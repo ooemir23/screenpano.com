@@ -51,6 +51,26 @@ TZ_NAME=Europe/Istanbul
 PORT=3000
 ```
 
+İsteğe bağlı (önerilir):
+
+```env
+PUBLIC_URL=https://screenpano.com
+# Cloudflare R2: medya ve gece yedekleri için
+R2_ACCOUNT_ID=...
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET=screenpano-media
+# R2_PUBLIC_URL=https://media.screenpano.com   (kovayı alan adına bağladıysanız)
+# Çevrimdışı uyarı e-postaları
+SMTP_HOST=smtp.yandex.com.tr
+SMTP_PORT=465
+SMTP_USER=bildirim@screenpano.com
+SMTP_PASS=...
+SMTP_FROM=ScreenPano <bildirim@screenpano.com>
+```
+
+**R2 kurulumu:** Cloudflare → R2 → kova oluşturun → "Manage R2 API Tokens" ile yalnız o kovaya *Object Read & Write* yetkili bir anahtar üretin. Mevcut medya dosyaları ilk açılıştan sonra arka planda R2'ye taşınır; süper yönetimde "Yedekler ve depolama" kartından ilerlemeyi görürsünüz. `R2_PUBLIC_URL` kullanacaksanız kovanın CORS ayarına `GET` için `https://screenpano.com` kaynağını ekleyin (TV'nin çevrimdışı önbelleği için).
+
 `SESSION_SECRET` için sunucuda `openssl rand -hex 32` çıktısını kullanabilirsiniz. `SUPER_PASS` yalnızca ilk açılışta süper yöneticiyi oluştururken kullanılır.
 
 6. **Advanced → Volumes (Mounts)** → **Volume Mount** ekleyin:
@@ -103,4 +123,16 @@ Depodaki `public/app.apk` zaten `https://screenpano.com` adresine göre derlenmi
 ## Güncelleme ve yedek
 
 - **Güncelleme:** GitHub'a push → Dokploy'da Deploy (ya da otomatik deploy'u açın). `/data` volume'ü korunur.
-- **Yedek:** Uygulama her işletmenin ayarlarını her gün yedekler ama bunlar da aynı diskte durur. Dokploy → Volume Backups ile `screenpano-data` volume'ünü düzenli olarak dışarıya (S3/R2) yedekleyin.
+- **Yedek:** Uygulama her gece tüm veritabanını `/data/backups/platform-*.db.gz` olarak yedekler (14 gün) ve R2 ayarlıysa R2'ye de gönderir (60 gün). Süper yönetimden elle yedek alıp indirebilirsiniz. R2 kullanmıyorsanız medya da diskte durur; Dokploy → Volume Backups ile `screenpano-data` volume'ünü dışarıya yedekleyin.
+- **Geri yükleme:** uygulamayı durdurun, yedeği açın (`gunzip platform-....db.gz`), `/data/platform.db` dosyasının yerine koyun (`platform.db-wal` ve `platform.db-shm` dosyalarını silin), uygulamayı başlatın.
+
+## İlk ayarlar (süper yönetim)
+
+- **Yasal bilgiler:** şirket unvanı, adres, MERSİS, KVKK e-postası. `/kvkk`, `/kosullar`, `/gizlilik` sayfalarında görünür. Metinler taslaktır; avukata kontrol ettirin.
+- **Tanıtım sitesi:** paket fiyatları, WhatsApp, telefon ve e-posta.
+- **Google Places API anahtarı:** Google Cloud'da "Places API (New)" açık bir anahtar. İşletmeler panelde Duyurular → Google yorumları bölümünden kendi işletmelerini arayıp seçer.
+- **Uyarı webhook'u:** çevrimdışı kalan kutular için size bildirim (Slack, Discord vb.).
+
+## Android 2.1
+
+Kaynak kodda sürüm 11 / 2.1 (uzaktan ekran görüntüsü eklendi). Derleyip `public/app.apk` olarak koyduktan **sonra** `public/apk-version.json` dosyasını `{"versionCode":11,"versionName":"2.1"}` yapın; kutulara güncelleme bildirimi gider.

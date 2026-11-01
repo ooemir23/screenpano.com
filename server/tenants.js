@@ -66,6 +66,7 @@ function save(t) { // aynı anda çok değişiklik gelirse tek yazım
 }
 function saveNow(t) { clearTimeout(saveTimers.get(t.id)); saveTimers.delete(t.id); store.q.tenantData.run(JSON.stringify(t.db), t.id); }
 function remove(id) {
+  require('./storage').removeTenant(id).catch(() => {});
   store.q.tenantDel.run(id); cache.delete(id);
   fs.rmSync(path.join(DATA_DIR, 'tenants', id), { recursive: true, force: true });
 }

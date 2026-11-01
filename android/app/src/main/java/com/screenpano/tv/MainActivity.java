@@ -2,6 +2,8 @@ package com.screenpano.tv;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.util.Base64;
 import android.graphics.Color;
 import android.content.Intent;
 import android.net.Uri;
@@ -25,6 +27,9 @@ import android.webkit.WebViewClient;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -238,6 +243,28 @@ public class MainActivity extends Activity {
         /** Kurulu uygulamanın sürüm kodu (güncelleme bildirimi için). */
         @JavascriptInterface public int versionCode() {
             try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode; } catch (Exception e) { return 0; }
+        }
+
+        /** Uzaktan durum izleme: ekranın küçük bir görüntüsü (960 px genişlik, JPEG, data: adresi). Çizim UI iş parçacığında yapılır. */
+        @JavascriptInterface public String snapshot() {
+            final String[] out = { "" };
+            final CountDownLatch done = new CountDownLatch(1);
+            runOnUiThread(new Runnable() { @Override public void run() {
+                try {
+                    int w = web.getWidth(), h = web.getHeight();
+                    if (w > 0 && h > 0) {
+                        float k = Math.min(1f, 960f / w);
+                        Bitmap b = Bitmap.createBitmap(Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k)), Bitmap.Config.RGB_565);
+                        Canvas c = new Canvas(b); c.scale(k, k); web.draw(c);
+                        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+                        b.compress(Bitmap.CompressFormat.JPEG, 70, bo); b.recycle();
+                        out[0] = "data:image/jpeg;base64," + Base64.encodeToString(bo.toByteArray(), Base64.NO_WRAP);
+                    }
+                } catch (Throwable t) { out[0] = ""; }
+                done.countDown();
+            } });
+            try { done.await(3, TimeUnit.SECONDS); } catch (InterruptedException e) { }
+            return out[0];
         }
 
         /** Yeni APK'yı indirir ve yükleyiciyi açar. Durum, sayfadaki window.__updateStatus(metin) ile bildirilir. */

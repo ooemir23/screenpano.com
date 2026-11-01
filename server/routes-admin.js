@@ -18,10 +18,19 @@ const { publicState, CAMP_QR, pubCamp } = require('./state');
 const r = express.Router();
 const HOUR = F.HOUR;
 
+// Çoklu şube: işletme sahibi aynı zincirdeki (org_id) başka bir şubeye geçmiş olabilir
+function activeTenantId(u) {
+  if (u.role === 'super') return u.imp;
+  if (u.br && u.br !== u.tenant_id && u.role === 'owner') {
+    const home = tenants.get(u.tenant_id), br = tenants.get(u.br);
+    if (home && br && home.org_id && br.org_id === home.org_id) return br.id;
+  }
+  return u.tenant_id;
+}
 // ---- kimlik: işletme sahibi/personeli ya da "işletme olarak giren" süper yönetici ----
 r.use((req, res, next) => {
   const u = auth.sessionUser(req);
-  const tid = u && (u.role === 'super' ? u.imp : u.tenant_id);
+  const tid = u && activeTenantId(u);
   const t = tid && tenants.get(tid);
   if (!u || !t) return res.status(401).json({ error: 'Giriş gerekli' });
   req.user = u; req.t = t;
@@ -45,7 +54,8 @@ const quota = (req, res, next) => {
   if (used + incoming > lim) return res.status(413).json({ error: `Depolama kotası doldu (${Math.round(used / 1048576)} / ${plan(req.t).storageMB} MB). Eski dosyaları silin ya da paketinizi yükseltin.` });
   next();
 };
-const rmUpload = (t, file) => { if (file && /^[\w.-]+$/.test(file)) fs.rmSync(path.join(t.dirs.uploads, file), { force: true }); };
+const fileSize = (t, f) => { try { return fs.statSync(path.join(t.dirs.uploads, f)).size; } catch { const o = store.q.objGet.get(t.id, f); if (o) return o.size; throw new Error('yok'); } };
+const rmUpload = (t, file) => require('./storage').remove(t, file);
 
 // ================= HESAP, İŞLETME, PAKET =================
 r.get('/me', (req, res) => {
@@ -161,11 +171,17 @@ r.post('/devices/reload', (req, res) => { sendTo(req.t, { type: 'reload' }); res
 
 // ================= FİYAT TARİFESİ =================
 r.put('/menu', (req, res) => {
-  const b = req.body || {}, s = (v, n) => String(v ?? '').trim().slice(0, n);
+  const b = req.body || {}, s = (v, n) => String(v ?? '').trim().slice(0, n), SCH = require('./sched'), LANGS = require('./state').LANGS;
+  // çeviriler: { en: 'Hot drinks' } ya da { en: { name, desc } }
+  const tr = (o, fn) => { const out = {}; if (o && typeof o === 'object') for (const l of LANGS) if (l !== 'tr' && o[l] != null) { const v = fn(o[l]); if (v) out[l] = v; } return Object.keys(out).length ? out : undefined; };
   const cats = (Array.isArray(b.categories) ? b.categories : []).slice(0, 20).map(c => ({
-    name: s(c.name, 40), items: (Array.isArray(c.items) ? c.items : []).slice(0, 60).map(i => ({ name: s(i.name, 60), price: s(i.price, 16), desc: s(i.desc, 90) })).filter(i => i.name),
+    name: s(c.name, 40), sch: SCH.clean(c.sch) || undefined, t: tr(c.t, v => s(v, 40)),
+    items: (Array.isArray(c.items) ? c.items : []).slice(0, 60).map(i => ({
+      name: s(i.name, 60), price: s(i.price, 16), desc: s(i.desc, 90), off: i.off === true || undefined,
+      t: tr(i.t, v => { const n = s(v && v.name, 60), d = s(v && v.desc, 90); return n || d ? { name: n, desc: d } : null; }),
+    })).filter(i => i.name),
   })).filter(c => c.name || c.items.length);
-  req.t.db.menu = { title: s(b.title, 40) || 'Fiyat Listesi', currency: s(b.currency, 4) || '₺', categories: cats };
+  req.t.db.menu = { title: s(b.title, 40) || 'Fiyat Listesi', currency: s(b.currency, 4) || '₺', categories: cats, t: tr(b.t, v => s(v, 40)) };
   changed(req.t); res.json({ ok: true });
 });
 
@@ -175,7 +191,11 @@ r.get('/state', (req, res) => res.json(publicState(req.t)));
 // ======================================================================
 // Aşağısı eski tek-kafe sürümünün yönetim uçları; davranış aynı, veri işletmeye ait.
 // ======================================================================
-r.get('/db', (req, res) => { const { trafficSecret, ...rest } = req.t.db; res.json(rest); });
+r.get('/db', (req, res) => {
+  const { trafficSecret, instagram, ...rest } = req.t.db;
+  if (instagram) { const { token, ...ig } = instagram; rest.instagram = { ...ig, connected: !!token }; }
+  res.json(rest);
+});
 r.get('/leagues', (req, res) => res.json({
   catalog: F.CATALOG.map(([code, label, group]) => ({ code, label, group })),
   enabled: F.enabledLeagues(req.t).map(([code]) => code),
@@ -288,9 +308,9 @@ r.post('/news/test', async (req, res) => {
 });
 r.get('/storage', (req, res) => {
   const t = req.t, files = {}; let mediaB = 0;
-  for (const v of t.db.videos) { try { files[v.file] = fs.statSync(path.join(t.dirs.uploads, v.file)).size; mediaB += files[v.file]; } catch {} }
+  for (const v of t.db.videos) { try { files[v.file] = fileSize(t, v.file); mediaB += files[v.file]; } catch {} }
   const used = media.usedBytes(t), lim = plan(t).storageMB * 1048576;
-  const celeb = [...(t.db.celebPhotos || []), ...(t.db.bigPhotos || [])].reduce((a, p) => { try { return a + fs.statSync(path.join(t.dirs.uploads, p.file)).size; } catch { return a; } }, 0);
+  const celeb = [...(t.db.celebPhotos || []), ...(t.db.bigPhotos || [])].reduce((a, p) => { try { return a + fileSize(t, p.file); } catch { return a; } }, 0);
   res.json({ files, mediaBytes: mediaB, mediaCount: t.db.videos.length, celebBytes: celeb, otherBytes: Math.max(0, used - mediaB - celeb), otherCount: 0, uploadsBytes: used, totalBytes: used, limitBytes: lim, disk: { total: lim, free: Math.max(0, lim - used) } });
 });
 r.get('/cache', (req, res) => {
@@ -345,7 +365,7 @@ r.post('/backups/:name/restore', ownerOnly, (req, res) => {
     if (!parsed || !Array.isArray(parsed.videos)) throw new Error('yedek dosyası geçerli değil');
     backupNow(t, 'geri-yukleme-oncesi');
     t.db = { ...t.db, ...parsed };
-    const missing = t.db.videos.filter(v => !fs.existsSync(path.join(t.dirs.uploads, v.file))).length;
+    const missing = t.db.videos.filter(v => !require('./storage').exists(t, v.file)).length;
     changed(t); res.json({ ok: true, missingFiles: missing });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
@@ -534,4 +554,5 @@ function startJobs() {
   }, 30000);
 }
 
-module.exports = { router: r, startJobs };
+require('./routes-ext')(r, { changed, sendTo, upload, quota, ownerOnly, rmUpload, backupNow });
+module.exports = { router: r, startJobs, activeTenantId };

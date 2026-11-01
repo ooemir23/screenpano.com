@@ -25,8 +25,27 @@ const page = file => (req, res) => { res.setHeader('Cache-Control', 'no-cache');
 app.get('/', (req, res) => {
   // eski APK'lar kök adresi açar: Android WebView'dan gelen istek TV sayfasına gider
   if (/; wv\)/.test(String(req.headers['user-agent'] || ''))) return res.redirect('/tv');
-  const u = auth.sessionUser(req); res.redirect(u ? (u.role === 'super' && !u.imp ? '/super' : '/panel') : '/login');
+  const u = auth.sessionUser(req);
+  if (u && req.query.site === undefined) return res.redirect(u.role === 'super' && !u.imp ? '/super' : '/panel');
+  res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(sitePage());
 });
+// Tanıtım sitesi: fiyat ve iletişim bilgileri süper yönetimden
+let siteTpl = null;
+function sitePage() {
+  if (!siteTpl || process.env.NODE_ENV !== 'production') siteTpl = fs.readFileSync(path.join(config.PUBLIC_DIR, 'site.html'), 'utf8');
+  const st = k => require('./store').setting(k, '');
+  const e = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const price = v => v ? e(v) : '<small>Fiyat için bize ulaşın</small>';
+  const phone = st('site_phone'), wa = st('site_whatsapp').replace(/\D/g, ''), mail = st('site_email') || st('legal_email');
+  const contact = [wa && `<a class="btn" href="https://wa.me/${wa}" rel="noopener">WhatsApp'tan yazın</a>`, phone && `<a class="btn ghost" href="tel:${e(phone.replace(/\s/g, ''))}">${e(phone)}</a>`, mail && `<a class="btn ghost" href="mailto:${e(mail)}">${e(mail)}</a>`].filter(Boolean).join('');
+  const live = tenants.all().filter(t => require('./plans').access(t).ok).length;
+  return siteTpl.replace('{{PRICE_BASLANGIC}}', price(st('site_price_baslangic'))).replace('{{PRICE_PRO}}', price(st('site_price_pro')))
+    .replace('{{CONTACT}}', contact).replace('{{YEAR}}', new Date().getFullYear())
+    .replace('{{LIVE}}', live >= 10 ? `${live} işletmede şu an yayında` : 'Kafe, restoran ve spor barlar için');
+}
+for (const k of ['kvkk', 'kosullar', 'gizlilik']) app.get('/' + k, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(require('./legal').render(k)); });
+// TV çevrimdışı önbelleği: service worker kök kapsamda ve her zaman taze
+app.get('/sw.js', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.setHeader('Service-Worker-Allowed', '/'); res.type('js').sendFile(path.join(config.PUBLIC_DIR, 'sw.js')); });
 app.get('/login', page('login.html'));
 app.get('/tv', page('tv.html'));
 app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html')(req, res, next) : res.redirect('/login')));
@@ -54,10 +73,8 @@ app.get('/logo/:id.png', async (req, res) => {
 app.get('/u/:tid/:file', (req, res) => {
   const { tid, file } = req.params;
   if (!/^[a-f0-9]{6,32}$/.test(tid) || !/^[\w-]+\.[a-z0-9]{1,5}$/i.test(file)) return res.status(400).end();
-  const f = path.join(config.DATA_DIR, 'tenants', tid, 'uploads', file);
-  if (!fs.existsSync(f)) return res.status(404).end();
-  res.set('Cache-Control', 'public, max-age=31536000, immutable');
-  res.sendFile(f);
+  const t = tenants.get(tid); if (!t) return res.status(404).end();
+  require('./storage').serve(req, res, t, file);
 });
 function makeApkFilename(name) {
   if (!name) return `${config.BRAND}.apk`;
@@ -105,4 +122,9 @@ realtime.attach(server);
 feeds.start();
 media.resumeAll();
 require('./routes-admin').startJobs();
+require('./storage').start();
+require('./backup').start();
+require('./monitor').start();
+require('./stats').start();
+require('./social').start();
 server.listen(config.PORT, () => console.log(`${config.BRAND} çalışıyor: http://localhost:${config.PORT}`));

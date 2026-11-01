@@ -70,6 +70,15 @@ function cleanLayout(l) {
         if (typeof dv === 'boolean') item.props[k] = typeof p[k] === 'boolean' ? p[k] : dv;
         else item.props[k] = typeof p[k] === 'string' ? p[k].slice(0, k === 'body' ? 400 : 200) : dv;
       }
+      // çeviriler: { en: { title, body } }
+      if (p.i18n && typeof p.i18n === 'object') {
+        const tr = {};
+        for (const [l, v] of Object.entries(p.i18n)) if (/^(en|de|ru|ar|fr|es)$/.test(l) && v && typeof v === 'object') {
+          const o = {}; for (const k of ['title', 'body']) if (typeof v[k] === 'string' && v[k].trim()) o[k] = v[k].slice(0, k === 'body' ? 400 : 200);
+          if (Object.keys(o).length) tr[l] = o;
+        }
+        if (Object.keys(tr).length) item.props.i18n = tr;
+      }
     }
     seen.add(w.type); out.push(item);
   }

@@ -58,7 +58,7 @@ main{flex:1;min-width:0;padding:28px 36px 90px}
 .f{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 14px;align-items:end}
 .fl{display:flex;flex-direction:column;gap:6px;min-width:0}
 .fl>span{font-size:12.5px;color:var(--mute);font-weight:500}
-input[type=text],input[type=password],input[type=number],input[type=time],input[type=tel],select,textarea{width:100%;background:#141616;border:1px solid var(--line2);border-radius:10px;padding:10px 12px;outline:none;min-width:0}
+input[type=text],input[type=password],input[type=number],input[type=time],input[type=tel],input[type=email],input[type=date],select,textarea{width:100%;background:#141616;border:1px solid var(--line2);border-radius:10px;padding:10px 12px;outline:none;min-width:0}
 input:focus,select:focus,textarea:focus{border-color:var(--accent2)}
 textarea{resize:vertical;min-height:80px}
 input[type=color]{width:100%;height:44px;border:1px solid var(--line2);border-radius:10px;background:#141616;padding:4px;cursor:pointer}
@@ -215,6 +215,35 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
   .mrow{grid-template-columns:1fr 90px auto}.mrow .md{display:none}
   .plans{grid-template-columns:1fr}
 }
+/* ===== yeni bölümler: afiş, zamanlama, istatistik, şube ===== */
+.pmini{position:relative;aspect-ratio:16/9;width:100%;overflow:hidden;background:#000}
+.tile .th .pmini{position:absolute;inset:0;aspect-ratio:auto}
+.tile .th.off{opacity:.45}
+.tile .sch{position:absolute;bottom:7px;left:7px;background:rgba(0,0,0,.75);border-radius:20px;padding:3px 9px;font-size:11px;max-width:calc(100% - 14px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .hid{position:absolute;bottom:7px;right:7px;background:var(--bad,#c0392b);border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700}
+.pgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.pcard{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0 0 10px;overflow:hidden;cursor:pointer}
+.pcard:hover{border-color:var(--accent2)}
+.pcard b,.pcard span{padding:0 11px}
+.ped{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;align-items:start}
+.ped .fl{margin-bottom:10px}
+.pv16{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000;margin-bottom:6px}
+#modal .mb:has(.ped){max-width:980px;width:96vw}
+.mtr{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 8px 14px;padding-left:10px;border-left:2px solid var(--line2)}
+.mtr input{flex:1 1 180px;font-size:13px;padding:6px 9px}
+.ckl{display:flex;gap:10px;align-items:center;font-size:13.5px;color:var(--soft);cursor:pointer}
+.ckl input{width:18px;height:18px;accent-color:var(--accent2)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:180px;padding:6px 0;border-bottom:1px solid var(--line2);margin-bottom:6px}
+.bars div{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
+.bars i{display:block;width:100%;background:var(--accent2);border-radius:3px 3px 0 0;min-height:2px}
+.bars div:hover i{background:var(--text)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-weight:600;color:var(--mute);font-size:12.5px;padding:8px 10px;border-bottom:1px solid var(--line2)}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line)}
+.tbl td:nth-child(n+3){font-variant-numeric:tabular-nums}
+#brsw{padding:0 6px 12px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+#brsw select{width:100%;font-size:13.5px;padding:8px 10px}
+@media (max-width:760px){.ped{grid-template-columns:1fr}}
 </style></head><body>
 <div id="app">
   <aside id="side">
@@ -232,5 +261,6 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 </div>
 <div id="modal" onclick="if(event.target===this)closeModal()"><div class="mb" id="modalb"></div></div>
 <div id="toasts"></div>
+<script src="/posters.js"></script>
 <script src="/panel.js"></script>
 </body></html>

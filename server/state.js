@@ -11,7 +11,7 @@ const { WIDGETS, defaultLayout } = require('./widgets');
 const appVersion = () => { try { const v = JSON.parse(fs.readFileSync(path.join(config.PUBLIC_DIR, 'apk-version.json'), 'utf8')); return { versionCode: Number(v.versionCode) || 0, versionName: String(v.versionName || ''), url: '/app.apk' }; } catch { return null; } };
 
 const CAMP_QR = url => QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
-const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec }) => ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec });
+const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch }) => ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch: sch || null });
 
 function wifiMarquee(db, text) {
   if (db.wifiText) return db.wifiText;
@@ -25,6 +25,37 @@ function layoutFor(t, screen) {
   if (!l || !Array.isArray(l.widgets)) l = defaultLayout();
   const pro = plan(t).pro;
   return { ...l, widgets: l.widgets.filter(w => WIDGETS[w.type] && (pro || !WIDGETS[w.type].pro)) };
+}
+
+const SCH = require('./sched');
+const LANGS = ['tr', 'en', 'de', 'ru', 'ar', 'fr', 'es'];
+const langList = db => ['tr', ...(((db.lang || {}).list) || []).filter(l => l !== 'tr' && LANGS.includes(l))].slice(0, 4);
+
+// Medya döngüsü: videolar, fotoğraflar, hazır afişler (+ Instagram paylaşımları araya serpiştirilir)
+function mediaList(t) {
+  const db = t.db, out = [];
+  for (const v of db.videos) {
+    if (v.status === 'processing' && !v.reopt) continue;
+    if (v.hidden || SCH.expired(v.sch)) continue;
+    if (v.type === 'poster') out.push({ id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null });
+    else out.push({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', sch: v.sch || null });
+  }
+  const ig = db.instagram;
+  if (ig && ig.enabled !== false && (ig.posts || []).length && require('./plans').plan(t).pro) {
+    const every = Math.max(1, Math.min(20, Number(ig.every) || 3)), posts = ig.posts.map(p => ({ id: p.id, name: 'Instagram', type: 'poster', tpl: 'insta', fields: { title: p.caption, sub: '@' + (ig.user || '') }, image: t.upBase + p.file, dur: Number(ig.dur) || 10 }));
+    if (!out.length) return posts;
+    const mixed = []; let k = 0;
+    out.forEach((v, i) => { mixed.push(v); if ((i + 1) % every === 0) mixed.push(posts[k++ % posts.length]); });
+    if (out.length < every) mixed.push(posts[0]);
+    return mixed;
+  }
+  return out;
+}
+// Yorumlar: elle girilenler + Google'dan gelenler (yalnız 4-5 yıldız)
+function reviewList(db) {
+  const g = db.google && db.google.show !== false ? (db.google.reviews || []) : [];
+  return [...(db.reviews || []).map(r => ({ ...r, source: r.source || 'manual' })), ...g].filter(r => r.rating >= 4)
+    .map(({ id, author, rating, text, source }) => ({ id, author, rating, text, source }));
 }
 
 function publicState(t) {
@@ -44,9 +75,12 @@ function publicState(t) {
   const books = F.books;
   return {
     ...base,
-    videos: db.videos.filter(v => v.status !== 'processing' || v.reopt).map(v => ({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video' })),
+    videos: mediaList(t),
     imageSeconds: db.imageSeconds,
-    reviews: pro && has('reviews') ? (db.reviews || []).filter(r => r.rating >= 4).map(({ id, author, rating, text }) => ({ id, author, rating, text })) : [],
+    reviews: pro && has('reviews') ? reviewList(db) : [],
+    googleRating: pro && db.google && db.google.rating ? { rating: db.google.rating, count: db.google.count } : null,
+    langs: langList(db), langSec: Math.max(5, Math.min(60, Number((db.lang || {}).sec) || 12)),
+    tz: config.TZ,
     matches: pro ? [
       ...db.matches.slice().sort((a, b) => a.time.localeCompare(b.time)).map(m => ({ ...m, day: 'Bugün' })),
       ...F.autoMatches.filter(m => enabled.some(([, label]) => label === m.league)),
@@ -84,4 +118,4 @@ function publicState(t) {
   };
 }
 
-module.exports = { publicState, layoutFor, appVersion, CAMP_QR, pubCamp };
+module.exports = { publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };

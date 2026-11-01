@@ -61,7 +61,7 @@ function sessionUser(req) {
   if (!p) return null;
   const u = store.q.userGet.get(p.uid);
   if (!u) return null;
-  return { ...u, imp: p.imp || null };
+  return { ...u, imp: p.imp || null, br: p.br || null };
 }
 
 // Cihaz token'ı: TV'de saklanır, veritabanında yalnızca özeti tutulur

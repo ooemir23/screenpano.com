@@ -44,10 +44,23 @@ hub.send = (filter, msg) => {
 hub.connectedTenantIds = () => new Set([...clients].map(c => c.tid));
 hub.clientCount = () => clients.size;
 hub.onlineDeviceIds = () => new Set([...clients].filter(c => c.deviceId).map(c => c.deviceId));
+hub.sendDevice = (id, msg) => { let n = 0; for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, msg); n++; } return n; };
 hub.kickDevice = id => { for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, { type: 'auth', error: 'revoked' }); ws.close(); } };
 
+// TV'den gelen mesajlar: durum raporu, oynatma kaydı, ekran görüntüsü (önizleme bağlantıları sayılmaz)
+function onMessage(ws, raw) {
+  if (!ws.deviceId || raw.length > 900000) return;
+  let m; try { m = JSON.parse(raw); } catch { return; }
+  if (!m || typeof m !== 'object') return;
+  if (m.type === 'status') require('./monitor').report(ws.tid, ws.deviceId, m);
+  else if (m.type === 'play') require('./stats').play(ws.tid, String(m.id || ''), m.sec);
+  else if (m.type === 'snap' && typeof m.data === 'string' && /^data:image\/(jpeg|png);base64,/.test(m.data)) require('./monitor').snaps.set(ws.deviceId, { at: Date.now(), data: m.data });
+}
+
 function attach(server) {
-  const wss = new WebSocketServer({ server, path: '/ws', perMessageDeflate: { threshold: 1024 } });
+  const wss = new WebSocketServer({ server, path: '/ws', perMessageDeflate: { threshold: 1024 }, maxPayload: 1024 * 1024 });
+  // ekran açık kalma süresi: bağlı her cihaz için dakikada bir
+  setInterval(() => { const seen = new Set(); for (const ws of clients) if (ws.deviceId && !seen.has(ws.deviceId)) { seen.add(ws.deviceId); try { require('./stats').online(ws.tid, ws.deviceId, 1); } catch (e) {} } }, 60000);
   wss.on('connection', (ws, req) => {
     const url = new URL(req.url, 'http://x');
     const token = url.searchParams.get('device'), preview = url.searchParams.get('preview');
@@ -56,9 +69,10 @@ function attach(server) {
       if (!d) { sendRaw(ws, { type: 'auth', error: 'invalid' }); return ws.close(); }
       Object.assign(ws, { tid: d.tenant_id, deviceId: d.id });
       store.q.deviceSeen.run(Date.now(), d.id);
+      const t0 = tenants.get(d.tenant_id); if (t0) require('./monitor').connected(t0, d);
     } else if (preview) { // panelin canlı önizlemesi: oturum çerezi gerekir
       const u = auth.sessionUser(req);
-      const tid = u && (u.role === 'super' ? u.imp : u.tenant_id);
+      const tid = u && require('./routes-admin').activeTenantId(u);
       if (!tid || !tenants.get(tid)) { sendRaw(ws, { type: 'auth', error: 'preview' }); return ws.close(); }
       Object.assign(ws, { tid, preview: true });
     } else { sendRaw(ws, { type: 'auth', error: 'missing' }); return ws.close(); }
@@ -66,6 +80,7 @@ function attach(server) {
     ws.isAlive = true;
     ws.on('pong', () => { ws.isAlive = true; });
     ws.on('close', () => clients.delete(ws));
+    ws.on('message', raw => onMessage(ws, raw));
     sendRaw(ws, { type: 'version', build: BUILD, now: Date.now() });
     sendState(ws);
     const F = require('./feeds'), t = tenants.get(ws.tid);

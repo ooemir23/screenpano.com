@@ -27,7 +27,15 @@ r.post('/login', (req, res) => {
   const { username, password } = req.body || {};
   const u = store.q.userByName.get(String(username || '').trim());
   if (!u || !u.tenant_id || !auth.checkPassword(password, u.pass)) { auth.noteFail(ip); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
-  const t = tenants.get(u.tenant_id);
+  let t = tenants.get(u.tenant_id);
+  // çoklu şube: işletme sahibinin birden çok şubesi varsa TV hangi şubeye bağlanacağını sorar
+  const branches = u.role === 'owner' && t.org_id ? store.q.orgTenants.all(t.org_id) : [];
+  if (branches.length > 1) {
+    const want = String((req.body || {}).branch || '');
+    if (!want) return res.json({ choose: branches.map(b => ({ id: b.id, name: b.name })) });
+    if (!branches.some(b => b.id === want)) return res.status(400).json({ error: 'Şube bulunamadı' });
+    t = tenants.get(want);
+  }
   const err = limitError(t); if (err) return res.status(400).json({ error: err });
   res.json({ deviceToken: issueDevice(t, req.headers['user-agent']), tenant: t.name });
 });

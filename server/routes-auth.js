@@ -6,6 +6,7 @@ const auth = require('./auth');
 const { createTenant } = require('./accounts');
 
 const r = express.Router();
+const LEGAL_VERSION = require('./legal').VERSION;
 
 r.post('/login', (req, res) => {
   const ip = auth.clientIp(req);
@@ -25,7 +26,9 @@ r.post('/signup', (req, res) => {
   if (auth.tooMany(ip)) return res.status(429).json({ error: 'Çok fazla deneme. Biraz sonra tekrar deneyin.' });
   try {
     const b = req.body || {};
+    if (b.accept !== true) throw new Error('Devam etmek için Kullanım Koşulları ve KVKK Aydınlatma Metni\'ni onaylayın');
     const t = createTenant({ name: b.business, username: b.username, password: b.password, phone: b.phone, plan: 'pro' });
+    t.db.consent = { terms: LEGAL_VERSION, kvkk: LEGAL_VERSION, at: Date.now(), ip, marketing: b.marketing === true }; require('./tenants').saveNow(t);
     auth.noteFail(ip); // kayıtlar da sayılır: tek IP'den seri hesap açılmasın
     const u = store.q.userByName.get(String(b.username).trim().toLowerCase());
     auth.setSession(req, res, u);

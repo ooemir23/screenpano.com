@@ -18,7 +18,8 @@ const SCALE = "scale='min(1920,iw)':'min(1920,ih)':force_original_aspect_ratio=d
 async function optimizeItem(tid, id) {
   const t = tenants.get(tid); if (!t) return;
   const v = t.db.videos.find(x => x.id === id); if (!v) return;
-  const src = path.join(t.dirs.uploads, v.file);
+  let src = path.join(t.dirs.uploads, v.file);
+  if (!fs.existsSync(src)) { try { src = await require('./storage').ensureLocal(t, v.file); } catch (e) {} }
   const done = patch => { const c = t.db.videos.find(x => x.id === id); if (c) { Object.assign(c, { status: 'ready', reopt: false, optimized: true }, patch); tenants.save(t); hub.pushTenant(tid); } };
   if (!fs.existsSync(src)) return done({ optError: 'dosya bulunamadı' });
   if (!ffmpegOk) return done({ optimized: false, optError: 'ffmpeg yok' });
@@ -34,7 +35,7 @@ async function optimizeItem(tid, id) {
     const after = fs.statSync(out).size;
     if (!t.db.videos.find(x => x.id === id)) { fs.rmSync(out, { force: true }); return; }
     if (after >= before && v.reopt) { fs.rmSync(out, { force: true }); return done({ sizeBefore: before, sizeAfter: before }); }
-    fs.rmSync(src, { force: true });
+    require('./storage').remove(t, v.file);
     done({ file: outName, sizeBefore: before, sizeAfter: after, optError: '' });
   } catch (e) {
     fs.rmSync(out, { force: true });
@@ -51,10 +52,6 @@ async function run() {
 function resumeAll() { for (const t of tenants.all()) for (const v of t.db.videos) if (v.status === 'processing') enqueue(t.id, v.id); }
 
 // İşletmenin diskte kapladığı yer (kota kontrolü için)
-function usedBytes(t) {
-  let n = 0;
-  for (const f of fs.existsSync(t.dirs.uploads) ? fs.readdirSync(t.dirs.uploads) : []) { try { n += fs.statSync(path.join(t.dirs.uploads, f)).size; } catch {} }
-  return n;
-}
+const usedBytes = t => require('./storage').usedBytes(t);
 
 module.exports = { enqueue, resumeAll, usedBytes, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };

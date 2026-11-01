@@ -28,6 +28,8 @@ input:focus{border-color:var(--accent2)}
 .btn:disabled{opacity:.6}
 .err{min-height:20px;margin-top:12px;color:var(--bad);font-size:14px}
 .note{color:var(--mute);font-size:12px;margin-top:14px;line-height:1.5}
+.ck{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:var(--mute);margin:12px 0 0;cursor:pointer}.ck input{width:18px;height:18px;flex:0 0 18px;margin:1px 0 0;accent-color:var(--accent2)}.ck a{color:inherit}
+.legal{margin-top:18px;font-size:12px;color:var(--mute);display:flex;gap:14px;flex-wrap:wrap}.legal a{color:inherit}
 </style></head><body>
 <div class="wrap">
   <div class="pitch">
@@ -55,10 +57,13 @@ input:focus{border-color:var(--accent2)}
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire">
       <label>Şifre (en az 8 karakter)</label><input name="password" type="password" autocomplete="new-password" minlength="8" required>
       <label>Telefon (isteğe bağlı)</label><input name="phone" type="tel" maxlength="30">
+      <label class="ck"><input type="checkbox" name="accept" required><span><a href="/kosullar" target="_blank">Kullanım Koşulları</a>'nı okudum ve kabul ediyorum; kişisel verilerimin <a href="/kvkk" target="_blank">KVKK Aydınlatma Metni</a> kapsamında işleneceğini biliyorum.</span></label>
+      <label class="ck"><input type="checkbox" name="marketing"><span>Yeni özellik ve kampanyalardan haberdar olmak istiyorum (isteğe bağlı).</span></label>
       <button class="btn">Hesabı oluştur</button>
       <p class="note" id="trialnote"></p>
     </form>
     <div class="err" id="err"></div>
+    <div class="legal"><a href="/">screenpano.com</a><a href="/kosullar">Kullanım Koşulları</a><a href="/kvkk">KVKK</a><a href="/gizlilik">Gizlilik</a></div>
   </div>
 </div>
 <script>
@@ -72,11 +77,11 @@ document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
   $('f-login').hidden = b.dataset.t !== 'login'; $('f-signup').hidden = b.dataset.t !== 'signup'; $('err').textContent = '';
 });
-if (location.hash === '#kayit') document.querySelector('[data-t=signup]').click();
+if (location.hash === '#kayit' || location.hash === '#signup') document.querySelector('[data-t=signup]').click();
 async function submit(form, url) {
   const btn = form.querySelector('button'); btn.disabled = true; $('err').textContent = '';
   try {
-    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign(Object.fromEntries(new FormData(form)), { accept: !!(form.accept && form.accept.checked), marketing: !!(form.marketing && form.marketing.checked) })) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'Bir hata oluştu');
     location.href = j.next + (location.hash.startsWith('#pair=') ? location.hash : '');

@@ -41,6 +41,7 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 .toast{background:#2b2f2f;border-left:4px solid var(--ok);padding:12px 16px;border-radius:10px;font-size:14px}
 .toast.err{border-left-color:var(--bad)}
 .scroll{overflow-x:auto}
+.hint a{color:var(--accent2,#c9955c)}
 </style></head><body>
 <header><a href="/super" style="text-decoration:none"><img src="/logo.svg?v=3" alt="ScreenPano" style="height:34px;display:block"></a><span style="color:var(--mute);font-size:13px;padding-left:6px;border-left:1px solid var(--line)">Süper Yönetim</span><span style="flex:1"></span><a class="btn ghost" href="/tv" target="_blank" style="text-decoration:none">TV sayfası</a><button class="btn ghost" onclick="pwDialog()">Şifremi değiştir</button><button class="btn ghost" onclick="logout()">Çıkış</button></header>
 <div class="stats" id="stats"></div>
@@ -55,6 +56,9 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
     <div style="max-width:220px"><label>CollectAPI planı</label><select id="s-collect_paid"><option value="">Ücretsiz (kota korumalı)</option><option value="1">Ücretli (kota sınırı yok)</option></select></div>
   </div>
   <div class="row" style="margin-top:12px">
+    <div><label>Google Places API anahtarı (Google yorumları)</label><input id="s-google_places_key" type="password" autocomplete="off"></div>
+  </div>
+  <div class="row" style="margin-top:12px">
     <div><label>TMDB API anahtarı (sinema)</label><input id="s-tmdb_key" type="password" autocomplete="off"></div>
     <div><label>Google Books API anahtarı (kitap kapakları)</label><input id="s-books_key" type="password" autocomplete="off"></div>
   </div>
@@ -62,8 +66,22 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
     <div><label>İBB trafik Worker adresi (isteğe bağlı)</label><input id="s-traffic_api" placeholder="https://trafik.kullanici.workers.dev"></div>
     <div><label>Worker imza anahtarı (TRAFFIC_SECRET olarak girin)</label><input id="s-traffic_secret" readonly></div>
   </div>
+  <h3 style="margin:22px 0 4px;font-size:15px">Uyarılar</h3>
+  <p class="hint">Bir TV kutusu 10 dakikadan uzun çevrimdışı kalınca bu adrese {"text": "..."} gönderilir (Slack, Discord ya da Telegram köprüsü). İşletmelere e-posta için sunucuda SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM ortam değişkenlerini girin. <span id="mailst"></span></p>
+  <div class="row"><div><label>Webhook adresi (https://…)</label><input id="s-alert_webhook" placeholder="https://hooks.slack.com/services/…"></div><div style="max-width:160px;align-self:flex-end"><button class="btn ghost" onclick="testHook()">Dene</button></div></div>
+  <h3 style="margin:22px 0 4px;font-size:15px">Yasal bilgiler (KVKK ve sözleşme sayfalarında görünür)</h3>
+  <p class="hint">Metinler başlangıç taslağıdır; yayına almadan önce bir avukata kontrol ettirin. Sayfalar: <a href="/kvkk" target="_blank">/kvkk</a> · <a href="/kosullar" target="_blank">/kosullar</a> · <a href="/gizlilik" target="_blank">/gizlilik</a></p>
+  <div class="row"><div><label>Şirket unvanı</label><input id="s-legal_company"></div><div><label>MERSİS no</label><input id="s-legal_mersis"></div></div>
+  <div class="row" style="margin-top:12px"><div><label>Açık adres</label><input id="s-legal_address"></div></div>
+  <div class="row" style="margin-top:12px"><div><label>KVKK başvuru e-postası</label><input id="s-legal_email"></div><div><label>Telefon</label><input id="s-legal_phone"></div><div><label>KEP adresi (varsa)</label><input id="s-legal_kep"></div></div>
+  <h3 style="margin:22px 0 4px;font-size:15px">Tanıtım sitesi</h3>
+  <p class="hint">Ana sayfadaki (<a href="/?site" target="_blank">önizle</a>) fiyatlar ve iletişim düğmeleri. Fiyat boşsa "Fiyat için bize ulaşın" yazar.</p>
+  <div class="row"><div><label>Başlangıç fiyatı</label><input id="s-site_price_baslangic" placeholder="örn. 499 ₺ / ay"></div><div><label>Pro fiyatı</label><input id="s-site_price_pro" placeholder="örn. 899 ₺ / ay"></div></div>
+  <div class="row" style="margin-top:12px"><div><label>WhatsApp numarası</label><input id="s-site_whatsapp" placeholder="905xxxxxxxxx"></div><div><label>Telefon</label><input id="s-site_phone"></div><div><label>E-posta</label><input id="s-site_email"></div></div>
   <div class="row" style="margin-top:14px"><button class="btn" onclick="saveSettings()">Kaydet</button></div>
 </div>
+<div class="card"><h2>Yedekler ve depolama</h2><div id="bk"><p class="hint">Yükleniyor…</p></div></div>
+<div class="card" id="offc" style="display:none"><h2>Çevrimdışı cihazlar</h2><div class="scroll"><table><thead><tr><th>İşletme</th><th>Cihaz</th><th>Son görülme</th><th></th></tr></thead><tbody id="offl"></tbody></table></div></div>
 <div id="dlg" onclick="if(event.target===this)closeDlg()"><div class="card" id="dlgc"></div></div>
 <div id="toasts"></div>
 <script>
@@ -84,17 +102,40 @@ async function load() {
   D = await call('GET', '/api/super/overview');
   const t = D.totals;
   $('stats').innerHTML = [['İşletme', t.tenants], ['Ekranı açık', t.live], ['Kayıtlı TV', t.devices], ['Şu an bağlı', t.online]].map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
-  for (const [k, v] of Object.entries(D.settings)) if ($('s-' + k)) $('s-' + k).value = v || '';
-  renderList();
+  if (!window.__setLoaded) { for (const [k, v] of Object.entries(D.settings)) if ($('s-' + k)) $('s-' + k).value = v || ''; window.__setLoaded = true; }
+  $('mailst').textContent = D.mail ? 'SMTP ayarlı: e-posta uyarıları açık.' : 'SMTP henüz ayarlı değil.';
+  renderList(); renderOff(); renderBk();
 }
+function renderOff() {
+  $('offc').style.display = D.offline.length ? '' : 'none';
+  $('offl').innerHTML = D.offline.map(o => `<tr><td>${esc(o.tenant)}</td><td>${esc(o.name || 'TV kutusu')}</td><td>${ago(o.lastSeen)} önce</td><td><button class="btn ghost sm" onclick="imp('${o.tenantId}')">Panele gir</button></td></tr>`).join('');
+}
+const size = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : b >= 1048576 ? Math.round(b / 1048576) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+async function renderBk() {
+  const st = D.storage, b = D.backup;
+  let list = { local: [], remote: [] };
+  try { list = await call('GET', '/api/super/backups'); } catch (e) {}
+  $('bk').innerHTML = `<p class="hint">Veritabanının tamamı (işletmeler, kullanıcılar, cihazlar, içerik ayarları) her gece 04:00'ten sonra sıkıştırılıp yedeklenir; sunucuda ${b.keepLocal} gün${b.remoteEnabled ? `, R2'de ${b.keepRemote} gün` : ''} saklanır.
+      Son yedek: <b>${b.at ? new Date(b.at).toLocaleString('tr-TR') : 'henüz yok'}</b>${b.remote ? ' (R2\'ye de gönderildi)' : ''}${b.error ? ` · <span style="color:var(--bad)">Son hata: ${esc(b.error)}</span>` : ''}</p>
+    <div class="row" style="margin-bottom:12px"><button class="btn" onclick="runBk()">Şimdi yedekle</button></div>
+    ${list.local.length ? `<div class="scroll"><table><thead><tr><th>Sunucudaki yedek</th><th>Boyut</th><th></th></tr></thead><tbody>${list.local.slice(0, 8).map(x => `<tr><td>${esc(x.name)}</td><td>${size(x.size)}</td><td><a class="btn ghost sm" href="/api/super/backups/${encodeURIComponent(x.name)}">İndir</a></td></tr>`).join('')}</tbody></table></div>` : ''}
+    ${list.remote.length ? `<p class="hint" style="margin-top:10px">R2'de ${list.remote.length} yedek var (en yenisi ${esc(list.remote[0].name)}).</p>` : list.remoteError ? `<p class="hint" style="color:var(--bad)">R2 yedek listesi alınamadı: ${esc(list.remoteError)}</p>` : ''}
+    <h3 style="margin:20px 0 4px;font-size:15px">Medya depolama</h3>
+    <p class="hint">${st.enabled ? `Cloudflare R2 açık · kova <b>${esc(st.bucket)}</b> · ${st.objects} dosya, ${size(st.bytes)}${st.pending ? ` · bekleyen ${st.pending}` : ''}${st.publicUrl ? ' · herkese açık adres: ' + esc(st.publicUrl) : ' · dosyalar sunucu üzerinden aktarılıyor'}${st.keepLocal ? ' · yerel kopyalar tutuluyor' : ''}${st.lastError ? ` · <span style="color:var(--bad)">${esc(st.lastError)}</span>` : ''}`
+      : 'R2 kapalı: medya sunucunun diskinde duruyor. Açmak için ortam değişkenlerine R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY ve R2_BUCKET girin; mevcut dosyalar arka planda R2\'ye taşınır.'}</p>
+    ${st.enabled ? '<button class="btn ghost sm" onclick="call(\'POST\',\'/api/super/storage/sync\').then(()=>toast(\'Eşitleme başladı\'))">Şimdi eşitle</button>' : ''}`;
+}
+async function runBk() { toast('Yedek alınıyor…'); try { const j = await call('POST', '/api/super/backups'); toast('Yedek alındı: ' + j.name); load(); } catch (e) { toast(e.message, true); } }
+async function testHook() { try { const j = await call('POST', '/api/super/alert/test'); toast(j.ok ? 'Deneme mesajı gönderildi' : 'Webhook ' + j.status + ' döndü', !j.ok); } catch (e) { toast(e.message, true); } }
 function stTag(x) {
   if (!x.access.ok) return x.access.reason === 'suspended' ? '<span class="tag bad">Askıda</span>' : '<span class="tag bad">Süresi doldu</span>';
-  return x.access.kind === 'trial' ? '<span class="tag trial">Deneme</span>' : '<span class="tag ok">Aktif</span>';
+  return (x.deletion ? `<span class="tag bad" title="KVKK silme talebi">Silinecek ${fmt(x.deletion)}</span> ` : '') + (x.access.kind === 'trial' ? '<span class="tag trial">Deneme</span>' : '<span class="tag ok">Aktif</span>');
 }
 function renderList() {
   const q = $('flt').value.trim().toLocaleLowerCase('tr-TR');
   const list = D.tenants.filter(x => !q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q)).sort((a, b) => b.created - a.created);
-  $('list').innerHTML = list.map(x => `<tr><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${esc(x.owner)}${x.phone ? ' · ' + esc(x.phone) : ''}</span></td>
+  const orgName = o => { const h = D.tenants.find(t => t.org === o && t.owner); return h ? h.name : ''; };
+  $('list').innerHTML = list.map(x => `<tr><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : x.org ? 'Şube · ' + esc(orgName(x.org)) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}${x.org && x.owner ? ' · zincir (' + D.tenants.filter(t => t.org === x.org).length + ' şube)' : ''}</span></td>
     <td>${esc((D.plans[x.plan] || {}).name || x.plan)}</td><td>${stTag(x)}</td><td>${fmt(x.access.until || x.paidUntil || x.trialUntil)}</td>
     <td>${x.devices} <span style="color:var(--ok)">${x.online ? '● ' + x.online : ''}</span></td><td>${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
     <td><div class="acts"><button class="btn sm" onclick="editDialog('${x.id}')">Düzenle</button><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`).join('') || '<tr><td colspan="8" style="color:var(--mute);text-align:center;padding:24px">İşletme yok</td></tr>';
@@ -120,16 +161,19 @@ function editDialog(id) {
   <div class="row" style="margin-top:10px"><div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div><div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
   <div class="row" style="margin-top:10px"><div><label>Deneme bitişi</label><input id="e-trial" type="date" value="${d(x.trialUntil)}"></div><div><label>Ödeme bitişi</label><input id="e-paid" type="date" value="${d(x.paidUntil)}"></div></div>
   <div class="row" style="margin-top:10px"><div><label>Not</label><input id="e-note" value="${esc(x.note || '')}"></div></div>
+  ${x.org ? `<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;color:var(--soft)"><input type="checkbox" id="e-org" style="width:auto"> Paket, durum ve süreleri zincirin tüm şubelerine uygula</label>` : ''}
+  ${x.deletion ? `<p class="hint" style="color:var(--bad);margin-top:10px">KVKK silme talebi: ${fmt(x.deletion)} tarihinde silinecek. <button class="btn ghost sm" onclick="call('DELETE','/api/super/tenants/${id}/deletion').then(()=>{closeDlg();load()})">Talebi iptal et</button></p>` : ''}
+  ${x.consent ? `<p class="hint" style="margin-top:6px">Sözleşme/KVKK onayı: ${fmt(x.consent)}</p>` : ''}
   <div class="row" style="margin-top:16px"><button class="btn" onclick="saveT('${id}')">Kaydet</button>
     <button class="btn ghost" onclick="extend('${id}',30)">+30 gün</button><button class="btn ghost" onclick="extend('${id}',365)">+1 yıl</button>
     <button class="btn ghost" onclick="resetPw('${id}')">Şifre sıfırla</button><button class="btn danger" onclick="delT('${id}')">Sil</button></div>`);
 }
 const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
 async function saveT(id) {
-  try { await call('PUT', '/api/super/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value }); closeDlg(); toast('Kaydedildi'); load(); }
+  try { await call('PUT', '/api/super/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDlg(); toast('Kaydedildi'); load(); }
   catch (e) { toast(e.message, true); }
 }
-async function extend(id, days) { try { await call('PUT', '/api/super/tenants/' + id, { extendDays: days }); closeDlg(); toast(`${days} gün eklendi`); load(); } catch (e) { toast(e.message, true); } }
+async function extend(id, days) { try { await call('PUT', '/api/super/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDlg(); toast(`${days} gün eklendi`); load(); } catch (e) { toast(e.message, true); } }
 async function resetPw(id) {
   const pw = prompt('Yeni şifre (boş bırakırsanız rastgele üretilir):', ''); if (pw === null) return;
   try { const j = await call('POST', `/api/super/tenants/${id}/password`, { password: pw }); alert(`Kullanıcı: ${j.username}\nYeni şifre: ${j.password}`); } catch (e) { toast(e.message, true); }
@@ -141,7 +185,7 @@ async function delT(id) {
 }
 async function imp(id) { try { const j = await call('POST', `/api/super/tenants/${id}/impersonate`); location.href = j.next; } catch (e) { toast(e.message, true); } }
 async function saveSettings() {
-  const b = {}; for (const k of ['collect_key', 'collect_paid', 'tmdb_key', 'books_key', 'traffic_api']) b[k] = $('s-' + k).value;
+  const b = {}; for (const k of Object.keys(D.settings)) if ($('s-' + k) && !$('s-' + k).readOnly) b[k] = $('s-' + k).value;
   try { await call('PUT', '/api/super/settings', b); toast('Platform ayarları kaydedildi'); } catch (e) { toast(e.message, true); }
 }
 function pwDialog() {

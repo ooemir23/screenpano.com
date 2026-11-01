@@ -10,6 +10,8 @@ Mekânda **tek Android kutu** yeterli: kutu HDMI dağıtıcıyla tüm TV'lere ay
 
 | Bölüm | Adres | Kim kullanır |
 | --- | --- | --- |
+| Tanıtım sitesi | `/` | Ziyaretçiler (giriş yapmış kullanıcı panele yönlenir; `/?site` her zaman siteyi açar) |
+| KVKK, kullanım koşulları, gizlilik | `/kvkk`, `/kosullar`, `/gizlilik` | Herkes |
 | Giriş / ücretsiz deneme kaydı | `/login` | İşletmeler |
 | İşletme paneli | `/panel` | İşletme sahibi ve personeli |
 | TV ekranı | `/tv` | Android TV kutusu (APK) ya da tarayıcı |
@@ -27,7 +29,22 @@ Mekânda **tek Android kutu** yeterli: kutu HDMI dağıtıcıyla tüm TV'lere ay
 | Duyurular | Kampanya kartı, QR kodlar, Google yorumları |
 | Kutlamalar | Doğum günü (kişiler, saatler), resmî günler |
 | Bilgi Bandı | Haber, nöbetçi eczane, sinema, kitap, tarihte bugün, trafik |
-| Ayarlar | İşletme ve şehir · Cihazlar (kodla bağlama, kaldırma) · Kullanıcılar · Paket · Yedekler |
+| İstatistik | Günlük ekran süresi, içerik bazında oynatma sayısı ve süresi (7/30/90 gün) |
+| Ayarlar | İşletme ve şehir · Cihazlar (durum raporu, ekran görüntüsü, çevrimdışı uyarısı, e-posta) · Şubeler (geçiş, yeni şube, içerik kopyalama) · Kullanıcılar · Paket · Yedekler · Verilerim (KVKK: dışa aktarma, hesap silme) |
+
+**Yeni özellikler (v2.1)**
+
+- **Zamanlama:** her video, fotoğraf, afiş, kampanya kartı ve fiyat listesi kategorisi için gün, saat aralığı (gece yarısını aşabilir) ve tarih aralığı. TV kuralları kendi saatinde 30 saniyede bir yeniden değerlendirir; internet yokken de çalışır.
+- **Hazır içerikler:** 9 düzenlenebilir afiş şablonu (`public/posters.js`, TV ve panel ortak). Renkler temadan gelir, fotoğraf eklenebilir, çevirisi girilebilir. Medya sırasında `type: 'poster'` kaydı olarak durur.
+- **Durum izleme:** TV dakikada bir sürüm, çözünürlük, çalışma süresi, oynayan içerik, son hata ve önbellek bilgisini bildirir. 10 dk bağlantı yoksa panelde uyarı, işletmeye e-posta (SMTP), platforma webhook. Android 2.1 uygulaması ekran görüntüsü verir.
+- **Çoklu şube:** sahibin hesabına bağlı şubeler (`tenants.org_id`). Panelden şube açma, şubeler arası geçiş, düzen/renk/medya/fiyat/duyuru/dil kopyalama. TV'de kullanıcı adıyla girişte şube sorulur.
+- **Google yorumları** (Places API, platform anahtarı) ve **Instagram** (işletmenin uzun ömürlü erişim anahtarı; görseller indirilir, medya döngüsüne serpiştirilir).
+- **Çoklu dil:** fiyat listesi, duyuru metni ve afişler Türkçe + en çok 3 dilde sırayla döner (en, de, ru, ar, fr, es).
+- **Kullanım istatistiği:** `stats` tablosunda günlük toplamlar; kişisel veri yok, 400 günden eskisi silinir.
+- **R2 depolama:** `server/s3.js` bağımlılıksız S3 (SigV4) istemcisi; yüklemeler arka planda R2'ye taşınır, `/u/...` adresi aynı kalır.
+- **Çevrimdışı oynatma:** `public/sw.js` TV sayfasını ve medyayı önbelleğe alır (video ileri sarma için Range desteği); son durum cihazda saklanır, internet yokken kutu yeniden açılsa da ekran gelir.
+- **Platform yedeği:** her gece tüm veritabanı sıkıştırılıp `DATA_DIR/backups`'a (14 gün) ve R2 ayarlıysa R2'ye (60 gün) yazılır.
+- **KVKK:** kayıtta sözleşme ve aydınlatma onayı (sürümüyle saklanır), panelden veri indirme, 30 gün bekletmeli hesap silme, doğum günü eklerken rıza onayı. Metinler `server/legal.js`'te taslaktır; **avukata kontrol ettirin**.
 
 **Widget'lar** (24×24 ızgara, her biri bir kez): Medya oynatıcı, Logo, Saat, Hava ve piyasalar, Kayan bant, Duyuru metni, Görsel, QR kart · Pro: Maçlar ve bilgi sayfaları, Google yorumları, Fiyat tarifesi.
 
@@ -54,6 +71,16 @@ Ortam değişkenleri:
 | `TRIAL_DAYS` | 14 | |
 | `SESSION_SECRET` | (otomatik) | Verilmezse veritabanında üretilir |
 | `FFMPEG_PATH`, `CHROMIUM_PATH` | ffmpeg, chromium | Medya optimizasyonu ve trafik haritası |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | (boş) | Cloudflare R2. Verilince medya ve yedekler R2'ye gider |
+| `R2_PUBLIC_URL` | (boş) | R2 kovası herkese açık bir alan adına bağlıysa TV dosyayı oradan çeker (sunucu trafiği azalır). Boşsa sunucu aktarır |
+| `R2_KEEP_LOCAL` | false | `true` ise R2'ye gönderilen dosyanın yerel kopyası da tutulur |
+| `S3_ENDPOINT`, `S3_REGION` | (R2'den) | R2 yerine başka bir S3 uyumlu depo |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_SECURE` | (boş) | Çevrimdışı uyarı e-postaları |
+| `PUBLIC_URL` | (boş) | E-postalardaki panel bağlantısı için, örn. `https://screenpano.com` |
+| `ALERT_WEBHOOK` | (boş) | Platform uyarıları (süper yönetimden de girilebilir) |
+| `OFFLINE_ALERT_MIN` | 10 | Kaç dakika bağlantısızlıktan sonra uyarı |
+| `BACKUP_KEEP_LOCAL`, `BACKUP_KEEP_REMOTE` | 14, 60 | Platform yedeklerinin saklama süresi (gün) |
+| `GOOGLE_PLACES_KEY` | (boş) | Süper yönetimdeki anahtar boşsa kullanılır |
 
 Docker: `docker build -t screenpano . && docker run -p 3000:3000 -v /srv/screenpano:/data -e SUPER_PASS=... screenpano`. HTTPS için önüne Caddy/Nginx koyun (sunucu `X-Forwarded-*` başlıklarına güvenir).
 
@@ -99,8 +126,15 @@ server/
   state.js          bir ekrana giden tam durum (paket kısıtları burada)
   realtime.js       WebSocket: her bağlantı işletme+ekrana bağlı; yayınlar yalnız ilgili işletmeye
   media.js          ffmpeg kuyruğu, kota ölçümü
-  routes-*.js       auth, tv, admin (işletme), super
-public/  tv.html · panel.html + panel.js · login.html · super.html
+  routes-*.js       auth, tv, admin (işletme), ext (yeni panel API'leri), super
+  s3.js, storage.js R2/S3 istemcisi ve medya depolama katmanı
+  backup.js         gece platform yedeği (yerel + R2)
+  monitor.js        cihaz durum raporu, çevrimdışı uyarısı, e-posta/webhook
+  stats.js          kullanım istatistiği
+  social.js         Google yorumları, Instagram
+  sched.js          zamanlama kuralları
+  legal.js          KVKK, kullanım koşulları, gizlilik sayfaları
+public/  tv.html · panel.html + panel.js · login.html · super.html · site.html + site.css · posters.js · sw.js
 android/ genel WebView uygulaması
 tools/   import-legacy.js · cloudflare-traffic-worker.js
 ```
@@ -109,6 +143,7 @@ tools/   import-legacy.js · cloudflare-traffic-worker.js
 
 - **Lisanslar (satıştan önce):** maç verisi ESPN'in resmi olmayan API'sinden, sinema TMDB'den (ticari kullanım lisans ister), trafik haritası Yandex ekran görüntüsünden geliyor. Ticari satıştan önce lisanslı kaynağa geçilmeli.
 - **Ödeme:** iyzico/PayTR abonelik entegrasyonu yok; paket ve süreler şimdilik süper yönetimden elle yönetiliyor.
-- **Medya depolama:** işletme klasörlerinde yerel disk. Ölçek büyüyünce Cloudflare R2/S3'e taşınmalı.
-- **KVKK:** doğum günü isimleri ve yorumcu adları kişisel veri; hizmet sözleşmesi ve aydınlatma metni gerekli.
+- **KVKK metinleri** taslaktır; şirket bilgilerini süper yönetimden girin ve yayından önce avukata kontrol ettirin. VERBİS kaydı gerekip gerekmediğini kontrol edin.
+- **Instagram:** Meta, Instagram API kullanımı için uygulama incelemesi isteyebilir; işletmelerin anahtarı kendileri alması gerekir. Google Places API ücretlidir (aylık ücretsiz kotası var).
+- **Android 2.1** (ekran görüntüsü) henüz derlenmedi. Derleyip `public/app.apk`'ya koyduktan sonra `public/apk-version.json`'u 11 / 2.1 yapın; önce yapılırsa kutular aynı APK'yı tekrar tekrar güncellemeye çalışır.
 - `public/celebrate/*.jpg` görsellerinin telif durumu doğrulanmalı.

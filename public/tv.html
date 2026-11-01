@@ -260,6 +260,9 @@ html.lite #traffic::after{box-shadow:none}
 #menu button:focus{box-shadow:0 0 0 .4vh #fff}
 #menu .hint{margin-top:1.6vh;font-size:1.6vh;color:#888}
 /* kampanya kartı */
+#poster{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .9s ease-in-out;pointer-events:none}#poster.on{opacity:1}
+#langchip{position:absolute;top:.8vh;right:.8vw;font:700 1.2vh/1 var(--font),sans-serif;letter-spacing:.08em;padding:.45vh .6vw;border-radius:.6vh;background:var(--accent);color:var(--white);opacity:.85}
+#a-branches{display:grid;gap:1.2vh;margin-top:1vh}#a-branches button{font-size:2.2vh}
 #camp{position:absolute;inset:.6vh;z-index:7;border-radius:1.39vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity 1.4s ease-in-out;display:flex;align-items:center;justify-content:center;gap:4vw;padding:3vh 3vw;background:radial-gradient(ellipse 70% 70% at 30% 40%,var(--ad) 0%,#2a1b0f 60%,#1a110a 100%)}
 #camp.on{opacity:1}
 #camp .cl{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2vh}
@@ -421,6 +424,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
     <p>Telefonla QR kodu okutun, ya da panelde <b>Ayarlar → Cihazlar</b> bölümüne bu kodu yazın.</p></div>
 </div></div>
 <div id="guide"><i></i><i></i><i></i><i></i><b id="gtxt"></b></div>
+<script src="/posters.js"></script>
 <script>
 const els = [document.getElementById('v'), document.getElementById('v2')], img = document.getElementById('img');
 let ci = 0; const curV = () => els[ci], idleV = () => els[1 - ci];
@@ -467,7 +471,7 @@ function playTrailer(retry) {
   const m = trailerList[trailerIdx++ % trailerList.length];
   if (!retry) trailerFails = 0;
   trailerOn = true; clearTimeout(timer); els.forEach(v => v.pause());
-  trailerCur = m; trailerTry = 0;
+  trailerCur = m; trailerTry = 0; wsSend({ type: 'play', id: 'tr:' + String(m.id || m.title || 'x').replace(/[^\w-]/g, '').slice(0, 40) });
   showTrailer(m, (m.alts && m.alts[0]) || m.trailer);
 }
 function next() {
@@ -496,6 +500,7 @@ function showEl(el) { img.style.zIndex = '1'; els.forEach(e => { if (e === el) {
 function prepNext() {
   if (videos.length < 2) { prepared = { id: null }; return; }
   const n = videos[(idx + 1) % videos.length], el = idleV();
+  if (n.type === 'poster') { if (n.image) { const im = new Image(); im.src = n.image; } prepared = { id: null }; return; }
   if (n.type === 'image') { // sıradaki fotoğrafı önceden indir ve çöz: gösterilince anında çıkar
     if (window.__preUrl !== n.url) { window.__preUrl = n.url; const im = new Image(); im.src = n.url; window.__preImg = im; if (im.decode) im.decode().catch(() => {}); }
     prepared = { id: null }; return;
@@ -510,7 +515,16 @@ function play() {
   if (!videos.length || !MEDIA_ON) return;
   idx %= videos.length;
   const it = videos[idx];
+  notePlay(it);
   current = it.id;
+  if (it.type === 'poster') {
+    els.forEach(e => e.pause());
+    showPoster(it);
+    timer = setTimeout(next, (it.dur || imageSeconds) * 1000);
+    setTimeout(prepNext, 500);
+    return;
+  }
+  hidePoster();
   if (it.type === 'image') {
     els.forEach(e => e.pause());
     const showImg = () => { els.forEach(e => e.style.zIndex = '1'); img.style.zIndex = '2'; img.style.display = 'block'; img.src = it.url; const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (current === it.id) { img.style.opacity = '1'; cleanupLayers(img); } })); if (img.decode) img.decode().then(go, go); else go(); };
@@ -709,7 +723,7 @@ let reviews = [], revIdx = 0, revTimer;
 function showReview() {
   const el = document.getElementById('reviews');
   const r = reviews[revIdx % reviews.length];
-  el.innerHTML = `<div class="g"><b>Google</b><small>Yorumlar</small></div><div class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div><div class="q">“${esc(r.text)}”</div><div class="who">${esc(r.author)}</div>`;
+  el.innerHTML = `<div class="g"><b>Google</b><small>${GRATING ? String(GRATING.rating).replace('.', ',') + ' ★ · ' + GRATING.count + ' yorum' : 'Yorumlar'}</small></div><div class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div><div class="q">“${esc(r.text)}”</div><div class="who">${esc(r.author)}</div>`;
 }
 function setReviews(list) {
   const same = JSON.stringify(list) === JSON.stringify(reviews);
@@ -877,12 +891,11 @@ function setState(s) {
   trailerList = s.showTrailers !== false && s.movies ? s.movies.items.filter(m => m.trailer) : [];
   setCeleb(s.celebration);
   applySafe(s.safe || { L: s.safeInset, R: s.safeInset, T: s.safeInset, B: s.safeInset }, s.safeGuide);
-  const ids = s.videos.map(x => x.id).join();
-  const changed = ids !== videos.map(x => x.id).join();
   if ((s.fxMode || 'auto') !== window.__fx) { window.__fx = s.fxMode || 'auto'; window.__applyFx(); }
-  videos = s.videos; imageSeconds = s.imageSeconds || 10;
-  if (changed) { prepared = { id: null }; const k = videos.findIndex(x => x.id === current); idx = k >= 0 ? k : 0; if (k < 0) play(); }
-  if (current === null && videos.length) play();
+  imageSeconds = s.imageSeconds || 10; TZ = s.tz || TZ;
+  setLangs(s.langs, s.langSec);
+  ALLV = s.videos || []; applyVideos();
+  GRATING = s.googleRating || null;
   const infoSig = JSON.stringify([s.pharmacies, s.showPharmacy, s.onThisDay, s.showOnThisDay, s.news, s.showNews, s.books, s.showBooks, s.movies, s.showMovies]);
   if (infoSig !== window.__infoSig) { window.__infoSig = infoSig; pharmData = s.pharmacies; showPharm = s.showPharmacy !== false; otdData = s.onThisDay; showOtd = s.showOnThisDay !== false; newsData = s.news; showNews = s.showNews !== false; booksData = s.books; showBooks = s.showBooks !== false; moviesData = s.movies; showMovies = s.showMovies !== false; window.__forceRender = true; }
   if (s.mapAt !== mapAt) { const had = !!mapAt; mapAt = s.mapAt || null; if (!had !== !mapAt) { pagesDirty = true; window.__forceRender = true; } loadTraffic(); }
@@ -1173,7 +1186,7 @@ setInterval(() => {
 }, 5000);
 setInterval(() => {
   if (camp.showing || camp.due || !camp.list.length || (window.__celeb && document.querySelector('#cphoto.on'))) return;
-  for (const c of camp.list) {
+  for (const c of camp.list.filter(c => schedOk(c.sch))) {
     const since = Date.now() - (camp.last[c.id] || camp.started - (c.everyMin || 3) * 60000 + 25000); // ilk gösterim açılıştan ~25 sn sonra
     if (since >= (c.everyMin || 3) * 60000) { if (videos.length > 1) camp.due = c; else campShow(c); break; } // medya bitince gösterilir (tek/boş listede hemen)
   }
@@ -1369,8 +1382,10 @@ function fitWidgets() {
 function renderText() {
   const p = WPROPS.text || {}, el = $id('wtext');
   el.className = 'wbox al-' + (['left', 'center', 'right'].includes(p.align) ? p.align : 'center');
-  el.querySelector('h3').textContent = p.title || '';
-  el.querySelector('p').textContent = p.body || '';
+  const t = (p.i18n && p.i18n[LANG]) || {};
+  el.querySelector('h3').textContent = t.title || p.title || '';
+  el.querySelector('p').textContent = t.body || (t.title ? '' : p.body) || '';
+  el.dir = LANG === 'ar' ? 'rtl' : 'ltr'; el.lang = LANG;
 }
 function renderImage() {
   const p = WPROPS.image || {}, el = $id('wimage');
@@ -1407,14 +1422,22 @@ function setQrTile(list) {
 const menuW = { data: null, pages: [], idx: 0, ncol: 1, timer: null, sig: '' };
 const fmtPrice = (p, cur) => /^\d+([.,]\d+)?$/.test(String(p || '').trim()) ? `${p} ${cur || '₺'}` : String(p || '');
 const menuRow = (r, cur) => r.c !== undefined ? `<div class="mc">${esc(r.c)}</div>` : `<div class="mi"><div class="n">${esc(r.name)}${r.desc ? `<small>${esc(r.desc)}</small>` : ''}</div><i class="dots"></i><div class="p">${esc(fmtPrice(r.price, cur))}</div></div>`;
-function setMenu(m) { const sig = JSON.stringify(m || null); if (sig === menuW.sig) return; menuW.sig = sig; menuW.data = m; renderMenuW(true); }
+function setMenu(m) { const sig = JSON.stringify(m || null) + menuSchedSig(m); if (sig === menuW.sig) return; menuW.sig = sig; menuW.data = m; renderMenuW(true); }
 function renderMenuW(reset) {
   const box = $id('wmenu'), body = box.querySelector('.mb'), m = menuW.data;
-  box.querySelector('h3').textContent = (WPROPS.menu && WPROPS.menu.title) || (m && m.title) || 'Fiyat Listesi';
+  const wp = WPROPS.menu || {}, ti = (wp.i18n && wp.i18n[LANG] && wp.i18n[LANG].title) || (m && m.t && m.t[LANG]);
+  box.querySelector('h3').textContent = ti || wp.title || (m && m.title) || 'Fiyat Listesi';
+  body.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  box.lang = LANG; // büyük harf dönüşümü dile göre (TR: i→İ, EN: i→I)
   clearInterval(menuW.timer);
   if (!box.closest('#app')) return;
   const rows = [];
-  for (const c of (m && m.categories) || []) { if (c.name) rows.push({ c: c.name }); for (const i of c.items || []) rows.push(i); }
+  for (const c of (m && m.categories) || []) {
+    if (!schedOk(c.sch)) continue;
+    const cn = (c.t && c.t[LANG]) || c.name;
+    if (cn) rows.push({ c: cn });
+    for (const i of c.items || []) { const t = (i.t && i.t[LANG]) || {}; rows.push({ name: t.name || i.name, desc: t.desc || (t.name ? '' : i.desc), price: i.off ? (LANG === 'tr' ? 'Tükendi' : 'Sold out') : i.price, off: i.off }); }
+  }
   if (!rows.length) { body.innerHTML = '<div class="mempty">Panelde Fiyat Listesi bölümünden ürün ekleyin.</div>'; box.querySelector('.pg').textContent = ''; return; }
   const W = body.clientWidth, H = body.clientHeight, gap = innerWidth * 0.02;
   const ncol = W > innerWidth * 0.42 ? (W > innerWidth * 0.75 ? 3 : 2) : 1, colW = (W - gap * (ncol - 1)) / ncol;
@@ -1496,8 +1519,16 @@ async function doLogin() {
   const u = $id('a-user').value.trim(), p = $id('a-pass').value;
   if (!u || !p) return authErr('Kullanıcı adı ve şifre girin');
   $id('a-go').textContent = 'Giriş yapılıyor…';
-  try { const j = await jpost('/api/tv/login', { username: u, password: p }); finishAuth(j.deviceToken); }
-  catch (e) { authErr(e.message); }
+  try {
+    const j = await jpost('/api/tv/login', { username: u, password: p, branch: authS.branch || '' });
+    if (j.choose) { // birden çok şube: hangisi?
+      let box = $id('a-branches'); if (!box) { box = document.createElement('div'); box.id = 'a-branches'; $id('a-step1').appendChild(box); }
+      box.innerHTML = '<p class="sub" style="margin:1vh 0 0">Bu ekran hangi şubede?</p>' + j.choose.map(b => `<button type="button" data-id="${esc(b.id)}">${esc(b.name)}</button>`).join('');
+      box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { authS.branch = b.dataset.id; doLogin(); }));
+      box.querySelector('button').focus();
+    } else { authS.branch = ''; finishAuth(j.deviceToken); }
+  }
+  catch (e) { authErr(e.message); authS.branch = ''; }
   $id('a-go').textContent = 'Giriş yap';
 }
 $id('a-go').addEventListener('click', doLogin);
@@ -1522,12 +1553,15 @@ function connect() {
   if (!PREVIEW && !tok) return showAuth();
   const qs = PREVIEW ? 'preview=' + encodeURIComponent(PREVIEW) : 'device=' + encodeURIComponent(tok);
   const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?' + qs);
+  window.__ws = ws;
   let authFail = false;
+  ws.onopen = () => { if (!PREVIEW) setTimeout(sendStatus, 3000); };
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.type === 'auth') { authFail = true; if (!PREVIEW) { tokenSet(''); showAuth(); } else { document.body.innerHTML = '<p style="color:#aaa;font:600 3vh sans-serif;padding:5vh">Önizleme için panele giriş yapın.</p>'; } return; }
     if (m.type === 'version') { if (m.now) window.__srvOff = m.now - Date.now(); if (window.__build && window.__build !== m.build) location.reload(); window.__build = m.build; }
-    else if (m.type === 'state') setState(m.state);
+    else if (m.type === 'state') { setState(m.state); saveState(m.state); }
+    else if (m.type === 'snap') sendSnap();
     else if (m.type === 'reload') location.reload();
     else if (m.type === 'rates') setRates(m.rates);
     else if (m.type === 'weather') setWeather(m.weather);
@@ -1539,5 +1573,129 @@ function connect() {
   };
   ws.onclose = () => { if (!authFail) setTimeout(connect, 3000); };
 }
+// =====================================================================
+// Zamanlama, hazır afişler, çoklu dil, kullanım istatistiği, durum raporu ve çevrimdışı önbellek
+// =====================================================================
+let ALLV = [], TZ = 'Europe/Istanbul', LANGS = ['tr'], LANG = 'tr', LANG_I = 0, LANG_SEC = 12, langTimer = null, GRATING = null;
+const BOOT = Date.now(), ERR = { n: 0, last: '' };
+addEventListener('error', e => { ERR.n++; ERR.last = String(e.message || e.type).slice(0, 180); });
+addEventListener('unhandledrejection', e => { ERR.n++; ERR.last = String((e.reason && e.reason.message) || e.reason).slice(0, 180); });
+const wsSend = o => { try { if (!PREVIEW && window.__ws && window.__ws.readyState === 1) window.__ws.send(JSON.stringify(o)); } catch (e) {} };
+
+// zamanlama kuralı: { days:[1..7], from, to, start, end } (sunucudaki sched.js ile aynı)
+function nowParts() {
+  const d = new Date(Date.now() + (window.__srvOff || 0));
+  const p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hour12: false }).formatToParts(d);
+  const g = t => (p.find(x => x.type === t) || {}).value;
+  return { ymd: `${g('year')}-${g('month')}-${g('day')}`, hm: `${g('hour') === '24' ? '00' : g('hour')}:${g('minute')}`, dow: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(g('weekday')) + 1 };
+}
+function schedOk(s) {
+  if (!s) return true;
+  const n = nowParts();
+  if (s.start && n.ymd < s.start) return false;
+  if (s.end && n.ymd > s.end) return false;
+  if (s.from && s.to) {
+    const inside = s.from < s.to ? n.hm >= s.from && n.hm < s.to : n.hm >= s.from || n.hm < s.to;
+    if (!inside) return false;
+    const dow = s.from > s.to && n.hm < s.to ? (n.dow + 5) % 7 + 1 : n.dow;
+    if (s.days && !s.days.includes(dow)) return false;
+  } else if (s.days && !s.days.includes(n.dow)) return false;
+  return true;
+}
+let vSig = '';
+function applyVideos() {
+  const list = ALLV.filter(x => schedOk(x.sch)), sig = JSON.stringify(list);
+  if (sig === vSig && (current !== null || !list.length)) return;
+  const curOld = videos.find(x => x.id === current), curNew = list.find(x => x.id === current);
+  vSig = sig; videos = list;
+  if (!videos.length) { clearTimeout(timer); current = null; els.forEach(v => v.pause()); hidePoster(); img.style.opacity = '0'; return; }
+  prepared = { id: null };
+  const k = videos.findIndex(x => x.id === current); idx = k >= 0 ? k : 0;
+  if (k < 0 || current === null) play();
+  else if (curNew && curNew.type === 'poster' && JSON.stringify(curOld) !== JSON.stringify(curNew)) showPoster(curNew); // afiş metni değişti
+}
+const menuSchedSig = m => ((m && m.categories) || []).map(c => (schedOk(c.sch) ? 1 : 0)).join('');
+setInterval(() => { // dakikada iki kez: zamanı gelen/biten içerik
+  applyVideos();
+  if (menuW.data) { const sig = JSON.stringify(menuW.data) + menuSchedSig(menuW.data); if (sig !== menuW.sig) { menuW.sig = sig; renderMenuW(true); } }
+}, 30000);
+
+// ---- hazır afişler ----
+const posterEl = (() => { const e = document.createElement('div'); e.id = 'poster'; $id('frame').appendChild(e); return e; })();
+let posterCur = null;
+function showPoster(it) {
+  posterCur = it;
+  posterEl.innerHTML = window.SPPoster ? SPPoster.html(it, LANG) : '';
+  if (posterEl.firstChild) SPPoster.fit(posterEl.firstChild);
+  requestAnimationFrame(() => posterEl.classList.add('on'));
+}
+function hidePoster() { if (!posterCur) return; posterCur = null; posterEl.classList.remove('on'); setTimeout(() => { if (!posterCur) posterEl.innerHTML = ''; }, 1000); }
+addEventListener('resize', () => { if (posterEl.firstChild) SPPoster.fit(posterEl.firstChild); });
+
+// ---- çoklu dil: fiyat listesi, duyuru metni ve afişler sırayla dillerde döner ----
+function setLangs(list, sec) {
+  const l = Array.isArray(list) && list.length ? list : ['tr'], k = (sec || 12);
+  if (l.join() === LANGS.join() && k === LANG_SEC) return;
+  LANGS = l; LANG_SEC = k; LANG_I = 0; LANG = 'tr'; clearInterval(langTimer);
+  if (LANGS.length > 1) langTimer = setInterval(nextLang, LANG_SEC * 1000);
+  applyLang();
+}
+function nextLang() { LANG_I = (LANG_I + 1) % LANGS.length; LANG = LANGS[LANG_I]; applyLang(); }
+function applyLang() {
+  renderText();
+  if (menuW.data) { const keep = menuW.idx; renderMenuW(false); menuW.idx = keep; }
+  if (posterCur) { posterEl.innerHTML = SPPoster.html(posterCur, LANG); SPPoster.fit(posterEl.firstChild); }
+  let chip = $id('langchip'); const box = $id('wmenu');
+  if (LANGS.length > 1 && box) { if (!chip) { chip = document.createElement('span'); chip.id = 'langchip'; box.appendChild(chip); } chip.textContent = LANG.toUpperCase(); }
+  else if (chip) chip.remove();
+}
+
+// ---- kullanım istatistiği: biten içerik sunucuya bildirilir ----
+let playRec = null;
+function notePlay(it) {
+  if (playRec) wsSend({ type: 'play', id: playRec.id, sec: Math.round((Date.now() - playRec.at) / 1000) });
+  playRec = it ? { id: it.id, at: Date.now() } : null;
+}
+
+// ---- uzaktan durum izleme ----
+let CACHE = { cached: 0, total: 0, bytes: 0 };
+function sendStatus() {
+  const n = window.__N, it = videos.find(x => x.id === current);
+  wsSend({
+    type: 'status', app: n && n.versionName ? n.versionName() : 'tarayıcı', build: window.__build || '',
+    screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
+    playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
+    cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,
+    mem: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0,
+  });
+}
+setInterval(sendStatus, 60000);
+function sendSnap() {
+  const n = window.__N;
+  if (n && n.snapshot) { setTimeout(() => { try { const d = n.snapshot(); if (d) wsSend({ type: 'snap', data: d }); } catch (e) {} }, 50); }
+}
+
+// ---- çevrimdışı: son durum cihazda saklanır, medya service worker önbelleğine indirilir ----
+function saveState(s) {
+  if (PREVIEW) return;
+  try { localStorage.setItem('lastState', JSON.stringify(s)); } catch (e) {}
+  prefetchMedia(s);
+}
+function prefetchMedia(s) {
+  if (!navigator.serviceWorker || !navigator.serviceWorker.controller || !s || s.blocked) return;
+  const urls = new Set();
+  for (const v of s.videos || []) { if (v.url) urls.add(v.url); if (v.image) urls.add(v.image); }
+  if (s.brand && s.brand.logo) urls.add(s.brand.logo);
+  const im = (s.layout && s.layout.widgets || []).find(w => w.type === 'image'); if (im && im.props && im.props.url) urls.add(im.props.url);
+  navigator.serviceWorker.controller.postMessage({ type: 'prefetch', urls: [...urls].filter(u => u.startsWith('/u/')) });
+}
+if (!PREVIEW && 'serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.)/.test(location.hostname))) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(e => { ERR.last = 'sw: ' + e.message; });
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'cache') CACHE = e.data; });
+  navigator.serviceWorker.addEventListener('controllerchange', () => { try { prefetchMedia(JSON.parse(localStorage.getItem('lastState') || 'null')); } catch (e) {} });
+}
+// açılışta son durumu hemen göster: internet yoksa da ekran boş kalmaz
+if (!PREVIEW && tokenGet()) { try { const last = JSON.parse(localStorage.getItem('lastState') || 'null'); if (last) setState(last); } catch (e) {} }
+
 connect();
 </script></body></html>
