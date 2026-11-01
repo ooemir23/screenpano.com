@@ -123,7 +123,8 @@ SECTIONS.design = {
   html() {
     const sub = SUB.design || 'layout';
     let h = head('Tasarım', 'Ekranınızın düzeni, renkleri, logosu ve TV ayarları. Kaydedince TV anında güncellenir.',
-      sub === 'layout' ? `<button class="btn g" onclick="undoL()">↶ Geri al</button><button class="btn" onclick="saveL()">Düzeni kaydet</button>` : '')
+      (sub === 'layout' ? `<button class="btn g" onclick="undoL()">↶ Geri al</button><button class="btn" onclick="saveL()">Düzeni kaydet</button>` : '')
+      + `<button class="btn g" onclick="resetDesign('${sub}')">⟲ Varsayılana sıfırla</button>`)
       + tabs('design', [['layout', 'Düzen'], ['colors', 'Renk ve logo'], ['tv', 'TV ayarları']]);
     if (sub === 'layout') {
       const T = S.cat.templates;
@@ -243,6 +244,14 @@ function dragSetup() {
 async function upAsset(inp) {
   const f = inp.files[0]; if (!f) return; const fd = new FormData(); fd.append('file', f);
   try { const j = await req('POST', '/assets', fd); setP('url', j.url); S.db = await req('GET', '/db'); drawProps(); toast('Resim yüklendi; düzeni kaydetmeyi unutmayın'); } catch (e) { toast(e.message, true); }
+}
+async function resetDesign(sub) {
+  const what = { layout: 'Düzen (widget yerleşimi ve ayarları)', colors: 'Renkler ve yazı tipi (logonuz kalır)', tv: 'TV ayarları (kenar payı, efekt)' }[sub];
+  if (!confirm(what + ' varsayılana döndürülsün mü? Bu işlem geri alınamaz.')) return;
+  if (await act('POST', '/design/reset', { scope: sub }, 'Varsayılana döndürüldü, TV güncellendi', false)) {
+    [S.me, S.db, S.scr] = await Promise.all([req('GET', '/me'), req('GET', '/db'), req('GET', '/screen')]);
+    EDIT.dirty = false; EDIT.layout = null; drawBrand(); render(true);
+  }
 }
 async function pickTheme(k) { const v = S.cat.themes[k]; await saveTheme({ bg: v.bg, accent: v.accent, accent2: v.accent2, text: v.text, font: v.font, plate: !!(S.me.tenant.theme || {}).plate }); }
 async function saveTheme(body) {

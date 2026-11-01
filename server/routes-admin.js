@@ -104,6 +104,21 @@ r.delete('/users/:id', ownerOnly, (req, res) => {
 
 // ================= GÖRÜNÜM: tema, logo, katalog =================
 r.get('/catalog', (req, res) => res.json({ cols: W.COLS, rows: W.ROWS, widgets: W.WIDGETS, templates: W.TEMPLATES, themes: W.THEMES, fonts: W.FONTS, pro: plan(req.t).pro }));
+// Tasarımı varsayılana döndür: layout (düzen), colors (renk/tema; logo kalır), tv (kenar payı, efekt), all
+r.post('/design/reset', (req, res) => {
+  const t = req.t, scope = String((req.body || {}).scope || 'all'), all = scope === 'all';
+  if (!['layout', 'colors', 'tv', 'all'].includes(scope)) return res.status(400).json({ error: 'Geçersiz kapsam' });
+  if (all || scope === 'layout') {
+    const l = W.cleanLayout(W.defaultLayout(plan(t).pro ? 'spor' : 'temel'));
+    store.updateScreen(tenants.mainScreen(t).id, t.id, { layout: JSON.stringify(l) });
+  }
+  if (all || scope === 'colors') { const { name, ...th } = W.THEMES.kahve; t.db.theme = W.cleanTheme(th, {}); }
+  if (all || scope === 'tv') {
+    t.db.safeInset = 0; t.db.safeGuide = false; t.db.fxMode = 'auto';
+    for (const k of ['L', 'R', 'T', 'B']) delete t.db['safe' + k];
+  }
+  changed(t); res.json({ ok: true });
+});
 r.put('/theme', (req, res) => { req.t.db.theme = W.cleanTheme(req.body || {}, req.t.db.theme); changed(req.t); res.json({ ok: true, theme: req.t.db.theme }); });
 r.post('/logo', quota, upload.single('file'), (req, res) => {
   const f = req.file, t = req.t;
