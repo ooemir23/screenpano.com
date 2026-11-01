@@ -59,10 +59,37 @@ app.get('/u/:tid/:file', (req, res) => {
   res.set('Cache-Control', 'public, max-age=31536000, immutable');
   res.sendFile(f);
 });
+function makeApkFilename(name) {
+  if (!name) return `${config.BRAND}.apk`;
+  const tr = { 'ç':'c', 'Ç':'C', 'ğ':'g', 'Ğ':'G', 'ı':'i', 'I':'I', 'İ':'I', 'ö':'o', 'Ö':'O', 'ş':'s', 'Ş':'S', 'ü':'u', 'Ü':'U' };
+  let clean = String(name).replace(/[çÇğĞıIİöÖşŞüÜ]/g, m => tr[m] || m);
+  clean = clean.replace(/[^a-zA-Z0-9]/g, '');
+  if (!clean) return `${config.BRAND}.apk`;
+  if (!/tv$/i.test(clean)) clean += 'TV';
+  return `${clean}.apk`;
+}
+
 app.get('/app.apk', (req, res) => {
   const f = path.join(config.PUBLIC_DIR, 'app.apk');
   if (!fs.existsSync(f)) return res.status(404).send('APK henüz yüklenmedi');
-  res.set('Cache-Control', 'public, max-age=300'); res.download(f, `${config.BRAND}.apk`);
+
+  let bizName = req.query.name || req.query.biz || '';
+  if (!bizName) {
+    const u = auth.sessionUser(req);
+    if (u) {
+      const tid = u.imp || u.tenant_id;
+      if (tid) {
+        const t = tenants.get(tid);
+        if (t && t.name) bizName = t.name;
+      }
+    }
+  }
+
+  const downloadName = makeApkFilename(bizName);
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.download(f, downloadName);
 });
 app.use(express.static(config.PUBLIC_DIR, {
   index: false,
