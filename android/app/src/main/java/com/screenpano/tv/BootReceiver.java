@@ -1,4 +1,4 @@
-package com.kafetv.tv;
+package com.screenpano.tv;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

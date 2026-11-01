@@ -1,10 +1,10 @@
-# KafeTV — kafeler için dijital ekran platformu
+# ScreenPano — kafeler için dijital ekran platformu
 
 BomeraTV'nin çok işletmeli (SaaS) sürümü. Tek sunucu, tek APK: her işletme kendi kullanıcı adı ve şifresiyle girer; medyasını, düzenini, renklerini ve logosunu yönetir.
 
 Mekânda **tek Android kutu** yeterli: kutu HDMI dağıtıcıyla tüm TV'lere aynı görüntüyü verir. Bu yüzden her işletmenin tek bir ekran düzeni vardır; paketler kutu (cihaz) sayısıyla sınırlanır.
 
-> Ürün adı geçicidir: `BRAND_NAME` ortam değişkeni ve APK'da `-PAPP_NAME` ile değişir.
+> Ürün adı ScreenPano'dur (`screenpano.com`); `BRAND_NAME` ortam değişkeni ve APK'da `-PAPP_NAME` ile değiştirilebilir.
 
 ## Neler var
 
@@ -48,14 +48,14 @@ Ortam değişkenleri:
 | --- | --- | --- |
 | `PORT` | 3000 | |
 | `DATA_DIR` | `./data` | Veritabanı (`platform.db`), işletme klasörleri, önbellek. Bulutta kalıcı diske bağlayın. |
-| `BRAND_NAME` | KafeTV | Ürün adı |
+| `BRAND_NAME` | ScreenPano | Ürün adı |
 | `SUPER_USER` / `SUPER_PASS` | admin / (rastgele) | Yalnızca ilk açılışta kullanılır |
 | `ALLOW_SIGNUP` | true | `false` ise yalnız süper yönetim işletme açar |
 | `TRIAL_DAYS` | 14 | |
 | `SESSION_SECRET` | (otomatik) | Verilmezse veritabanında üretilir |
 | `FFMPEG_PATH`, `CHROMIUM_PATH` | ffmpeg, chromium | Medya optimizasyonu ve trafik haritası |
 
-Docker: `docker build -t kafetv . && docker run -p 3000:3000 -v /srv/kafetv:/data -e SUPER_PASS=... kafetv`. HTTPS için önüne Caddy/Nginx koyun (sunucu `X-Forwarded-*` başlıklarına güvenir).
+Docker: `docker build -t screenpano . && docker run -p 3000:3000 -v /srv/screenpano:/data -e SUPER_PASS=... screenpano`. HTTPS için önüne Caddy/Nginx koyun (sunucu `X-Forwarded-*` başlıklarına güvenir).
 
 ## İlk kurulum adımları
 
@@ -78,10 +78,10 @@ Videolar, fotoğraflar, yorumlar, doğum günleri, QR'lar, kampanyalar, lig seç
 
 ```bash
 cd android
-./gradlew assembleRelease -PBASE_URL=https://ekran.alanadiniz.com -PAPP_NAME="KafeTV"
+./gradlew assembleRelease -PBASE_URL=https://app.screenpano.com -PAPP_NAME="ScreenPano"
 ```
 
-- Paket adı `com.kafetv.tv` (değiştirmek için `app/build.gradle` → `applicationId`).
+- Paket adı `com.screenpano.tv` (değiştirmek için `app/build.gradle` → `applicationId`).
 - Release imzası için `android/keystore.properties` oluşturun (dosyadaki açıklamaya bakın). **Anahtarı kaybetmeyin**: güncellemeler aynı anahtarla imzalanmalı.
 - Uygulama açılınca `/tv` gelir: kullanıcı adı/şifre ile giriş, ya da TV'deki 6 haneli kodu/QR'ı telefondan panele (Ayarlar → Cihazlar) girerek eşleştirme. Cihaza verilen token uygulamanın kalıcı deposunda saklanır, şifre saklanmaz.
 - Eski Bomera APK'sı farklı paket adı ve debug anahtarıyla imzalı olduğu için yeni APK üzerine kurulmaz; kutulara yeni APK'yı bir kez elle kurun (eski uygulamayı kaldırabilirsiniz). Eski APK kök adresi açarsa sunucu onu `/tv`'ye yönlendirir.

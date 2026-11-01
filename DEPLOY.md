@@ -33,11 +33,11 @@ Docker imajı yaklaşık 1,5 GB tutar (ffmpeg ve Chromium dahil).
 2. Dokploy → Settings → Git → GitHub'ı bağlayın.
 
 **B) Zip ile yükleme**
-`kafetv-deploy.zip` dosyasını kullanın (Dokploy'da kaynak türü olarak "Drop" seçeneği varsa zip'i oraya bırakın).
+`screenpano-deploy.zip` dosyasını kullanın (Dokploy'da kaynak türü olarak "Drop" seçeneği varsa zip'i oraya bırakın).
 
 ## 3. Uygulamayı oluşturun
 
-1. Dokploy → **Projects → Create Project** → ad: `KafeTV`.
+1. Dokploy → **Projects → Create Project** → ad: `ScreenPano`.
 2. Proje içinde **Create Service → Application**.
 3. **Provider**: GitHub (depo ve `main` dalı) ya da Drop (zip).
 4. **Build Type**: `Dockerfile`, Dockerfile yolu: `./Dockerfile`.
@@ -46,7 +46,7 @@ Docker imajı yaklaşık 1,5 GB tutar (ffmpeg ve Chromium dahil).
 ```env
 SUPER_PASS=en-az-12-karakterli-guclu-bir-sifre
 SESSION_SECRET=buraya-uzun-rastgele-bir-metin-yazin
-BRAND_NAME=KafeTV
+BRAND_NAME=ScreenPano
 TZ_NAME=Europe/Istanbul
 PORT=3000
 ```
@@ -54,18 +54,18 @@ PORT=3000
 `SESSION_SECRET` için sunucuda `openssl rand -hex 32` çıktısını kullanabilirsiniz. `SUPER_PASS` yalnızca ilk açılışta süper yöneticiyi oluştururken kullanılır.
 
 6. **Advanced → Volumes (Mounts)** → **Volume Mount** ekleyin:
-   - Volume adı: `kafetv-data`
+   - Volume adı: `screenpano-data`
    - Mount path: `/data`
 
    **Bu adımı atlamayın**: veritabanı, müşteri videoları ve yedekler `/data`'dadır. Volume yoksa her yeniden yüklemede hepsi silinir.
 
 7. **Domains** sekmesi → **Add Domain**:
-   - Host: alan adınız (örn. `ekranza.com` ya da `app.ekranza.com`). Alan adınız yoksa Dokploy'un verdiği ücretsiz test adresini kullanabilirsiniz.
+   - Host: alan adınız (örn. `screenpano.com` ya da `app.screenpano.com`). Alan adınız yoksa Dokploy'un verdiği ücretsiz test adresini kullanabilirsiniz.
    - Container Port: `3000`
    - HTTPS: açık, Certificate: Let's Encrypt
    - Alan adınızın DNS'inde bir **A kaydı** oluşturup sunucu IP'nize yönlendirin.
 
-8. **Deploy**'a basın. Logs sekmesinde `KafeTV çalışıyor: http://localhost:3000` satırını görünce hazırdır.
+8. **Deploy**'a basın. Logs sekmesinde `ScreenPano çalışıyor: http://localhost:3000` satırını görünce hazırdır.
 
 ## 4. İlk giriş
 
@@ -79,7 +79,7 @@ Eski sunucudaki `data` klasörünü (içinde `db.json` ve `uploads/`) yeni sunuc
 
 ```bash
 # konteyner adını bulun
-docker ps --format '{{.Names}}' | grep -i kafetv
+docker ps --format '{{.Names}}' | grep -i screenpano
 # eski veriyi konteynere kopyalayın
 docker cp /root/eski-data <konteyner-adi>:/data/legacy
 # aktarın
@@ -95,7 +95,7 @@ APK'yı kendi alan adınızla derleyin:
 
 ```bash
 cd android
-./gradlew assembleRelease -PBASE_URL=https://alanadiniz -PAPP_NAME="KafeTV"
+./gradlew assembleRelease -PBASE_URL=https://alanadiniz -PAPP_NAME="ScreenPano"
 ```
 
 Çıkan APK'yı `public/app.apk` olarak projeye koyup yeniden deploy edin; panelde "Android uygulaması (APK)" bağlantısı bu dosyayı indirir. Sürüm yükselttiğinizde `public/apk-version.json`'u da güncelleyin.
@@ -103,4 +103,4 @@ cd android
 ## Güncelleme ve yedek
 
 - **Güncelleme:** GitHub'a push → Dokploy'da Deploy (ya da otomatik deploy'u açın). `/data` volume'ü korunur.
-- **Yedek:** Uygulama her işletmenin ayarlarını her gün yedekler ama bunlar da aynı diskte durur. Dokploy → Volume Backups ile `kafetv-data` volume'ünü düzenli olarak dışarıya (S3/R2) yedekleyin.
+- **Yedek:** Uygulama her işletmenin ayarlarını her gün yedekler ama bunlar da aynı diskte durur. Dokploy → Volume Backups ile `screenpano-data` volume'ünü düzenli olarak dışarıya (S3/R2) yedekleyin.

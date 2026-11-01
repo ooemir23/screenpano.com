@@ -3,9 +3,9 @@ plugins {
 }
 
 // Tek APK, tüm işletmeler. Sunucu adresi ve uygulama adı derlerken verilir:
-//   ./gradlew assembleRelease -PBASE_URL=https://ekran.alanadiniz.com -PAPP_NAME="KafeTV"
+//   ./gradlew assembleRelease -PBASE_URL=https://app.screenpano.com -PAPP_NAME="ScreenPano"
 def baseUrl = (project.findProperty('BASE_URL') ?: 'https://ekran.example.com').toString()
-def appName = (project.findProperty('APP_NAME') ?: 'KafeTV').toString()
+def appName = (project.findProperty('APP_NAME') ?: 'ScreenPano').toString()
 
 // Release imzası: android/keystore.properties (git'e eklemeyin)
 //   storeFile=../release.jks  storePassword=...  keyAlias=tv  keyPassword=...
@@ -14,11 +14,11 @@ def ks = new Properties()
 if (ksFile.exists()) ksFile.withInputStream { ks.load(it) }
 
 android {
-    namespace 'com.kafetv.tv'
+    namespace 'com.screenpano.tv'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'com.kafetv.tv'
+        applicationId 'com.screenpano.tv'
         minSdk 21
         targetSdk 34
         versionCode 10

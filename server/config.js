@@ -11,7 +11,7 @@ module.exports = {
   PORT: Number(process.env.PORT) || 3000,
   TZ: process.env.TZ_NAME || 'Europe/Istanbul',
   // Ürün adı: TV menüsünde, panelde ve Başlangıç paketindeki köşe ibaresinde görünür
-  BRAND: process.env.BRAND_NAME || 'KafeTV',
+  BRAND: process.env.BRAND_NAME || 'ScreenPano',
   // Süper yönetici: ilk açılışta yoksa oluşturulur (şifreyi mutlaka değiştirin)
   SUPER_USER: process.env.SUPER_USER || 'admin',
   SUPER_PASS: process.env.SUPER_PASS || '',
