@@ -67,6 +67,7 @@ Ortam değişkenleri:
 | `DATA_DIR` | `./data` | Veritabanı (`platform.db`), işletme klasörleri, önbellek. Bulutta kalıcı diske bağlayın. |
 | `BRAND_NAME` | ScreenPano | Ürün adı |
 | `SUPER_USER` / `SUPER_PASS` | admin / (rastgele) | Yalnızca ilk açılışta kullanılır |
+| `LOGIN_LIMIT` | (kapalı) | `on` ise aynı IP'den 10 dakikada 12 hatalı giriş/kayıttan sonra 10 dakika bekletilir |
 | `ALLOW_SIGNUP` | true | `false` ise yalnız süper yönetim işletme açar |
 | `TRIAL_DAYS` | 14 | |
 | `SESSION_SECRET` | (otomatik) | Verilmezse veritabanında üretilir |

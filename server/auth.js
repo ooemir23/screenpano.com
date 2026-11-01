@@ -70,11 +70,15 @@ const hashToken = t => crypto.createHash('sha256').update(String(t)).digest('hex
 
 // Basit deneme sınırı: aynı IP'den 10 dakikada en çok 12 hatalı giriş
 const fails = new Map();
+// LOGIN_LIMIT=on ile açılır (şimdilik varsayılan kapalı)
+const LIMIT_ON = process.env.LOGIN_LIMIT === 'on';
 function tooMany(ip) {
+  if (!LIMIT_ON) return false;
   const r = fails.get(ip);
   return r && r.n >= 12 && Date.now() - r.at < 10 * 60 * 1000;
 }
 function noteFail(ip) {
+  if (!LIMIT_ON) return;
   const r = fails.get(ip);
   if (!r || Date.now() - r.at > 10 * 60 * 1000) fails.set(ip, { n: 1, at: Date.now() });
   else r.n++;
