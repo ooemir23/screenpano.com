@@ -8,3 +8,9 @@ keystore.properties
 *.keystore
 *.jks
 *.zip
+
+# Anahtar ve imzalama dosyaları asla depoya girmesin
+*.pem
+*.p12
+android/*.properties
+!android/gradle/wrapper/gradle-wrapper.properties

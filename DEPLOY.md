@@ -98,7 +98,7 @@ cd android
 ./gradlew assembleRelease -PBASE_URL=https://alanadiniz -PAPP_NAME="ScreenPano"
 ```
 
-Çıkan APK'yı `public/app.apk` olarak projeye koyup yeniden deploy edin; panelde "Android uygulaması (APK)" bağlantısı bu dosyayı indirir. Sürüm yükselttiğinizde `public/apk-version.json`'u da güncelleyin.
+Depodaki `public/app.apk` zaten `https://screenpano.com` adresine göre derlenmiştir; farklı bir alan adı kullanacaksanız yukarıdaki komutla yeniden derleyip `public/app.apk` dosyasını değiştirin. Sürüm yükselttiğinizde `public/apk-version.json`'u da güncelleyin.
 
 ## Güncelleme ve yedek
 
