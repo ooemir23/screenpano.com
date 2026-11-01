@@ -17,12 +17,16 @@ const cfg = {
   region: env.S3_REGION || 'auto',
   publicUrl: (env.R2_PUBLIC_URL || env.S3_PUBLIC_URL || '').replace(/\/+$/, ''),
 };
+// R2'de Access Key ID 32, Secret 64 karakterdir; ters girildiyse yer değiştir
+if (cfg.key.length === 64 && cfg.secret.length === 32) { const k = cfg.key; cfg.key = cfg.secret; cfg.secret = k; console.log('[R2] Access Key ID ile Secret ters girilmiş; düzeltildi.'); }
 // Yanlış girilmiş değeri adıyla bildir (değerin kendisi asla yazılmaz)
 const SAFE = /^[\x21-\x7e]+$/;
 const configError = !(cfg.endpoint && cfg.bucket && cfg.key && cfg.secret) ? ''
   : !/^[a-f0-9]{32}$/i.test(account) && !env.S3_ENDPOINT ? 'R2_ACCOUNT_ID 32 karakterlik hesap kimliği olmalı'
   : !SAFE.test(cfg.key) ? 'R2_ACCESS_KEY_ID geçersiz karakter içeriyor (boşluk, Türkçe harf ya da satır sonu olmamalı)'
   : !SAFE.test(cfg.secret) ? 'R2_SECRET_ACCESS_KEY geçersiz karakter içeriyor (boşluk, Türkçe harf ya da satır sonu olmamalı)'
+  : !env.S3_ENDPOINT && cfg.key.length !== 32 ? `R2_ACCESS_KEY_ID 32 karakter olmalı (şu an ${cfg.key.length}); Cloudflare'deki "Access Key ID" değerini girin`
+  : !env.S3_ENDPOINT && cfg.secret.length !== 64 ? `R2_SECRET_ACCESS_KEY 64 karakter olmalı (şu an ${cfg.secret.length}); "Secret Access Key" değerini girin, cfat_ ile başlayan token değerini değil`
   : !/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(cfg.bucket) ? 'R2_BUCKET geçersiz' : '';
 if (configError) console.error('[R2] ' + configError + ' — depo kapalı, dosyalar yerel diskte kalır.');
 const enabled = !!(cfg.endpoint && cfg.bucket && cfg.key && cfg.secret) && !configError;
