@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 180" width="100%" height="100%">
+  <defs>
+    <!-- Altın / Bronz Gradyanı -->
+    <linearGradient id="goldH" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F6C878"/>
+      <stop offset="40%" stop-color="#DE9640"/>
+      <stop offset="80%" stop-color="#B86C20"/>
+      <stop offset="100%" stop-color="#8F4E10"/>
+    </linearGradient>
+
+    <!-- TV ekranı koyu mat gövdesi -->
+    <linearGradient id="tvBodyH" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2c3031"/>
+      <stop offset="100%" stop-color="#181b1c"/>
+    </linearGradient>
+
+    <!-- Sağ üst kart turuncu/amber gradyanı -->
+    <linearGradient id="cardOrangeH" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EAA64D"/>
+      <stop offset="100%" stop-color="#BA6F20"/>
+    </linearGradient>
+
+    <!-- Kart gölgesi -->
+    <filter id="shadowH" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Yeşil LED Glow -->
+    <filter id="greenLedH" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- İKON BÖLÜMÜ (Sol: 15 -> 155) -->
+  <g transform="translate(15, 14)">
+    <!-- TV Ayakları -->
+    <path d="M 68 122 L 56 142" stroke="url(#goldH)" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M 94 122 L 106 142" stroke="url(#goldH)" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- TV Ekran Kasası -->
+    <rect x="12" y="16" width="138" height="106" rx="18" fill="url(#tvBodyH)" stroke="url(#goldH)" stroke-width="4.5" filter="url(#shadowH)"/>
+
+    <!-- Üst Orta Yeşil Canlı Yayın LED'i -->
+    <circle cx="81" cy="24" r="2.5" fill="#4ADE80" filter="url(#greenLedH)"/>
+
+    <!-- 1. Sol Büyük Kart: Video / Medya Alanı -->
+    <rect x="23" y="30" width="70" height="78" rx="9" fill="#121415" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    
+    <!-- Ortada Net Altın PLAY Butonu Üçgeni (Sıfır kahve!) -->
+    <polygon points="53,60 53,78 70,69" fill="url(#goldH)"/>
+
+    <!-- 2. Sağ Üst Kart: Anlık Bilgi / Duyuru (Turuncu/Karamel) -->
+    <rect x="98" y="30" width="40" height="36" rx="7" fill="url(#cardOrangeH)"/>
+    <line x1="105" y1="42" x2="131" y2="42" stroke="#1c1f20" stroke-width="2.6" stroke-linecap="round"/>
+    <line x1="105" y1="50" x2="124" y2="50" stroke="#1c1f20" stroke-width="2.6" stroke-linecap="round"/>
+
+    <!-- 3. Sağ Alt Kart: Liste / Fiyat / Menü / Pano -->
+    <rect x="98" y="71" width="40" height="37" rx="7" fill="#121415" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <!-- 1. Satır: Altın nokta + Beyaz çizgi -->
+    <circle cx="106" cy="82" r="2.2" fill="url(#goldH)"/>
+    <line x1="113" y1="82" x2="131" y2="82" stroke="#F1F5F9" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- 2. Satır: Altın nokta + Beyaz çizgi -->
+    <circle cx="106" cy="94" r="2.2" fill="url(#goldH)"/>
+    <line x1="113" y1="94" x2="128" y2="94" stroke="#F1F5F9" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+
+  <!-- YAZI BÖLÜMÜ: "screenpano" -->
+  <g transform="translate(195, 0)">
+    <!-- "screen" -->
+    <text x="0" y="102" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="400" font-size="62" letter-spacing="-1px" fill="#FFFFFF">
+      screen
+    </text>
+
+    <!-- "pano" (Altın / Karamel Gradyanlı) -->
+    <text x="218" y="102" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="900" font-size="62" letter-spacing="-0.5px" fill="url(#goldH)">
+      pano
+    </text>
+
+    <!-- Canlı Yayın Yeşil Noktası -->
+    <circle cx="410" cy="94" r="5" fill="#4ADE80" filter="url(#greenLedH)"/>
+
+    <!-- Alt Slogan: Tüm sektörler için dijital tabela & pano platformu -->
+    <text x="2" y="134" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="700" font-size="12.5" letter-spacing="5px" fill="#9AA0A0" text-transform="uppercase">
+      DİJİTAL EKRAN &amp; PANO YÖNETİMİ
+    </text>
+  </g>
+</svg>

@@ -2,7 +2,7 @@
 // Eski tek-kafe sürümünün verisini (data/db.json + data/uploads) yeni platforma bir işletme olarak aktarır.
 //
 // Kullanım (sunucu kapalıyken önerilir):
-//   node tools/import-legacy.js --data /eski/data --name "Bomera Lounge" --user bomera --pass "guclu-sifre" \
+//   node tools/import-legacy.js --data /eski/data --name "Örnek İşletme" --user isletme --pass "guclu-sifre" \
 //        [--plan pro] [--days 365] [--logo /eski/public/logo.png]
 //
 // Eski sürümde işletmenin girdiği API anahtarları (CollectAPI, TMDB, Google Books) ve trafik Worker ayarları

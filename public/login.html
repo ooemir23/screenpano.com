@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <title>Giriş</title>
 <style>
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F}
@@ -30,18 +31,19 @@ input:focus{border-color:var(--accent2)}
 </style></head><body>
 <div class="wrap">
   <div class="pitch">
-    <h1>Kafenizin ekranı, <span>tek panelden</span>.</h1>
-    <p>Video döngüsü, canlı maç skorları, döviz ve hava durumu, fiyat tarifesi, kampanyalar ve QR kodlar. Logonuz ve renklerinizle, dakikalar içinde.</p>
+    <h1>İşletmenizin ekranları, <span>tek panelden</span>.</h1>
+    <p>Video döngüsü, duyuru panoları, anlık bilgi kartları, dijital fiyat ve ürün tarifesi, kampanyalar ve QR kodlar. Logonuz ve kurumsal renklerinizle, dakikalar içinde.</p>
     <ul>
-      <li><b>⚽</b> Süper Lig ve Avrupa maçları Türkçe, gol anında ekranda</li>
-      <li><b>🎨</b> Widget'larla kendi düzeninizi kurun, renk ve logonuzu ekleyin</li>
-      <li><b>🧾</b> Fiyat Etiketi Yönetmeliği'ne uygun dijital fiyat tarifesi</li>
-      <li><b>📺</b> Tek Android kutu, HDMI ile mekândaki tüm TV'lere; kullanıcı adı ve şifreyle giriş</li>
+      <li><b>📺</b> Tek Android kutu, HDMI ile mekândaki tüm ekranlara; kullanıcı adı ve şifreyle giriş</li>
+      <li><b>🎨</b> Widget'larla kendi düzeninizi kurun, kurumsal renk ve logonuzu ekleyin</li>
+      <li><b>🧾</b> Mevzuata uygun dijital fiyat ve ürün tarifesi</li>
+      <li><b>⚡</b> Canlı bilgi bandı, haberler, hava durumu ve anlık bildirimler</li>
     </ul>
   </div>
   <div class="box">
-    <div class="brand" id="brand">…</div>
-    <div style="color:var(--mute);font-size:14px">İşletme paneli</div>
+    <div style="margin-bottom:16px"><img src="/logo.svg?v=3" alt="ScreenPano" style="height:46px;display:block"></div>
+    <div class="brand" id="brand" style="display:none">…</div>
+    <div style="color:var(--mute);font-size:14px;margin-bottom:6px">İşletme paneli</div>
     <div class="tabs" id="tabs"><button class="on" data-t="login">Giriş yap</button><button data-t="signup" id="tsignup">Ücretsiz dene</button></div>
     <form id="f-login">
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required>
@@ -49,7 +51,7 @@ input:focus{border-color:var(--accent2)}
       <button class="btn">Giriş yap</button>
     </form>
     <form id="f-signup" hidden>
-      <label>İşletme adı</label><input name="business" maxlength="80" required placeholder="örn. Bomera Lounge">
+      <label>İşletme adı</label><input name="business" maxlength="80" required placeholder="örn. Sahil Kafe">
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire">
       <label>Şifre (en az 8 karakter)</label><input name="password" type="password" autocomplete="new-password" minlength="8" required>
       <label>Telefon (isteğe bağlı)</label><input name="phone" type="tel" maxlength="30">

@@ -66,7 +66,10 @@ app.get('/app.apk', (req, res) => {
 });
 app.use(express.static(config.PUBLIC_DIR, {
   index: false,
-  setHeaders: (res, file) => { if (/\.(woff2|png|jpe?g|svg)$/.test(file)) res.setHeader('Cache-Control', 'public, max-age=2592000'); },
+  setHeaders: (res, file) => {
+    if (/\.(woff2|png|jpe?g)$/.test(file)) res.setHeader('Cache-Control', 'public, max-age=2592000');
+    else if (/\.svg$/.test(file)) res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+  },
 }));
 app.use('/api', (req, res) => res.status(404).json({ error: 'bulunamadı' }));
 

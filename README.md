@@ -1,10 +1,10 @@
-# ScreenPano — kafeler için dijital ekran platformu
+# ScreenPano — İşletmeler İçin Dijital Ekran ve Menü Panosu Platformu
 
-BomeraTV'nin çok işletmeli (SaaS) sürümü. Tek sunucu, tek APK: her işletme kendi kullanıcı adı ve şifresiyle girer; medyasını, düzenini, renklerini ve logosunu yönetir.
+Çok işletmeli (SaaS) dijital ekran ve menü panosu platformu. Tek sunucu, tek APK: her işletme kendi kullanıcı adı ve şifresiyle girer; medyasını, düzenini, renklerini ve logosunu yönetir.
 
 Mekânda **tek Android kutu** yeterli: kutu HDMI dağıtıcıyla tüm TV'lere aynı görüntüyü verir. Bu yüzden her işletmenin tek bir ekran düzeni vardır; paketler kutu (cihaz) sayısıyla sınırlanır.
 
-> Ürün adı ScreenPano'dur (`screenpano.com`); `BRAND_NAME` ortam değişkeni ve APK'da `-PAPP_NAME` ile değiştirilebilir.
+> Ürün adı: `BRAND_NAME` ortam değişkeni (varsayılan: `ScreenPano`) ve APK'da `-PAPP_NAME` ile yapılandırılır.
 
 ## Neler var
 
@@ -60,31 +60,28 @@ Docker: `docker build -t screenpano . && docker run -p 3000:3000 -v /srv/screenp
 ## İlk kurulum adımları
 
 1. `/super` → **Platform anahtarları**: CollectAPI (eczane, haber, kitap), TMDB (sinema), Google Books (kapaklar), isteğe bağlı İBB trafik Worker adresi. Anahtarlar tüm işletmeler için ortaktır; her veri bir kez çekilip herkese dağıtılır.
-2. Bomera'yı ilk işletme olarak aktarın (aşağıda).
-3. APK'yı kendi alan adınızla derleyip `public/app.apk` olarak koyun, `public/apk-version.json`'u güncelleyin.
+2. APK'yı kendi alan adınızla derleyip `public/app.apk` olarak koyun, `public/apk-version.json`'u güncelleyin.
 
-## Bomera verisini aktarma
+## Eski sürüm verisini aktarma
 
-Eski sunucudaki `data` klasörünü (içinde `db.json` ve `uploads/`) bu makineye kopyalayın, sunucu kapalıyken:
+Eski tek-işletmeli sürümdeki `data` klasörünü (içinde `db.json` ve `uploads/`) bu makineye kopyalayın, sunucu kapalıyken:
 
 ```bash
-node tools/import-legacy.js --data /eski/data --name "Bomera Lounge" --user bomera --pass 'guclu-sifre' \
+node tools/import-legacy.js --data /eski/data --name "Örnek İşletme" --user isletme --pass 'guclu-sifre' \
   --plan pro --days 365 --logo /eski/public/logo.png
 ```
-
-Videolar, fotoğraflar, yorumlar, doğum günleri, QR'lar, kampanyalar, lig seçimi ve kutlama ayarları taşınır. Eski panelde girilmiş API anahtarları ve trafik Worker imza anahtarı, platform ayarı boşsa oraya aktarılır (mevcut Cloudflare Worker çalışmaya devam eder).
 
 ## Android uygulaması (tek APK)
 
 ```bash
 cd android
-./gradlew assembleRelease -PBASE_URL=https://app.screenpano.com -PAPP_NAME="ScreenPano"
+./gradlew assembleRelease -PBASE_URL=https://screenpano.com -PAPP_NAME="ScreenPano"
 ```
 
 - Paket adı `com.screenpano.tv` (değiştirmek için `app/build.gradle` → `applicationId`).
 - Release imzası için `android/keystore.properties` oluşturun (dosyadaki açıklamaya bakın). **Anahtarı kaybetmeyin**: güncellemeler aynı anahtarla imzalanmalı.
 - Uygulama açılınca `/tv` gelir: kullanıcı adı/şifre ile giriş, ya da TV'deki 6 haneli kodu/QR'ı telefondan panele (Ayarlar → Cihazlar) girerek eşleştirme. Cihaza verilen token uygulamanın kalıcı deposunda saklanır, şifre saklanmaz.
-- Eski Bomera APK'sı farklı paket adı ve debug anahtarıyla imzalı olduğu için yeni APK üzerine kurulmaz; kutulara yeni APK'yı bir kez elle kurun (eski uygulamayı kaldırabilirsiniz). Eski APK kök adresi açarsa sunucu onu `/tv`'ye yönlendirir.
+- Eski APK farklı paket adı ve anahtarla imzalandıysa yeni APK üzerine kurulmaz; kutulara ScreenPano APK'sını bir kez kurun. Eski APK kök adresi açarsa sunucu onu `/tv`'ye yönlendirir.
 - Simgeler geçici, genel bir TV simgesidir; marka belli olunca `android/app/src/main/res` altındakileri değiştirin.
 
 ## Mimari

@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Süper Yönetim</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
+<title>ScreenPano — Süper Yönetim</title>
 <style>
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F}
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC}
@@ -41,7 +42,7 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 .toast.err{border-left-color:var(--bad)}
 .scroll{overflow-x:auto}
 </style></head><body>
-<header><h1>Süper Yönetim</h1><span style="flex:1"></span><a class="btn ghost" href="/tv" target="_blank" style="text-decoration:none">TV sayfası</a><button class="btn ghost" onclick="pwDialog()">Şifremi değiştir</button><button class="btn ghost" onclick="logout()">Çıkış</button></header>
+<header><a href="/super" style="text-decoration:none"><img src="/logo.svg?v=3" alt="ScreenPano" style="height:34px;display:block"></a><span style="color:var(--mute);font-size:13px;padding-left:6px;border-left:1px solid var(--line)">Süper Yönetim</span><span style="flex:1"></span><a class="btn ghost" href="/tv" target="_blank" style="text-decoration:none">TV sayfası</a><button class="btn ghost" onclick="pwDialog()">Şifremi değiştir</button><button class="btn ghost" onclick="logout()">Çıkış</button></header>
 <div class="stats" id="stats"></div>
 <div class="card"><h2>İşletmeler</h2>
   <div class="row" style="margin-bottom:14px"><div><input id="flt" placeholder="Ara (ad, kullanıcı, telefon)" oninput="renderList()"></div><button class="btn" onclick="newDialog()">＋ Yeni işletme</button></div>

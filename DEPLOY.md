@@ -60,7 +60,7 @@ PORT=3000
    **Bu adımı atlamayın**: veritabanı, müşteri videoları ve yedekler `/data`'dadır. Volume yoksa her yeniden yüklemede hepsi silinir.
 
 7. **Domains** sekmesi → **Add Domain**:
-   - Host: alan adınız (örn. `screenpano.com` ya da `app.screenpano.com`). Alan adınız yoksa Dokploy'un verdiği ücretsiz test adresini kullanabilirsiniz.
+   - Host: alan adınız (örn. `screenpano.com` ya da `app.screenpano.com`). Alan adınız yoksa Dokploy'un verdiği test adresini kullanabilirsiniz.
    - Container Port: `3000`
    - HTTPS: açık, Certificate: Let's Encrypt
    - Alan adınızın DNS'inde bir **A kaydı** oluşturup sunucu IP'nize yönlendirin.
@@ -73,9 +73,9 @@ PORT=3000
 2. Süper yönetim → **Platform anahtarları**: CollectAPI, TMDB, Google Books (ve varsa İBB trafik Worker adresi).
 3. Sağ üstten şifrenizi değiştirin.
 
-## 5. Bomera'yı aktarma
+## 5. Eski verileri aktarma
 
-Eski sunucudaki `data` klasörünü (içinde `db.json` ve `uploads/`) yeni sunucuya kopyalayın, sonra konteynerin içine alıp aktarın:
+Eski tek işletmeli sürümdeki `data` klasörünü (içinde `db.json` ve `uploads/`) yeni sunucuya kopyalayın, sonra konteynerin içine alıp aktarın:
 
 ```bash
 # konteyner adını bulun
@@ -84,7 +84,7 @@ docker ps --format '{{.Names}}' | grep -i screenpano
 docker cp /root/eski-data <konteyner-adi>:/data/legacy
 # aktarın
 docker exec -it <konteyner-adi> node tools/import-legacy.js --data /data/legacy \
-  --name "Bomera Lounge" --user bomera --pass 'guclu-sifre' --plan pro --days 365
+  --name "Örnek İşletme" --user isletme --pass 'guclu-sifre' --plan pro --days 365
 ```
 
 Logo için: önce logoyu da `/data/legacy/logo.png` olarak kopyalayıp komuta `--logo /data/legacy/logo.png` ekleyin. Aktarımdan sonra uygulamayı Dokploy'dan bir kez **Restart** edin.

@@ -3,8 +3,8 @@ plugins {
 }
 
 // Tek APK, tüm işletmeler. Sunucu adresi ve uygulama adı derlerken verilir:
-//   ./gradlew assembleRelease -PBASE_URL=https://app.screenpano.com -PAPP_NAME="ScreenPano"
-def baseUrl = (project.findProperty('BASE_URL') ?: 'https://ekran.example.com').toString()
+//   ./gradlew assembleRelease -PBASE_URL=https://screenpano.com -PAPP_NAME="ScreenPano"
+def baseUrl = (project.findProperty('BASE_URL') ?: 'https://screenpano.com').toString()
 def appName = (project.findProperty('APP_NAME') ?: 'ScreenPano').toString()
 
 // Release imzası: android/keystore.properties (git'e eklemeyin)

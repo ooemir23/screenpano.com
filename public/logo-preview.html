@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ScreenPano — Kurumsal Logo &amp; Amblem Tasarımı</title>
+  <style>
+    @font-face {
+      font-family: 'Montserrat';
+      font-style: normal;
+      font-weight: 300 900;
+      font-display: swap;
+      src: url(/fonts/montserrat-latin-ext.woff2) format('woff2');
+    }
+    :root {
+      --bg: #0e1010;
+      --card: #161819;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --gold: #de9640;
+      --live: #4ade80;
+      --text: #f4f1ea;
+      --mute: #9aa0a0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 50% 0%, #202425 0%, var(--bg) 70%);
+      color: var(--text);
+      font-family: 'Montserrat', system-ui, sans-serif;
+      padding: 40px 20px 80px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(222, 150, 64, 0.14);
+      border: 1px solid rgba(222, 150, 64, 0.35);
+      color: var(--gold);
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .badge .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--live);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--live);
+    }
+    h1 {
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    h1 span.screen {
+      color: #ffffff;
+      font-weight: 400;
+    }
+    h1 span.pano {
+      background: linear-gradient(135deg, #F6C878 0%, #DE9640 50%, #B86C20 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 900;
+    }
+    header p {
+      color: var(--mute);
+      font-size: 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .sectors {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .sector-tag {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--mute);
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 45px 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--card-border);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 24px;
+    }
+    @media (max-width: 600px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(222, 150, 64, 0.35);
+      transform: translateY(-2px);
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .card-tag {
+      font-size: 12px;
+      color: var(--mute);
+      background: rgba(255,255,255,0.06);
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .preview-box {
+      border-radius: 14px;
+      padding: 32px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      position: relative;
+    }
+    .dark-box {
+      background: #0e1010;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .light-box {
+      background: #F8F6F0;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+    .preview-box svg {
+      max-width: 100%;
+      height: auto;
+      max-height: 120px;
+      display: block;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, #DE9640, #B86C20);
+      border: none;
+      color: #fff;
+    }
+    .btn.primary:hover {
+      filter: brightness(1.15);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="badge"><span class="dot"></span> B2B SaaS • Digital Signage</div>
+    <h1><span class="screen">screen</span><span class="pano">pano</span></h1>
+    <p>Tüm işletmeler için profesyonel dijital ekran ve akıllı pano yönetim platformu.</p>
+    
+    <div class="sectors">
+      <span class="sector-tag">🏢 Kurumsal Ofisler &amp; Plazalar</span>
+      <span class="sector-tag">🛍️ Mağazalar &amp; Perakende</span>
+      <span class="sector-tag">🏥 Klinikler &amp; Sağlık Merkezleri</span>
+      <span class="sector-tag">🏋️ Spor Salonları</span>
+      <span class="sector-tag">🏨 Oteller &amp; Lobiler</span>
+      <span class="sector-tag">🍽️ Restoranlar &amp; Kafeler</span>
+    </div>
+  </header>
+
+  <div class="section-title">Ana Logo Çözümleri</div>
+
+  <div class="grid-2">
+    <!-- 1. SCREENPANO KOYU (INLINE SVG - ASLA CACHE'E TAKILMAZ) -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">ScreenPano — Koyu Zemin (Ana Logo)</div>
+        <div class="card-tag">SVG • Panel, TV &amp; Giriş Ekranı</div>
+      </div>
+      <div class="preview-box dark-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 180" width="100%" height="100%">
+          <defs>
+            <linearGradient id="goldH1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#F6C878"/><stop offset="40%" stop-color="#DE9640"/><stop offset="80%" stop-color="#B86C20"/><stop offset="100%" stop-color="#8F4E10"/>
+            </linearGradient>
+            <linearGradient id="tvBodyH1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#2c3031"/><stop offset="100%" stop-color="#181b1c"/>
+            </linearGradient>
+            <linearGradient id="cardOrangeH1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#EAA64D"/><stop offset="100%" stop-color="#BA6F20"/>
+            </linearGradient>
+            <filter id="shadowH1" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000000" flood-opacity="0.5"/>
+            </filter>
+            <filter id="greenLedH1" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/>
+            </filter>
+          </defs>
+          <g transform="translate(15, 14)">
+            <path d="M 68 122 L 56 142" stroke="url(#goldH1)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M 94 122 L 106 142" stroke="url(#goldH1)" stroke-width="3.5" stroke-linecap="round"/>
+            <rect x="12" y="16" width="138" height="106" rx="18" fill="url(#tvBodyH1)" stroke="url(#goldH1)" stroke-width="4.5" filter="url(#shadowH1)"/>
+            <circle cx="81" cy="24" r="2.5" fill="#4ADE80" filter="url(#greenLedH1)"/>
+            <rect x="23" y="30" width="70" height="78" rx="9" fill="#121415" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+            <polygon points="53,60 53,78 70,69" fill="url(#goldH1)"/>
+            <rect x="98" y="30" width="40" height="36" rx="7" fill="url(#cardOrangeH1)"/>
+            <line x1="105" y1="42" x2="131" y2="42" stroke="#1c1f20" stroke-width="2.6" stroke-linecap="round"/>
+            <line x1="105" y1="50" x2="124" y2="50" stroke="#1c1f20" stroke-width="2.6" stroke-linecap="round"/>
+            <rect x="98" y="71" width="40" height="37" rx="7" fill="#121415" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+            <circle cx="106" cy="82" r="2.2" fill="url(#goldH1)"/>
+            <line x1="113" y1="82" x2="131" y2="82" stroke="#F1F5F9" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="106" cy="94" r="2.2" fill="url(#goldH1)"/>
+            <line x1="113" y1="94" x2="128" y2="94" stroke="#F1F5F9" stroke-width="2.2" stroke-linecap="round"/>
+          </g>
+          <g transform="translate(195, 0)">
+            <text x="0" y="102" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="400" font-size="62" letter-spacing="-1px" fill="#FFFFFF">screen</text>
+            <text x="218" y="102" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="900" font-size="62" letter-spacing="-0.5px" fill="url(#goldH1)">pano</text>
+            <circle cx="410" cy="94" r="5" fill="#4ADE80" filter="url(#greenLedH1)"/>
+            <text x="2" y="134" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="700" font-size="12.5" letter-spacing="5px" fill="#9AA0A0" text-transform="uppercase">DİJİTAL EKRAN &amp; PANO YÖNETİMİ</text>
+          </g>
+        </svg>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="/logo.svg?v=3" target="_blank" download="screenpano-logo.svg">Dosyayı İndir</a>
+        <button class="btn" onclick="navigator.clipboard.writeText(location.origin + '/logo.svg?v=3'); alert('Bağlantı kopyalandı!')">Bağlantıyı Kopyala</button>
+      </div>
+    </div>
+
+    <!-- 2. SCREENPANO AÇIK (INLINE SVG) -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">ScreenPano — Açık Zemin (Light Mode)</div>
+        <div class="card-tag">SVG • Fatura, Baskı &amp; Evrak</div>
+      </div>
+      <div class="preview-box light-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 180" width="100%" height="100%">
+          <defs>
+            <linearGradient id="goldLight1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#C97A2B"/><stop offset="100%" stop-color="#8F4800"/>
+            </linearGradient>
+            <linearGradient id="cardOrangeLight1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#E5984A"/><stop offset="100%" stop-color="#A55E1A"/>
+            </linearGradient>
+          </defs>
+          <g transform="translate(15, 14)">
+            <path d="M 68 122 L 56 142" stroke="#8F4800" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M 94 122 L 106 142" stroke="#8F4800" stroke-width="3.5" stroke-linecap="round"/>
+            <rect x="12" y="16" width="138" height="106" rx="18" fill="#F8F6F0" stroke="#8F4800" stroke-width="4.5"/>
+            <circle cx="81" cy="24" r="2.5" fill="#16A34A"/>
+            <rect x="23" y="30" width="70" height="78" rx="9" fill="#EDE9DF" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+            <polygon points="53,60 53,78 70,69" fill="url(#goldLight1)"/>
+            <rect x="98" y="30" width="40" height="36" rx="7" fill="url(#cardOrangeLight1)"/>
+            <line x1="105" y1="42" x2="131" y2="42" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
+            <line x1="105" y1="50" x2="124" y2="50" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
+            <rect x="98" y="71" width="40" height="37" rx="7" fill="#EDE9DF" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+            <circle cx="106" cy="82" r="2.2" fill="url(#goldLight1)"/>
+            <line x1="113" y1="82" x2="131" y2="82" stroke="#475569" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="106" cy="94" r="2.2" fill="url(#goldLight1)"/>
+            <line x1="113" y1="94" x2="128" y2="94" stroke="#475569" stroke-width="2.2" stroke-linecap="round"/>
+          </g>
+          <g transform="translate(195, 0)">
+            <text x="0" y="102" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="500" font-size="62" letter-spacing="-1px" fill="#181A1A">screen</text>
+            <text x="218" y="102" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="900" font-size="62" letter-spacing="-0.5px" fill="url(#goldLight1)">pano</text>
+            <circle cx="410" cy="94" r="5" fill="#16A34A"/>
+            <text x="2" y="134" font-family="'Montserrat', 'Inter', system-ui, sans-serif" font-weight="700" font-size="12.5" letter-spacing="5px" fill="#64748B" text-transform="uppercase">DİJİTAL EKRAN &amp; PANO YÖNETİMİ</text>
+          </g>
+        </svg>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="/logo-light.svg?v=3" target="_blank" download="screenpano-light.svg">Dosyayı İndir</a>
+        <button class="btn" onclick="navigator.clipboard.writeText(location.origin + '/logo-light.svg?v=3'); alert('Bağlantı kopyalandı!')">Bağlantıyı Kopyala</button>
+      </div>
+    </div>
+
+    <!-- 3. AMBLEM & UYGULAMA İKONU (INLINE SVG) -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Amblem &amp; Uygulama İkonu</div>
+        <div class="card-tag">SVG • Android TV APK &amp; Mobil</div>
+      </div>
+      <div class="preview-box dark-box" style="padding: 14px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+          <defs>
+            <linearGradient id="bgGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#181a1a"/><stop offset="100%" stop-color="#0e1010"/>
+            </linearGradient>
+            <linearGradient id="tvBodyGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#2c3031"/><stop offset="100%" stop-color="#181b1c"/>
+            </linearGradient>
+            <linearGradient id="goldStroke1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#F6C878"/><stop offset="40%" stop-color="#DE9640"/><stop offset="80%" stop-color="#B86C20"/><stop offset="100%" stop-color="#8F4E10"/>
+            </linearGradient>
+            <linearGradient id="cardOrangeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#EAA64D"/><stop offset="100%" stop-color="#BA6F20"/>
+            </linearGradient>
+            <linearGradient id="panelDark1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#181a1a"/><stop offset="100%" stop-color="#101212"/>
+            </linearGradient>
+            <filter id="cardShadow1" x="-15%" y="-15%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.45"/>
+            </filter>
+            <filter id="greenLedGlow1" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="3.5" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/>
+            </filter>
+          </defs>
+          <rect width="512" height="512" rx="120" fill="url(#bgGrad1)"/>
+          <rect width="508" height="508" x="2" y="2" rx="118" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>
+          <path d="M 218 360 L 192 416" stroke="url(#goldStroke1)" stroke-width="8" stroke-linecap="round"/>
+          <path d="M 294 360 L 320 416" stroke="url(#goldStroke1)" stroke-width="8" stroke-linecap="round"/>
+          <rect x="86" y="92" width="340" height="268" rx="42" fill="url(#tvBodyGrad1)" stroke="url(#goldStroke1)" stroke-width="8.5" filter="url(#cardShadow1)"/>
+          <circle cx="256" cy="112" r="5" fill="#4ADE80" filter="url(#greenLedGlow1)"/>
+          <rect x="114" y="128" width="176" height="196" rx="22" fill="url(#panelDark1)" stroke="rgba(255,255,255,0.05)" stroke-width="1.5" filter="url(#cardShadow1)"/>
+          <polygon points="190,202 190,250 234,226" fill="url(#goldStroke1)"/>
+          <rect x="304" y="128" width="98" height="90" rx="18" fill="url(#cardOrangeGrad1)" filter="url(#cardShadow1)"/>
+          <line x1="322" y1="156" x2="384" y2="156" stroke="#1c1f20" stroke-width="6.5" stroke-linecap="round"/>
+          <line x1="322" y1="175" x2="368" y2="175" stroke="#1c1f20" stroke-width="6.5" stroke-linecap="round"/>
+          <rect x="304" y="232" width="98" height="92" rx="18" fill="url(#panelDark1)" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" filter="url(#cardShadow1)"/>
+          <circle cx="326" cy="260" r="5" fill="url(#goldStroke1)"/>
+          <line x1="342" y1="260" x2="384" y2="260" stroke="#F1F5F9" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="326" cy="292" r="5" fill="url(#goldStroke1)"/>
+          <line x1="342" y1="292" x2="380" y2="292" stroke="#F1F5F9" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="/logo-icon.svg?v=3" target="_blank" download="screenpano-icon.svg">Dosyayı İndir</a>
+        <button class="btn" onclick="navigator.clipboard.writeText(location.origin + '/logo-icon.svg?v=3'); alert('Bağlantı kopyalandı!')">Bağlantıyı Kopyala</button>
+      </div>
+    </div>
+
+    <!-- 4. KÜÇÜK BOYUT & FAVICON TESTİ -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Favicon &amp; Küçük Boyut Testi (16 - 64px)</div>
+        <div class="card-tag">Piksel Seviyesinde Keskinlik</div>
+      </div>
+      <div class="preview-box dark-box" style="display: flex; gap: 32px; align-items: center; justify-content: center;">
+        <div style="text-align: center;">
+          <img src="/favicon.svg?v=3" style="width: 16px; height: 16px; margin: 0 auto 8px;" alt="16px">
+          <div style="font-size: 11px; color: var(--mute);">16px (Sekme)</div>
+        </div>
+        <div style="text-align: center;">
+          <img src="/favicon.svg?v=3" style="width: 32px; height: 32px; margin: 0 auto 8px;" alt="32px">
+          <div style="font-size: 11px; color: var(--mute);">32px (Toolbar)</div>
+        </div>
+        <div style="text-align: center;">
+          <img src="/favicon.svg?v=3" style="width: 48px; height: 48px; margin: 0 auto 8px;" alt="48px">
+          <div style="font-size: 11px; color: var(--mute);">48px (Bildirim)</div>
+        </div>
+        <div style="text-align: center;">
+          <img src="/favicon.svg?v=3" style="width: 64px; height: 64px; margin: 0 auto 8px;" alt="64px">
+          <div style="font-size: 11px; color: var(--mute);">64px (Menü)</div>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="/favicon.svg?v=3" target="_blank" download="favicon.svg">Favicon İndir</a>
+        <button class="btn" onclick="navigator.clipboard.writeText(location.origin + '/favicon.svg?v=3'); alert('Bağlantı kopyalandı!')">Bağlantıyı Kopyala</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
