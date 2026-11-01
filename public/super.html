@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Süper Yönetim</title>
+<style>
+@font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F}
+@font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC}
+:root{--bg:#121414;--panel:#1c1f1f;--panel2:#242828;--line:rgba(255,255,255,.09);--text:#f4f1ea;--mute:#9aa0a0;--accent:#906538;--accent2:#c9955c;--ok:#3ecf4a;--bad:#ee5b4f}
+*{box-sizing:border-box;margin:0}
+body{font-family:Montserrat,system-ui,sans-serif;background:var(--bg);color:var(--text);padding:28px 32px 80px;max-width:1500px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+h1{font-size:24px}
+h2{font-size:16px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stat b{display:block;font-size:28px;color:var(--accent2)}
+.stat span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:20px}
+.hint{color:var(--mute);font-size:13px;line-height:1.5;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mute);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+.tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.tag.ok{background:rgba(62,207,74,.15);color:var(--ok)}.tag.trial{background:rgba(201,149,92,.18);color:var(--accent2)}.tag.bad{background:rgba(238,91,79,.15);color:var(--bad)}
+input,select{background:#141616;border:1px solid var(--line);border-radius:9px;padding:9px 11px;outline:none;width:100%}
+input:focus,select:focus{border-color:var(--accent2)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1;min-width:140px}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
+.btn{background:linear-gradient(135deg,var(--accent2),var(--accent));border:0;border-radius:9px;padding:9px 16px;font-weight:600;cursor:pointer;color:#fff;white-space:nowrap}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.danger{background:transparent;border:1px solid rgba(238,91,79,.45);color:var(--bad)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+#dlg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+#dlg.on{display:flex}
+#dlg .card{width:100%;max-width:620px;max-height:90vh;overflow:auto}
+#toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:20}
+.toast{background:#2b2f2f;border-left:4px solid var(--ok);padding:12px 16px;border-radius:10px;font-size:14px}
+.toast.err{border-left-color:var(--bad)}
+.scroll{overflow-x:auto}
+</style></head><body>
+<header><h1>Süper Yönetim</h1><span style="flex:1"></span><a class="btn ghost" href="/tv" target="_blank" style="text-decoration:none">TV sayfası</a><button class="btn ghost" onclick="pwDialog()">Şifremi değiştir</button><button class="btn ghost" onclick="logout()">Çıkış</button></header>
+<div class="stats" id="stats"></div>
+<div class="card"><h2>İşletmeler</h2>
+  <div class="row" style="margin-bottom:14px"><div><input id="flt" placeholder="Ara (ad, kullanıcı, telefon)" oninput="renderList()"></div><button class="btn" onclick="newDialog()">＋ Yeni işletme</button></div>
+  <div class="scroll"><table><thead><tr><th>İşletme</th><th>Paket</th><th>Durum</th><th>Bitiş</th><th>Cihaz</th><th>Depolama</th><th>Son giriş</th><th></th></tr></thead><tbody id="list"></tbody></table></div>
+</div>
+<div class="card"><h2>Platform anahtarları</h2>
+  <p class="hint">Bu anahtarlar tüm işletmeler için ortaktır; işletmeler hiçbir anahtar görmez. Veri her kaynaktan bir kez çekilip herkese dağıtılır. Ticari kullanım şartlarını her sağlayıcıdan kontrol edin.</p>
+  <div class="row">
+    <div><label>CollectAPI anahtarı (eczane, haber, kitap)</label><input id="s-collect_key" type="password" autocomplete="off"></div>
+    <div style="max-width:220px"><label>CollectAPI planı</label><select id="s-collect_paid"><option value="">Ücretsiz (kota korumalı)</option><option value="1">Ücretli (kota sınırı yok)</option></select></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <div><label>TMDB API anahtarı (sinema)</label><input id="s-tmdb_key" type="password" autocomplete="off"></div>
+    <div><label>Google Books API anahtarı (kitap kapakları)</label><input id="s-books_key" type="password" autocomplete="off"></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <div><label>İBB trafik Worker adresi (isteğe bağlı)</label><input id="s-traffic_api" placeholder="https://trafik.kullanici.workers.dev"></div>
+    <div><label>Worker imza anahtarı (TRAFFIC_SECRET olarak girin)</label><input id="s-traffic_secret" readonly></div>
+  </div>
+  <div class="row" style="margin-top:14px"><button class="btn" onclick="saveSettings()">Kaydet</button></div>
+</div>
+<div id="dlg" onclick="if(event.target===this)closeDlg()"><div class="card" id="dlgc"></div></div>
+<div id="toasts"></div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = ms => ms ? new Date(ms).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+const ago = ms => { if (!ms) return '-'; const m = Math.round((Date.now() - ms) / 60000); return m < 60 ? m + ' dk' : m < 1440 ? Math.round(m / 60) + ' sa' : Math.round(m / 1440) + ' gün'; };
+let D = null;
+function toast(m, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = m; $('toasts').appendChild(t); setTimeout(() => t.remove(), 4000); }
+async function call(method, url, body) {
+  const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401) location.href = '/login';
+  if (!r.ok) throw new Error(j.error || 'Hata ' + r.status);
+  return j;
+}
+async function load() {
+  D = await call('GET', '/api/super/overview');
+  const t = D.totals;
+  $('stats').innerHTML = [['İşletme', t.tenants], ['Ekranı açık', t.live], ['Kayıtlı TV', t.devices], ['Şu an bağlı', t.online]].map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  for (const [k, v] of Object.entries(D.settings)) if ($('s-' + k)) $('s-' + k).value = v || '';
+  renderList();
+}
+function stTag(x) {
+  if (!x.access.ok) return x.access.reason === 'suspended' ? '<span class="tag bad">Askıda</span>' : '<span class="tag bad">Süresi doldu</span>';
+  return x.access.kind === 'trial' ? '<span class="tag trial">Deneme</span>' : '<span class="tag ok">Aktif</span>';
+}
+function renderList() {
+  const q = $('flt').value.trim().toLocaleLowerCase('tr-TR');
+  const list = D.tenants.filter(x => !q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q)).sort((a, b) => b.created - a.created);
+  $('list').innerHTML = list.map(x => `<tr><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${esc(x.owner)}${x.phone ? ' · ' + esc(x.phone) : ''}</span></td>
+    <td>${esc((D.plans[x.plan] || {}).name || x.plan)}</td><td>${stTag(x)}</td><td>${fmt(x.access.until || x.paidUntil || x.trialUntil)}</td>
+    <td>${x.devices} <span style="color:var(--ok)">${x.online ? '● ' + x.online : ''}</span></td><td>${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
+    <td><div class="acts"><button class="btn sm" onclick="editDialog('${x.id}')">Düzenle</button><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`).join('') || '<tr><td colspan="8" style="color:var(--mute);text-align:center;padding:24px">İşletme yok</td></tr>';
+}
+const closeDlg = () => $('dlg').classList.remove('on');
+const openDlg = html => { $('dlgc').innerHTML = html; $('dlg').classList.add('on'); };
+const planOpts = sel => Object.values(D.plans).map(p => `<option value="${p.id}"${p.id === sel ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+function newDialog() {
+  openDlg(`<h2>Yeni işletme</h2><div class="row"><div><label>İşletme adı</label><input id="n-name"></div><div><label>Telefon</label><input id="n-phone"></div></div>
+  <div class="row" style="margin-top:10px"><div><label>Kullanıcı adı</label><input id="n-user"></div><div><label>Şifre (en az 8)</label><input id="n-pass"></div></div>
+  <div class="row" style="margin-top:10px"><div><label>Paket</label><select id="n-plan">${planOpts('pro')}</select></div><div><label>Ödenmiş gün (0 = yalnız deneme)</label><input id="n-days" type="number" value="0"></div><div><label>Deneme günü</label><input id="n-trial" type="number" value="14"></div></div>
+  <div class="row" style="margin-top:16px"><button class="btn" onclick="createT()">Oluştur</button><button class="btn ghost" onclick="closeDlg()">Vazgeç</button></div>`);
+}
+async function createT() {
+  try { await call('POST', '/api/super/tenants', { name: $('n-name').value, phone: $('n-phone').value, username: $('n-user').value, password: $('n-pass').value, plan: $('n-plan').value, days: Number($('n-days').value), trialDays: Number($('n-trial').value) }); closeDlg(); toast('İşletme oluşturuldu'); load(); }
+  catch (e) { toast(e.message, true); }
+}
+function editDialog(id) {
+  const x = D.tenants.find(t => t.id === id);
+  const d = ms => ms ? new Date(ms).toISOString().slice(0, 10) : '';
+  openDlg(`<h2>${esc(x.name)}</h2><p class="hint">Sahip: ${esc(x.owner)} · Kayıt: ${fmt(x.created)}</p>
+  <div class="row"><div><label>İşletme adı</label><input id="e-name" value="${esc(x.name)}"></div><div><label>Telefon</label><input id="e-phone" value="${esc(x.phone || '')}"></div></div>
+  <div class="row" style="margin-top:10px"><div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div><div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
+  <div class="row" style="margin-top:10px"><div><label>Deneme bitişi</label><input id="e-trial" type="date" value="${d(x.trialUntil)}"></div><div><label>Ödeme bitişi</label><input id="e-paid" type="date" value="${d(x.paidUntil)}"></div></div>
+  <div class="row" style="margin-top:10px"><div><label>Not</label><input id="e-note" value="${esc(x.note || '')}"></div></div>
+  <div class="row" style="margin-top:16px"><button class="btn" onclick="saveT('${id}')">Kaydet</button>
+    <button class="btn ghost" onclick="extend('${id}',30)">+30 gün</button><button class="btn ghost" onclick="extend('${id}',365)">+1 yıl</button>
+    <button class="btn ghost" onclick="resetPw('${id}')">Şifre sıfırla</button><button class="btn danger" onclick="delT('${id}')">Sil</button></div>`);
+}
+const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
+async function saveT(id) {
+  try { await call('PUT', '/api/super/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value }); closeDlg(); toast('Kaydedildi'); load(); }
+  catch (e) { toast(e.message, true); }
+}
+async function extend(id, days) { try { await call('PUT', '/api/super/tenants/' + id, { extendDays: days }); closeDlg(); toast(`${days} gün eklendi`); load(); } catch (e) { toast(e.message, true); } }
+async function resetPw(id) {
+  const pw = prompt('Yeni şifre (boş bırakırsanız rastgele üretilir):', ''); if (pw === null) return;
+  try { const j = await call('POST', `/api/super/tenants/${id}/password`, { password: pw }); alert(`Kullanıcı: ${j.username}\nYeni şifre: ${j.password}`); } catch (e) { toast(e.message, true); }
+}
+async function delT(id) {
+  const x = D.tenants.find(t => t.id === id);
+  const c = prompt(`Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler.\nOnaylamak için işletme adını aynen yazın: ${x.name}`); if (c === null) return;
+  try { await call('DELETE', '/api/super/tenants/' + id, { confirm: c }); closeDlg(); toast('Silindi'); load(); } catch (e) { toast(e.message, true); }
+}
+async function imp(id) { try { const j = await call('POST', `/api/super/tenants/${id}/impersonate`); location.href = j.next; } catch (e) { toast(e.message, true); } }
+async function saveSettings() {
+  const b = {}; for (const k of ['collect_key', 'collect_paid', 'tmdb_key', 'books_key', 'traffic_api']) b[k] = $('s-' + k).value;
+  try { await call('PUT', '/api/super/settings', b); toast('Platform ayarları kaydedildi'); } catch (e) { toast(e.message, true); }
+}
+function pwDialog() {
+  openDlg(`<h2>Şifre değiştir</h2><div class="row"><div><label>Mevcut</label><input id="p-cur" type="password"></div><div><label>Yeni (en az 10)</label><input id="p-new" type="password"></div></div><div class="row" style="margin-top:14px"><button class="btn" onclick="changePw()">Değiştir</button></div>`);
+}
+async function changePw() { try { await call('PUT', '/api/super/password', { current: $('p-cur').value, next: $('p-new').value }); closeDlg(); toast('Şifre değiştirildi'); } catch (e) { toast(e.message, true); } }
+async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/login'; }
+load(); setInterval(load, 30000);
+</script>
+</body></html>

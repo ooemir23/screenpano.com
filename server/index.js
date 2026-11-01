@@ -1,0 +1,78 @@
+// Sunucu girişi: sayfalar, statik dosyalar, API'ler ve WebSocket.
+const fs = require('fs');
+const path = require('path');
+const http = require('http');
+const express = require('express');
+const config = require('./config');
+const auth = require('./auth');
+const tenants = require('./tenants');
+const feeds = require('./feeds');
+const media = require('./media');
+const realtime = require('./realtime');
+const { ensureSuper } = require('./accounts');
+
+ensureSuper();
+tenants.all();
+
+const app = express();
+app.disable('x-powered-by');
+app.set('trust proxy', true);
+app.use(require('compression')());
+app.use(express.json({ limit: '1mb' }));
+app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); next(); });
+
+const page = file => (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(config.PUBLIC_DIR, file)); };
+app.get('/', (req, res) => {
+  // eski APK'lar kök adresi açar: Android WebView'dan gelen istek TV sayfasına gider
+  if (/; wv\)/.test(String(req.headers['user-agent'] || ''))) return res.redirect('/tv');
+  const u = auth.sessionUser(req); res.redirect(u ? (u.role === 'super' && !u.imp ? '/super' : '/panel') : '/login');
+});
+app.get('/login', page('login.html'));
+app.get('/tv', page('tv.html'));
+app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html')(req, res, next) : res.redirect('/login')));
+app.get('/super', (req, res, next) => { const u = auth.sessionUser(req); return u && u.role === 'super' ? page('super.html')(req, res, next) : res.redirect('/login'); });
+
+app.use('/api/auth', require('./routes-auth'));
+app.use('/api/tv', require('./routes-tv').router);
+app.use('/api/admin', require('./routes-admin').router);
+app.use('/api/super', require('./routes-super'));
+
+// İBB trafik değeri (Cloudflare Worker imzalı)
+app.post('/api/traffic/report', (req, res) => { const [code, msg] = feeds.reportTraffic(req.body || {}); res.status(code).json(code === 200 ? { ok: true } : { error: msg }); });
+app.get('/traffic-map.jpg', (req, res) => { if (!feeds.mapAt) return res.status(404).end(); res.set('Cache-Control', 'no-cache'); res.sendFile(feeds.MAP_FILE); });
+const logoJobs = new Map();
+app.get('/logo/:id.png', async (req, res) => {
+  if (!/^\d{1,8}$/.test(req.params.id)) return res.status(400).end();
+  try {
+    if (!logoJobs.has(req.params.id)) logoJobs.set(req.params.id, feeds.makeLogo(req.params.id).finally(() => setTimeout(() => logoJobs.delete(req.params.id), 1000)));
+    const file = await logoJobs.get(req.params.id);
+    res.set('Cache-Control', 'public, max-age=2592000, immutable'); res.sendFile(file);
+  } catch (e) { res.status(404).end(); }
+});
+
+// İşletme medyası: rastgele dosya adlarıyla, uzun süreli önbellek (TV videoyu başlıksız isteyebilsin diye herkese açık)
+app.get('/u/:tid/:file', (req, res) => {
+  const { tid, file } = req.params;
+  if (!/^[a-f0-9]{6,32}$/.test(tid) || !/^[\w-]+\.[a-z0-9]{1,5}$/i.test(file)) return res.status(400).end();
+  const f = path.join(config.DATA_DIR, 'tenants', tid, 'uploads', file);
+  if (!fs.existsSync(f)) return res.status(404).end();
+  res.set('Cache-Control', 'public, max-age=31536000, immutable');
+  res.sendFile(f);
+});
+app.get('/app.apk', (req, res) => {
+  const f = path.join(config.PUBLIC_DIR, 'app.apk');
+  if (!fs.existsSync(f)) return res.status(404).send('APK henüz yüklenmedi');
+  res.set('Cache-Control', 'public, max-age=300'); res.download(f, `${config.BRAND}.apk`);
+});
+app.use(express.static(config.PUBLIC_DIR, {
+  index: false,
+  setHeaders: (res, file) => { if (/\.(woff2|png|jpe?g|svg)$/.test(file)) res.setHeader('Cache-Control', 'public, max-age=2592000'); },
+}));
+app.use('/api', (req, res) => res.status(404).json({ error: 'bulunamadı' }));
+
+const server = http.createServer(app);
+realtime.attach(server);
+feeds.start();
+media.resumeAll();
+require('./routes-admin').startJobs();
+server.listen(config.PORT, () => console.log(`${config.BRAND} çalışıyor: http://localhost:${config.PORT}`));

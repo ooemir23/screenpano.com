@@ -1,0 +1,72 @@
+// TV tarafı (/api/tv/*): kullanıcı adı/şifre ile giriş, ekran seçimi, telefondan 6 haneli kodla eşleştirme.
+// Başarılı girişte cihaza uzun ömürlü bir token verilir; şifre cihazda saklanmaz.
+const express = require('express');
+const QRCode = require('qrcode');
+const store = require('./store');
+const auth = require('./auth');
+const tenants = require('./tenants');
+const { plan } = require('./plans');
+
+const r = express.Router();
+const MIN = 60 * 1000;
+
+const limitError = t => {
+  const n = store.q.devicesOf.all(t.id).length, lim = plan(t).devices;
+  return n >= lim ? `Paketinizde en çok ${lim} cihaz bağlanabilir. Panelde Ayarlar → Cihazlar bölümünden kullanılmayan cihazı kaldırın.` : null;
+};
+function issueDevice(t, agent, name) {
+  const token = auth.newDeviceToken(), id = auth.uid(), s = tenants.mainScreen(t);
+  store.q.deviceIns.run({ id, tenant_id: t.id, screen_id: s.id, token_hash: auth.hashToken(token), name: String(name || '').slice(0, 40) || 'TV kutusu', agent: String(agent || '').slice(0, 160), created: Date.now() });
+  return token;
+}
+
+// Kullanıcı adı ve şifreyle giriş: doğrudan cihaz token'ı
+r.post('/login', (req, res) => {
+  const ip = auth.clientIp(req);
+  if (auth.tooMany(ip)) return res.status(429).json({ error: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin.' });
+  const { username, password } = req.body || {};
+  const u = store.q.userByName.get(String(username || '').trim());
+  if (!u || !u.tenant_id || !auth.checkPassword(password, u.pass)) { auth.noteFail(ip); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
+  const t = tenants.get(u.tenant_id);
+  const err = limitError(t); if (err) return res.status(400).json({ error: err });
+  res.json({ deviceToken: issueDevice(t, req.headers['user-agent']), tenant: t.name });
+});
+
+// Telefonla eşleştirme: TV kod ister, işletme panelde kodu girer, TV sorarak token'ı alır
+const pairs = new Map(); // pid -> { code, created, token, screen }
+const byCode = new Map(); // code -> pid
+setInterval(() => { for (const [pid, p] of pairs) if (Date.now() - p.created > 15 * MIN) { pairs.delete(pid); byCode.delete(p.code); } }, MIN);
+r.post('/pair/start', async (req, res) => {
+  if (pairs.size > 5000) return res.status(503).json({ error: 'meşgul' });
+  let code; do { code = String(require('crypto').randomInt(100000, 1000000)); } while (byCode.has(code));
+  const pid = auth.uid(24);
+  pairs.set(pid, { code, created: Date.now(), token: null });
+  byCode.set(code, pid);
+  // telefonla okutulunca panelin eşleştirme ekranı kod dolu açılır
+  const url = `${req.protocol}://${req.get('host')}/panel#pair=${code}`;
+  const qr = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#111111', light: '#ffffff' } });
+  res.json({ pid, code, qr, expiresIn: 15 * 60 });
+});
+r.get('/pair/:pid', (req, res) => {
+  const p = pairs.get(req.params.pid);
+  if (!p) return res.status(404).json({ status: 'expired' });
+  if (!p.token) return res.json({ status: 'waiting' });
+  pairs.delete(req.params.pid); byCode.delete(p.code);
+  res.json({ status: 'done', deviceToken: p.token });
+});
+// panelden kod girilince: hata metni ya da null
+function claimPair(code, t, agent) {
+  const pid = byCode.get(code), p = pid && pairs.get(pid);
+  if (!p || p.token || Date.now() - p.created > 15 * MIN) return 'Kod bulunamadı ya da süresi doldu. TV ekranındaki güncel kodu girin.';
+  const err = limitError(t); if (err) return err;
+  p.token = issueDevice(t, agent, 'TV kutusu');
+  return null;
+}
+// Cihaz kendini çıkarır (TV menüsündeki "Bu ekrandan çık")
+r.post('/logout', (req, res) => {
+  const d = store.q.deviceByHash.get(auth.hashToken((req.body || {}).deviceToken || ''));
+  if (d) store.q.deviceDel.run(d.id, d.tenant_id);
+  res.json({ ok: true });
+});
+
+module.exports = { router: r, claimPair };
