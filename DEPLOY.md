@@ -122,7 +122,7 @@ Depodaki `public/app.apk` zaten `https://screenpano.com` adresine göre derlenmi
 
 ## Güncelleme ve yedek
 
-- **Güncelleme:** GitHub'a push → Dokploy'da Deploy (ya da otomatik deploy'u açın). `/data` volume'ü korunur.
+- **Güncelleme:** GitHub'a push yeter; depodaki webhook Dokploy'a (`https://panel.screenpano.com/api/deploy/…`) haber verir ve uygulama kendiliğinden yeniden derlenir. `/data` volume'ü korunur.
 - **Yedek:** Uygulama her gece tüm veritabanını `/data/backups/platform-*.db.gz` olarak yedekler (14 gün) ve R2 ayarlıysa R2'ye de gönderir (60 gün). Süper yönetimden elle yedek alıp indirebilirsiniz. R2 kullanmıyorsanız medya da diskte durur; Dokploy → Volume Backups ile `screenpano-data` volume'ünü dışarıya yedekleyin.
 - **Geri yükleme:** uygulamayı durdurun, yedeği açın (`gunzip platform-....db.gz`), `/data/platform.db` dosyasının yerine koyun (`platform.db-wal` ve `platform.db-shm` dosyalarını silin), uygulamayı başlatın.
 
