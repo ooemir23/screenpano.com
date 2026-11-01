@@ -122,7 +122,7 @@ async function renderBk() {
     ${list.remote.length ? `<p class="hint" style="margin-top:10px">R2'de ${list.remote.length} yedek var (en yenisi ${esc(list.remote[0].name)}).</p>` : list.remoteError ? `<p class="hint" style="color:var(--bad)">R2 yedek listesi alınamadı: ${esc(list.remoteError)}</p>` : ''}
     <h3 style="margin:20px 0 4px;font-size:15px">Medya depolama</h3>
     <p class="hint">${st.enabled ? `Cloudflare R2 açık · kova <b>${esc(st.bucket)}</b> · ${st.objects} dosya, ${size(st.bytes)}${st.pending ? ` · bekleyen ${st.pending}` : ''}${st.publicUrl ? ' · herkese açık adres: ' + esc(st.publicUrl) : ' · dosyalar sunucu üzerinden aktarılıyor'}${st.keepLocal ? ' · yerel kopyalar tutuluyor' : ''}${st.lastError ? ` · <span style="color:var(--bad)">${esc(st.lastError)}</span>` : ''}`
-      : 'R2 kapalı: medya sunucunun diskinde duruyor. Açmak için ortam değişkenlerine R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY ve R2_BUCKET girin; mevcut dosyalar arka planda R2\'ye taşınır.'}</p>
+      : st.configError ? `<span style="color:var(--bad)">R2 ayarı hatalı: ${esc(st.configError)}. Dokploy → Environment'ta değeri düzeltip yeniden deploy edin.</span>` : 'R2 kapalı: medya sunucunun diskinde duruyor. Açmak için ortam değişkenlerine R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY ve R2_BUCKET girin; mevcut dosyalar arka planda R2\'ye taşınır.'}</p>
     ${st.enabled ? '<button class="btn ghost sm" onclick="call(\'POST\',\'/api/super/storage/sync\').then(()=>toast(\'Eşitleme başladı\'))">Şimdi eşitle</button>' : ''}`;
 }
 async function runBk() { toast('Yedek alınıyor…'); try { const j = await call('POST', '/api/super/backups'); toast('Yedek alındı: ' + j.name); load(); } catch (e) { toast(e.message, true); } }

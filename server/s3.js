@@ -5,16 +5,27 @@ const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
 
-const env = process.env;
+// Panele yapıştırılırken eklenen boşluk, satır sonu ve tırnakları temizle
+const clean = v => String(v || '').trim().replace(/^["'`]+|["'`]+$/g, '').trim();
+const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => /^(R2|S3)_/.test(k)).map(([k, v]) => [k, clean(v)]));
+const account = (env.R2_ACCOUNT_ID || '').replace(/^https?:\/\//, '').replace(/\.r2\.cloudflarestorage\.com.*$/, '');
 const cfg = {
-  endpoint: env.S3_ENDPOINT || (env.R2_ACCOUNT_ID ? `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : ''),
+  endpoint: (env.S3_ENDPOINT || (account ? `https://${account}.r2.cloudflarestorage.com` : '')).replace(/\/+$/, ''),
   bucket: env.R2_BUCKET || env.S3_BUCKET || '',
   key: env.R2_ACCESS_KEY_ID || env.S3_ACCESS_KEY_ID || '',
   secret: env.R2_SECRET_ACCESS_KEY || env.S3_SECRET_ACCESS_KEY || '',
   region: env.S3_REGION || 'auto',
-  publicUrl: String(env.R2_PUBLIC_URL || env.S3_PUBLIC_URL || '').replace(/\/+$/, ''),
+  publicUrl: (env.R2_PUBLIC_URL || env.S3_PUBLIC_URL || '').replace(/\/+$/, ''),
 };
-const enabled = !!(cfg.endpoint && cfg.bucket && cfg.key && cfg.secret);
+// Yanlış girilmiş değeri adıyla bildir (değerin kendisi asla yazılmaz)
+const SAFE = /^[\x21-\x7e]+$/;
+const configError = !(cfg.endpoint && cfg.bucket && cfg.key && cfg.secret) ? ''
+  : !/^[a-f0-9]{32}$/i.test(account) && !env.S3_ENDPOINT ? 'R2_ACCOUNT_ID 32 karakterlik hesap kimliği olmalı'
+  : !SAFE.test(cfg.key) ? 'R2_ACCESS_KEY_ID geçersiz karakter içeriyor (boşluk, Türkçe harf ya da satır sonu olmamalı)'
+  : !SAFE.test(cfg.secret) ? 'R2_SECRET_ACCESS_KEY geçersiz karakter içeriyor (boşluk, Türkçe harf ya da satır sonu olmamalı)'
+  : !/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(cfg.bucket) ? 'R2_BUCKET geçersiz' : '';
+if (configError) console.error('[R2] ' + configError + ' — depo kapalı, dosyalar yerel diskte kalır.');
+const enabled = !!(cfg.endpoint && cfg.bucket && cfg.key && cfg.secret) && !configError;
 
 const sha = (d, enc = 'hex') => crypto.createHash('sha256').update(d).digest(enc);
 const hmac = (k, d) => crypto.createHmac('sha256', k).update(d).digest();
@@ -88,4 +99,4 @@ async function list(prefix) {
 }
 const publicUrl = key => (cfg.publicUrl ? `${cfg.publicUrl}/${encKey(key)}` : '');
 
-module.exports = { enabled, cfg: { endpoint: cfg.endpoint, bucket: cfg.bucket, publicUrl: cfg.publicUrl }, sign, request, putFile, putBuffer, del, head, getStream, list, publicUrl, _secret: () => cfg.secret };
+module.exports = { enabled, configError, cfg: { endpoint: cfg.endpoint, bucket: cfg.bucket, publicUrl: cfg.publicUrl }, sign, request, putFile, putBuffer, del, head, getStream, list, publicUrl, _secret: () => cfg.secret };

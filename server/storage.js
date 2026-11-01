@@ -103,7 +103,7 @@ async function syncTick() {
 function start() { if (s3.enabled) { setTimeout(syncTick, 15000); setInterval(syncTick, 60000); } }
 function status() {
   const tot = store.q.objTotals.get();
-  return { enabled: s3.enabled, bucket: s3.cfg.bucket, publicUrl: s3.cfg.publicUrl, keepLocal: KEEP_LOCAL, objects: tot.n, bytes: tot.bytes, pending: pendingCount, lastRun, lastError };
+  return { enabled: s3.enabled, configError: s3.configError, bucket: s3.cfg.bucket, publicUrl: s3.cfg.publicUrl, keepLocal: KEEP_LOCAL, objects: tot.n, bytes: tot.bytes, pending: pendingCount, lastRun, lastError };
 }
 
 module.exports = { exists, usedBytes, remove, removeTenant, ensureLocal, copy, serve, syncTick, start, status, localPath, keyFor, typeOf };
