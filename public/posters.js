@@ -65,6 +65,9 @@
 /* yeni çıkan kitap: kapak solda, bilgi sağda */
 .spp.t-kitap{background:radial-gradient(circle at 25% 50%,color-mix(in srgb,var(--accent) 45%,var(--bg)) 0,var(--bg) 70%)}
 .spp.t-kitap .ph{right:auto;left:6%;top:7%;bottom:7%;width:34%;background-size:contain;background-repeat:no-repeat;background-position:center;filter:drop-shadow(0 .5em 1em rgba(0,0,0,.6))}
+.spp.t-kitap .ph.gen{background:linear-gradient(160deg,hsl(var(--h) 45% 32%),hsl(var(--h) 50% 16%));display:flex;flex-direction:column;justify-content:space-between;padding:7% 6%;border-radius:.3em .6em .6em .3em;box-shadow:inset .5em 0 0 rgba(0,0,0,.25),0 .5em 1em rgba(0,0,0,.6);filter:none}
+.spp.t-kitap .ph.gen b{font-size:1.9em;line-height:1.1;font-weight:800;color:#fff;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;padding-left:.5em}
+.spp.t-kitap .ph.gen i{font-size:1.15em;font-style:normal;font-weight:600;color:rgba(255,255,255,.8);padding-left:.6em}
 .spp.t-kitap .in{margin-left:44%;padding:5% 6% 5% 2%;justify-content:center;gap:.5em}
 .spp.t-kitap h1{font-size:3.2em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .spp.t-kitap .sub{font-size:1.9em}
@@ -91,6 +94,11 @@
     if (tpl === 'insta') {
       const ig = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>';
       return `<div class="${cls}"${dir}>${img}<div class="in"><div class="ig">${ig}${f('sub')}</div><div class="cap">${f('title')}</div></div></div>`;
+    }
+    if (tpl === 'kitap' && !item.image) {
+      const hue = [...String(base.title || '')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);
+      const cover = `<div class="ph gen" style="--h:${hue}"><b>${esc(base.title)}</b><i>${esc(base.sub)}</i></div>`;
+      return `<div class="${cls}"${dir}>${cover}<div class="in">${f('badge') ? `<div class="badge">${f('badge')}</div>` : ''}<h1>${f('title')}</h1>${f('sub') ? `<div class="sub">${f('sub')}</div>` : ''}${f('note') ? `<div class="note">${f('note')}</div>` : ''}</div></div>`;
     }
     const opt = (k, c) => (f(k) ? `<div class="${c}">${f(k)}</div>` : '');
     if (tpl === 'indirim') return `<div class="${cls}"${dir}><div class="big">${f('badge')}</div><div class="in"><h1>${f('title')}</h1>${opt('sub', 'sub')}${opt('note', 'note')}</div></div>`;

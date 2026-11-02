@@ -314,14 +314,22 @@ let books = cacheGet('books'); let booksError = '', booksFailAt = 0, coverErr = 
 const coverMiss = new Set();
 const gbKey = () => String(process.env.GOOGLE_BOOKS_KEY || platformKey('books_key') || '').trim();
 const titleToks = t => norm(t).split(/[^a-z0-9]+/).filter(w => w.length >= 3);
-const titleMatch = (ours, cand) => { const a = titleToks(String(ours).split(/\s[-–:]\s/)[0]), c = new Set(titleToks(cand)); return a.length > 0 && a.filter(w => c.has(w)).length / a.length >= 0.6; };
+// Başlık eşleşmesi: yazar uyuyorsa %75, uymuyorsa ya da bilinmiyorsa başlığın tamamı (en az 2 sözcük) tutmalı; yanlış kitabın kapağı çıkmasın
+const titleMatch = (ours, cand, ourAuthor, candAuthors) => {
+  const a = titleToks(String(ours).split(/\s[-–:]\s/)[0]), c = new Set(titleToks(cand));
+  if (!a.length) return false;
+  const ratio = a.filter(w => c.has(w)).length / a.length;
+  const sur = titleToks(String(ourAuthor || '')).pop(), ca = norm(String(candAuthors || ''));
+  if (sur && ca && ca.includes(sur)) return ratio >= 0.75;
+  return ratio === 1 && a.length >= 2;
+};
 async function olCover(b) {
   const head = b.title.split(/\s[-–:]\s/)[0];
   try {
     for (const q of [head + ' ' + (b.author || ''), head]) {
-      const r = await fetch(`https://openlibrary.org/search.json?limit=8&fields=cover_i,title&q=${encodeURIComponent(q.trim())}`, { signal: AbortSignal.timeout(8000) });
+      const r = await fetch(`https://openlibrary.org/search.json?limit=8&fields=cover_i,title,author_name&q=${encodeURIComponent(q.trim())}`, { signal: AbortSignal.timeout(8000) });
       if (!r.ok) return null;
-      const d = ((await r.json()).docs || []).find(x => x.cover_i && titleMatch(b.title, x.title));
+      const d = ((await r.json()).docs || []).find(x => x.cover_i && titleMatch(b.title, x.title, b.author, (x.author_name || []).join(' ')));
       if (d) return `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`;
     }
     return null;
@@ -337,7 +345,7 @@ async function bookCover(b) {
       if (!r.ok) { failed = true; coverErr = 'Google Books ' + r.status; break; }
       for (const v of (await r.json()).items || []) {
         const vi = v.volumeInfo || {}, l = vi.imageLinks, u = l && (l.thumbnail || l.smallThumbnail);
-        if (u && titleMatch(b.title, [vi.title, vi.subtitle].filter(Boolean).join(' '))) return u.replace(/^http:/, 'https:').replace('&edge=curl', '');
+        if (u && titleMatch(b.title, [vi.title, vi.subtitle].filter(Boolean).join(' '), b.author, (vi.authors || []).join(' '))) return u.replace(/^http:/, 'https:').replace('&edge=curl', '');
       }
     } catch (e) { failed = true; coverErr = 'Google Books: ' + e.message; break; }
     await new Promise(r => setTimeout(r, 300));
@@ -366,6 +374,7 @@ async function coverGet(url) {
 }
 async function verifyCovers() { // indirilemeyen kapağı listeden düşür; fillCovers yedek kaynaklardan arasın
   if (!books) return;
+  if (books.coverVer !== 2) { for (const b of books.items) b.image = ''; coverMiss.clear(); books.coverVer = 2; cachePut('books', books); } // eski (yanlış eşleşmiş olabilen) kapaklar bir kez sıfırlanır
   let drop = 0;
   for (const b of books.items) {
     if (!b.image || coverBuf.has(coverHash(b.image))) continue;
@@ -403,7 +412,7 @@ async function refreshBooks(force) {
       if (items.length >= 8) break;
     }
     if (!items.length) throw new Error('kitap listesi boş');
-    books = { items, updated: new Date().toISOString() }; booksError = ''; cachePut('books', books); fillCovers(); hub.pushAll();
+    books = { items, coverVer: 2, updated: new Date().toISOString() }; booksError = ''; cachePut('books', books); fillCovers(); hub.pushAll();
   } catch (e) { booksError = e.message; booksFailAt = Date.now(); console.error('Kitaplar alınamadı:', e.message); }
 }
 
