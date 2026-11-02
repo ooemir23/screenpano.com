@@ -12,6 +12,7 @@
     etkinlik: { name: 'Etkinlik', fields: { badge: 'Bu akşam', title: 'Maç Gecesi', sub: 'Dev ekranda canlı yayın', note: 'Masanızı ayırtın' }, image: true },
     wifi:     { name: 'Wi-Fi', fields: { title: 'Ücretsiz Wi-Fi', sub: 'Ağ: Kafe_Misafir', note: 'Şifre: hosgeldiniz' } },
     tesekkur: { name: 'Teşekkür', fields: { title: 'Bizi tercih ettiğiniz için teşekkürler', sub: '@isletmeniz', note: 'Paylaşımlarınızda bizi etiketleyin' } },
+    kitap:    { name: 'Yeni kitap', hidden: true, fields: { badge: 'Yeni çıkan kitap', title: '', sub: '', note: '' }, image: true },
     insta:    { name: 'Instagram', hidden: true, fields: { title: '', sub: '', note: '' }, image: true },
   };
   const FIELD_LABELS = { badge: 'Rozet', title: 'Başlık', sub: 'Alt yazı', price: 'Fiyat', note: 'Not', body: 'Satırlar (her satıra bir ürün)' };
@@ -61,6 +62,13 @@
 .spp.has-img.t-kahvalti .shade,.spp.has-img.t-yeni .shade{background:linear-gradient(90deg,var(--bg) 42%,transparent 62%)}
 .spp.has-img .in{max-width:58%}
 .spp.t-etkinlik.has-img .in{max-width:70%}
+/* yeni çıkan kitap: kapak solda, bilgi sağda */
+.spp.t-kitap{background:radial-gradient(circle at 25% 50%,color-mix(in srgb,var(--accent) 45%,var(--bg)) 0,var(--bg) 70%)}
+.spp.t-kitap .ph{right:auto;left:6%;top:7%;bottom:7%;width:34%;background-size:contain;background-repeat:no-repeat;background-position:center;filter:drop-shadow(0 .5em 1em rgba(0,0,0,.6))}
+.spp.t-kitap .in{margin-left:44%;padding:5% 6% 5% 2%;justify-content:center;gap:.5em}
+.spp.t-kitap h1{font-size:3.2em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.spp.t-kitap .sub{font-size:1.9em}
+.spp.t-kitap .note{font-size:1.5em}
 /* instagram */
 .spp.t-insta{background:var(--bg)}
 .spp.t-insta .ph{right:auto;width:56.25%;background-size:contain;background-repeat:no-repeat;background-color:#000}
@@ -77,7 +85,7 @@
     const tpl = T[item.tpl] ? item.tpl : 'happy', def = T[tpl];
     const base = Object.assign({}, def.fields, item.fields || {}), tr = (item.i18n && lang && item.i18n[lang]) || {};
     const f = k => esc(tr[k] != null && tr[k] !== '' ? tr[k] : base[k]);
-    const img = item.image ? `<div class="ph" style="background-image:url('${esc(item.image)}')"></div>${tpl === 'insta' ? '' : '<div class="shade"></div>'}` : '';
+    const img = item.image ? `<div class="ph" style="background-image:url('${esc(item.image)}')"></div>${tpl === 'insta' || tpl === 'kitap' ? '' : '<div class="shade"></div>'}` : '';
     const dir = lang === 'ar' ? ' dir="rtl"' : '';
     const cls = `spp t-${tpl}${item.image ? ' has-img' : ''}`;
     if (tpl === 'insta') {

@@ -316,11 +316,15 @@ const gbKey = () => String(process.env.GOOGLE_BOOKS_KEY || platformKey('books_ke
 const titleToks = t => norm(t).split(/[^a-z0-9]+/).filter(w => w.length >= 3);
 const titleMatch = (ours, cand) => { const a = titleToks(String(ours).split(/\s[-–:]\s/)[0]), c = new Set(titleToks(cand)); return a.length > 0 && a.filter(w => c.has(w)).length / a.length >= 0.6; };
 async function olCover(b) {
+  const head = b.title.split(/\s[-–:]\s/)[0];
   try {
-    const r = await fetch(`https://openlibrary.org/search.json?limit=5&fields=cover_i,title&q=${encodeURIComponent(b.title.split(/\s[-–:]\s/)[0] + ' ' + (b.author || ''))}`, { signal: AbortSignal.timeout(8000) });
-    if (!r.ok) return null;
-    const d = ((await r.json()).docs || []).find(x => x.cover_i && titleMatch(b.title, x.title));
-    return d ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : null;
+    for (const q of [head + ' ' + (b.author || ''), head]) {
+      const r = await fetch(`https://openlibrary.org/search.json?limit=8&fields=cover_i,title&q=${encodeURIComponent(q.trim())}`, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) return null;
+      const d = ((await r.json()).docs || []).find(x => x.cover_i && titleMatch(b.title, x.title));
+      if (d) return `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`;
+    }
+    return null;
   } catch (e) { return null; }
 }
 async function bookCover(b) {
@@ -590,7 +594,7 @@ module.exports = {
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, fetchNews, refreshNews, NEWS_TAGS, get newsError() { return newsError; },
-  get books() { return books; }, get booksError() { return booksError; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
+  coverHash: u => require('crypto').createHash('sha1').update(String(u)).digest('hex').slice(0, 12), get books() { return books; }, get booksError() { return booksError; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,

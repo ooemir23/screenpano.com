@@ -74,6 +74,24 @@ app.use('/api/super', require('./routes-super'));
 app.post('/api/traffic/report', (req, res) => { const [code, msg] = feeds.reportTraffic(req.body || {}); res.status(code).json(code === 200 ? { ok: true } : { error: msg }); });
 app.get('/traffic-map.jpg', (req, res) => { if (!feeds.mapAt) return res.status(404).end(); res.set('Cache-Control', 'no-cache'); res.sendFile(feeds.MAP_FILE); });
 const logoJobs = new Map();
+// Kitap kapakları: TV'ler dış sitelere doğrudan gitmesin (engelleme/yönlendiren sorunları); yalnız listedeki adresler sunucudan alınır ve bellekte tutulur
+const coverCache = new Map();
+app.get('/cover/:h.jpg', async (req, res) => {
+  const b = ((feeds.books || {}).items || []).find(x => x.image && feeds.coverHash(x.image) === req.params.h);
+  if (!b) return res.status(404).end();
+  let c = coverCache.get(req.params.h);
+  if (!c) {
+    try {
+      const r = await fetch(b.image, { signal: AbortSignal.timeout(10000), headers: { 'user-agent': 'Mozilla/5.0 ScreenPano' } });
+      const type = r.headers.get('content-type') || '';
+      const buf = Buffer.from(await r.arrayBuffer());
+      if (!r.ok || !/^image\//.test(type) || buf.length > 3e6 || buf.length < 500) return res.status(404).end();
+      c = { buf, type }; coverCache.set(req.params.h, c);
+      if (coverCache.size > 60) coverCache.delete(coverCache.keys().next().value);
+    } catch (e) { return res.status(404).end(); }
+  }
+  res.set({ 'Content-Type': c.type, 'Cache-Control': 'public, max-age=86400' }).send(c.buf);
+});
 app.get('/logo/:id.png', async (req, res) => {
   if (!/^\d{1,8}$/.test(req.params.id)) return res.status(400).end();
   try {

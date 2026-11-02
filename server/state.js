@@ -40,16 +40,27 @@ function mediaList(t) {
     if (v.type === 'poster') out.push({ id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null });
     else out.push({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', sch: v.sch || null });
   }
+  const bk = F.books;
+  const covers = require('./plans').plan(t).pro && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR
+    ? bk.items.filter(b => b.image).slice(0, 6).map(b => ({ id: 'bk' + F.coverHash(b.image), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: b.title, sub: b.author || '', note: b.publisher || '' }, image: '/cover/' + F.coverHash(b.image) + '.jpg', dur: 10 })) : [];
+  const withBooks = list => { // her 4 içerikte bir yeni çıkan kitap kapağı
+    if (!covers.length) return list;
+    if (!list.length) return covers.slice(0, 1);
+    const m = []; let k = 0;
+    list.forEach((v, i) => { m.push(v); if ((i + 1) % 4 === 0) m.push(covers[k++ % covers.length]); });
+    if (list.length < 4) m.push(covers[0]);
+    return m;
+  };
   const ig = db.instagram;
   if (ig && ig.enabled !== false && (ig.posts || []).length && require('./plans').plan(t).pro) {
     const every = Math.max(1, Math.min(20, Number(ig.every) || 3)), posts = ig.posts.map(p => ({ id: p.id, name: 'Instagram', type: 'poster', tpl: 'insta', fields: { title: p.caption, sub: '@' + (ig.user || '') }, image: t.upBase + p.file, dur: Number(ig.dur) || 10 }));
-    if (!out.length) return posts;
+    if (!out.length) return withBooks(posts);
     const mixed = []; let k = 0;
     out.forEach((v, i) => { mixed.push(v); if ((i + 1) % every === 0) mixed.push(posts[k++ % posts.length]); });
     if (out.length < every) mixed.push(posts[0]);
-    return mixed;
+    return withBooks(mixed);
   }
-  return out;
+  return withBooks(out);
 }
 // Yorumlar: elle girilenler + Google'dan gelenler (yalnız 4-5 yıldız)
 function reviewList(db) {
@@ -97,7 +108,7 @@ function publicState(t) {
     showNews: pro && (db.news || {}).enabled !== false,
     news: pro ? F.newsFor(t) : null,
     showBooks: pro && db.showBooks !== false,
-    books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items } : null,
+    books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.map(b => ({ ...b, image: b.image ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
     showMovies: pro && (db.movies || {}).enabled !== false,
     showTrailers: pro && (db.movies || {}).trailers !== false,
     movies: pro && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items } : null,

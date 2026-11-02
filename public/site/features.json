@@ -751,6 +751,26 @@
           "text": "لوحة الإدارة متاحة بالتركية والإنجليزية والألمانية والعربية (من اليمين إلى اليسار)."
         }
       }
+    },
+    {
+      "icon": "📚",
+      "title": "Yeni çıkan kitaplar kapaklarıyla",
+      "text": "Yeni çıkan kitaplar medya döngüsünde kapak fotoğraflarıyla tam ekran çıkar.",
+      "added": "2026-11-02",
+      "i18n": {
+        "en": {
+          "title": "New books with their covers",
+          "text": "Newly released books appear full screen with their cover photos in the media loop."
+        },
+        "de": {
+          "title": "Neuerscheinungen mit Cover",
+          "text": "Neu erschienene Bücher erscheinen mit ihren Covern im Vollbild in der Medienschleife."
+        },
+        "ar": {
+          "title": "الكتب الجديدة بأغلفتها",
+          "text": "تظهر الكتب الصادرة حديثًا بملء الشاشة مع صور أغلفتها ضمن دورة الوسائط."
+        }
+      }
     }
   ],
   "shots": {
