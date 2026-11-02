@@ -662,17 +662,31 @@ SECTIONS.settings = {
   },
 };
 let geoT;
+// yazdıkça arar; ilk sonucu kendiliğinden seçer (başka bir sonuç isteniyorsa listeden tıklanır)
 function geoSearch() {
-  clearTimeout(geoT);
+  clearTimeout(geoT); GEO = null;
   geoT = setTimeout(async () => {
     const q = $('s-city').value.trim(); if (q.length < 2) { $('geo').innerHTML = ''; return; }
-    try { const l = await req('GET', '/geo?q=' + encodeURIComponent(q)); window.__geo = l; $('geo').innerHTML = l.map((x, i) => `<button type="button" onclick="pickGeo(${i})">${esc(x.city)}${x.admin ? ' · ' + esc(x.admin) : ''}</button>`).join('') || '<span class="muted">Sonuç yok</span>'; }
-    catch (e) { $('geo').innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
+    try {
+      const l = await req('GET', '/geo?q=' + encodeURIComponent(q)); window.__geo = l;
+      if (!l.length) { $('geo').innerHTML = '<span class="muted">Sonuç yok</span>'; return; }
+      GEO = l[0]; drawGeo(0);
+    } catch (e) { $('geo').innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
   }, 350);
 }
-function pickGeo(i) { GEO = window.__geo[i]; $('s-city').value = GEO.city + (GEO.admin ? ', ' + GEO.admin : ''); $('geo').innerHTML = ''; }
+function drawGeo(sel) {
+  $('geo').innerHTML = window.__geo.map((x, i) => `<button type="button" class="${i === sel ? 'on' : ''}" onclick="pickGeo(${i})">${i === sel ? '✓ ' : ''}${esc(x.city)}${x.admin ? ' · ' + esc(x.admin) : ''}</button>`).join('');
+}
+function pickGeo(i) { GEO = window.__geo[i]; drawGeo(i); }
 async function saveProfile() {
-  const body = { name: $('s-name').value.trim() }; if (GEO) body.location = { city: GEO.city, lat: GEO.lat, lon: GEO.lon };
+  const body = { name: $('s-name').value.trim() };
+  // yazıp hemen kaydedilirse arama bitmemiş olabilir; ilk sonucu burada çöz
+  const q = $('s-city').value.trim();
+  if (!GEO && q.length >= 2) {
+    try { const l = await req('GET', '/geo?q=' + encodeURIComponent(q)); if (l[0]) GEO = l[0]; else return toast('Şehir bulunamadı, yazımı kontrol edin', true); }
+    catch (e) { return toast(e.message, true); }
+  }
+  if (GEO) body.location = { city: GEO.city, lat: GEO.lat, lon: GEO.lon };
   if (await act('PUT', '/profile', body, 'Kaydedildi', false)) { GEO = null; S.me = await req('GET', '/me'); drawBrand(); refresh(); }
 }
 async function pairTv() {
