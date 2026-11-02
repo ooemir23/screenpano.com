@@ -346,15 +346,46 @@ async function bookCover(b) {
   if (ol) return ol;
   return failed ? null : '';
 }
+// Kapak indirme: görüntü gerçekten inmeli (içerik türü başlığı yoksa dosya imzasına bakılır); inenler bellekte tutulur
+const coverHash = u => require('crypto').createHash('sha1').update(String(u)).digest('hex').slice(0, 12);
+const coverBuf = new Map();
+const sniff = b => b.length > 4 && ((b[0] === 0xff && b[1] === 0xd8) ? 'image/jpeg' : (b[0] === 0x89 && b[1] === 0x50) ? 'image/png' : (b.slice(0, 4).toString() === 'RIFF') ? 'image/webp' : (b.slice(0, 3).toString() === 'GIF') ? 'image/gif' : '');
+async function coverGet(url) {
+  const h = coverHash(url);
+  if (coverBuf.has(h)) return coverBuf.get(h);
+  try {
+    const u = String(url).replace(/^\/\//, 'https://').replace(/^http:/, 'https:');
+    const r = await fetch(u, { signal: AbortSignal.timeout(12000), redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36', accept: 'image/*,*/*;q=0.5' } });
+    if (!r.ok) { coverErr = `Kapak indirilemedi (${r.status}): ${new URL(u).hostname}`; return null; }
+    const buf = Buffer.from(await r.arrayBuffer()), type = sniff(buf);
+    if (!type || buf.length < 1500 || buf.length > 3e6) { coverErr = `Kapak geçersiz (${buf.length} bayt): ${new URL(u).hostname}`; return null; }
+    const c = { buf, type }; coverBuf.set(h, c);
+    if (coverBuf.size > 60) coverBuf.delete(coverBuf.keys().next().value);
+    return c;
+  } catch (e) { coverErr = 'Kapak indirilemedi: ' + e.message; return null; }
+}
+async function verifyCovers() { // indirilemeyen kapağı listeden düşür; fillCovers yedek kaynaklardan arasın
+  if (!books) return;
+  let drop = 0;
+  for (const b of books.items) {
+    if (!b.image || coverBuf.has(coverHash(b.image))) continue;
+    if (await coverGet(b.image)) continue;
+    b.image = ''; coverMiss.delete(b.title); drop++;
+  }
+  if (drop) { cachePut('books', books); hub.pushAll(); }
+}
 async function fillCovers() {
   if (!books) return;
+  await verifyCovers();
   let n = 0;
   for (const b of books.items) {
     if (b.image || coverMiss.has(b.title)) continue;
     await new Promise(r => setTimeout(r, 400));
     const u = await bookCover(b);
     if (u === null) continue;
-    b.image = u; if (u) { n++; coverErr = ''; } else coverMiss.add(b.title);
+    b.image = u;
+    if (u && !(await coverGet(u))) { b.image = ''; coverMiss.add(b.title); continue; } // yedek kaynağın da kapağı inmedi
+    if (u) { n++; coverErr = ''; } else coverMiss.add(b.title);
   }
   if (n) { cachePut('books', books); hub.pushAll(); }
 }
@@ -594,7 +625,7 @@ module.exports = {
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, fetchNews, refreshNews, NEWS_TAGS, get newsError() { return newsError; },
-  coverHash: u => require('crypto').createHash('sha1').update(String(u)).digest('hex').slice(0, 12), get books() { return books; }, get booksError() { return booksError; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
+  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,

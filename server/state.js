@@ -42,7 +42,7 @@ function mediaList(t) {
   }
   const bk = F.books;
   const covers = require('./plans').plan(t).pro && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR
-    ? bk.items.filter(b => b.image).slice(0, 6).map(b => ({ id: 'bk' + F.coverHash(b.image), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: b.title, sub: b.author || '', note: b.publisher || '' }, image: '/cover/' + F.coverHash(b.image) + '.jpg', dur: 10 })) : [];
+    ? bk.items.filter(b => b.image && F.coverReady(b.image)).slice(0, 6).map(b => ({ id: 'bk' + F.coverHash(b.image), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: b.title, sub: b.author || '', note: b.publisher || '' }, image: '/cover/' + F.coverHash(b.image) + '.jpg', dur: 10 })) : [];
   const withBooks = list => { // her 4 içerikte bir yeni çıkan kitap kapağı
     if (!covers.length) return list;
     if (!list.length) return covers.slice(0, 1);
