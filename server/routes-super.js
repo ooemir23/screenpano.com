@@ -107,9 +107,8 @@ r.post('/mail/test', async (req, res) => {
   const m = require('./monitor');
   if (!m.mailEnabled()) return res.status(400).json({ error: 'SMTP ayarlı değil (SMTP_HOST ortam değişkeni yok)' });
   try {
-    const t = require('nodemailer').createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT) || 587, secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465, auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined, connectionTimeout: 15000 });
-    await t.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject: 'ScreenPano deneme e-postası', text: 'Bu e-posta geldiyse ScreenPano uyarı e-postaları çalışıyor.' });
-    res.json({ ok: true });
+    const o = await require('./mailer').send({ to, subject: 'ScreenPano deneme e-postası', text: 'Bu e-posta geldiyse ScreenPano uyarı e-postaları çalışıyor.' });
+    res.json({ ok: true, port: o.port });
   } catch (e) { res.status(502).json({ error: e.message }); }
 });
 // silme talebini iptal et / hemen uygula

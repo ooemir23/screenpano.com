@@ -10,20 +10,11 @@ const live = new Map();    // cihaz -> son durum (bellekte; veritabanına da yaz
 const snaps = new Map();   // cihaz -> { at, data } ekran görüntüsü
 
 // ---- e-posta (SMTP ayarlıysa) ----
-let mailer = null;
-function mail() {
-  if (mailer !== null) return mailer;
-  const e = process.env;
-  if (!e.SMTP_HOST) { mailer = false; return mailer; }
-  try {
-    mailer = require('nodemailer').createTransport({ host: e.SMTP_HOST, port: Number(e.SMTP_PORT) || 587, secure: e.SMTP_SECURE === 'true' || Number(e.SMTP_PORT) === 465, auth: e.SMTP_USER ? { user: e.SMTP_USER, pass: e.SMTP_PASS } : undefined });
-  } catch (err) { console.error('SMTP kurulamadı', err.message); mailer = false; }
-  return mailer;
-}
-const mailEnabled = () => !!mail();
+const mailer = require('./mailer');
+const mailEnabled = () => mailer.enabled();
 async function sendMail(to, subject, text) {
-  const m = mail(); if (!m || !to) return false;
-  try { await m.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject, text }); return true; }
+  if (!mailer.enabled() || !to) return false;
+  try { await mailer.send({ to, subject, text }); return true; }
   catch (e) { console.error('E-posta gönderilemedi', e.message); return false; }
 }
 // Platform yöneticisi için webhook (Slack, Discord, Telegram köprüsü vb.: {"text": "..."} gönderilir)
