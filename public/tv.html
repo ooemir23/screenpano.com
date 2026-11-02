@@ -1253,6 +1253,16 @@ document.addEventListener('keydown', e => {
   prepared = { id: null };
   play();
 });
+// Kumanda yukarı/aşağı okları: sağ taraftaki içerik (maç, puan durumu, eczane, haber, kitap...) sonraki / önceki sayfaya geçer
+let lastPage = 0;
+document.addEventListener('keydown', e => {
+  if (window.__auth || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') || $m('menu').classList.contains('on')) return;
+  if (PIN && PIN !== 'goal' || pages.length < 2) return;
+  if (Date.now() - lastPage < 300) return; lastPage = Date.now(); e.preventDefault();
+  clearTimeout(rot);
+  page = (page + (e.key === 'ArrowDown' ? 1 : -1) + pages.length) % pages.length;
+  render(); schedule();
+});
 document.addEventListener('keydown', e => { // kumanda OK tuşu menüyü açar (menü açıkken düğmeyi çalıştırır)
   if (window.__auth || $m('menu').classList.contains('on')) return;
   if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 23) { e.preventDefault(); window.__menu(); }
