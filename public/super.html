@@ -124,6 +124,7 @@ async function load() {
   if (D.books && $('bk-info')) {
     const b = D.books, L = [];
     L.push(`Kaynak: ${b.kaynak === 'google' ? 'Google Books' : b.kaynak === 'collect' ? 'D&R (CollectAPI)' : '—'} · Havuz: ${b.adet} kitap · Kapağı indirilen: ${b.kapakli}/${b.adet} · Google anahtarı: ${b.anahtar ? 'var' : 'YOK'}`);
+    if (b.googleEngel) L.push(`Google Books kotası dolu: ${b.googleEngel} dk boyunca Google'a istek gönderilmeyecek (günlük kota gece yarısı Pasifik saatinde sıfırlanır).`);
     if (b.hata) L.push('Uyarı: ' + b.hata);
     if (b.kapakHata) L.push('Kapak hatası: ' + b.kapakHata);
     if (b.alanlar) L.push('D&R alanları: ' + b.alanlar);

@@ -415,6 +415,7 @@ async function olCover(b) {
   } catch (e) { return null; }
 }
 async function bookCover(b) {
+  if (googleBlocked()) { const ol = await olCover(b); return ol || null; } // Google günlük kotası dolu: yalnız Open Library denenir, kitap "bulunamadı" diye işaretlenmez
   const q = t => `https://www.googleapis.com/books/v1/volumes?maxResults=8&printType=books${gbKey() ? '&key=' + encodeURIComponent(gbKey()) : ''}&q=${encodeURIComponent(t)}`;
   const clean = b.title.split(/\s[-–:]\s/)[0];
   let failed = false;
@@ -422,7 +423,7 @@ async function bookCover(b) {
     try {
       let r = await fetch(q(t), { signal: AbortSignal.timeout(10000) });
       if (r.status === 503 || r.status === 500) { await new Promise(x => setTimeout(x, 1500)); r = await fetch(q(t), { signal: AbortSignal.timeout(10000) }); } // Google geçici hata verirse bir kez daha dene
-      if (!r.ok) { failed = true; coverErr = 'Google Books ' + await gbWhy(r); break; }
+      if (!r.ok) { failed = true; coverErr = 'Google Books ' + await gbWhy(r); googleBlock(r); break; }
       for (const v of (await r.json()).items || []) {
         const vi = v.volumeInfo || {}, l = vi.imageLinks, u = l && (l.thumbnail || l.smallThumbnail);
         if (u && titleMatch(b.title, [vi.title, vi.subtitle].filter(Boolean).join(' '), b.author, (vi.authors || []).join(' '))) return u.replace(/^http:/, 'https:').replace('&edge=curl', '');
@@ -436,8 +437,10 @@ async function bookCover(b) {
 }
 // Kapak indirme: görüntü gerçekten inmeli (içerik türü başlığı yoksa dosya imzasına bakılır); inenler bellekte tutulur
 const coverHash = u => require('crypto').createHash('sha1').update(String(u)).digest('hex').slice(0, 12);
-const coverBuf = new Map();
 const sniff = b => b.length > 4 && ((b[0] === 0xff && b[1] === 0xd8) ? 'image/jpeg' : (b[0] === 0x89 && b[1] === 0x50) ? 'image/png' : (b.slice(0, 4).toString() === 'RIFF') ? 'image/webp' : (b.slice(0, 3).toString() === 'GIF') ? 'image/gif' : '');
+const coverBuf = new Map();
+const COVER_DIR = path.join(DATA_DIR, 'covers');
+try { fs.mkdirSync(COVER_DIR, { recursive: true }); for (const f of fs.readdirSync(COVER_DIR).slice(-80)) { const buf = fs.readFileSync(path.join(COVER_DIR, f)); const type = sniff(buf); if (type) coverBuf.set(f.replace(/\.img$/, ''), { buf, type }); } } catch (e) { /* ilk açılış */ }
 async function coverGet(url) {
   const h = coverHash(url);
   if (coverBuf.has(h)) return coverBuf.get(h);
@@ -448,7 +451,7 @@ async function coverGet(url) {
     const buf = Buffer.from(await r.arrayBuffer()), type = sniff(buf);
     if (!type || buf.length < 1500 || buf.length > 3e6) { coverErr = `Kapak geçersiz (${buf.length} bayt): ${new URL(u).hostname}`; return null; }
     const c = { buf, type }; coverBuf.set(h, c);
-    if (coverBuf.size > 60) coverBuf.delete(coverBuf.keys().next().value);
+    fs.writeFile(path.join(COVER_DIR, h + '.img'), buf, () => {});
     return c;
   } catch (e) { coverErr = 'Kapak indirilemedi: ' + e.message; return null; }
 }
@@ -483,6 +486,9 @@ async function fillCovers() {
 // ---- Yeni kitaplar: Google Books (yayınevine göre en yeniler, kapaklı) — başarısız ya da az çıkarsa CollectAPI (D&R) listesine dönülür ----
 const BOOK_PUBLISHERS = ['Can Yayınları', 'Yapı Kredi Yayınları', 'İletişim Yayınları', 'İş Bankası Kültür Yayınları', 'Doğan Kitap', 'Everest Yayınları', 'Domingo Yayınları', 'Timaş Yayınları', 'Epsilon Yayınevi', 'Metis Yayınları'];
 const bookPublishers = () => { const l = String(platformKey('books_publishers') || '').split(',').map(x => x.trim()).filter(Boolean); return l.length ? l.slice(0, 15) : BOOK_PUBLISHERS; };
+let googleBlockUntil = 0;
+const googleBlocked = () => Date.now() < googleBlockUntil;
+const googleBlock = r => { if (r.status === 429 || r.status === 403) googleBlockUntil = Date.now() + 6 * HOUR; };
 async function gbWhy(r) { // Google'ın hata gövdesinden (reason + message) kısa neden
   try { const j = JSON.parse(await r.text()), e = j.error || {}; return `${r.status} ${((e.errors || [])[0] || {}).reason || e.status || ''} ${String(e.message || '').replace(/\s+/g, ' ').slice(0, 140)}`.trim(); }
   catch (x) { return String(r.status); }
@@ -490,6 +496,7 @@ async function gbWhy(r) { // Google'ın hata gövdesinden (reason + message) kı
 const AUDIO = /sesli|audio|dinle|\bmp3\b|podcast/i;
 const pubDate = d => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || '')); return m ? Date.parse(`${m[1]}-${m[2]}-${m[3]}`) : NaN; }; // yalnız gün-gün tarih: "o hafta çıkan" ancak böyle doğrulanır
 async function googleNewBooks() {
+  if (googleBlocked()) throw new Error('Google Books günlük kotası dolu; ' + Math.ceil((googleBlockUntil - Date.now()) / 3600000) + ' saat sonra yeniden denenecek');
   const key = gbKey(), since = Date.now() - 7 * 24 * HOUR, found = []; // yalnız son 7 günde çıkanlar
   let calls = 0, firstErr = '';
   const st = { ham: 0, kapaksiz: 0, sesli: 0, yazarsiz: 0, tarih: 0, yayinevi: 0 };
@@ -497,7 +504,7 @@ async function googleNewBooks() {
     try {
       calls++;
       const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(`inpublisher:"${pub}"`)}&orderBy=newest&langRestrict=tr&printType=books&maxResults=15&key=${encodeURIComponent(key)}`, { signal: AbortSignal.timeout(12000) });
-      if (!r.ok) { firstErr = firstErr || 'Google Books ' + await gbWhy(r); if (r.status === 403 || r.status === 429) break; continue; }
+      if (!r.ok) { firstErr = firstErr || 'Google Books ' + await gbWhy(r); googleBlock(r); if (r.status === 403 || r.status === 429) break; continue; }
       const list = [];
       for (const v of (await r.json()).items || []) {
         const vi = v.volumeInfo || {}, l = vi.imageLinks, u = l && (l.thumbnail || l.smallThumbnail), d = pubDate(vi.publishedDate);
@@ -791,7 +798,7 @@ module.exports = {
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
-  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, ornek: booksSample, kapakli: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, kaynak: (books && books.source) || '', adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, anahtar: !!gbKey(), hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await fillCovers(); }, get booksSource() { return (books && books.source) || ''; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
+  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ googleEngel: googleBlocked() ? Math.ceil((googleBlockUntil - Date.now()) / 60000) : 0, alanlar: booksRaw, ornek: booksSample, kapakli: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, kaynak: (books && books.source) || '', adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, anahtar: !!gbKey(), googleEngel: googleBlocked() ? Math.ceil((googleBlockUntil - Date.now()) / 60000) : 0, hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await fillCovers(); }, get booksSource() { return (books && books.source) || ''; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,
