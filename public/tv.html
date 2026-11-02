@@ -87,6 +87,8 @@ video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100
 .ph .pt2{font-size:1.75vh;color:var(--accent2);font-weight:700;margin-top:.5vh;letter-spacing:.05em}
 .ph .pd{color:var(--mute);font-weight:500;font-size:1.3vh;letter-spacing:.12em;text-transform:uppercase;margin-left:.6vw}
 .nw{padding:1.2vh .9vw}
+.brkc{border-left:.5vh solid #d6262a}
+.brkc .bdot{background:#d6262a;color:#fff;padding:.15vh .6vw;border-radius:.5vh;margin-right:.7vw;letter-spacing:.12em;font-weight:800}
 .nw .nt{font-size:2.6vh;font-weight:700;line-height:1.28;color:var(--white);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .mv{display:flex;gap:1.1vw;align-items:center;padding:.9vh 1vw}
 .mv img{height:15vh;width:10vh;object-fit:cover;border-radius:.6vh;flex:none;background:#222}
@@ -204,6 +206,8 @@ background:radial-gradient(120% 90% at 50% 0%,var(--accent2) 0%,var(--ad) 45%,#1
 #tlabel{flex:none;display:flex;align-items:center;gap:.5vw;margin:1vh 1.1vw;padding:0 2vw;background:rgba(var(--a2),.16);border:max(1px,.1vh) solid rgba(var(--a2),.75);border-radius:1.11vh;color:var(--al);font-size:1.65vh;font-weight:800;letter-spacing:.12em;text-transform:uppercase;position:relative;z-index:2;white-space:nowrap}
 #tlabel::before{content:"";width:1vh;height:1vh;border-radius:50%;background:var(--accent2);animation:pulse 1.2s infinite}
 #tview{flex:1;overflow:hidden;display:flex;align-items:center;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
+#tview,#tl{transition:opacity .55s ease}
+#tview.fade,#tl.fade{opacity:0}
 #ttrack{display:flex;flex:none;white-space:nowrap;animation:tscroll 60s linear infinite;will-change:transform}
 #ttrack>div{display:flex;align-items:center;flex:none}
 @keyframes tscroll{to{transform:translateX(-50%)}}
@@ -607,6 +611,7 @@ let pharmData = null, showPharm = true, otdData = null, showOtd = true, newsData
 const pharmCard = p => `<div class="m ph"><div class="pn">${esc(p.name)}</div><div class="pa">${esc(p.address)}</div><div class="pt2">${p.phone ? '☎ ' + esc(fmtPhone(p.phone)) : ''}${pharmData && pharmData.districts.length > 1 ? `<span class="pd">${esc(p.district)}</span>` : ''}</div></div>`;
 const fmtPhone = t => { const d = String(t || '').replace(/\D/g, ''); return /^0\d{10}$/.test(d) ? `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}` : String(t || ''); };
 const ago = iso => { const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return !isFinite(m) || m < 0 ? '' : m < 1 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.floor(m / 60) + ' saat önce' : Math.floor(m / 1440) + ' gün önce'; };
+const brkCard = n => `<div class="m nw brkc"><div class="nt">${esc(n.title)}</div><div class="nm2"><span class="bdot">SON DAKİKA</span>${esc(n.source)}${n.date ? ' · ' + esc(ago(n.date)) : ''}</div></div>`;
 const newsCard = n => `<div class="m nw"><div class="nt">${esc(n.title)}</div><div class="nm2">${esc(n.source)}${n.date ? ' · ' + esc(ago(n.date)) : ''}</div></div>`;
 const bookCard = b => `<div class="m bk">${b.image ? `<img src="${esc(b.image)}" alt="" onerror="this.remove()">` : ''}<div style="min-width:0"><div class="bt">${esc(b.title)}</div>${b.author ? `<div class="bm">${esc(b.author)}</div>` : ''}${b.publisher ? `<div class="bm bp">${esc(b.publisher)}</div>` : ''}</div></div>`;
 const trDate = d => { const [, m, dd] = String(d).split('-'); return m ? Number(dd) + ' ' + MONTHS[Number(m) - 1] : ''; };
@@ -662,6 +667,10 @@ function buildPages() {
     const ch = paginate(pharmData.items, pharmCard);
     ch.forEach((items, i) => pages.push({ type: 'pharm', items, part: i + 1, parts: ch.length }));
   }
+  if (showBrk && breakData && breakData.items.length) {
+    const ch = paginate(breakData.items.slice(0, 8), brkCard);
+    ch.forEach((items, i) => pages.push({ type: 'breaking', items, part: i + 1, parts: ch.length }));
+  }
   if (showNews && newsData && newsData.items.length) {
     const ch = paginate(newsData.items, newsCard);
     ch.forEach((items, i) => pages.push({ type: 'news', items, part: i + 1, parts: ch.length }));
@@ -678,7 +687,7 @@ function buildPages() {
     const ch = paginate(otdData.items, dayCard);
     ch.forEach((items, i) => pages.push({ type: 'otd', items, part: i + 1, parts: ch.length, date: otdData.date }));
   }
-  if (!pages.some(p => p.type === 'league' || p.type === 'pharm' || p.type === 'otd' || p.type === 'news' || p.type === 'books' || p.type === 'movies')) pages.unshift({ type: 'empty' });
+  if (!pages.some(p => p.type === 'league' || p.type === 'pharm' || p.type === 'otd' || p.type === 'news' || p.type === 'breaking' || p.type === 'books' || p.type === 'movies')) pages.unshift({ type: 'empty' });
   if (mapAt) pages.push({ type: 'traffic' });
 }
 let mapAt = null, mapShown = null;
@@ -697,7 +706,7 @@ function render() {
   const isTraffic = pg.type === 'traffic';
   tr.classList.toggle('off', !isTraffic);
   list.style.display = isTraffic ? 'none' : 'flex';
-  document.getElementById('mtitle').innerHTML = isTraffic ? 'Canlı Trafik' : pg.type === 'empty' ? 'Maçlar' : pg.type === 'movies' ? `Sinemalarda<em>BU HAFTA${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'books' ? `Yeni Çıkan Kitaplar<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'D&R'}</em>` : pg.type === 'news' ? `Gündem<em>TÜRKİYE${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'pharm' ? `Nöbetçi Eczaneler<em>${esc((pharmData.districts || []).join(' · ').toLocaleUpperCase('tr-TR'))}${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'otd' ? `Tarihte Bugün<em>${pg.date ? esc(Number(pg.date.split('-')[2]) + ' ' + MONTHS[Number(pg.date.split('-')[1]) - 1].toLocaleUpperCase('tr-TR')) : ''}${pg.parts > 1 ? ` · ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'table' ? `${esc(pg.league)}<em>PUAN DURUMU${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : esc(pg.league);
+  document.getElementById('mtitle').innerHTML = isTraffic ? 'Canlı Trafik' : pg.type === 'empty' ? 'Maçlar' : pg.type === 'movies' ? `Sinemalarda<em>BU HAFTA${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'books' ? `Yeni Çıkan Kitaplar<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'D&R'}</em>` : pg.type === 'breaking' ? `Son Dakika<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'CANLI'}</em>` : pg.type === 'news' ? `Gündem<em>TÜRKİYE${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'pharm' ? `Nöbetçi Eczaneler<em>${esc((pharmData.districts || []).join(' · ').toLocaleUpperCase('tr-TR'))}${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'otd' ? `Tarihte Bugün<em>${pg.date ? esc(Number(pg.date.split('-')[2]) + ' ' + MONTHS[Number(pg.date.split('-')[1]) - 1].toLocaleUpperCase('tr-TR')) : ''}${pg.parts > 1 ? ` · ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'table' ? `${esc(pg.league)}<em>PUAN DURUMU${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : esc(pg.league);
   document.getElementById('mtitle').lang = /lang="tr"/.test(lng(pg.league)) || !pg.league ? 'tr' : 'en';
   document.getElementById('mtitle').classList.toggle('long', document.getElementById('mtitle').textContent.length > 20);
   if (pg.type === 'league') list.innerHTML = pg.items.map(card).join('');
@@ -706,6 +715,7 @@ function render() {
   else if (pg.type === 'movies') list.innerHTML = pg.items.map(movieCard).join('');
   else if (pg.type === 'books') list.innerHTML = pg.items.map(bookCard).join('');
   else if (pg.type === 'news') list.innerHTML = pg.items.map(newsCard).join('');
+  else if (pg.type === 'breaking') list.innerHTML = pg.items.map(brkCard).join('');
   else if (pg.type === 'otd') list.innerHTML = pg.items.map(dayCard).join('');
   else if (pg.type === 'empty') list.innerHTML = '<div class="m"><div class="top"><span>Yakında maç yok</span></div></div>';
   dots.innerHTML = pages.length > 6 ? `<span class="cnt">${page + 1} / ${pages.length}</span>` : pages.length > 1 ? pages.map((_, i) => `<i class="${i === page ? 'on' : ''}"></i>`).join('') : '';
@@ -719,7 +729,7 @@ function tick() {
 function schedule() {
   clearTimeout(rot);
   const ty = pages[page] && pages[page].type;
-  rot = setTimeout(tick, ty === 'traffic' ? TRAFFIC_MS : (ty === 'pharm' || ty === 'otd' || ty === 'news' || ty === 'books' || ty === 'movies') ? 13000 : PAGE_MS);
+  rot = setTimeout(tick, ty === 'traffic' ? TRAFFIC_MS : (ty === 'pharm' || ty === 'otd' || ty === 'news' || ty === 'breaking' || ty === 'books' || ty === 'movies') ? 13000 : PAGE_MS);
 }
 addEventListener('resize', () => { fit(); pagesDirty = true; render(); });
 function setMatches(list, st, show) {
@@ -854,13 +864,23 @@ function setTicker(list) {
     if (!shown.length && info.length) label = 'Güncel Bilgiler';
   }
   window.__tickerInfo = segIsInfo || (!live.length && !shown.length && info.length > 0);
-  const items = window.__tickerInfo ? info.join('') : shown.map(m => {
+  const brkTi = !window.__tickerInfo && showBrk && breakData ? breakData.items.slice(0, 3).map(n => `<span class="ti"><span class="lg brk">SON DAKİKA</span><span>${esc(n.title)} <span class="ft">${esc(n.source)}</span></span></span>`).join('') : '';
+  const items = window.__tickerInfo ? info.join('') : brkTi + shown.map(m => {
     const mid = m.hs != null ? `<span class="sc">${esc(m.hs)} - ${esc(m.as)}</span>` : '<span class="ft">vs</span>';
     const tag = m.live ? `<span class="lv">● ${esc(m.clock || 'CANLI')}</span>` : m.final ? '<span class="ft">MS</span>' : `<span class="ft">${esc(m.time)}</span>`;
     return `<span class="ti"><span class="lg"${lng(m.league)}>${esc(m.league)}</span><span>${esc(m.home)}</span>${mid}<span>${esc(m.away)}</span>${tag}</span>`;
   }).join('') || '<span class="ti"><span class="ft">Şu an gösterilecek maç yok</span></span>';
   if (window.__lastTick === label + '|' + items) return; // değişiklik yok: yeniden çizme
+  const first = !window.__lastTick;
   window.__lastTick = label + '|' + items;
+  const view0 = document.getElementById('tview'), tl = document.getElementById('tl');
+  const apply = () => applyTicker(label, items, seg, shown, info);
+  clearTimeout(window.__tickFade);
+  if (first) { apply(); return; }
+  view0.classList.add('fade'); if (tl.textContent !== label) tl.classList.add('fade');
+  window.__tickFade = setTimeout(() => { apply(); view0.classList.remove('fade'); tl.classList.remove('fade'); }, 550);
+}
+function applyTicker(label, items, seg, shown, info) {
   document.getElementById('tl').textContent = label;
   const a = document.getElementById('ta'), b = document.getElementById('tb'), track = document.getElementById('ttrack');
   const view = document.getElementById('tview').clientWidth;
@@ -920,7 +940,7 @@ function setState(s) {
   setLangs(s.langs, s.langSec);
   ALLV = s.videos || []; applyVideos();
   GRATING = s.googleRating || null;
-  { const bs = JSON.stringify([s.breaking, s.showBreaking, s.breakingBanner]); if (bs !== window.__brkSig) { window.__brkSig = bs; breakData = s.breaking; showBrk = s.showBreaking === true; brkBanner = s.breakingBanner !== false; window.__forceRender = true; checkBreaking(); } }
+  { const bs = JSON.stringify([s.breaking, s.showBreaking, s.breakingBanner]); if (bs !== window.__brkSig) { window.__brkSig = bs; pagesDirty = true; breakData = s.breaking; showBrk = s.showBreaking === true; brkBanner = s.breakingBanner !== false; window.__forceRender = true; checkBreaking(); } }
   const infoSig = JSON.stringify([s.pharmacies, s.showPharmacy, s.onThisDay, s.showOnThisDay, s.news, s.showNews, s.books, s.showBooks, s.movies, s.showMovies]);
   if (infoSig !== window.__infoSig) { window.__infoSig = infoSig; pharmData = s.pharmacies; showPharm = s.showPharmacy !== false; otdData = s.onThisDay; showOtd = s.showOnThisDay !== false; newsData = s.news; showNews = s.showNews !== false; booksData = s.books; showBooks = s.showBooks !== false; moviesData = s.movies; showMovies = s.showMovies !== false; window.__forceRender = true; }
   if (s.mapAt !== mapAt) { const had = !!mapAt; mapAt = s.mapAt || null; if (!had !== !mapAt) { pagesDirty = true; window.__forceRender = true; } loadTraffic(); }
