@@ -1,0 +1,42 @@
+# Windows uygulamasını (desktop/) derler ve GitHub Releases'e ScreenPano-Setup.exe olarak yükler.
+# Yeni sürüm için desktop/package.json'daki "version"ı artırıp main'e gönderin. Kurulu uygulamalar
+# yeni sürümü buradan kendiliğinden indirir ve gece 04:00'te kurar. İndirme adresi: /app.exe
+name: Windows uygulaması
+
+on:
+  push:
+    branches: [main]
+    paths: ['desktop/**', '.github/workflows/desktop.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-build
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - name: Derle ve yayınla
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --x64 --publish always
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ScreenPano-Setup
+          path: desktop/dist/ScreenPano-Setup.exe
+          retention-days: 14

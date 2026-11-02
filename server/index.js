@@ -74,6 +74,9 @@ function makeApkFilename(name) {
   return `${clean}.apk`;
 }
 
+// Windows uygulaması: GitHub Releases'teki son sürüme yönlendirir (derleme: .github/workflows/desktop.yml)
+const DESKTOP_URL = process.env.DESKTOP_URL || 'https://github.com/ooemir23/screenpano.com/releases/latest/download/ScreenPano-Setup.exe';
+app.get('/app.exe', (req, res) => { res.set('Cache-Control', 'no-cache'); res.redirect(302, DESKTOP_URL); });
 app.get('/app.apk', (req, res) => {
   const f = path.join(config.PUBLIC_DIR, 'app.apk');
   if (!fs.existsSync(f)) return res.status(404).send('APK henüz yüklenmedi');

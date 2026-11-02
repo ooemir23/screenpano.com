@@ -59,7 +59,7 @@ function features(data) {
   <div class="fx-step"><button class="fx-prev" aria-label="Önceki özellik">‹</button><span class="fx-c" aria-live="polite">1 / ${list.length}</span><button class="fx-next" aria-label="Sonraki özellik">›</button></div></div>`;
 }
 
-const extras = data => (data.extras || []).map(x => `<li><b>${x.icon || ''} ${e(x.title)}</b>${e(x.text)}</li>`).join('');
+const extras = data => (data.extras || []).map(x => `<li><b>${x.icon || ''} ${e(x.title)}${isNew(x) ? ' <span class="nb">Yeni</span>' : ''}</b>${e(x.text)}</li>`).join('');
 
 function compare(data) {
   const b = PLANS.baslangic, p = PLANS.pro, gb = mb => (mb >= 1024 ? Math.round(mb / 1024) + ' GB' : mb + ' MB');

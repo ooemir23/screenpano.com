@@ -10,7 +10,7 @@
   window.__fx = 'auto';
   window.__applyFx = function () {
     window.__N = window.TVNative || window.__N || null;
-    var lite = window.__fx === 'lite' || (window.__fx === 'auto' && !!window.__N) || /[?&]lite=1/.test(location.search);
+    var lite = window.__fx === 'lite' || (window.__fx === 'auto' && !!window.__N && !window.__N.desktop) || /[?&]lite=1/.test(location.search);
     document.documentElement.classList.toggle('lite', lite); window.__lite = lite;
   };
   window.__applyFx();
@@ -904,7 +904,7 @@ function setState(s) {
   setRates(s.rates);
   if (s.weather) setWeather(s.weather);
   setTicker(s.matches);
-  if (window.__N) { /* APK içinde: İBB verisini uygulama doğrudan verir */ } else if (s.trafficApi) pollTraffic(s.trafficApi); else { trafficUrl = ''; dbg(['trafficApi: YOK (sunucu durumunda adres boş)']); }
+  if (window.__N && !window.__N.desktop) { /* APK içinde: İBB verisini uygulama doğrudan verir */ } else if (s.trafficApi) pollTraffic(s.trafficApi); else { trafficUrl = ''; dbg(['trafficApi: YOK (sunucu durumunda adres boş)']); }
   serverTraffic = s.traffic ? { ...s.traffic, at: s.traffic.at || Date.parse(s.traffic.updated) } : null;
   applyServerTraffic();
   setReviews(s.reviews);
@@ -1218,12 +1218,13 @@ window.__updateStatus = msg => { if (!$m('menu').classList.contains('on')) menuO
 function checkUpdate(a) {
   const n = window.__N;
   if (a) upd.last = a;
-  upd.avail = (n && n.versionCode && a && a.versionCode > n.versionCode()) ? a : null;
+  upd.avail = (n && !n.desktop && n.versionCode && a && a.versionCode > n.versionCode()) ? a : null;
   $m('updot').classList.toggle('on', !!(upd.avail && n.versionName));
   if ($m('menu').classList.contains('on')) menuInfo();
 }
 $m('mchk').addEventListener('click', async () => {
   menuSt('Kontrol ediliyor…');
+  if (window.__N && window.__N.desktop && window.__N.checkUpdate) { window.__N.checkUpdate(); return; } // Windows: sonuç __updateStatus ile gelir
   try {
     const a = await (await fetch('/apk-version.json?t=' + Date.now(), { cache: 'no-store' })).json();
     checkUpdate(a); menuInfo();
@@ -1672,6 +1673,7 @@ function sendStatus() {
 setInterval(sendStatus, 60000);
 function sendSnap() {
   const n = window.__N;
+  if (n && n.snapshotAsync) { n.snapshotAsync().then(d => { if (d) wsSend({ type: 'snap', data: d }); }).catch(() => {}); return; } // Windows uygulaması
   if (n && n.snapshot) { setTimeout(() => { try { const d = n.snapshot(); if (d) wsSend({ type: 'snap', data: d }); } catch (e) {} }, 50); }
 }
 

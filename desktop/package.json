@@ -1,0 +1,45 @@
+{
+  "name": "screenpano-desktop",
+  "productName": "ScreenPano",
+  "version": "1.0.0",
+  "description": "ScreenPano TV oynatıcı: Android kutu yerine Windows bilgisayardan ekranlara yayın",
+  "author": "ScreenPano",
+  "homepage": "https://screenpano.com",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64",
+    "release": "electron-builder --win --x64 --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.screenpano.desktop",
+    "productName": "ScreenPano",
+    "copyright": "ScreenPano",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "config.js", "build/icon.png", "package.json"],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.png",
+      "artifactName": "ScreenPano-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ScreenPano",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [{ "provider": "github", "owner": "ooemir23", "repo": "screenpano.com", "releaseType": "release" }]
+  }
+}

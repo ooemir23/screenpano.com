@@ -94,7 +94,7 @@ SECTIONS.home = {
     const steps = [
       [!!t.logo, 'Logo ve renkler', 'Logonuzu yükleyin, renklerinizi seçin', '#design/colors'],
       [db.videos.length > 0, 'Medya ekleyin', 'Tanıtım videoları ve fotoğraflar', '#media'],
-      [devs.length > 0, 'TV kutusunu bağlayın', 'APK\'yı kurun, kodu girin ya da şifrenizle giriş yapın', '#settings/devices'],
+      [devs.length > 0, 'TV kutusunu bağlayın', 'Android kutuya ya da Windows bilgisayara uygulamayı kurun, kodu girin', '#settings/devices'],
       [!!(db.location || {}).custom, 'Şehrinizi seçin', 'Hava durumu için', '#settings/business'],
     ];
     if (pro()) steps.push([(db.menu.categories || []).length > 0, 'Fiyat listesi', 'Ürünlerinizi ve fiyatlarınızı girin', '#menu']);
@@ -620,7 +620,7 @@ SECTIONS.settings = {
       const devs = S.scr.devices, lim = S.scr.limit;
       h += `<div class="grid g2" style="margin-bottom:18px">`
         + card('TV kutusunu bağla', 'Mekândaki Android kutu, HDMI dağıtıcıyla tüm TV\'lere aynı görüntüyü verir; tek kutu yeterli.',
-          `<ol style="padding-left:20px;line-height:1.9;color:var(--soft);font-size:14px"><li><a href="/app.apk?name=${encodeURIComponent(S.me.tenant.name)}">Android uygulamasını (APK) indirin</a> ve kutuya kurun.</li><li>Uygulamayı açın. Ekranda giriş formu ve 6 haneli bir kod çıkar.</li><li>Kutuda kullanıcı adı ve şifrenizle giriş yapın, <b>ya da</b> kodu aşağıya yazın (TV'deki QR'ı telefonla okutursanız kendiliğinden dolar).</li></ol>
+          `<ol style="padding-left:20px;line-height:1.9;color:var(--soft);font-size:14px"><li><a href="/app.apk?name=${encodeURIComponent(S.me.tenant.name)}">Android uygulamasını (APK) indirin</a> ve kutuya kurun. Kutu yerine televizyona bağlı bir <b>Windows bilgisayar</b> kullanacaksanız <a href="/app.exe">Windows uygulamasını indirin</a>; televizyon ikinci ekransa yayın oraya açılır.</li><li>Uygulamayı açın. Ekranda giriş formu ve 6 haneli bir kod çıkar.</li><li>Kutuda kullanıcı adı ve şifrenizle giriş yapın, <b>ya da</b> kodu aşağıya yazın (TV'deki QR'ı telefonla okutursanız kendiliğinden dolar).</li></ol>
            <div class="row mt"><input type="text" id="pcode" class="code-in" inputmode="numeric" maxlength="7" placeholder="123 456" value="${window.__pair ? window.__pair.replace(/(\d{3})(\d{3})/, '$1 $2') : ''}"><button class="btn" onclick="pairTv()">Bağla</button></div>`)
         + card(`Bağlı cihazlar <span class="muted">· ${devs.length}/${lim}</span>`, 'Kutu değiştirirseniz eskisini buradan kaldırın.',
           devs.length ? `<div class="list">${devs.map(d => `<div class="it"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b"><b>${esc(d.name || 'TV kutusu')}</b><span>${d.online ? 'Şu an bağlı' : 'Son görülme: ' + ago(d.last_seen)} · eklendi ${fmtDate(d.created)}</span></div><button class="btn xs g" onclick="renDev('${d.id}','${esc(d.name || '').replace(/'/g, '')}')">Adlandır</button><button class="btn xs d" onclick="delDev('${d.id}')">Kaldır</button></div>`).join('')}</div>

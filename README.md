@@ -112,6 +112,10 @@ cd android
 - Eski APK farklı paket adı ve anahtarla imzalandıysa yeni APK üzerine kurulmaz; kutulara ScreenPano APK'sını bir kez kurun. Eski APK kök adresi açarsa sunucu onu `/tv`'ye yönlendirir.
 - Simgeler geçici, genel bir TV simgesidir; marka belli olunca `android/app/src/main/res` altındakileri değiştirin.
 
+## Windows uygulaması
+
+Android kutu yerine televizyona bağlı bir Windows bilgisayardan yayın için `desktop/` (Electron). GitHub'da kendiliğinden derlenip Releases'e yüklenir; indirme adresi `/app.exe`. Ayrıntı: `desktop/README.md`.
+
 ## Mimari
 
 ```

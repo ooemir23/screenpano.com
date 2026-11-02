@@ -7,10 +7,17 @@
       "title": "Video, fotoğraf ve hazır afişler",
       "short": "Medya ve afişler",
       "text": "Tanıtım videolarınızı ve fotoğraflarınızı yükleyin, sürükleyerek sıralayın. Tasarımcınız yoksa dert değil: happy hour, günün menüsü, yeni ürün ya da Wi‑Fi şifresi için hazır afişin yazısını değiştirmeniz yeterli.",
-      "points": ["9 düzenlenebilir afiş şablonu, renkler temanızdan", "Videolar TV için otomatik küçültülür", "Afişe kendi fotoğrafınızı ekleyebilirsiniz"],
+      "points": [
+        "9 düzenlenebilir afiş şablonu, renkler temanızdan",
+        "Videolar TV için otomatik küçültülür",
+        "Afişe kendi fotoğrafınızı ekleyebilirsiniz"
+      ],
       "plan": "all",
       "compare": "Video, fotoğraf ve hazır afişler",
-      "visual": { "type": "poster", "phone": "m-medya" }
+      "visual": {
+        "type": "poster",
+        "phone": "m-medya"
+      }
     },
     {
       "id": "fiyat",
@@ -18,10 +25,19 @@
       "title": "Fiyat listesi ve menü, turistler için çoklu dil",
       "short": "Fiyat listesi",
       "text": "Kategorileri ve ürünleri girin, ekranda sayfa sayfa dönsün. Fiyat değişince menü bastırmazsınız; telefondan düzeltip kaydedersiniz. Liste Türkçeyle birlikte en çok üç dilde sırayla gösterilir.",
-      "points": ["Fiyat Etiketi Yönetmeliği'ne uygun giriş ekranı", "Kahvaltı menüsü sabah, kokteyl listesi akşam", "İngilizce, Almanca, Rusça, Arapça, Fransızca, İspanyolca", "Biten ürünü tek dokunuşla \"yok\" yapın"],
+      "points": [
+        "Fiyat Etiketi Yönetmeliği'ne uygun giriş ekranı",
+        "Kahvaltı menüsü sabah, kokteyl listesi akşam",
+        "İngilizce, Almanca, Rusça, Arapça, Fransızca, İspanyolca",
+        "Biten ürünü tek dokunuşla \"yok\" yapın"
+      ],
       "plan": "pro",
       "compare": "Fiyat listesi ve çoklu dil",
-      "visual": { "type": "tv", "img": "tv-vitrin", "phone": "m-fiyat" }
+      "visual": {
+        "type": "tv",
+        "img": "tv-vitrin",
+        "phone": "m-fiyat"
+      }
     },
     {
       "id": "spor",
@@ -29,10 +45,17 @@
       "title": "Maç akşamları ekran kendi kendine canlanır",
       "short": "Canlı maçlar",
       "text": "Seçtiğiniz liglerin bugünkü maçları, canlı skorlar ve puan durumu ekranda. Gol olduğunda konfetili animasyon çıkar, kayan bantta günün sonuçları akar. Büyük maçlardan önce rezervasyon notunuzla duyuru yapılır.",
-      "points": ["Süper Lig, 1. Lig, Avrupa kupaları ve büyük Avrupa ligleri", "Gol animasyonu ve canlı skor", "Yayın kanalı bilgisiyle kendi maç listeniz"],
+      "points": [
+        "Süper Lig, 1. Lig, Avrupa kupaları ve büyük Avrupa ligleri",
+        "Gol animasyonu ve canlı skor",
+        "Yayın kanalı bilgisiyle kendi maç listeniz"
+      ],
       "plan": "pro",
       "compare": "Canlı maçlar ve gol animasyonu",
-      "visual": { "type": "tv", "img": "tv-gol" }
+      "visual": {
+        "type": "tv",
+        "img": "tv-gol"
+      }
     },
     {
       "id": "duyuru",
@@ -40,10 +63,18 @@
       "title": "Kampanya kartı, QR kodlar ve Google yorumları",
       "short": "Kampanya ve QR",
       "text": "Belirli aralıklarla medyanın yerine QR kodlu bir kampanya kartı çıkar: \"Google'da yorum yapın, kahveniz bizden\" gibi. Menü, Wi‑Fi ya da Instagram için QR kodlar ekranda döner; 4 ve 5 yıldızlı Google yorumlarınız ekranın altında akar.",
-      "points": ["Kaç dakikada bir, kaç saniye görüneceğini siz seçin", "En çok 6 QR kod; Wi‑Fi QR'ı tek dokunuşla bağlanır", "Instagram paylaşımlarınız medya döngüsüne girer"],
+      "points": [
+        "Kaç dakikada bir, kaç saniye görüneceğini siz seçin",
+        "En çok 6 QR kod; Wi‑Fi QR'ı tek dokunuşla bağlanır",
+        "Instagram paylaşımlarınız medya döngüsüne girer"
+      ],
       "plan": "all",
       "compare": "QR kodlar ve kampanya kartı",
-      "visual": { "type": "tv", "img": "tv-kampanya", "phone": "m-duyuru" }
+      "visual": {
+        "type": "tv",
+        "img": "tv-kampanya",
+        "phone": "m-duyuru"
+      }
     },
     {
       "id": "yorum",
@@ -57,10 +88,18 @@
       "title": "Doğum günleri ve resmî bayramlar",
       "short": "Kutlamalar",
       "text": "Müşterinizin ya da çalışanınızın doğum gününde ekranda kutlama yazısı çıkar; saatlerini siz belirlersiniz. 23 Nisan, 19 Mayıs, 30 Ağustos, 29 Ekim ve 10 Kasım'da ekran kendiliğinden bayrak ve anma görselleriyle değişir.",
-      "points": ["Kişiler, mesajlar ve gösterim saatleri", "Resmî günlerde otomatik, isterseniz kendi fotoğrafınızla", "Doğum günü eklerken KVKK rıza onayı"],
+      "points": [
+        "Kişiler, mesajlar ve gösterim saatleri",
+        "Resmî günlerde otomatik, isterseniz kendi fotoğrafınızla",
+        "Doğum günü eklerken KVKK rıza onayı"
+      ],
       "plan": "pro",
       "compare": "Doğum günü kutlamaları",
-      "visual": { "type": "tv", "img": "tv-dogumgunu", "win": "p-kutlama" }
+      "visual": {
+        "type": "tv",
+        "img": "tv-dogumgunu",
+        "win": "p-kutlama"
+      }
     },
     {
       "id": "bilgi",
@@ -68,10 +107,20 @@
       "title": "Bilgi bandı: ekran hiç boş kalmaz",
       "short": "Bilgi bandı",
       "text": "Medya ve fiyatların arasında müşterilerinizin ilgisini çeken bilgi sayfaları döner. Hangilerinin görüneceğini anahtarla açıp kapatırsınız; veriler kendiliğinden güncellenir.",
-      "tags": ["Son dakika haberleri", "Nöbetçi eczaneler", "Vizyondaki filmler ve fragmanlar", "Yeni çıkan kitaplar", "Tarihte bugün", "Trafik durumu (İstanbul)"],
+      "tags": [
+        "Son dakika haberleri",
+        "Nöbetçi eczaneler",
+        "Vizyondaki filmler ve fragmanlar",
+        "Yeni çıkan kitaplar",
+        "Tarihte bugün",
+        "Trafik durumu (İstanbul)"
+      ],
       "plan": "pro",
       "compare": "Bilgi bandı (haber, eczane, sinema…)",
-      "visual": { "type": "win", "img": "p-bilgi" }
+      "visual": {
+        "type": "win",
+        "img": "p-bilgi"
+      }
     },
     {
       "id": "piyasa",
@@ -85,10 +134,15 @@
       "title": "Her içeriğe kendi saati",
       "short": "Zamanlama",
       "text": "Her video, fotoğraf, afiş, kampanya ve fiyat listesi kategorisi için gün, saat ve tarih aralığı verin. Kahvaltı afişi yalnızca hafta sonu sabah, happy hour yalnızca akşamüstü. Kurallar internet yokken de çalışır.",
-      "points": ["Gece yarısını aşan saat aralıkları (22:00 – 02:00)", "Başlangıç ve bitiş tarihi olan kampanyalar"],
+      "points": [
+        "Gece yarısını aşan saat aralıkları (22:00 – 02:00)",
+        "Başlangıç ve bitiş tarihi olan kampanyalar"
+      ],
       "plan": "all",
       "compare": "Zamanlama",
-      "visual": { "type": "schedule" }
+      "visual": {
+        "type": "schedule"
+      }
     },
     {
       "id": "cihaz",
@@ -96,10 +150,17 @@
       "title": "İnternet kesilse de yayın sürer, ekran kapanınca haberiniz olur",
       "short": "Çevrimdışı ve uyarılar",
       "text": "Kutu videolarınızın ve son ayarlarınızın bir kopyasını saklar; bağlantı gitse, kutu yeniden başlasa da ekran kararmaz. Kutu 10 dakikadan uzun süre bağlantı vermezse panelde ve e‑postanızda uyarı görürsünüz.",
-      "points": ["Kutu açılınca uygulama kendiliğinden başlar", "Cihaz durumu: sürüm, çözünürlük, oynayan içerik", "Ekranın o anki görüntüsünü telefondan açın, uzaktan yenileyin"],
+      "points": [
+        "Kutu açılınca uygulama kendiliğinden başlar",
+        "Cihaz durumu: sürüm, çözünürlük, oynayan içerik",
+        "Ekranın o anki görüntüsünü telefondan açın, uzaktan yenileyin"
+      ],
       "plan": "all",
       "compare": "Çevrimdışı oynatma ve cihaz uyarıları",
-      "visual": { "type": "win", "img": "p-cihaz" }
+      "visual": {
+        "type": "win",
+        "img": "p-cihaz"
+      }
     },
     {
       "id": "istatistik",
@@ -107,10 +168,18 @@
       "title": "Ne kadar izlendi, görün",
       "short": "İstatistik",
       "text": "Ekranınız günde kaç saat açık kaldı, hangi video ya da afiş kaç kez oynadı. Son 7, 30 ve 90 gün için özet; kampanyanın gerçekten gösterildiğinden emin olursunuz.",
-      "points": ["Günlük ekran süresi grafiği", "İçerik bazında oynatma sayısı ve süresi", "Kişisel veri tutulmaz"],
+      "points": [
+        "Günlük ekran süresi grafiği",
+        "İçerik bazında oynatma sayısı ve süresi",
+        "Kişisel veri tutulmaz"
+      ],
       "plan": "all",
       "compare": "İstatistik",
-      "visual": { "type": "win", "img": "p-istatistik", "phone": "m-istatistik" }
+      "visual": {
+        "type": "win",
+        "img": "p-istatistik",
+        "phone": "m-istatistik"
+      }
     },
     {
       "id": "sube",
@@ -118,40 +187,163 @@
       "title": "Birden çok şube, tek hesap",
       "short": "Şubeler",
       "text": "Her şubenin kendi ekranı ve içeriği olur; hepsini tek hesaptan yönetirsiniz. Menüyü ya da kampanyayı bir şubede hazırlayıp diğerlerine tek tuşla kopyalayın, çalışanlarınıza kendi kullanıcılarını açın.",
-      "points": ["Şubeler arası tek tıkla geçiş", "Düzen, renk, medya, fiyat ve duyuru kopyalama"],
+      "points": [
+        "Şubeler arası tek tıkla geçiş",
+        "Düzen, renk, medya, fiyat ve duyuru kopyalama"
+      ],
       "plan": "pro",
       "compare": "Birden çok şube",
-      "visual": { "type": "win", "img": "p-sube" }
+      "visual": {
+        "type": "win",
+        "img": "p-sube"
+      }
     }
   ],
   "extras": [
-    { "icon": "🔒", "title": "KVKK'ya uygun", "text": "Aydınlatma onayı, verilerinizi indirme ve hesap silme." },
-    { "icon": "💾", "title": "Her gece yedek", "text": "Panelden elle yedek alıp geri de yükleyebilirsiniz." },
-    { "icon": "📺", "title": "Kenar payı ayarı", "text": "Kenarları kesen televizyonlar için ekranı içeri alın." },
-    { "icon": "⚡", "title": "Anında güncelleme", "text": "Kaydettiğiniz değişiklik birkaç saniyede ekranda." },
-    { "icon": "🔑", "title": "Güvenli eşleştirme", "text": "Kutu şifrenizi değil, yalnızca kendi anahtarını saklar." },
-    { "icon": "🧩", "title": "Tek kutu, tüm TV'ler", "text": "HDMI dağıtıcıyla istediğiniz kadar televizyon." }
+    {
+      "icon": "💻",
+      "title": "Windows'tan da yayın",
+      "text": "Kutu yerine televizyona bağlı bilgisayarınızdan yayın yapın.",
+      "added": "2026-11-02"
+    },
+    {
+      "icon": "🔒",
+      "title": "KVKK'ya uygun",
+      "text": "Aydınlatma onayı, verilerinizi indirme ve hesap silme."
+    },
+    {
+      "icon": "💾",
+      "title": "Her gece yedek",
+      "text": "Panelden elle yedek alıp geri de yükleyebilirsiniz."
+    },
+    {
+      "icon": "📺",
+      "title": "Kenar payı ayarı",
+      "text": "Kenarları kesen televizyonlar için ekranı içeri alın."
+    },
+    {
+      "icon": "⚡",
+      "title": "Anında güncelleme",
+      "text": "Kaydettiğiniz değişiklik birkaç saniyede ekranda."
+    },
+    {
+      "icon": "🔑",
+      "title": "Güvenli eşleştirme",
+      "text": "Kutu şifrenizi değil, yalnızca kendi anahtarını saklar."
+    },
+    {
+      "icon": "🧩",
+      "title": "Tek kutu, tüm TV'ler",
+      "text": "HDMI dağıtıcıyla istediğiniz kadar televizyon."
+    }
   ],
   "shots": {
-    "tv-kafe":      { "tenant": "kafe",   "view": "tv" },
-    "tv-spor":      { "tenant": "spor",   "view": "tv" },
-    "tv-vitrin":    { "tenant": "vitrin", "view": "tv" },
-    "tv-gol":       { "tenant": "spor",   "view": "tv", "eval": "showGoal({id:'demo',league:'Süper Lig',home:'Galatasaray',away:'Fenerbahçe',hs:2,as:1,side:'home',minute:\"78'\",player:'',own:false,pen:false})", "after": 1800 },
-    "tv-kampanya":  { "tenant": "kafe",   "view": "tv", "api": ["POST", "/api/admin/campaigns/google-yorum/test"], "after": 2500 },
-    "tv-dogumgunu": { "tenant": "kafe",   "view": "tv", "api": ["POST", "/api/admin/birthday/fire"], "after": 2500 },
-    "tv-eslestir":  { "view": "pair", "width": 1200 },
-    "p-ozet":       { "tenant": "kafe", "view": "panel", "hash": "home" },
-    "p-duzen":      { "tenant": "kafe", "view": "panel", "hash": "design/layout" },
-    "p-renk":       { "tenant": "kafe", "view": "panel", "hash": "design/colors" },
-    "p-kutlama":    { "tenant": "kafe", "view": "panel", "hash": "celeb" },
-    "p-bilgi":      { "tenant": "kafe", "view": "panel", "hash": "info" },
-    "p-istatistik": { "tenant": "kafe", "view": "panel", "hash": "stats" },
-    "p-cihaz":      { "tenant": "kafe", "view": "panel", "hash": "settings/devices" },
-    "p-sube":       { "tenant": "kafe", "view": "panel", "hash": "settings/branches" },
-    "m-ozet":       { "tenant": "kafe", "view": "mobile", "hash": "home" },
-    "m-medya":      { "tenant": "kafe", "view": "mobile", "hash": "media", "scroll": 620 },
-    "m-fiyat":      { "tenant": "kafe", "view": "mobile", "hash": "menu", "scroll": 560 },
-    "m-duyuru":     { "tenant": "kafe", "view": "mobile", "hash": "promo" },
-    "m-istatistik": { "tenant": "kafe", "view": "mobile", "hash": "stats" }
+    "tv-kafe": {
+      "tenant": "kafe",
+      "view": "tv"
+    },
+    "tv-spor": {
+      "tenant": "spor",
+      "view": "tv"
+    },
+    "tv-vitrin": {
+      "tenant": "vitrin",
+      "view": "tv"
+    },
+    "tv-gol": {
+      "tenant": "spor",
+      "view": "tv",
+      "eval": "showGoal({id:'demo',league:'Süper Lig',home:'Galatasaray',away:'Fenerbahçe',hs:2,as:1,side:'home',minute:\"78'\",player:'',own:false,pen:false})",
+      "after": 1800
+    },
+    "tv-kampanya": {
+      "tenant": "kafe",
+      "view": "tv",
+      "api": [
+        "POST",
+        "/api/admin/campaigns/google-yorum/test"
+      ],
+      "after": 2500
+    },
+    "tv-dogumgunu": {
+      "tenant": "kafe",
+      "view": "tv",
+      "api": [
+        "POST",
+        "/api/admin/birthday/fire"
+      ],
+      "after": 2500
+    },
+    "tv-eslestir": {
+      "view": "pair",
+      "width": 1200
+    },
+    "p-ozet": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "home"
+    },
+    "p-duzen": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "design/layout"
+    },
+    "p-renk": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "design/colors"
+    },
+    "p-kutlama": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "celeb"
+    },
+    "p-bilgi": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "info"
+    },
+    "p-istatistik": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "stats"
+    },
+    "p-cihaz": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "settings/devices"
+    },
+    "p-sube": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "settings/branches"
+    },
+    "m-ozet": {
+      "tenant": "kafe",
+      "view": "mobile",
+      "hash": "home"
+    },
+    "m-medya": {
+      "tenant": "kafe",
+      "view": "mobile",
+      "hash": "media",
+      "scroll": 620
+    },
+    "m-fiyat": {
+      "tenant": "kafe",
+      "view": "mobile",
+      "hash": "menu",
+      "scroll": 560
+    },
+    "m-duyuru": {
+      "tenant": "kafe",
+      "view": "mobile",
+      "hash": "promo"
+    },
+    "m-istatistik": {
+      "tenant": "kafe",
+      "view": "mobile",
+      "hash": "stats"
+    }
   }
 }

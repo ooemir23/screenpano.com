@@ -25,6 +25,7 @@ Sitedeki (`/`) özellik gezgini, "Ve dahası" kartları ve paket karşılaştır
 - `added`: bu tarihten sonraki 60 gün sitede **Yeni** rozeti çıkar.
 - `visual.type`: `tv` (TV görüntüsü, `img`), `win` (panel görüntüsü, `img`), `poster` (canlı afiş örneği), `schedule` (zamanlama tablosu). İsteğe bağlı `phone` (telefon görüntüsü) ve `win` (TV'nin altında panel).
 - Yalnız tabloda görünsün istiyorsanız `"hidden": true` ve `compare` yeter.
+- Küçük özellikler için `extras` listesine `{ "icon", "title", "text", "added" }` eklemek yeter ("Ve dahası" kartları).
 
 2. Görsel gerekiyorsa aynı dosyadaki `shots` listesine nasıl çekileceğini yazın:
 
