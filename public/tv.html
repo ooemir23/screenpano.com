@@ -684,7 +684,7 @@ const brkCard = n => `<div class="m nw brkc"><div class="nt">${esc(n.title)}</di
 const newsCard = n => `<div class="m nw"><div class="nt">${esc(n.title)}</div><div class="nm2">${esc(n.source)}${n.date ? ' · ' + esc(ago(n.date)) : ''}</div></div>`;
 const bookCard = b => `<div class="m bk">${b.image ? `<img src="${esc(b.image)}" alt="" onerror="this.remove()">` : ''}<div style="min-width:0"><div class="bt">${esc(b.title)}</div>${b.author ? `<div class="bm">${esc(b.author)}</div>` : ''}${b.publisher ? `<div class="bm bp">${esc(b.publisher)}</div>` : ''}</div></div>`;
 const trDate = d => { const [, m, dd] = String(d).split('-'); return m ? Number(dd) + ' ' + MONTHS[Number(m) - 1] : ''; };
-const movieCard = m => `<div class="m mv">${m.poster ? `<img src="${esc(m.poster)}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<div><div class="mt">${esc(m.title)}</div><div class="mm">${esc(trDate(m.date))}${m.rating ? ' · ★ ' + esc(String(m.rating).replace('.', ',')) : ''}${m.trailer ? ' · ▶ Fragman' : ''}</div></div></div>`;
+const movieCard = m => `<div class="m mv">${m.poster ? `<img src="${esc(m.poster)}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<div><div class="mt">${esc(m.title)}</div><div class="mm">${esc(trDate(m.date))}${m.rating ? ' · ★ ' + esc(String(m.rating).replace('.', ',')) : ''}</div></div></div>`;
 const dayCard = e => `<div class="m od"><b class="oy">${esc(e.year)}</b><p>${esc(e.text)}</p></div>`;
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 function fit() {
