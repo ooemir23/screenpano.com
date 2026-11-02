@@ -26,9 +26,20 @@ function read(file, parse) {
   cache[file] = { m, v }; return v;
 }
 // dil sözlüğü: eksik anahtar Türkçeye düşer
+// deneme süresi: metinlerde {trial} (sayı) ve {trialDays} (birimiyle) yer tutucuları kullanılır; süre config.TRIAL_DAYS'ten gelir
+function trialText(lang, n) {
+  if (lang === 'en') return n === 1 ? '1 day' : `${n} days`;
+  if (lang === 'de') return n === 1 ? '1 Tag' : `${n} Tage`;
+  if (lang === 'ar') return n === 1 ? 'يوم واحد' : n === 2 ? 'يومان' : n <= 10 ? `${n} أيام` : `${n} يومًا`;
+  return `${n} gün`;
+}
 function dict(lang) {
   const tr = read(I18N('tr'), true), d = lang === 'tr' ? tr : read(I18N(lang), true);
-  return k => (d[k] !== undefined && d[k] !== null ? d[k] : tr[k] !== undefined ? tr[k] : k);
+  const n = config.TRIAL_DAYS;
+  return k => {
+    const v = d[k] !== undefined && d[k] !== null ? d[k] : tr[k] !== undefined ? tr[k] : k;
+    return typeof v === 'string' ? v.replace(/\{trialDays\}/g, trialText(lang, n)).replace(/\{trial\}/g, n) : v;
+  };
 }
 // özellik kaydının çevirisi
 const loc = (f, lang) => (lang === 'tr' || !f.i18n || !f.i18n[lang] ? f : { ...f, ...f.i18n[lang] });
@@ -121,4 +132,4 @@ function render(store, tenants, access, lang = 'tr') {
     .replace(/\/site\/([\w-]+)\.webp/g, (m, n) => `${m}?v=${ver(n)}`);
 }
 
-module.exports = { render, LANGS };
+module.exports = { render, LANGS, BASE, PATH };

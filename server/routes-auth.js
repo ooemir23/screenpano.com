@@ -10,10 +10,11 @@ const LEGAL_VERSION = require('./legal').VERSION;
 
 r.post('/login', (req, res) => {
   const ip = auth.clientIp(req);
-  if (auth.tooMany(ip)) return res.status(429).json({ error: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin.' });
   const { username, password } = req.body || {};
+  if (auth.tooMany(ip, username)) return res.status(429).json({ error: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin.' });
   const u = store.q.userByName.get(String(username || '').trim());
-  if (!u || !auth.checkPassword(password, u.pass)) { auth.noteFail(ip); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
+  if (!u || !auth.checkPassword(password, u.pass)) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
+  auth.clearFails(ip, username);
   store.q.userLogin.run(Date.now(), u.id);
   auth.setSession(req, res, u);
   res.json({ ok: true, role: u.role, next: u.role === 'super' ? '/super' : '/panel' });

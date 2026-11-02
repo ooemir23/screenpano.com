@@ -17,7 +17,7 @@ module.exports = {
   SUPER_PASS: process.env.SUPER_PASS || '',
   // İşletmeler kendi kendine kayıt olabilsin mi (14 gün deneme ile)
   ALLOW_SIGNUP: process.env.ALLOW_SIGNUP !== 'false',
-  TRIAL_DAYS: Number(process.env.TRIAL_DAYS) || 14,
+  TRIAL_DAYS: Number(process.env.TRIAL_DAYS) || 3,
   // Oturum imzası için gizli anahtar; verilmezse veritabanında üretilip saklanır
   SESSION_SECRET: process.env.SESSION_SECRET || '',
   FFMPEG: process.env.FFMPEG_PATH || 'ffmpeg',

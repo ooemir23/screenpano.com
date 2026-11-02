@@ -68,21 +68,26 @@ function sessionUser(req) {
 const newDeviceToken = () => crypto.randomBytes(32).toString('hex');
 const hashToken = t => crypto.createHash('sha256').update(String(t)).digest('hex');
 
-// Basit deneme sınırı: aynı IP'den 10 dakikada en çok 12 hatalı giriş
+// Deneme sınırı: aynı IP'den ya da aynı kullanıcı adına 10 dakikada en çok 5 hatalı giriş.
+// Kapatmak için LOGIN_LIMIT=off. Sınır dolunca 10 dakika beklenir; doğru girişte kullanıcı sayacı sıfırlanır.
 const fails = new Map();
-// LOGIN_LIMIT=on ile açılır (şimdilik varsayılan kapalı)
-const LIMIT_ON = process.env.LOGIN_LIMIT === 'on';
-function tooMany(ip) {
+const LIMIT_ON = process.env.LOGIN_LIMIT !== 'off';
+const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS) || 5, WINDOW = 10 * 60 * 1000;
+const keys = (ip, user) => [ip && 'ip:' + ip, user && 'u:' + String(user).trim().toLowerCase()].filter(Boolean);
+function tooMany(ip, user) {
   if (!LIMIT_ON) return false;
-  const r = fails.get(ip);
-  return r && r.n >= 12 && Date.now() - r.at < 10 * 60 * 1000;
+  return keys(ip, user).some(k => { const r = fails.get(k); return r && r.n >= MAX_FAILS && Date.now() - r.at < WINDOW; });
 }
-function noteFail(ip) {
+function noteFail(ip, user) {
   if (!LIMIT_ON) return;
-  const r = fails.get(ip);
-  if (!r || Date.now() - r.at > 10 * 60 * 1000) fails.set(ip, { n: 1, at: Date.now() });
-  else r.n++;
+  for (const k of keys(ip, user)) {
+    const r = fails.get(k);
+    if (!r || Date.now() - r.at > WINDOW) fails.set(k, { n: 1, at: Date.now() }); else r.n++;
+  }
 }
-const clientIp = req => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+function clearFails(ip, user) { for (const k of keys(null, user)) fails.delete(k); }
+setInterval(() => { const t = Date.now(); for (const [k, r] of fails) if (t - r.at > WINDOW) fails.delete(k); }, 5 * 60 * 1000).unref();
+// Traefik/Dokploy gerçek istemci IP'sini X-Forwarded-For'un SONUNA ekler; baştaki değer istemci tarafından uydurulabilir
+const clientIp = req => { const x = String(req.headers['x-forwarded-for'] || '').split(',').map(v => v.trim()).filter(Boolean); return x.length ? x[x.length - 1] : String(req.socket.remoteAddress || ''); };
 
-module.exports = { uid, hashPassword, checkPassword, sign, verify, setSession, clearSession, sessionUser, newDeviceToken, hashToken, tooMany, noteFail, clientIp, parseCookies };
+module.exports = { uid, hashPassword, checkPassword, sign, verify, setSession, clearSession, sessionUser, newDeviceToken, hashToken, tooMany, noteFail, clearFails, clientIp, parseCookies };

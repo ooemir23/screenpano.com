@@ -69,7 +69,7 @@ Ortam değişkenleri:
 | `SUPER_USER` / `SUPER_PASS` | admin / (rastgele) | Yalnızca ilk açılışta kullanılır |
 | `LOGIN_LIMIT` | (kapalı) | `on` ise aynı IP'den 10 dakikada 12 hatalı giriş/kayıttan sonra 10 dakika bekletilir |
 | `ALLOW_SIGNUP` | true | `false` ise yalnız süper yönetim işletme açar |
-| `TRIAL_DAYS` | 14 | |
+| `TRIAL_DAYS` | 3 | |
 | `SESSION_SECRET` | (otomatik) | Verilmezse veritabanında üretilir |
 | `FFMPEG_PATH`, `CHROMIUM_PATH` | ffmpeg, chromium | Medya optimizasyonu ve trafik haritası |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | (boş) | Cloudflare R2. Verilince medya ve yedekler R2'ye gider |

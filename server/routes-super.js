@@ -1,6 +1,7 @@
 // Süper yönetim (/api/super/*): işletmeler, paketler, abonelik süreleri ve platform anahtarları.
 const fs = require('fs');
 const express = require('express');
+const config = require('./config');
 const store = require('./store');
 const auth = require('./auth');
 const tenants = require('./tenants');
@@ -35,7 +36,7 @@ r.post('/tenants', (req, res) => {
   try {
     const b = req.body || {};
     const days = Math.max(0, Math.min(3650, Number(b.days) || 0));
-    const t = createTenant({ name: b.name, username: b.username, password: b.password, phone: b.phone, plan: PLANS[b.plan] ? b.plan : 'pro', paidUntil: days ? Date.now() + days * DAY : null, trialDays: Number(b.trialDays) || 14 });
+    const t = createTenant({ name: b.name, username: b.username, password: b.password, phone: b.phone, plan: PLANS[b.plan] ? b.plan : 'pro', paidUntil: days ? Date.now() + days * DAY : null, trialDays: Number(b.trialDays) || config.TRIAL_DAYS });
     res.json({ ok: true, id: t.id });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });

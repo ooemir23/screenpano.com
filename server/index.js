@@ -41,6 +41,20 @@ app.get(/^\/(en|de|ar)\/?$/, (req, res) => {
   res.setHeader('Cache-Control', 'no-cache'); res.setHeader('Content-Language', req.params[0]);
   res.type('html').send(sitePage(req.params[0]));
 });
+// Arama motorları: panel, TV ve API sayfaları dizine girmez; site ve hukuki sayfalar girer
+app.use((req, res, next) => { if (/^\/(panel|super|tv|api|login)(\/|$)/.test(req.path)) res.setHeader('X-Robots-Tag', 'noindex, nofollow'); next(); });
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /super\nDisallow: /tv\nDisallow: /api/\nDisallow: /login\n\nSitemap: ${require('./site').BASE}/sitemap.xml\n`);
+});
+app.get('/sitemap.xml', (req, res) => {
+  const { LANGS, BASE, PATH } = require('./site'), fs = require('fs');
+  const mtime = f => { try { return fs.statSync(path.join(config.PUBLIC_DIR, f)).mtime.toISOString().slice(0, 10); } catch (e) { return undefined; } };
+  const last = mtime('site/features.json') || require('./legal').VERSION;
+  const alt = LANGS.map(l => `<xhtml:link rel="alternate" hreflang="${l}" href="${BASE}${PATH(l)}"/>`).join('') + `<xhtml:link rel="alternate" hreflang="x-default" href="${BASE}/"/>`;
+  const home = LANGS.map(l => `<url><loc>${BASE}${PATH(l)}</loc><lastmod>${last}</lastmod><changefreq>weekly</changefreq><priority>${l === 'tr' ? '1.0' : '0.9'}</priority>${alt}</url>`);
+  const legal = require('./legal').KEYS.map(k => `<url><loc>${BASE}/${k}</loc><lastmod>${require('./legal').VERSION}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>`);
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${[...home, ...legal].join('\n')}\n</urlset>\n`);
+});
 // Tanıtım sitesi: şablon + public/site/features.json (server/site.js)
 const sitePage = lang => require('./site').render(require('./store'), tenants, require('./plans').access, lang);
 for (const k of require('./legal').KEYS) app.get('/' + k, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(require('./legal').render(k)); });

@@ -163,7 +163,7 @@ const planOpts = sel => Object.values(D.plans).map(p => `<option value="${p.id}"
 function newDialog() {
   openDlg(`<h2>Yeni işletme</h2><div class="row"><div><label>İşletme adı</label><input id="n-name"></div><div><label>Telefon</label><input id="n-phone"></div></div>
   <div class="row" style="margin-top:10px"><div><label>Kullanıcı adı</label><input id="n-user"></div><div><label>Şifre (en az 8)</label><input id="n-pass"></div></div>
-  <div class="row" style="margin-top:10px"><div><label>Paket</label><select id="n-plan">${planOpts('pro')}</select></div><div><label>Ödenmiş gün (0 = yalnız deneme)</label><input id="n-days" type="number" value="0"></div><div><label>Deneme günü</label><input id="n-trial" type="number" value="14"></div></div>
+  <div class="row" style="margin-top:10px"><div><label>Paket</label><select id="n-plan">${planOpts('pro')}</select></div><div><label>Ödenmiş gün (0 = yalnız deneme)</label><input id="n-days" type="number" value="0"></div><div><label>Deneme günü</label><input id="n-trial" type="number" value="3"></div></div>
   <div class="row" style="margin-top:16px"><button class="btn" onclick="createT()">Oluştur</button><button class="btn ghost" onclick="closeDlg()">Vazgeç</button></div>`);
 }
 async function createT() {
