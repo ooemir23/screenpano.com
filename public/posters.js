@@ -105,7 +105,7 @@
     }
     if (tpl === 'kitap' && item.books && item.books.length) { // 2 kitap yan yana: kapak + ad + yazar + yayınevi + açıklama
       const card = b => {
-        const cv = `<div class="cv" style="background-image:url('${esc(b.image)}')"></div>`;
+        const cv = b.image ? `<div class="cv" style="background-image:url('${esc(b.image)}')"></div>` : '';
         return `<div class="bkc">${cv}<div class="tx"><div class="badge">${esc(base.badge)}</div><h2>${esc(b.title)}</h2>${b.author ? `<div class="sub">${esc(b.author)}</div>` : ''}${b.publisher ? `<div class="note">${esc(b.publisher)}</div>` : ''}${b.desc ? `<p>${esc(b.desc)}</p>` : ''}</div></div>`;
       };
       return `<div class="spp t-kitap multi n${item.books.length}"${dir}>${item.books.slice(0, 2).map(card).join('')}</div>`;

@@ -428,8 +428,10 @@ const cleanDesc = v => String(v || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/
 const rawDesc = b => { for (const [k, v] of Object.entries(b)) if (DESC_KEY.test(k) && typeof v === 'string' && v.trim().length > 20) return cleanDesc(v); return ''; };
 const IMG_URL = /^(https?:)?\/\/[^\s]+\.(jpe?g|png|webp|gif)(\?[^\s]*)?$/i;
 const IMG_KEY = /img|image|resim|gorsel|görsel|cover|kapak|foto|thumb|poster/i;
+// D&R adresleri kısaltılmış gelir ("…/cache/…jpg", "…/kitap/…"): başına D&R alan adı eklenir
+const drUrl = (v, host) => { const x = String(v || '').trim().replace(/^(\.\.\.|…)/, ''); return /^https?:\/\//.test(x) ? x : /^\/\//.test(x) ? 'https:' + x : x.startsWith('/') ? host + x : ''; };
 const rawImage = b => { // bilinen alanlar, yoksa görsel gibi görünen herhangi bir alan
-  for (const k of ['image', 'resim', 'img', 'gorsel', 'cover', 'kapak', 'foto', 'thumbnail']) if (typeof b[k] === 'string' && /^(https?:)?\/\//.test(b[k].trim())) return b[k].trim();
+  for (const k of ['image', 'resim', 'img', 'gorsel', 'cover', 'kapak', 'foto', 'thumbnail']) if (typeof b[k] === 'string' && drUrl(b[k], 'https://i.dr.com.tr')) return drUrl(b[k], 'https://i.dr.com.tr').replace(/\/cache\/\d+x\d+-\d+\//, '/cache/500x400-0/');
   for (const [k, v] of Object.entries(b)) if (typeof v === 'string' && /^(https?:)?\/\//.test(v.trim()) && (IMG_URL.test(v.trim()) || IMG_KEY.test(k))) return v.trim();
   return '';
 };
@@ -437,7 +439,7 @@ async function collectNewBooks(key) {
   const j = await collectFetch(`${config.PHARM_BASE}/book/newBook`, key, 'books');
   const seen = new Set(), items = [];
   for (const b of j.result || []) {
-    const title = String(b.title || '').trim(); if (!title || seen.has(title) || AUDIO.test(title + ' ' + (b['yayın'] || b.yayin || ''))) continue; seen.add(title);
+    const title = String(b.title || '').trim(); if (!title || seen.has(title) || AUDIO.test(title + ' ' + (b['yayın'] || b.yayin || '') + ' ' + (b.url || ''))) continue; seen.add(title);
     items.push({ image: rawImage(b), desc: rawDesc(b), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
     if (items.length >= 40) break;
   }
@@ -446,13 +448,13 @@ async function collectNewBooks(key) {
   booksRaw = Object.keys(r0).join(', '); booksSample = JSON.stringify(r0, (k, v) => typeof v === 'string' && v.length > 80 ? v.slice(0, 80) + '…' : v).slice(0, 400);
   return items;
 }
-// Ekranlarda gösterilen kitaplar: kapağı inmiş kitaplardan rastgele 8; her 3 saatte bir seçim değişir (herkes için aynı)
+// Ekranlarda gösterilen kitaplar: havuzdan rastgele 8 (kapak şart değil; inen kapak varsa gösterilir); her 3 saatte bir seçim değişir (herkes için aynı)
 const BOOK_ROTATE_MS = 3 * HOUR;
 const booksSeed = () => Math.floor(Date.now() / BOOK_ROTATE_MS);
 function seeded(n) { let x = (n * 2654435761) >>> 0; return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296); }
 function booksView() {
   if (!books) return null;
-  const a = books.items.filter(b => b.image && coverBuf.has(coverHash(b.image)));
+  const a = books.items.filter(b => !AUDIO.test(b.title + ' ' + (b.publisher || ''))); // eski önbellekte sesli kitap kalmışsa da gösterilmez
   if (!a.length) return null;
   const rnd = seeded(booksSeed());
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
@@ -464,12 +466,12 @@ async function refreshBooks(force) {
   const ck = collectKey();
   if (!ck) return;
   if (!proTenants().some(t => t.db.showBooks !== false)) return;
-  const stale = books && books.source !== 'collect'; // eski (Google) listesi kaldıysa hemen D&R'den yenile
+  const stale = books && (books.source !== 'collect' || books.v !== 3); // eski liste (Google ya da kısaltılmış görsel adresleri) kaldıysa hemen yenile // eski (Google) listesi kaldıysa hemen D&R'den yenile
   if (!force && books && !stale && cacheAge('books') < 24 * HOUR) return;
   if (!force && !stale && Date.now() - booksFailAt < 3 * HOUR) return;
   try {
     const items = await collectNewBooks(ck);
-    books = { items, source: 'collect', updated: new Date().toISOString() }; booksError = ''; cachePut('books', books);
+    books = { items, source: 'collect', v: 3, updated: new Date().toISOString() }; booksError = ''; cachePut('books', books);
     hub.pushAll(); downloadCovers();
   } catch (e) { booksError = e.message; booksFailAt = Date.now(); console.error('Kitaplar alınamadı:', e.message); }
 }

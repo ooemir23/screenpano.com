@@ -116,7 +116,7 @@ function publicState(t) {
     breakingBanner: (db.breaking || {}).banner !== false,
     breaking: pro && F.breakingOn(t) ? F.breakingFor() : null,
     showBooks: pro && db.showBooks !== false,
-    books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.map(b => ({ ...b, image: b.image ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
+    books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.map(b => ({ ...b, image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
     showMovies: pro && (db.movies || {}).enabled !== false,
     showTrailers: pro && (db.movies || {}).trailers !== false,
     movies: pro && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items } : null,

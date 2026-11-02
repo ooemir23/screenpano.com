@@ -754,21 +754,21 @@
     },
     {
       "icon": "📚",
-      "title": "Yeni çıkan kitaplar kapaklarıyla",
-      "text": "Yeni çıkan kitaplar medya döngüsünde kapak fotoğraflarıyla tam ekran çıkar.",
-      "added": "2026-11-02",
+      "title": "Yeni çıkan kitaplar",
+      "text": "D&R'ın yeni çıkan kitapları medya döngüsünde ekranda ikişer ikişer gösterilir; sesli kitaplar alınmaz.",
+      "added": "2026-11-03",
       "i18n": {
         "en": {
-          "title": "New books with their covers",
-          "text": "Newly released books appear full screen with their cover photos in the media loop."
+          "title": "New book releases",
+          "text": "New releases from D&R appear two at a time in the media loop; audiobooks are left out."
         },
         "de": {
-          "title": "Neuerscheinungen mit Cover",
-          "text": "Neu erschienene Bücher erscheinen mit ihren Covern im Vollbild in der Medienschleife."
+          "title": "Neuerscheinungen",
+          "text": "Neuerscheinungen von D&R erscheinen jeweils zu zweit in der Medienschleife; Hörbücher werden ausgelassen."
         },
         "ar": {
-          "title": "الكتب الجديدة بأغلفتها",
-          "text": "تظهر الكتب الصادرة حديثًا بملء الشاشة مع صور أغلفتها ضمن دورة الوسائط."
+          "title": "الكتب الجديدة",
+          "text": "تظهر إصدارات D&R الجديدة كتابين في كل مرة ضمن دورة الوسائط، دون الكتب الصوتية."
         }
       }
     },
