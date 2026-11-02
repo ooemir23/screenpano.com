@@ -111,7 +111,7 @@ app.get('/app.apk', (req, res) => {
 app.use(express.static(config.PUBLIC_DIR, {
   index: false,
   setHeaders: (res, file) => {
-    if (/\.(woff2|png|jpe?g)$/.test(file)) res.setHeader('Cache-Control', 'public, max-age=2592000');
+    if (/\.(woff2|png|jpe?g|webp)$/.test(file)) res.setHeader('Cache-Control', 'public, max-age=2592000');
     else if (/\.svg$/.test(file)) res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   },
 }));
