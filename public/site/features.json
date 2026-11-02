@@ -891,6 +891,26 @@
           "text": "أضف عدة بطاقات QR إلى تخطيط الشاشة واختر الرمز الذي تعرضه كل بطاقة أو اتركها تتناوب. يمكن وضع بطاقة QR فوق الوسائط والمربعات الأخرى."
         }
       }
+    },
+    {
+      "icon": "🧭",
+      "title": "Panelde hızlı erişim",
+      "text": "Her panel sayfasının üstünde bölüm başlıkları bulunur; tıklayınca ekran o bölüme kayar. QR kodların ayrı bir menüsü var.",
+      "added": "2026-11-03",
+      "i18n": {
+        "en": {
+          "title": "Quick navigation in the panel",
+          "text": "Each panel page has its section headings at the top; click one to jump straight to it. QR codes have their own menu."
+        },
+        "de": {
+          "title": "Schnellzugriff im Panel",
+          "text": "Oben auf jeder Panelseite stehen die Abschnittstitel; ein Klick springt direkt dorthin. QR-Codes haben ein eigenes Menü."
+        },
+        "ar": {
+          "title": "تنقل سريع في اللوحة",
+          "text": "في أعلى كل صفحة من اللوحة عناوين الأقسام؛ انقر على أحدها للانتقال إليه مباشرة. ولرموز QR قائمة خاصة بها."
+        }
+      }
     }
   ],
   "shots": {

@@ -46,7 +46,7 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 /* ================= gezinme ================= */
 const NAV = [
   ['home', '▦', 'Özet'], ['design', '🎨', 'Tasarım'], ['media', '🎞', 'Medya'], ['menu', '🧾', 'Fiyat Listesi', 1], ['sport', '⚽', 'Spor', 1],
-  ['promo', '📣', 'Duyurular'], ['celeb', '🎉', 'Kutlamalar'], ['info', '📰', 'Bilgi Bandı', 1], ['stats', '📊', 'İstatistik'], null, ['settings', '⚙', 'Ayarlar'],
+  ['promo', '📣', 'Duyurular'], ['qr', '▣', 'QR Kodlar'], ['celeb', '🎉', 'Kutlamalar'], ['info', '📰', 'Bilgi Bandı', 1], ['stats', '📊', 'İstatistik'], null, ['settings', '⚙', 'Ayarlar'],
 ];
 function drawNav() {
   $('nav').innerHTML = NAV.map(n => n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}"><span class="i">${n[1]}</span>${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
@@ -71,8 +71,28 @@ function render(keepScroll) {
   const sec = SECTIONS[TAB];
   $('view').innerHTML = sec.html();
   if (sec.after) sec.after();
+  drawJump();
   setTimeout(scalePv, 30);
   if (keepScroll) scrollTo(0, y);
+}
+// Sayfa içi hızlı erişim: kart başlıkları üstte sabit bir şeritte; tıklayınca ekran o karta kayar ve kart kısa süre vurgulanır
+function drawJump() {
+  const v = $('view'), cards = [...v.querySelectorAll('.card')].filter(c => c.querySelector('.ch h3'));
+  if (cards.length < 3) return;
+  const bar = document.createElement('div'); bar.className = 'jump';
+  cards.forEach((c, i) => {
+    c.id = 'kart-' + i;
+    const a = document.createElement('button'); a.type = 'button';
+    a.textContent = c.querySelector('.ch h3').textContent.trim();
+    a.onclick = () => jumpTo(c); bar.appendChild(a);
+  });
+  const h = v.querySelector('.head'); h ? h.after(bar) : v.prepend(bar);
+}
+function jumpTo(c) {
+  const bar = document.querySelector('.jump'), top = c.getBoundingClientRect().top + scrollY - (bar ? bar.offsetHeight : 0) - ($('top').offsetHeight || 0) - 12;
+  scrollTo({ top, behavior: 'smooth' });
+  c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+  const inp = c.querySelector('input:not([type=hidden]):not([type=checkbox]),select,textarea'); if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 450);
 }
 function drawBanner() {
   const t = S.me.tenant, acc = t.access, days = acc.until ? Math.ceil((acc.until - Date.now()) / 86400000) : 0;
@@ -183,7 +203,7 @@ function drawPal() {
   const n = k => EDIT.layout.widgets.filter(w => w.type === k).length;
   $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} ${esc(d.name)}${d.pro && !pro() ? ' 🔒' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
 }
-const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Yorumlar <a href="#promo">Duyurular</a> sayfasından eklenir.', qr: 'QR kodlar <a href="#promo">Duyurular</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
+const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Yorumlar <a href="#promo">Duyurular</a> sayfasından eklenir.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
 function drawProps() {
   const box = $('props'), w = EDIT.layout.widgets[EDIT.sel];
   if (!w) { box.innerHTML = `<h4>Widget ayarları</h4><p class="muted">Ayarlarını görmek için bir kutuya tıklayın.</p>${badSet().size ? '<p class="muted mt" style="color:var(--bad)">Kırmızı kutular üst üste biniyor; kaydetmeden önce düzeltin.</p>' : ''}${EDIT.dirty ? '<p class="muted mt" style="color:var(--warn)">Kaydedilmemiş değişiklikler var.</p>' : ''}`; return; }
@@ -576,27 +596,33 @@ SECTIONS.promo = {
   after() { if ($('ig-st')) drawInsta(); },
   html() {
     const db = S.db;
-    return head('Duyurular', 'Kampanya kartı, QR kodlar ve müşteri yorumları.')
+    return head('Duyurular', 'Kampanya kartı ve müşteri yorumları.')
       + (db.campaigns || []).map(c => card('🎁 Kampanya kartı', 'Belirli aralıklarla medya yerine tam sayfa, QR kodlu bir kart çıkar. Örnek: Google yorumu karşılığı ikram.',
         `<div class="f">${fl('Bağlantı (QR kodu buraya gider)', `<input type="text" id="c-url" value="${esc(c.url)}" placeholder="https://g.page/r/.../review">`)}${fl('Başlık', `<input type="text" id="c-h" maxlength="90" value="${esc(c.headline)}">`)}</div>
          <div class="f mt">${fl('Alt yazı', `<input type="text" id="c-s" maxlength="140" value="${esc(c.sub)}">`)}${fl('Not', `<input type="text" id="c-n" maxlength="160" value="${esc(c.note || '')}">`)}${fl('QR altındaki yazı', `<input type="text" id="c-q" maxlength="60" value="${esc(c.qrLabel || '')}">`)}</div>
          <div class="f mt">${fl('Kaç dakikada bir', `<input type="number" id="c-e" min="1" max="60" value="${c.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="c-d" min="8" max="60" value="${c.durSec}">`)}</div>
          <div class="row end mt"><button class="btn g s" onclick="openSched('camp','${c.id}')">⏱ ${c.sch ? esc(schShort(c.sch)) : 'Zamanla'}</button><button class="btn g s" onclick="act('POST','/campaigns/${c.id}/test',undefined,'Kart TV\\'de gösteriliyor',false)">Şimdi göster</button><button class="btn" onclick="saveCamp('${c.id}')">Kaydet</button></div>`,
         sw(c.enabled, `campToggle('${c.id}',this)`))).join('')
-      + card('▣ QR kodlar', 'Wi-Fi, menü, Instagram… Medyanın köşesinde döner; düzene "QR kart" widget\'ı da ekleyebilirsiniz.',
-        `${(db.qrs || []).length ? `<div class="list">${db.qrs.map(q => `<div class="it"><div class="qr">${q.svg}</div><div class="b"><b>${esc(q.label)}</b><span>${q.kind === 'wifi' ? 'Wi-Fi' : esc(q.text)}</span></div><select style="width:auto" onchange="act('PATCH','/qrs/${q.id}',{side:this.value},'Kaydedildi')"><option value="right" ${q.side !== 'left' ? 'selected' : ''}>Sağ köşe</option><option value="left" ${q.side === 'left' ? 'selected' : ''}>Sol köşe</option></select><button class="btn xs d" onclick="act('DELETE','/qrs/${q.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : '<div class="empty">Henüz QR kod yok</div>'}
-         <hr class="sep2"><div class="f">${fl('Tür', `<select id="q-kind" onchange="$('q-link').hidden=this.value==='wifi';$('q-wifi').hidden=this.value!=='wifi'"><option value="link">Bağlantı / metin</option><option value="wifi">Wi-Fi</option></select>`)}${fl('Etiket (QR altında)', '<input type="text" id="q-label" maxlength="40" placeholder="örn. Menü için okutun">')}</div>
-         <div class="f mt" id="q-link">${fl('Bağlantı', '<input type="text" id="q-text" placeholder="https://instagram.com/...">')}</div>
-         <div class="f mt" id="q-wifi" hidden>${fl('Ağ adı (SSID)', '<input type="text" id="q-ssid">')}${fl('Şifre', '<input type="text" id="q-pass">')}${fl('Güvenlik', '<select id="q-sec"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Şifresiz</option></select>')}</div>
-         <div class="row end mt"><button class="btn" onclick="addQr()">QR ekle</button></div>
-         <hr class="sep2"><div class="f">${fl(`Köşedeki QR boyutu: <b id="qsv">${db.qrSize || 17}</b>`, `<input type="range" min="10" max="30" value="${db.qrSize || 17}" oninput="$('qsv').textContent=this.value" onchange="opt('qrSize',+this.value)">`)}${fl('Wi-Fi şifre yazısı (boşsa QR\'daki şifre)', `<input type="text" maxlength="120" value="${esc(db.wifiText || '')}" onchange="opt('wifiText',this.value)">`)}</div>`,
-        `<span class="muted" style="white-space:nowrap">Köşede göster</span>${sw(db.showQr !== false, "opt('showQr',this.checked)")}`)
       + lock('Google yorumları ve Instagram')
       + googleCard() + instaCard()
       + card('★ Elle eklenen yorumlar', 'Medyanın altındaki şeritte döner (düzende "Google yorumları" widget\'ı olmalı). Yalnız 4 ve 5 yıldız.',
         `${(db.reviews || []).length ? `<div class="list">${db.reviews.map(r => `<div class="it"><div class="b"><b>${esc(r.author)} <span class="stars">${'★'.repeat(r.rating)}</span></b><span>${esc(r.text)}</span></div><button class="btn xs d" onclick="act('DELETE','/reviews/${r.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : '<div class="empty">Henüz yorum yok</div>'}
          <hr class="sep2"><div class="f">${fl('Yorumcu adı', '<input type="text" id="r-a" maxlength="60">')}${fl('Puan', '<select id="r-r"><option value="5">★★★★★</option><option value="4">★★★★</option></select>')}</div>
          ${fl('Yorum (Google\'dan kopyalayıp yapıştırın)', '<textarea id="r-t" maxlength="400" rows="3"></textarea>')}<div class="row end mt"><button class="btn" onclick="addReview()">Yorum ekle</button></div>`);
+  },
+};
+SECTIONS.qr = {
+  html() {
+    const db = S.db;
+    return head('QR Kodlar', 'Wi-Fi, menü, Instagram… QR kodlarınız medyanın köşesinde döner. Tasarım → Ekran düzeni\'nden "QR kart" ekleyip her karta ayrı QR seçebilirsiniz.')
+      + card('▣ QR kodlar', 'Wi-Fi, menü, Instagram… Medyanın köşesinde döner; düzene "QR kart" widget\'ı da ekleyebilirsiniz.',
+        `${(db.qrs || []).length ? `<div class="list">${db.qrs.map(q => `<div class="it"><div class="qr">${q.svg}</div><div class="b"><b>${esc(q.label)}</b><span>${q.kind === 'wifi' ? 'Wi-Fi' : esc(q.text)}</span></div><select style="width:auto" onchange="act('PATCH','/qrs/${q.id}',{side:this.value},'Kaydedildi')"><option value="right" ${q.side !== 'left' ? 'selected' : ''}>Sağ köşe</option><option value="left" ${q.side === 'left' ? 'selected' : ''}>Sol köşe</option></select><button class="btn xs d" onclick="act('DELETE','/qrs/${q.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : '<div class="empty">Henüz QR kod yok</div>'}
+         <hr class="sep2"><div class="f">${fl('Tür', `<select id="q-kind" onchange="$('q-link').hidden=this.value==='wifi';$('q-wifi').hidden=this.value!=='wifi'"><option value="link">Bağlantı / metin</option><option value="wifi">Wi-Fi</option></select>`)}${fl('Etiket (QR altında)', '<input type="text" id="q-label" maxlength="40" placeholder="örn. Menü için okutun">')}</div>
+         <div class="f mt" id="q-link">${fl('Bağlantı', '<input type="text" id="q-text" placeholder="https://instagram.com/...">')}</div>
+         <div class="f mt" id="q-wifi" hidden>${fl('Ağ adı (SSID)', '<input type="text" id="q-ssid">')}${fl('Şifre', '<input type="text" id="q-pass">')}${fl('Güvenlik', '<select id="q-sec"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Şifresiz</option></select>')}</div>
+         <div class="row end mt"><button class="btn" onclick="addQr()">QR ekle</button></div>
+         <hr class="sep2"><div class="f">${fl(`QR boyutu (köşe ve QR kartları): <b id="qsv">${db.qrSize || 17}</b>`, `<input type="range" min="10" max="30" value="${db.qrSize || 17}" oninput="$('qsv').textContent=this.value" onchange="opt('qrSize',+this.value)">`)}${fl('Wi-Fi şifre yazısı (boşsa QR\'daki şifre)', `<input type="text" maxlength="120" value="${esc(db.wifiText || '')}" onchange="opt('wifiText',this.value)">`)}</div>`,
+        `<span class="muted" style="white-space:nowrap">Köşede göster</span>${sw(db.showQr !== false, "opt('showQr',this.checked)")}`);
   },
 };
 const saveCamp = id => act('PUT', '/campaigns/' + id, { url: $('c-url').value, headline: $('c-h').value, sub: $('c-s').value, note: $('c-n').value, qrLabel: $('c-q').value, everyMin: $('c-e').value, durSec: $('c-d').value }, 'Kampanya kaydedildi');

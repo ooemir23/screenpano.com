@@ -45,7 +45,15 @@ main{flex:1;min-width:0;padding:28px 36px 90px}
 .grid{display:grid;gap:18px}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+[hidden]{display:none!important}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:18px;min-width:0}
+.jump{position:sticky;top:0;z-index:20;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:-6px -4px 18px;padding:10px 4px;background:linear-gradient(var(--bg) 80%,transparent)}
+.jump::-webkit-scrollbar{display:none}
+.jump button{flex:none;border:1px solid var(--line2);background:var(--panel);color:var(--soft);border-radius:20px;padding:7px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.jump button:hover{color:#fff;border-color:rgba(var(--a2),.7)}
+.card.flash{animation:cflash 1.6s ease}
+@keyframes cflash{0%,30%{box-shadow:0 0 0 2px var(--accent2),0 0 24px rgba(var(--a2),.35)}100%{box-shadow:0 0 0 0 transparent}}
+@media(max-width:900px){.jump{top:61px}}
 .grid>.card{margin-bottom:0}
 .ch{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
 .ch>div:first-child{flex:1;min-width:0}

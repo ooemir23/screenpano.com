@@ -1576,6 +1576,21 @@ function drawQrCell(c) {
   el.style.setProperty('--qs', 'var(--qrs,17vh)');
   el.innerHTML = `<div class="code" style="width:var(--qrs,17vh);height:var(--qrs,17vh)">${q.svg}</div><div class="lbl qp${q.marquee ? ' wf' : ''}"><span class="wt">${esc(q.label)}</span></div>`;
   clearTimeout(el._wt); if (q.marquee) wifiCycle(el, q); else fitLbl(el.querySelector('.lbl')); // Wi-Fi: etiket ile şifre sırayla değişir
+  keepInside(el);
+}
+// QR kutusu küçükse içerik taşar: üstünde durduğu widget'ın (ya da ekranın) dışına çıkmasın diye içeri kaydırılır
+function keepInside(el) {
+  el.style.transform = '';
+  // sınır: QR kartının ortasının düştüğü widget (ör. medya) — yoksa tüm ekran; böylece alt bandın ya da ekranın dışına taşmaz
+  const cr = el.parentNode.getBoundingClientRect(), cx = (cr.left + cr.right) / 2, cy = (cr.top + cr.bottom) / 2;
+  const host = [...$id('app').querySelectorAll('.cell:not(.qrcell)')].map(c => c.getBoundingClientRect()).find(r => r.width && cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom);
+  const app = host || $id('app').getBoundingClientRect(), pad = innerHeight * 0.012;
+  let L = Infinity, T = Infinity, R = -Infinity, B = -Infinity;
+  for (const k of el.children) { const r = k.getBoundingClientRect(); L = Math.min(L, r.left); T = Math.min(T, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom); }
+  if (!isFinite(L)) return;
+  const dx = L < app.left + pad ? app.left + pad - L : R > app.right - pad ? app.right - pad - R : 0;
+  const dy = T < app.top + pad ? app.top + pad - T : B > app.bottom - pad ? app.bottom - pad - B : 0;
+  if (dx || dy) el.style.transform = `translate(${Math.round(dx)}px,${Math.round(dy)}px)`;
 }
 function showQrTile() { qrTile.cells.forEach(drawQrCell); }
 function setQrTile(list) {
