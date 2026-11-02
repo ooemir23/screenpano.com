@@ -128,7 +128,7 @@ async function renderBk() {
     ${st.enabled ? '<button class="btn ghost sm" onclick="call(\'POST\',\'/api/super/storage/sync\').then(()=>toast(\'Eşitleme başladı\'))">Şimdi eşitle</button>' : ''}`;
 }
 async function runBk() { toast('Yedek alınıyor…'); try { const j = await call('POST', '/api/super/backups'); toast('Yedek alındı: ' + j.name); load(); } catch (e) { toast(e.message, true); } }
-async function testMail() { const to = $('mt-to').value.trim(); if (!to) return toast('Adres yazın', true); toast('Gönderiliyor…'); try { const j = await call('POST', '/api/super/mail/test', { to }); toast(`Gönderildi (port ${j.port}); gelen kutusunu ve spam klasörünü kontrol edin`); } catch (e) { toast('Gönderilemedi: ' + e.message, true); } }
+async function testMail() { const to = $('mt-to').value.trim(); if (!to) return toast('Adres yazın', true); toast('Gönderiliyor…'); try { const j = await call('POST', '/api/super/mail/test', { to }); toast(`Gönderildi: port ${j.mode || j.port}. Gelen kutusunu ve spam klasörünü kontrol edin`); } catch (e) { toast('Gönderilemedi: ' + e.message, true); } }
 async function testHook() { try { const j = await call('POST', '/api/super/alert/test'); toast(j.ok ? 'Deneme mesajı gönderildi' : 'Webhook ' + j.status + ' döndü', !j.ok); } catch (e) { toast(e.message, true); } }
 function stTag(x) {
   if (!x.access.ok) return x.access.reason === 'suspended' ? '<span class="tag bad">Askıda</span>' : '<span class="tag bad">Süresi doldu</span>';

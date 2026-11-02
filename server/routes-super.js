@@ -108,8 +108,13 @@ r.post('/mail/test', async (req, res) => {
   if (!m.mailEnabled()) return res.status(400).json({ error: 'SMTP ayarlı değil (SMTP_HOST ortam değişkeni yok)' });
   try {
     const o = await require('./mailer').send({ to, subject: 'ScreenPano deneme e-postası', text: 'Bu e-posta geldiyse ScreenPano uyarı e-postaları çalışıyor.' });
-    res.json({ ok: true, port: o.port });
-  } catch (e) { res.status(502).json({ error: e.message }); }
+    res.json({ ok: true, port: o.port, mode: o.mode });
+  } catch (e) {
+    const msg = String(e.message || e).split('\n')[0];
+    const hint = /EAUTH|535|authentication|Invalid login/i.test(`${e.code} ${msg}`) ? ' — kullanıcı adı (tam e-posta adresi) ya da şifre yanlış'
+      : /timeout|ETIMEDOUT|ECONNREFUSED|ECONNECTION/i.test(`${e.code} ${msg}`) ? ' — sunucuya bağlanılamadı; port sunucu sağlayıcınızca engelli olabilir' : '';
+    res.status(502).json({ error: msg + hint });
+  }
 });
 // silme talebini iptal et / hemen uygula
 r.delete('/tenants/:id/deletion', (req, res) => { const t = tenants.get(req.params.id); if (!t) return res.status(404).end(); delete t.db.deletion; tenants.save(t); res.json({ ok: true }); });

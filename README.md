@@ -76,7 +76,8 @@ Ortam değişkenleri:
 | `R2_PUBLIC_URL` | (boş) | R2 kovası herkese açık bir alan adına bağlıysa TV dosyayı oradan çeker (sunucu trafiği azalır). Boşsa sunucu aktarır |
 | `R2_KEEP_LOCAL` | false | `true` ise R2'ye gönderilen dosyanın yerel kopyası da tutulur |
 | `S3_ENDPOINT`, `S3_REGION` | (R2'den) | R2 yerine başka bir S3 uyumlu depo |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_SECURE` | (boş) | Çevrimdışı uyarı e-postaları |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_SECURE` | (boş) | Çevrimdışı uyarı e-postaları. 465 = SSL |
+| `SMTP_STARTTLS` | (boş: varsa kullan) | 587 için: `true` şifreleme zorunlu, `false` şifresiz (Natro gibi 587'de STARTTLS desteklemeyenler) |
 | `PUBLIC_URL` | (boş) | E-postalardaki panel bağlantısı için, örn. `https://screenpano.com` |
 | `ALERT_WEBHOOK` | (boş) | Platform uyarıları (süper yönetimden de girilebilir) |
 | `OFFLINE_ALERT_MIN` | 10 | Kaç dakika bağlantısızlıktan sonra uyarı |
