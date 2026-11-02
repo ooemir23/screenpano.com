@@ -422,7 +422,7 @@ async function bookCover(b) {
     try {
       let r = await fetch(q(t), { signal: AbortSignal.timeout(10000) });
       if (r.status === 503 || r.status === 500) { await new Promise(x => setTimeout(x, 1500)); r = await fetch(q(t), { signal: AbortSignal.timeout(10000) }); } // Google geçici hata verirse bir kez daha dene
-      if (!r.ok) { failed = true; coverErr = 'Google Books ' + r.status; break; }
+      if (!r.ok) { failed = true; coverErr = 'Google Books ' + await gbWhy(r); break; }
       for (const v of (await r.json()).items || []) {
         const vi = v.volumeInfo || {}, l = vi.imageLinks, u = l && (l.thumbnail || l.smallThumbnail);
         if (u && titleMatch(b.title, [vi.title, vi.subtitle].filter(Boolean).join(' '), b.author, (vi.authors || []).join(' '))) return u.replace(/^http:/, 'https:').replace('&edge=curl', '');
@@ -482,6 +482,10 @@ async function fillCovers() {
 // ---- Yeni kitaplar: Google Books (yayınevine göre en yeniler, kapaklı) — başarısız ya da az çıkarsa CollectAPI (D&R) listesine dönülür ----
 const BOOK_PUBLISHERS = ['Can Yayınları', 'Yapı Kredi Yayınları', 'İletişim Yayınları', 'İş Bankası Kültür Yayınları', 'Doğan Kitap', 'Everest Yayınları', 'Domingo Yayınları', 'Timaş Yayınları', 'Epsilon Yayınevi', 'Metis Yayınları'];
 const bookPublishers = () => { const l = String(platformKey('books_publishers') || '').split(',').map(x => x.trim()).filter(Boolean); return l.length ? l.slice(0, 15) : BOOK_PUBLISHERS; };
+async function gbWhy(r) { // Google'ın hata gövdesinden (reason + message) kısa neden
+  try { const j = JSON.parse(await r.text()), e = j.error || {}; return `${r.status} ${((e.errors || [])[0] || {}).reason || e.status || ''} ${String(e.message || '').replace(/\s+/g, ' ').slice(0, 140)}`.trim(); }
+  catch (x) { return String(r.status); }
+}
 const AUDIO = /sesli|audio|dinle|\bmp3\b|podcast/i;
 const pubDate = d => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || '')); return m ? Date.parse(`${m[1]}-${m[2]}-${m[3]}`) : NaN; }; // yalnız gün-gün tarih: "o hafta çıkan" ancak böyle doğrulanır
 async function googleNewBooks() {
@@ -492,7 +496,7 @@ async function googleNewBooks() {
     try {
       calls++;
       const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(`inpublisher:"${pub}"`)}&orderBy=newest&langRestrict=tr&printType=books&maxResults=15&key=${encodeURIComponent(key)}`, { signal: AbortSignal.timeout(12000) });
-      if (!r.ok) { firstErr = firstErr || 'Google Books ' + r.status; if (r.status === 403 || r.status === 429) break; continue; }
+      if (!r.ok) { firstErr = firstErr || 'Google Books ' + await gbWhy(r); if (r.status === 403 || r.status === 429) break; continue; }
       const list = [];
       for (const v of (await r.json()).items || []) {
         const vi = v.volumeInfo || {}, l = vi.imageLinks, u = l && (l.thumbnail || l.smallThumbnail), d = pubDate(vi.publishedDate);
@@ -506,7 +510,7 @@ async function googleNewBooks() {
       }
       list.sort((a, b) => b.d - a.d); found.push(list.slice(0, 3));
     } catch (e) { firstErr = firstErr || 'Google Books: ' + e.message; }
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 1200));
   }
   const seen = new Set(), items = [];
   for (let i = 0; i < 3 && items.length < 8; i++) for (const l of found) { const x = l[i]; if (!x || seen.has(norm(x.title))) continue; seen.add(norm(x.title)); const { d, ...rest } = x; items.push(rest); }
