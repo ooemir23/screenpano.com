@@ -65,9 +65,6 @@
 /* yeni çıkan kitap: kapak solda, bilgi sağda */
 .spp.t-kitap{background:radial-gradient(circle at 25% 50%,color-mix(in srgb,var(--accent) 45%,var(--bg)) 0,var(--bg) 70%)}
 .spp.t-kitap .ph{right:auto;left:6%;top:7%;bottom:7%;width:34%;background-size:contain;background-repeat:no-repeat;background-position:center;filter:drop-shadow(0 .5em 1em rgba(0,0,0,.6))}
-.spp.t-kitap .ph.gen{background:linear-gradient(160deg,hsl(var(--h) 45% 32%),hsl(var(--h) 50% 16%));display:flex;flex-direction:column;justify-content:space-between;padding:7% 6%;border-radius:.3em .6em .6em .3em;box-shadow:inset .5em 0 0 rgba(0,0,0,.25),0 .5em 1em rgba(0,0,0,.6);filter:none}
-.spp.t-kitap .ph.gen b{font-size:1.9em;line-height:1.1;font-weight:800;color:#fff;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;padding-left:.5em}
-.spp.t-kitap .ph.gen i{font-size:1.15em;font-style:normal;font-weight:600;color:rgba(255,255,255,.8);padding-left:.6em}
 .spp.t-kitap .in{margin-left:44%;padding:5% 6% 5% 2%;justify-content:center;gap:.5em}
 .spp.t-kitap h1{font-size:3.2em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .spp.t-kitap .sub{font-size:1.9em}
@@ -77,8 +74,6 @@
 .spp.t-kitap.multi.n1{grid-template-columns:1fr}
 .spp.t-kitap.multi .bkc{display:flex;gap:4%;align-items:center;min-width:0}
 .spp.t-kitap.multi .cv{flex:0 0 36%;aspect-ratio:2/3;align-self:center;background-size:contain;background-repeat:no-repeat;background-position:center;filter:drop-shadow(0 .4em .8em rgba(0,0,0,.6))}
-.spp.t-kitap.multi .cv.gen{background:linear-gradient(160deg,hsl(var(--h) 45% 32%),hsl(var(--h) 50% 16%));display:flex;align-items:center;padding:6%;border-radius:.3em .6em .6em .3em;box-shadow:inset .4em 0 0 rgba(0,0,0,.25);filter:none}
-.spp.t-kitap.multi .cv.gen b{font-size:1.3em;line-height:1.1;font-weight:800;color:#fff;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 .spp.t-kitap.multi .tx{min-width:0;display:flex;flex-direction:column;gap:.35em;justify-content:center}
 .spp.t-kitap.multi .badge{font-size:.8em;padding:.2em .6em}
 .spp.t-kitap.multi h2{margin:0;font-size:1.7em;line-height:1.08;font-weight:800;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
@@ -110,16 +105,10 @@
     }
     if (tpl === 'kitap' && item.books && item.books.length) { // 2 kitap yan yana: kapak + ad + yazar + yayınevi + açıklama
       const card = b => {
-        const hue = [...String(b.title || '')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);
-        const cv = b.image ? `<div class="cv" style="background-image:url('${esc(b.image)}')"></div>` : `<div class="cv gen" style="--h:${hue}"><b>${esc(b.title)}</b></div>`;
+        const cv = `<div class="cv" style="background-image:url('${esc(b.image)}')"></div>`;
         return `<div class="bkc">${cv}<div class="tx"><div class="badge">${esc(base.badge)}</div><h2>${esc(b.title)}</h2>${b.author ? `<div class="sub">${esc(b.author)}</div>` : ''}${b.publisher ? `<div class="note">${esc(b.publisher)}</div>` : ''}${b.desc ? `<p>${esc(b.desc)}</p>` : ''}</div></div>`;
       };
       return `<div class="spp t-kitap multi n${item.books.length}"${dir}>${item.books.slice(0, 2).map(card).join('')}</div>`;
-    }
-    if (tpl === 'kitap' && !item.image) {
-      const hue = [...String(base.title || '')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);
-      const cover = `<div class="ph gen" style="--h:${hue}"><b>${esc(base.title)}</b><i>${esc(base.sub)}</i></div>`;
-      return `<div class="${cls}"${dir}>${cover}<div class="in">${f('badge') ? `<div class="badge">${f('badge')}</div>` : ''}<h1>${f('title')}</h1>${f('sub') ? `<div class="sub">${f('sub')}</div>` : ''}${f('note') ? `<div class="note">${f('note')}</div>` : ''}</div></div>`;
     }
     const opt = (k, c) => (f(k) ? `<div class="${c}">${f(k)}</div>` : '');
     if (tpl === 'indirim') return `<div class="${cls}"${dir}><div class="big">${f('badge')}</div><div class="in"><h1>${f('title')}</h1>${opt('sub', 'sub')}${opt('note', 'note')}</div></div>`;

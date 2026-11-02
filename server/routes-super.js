@@ -17,7 +17,7 @@ r.use((req, res, next) => {
   req.user = u; next();
 });
 
-const SETTINGS = ['collect_key', 'collect_paid', 'tmdb_key', 'books_key', 'books_source', 'books_publishers', 'traffic_api', 'google_places_key', 'google_monthly_cap', 'alert_webhook',
+const SETTINGS = ['collect_key', 'collect_paid', 'tmdb_key', 'traffic_api', 'google_places_key', 'google_monthly_cap', 'alert_webhook',
   'legal_company', 'legal_address', 'legal_email', 'legal_phone', 'legal_mersis', 'legal_kep', 'legal_hosting',
   'site_url', 'site_phone', 'site_whatsapp', 'site_email', 'site_price_baslangic', 'site_price_pro'];
 
