@@ -49,6 +49,7 @@ self.addEventListener('fetch', e => {
   if (u.pathname.startsWith('/api/') || u.pathname === '/ws' || u.pathname === '/sw.js' || u.pathname === '/app.apk') return;
   if (u.pathname.startsWith('/u/')) return e.respondWith(media(req));
   if (u.pathname === '/tv' || (req.mode === 'navigate' && u.pathname === '/')) return e.respondWith(networkFirst(req, '/tv'));
+  if (u.pathname === '/posters.js') return e.respondWith(networkFirst(req)); // poster tasarımları güncellenince eski kopya kullanılmasın (internet yoksa önbellekten)
   if (/^\/(fonts|celebrate|logo)\//.test(u.pathname) || /\.(js|svg|png|jpe?g|webp|woff2)$/.test(u.pathname)) return e.respondWith(staleWhileRevalidate(req));
 });
 

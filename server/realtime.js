@@ -12,7 +12,8 @@ const { publicState } = require('./state');
 
 const clients = new Set();
 let BUILD = '';
-const computeBuild = () => { try { BUILD = crypto.createHash('md5').update(fs.readFileSync(path.join(config.PUBLIC_DIR, 'tv.html'))).digest('hex'); } catch { BUILD = String(Date.now()); } };
+// TV sayfasının sürümü: tv.html ve onun yüklediği posters.js değişince ekranlar kendini yeniler
+const computeBuild = () => { try { const h = crypto.createHash('md5'); for (const f of ['tv.html', 'posters.js']) { try { h.update(fs.readFileSync(path.join(config.PUBLIC_DIR, f))); } catch { /* dosya yok */ } } BUILD = h.digest('hex'); } catch { BUILD = String(Date.now()); } };
 computeBuild();
 
 const sendRaw = (ws, msg) => { if (ws.readyState === 1) ws.send(typeof msg === 'string' ? msg : JSON.stringify(msg)); };
