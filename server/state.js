@@ -40,9 +40,9 @@ function mediaList(t) {
     if (v.type === 'poster') out.push({ id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null });
     else out.push({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', sch: v.sch || null });
   }
-  const bk = F.books;
+  const bk = F.booksView();
   const covers = require('./plans').plan(t).pro && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR
-    ? bk.items.slice(0, 8).map(b => { const ok = b.image && F.coverReady(b.image); return { id: 'bk' + F.coverHash(b.title), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: b.title, sub: b.author || '', note: b.publisher || '' }, image: ok ? '/cover/' + F.coverHash(b.image) + '.jpg' : null, dur: 10 }; }) : [];
+    ? bk.items.map(b => { const ok = b.image && F.coverReady(b.image); return { id: 'bk' + F.coverHash(b.title), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: b.title, sub: b.author || '', note: b.publisher || '' }, image: ok ? '/cover/' + F.coverHash(b.image) + '.jpg' : null, dur: 10 }; }) : [];
   const withBooks = list => { // her 4 içerikte bir yeni çıkan kitap kapağı
     if (!covers.length) return list;
     if (!list.length) return covers.slice(0, 1);
@@ -83,7 +83,7 @@ function publicState(t) {
   if (!acc.ok) return { ...base, videos: [], matches: [], standings: {}, qrs: [], campaigns: [], bigMatches: [], reviews: [], rates: {}, weather: null };
   const enabled = F.enabledLeagues(t);
   const movies = F.movies;
-  const books = F.books;
+  const books = F.booksView();
   return {
     ...base,
     videos: mediaList(t),

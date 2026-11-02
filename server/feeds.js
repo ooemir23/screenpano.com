@@ -442,8 +442,8 @@ async function coverGet(url) {
   const h = coverHash(url);
   if (coverBuf.has(h)) return coverBuf.get(h);
   try {
-    const u = String(url).replace(/^\/\//, 'https://').replace(/^http:/, 'https:');
-    const r = await fetch(u, { signal: AbortSignal.timeout(12000), redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36', accept: 'image/*,*/*;q=0.5' } });
+    const u = String(url).replace(/^\/\//, 'https://').replace(/^http:(?!\/\/localhost)/, 'https:');
+    const r = await fetch(u, { signal: AbortSignal.timeout(12000), redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36', accept: 'image/*,*/*;q=0.5', referer: new URL(u).origin + '/' } });
     if (!r.ok) { coverErr = `Kapak indirilemedi (${r.status}): ${new URL(u).hostname}`; return null; }
     const buf = Buffer.from(await r.arrayBuffer()), type = sniff(buf);
     if (!type || buf.length < 1500 || buf.length > 3e6) { coverErr = `Kapak geçersiz (${buf.length} bayt): ${new URL(u).hostname}`; return null; }
@@ -467,9 +467,10 @@ async function verifyCovers() { // indirilemeyen kapağı listeden düşür; fil
 async function fillCovers() {
   if (!books) return;
   await verifyCovers();
-  let n = 0;
+  let n = 0, tried = 0;
   for (const b of books.items) {
     if (b.image || coverMiss.has(b.title)) continue;
+    if (++tried > 10) break;
     await new Promise(r => setTimeout(r, 400));
     const u = await bookCover(b);
     if (u === null) continue;
@@ -518,18 +519,34 @@ async function googleNewBooks() {
   if (items.length < 1) throw new Error(`Google Books: bu hafta çıkan kitap bulunamadı (${items.length}; ${dbg})${firstErr ? ' · ' + firstErr : ''}`);
   return items.slice(0, 8);
 }
+let booksRaw = '';
 async function collectNewBooks(key) {
   const j = await collectFetch(`${config.PHARM_BASE}/book/newBook`, key, 'books');
   const seen = new Set(), items = [];
   for (const b of j.result || []) {
     const title = String(b.title || '').trim(); if (!title || seen.has(title) || AUDIO.test(title + ' ' + (b['yayın'] || b.yayin || ''))) continue; seen.add(title);
     items.push({ image: String(b.image || b.resim || b.img || b.gorsel || b.cover || '').trim(), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
-    if (items.length >= 8) break;
+    if (items.length >= 40) break;
   }
   if (!items.length) throw new Error('kitap listesi boş');
+  booksRaw = Object.keys((j.result || [])[0] || {}).join(',');
   return items;
 }
 let booksSource = '';
+// Ekranlarda gösterilen kitaplar: havuzdaki KAPAKLI (indirilebilen) kitaplardan rastgele 8; her 3 saatte bir seçim değişir (herkes için aynı)
+const BOOK_ROTATE_MS = 3 * HOUR;
+const booksSeed = () => Math.floor(Date.now() / BOOK_ROTATE_MS);
+function seeded(n) { let x = (n * 2654435761) >>> 0; return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function booksView() {
+  if (!books) return null;
+  const covered = books.items.filter(b => b.image && coverBuf.has(coverHash(b.image)));
+  const pool = covered.length ? covered : books.items;
+  const rnd = seeded(booksSeed()), a = pool.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return { items: a.slice(0, 8), updated: books.updated };
+}
+let lastBookSeed = booksSeed();
+setInterval(() => { const sd = booksSeed(); if (sd !== lastBookSeed) { lastBookSeed = sd; hub.pushAll(); } }, 5 * MIN);
 async function refreshBooks(force) {
   const want = platformKey('books_source') === 'collect' ? 'collect' : 'google', ck = collectKey();
   if (!(want === 'google' && gbKey()) && !ck) return;
@@ -763,7 +780,7 @@ module.exports = {
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
-  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksInfo: () => ({ kaynak: (books && books.source) || '', adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, anahtar: !!gbKey(), hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await fillCovers(); }, get booksSource() { return (books && books.source) || ''; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
+  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, kapakli: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, kaynak: (books && books.source) || '', adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, anahtar: !!gbKey(), hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await fillCovers(); }, get booksSource() { return (books && books.source) || ''; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,

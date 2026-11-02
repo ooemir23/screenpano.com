@@ -112,7 +112,7 @@ async function load() {
   D = await call('GET', '/api/super/overview');
   const t = D.totals;
   $('stats').innerHTML = [['İşletme', t.tenants], ['Ekranı açık', t.live], ['Kayıtlı TV', t.devices], ['Şu an bağlı', t.online]].map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
-  if (D.books && $('bk-info')) { const b = D.books; $('bk-info').textContent = `Kitaplar: kaynak ${b.kaynak || '—'} · ${b.adet} kitap · gerçek kapak ${b.kapak}/${b.adet} · Google anahtarı ${b.anahtar ? 'var' : 'YOK'}${b.hata ? ' · uyarı: ' + b.hata : ''}${b.kapakHata ? ' · kapak hatası: ' + b.kapakHata : ''}`; }
+  if (D.books && $('bk-info')) { const b = D.books; $('bk-info').textContent = `Kitaplar: kaynak ${b.kaynak || '—'} · havuz ${b.adet} · gerçek kapak ${b.kapak}/${b.adet}${b.alanlar ? ' · D&R alanları: ' + b.alanlar : ''} · Google anahtarı ${b.anahtar ? 'var' : 'YOK'}${b.hata ? ' · uyarı: ' + b.hata : ''}${b.kapakHata ? ' · kapak hatası: ' + b.kapakHata : ''}`; }
   if (D.google && $('g-use')) $('g-use').textContent = `· bu ay ${D.google.calls} / ${D.google.cap}`;
   if (!window.__setLoaded) { for (const [k, v] of Object.entries(D.settings)) if ($('s-' + k)) $('s-' + k).value = v || ''; window.__setLoaded = true; }
   $('mailst').textContent = D.mail ? 'SMTP ayarlı: e-posta uyarıları açık.' : 'SMTP henüz ayarlı değil.';
