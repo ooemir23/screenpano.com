@@ -83,7 +83,7 @@
 .spp.t-kitap.multi .tx{min-width:0;display:flex;flex-direction:column;gap:.3em;justify-content:center}
 .spp.t-kitap.multi h2{margin:0;font-size:1.45em;line-height:1.1;font-weight:800;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .spp.t-kitap.multi .sub{font-size:1em;font-weight:600;opacity:.95}
-.spp.t-kitap.multi .note{font-size:.8em;color:var(--accent,#d6a35c);font-weight:600}
+.spp.t-kitap.multi .note{font-size:.85em;color:#fff;opacity:.72;font-weight:600}
 .spp.t-kitap.multi p{margin:.25em 0 0;font-size:.78em;line-height:1.3;opacity:.82;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 /* instagram */
 .spp.t-insta{background:var(--bg)}

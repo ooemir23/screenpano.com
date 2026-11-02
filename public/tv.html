@@ -108,6 +108,7 @@ video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100
 .bk img{height:15vh;width:10vh;object-fit:cover;border-radius:.6vh;flex:none;background:#222}
 .bk .bt{font-size:2.8vh;font-weight:700;line-height:1.25;color:var(--white);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .bk .bm{font-size:2.1vh;color:var(--accent2);font-weight:600;margin-top:.5vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk .bm.bp{font-size:1.8vh;color:var(--white);opacity:.7;margin-top:.2vh}
 
 .nw .nm2{font-size:1.7vh;color:var(--accent2);font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:.6vh}
 .od{display:flex;gap:1vw;align-items:flex-start;padding:1.2vh .9vw}
@@ -607,7 +608,7 @@ const pharmCard = p => `<div class="m ph"><div class="pn">${esc(p.name)}</div><d
 const fmtPhone = t => { const d = String(t || '').replace(/\D/g, ''); return /^0\d{10}$/.test(d) ? `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}` : String(t || ''); };
 const ago = iso => { const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return !isFinite(m) || m < 0 ? '' : m < 1 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.floor(m / 60) + ' saat önce' : Math.floor(m / 1440) + ' gün önce'; };
 const newsCard = n => `<div class="m nw"><div class="nt">${esc(n.title)}</div><div class="nm2">${esc(n.source)}${n.date ? ' · ' + esc(ago(n.date)) : ''}</div></div>`;
-const bookCard = b => `<div class="m bk">${b.image ? `<img src="${esc(b.image)}" alt="" onerror="this.remove()">` : ''}<div style="min-width:0"><div class="bt">${esc(b.title)}</div><div class="bm">${esc([b.author, b.publisher].filter(Boolean).join(' · '))}</div></div></div>`;
+const bookCard = b => `<div class="m bk">${b.image ? `<img src="${esc(b.image)}" alt="" onerror="this.remove()">` : ''}<div style="min-width:0"><div class="bt">${esc(b.title)}</div>${b.author ? `<div class="bm">${esc(b.author)}</div>` : ''}${b.publisher ? `<div class="bm bp">${esc(b.publisher)}</div>` : ''}</div></div>`;
 const trDate = d => { const [, m, dd] = String(d).split('-'); return m ? Number(dd) + ' ' + MONTHS[Number(m) - 1] : ''; };
 const movieCard = m => `<div class="m mv">${m.poster ? `<img src="${esc(m.poster)}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<div><div class="mt">${esc(m.title)}</div><div class="mm">${esc(trDate(m.date))}${m.rating ? ' · ★ ' + esc(String(m.rating).replace('.', ',')) : ''}${m.trailer ? ' · ▶ Fragman' : ''}</div></div></div>`;
 const dayCard = e => `<div class="m od"><b class="oy">${esc(e.year)}</b><p>${esc(e.text)}</p></div>`;
