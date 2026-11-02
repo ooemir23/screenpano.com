@@ -137,4 +137,4 @@ Depodaki `public/app.apk` zaten `https://screenpano.com` adresine göre derlenmi
 
 ## Android 2.1
 
-Kaynak kodda sürüm 11 / 2.1 (uzaktan ekran görüntüsü eklendi). Derleyip `public/app.apk` olarak koyduktan **sonra** `public/apk-version.json` dosyasını `{"versionCode":11,"versionName":"2.1"}` yapın; kutulara güncelleme bildirimi gider.
+`public/app.apk` sürüm 11 / 2.1'dir ve yeni imza anahtarıyla derlenmiştir. `apk-version.json` bilerek 10'da bırakıldı (ayrıntı: README → Android uygulaması). **İmza anahtarını (`.jks`) ve şifresini güvenli bir yerde saklayın**; kaybolursa kutulara APK'yı baştan kurmak gerekir.

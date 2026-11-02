@@ -151,5 +151,5 @@ tools/   import-legacy.js · cloudflare-traffic-worker.js
 - **Ödeme:** iyzico/PayTR abonelik entegrasyonu yok; paket ve süreler şimdilik süper yönetimden elle yönetiliyor.
 - **KVKK metinleri** taslaktır; şirket bilgilerini süper yönetimden girin ve yayından önce avukata kontrol ettirin. VERBİS kaydı gerekip gerekmediğini kontrol edin.
 - **Instagram:** Meta, Instagram API kullanımı için uygulama incelemesi isteyebilir; işletmelerin anahtarı kendileri alması gerekir. Google Places API ücretlidir (aylık ücretsiz kotası var).
-- **Android 2.1** (ekran görüntüsü) henüz derlenmedi. Derleyip `public/app.apk`'ya koyduktan sonra `public/apk-version.json`'u 11 / 2.1 yapın; önce yapılırsa kutular aynı APK'yı tekrar tekrar güncellemeye çalışır.
+- **Android 2.1** derlendi ve `public/app.apk` olarak konuldu, ama yeni bir imza anahtarıyla (eski anahtar elde yoktu). Bu yüzden `public/apk-version.json` bilerek 10 / 2.0'da bırakıldı: eski anahtarla kurulu kutular yeni APK'yı üstüne kuramaz, güncelleme denemesi başarısız olur. Eski kutulara APK'yı bir kez silip yeniden kurun; yeni kurulan kutular sorunsuz güncellenir. Tüm kutular 2.1'e geçince `apk-version.json`'u 11 / 2.1 yapın.
 - `public/celebrate/*.jpg` görsellerinin telif durumu doğrulanmalı.
