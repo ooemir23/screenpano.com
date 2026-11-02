@@ -1,0 +1,55 @@
+# Tanıtım sitesinin ekran görüntülerini uygulamadan yeniden üretir ve depoya geri yazar.
+# Uygulama ekranları (TV, panel, afişler) ya da features.json değişince kendiliğinden çalışır;
+# Actions sekmesinden "Run workflow" ile elle de çalıştırılabilir. Yazılan commit Dokploy'u tetikler.
+name: Site görselleri
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/tv.html'
+      - 'public/panel.html'
+      - 'public/panel.js'
+      - 'public/posters.js'
+      - 'public/site/features.json'
+      - 'server/widgets.js'
+      - 'server/state.js'
+      - 'tools/site-shots/**'
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Yalnız bu görseller (boşluklu liste, örn. "tv-gol p-ozet"); boş = hepsi'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: site-shots
+  cancel-in-progress: true
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Görselleri üret
+        env:
+          TZ: Europe/Istanbul
+        run: npm run site-shots -- ${{ github.event.inputs.only }}
+      - name: Değiştiyse gönder
+        run: |
+          git add public/site/*.webp
+          if git diff --cached --quiet; then echo "Görseller aynı"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Site görsellerini güncelle"
+          git pull --rebase origin main
+          git push origin HEAD:main

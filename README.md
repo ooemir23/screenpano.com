@@ -10,7 +10,7 @@ Mekânda **tek Android kutu** yeterli: kutu HDMI dağıtıcıyla tüm TV'lere ay
 
 | Bölüm | Adres | Kim kullanır |
 | --- | --- | --- |
-| Tanıtım sitesi | `/` | Ziyaretçiler (giriş yapmış kullanıcı panele yönlenir; `/?site` her zaman siteyi açar) |
+| Tanıtım sitesi | `/` | Ziyaretçiler (giriş yapmış kullanıcı panele yönlenir; `/?site` her zaman siteyi açar). Özellikler `public/site/features.json`'dan çizilir, görseller otomatik üretilir: `tools/site-shots/README.md` |
 | KVKK, kullanım koşulları, gizlilik | `/kvkk`, `/kosullar`, `/gizlilik` | Herkes |
 | Giriş / ücretsiz deneme kaydı | `/login` | İşletmeler |
 | İşletme paneli | `/panel` | İşletme sahibi ve personeli |

@@ -29,20 +29,8 @@ app.get('/', (req, res) => {
   if (u && req.query.site === undefined) return res.redirect(u.role === 'super' && !u.imp ? '/super' : '/panel');
   res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(sitePage());
 });
-// Tanıtım sitesi: fiyat ve iletişim bilgileri süper yönetimden
-let siteTpl = null;
-function sitePage() {
-  if (!siteTpl || process.env.NODE_ENV !== 'production') siteTpl = fs.readFileSync(path.join(config.PUBLIC_DIR, 'site.html'), 'utf8');
-  const st = k => require('./store').setting(k, '');
-  const e = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const price = v => v ? e(v) : '<small>Fiyat için bize ulaşın</small>';
-  const phone = st('site_phone'), wa = st('site_whatsapp').replace(/\D/g, ''), mail = st('site_email') || st('legal_email');
-  const contact = [wa && `<a class="btn" href="https://wa.me/${wa}" rel="noopener">WhatsApp'tan yazın</a>`, phone && `<a class="btn ghost" href="tel:${e(phone.replace(/\s/g, ''))}">${e(phone)}</a>`, mail && `<a class="btn ghost" href="mailto:${e(mail)}">${e(mail)}</a>`].filter(Boolean).join('');
-  const live = tenants.all().filter(t => require('./plans').access(t).ok).length;
-  return siteTpl.replace('{{PRICE_BASLANGIC}}', price(st('site_price_baslangic'))).replace('{{PRICE_PRO}}', price(st('site_price_pro')))
-    .replace('{{CONTACT}}', contact).replace('{{YEAR}}', new Date().getFullYear())
-    .replace('{{LIVE}}', live >= 10 ? `${live} işletmede şu an yayında` : 'Kafe, restoran ve spor barlar için');
-}
+// Tanıtım sitesi: şablon + public/site/features.json (server/site.js)
+const sitePage = () => require('./site').render(require('./store'), tenants, require('./plans').access);
 for (const k of ['kvkk', 'kosullar', 'gizlilik']) app.get('/' + k, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(require('./legal').render(k)); });
 // TV çevrimdışı önbelleği: service worker kök kapsamda ve her zaman taze
 app.get('/sw.js', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.setHeader('Service-Worker-Allowed', '/'); res.type('js').sendFile(path.join(config.PUBLIC_DIR, 'sw.js')); });

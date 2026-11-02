@@ -6,7 +6,8 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "import-legacy": "node tools/import-legacy.js"
+    "import-legacy": "node tools/import-legacy.js",
+    "site-shots": "node tools/site-shots/run.js"
   },
   "engines": {
     "node": ">=18"
@@ -19,5 +20,9 @@
     "nodemailer": "^6.10.1",
     "qrcode": "^1.5.4",
     "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1",
+    "sharp": "^0.35.5"
   }
 }
