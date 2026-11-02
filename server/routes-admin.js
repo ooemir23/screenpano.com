@@ -330,6 +330,11 @@ r.put('/news', (req, res) => {
   t.db.news = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, tag: F.NEWS_TAGS.includes(b.tag) ? b.tag : cur.tag || F.NEWS_DEFAULT };
   changed(t); res.json({ ok: true }); F.refreshNews();
 });
+r.put('/breaking', (req, res) => {
+  const t = req.t, b = req.body || {}, cur = t.db.breaking || {};
+  t.db.breaking = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, banner: typeof b.banner === 'boolean' ? b.banner : cur.banner !== false };
+  changed(t); res.json({ ok: true }); F.refreshBreaking();
+});
 r.post('/news/test', async (req, res) => {
   const key = store.setting('collect_key'), tag = F.NEWS_TAGS.includes((req.body || {}).tag) ? req.body.tag : F.NEWS_DEFAULT;
   if (!key && !F.RSS_TAGS.includes(tag)) return res.status(400).json({ error: 'Haber servisi henüz platformda etkin değil' });

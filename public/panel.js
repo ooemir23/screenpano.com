@@ -639,13 +639,15 @@ async function upCeleb(day, inp) { const f = inp.files[0]; if (!f) return; const
 /* ================= BİLGİ BANDI ================= */
 SECTIONS.info = {
   html() {
-    const db = S.db, ph = db.pharmacy || {}, nw = db.news || {}, mv = db.movies || {};
+    const db = S.db, ph = db.pharmacy || {}, nw = db.news || {}, mv = db.movies || {}, bk = db.breaking || {};
     const ist = /istanbul|İstanbul/i.test((db.location || {}).city || '');
     const row = (title, desc, on, js, extra = '') => `<div class="swr" style="flex-wrap:wrap"><div class="b"><b>${title}</b><span>${desc}</span></div>${sw(on, js)}${extra ? `<div style="flex-basis:100%;${on ? '' : 'opacity:.45;pointer-events:none'}">${extra}</div>` : ''}</div>`;
     return head('Bilgi Bandı', '"Maçlar ve bilgi sayfaları" widget\'ında sırayla dönen ve kayan bantta akan bilgiler. Maç yokken ekranı canlı tutar.')
       + lock('Bilgi bandı')
       + card('Sayfalar', 'Açtıklarınız sırayla gösterilir. Veriler otomatik yenilenir; anahtar ya da ayar gerekmez.',
-        row('📰 Haberler', 'Türkiye gündeminden son dakika başlıkları (TRT, AA, NTV)', nw.enabled !== false, "act('PUT','/news',{enabled:this.checked},'Kaydedildi')",
+        row('🚨 Son dakika', 'TRT Haber son dakika başlıkları; haberler sayfasından ayrı olarak alt bantta ve yeni haber gelince ekranda bildirim bandıyla çıkar', bk.enabled !== false, "act('PUT','/breaking',{enabled:this.checked},'Kaydedildi')",
+          `<div class="swr"><div class="b"><b>Ekranda bildirim bandı</b><span>Yeni son dakika gelince birkaç saniye üstte kırmızı bantla gösterilir</span></div>${sw(bk.banner !== false, "act('PUT','/breaking',{banner:this.checked},'Kaydedildi',false)")}</div>`)
+        + row('📰 Haberler', 'Türkiye gündeminden son dakika başlıkları (TRT, AA, NTV)', nw.enabled !== false, "act('PUT','/news',{enabled:this.checked},'Kaydedildi')",
           `<div class="f mt">${fl('Kategori', `<select onchange="act('PUT','/news',{tag:this.value},'Kaydedildi')">${[['mix', 'Son dakika · TRT + AA + NTV'], ['trt', 'Son dakika · TRT Haber'], ['aa', 'Son dakika · Anadolu Ajansı'], ['ntv', 'Gündem · NTV'], ['general', 'Genel'], ['economy', 'Ekonomi'], ['sport', 'Spor'], ['technology', 'Teknoloji']].map(([v, l]) => `<option value="${v}" ${(nw.tag || 'mix') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`)
         + row('💊 Nöbetçi eczaneler', 'Seçtiğiniz ilçelerin bugünkü nöbetçi eczaneleri', ph.enabled !== false, "act('PUT','/pharmacy',{enabled:this.checked},'Kaydedildi')",
           `<div class="f mt">${fl('İl', `<input type="text" id="ph-il" value="${esc(ph.il || 'İstanbul')}">`)}${fl('İlçe(ler), virgülle (en fazla 2)', `<input type="text" id="ph-d" value="${esc((ph.districts || []).join(', '))}" placeholder="örn. Kadıköy, Üsküdar">`)}</div><div class="row end mt"><span id="ph-res" class="muted" style="flex:1"></span><button class="btn g s" onclick="testPharm()">Dene</button><button class="btn s" onclick="savePharm()">Kaydet</button></div>`)

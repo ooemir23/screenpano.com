@@ -361,6 +361,18 @@ async function fetchNews(key, tag) {
   if (!items.length) throw new Error('haber listesi boş');
   return items;
 }
+// ---- Son dakika: TRT Haber son dakika yayını; haberler sayfasından bağımsız, ekranda bant + alt şeritte "SON DAKİKA" olarak çıkar ----
+let breaking = cacheGet('breaking'); let breakingFail = 0;
+const breakingOn = t => (t.db.breaking || {}).enabled !== false;
+async function refreshBreaking(force) {
+  if (!force && !proTenants().some(breakingOn)) return;
+  if (!force && Date.now() - breakingFail < 2 * MIN) return;
+  try {
+    const items = (await fetchRss('trt')).filter(x => x.date).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, 6);
+    breaking = { items, updated: new Date().toISOString() }; cachePut('breaking', breaking); hub.pushAll();
+  } catch (e) { breakingFail = Date.now(); console.error('Son dakika alınamadı:', e.message); }
+}
+const breakingFor = () => breaking && Date.now() - Date.parse(breaking.updated) < 2 * HOUR ? { items: breaking.items.filter(x => Date.now() - Date.parse(x.date) < 3 * HOUR) } : null;
 const newsTag = t => (t.db.news || {}).tag || NEWS_DEFAULT;
 async function refreshNews(force) {
   const key = collectKey();
@@ -682,7 +694,7 @@ function start() {
   matchLoop();
   setTimeout(refreshOnThisDay, 2000); setInterval(refreshOnThisDay, 30 * MIN);
   setTimeout(refreshPharmacies, 4000); setInterval(refreshPharmacies, 30 * MIN);
-  setTimeout(refreshNews, 6000); setInterval(refreshNews, 5 * MIN);
+  setTimeout(refreshNews, 6000); setInterval(refreshNews, 5 * MIN); setTimeout(refreshBreaking, 7000); setInterval(refreshBreaking, 3 * MIN);
   setTimeout(refreshBigMatches, 7000); setInterval(refreshBigMatches, 30 * MIN);
   setTimeout(refreshBooks, 9000); setInterval(refreshBooks, 30 * MIN);
   setTimeout(fillCovers, 12000); setInterval(fillCovers, 30 * MIN);
@@ -700,7 +712,7 @@ module.exports = {
   get autoMatches() { return autoMatches; }, refreshMatches, refreshStandings,
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
-  newsFor, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
+  newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
   coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,

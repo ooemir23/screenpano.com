@@ -831,6 +831,26 @@
           "text": "تتناوب عناوين آخر الأخبار من TRT Haber ووكالة الأناضول وNTV على الشاشة وتتحدث كل بضع دقائق."
         }
       }
+    },
+    {
+      "icon": "🚨",
+      "title": "Son dakika bildirim bandı",
+      "text": "Yeni bir son dakika haberi gelince ekranın üstünde kırmızı bant çıkar; alt şeritte de \"SON DAKİKA\" olarak akar.",
+      "added": "2026-11-02",
+      "i18n": {
+        "en": {
+          "title": "Breaking-news alert bar",
+          "text": "When a new breaking story arrives a red bar appears at the top of the screen, and it also scrolls in the bottom ticker as BREAKING."
+        },
+        "de": {
+          "title": "Eilmeldungs-Leiste",
+          "text": "Bei einer neuen Eilmeldung erscheint oben eine rote Leiste; im unteren Laufband läuft sie zusätzlich als EILMELDUNG durch."
+        },
+        "ar": {
+          "title": "شريط تنبيه الأخبار العاجلة",
+          "text": "عند وصول خبر عاجل جديد يظهر شريط أحمر أعلى الشاشة، ويمر أيضًا في الشريط السفلي بعنوان «عاجل»."
+        }
+      }
     }
   ],
   "shots": {
