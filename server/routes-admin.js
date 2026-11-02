@@ -288,7 +288,7 @@ r.put('/bigmatch', (req, res) => {
     enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled,
     note: typeof b.note === 'string' ? b.note.trim().slice(0, 140) : cur.note,
     info: Array.isArray(b.info) ? b.info.slice(0, 3).map(x => String(x || '').trim().slice(0, 60)) : cur.info,
-    style: ['klasik', 'yan', 'sade', 'skor'].includes(b.style) ? b.style : (cur.style || 'klasik'),
+    style: ['klasik', 'uyum', 'yan', 'sade', 'skor'].includes(b.style) ? b.style : (cur.style || 'klasik'),
     days: num(b.days, 1, 7, cur.days), everyMin: num(b.everyMin, 2, 60, cur.everyMin), durSec: num(b.durSec, 5, 60, cur.durSec),
   };
   changed(t); res.json({ ok: true });

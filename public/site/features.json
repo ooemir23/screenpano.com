@@ -855,20 +855,20 @@
     {
       "icon": "🏟️",
       "title": "Büyük maç kartında tasarım seçimi",
-      "text": "Derbi ve Avrupa maçı duyurusu dört tasarımdan biriyle gösterilir: Klasik, Karşı karşıya, Sade ve Skorbord.",
+      "text": "Derbi ve Avrupa maçı duyurusu beş tasarımdan biriyle gösterilir: Klasik, Klasik (ekrana uyumlu), Karşı karşıya, Sade ve Skorbord.",
       "added": "2026-11-03",
       "i18n": {
         "en": {
           "title": "Choose a design for big-match cards",
-          "text": "Derby and European match announcements can use one of four designs: Classic, Face to face, Plain and Scoreboard."
+          "text": "Derby and European match announcements can use one of five designs: Classic, Classic (fits the screen), Face to face, Plain and Scoreboard."
         },
         "de": {
           "title": "Design-Auswahl für Topspiel-Karten",
-          "text": "Ankündigungen für Derbys und Europapokalspiele gibt es in vier Designs: Klassisch, Gegenüber, Schlicht und Anzeigetafel."
+          "text": "Ankündigungen für Derbys und Europapokalspiele gibt es in fünf Designs: Klassisch, Klassisch (an Fläche angepasst), Gegenüber, Schlicht und Anzeigetafel."
         },
         "ar": {
           "title": "اختيار تصميم بطاقة المباراة الكبرى",
-          "text": "يمكن عرض إعلان الديربي ومباريات البطولات الأوروبية بأحد أربعة تصاميم: كلاسيكي، وجهًا لوجه، بسيط، ولوحة النتائج."
+          "text": "يمكن عرض إعلان الديربي ومباريات البطولات الأوروبية بأحد خمسة تصاميم: كلاسيكي، كلاسيكي (متوافق مع الشاشة)، وجهًا لوجه، بسيط، ولوحة النتائج."
         }
       }
     }
