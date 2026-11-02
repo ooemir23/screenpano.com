@@ -243,10 +243,17 @@ function qrText(b) {
   if (!t) throw new Error('Link ya da metin gerekli');
   return /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(t) && !/^https?:\/\//i.test(t) ? 'https://' + t : t;
 }
+// Önizleme: kaydetmeden QR üretir (panelde yazarken canlı görünür)
+r.post('/qrs/preview', async (req, res) => {
+  try {
+    const text = qrText(req.body); if (text.length > 400) throw new Error('İçerik çok uzun');
+    res.json({ svg: await QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } }) });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
 r.post('/qrs', async (req, res) => {
   try {
     const db = req.t.db;
-    const label = String(req.body.label || '').trim().slice(0, 40);
+    const label = (String(req.body.label || '').trim() || (req.body.kind === 'wifi' ? 'Wi-Fi Şifresi' : '')).slice(0, 40); // Wi-Fi için etiket boşsa varsayılan
     if (!label) throw new Error('Etiket gerekli (örn. "Menü için okutun")');
     const text = qrText(req.body);
     if (text.length > 400) throw new Error('İçerik çok uzun');

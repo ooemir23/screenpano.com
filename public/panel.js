@@ -617,16 +617,28 @@ SECTIONS.qr = {
     return head('QR Kodlar', 'Wi-Fi, menü, Instagram… QR kodlarınız medyanın köşesinde döner. Tasarım → Ekran düzeni\'nden "QR kart" ekleyip her karta ayrı QR seçebilirsiniz.')
       + card('▣ QR kodlar', 'Wi-Fi, menü, Instagram… Medyanın köşesinde döner; düzene "QR kart" widget\'ı da ekleyebilirsiniz.',
         `${(db.qrs || []).length ? `<div class="list">${db.qrs.map(q => `<div class="it"><div class="qr">${q.svg}</div><div class="b"><b>${esc(q.label)}</b><span>${q.kind === 'wifi' ? 'Wi-Fi' : esc(q.text)}</span></div><select style="width:auto" onchange="act('PATCH','/qrs/${q.id}',{side:this.value},'Kaydedildi')"><option value="right" ${q.side !== 'left' ? 'selected' : ''}>Sağ köşe</option><option value="left" ${q.side === 'left' ? 'selected' : ''}>Sol köşe</option></select><button class="btn xs d" onclick="act('DELETE','/qrs/${q.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : '<div class="empty">Henüz QR kod yok</div>'}
-         <hr class="sep2"><div class="f">${fl('Tür', `<select id="q-kind" onchange="$('q-link').hidden=this.value==='wifi';$('q-wifi').hidden=this.value!=='wifi'"><option value="link">Bağlantı / metin</option><option value="wifi">Wi-Fi</option></select>`)}${fl('Etiket (QR altında)', '<input type="text" id="q-label" maxlength="40" placeholder="örn. Menü için okutun">')}</div>
-         <div class="f mt" id="q-link">${fl('Bağlantı', '<input type="text" id="q-text" placeholder="https://instagram.com/...">')}</div>
-         <div class="f mt" id="q-wifi" hidden>${fl('Ağ adı (SSID)', '<input type="text" id="q-ssid">')}${fl('Şifre', '<input type="text" id="q-pass">')}${fl('Güvenlik', '<select id="q-sec"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Şifresiz</option></select>')}</div>
-         <div class="row end mt"><button class="btn" onclick="addQr()">QR ekle</button></div>
+         <hr class="sep2"><div class="f">${fl('Tür', `<select id="q-kind" onchange="$('q-link').hidden=this.value==='wifi';$('q-wifi').hidden=this.value!=='wifi';if(this.value==='wifi'&&!$('q-label').value)$('q-label').placeholder='Wi-Fi Şifresi';qrPrev()"><option value="link">Bağlantı / metin</option><option value="wifi">Wi-Fi</option></select>`)}${fl('Etiket (QR altında)', '<input type="text" id="q-label" maxlength="40" placeholder="örn. Menü için okutun">')}</div>
+         <div class="f mt" id="q-link">${fl('Bağlantı', '<input type="text" id="q-text" placeholder="https://instagram.com/..." oninput="qrPrev()">')}</div>
+         <div class="f mt" id="q-wifi" hidden>${fl('Ağ adı (SSID)', '<input type="text" id="q-ssid" oninput="qrPrev()">')}${fl('Şifre', '<input type="text" id="q-pass" oninput="qrPrev()">')}${fl('Güvenlik', '<select id="q-sec" onchange="qrPrev()"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Şifresiz</option></select>')}</div>
+         <div class="row mt" style="align-items:center"><div id="q-prev" class="qprev"><span class="muted">QR, bilgileri yazdıkça burada oluşur</span></div><span style="flex:1"></span><button class="btn" onclick="addQr()">QR ekle</button></div>
          <hr class="sep2"><div class="f">${fl(`QR boyutu (köşe ve QR kartları): <b id="qsv">${db.qrSize || 17}</b>`, `<input type="range" min="10" max="30" value="${db.qrSize || 17}" oninput="$('qsv').textContent=this.value" onchange="opt('qrSize',+this.value)">`)}${fl('Wi-Fi şifre yazısı (boşsa QR\'daki şifre)', `<input type="text" maxlength="120" value="${esc(db.wifiText || '')}" onchange="opt('wifiText',this.value)">`)}</div>`,
         `<span class="muted" style="white-space:nowrap">Köşede göster</span>${sw(db.showQr !== false, "opt('showQr',this.checked)")}`);
   },
 };
 const saveCamp = id => act('PUT', '/campaigns/' + id, { url: $('c-url').value, headline: $('c-h').value, sub: $('c-s').value, note: $('c-n').value, qrLabel: $('c-q').value, everyMin: $('c-e').value, durSec: $('c-d').value }, 'Kampanya kaydedildi');
 async function campToggle(id, el) { const url = $('c-url').value.trim(); const ok = await act('PUT', '/campaigns/' + id, { url, enabled: el.checked }, el.checked ? 'Kampanya açıldı' : 'Kampanya kapatıldı'); if (!ok) el.checked = !el.checked; }
+// yazarken canlı QR önizlemesi (kaydetmeden üretilir)
+let qrPrevT = 0;
+function qrPrev() {
+  clearTimeout(qrPrevT);
+  qrPrevT = setTimeout(async () => {
+    const box = $('q-prev'); if (!box) return;
+    const kind = $('q-kind').value, b = { kind };
+    if (kind === 'wifi') Object.assign(b, { ssid: $('q-ssid').value.trim(), password: $('q-pass').value, security: $('q-sec').value }); else b.text = $('q-text').value.trim();
+    if (kind === 'wifi' ? !b.ssid : !b.text) { box.innerHTML = `<span class="muted">${kind === 'wifi' ? 'Ağ adını ve şifreyi yazın, QR burada oluşur' : 'Bağlantıyı yazın, QR burada oluşur'}</span>`; return; }
+    try { const j = await req('POST', '/qrs/preview', b); if ($('q-prev')) $('q-prev').innerHTML = `<div class="qr">${j.svg}</div><span class="muted">Önizleme · kaydetmek için “QR ekle”</span>`; } catch (e) { box.innerHTML = `<span class="muted">${esc(e.message)}</span>`; }
+  }, 350);
+}
 function addQr() {
   const kind = $('q-kind').value, b = { kind, label: $('q-label').value.trim() };
   if (kind === 'wifi') Object.assign(b, { ssid: $('q-ssid').value.trim(), password: $('q-pass').value, security: $('q-sec').value }); else b.text = $('q-text').value.trim();
