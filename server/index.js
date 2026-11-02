@@ -31,7 +31,7 @@ app.get('/', (req, res) => {
 });
 // Tanıtım sitesi: şablon + public/site/features.json (server/site.js)
 const sitePage = () => require('./site').render(require('./store'), tenants, require('./plans').access);
-for (const k of ['kvkk', 'kosullar', 'gizlilik']) app.get('/' + k, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(require('./legal').render(k)); });
+for (const k of require('./legal').KEYS) app.get('/' + k, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(require('./legal').render(k)); });
 // TV çevrimdışı önbelleği: service worker kök kapsamda ve her zaman taze
 app.get('/sw.js', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.setHeader('Service-Worker-Allowed', '/'); res.type('js').sendFile(path.join(config.PUBLIC_DIR, 'sw.js')); });
 app.get('/login', page('login.html'));

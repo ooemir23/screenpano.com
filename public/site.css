@@ -284,6 +284,13 @@ body.legal{background:#fff}
 .lm h2{font-size:20px;margin:32px 0 8px;letter-spacing:-.01em}
 .lm p,.lm li{color:var(--soft);font-size:16px;line-height:1.7}
 .lm .meta{color:var(--mute);font-size:14px}
+.lh nav{flex-wrap:wrap;row-gap:6px}
+.lh nav a[aria-current]{color:var(--copper-d)}
+.lm .lt{width:100%;border-collapse:collapse;margin:12px 0 8px;font-size:14.5px;display:block;overflow-x:auto}
+.lm .lt th,.lm .lt td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;color:var(--soft);line-height:1.5}
+.lm .lt th{background:var(--paper);color:var(--ink);font-size:13px}
+.lm blockquote{margin:12px 0;padding:14px 18px;border-left:3px solid var(--copper);background:var(--paper);color:var(--soft);border-radius:0 10px 10px 0}
+.lm code{font-size:13.5px;background:var(--paper);padding:1px 6px;border-radius:5px}
 .lf{max-width:860px;margin:0 auto;padding:24px;border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
 
 /* duyarlı */

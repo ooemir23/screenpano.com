@@ -17,7 +17,7 @@ r.use((req, res, next) => {
 });
 
 const SETTINGS = ['collect_key', 'collect_paid', 'tmdb_key', 'books_key', 'traffic_api', 'google_places_key', 'alert_webhook',
-  'legal_company', 'legal_address', 'legal_email', 'legal_phone', 'legal_mersis', 'legal_kep',
+  'legal_company', 'legal_address', 'legal_email', 'legal_phone', 'legal_mersis', 'legal_kep', 'legal_hosting',
   'site_url', 'site_phone', 'site_whatsapp', 'site_email', 'site_price_baslangic', 'site_price_pro'];
 
 r.get('/overview', (req, res) => {
