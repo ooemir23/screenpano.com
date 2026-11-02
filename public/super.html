@@ -34,6 +34,8 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 .btn.sm{padding:5px 10px;font-size:12px}
 .btn.danger{background:transparent;border:1px solid rgba(238,91,79,.45);color:var(--bad)}
 .acts{display:flex;gap:6px;flex-wrap:wrap}
+tr.sub td:first-child{padding-left:30px}
+tr.sub .br{color:var(--mute);margin-right:6px;font-weight:400}
 #dlg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
 #dlg.on{display:flex}
 #dlg .card{width:100%;max-width:620px;max-height:90vh;overflow:auto}
@@ -136,9 +138,21 @@ function stTag(x) {
 }
 function renderList() {
   const q = $('flt').value.trim().toLocaleLowerCase('tr-TR');
-  const list = D.tenants.filter(x => !q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q)).sort((a, b) => b.created - a.created);
-  const orgName = o => { const h = D.tenants.find(t => t.org === o && t.owner); return h ? h.name : ''; };
-  $('list').innerHTML = list.map(x => `<tr><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : x.org ? 'Şube · ' + esc(orgName(x.org)) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}${x.org && x.owner ? ' · zincir (' + D.tenants.filter(t => t.org === x.org).length + ' şube)' : ''}</span></td>
+  const hit = x => [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q);
+  const head = o => D.tenants.find(t => t.org === o && t.owner);
+  const kids = o => D.tenants.filter(t => t.org === o && !t.owner).sort((a, b) => a.created - b.created);
+  // ana işletmeler (ve sahibi bulunamayan yetim şubeler) yeniden eskiye; şubeler sahibinin hemen altında
+  const tops = D.tenants.filter(x => x.owner || !x.org || !head(x.org)).sort((a, b) => b.created - a.created);
+  const list = [];
+  for (const x of tops) {
+    const ch = x.owner && x.org ? kids(x.org) : [];
+    // ana işletme ya da şubelerinden biri aramaya uyuyorsa zinciri birlikte göster
+    if (q && !hit(x) && !ch.some(hit)) continue;
+    list.push({ x, sub: false });
+    for (const c of ch) if (!q || hit(x) || hit(c)) list.push({ x: c, sub: true });
+  }
+  const orgName = o => { const h = head(o); return h ? h.name : ''; };
+  $('list').innerHTML = list.map(({ x, sub }) => `<tr${sub ? ' class="sub"' : ''}><td><b>${sub ? '<span class="br">↳</span>' : ''}${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : x.org ? 'Şube · ' + esc(orgName(x.org)) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}${x.org && x.owner ? ' · zincir (' + D.tenants.filter(t => t.org === x.org).length + ' şube)' : ''}</span></td>
     <td>${esc((D.plans[x.plan] || {}).name || x.plan)}</td><td>${stTag(x)}</td><td>${fmt(x.access.until || x.paidUntil || x.trialUntil)}</td>
     <td>${x.devices} <span style="color:var(--ok)">${x.online ? '● ' + x.online : ''}</span></td><td>${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
     <td><div class="acts"><button class="btn sm" onclick="editDialog('${x.id}')">Düzenle</button><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`).join('') || '<tr><td colspan="8" style="color:var(--mute);text-align:center;padding:24px">İşletme yok</td></tr>';
