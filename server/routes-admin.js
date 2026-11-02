@@ -62,7 +62,7 @@ r.get('/me', (req, res) => {
   const t = req.t, p = plan(t), acc = access(t);
   res.json({
     user: { id: req.user.id, username: req.user.username, role: req.user.role, name: req.user.name, impersonating: req.user.role === 'super' },
-    tenant: { id: t.id, name: t.name, plan: p, status: t.status, access: acc, trialUntil: t.trial_until, paidUntil: t.paid_until, location: t.db.location, logo: t.db.logo ? t.upBase + t.db.logo : null, theme: t.db.theme },
+    tenant: { id: t.id, name: t.name, plan: p, status: t.status, access: acc, trialUntil: t.trial_until, paidUntil: t.paid_until, location: t.db.location, menuCount: ((t.db.menu || {}).categories || []).length, logo: t.db.logo ? t.upBase + t.db.logo : null, theme: t.db.theme },
     upBase: t.upBase, brand: config.BRAND, plans: PLANS,
     usage: { devices: store.q.devicesOf.all(t.id).length, storageBytes: media.usedBytes(t), users: store.q.usersOf.all(t.id).length },
   });
@@ -124,7 +124,18 @@ r.delete('/users/:id', ownerOnly, (req, res) => {
 });
 
 // ================= GÖRÜNÜM: tema, logo, katalog =================
-r.get('/catalog', (req, res) => res.json({ cols: W.COLS, rows: W.ROWS, widgets: W.WIDGETS, templates: W.TEMPLATES, themes: W.THEMES, fonts: W.FONTS, pro: plan(req.t).pro }));
+r.get('/catalog', (req, res) => res.json({ cols: W.COLS, rows: W.ROWS, widgets: W.WIDGETS, templates: W.TEMPLATES, themes: W.THEMES, fonts: W.FONTS, starters: require('./starters').list(), pro: plan(req.t).pro }));
+// Başlangıç paketleri: düzen + renk + (isteğe bağlı) örnek fiyat listesi. Medya, logo ve diğer içerikler korunur.
+r.get('/starters', (req, res) => res.json({ list: require('./starters').list(), hasMenu: (req.t.db.menu.categories || []).length > 0 }));
+r.post('/starter', (req, res) => {
+  const t = req.t, b = req.body || {}, st = require('./starters').build(String(b.key || ''), plan(t).pro);
+  if (!st) return res.status(400).json({ error: 'Geçersiz paket' });
+  store.updateScreen(tenants.mainScreen(t).id, t.id, { layout: JSON.stringify(st.layout) });
+  t.db.theme = { ...t.db.theme, ...st.doc.theme };
+  const hadMenu = (t.db.menu.categories || []).length > 0;
+  if (st.doc.menu && (!hadMenu || b.replaceMenu === true)) t.db.menu = st.doc.menu; // dolu fiyat listesi yalnız açıkça istenirse ezilir
+  changed(t); res.json({ ok: true, menuReplaced: !!(st.doc.menu && (!hadMenu || b.replaceMenu === true)) });
+});
 // Tasarımı varsayılana döndür: layout (düzen), colors (renk/tema; logo kalır), tv (kenar payı, efekt), all
 r.post('/design/reset', (req, res) => {
   const t = req.t, scope = String((req.body || {}).scope || 'all'), all = scope === 'all';

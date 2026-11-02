@@ -579,6 +579,26 @@
   ],
   "extras": [
     {
+      "icon": "🎨",
+      "title": "Hazır başlangıç paketleri",
+      "text": "Kafe, spor barı, restoran, bar ya da vitrin: türünüzü seçin, ekran düzeni, renkler ve örnek ürün listesi hazır gelsin.",
+      "added": "2026-11-02",
+      "i18n": {
+        "en": {
+          "title": "Ready-made starter packs",
+          "text": "Café, sports bar, restaurant, lounge or shop window: pick your type and get the screen layout, colours and a sample product list."
+        },
+        "de": {
+          "title": "Fertige Starterpakete",
+          "text": "Café, Sportbar, Restaurant, Lounge oder Schaufenster: Typ wählen und Bildschirmlayout, Farben und eine Beispiel-Produktliste erhalten."
+        },
+        "ar": {
+          "title": "حِزم بدء جاهزة",
+          "text": "مقهى أو بار رياضي أو مطعم أو صالة أو واجهة محل: اختر نوع نشاطك لتحصل على تخطيط الشاشة والألوان وقائمة منتجات نموذجية."
+        }
+      }
+    },
+    {
       "icon": "💻",
       "title": "Windows'tan da yayın",
       "text": "Kutu yerine televizyona bağlı bilgisayarınızdan yayın yapın.",

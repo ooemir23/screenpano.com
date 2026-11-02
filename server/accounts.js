@@ -8,7 +8,7 @@ const W = require('./widgets');
 const DAY = 24 * 3600 * 1000;
 const USERNAME = /^[a-z0-9._-]{3,32}$/;
 
-function createTenant({ name, username, password, plan = 'pro', trialDays = config.TRIAL_DAYS, paidUntil = null, phone = '', doc = null, template = null }) {
+function createTenant({ name, username, password, plan = 'pro', trialDays = config.TRIAL_DAYS, paidUntil = null, phone = '', doc = null, template = null, starter = null }) {
   name = String(name || '').trim().slice(0, 80);
   username = String(username || '').trim().toLowerCase();
   if (name.length < 2) throw new Error('İşletme adı gerekli');
@@ -16,11 +16,12 @@ function createTenant({ name, username, password, plan = 'pro', trialDays = conf
   if (String(password || '').length < 8) throw new Error('Şifre en az 8 karakter olmalı');
   if (store.q.userByName.get(username)) throw new Error('Bu kullanıcı adı alınmış');
   const id = auth.uid(), now = Date.now();
-  const data = { ...tenants.defaultDoc(), ...(doc || {}) };
+  const pro = !!(require('./plans').PLANS[plan] || {}).pro, st = starter ? require('./starters').build(starter, pro) : null;
+  const data = { ...tenants.defaultDoc(), ...(st ? st.doc : {}), ...(doc || {}) };
   store.sql.transaction(() => {
     store.q.tenantIns.run({ id, name, plan, status: paidUntil ? 'active' : 'trial', trial_until: now + trialDays * DAY, paid_until: paidUntil, phone: String(phone || '').slice(0, 30), created: now, data: JSON.stringify(data) });
     store.q.userIns.run({ id: auth.uid(), tenant_id: id, username, pass: auth.hashPassword(password), role: 'owner', name: '', created: now });
-    store.q.screenIns.run({ id: auth.uid(), tenant_id: id, name: 'Ana Ekran', layout: JSON.stringify(W.cleanLayout(W.defaultLayout(template || ((require('./plans').PLANS[plan] || {}).pro ? 'spor' : 'temel')))), sort: 0, created: now });
+    store.q.screenIns.run({ id: auth.uid(), tenant_id: id, name: 'Ana Ekran', layout: JSON.stringify(st ? st.layout : W.cleanLayout(W.defaultLayout(template || (pro ? 'spor' : 'temel')))), sort: 0, created: now });
   })();
   return tenants.get(id);
 }

@@ -22,8 +22,8 @@ body{min-height:100vh;font-family:Montserrat,system-ui,sans-serif;background:rad
 .tabs button{flex:1;padding:10px;border:0;border-radius:9px;background:none;color:var(--mute);font:600 14px Montserrat,sans-serif;cursor:pointer}
 .tabs button.on{background:var(--accent);color:#fff}
 label{display:block;font-size:12px;color:var(--mute);margin:14px 0 6px;letter-spacing:.04em}
-input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#141616;color:var(--text);font:500 15px Montserrat,sans-serif;outline:none}
-input:focus{border-color:var(--accent2)}
+input,select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#141616;color:var(--text);font:500 15px Montserrat,sans-serif;outline:none}
+input:focus,select:focus{border-color:var(--accent2)}
 .btn{width:100%;margin-top:20px;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;font:700 15px Montserrat,sans-serif;cursor:pointer}
 .btn:disabled{opacity:.6}
 .err{min-height:20px;margin-top:12px;color:var(--bad);font-size:14px}
@@ -54,6 +54,7 @@ input:focus{border-color:var(--accent2)}
     </form>
     <form id="f-signup" hidden>
       <label>İşletme adı</label><input name="business" maxlength="80" required placeholder="örn. Sahil Kafe">
+      <label>İşletme türü <span style="opacity:.6;font-weight:400">(hazır ekran ve renkleri getirir)</span></label><select name="starter" id="starter"><option value="">Boş başlangıç</option></select>
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire">
       <label>Şifre (en az 8 karakter)</label><input name="password" type="password" autocomplete="new-password" minlength="8" required>
       <label>Telefon (isteğe bağlı)</label><input name="phone" type="tel" maxlength="30">
@@ -71,6 +72,7 @@ const $ = id => document.getElementById(id);
 fetch('/api/auth/config').then(r => r.json()).then(c => {
   $('brand').textContent = c.brand; document.title = c.brand + ' · Giriş';
   if (!c.signup) $('tsignup').style.display = 'none';
+  $('starter').innerHTML = (c.starters || []).filter(x => x.key !== 'bos').map(x => `<option value="${x.key}">${x.name}</option>`).join('') + '<option value="bos">Boş başlangıç</option>';
   $('trialnote').textContent = `${c.trialDays} gün boyunca tüm özellikler ücretsiz. Kredi kartı gerekmez.`;
 });
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {

@@ -131,7 +131,8 @@ SECTIONS.design = {
       + tabs('design', [['layout', 'Düzen'], ['colors', 'Renk ve logo'], ['tv', 'TV ayarları']]);
     if (sub === 'layout') {
       const T = S.cat.templates;
-      h += card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin.', `<div class="tpls">${Object.entries(T).map(([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`)
+      h += card('Başlangıç paketleri', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`)
+        + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin.', `<div class="tpls">${Object.entries(T).map(([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`)
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, sağ alt köşesinden boyutlandırın, tıklayınca ayarları sağda açılır.',
           `<div class="editor"><div id="cw"><div id="cv"></div></div><div id="props"></div></div>
            <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`)
@@ -216,6 +217,13 @@ function addW(type) {
   EDIT.layout.widgets.push({ type, ...(spot || { x: 0, y: 0, w: mw, h: mh }), ...(d.props ? { props: clone(d.props) } : {}) });
   EDIT.sel = EDIT.layout.widgets.length - 1; drawCanvas(); drawProps(); drawPal();
   if (!spot) toast('Boş yer yok: kutu sol üste kondu, diğerlerini küçültüp yerleştirin', true);
+}
+async function applyStarter(k) {
+  const v = (S.cat.starters || []).find(x => x.key === k); if (!v) return;
+  if (!confirm(`"${v.name}" paketi uygulansın mı? Ekran düzeniniz ve renkleriniz değişir (medya, logo ve diğer ayarlar korunur).`)) return;
+  const body = { key: k };
+  if (v.menu && S.me && S.me.tenant && (S.me.tenant.menuCount || 0) > 0) body.replaceMenu = confirm('Mevcut fiyat listenizin yerine örnek liste konsun mu?\n\nTamam: örnek liste gelir (eski liste silinir)\nİptal: fiyat listeniz korunur');
+  if (await act('POST', '/starter', body, 'Paket uygulandı', false)) { S.me = await req('GET', '/me'); drawBrand(); refresh(); }
 }
 function applyTpl(k) {
   if (EDIT.dirty && !confirm('Mevcut düzenin yerine bu şablon konsun mu?')) return;

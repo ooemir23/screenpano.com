@@ -20,7 +20,7 @@ r.post('/login', (req, res) => {
   res.json({ ok: true, role: u.role, next: u.role === 'super' ? '/super' : '/panel' });
 });
 r.post('/logout', (req, res) => { auth.clearSession(res); res.json({ ok: true }); });
-r.get('/config', (req, res) => res.json({ brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS }));
+r.get('/config', (req, res) => res.json({ brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, starters: require('./starters').list().map(({ key, name }) => ({ key, name })) }));
 r.post('/signup', (req, res) => {
   if (!config.ALLOW_SIGNUP) return res.status(403).json({ error: 'Yeni kayıt şu an kapalı' });
   const ip = auth.clientIp(req);
@@ -28,7 +28,7 @@ r.post('/signup', (req, res) => {
   try {
     const b = req.body || {};
     if (b.accept !== true) throw new Error('Devam etmek için Kullanım Koşulları ve KVKK Aydınlatma Metni\'ni onaylayın');
-    const t = createTenant({ name: b.business, username: b.username, password: b.password, phone: b.phone, plan: 'pro' });
+    const t = createTenant({ name: b.business, username: b.username, password: b.password, phone: b.phone, plan: 'pro', starter: require('./starters').STARTERS[b.starter] ? b.starter : null });
     t.db.consent = { terms: LEGAL_VERSION, kvkk: LEGAL_VERSION, at: Date.now(), ip, marketing: b.marketing === true }; require('./tenants').saveNow(t);
     auth.noteFail(ip); // kayıtlar da sayılır: tek IP'den seri hesap açılmasın
     const u = store.q.userByName.get(String(b.username).trim().toLowerCase());
