@@ -31,7 +31,7 @@ r.get('/overview', (req, res) => {
   settings.traffic_secret = require('./feeds').trafficSecret();
   const gUse = require('./social').googleUsage();
   const backup = require('./backup'), storage = require('./storage'), monitor = require('./monitor');
-  res.json({ google: gUse, backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
+  res.json({ books: require('./feeds').booksInfo(), google: gUse, backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
 });
 r.post('/tenants', (req, res) => {
   try {
@@ -98,6 +98,7 @@ r.get('/backups', async (req, res) => {
   try { remote = await b.listRemote(); } catch (e) { remoteError = e.message; }
   res.json({ status: b.status(), local: b.listLocal(), remote, remoteError });
 });
+r.post('/books/refresh', async (req, res) => { try { await require('./feeds').refreshBooksNow(); res.json({ ok: true, info: require('./feeds').booksInfo() }); } catch (e) { res.status(500).json({ error: e.message }); } });
 r.post('/backups', async (req, res) => { try { res.json({ ok: true, name: await require('./backup').run('manuel') }); } catch (e) { res.status(500).json({ error: e.message }); } });
 r.get('/backups/:name', (req, res) => { const f = require('./backup').filePath(req.params.name); if (!f || !fs.existsSync(f)) return res.status(404).end(); res.download(f); });
 r.post('/storage/sync', (req, res) => { require('./storage').syncTick().catch(() => {}); res.json({ ok: true }); });

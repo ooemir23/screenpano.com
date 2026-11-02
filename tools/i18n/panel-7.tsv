@@ -25,3 +25,6 @@ Google Books (anahtar varsa; olmazsa D&R listesi) ¦ Google Books (if a key is s
 Yalnız D&R listesi (CollectAPI) ¦ D&R list only (CollectAPI) ¦ Nur D&R-Liste (CollectAPI) ¦ قائمة D&R فقط (CollectAPI)
 Yeni kitaplar için yayınevleri (virgülle) ¦ Publishers for new books (comma-separated) ¦ Verlage für Neuerscheinungen (kommagetrennt) ¦ دور النشر للكتب الجديدة (مفصولة بفواصل)
 Can Yayınları, İletişim Yayınları, … (boş = hazır liste) ¦ Can Yayınları, İletişim Yayınları, … (empty = built-in list) ¦ Can Yayınları, İletişim Yayınları, … (leer = vorgegebene Liste) ¦ Can Yayınları, İletişim Yayınları, … (فارغ = القائمة الجاهزة)
+Kitapları şimdi yenile ¦ Refresh books now ¦ Bücher jetzt aktualisieren ¦ تحديث الكتب الآن
+Yenileniyor… ¦ Refreshing… ¦ Wird aktualisiert… ¦ جارٍ التحديث…
+Kitaplar yenilendi ¦ Books refreshed ¦ Bücher aktualisiert ¦ تم تحديث الكتب
