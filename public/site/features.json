@@ -811,6 +811,26 @@
           "text": "نزّل القالب الجاهز وعبّئه في Excel وارفعه؛ لتصبح قائمة أسعارك جاهزة في ثوانٍ."
         }
       }
+    },
+    {
+      "icon": "🚨",
+      "title": "Son dakika haberleri",
+      "text": "TRT Haber, Anadolu Ajansı ve NTV'den son dakika başlıkları ekranda döner; birkaç dakikada bir yenilenir.",
+      "added": "2026-11-02",
+      "i18n": {
+        "en": {
+          "title": "Breaking news",
+          "text": "Breaking headlines from TRT Haber, Anadolu Agency and NTV rotate on screen and refresh every few minutes."
+        },
+        "de": {
+          "title": "Eilmeldungen",
+          "text": "Eilmeldungen von TRT Haber, Anadolu-Agentur und NTV laufen auf dem Bildschirm durch und werden alle paar Minuten aktualisiert."
+        },
+        "ar": {
+          "title": "آخر الأخبار",
+          "text": "تتناوب عناوين آخر الأخبار من TRT Haber ووكالة الأناضول وNTV على الشاشة وتتحدث كل بضع دقائق."
+        }
+      }
     }
   ],
   "shots": {

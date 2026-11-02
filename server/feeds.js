@@ -309,28 +309,73 @@ async function refreshPharmacies(force) {
 }
 const pharmFor = t => { const p = pharmacies.get(pharmSig(t)); return p && p.duty === dutyDay() ? { items: p.items, districts: pharmCfg(t).districts || [] } : null; };
 
-const NEWS_TAGS = ['general', 'economy', 'sport', 'technology'];
+const NEWS_TAGS = ['general', 'economy', 'sport', 'technology', 'trt', 'aa', 'ntv', 'mix'];
 const news = new Map(Object.entries(cacheGet('newsByTag') || {}));
 const newsFail = new Map(); let newsError = '';
+// ---- Haber kaynakları: RSS (TRT, AA, NTV) anahtarsız ve kotasız; CollectAPI kategorileri anahtar ister ----
+const RSS = {
+  trt: { name: 'TRT Haber', url: 'https://www.trthaber.com/sondakika.rss' },
+  aa: { name: 'Anadolu Ajansı', url: 'https://www.aa.com.tr/tr/rss/default?cat=guncel' },
+  ntv: { name: 'NTV', url: 'https://www.ntv.com.tr/gundem.rss' },
+};
+const RSS_TAGS = ['trt', 'aa', 'ntv', 'mix'];
+const NEWS_DEFAULT = 'mix';
+const NOISE = /deprem mi oldu|son depremler|çekiliş sonuçları|bayram mı|tatil mi/i; // her gün tekrarlanan hizmet başlıkları
+const xmlText = v => String(v || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/<[^>]+>/g, ' ')
+  .replace(/&(amp|lt|gt|quot|apos|#39|#x27|nbsp);/g, (m, c) => ({ amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", '#39': "'", '#x27': "'", nbsp: ' ' }[c])).replace(/&#(\d+);/g, (m, n) => String.fromCharCode(+n)).replace(/\s+/g, ' ').trim();
+function parseFeed(xml, source) { // RSS 2.0 (<item>) ve Atom (<entry>) ikisini de okur
+  const out = [], blocks = String(xml).match(/<(item|entry)[\s>][\s\S]*?<\/\1>/g) || [];
+  for (const bl of blocks) {
+    const g = tag => { const m = bl.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, 'i')); return m ? xmlText(m[1]) : ''; };
+    const title = g('title'), d = Date.parse(g('pubDate') || g('published') || g('updated') || g('dc:date'));
+    if (title && !NOISE.test(title)) out.push({ title, source, date: isFinite(d) ? new Date(d).toISOString() : null });
+  }
+  return out;
+}
+async function fetchRss(id) {
+  const f = RSS[id];
+  const r = await fetch(f.url, { signal: AbortSignal.timeout(12000), headers: { 'user-agent': 'Mozilla/5.0 ScreenPano', accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' } });
+  if (!r.ok) throw new Error(`${f.name}: HTTP ${r.status}`);
+  const items = parseFeed(await r.text(), f.name);
+  if (!items.length) throw new Error(`${f.name}: haber bulunamadı`);
+  return items;
+}
+async function fetchRssTag(tag) {
+  const ids = tag === 'mix' ? ['trt', 'aa', 'ntv'] : [tag];
+  const res = await Promise.allSettled(ids.map(fetchRss)), ok = res.filter(x => x.status === 'fulfilled').map(x => x.value);
+  if (!ok.length) throw new Error(res.map(x => x.reason && x.reason.message).filter(Boolean).join(' · ') || 'haber alınamadı');
+  const day = Date.now() - 36 * HOUR, seen = new Set(), all = [];
+  for (const list of ok) {
+    const fresh = list.filter(x => !x.date || Date.parse(x.date) > day).sort((a, b) => Date.parse(b.date || 0) - Date.parse(a.date || 0));
+    all.push(fresh.length >= 3 ? fresh : list.slice(0, 5));
+  }
+  const out = []; // kaynaklar sırayla karıştırılır (her kaynaktan bir), yinelenen başlıklar atlanır
+  for (let i = 0; out.length < 12 && all.some(l => i < l.length); i++) for (const l of all) { const x = l[i]; if (!x) continue; const k = norm(x.title).slice(0, 60); if (seen.has(k)) continue; seen.add(k); out.push(x); }
+  return out;
+}
 async function fetchNews(key, tag) {
+  if (RSS_TAGS.includes(tag)) return fetchRssTag(tag);
   const j = await collectFetch(`${config.PHARM_BASE}/news/getNews?country=tr&tag=${encodeURIComponent(tag || 'general')}`, key, 'news');
   const seen = new Set(), items = [];
   for (const n of j.result || []) { const title = String(n.name || '').trim(); if (!title || seen.has(title)) continue; seen.add(title); items.push({ title, source: n.source || '', date: n.date || null }); if (items.length >= 8) break; }
   if (!items.length) throw new Error('haber listesi boş');
   return items;
 }
+const newsTag = t => (t.db.news || {}).tag || NEWS_DEFAULT;
 async function refreshNews(force) {
-  const key = collectKey(); if (!key) return;
-  const tags = new Set(proTenants().filter(t => (t.db.news || {}).enabled !== false).map(t => (t.db.news || {}).tag || 'general'));
+  const key = collectKey();
+  const tags = new Set(proTenants().filter(t => (t.db.news || {}).enabled !== false).map(newsTag));
   for (const tag of tags) {
+    const rss = RSS_TAGS.includes(tag);
+    if (!rss && !key) continue;
     const cur = news.get(tag);
-    if (!force && cur && Date.now() - Date.parse(cur.updated) < 3 * HOUR) continue;
-    if (!force && Date.now() - (newsFail.get(tag) || 0) < HOUR) continue;
+    if (!force && cur && Date.now() - Date.parse(cur.updated) < (rss ? 5 * MIN : 3 * HOUR)) continue;
+    if (!force && Date.now() - (newsFail.get(tag) || 0) < (rss ? 3 * MIN : HOUR)) continue;
     try { news.set(tag, { items: await fetchNews(key, tag), updated: new Date().toISOString() }); newsError = ''; cachePut('newsByTag', Object.fromEntries(news)); hub.pushAll(); }
     catch (e) { newsError = e.message; newsFail.set(tag, Date.now()); console.error('Haber alınamadı:', e.message); }
   }
 }
-const newsFor = t => { const n = news.get((t.db.news || {}).tag || 'general'); return n && Date.now() - Date.parse(n.updated) < 12 * HOUR ? { items: n.items } : null; };
+const newsFor = t => { const n = news.get(newsTag(t)); return n && Date.now() - Date.parse(n.updated) < 12 * HOUR ? { items: n.items } : null; };
 
 let books = cacheGet('books'); let booksError = '', booksFailAt = 0, coverErr = '';
 const coverMiss = new Set();
@@ -637,7 +682,7 @@ function start() {
   matchLoop();
   setTimeout(refreshOnThisDay, 2000); setInterval(refreshOnThisDay, 30 * MIN);
   setTimeout(refreshPharmacies, 4000); setInterval(refreshPharmacies, 30 * MIN);
-  setTimeout(refreshNews, 6000); setInterval(refreshNews, 10 * MIN);
+  setTimeout(refreshNews, 6000); setInterval(refreshNews, 5 * MIN);
   setTimeout(refreshBigMatches, 7000); setInterval(refreshBigMatches, 30 * MIN);
   setTimeout(refreshBooks, 9000); setInterval(refreshBooks, 30 * MIN);
   setTimeout(fillCovers, 12000); setInterval(fillCovers, 30 * MIN);
@@ -655,7 +700,7 @@ module.exports = {
   get autoMatches() { return autoMatches; }, refreshMatches, refreshStandings,
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
-  newsFor, fetchNews, refreshNews, NEWS_TAGS, get newsError() { return newsError; },
+  newsFor, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
   coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
