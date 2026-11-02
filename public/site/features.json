@@ -791,6 +791,26 @@
           "text": "يمكن عرض السعرات الحرارية بجانب كل منتج في قائمة الأسعار، وتُجلب من اسم المنتج بنقرة واحدة."
         }
       }
+    },
+    {
+      "icon": "📥",
+      "title": "Excel ile toplu fiyat girişi",
+      "text": "Hazır şablonu indirin, Excel'de doldurun, yükleyin; fiyat listeniz saniyeler içinde hazır.",
+      "added": "2026-11-02",
+      "i18n": {
+        "en": {
+          "title": "Bulk price entry with Excel",
+          "text": "Download the ready template, fill it in with Excel and upload it; your price list is ready in seconds."
+        },
+        "de": {
+          "title": "Preise per Excel erfassen",
+          "text": "Vorlage herunterladen, in Excel ausfüllen und hochladen – Ihre Preisliste ist in Sekunden fertig."
+        },
+        "ar": {
+          "title": "إدخال الأسعار دفعة واحدة عبر Excel",
+          "text": "نزّل القالب الجاهز وعبّئه في Excel وارفعه؛ لتصبح قائمة أسعارك جاهزة في ثوانٍ."
+        }
+      }
     }
   ],
   "shots": {

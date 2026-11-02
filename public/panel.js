@@ -435,7 +435,7 @@ SECTIONS.menu = {
       + langCard()
       + `<div id="mcats"></div><div class="row" style="margin-bottom:18px"><button class="btn g" onclick="addCat()">＋ Kategori ekle</button><span style="flex:1"></span><button class="btn" onclick="saveMenu()">Kaydet</button></div>`
       + card('Toplu ekle', 'Her satıra bir ürün: <code>Ürün ; fiyat ; açıklama</code>. Kategori satırı <code>#</code> ile başlar. Örnek: <code># Sıcak İçecekler</code> · <code>Türk Kahvesi ; 90</code>',
-        `<textarea id="mbulk" rows="6" placeholder="# Sıcak İçecekler&#10;Türk Kahvesi ; 90&#10;Latte ; 120 ; Yulaf sütüyle +15"></textarea><div class="row mt"><button class="btn g" onclick="bulk(false)">Listeye ekle</button><button class="btn d" onclick="bulk(true)">Listeyi bununla değiştir</button></div>`);
+        `<div class="row" style="margin-bottom:10px"><button class="btn g" onclick="menuTemplate()">⬇ Excel şablonunu indir</button><button class="btn g" onclick="$('mfile').click()">⬆ Doldurduğum dosyayı yükle</button><input id="mfile" type="file" accept=".csv,.txt,.tsv,text/csv,text/plain" style="display:none" onchange="menuFile(this)"></div><div class="muted" style="font-size:13px;margin-bottom:10px">Şablonu indirin, Excel'de ürünlerinizle doldurun, <b>CSV (virgülle/noktalı virgülle ayrılmış)</b> olarak kaydedip buraya yükleyin. Dosyadaki liste aşağıya yazılır; kontrol edip "Listeye ekle" ya da "Listeyi bununla değiştir"e basın.</div><textarea id="mbulk" rows="6" placeholder="# Sıcak İçecekler&#10;Türk Kahvesi ; 90&#10;Latte ; 120 ; Yulaf sütüyle +15"></textarea><div class="row mt"><button class="btn g" onclick="bulk(false)">Listeye ekle</button><button class="btn d" onclick="bulk(true)">Listeyi bununla değiştir</button></div>`);
   },
   after() { drawMenu(); },
 };
@@ -466,6 +466,50 @@ const mv = (a, i, d) => { const j = i + d; if (j >= 0 && j < a.length) [a[i], a[
 const mE = fn => { fn(); MENU.__dirty = 1; drawMenu(); };
 const addCat = () => mE(() => MENU.categories.push({ name: '', items: [{ name: '', price: '', desc: '' }] }));
 async function saveMenu() { const body = clone(MENU); delete body.__dirty; if (await act('PUT', '/menu', body, 'Fiyat listesi kaydedildi', false)) { MENU.__dirty = 0; S.db = await req('GET', '/db'); } }
+// ---- Excel/CSV şablonu: indir, doldur, yükle ----
+const TEMPLATE_ROWS = [['Kategori', 'Ürün', 'Fiyat', 'Açıklama'],
+  ['Sıcak İçecekler', 'Türk Kahvesi', '90', 'Közde, lokum ile'], ['Sıcak İçecekler', 'Latte', '120', 'Yulaf sütüyle +15'], ['Sıcak İçecekler', 'Filtre Kahve', '95', ''],
+  ['Soğuk İçecekler', 'Limonata', '85', 'Taze nane ile'], ['Soğuk İçecekler', 'Buzlu Çay', '75', 'Şeftali ya da limon'],
+  ['Tatlılar', 'San Sebastian Cheesecake', '165', 'Ev yapımı'], ['Tatlılar', 'Sufle', '150', 'Sıcak çikolata, dondurma ile'],
+  ['Kahvaltı', 'Serpme Kahvaltı (2 kişilik)', '450', 'Sınırsız çay']];
+function menuTemplate() {
+  const csv = '\ufeff' + TEMPLATE_ROWS.map(r => r.map(c => /[;"\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c).join(';')).join('\r\n') + '\r\n';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'fiyat-listesi-sablon.csv';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function parseCsv(text) { // ayraç (; , sekme) otomatik bulunur; tırnaklı alanlar desteklenir
+  text = text.replace(/^\ufeff/, '');
+  const first = text.split(/\r?\n/)[0] || '', cnt = c => first.split(c).length;
+  const sep = [';', '\t', ','].sort((a, b) => cnt(b) - cnt(a))[0];
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === sep) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.map(r => r.map(x => x.trim())).filter(r => r.some(Boolean));
+}
+async function menuFile(inp) {
+  const f = inp.files[0]; inp.value = ''; if (!f) return;
+  const buf = await f.arrayBuffer();
+  let text; try { text = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { text = new TextDecoder('windows-1254').decode(buf); } // eski Excel "CSV" kaydı
+  if (/^PK/.test(text.slice(0, 2))) return toast('Bu bir .xlsx dosyası: Excel\'de "Farklı kaydet" → "CSV" seçip yükleyin', true);
+  let rows = parseCsv(text);
+  if (rows.length && /^kategori/i.test(rows[0][0] || '') ) rows = rows.slice(1);
+  let cur = '', out = [], n = 0;
+  for (const [cat = '', name = '', price = '', desc = ''] of rows) {
+    if (!name) continue;
+    if (cat && cat !== cur) { cur = cat; out.push('# ' + cat); } else if (!out.length) out.push('# Ürünler');
+    out.push([name, price, desc].map(x => x.replace(/[;\t|]/g, ',')).join(' ; ').replace(/( ; )+$/, '')); n++;
+  }
+  if (!n) return toast('Dosyada ürün bulunamadı', true);
+  $('mbulk').value = out.join('\n');
+  toast(`Dosya okundu: ${n} ürün. Kontrol edip "Listeye ekle" ya da "Listeyi bununla değiştir"e basın`);
+}
 function bulk(replace) {
   const lines = $('mbulk').value.split('\n').map(l => l.trim()).filter(Boolean);
   if (!lines.length) return toast('Önce listeyi yapıştırın', true);
