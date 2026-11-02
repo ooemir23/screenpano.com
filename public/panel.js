@@ -613,7 +613,7 @@ SECTIONS.settings = {
       + tabs('settings', [['business', 'İşletme'], ['devices', 'Cihazlar'], ['branches', 'Şubeler'], ['users', 'Kullanıcılar'], ['plan', 'Paket'], ['backup', 'Yedekler'], ['privacy', 'Verilerim']]);
     if (sub === 'business') {
       const loc = S.db.location || {};
-      h += card('İşletme bilgileri', '', `<div class="f">${fl('İşletme adı', `<input type="text" id="s-name" maxlength="80" value="${esc(t.name)}">`)}${fl('Şehir / ilçe (hava durumu için)', `<input type="text" id="s-city" placeholder="örn. Kadıköy" autocomplete="off" oninput="geoSearch()">`)}</div>
+      h += card('İşletme bilgileri', '', `<div class="f">${fl('İşletme adı', `<input type="text" id="s-name" maxlength="80" value="${esc(t.name)}">`)}${fl('Şehir / ilçe (hava durumu için)', `<input type="text" id="s-city" placeholder="örn. Kadıköy" autocomplete="off" oninput="geoSearch()"><button type="button" class="btn ghost sm" id="geo-me" style="margin-top:6px" onclick="geoLocate()">📍 Konumumu otomatik bul</button>`)}</div>
         <div class="geo" id="geo"></div><p class="muted mt">Şu anki konum: <b style="color:var(--text)">${esc(loc.city || '-')}</b>${loc.custom ? '' : ' (varsayılan)'}</p>
         <div class="row end mt"><button class="btn" onclick="saveProfile()">Kaydet</button></div>`);
     } else if (sub === 'devices') {
@@ -676,6 +676,19 @@ function geoSearch() {
 }
 function drawGeo(sel) {
   $('geo').innerHTML = window.__geo.map((x, i) => `<button type="button" class="${i === sel ? 'on' : ''}" onclick="pickGeo(${i})">${i === sel ? '✓ ' : ''}${esc(x.city)}${x.admin ? ' · ' + esc(x.admin) : ''}</button>`).join('');
+}
+// tarayıcının konum iznini ister, şehri kendisi bulur
+function geoLocate() {
+  if (!navigator.geolocation) return toast('Bu tarayıcı konum bulmayı desteklemiyor; şehri yazarak seçin', true);
+  const b = $('geo-me'); b.disabled = true; b.textContent = 'Konum aranıyor…';
+  const done = () => { b.disabled = false; b.textContent = '📍 Konumumu otomatik bul'; };
+  navigator.geolocation.getCurrentPosition(async pos => {
+    try {
+      const x = await req('GET', `/geo/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+      window.__geo = [x]; GEO = x; $('s-city').value = x.city + (x.admin ? ', ' + x.admin : ''); drawGeo(0);
+    } catch (e) { toast(e.message, true); }
+    done();
+  }, err => { done(); toast(err.code === 1 ? 'Konum izni verilmedi; şehri yazarak seçebilirsiniz' : 'Konum alınamadı; şehri yazarak seçebilirsiniz', true); }, { timeout: 10000, maximumAge: 600000 });
 }
 function pickGeo(i) { GEO = window.__geo[i]; drawGeo(i); }
 async function saveProfile() {

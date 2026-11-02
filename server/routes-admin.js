@@ -88,6 +88,17 @@ r.get('/geo', async (req, res) => {
     res.json((j.results || []).map(x => ({ city: x.name, admin: x.admin1 || '', lat: x.latitude, lon: x.longitude })));
   } catch (e) { res.status(502).json({ error: 'Şehir araması yapılamadı' }); }
 });
+// tarayıcı konumundan şehir adı bul (koordinat ~1 km'ye yuvarlanıp gönderilir; yalnız işletme konumu, kişisel veri değil)
+r.get('/geo/reverse', async (req, res) => {
+  const lat = Math.round(Number(req.query.lat) * 100) / 100, lon = Math.round(Number(req.query.lon) * 100) / 100;
+  if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return res.status(400).json({ error: 'Geçersiz konum' });
+  let city = '', admin = '';
+  try {
+    const j = await (await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=tr`, { signal: AbortSignal.timeout(6000) })).json();
+    city = j.locality || j.city || ''; admin = j.principalSubdivision || '';
+  } catch (e) { /* ad bulunamasa da koordinat yeter; hava durumu koordinatla çalışır */ }
+  res.json({ city: city || 'Konumum', admin, lat, lon });
+});
 r.put('/password', (req, res) => {
   const { current, next: nw } = req.body || {};
   const u = store.q.userGet.get(req.user.id);
