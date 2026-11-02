@@ -28,3 +28,8 @@ Can Yayınları, İletişim Yayınları, … (boş = hazır liste) ¦ Can Yayın
 Kitapları şimdi yenile ¦ Refresh books now ¦ Bücher jetzt aktualisieren ¦ تحديث الكتب الآن
 Yenileniyor… ¦ Refreshing… ¦ Wird aktualisiert… ¦ جارٍ التحديث…
 Kitaplar yenilendi ¦ Books refreshed ¦ Bücher aktualisiert ¦ تم تحديث الكتب
+Yeni çıkan kitaplar ¦ New releases (books) ¦ Neu erschienene Bücher ¦ الكتب الصادرة حديثًا
+Liste D&R (CollectAPI) ya da Google Books'tan gelir; ekranlarda yalnız kapağı indirilebilen kitaplar, havuzdan rastgele ve 3 saatte bir değişerek gösterilir. ¦ The list comes from D&R (CollectAPI) or Google Books; on screens only books whose cover can be downloaded are shown, picked at random from the pool and changing every 3 hours. ¦ Die Liste stammt von D&R (CollectAPI) oder Google Books; auf den Bildschirmen werden nur Bücher mit herunterladbarem Cover gezeigt, zufällig aus dem Pool gewählt und alle 3 Stunden gewechselt. ¦ تأتي القائمة من D&R (CollectAPI) أو Google Books؛ وتُعرض على الشاشات الكتب التي يمكن تنزيل غلافها فقط، تُختار عشوائيًا من المجموعة وتتغير كل 3 ساعات.
+Google Books API anahtarı ¦ Google Books API key ¦ Google-Books-API-Schlüssel ¦ مفتاح Google Books API
+Google Books için yayınevleri (virgülle) ¦ Publishers for Google Books (comma-separated) ¦ Verlage für Google Books (kommagetrennt) ¦ دور النشر لـ Google Books (مفصولة بفواصل)
+Ayarları kaydettikten sonra basın. ¦ Press after saving the settings. ¦ Nach dem Speichern der Einstellungen drücken. ¦ اضغط بعد حفظ الإعدادات.

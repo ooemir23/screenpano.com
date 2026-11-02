@@ -45,6 +45,8 @@ tr.sub .br{color:var(--mute);margin-right:6px;font-weight:400}
 .scroll{overflow-x:auto}
 .hint a{color:var(--accent2,#c9955c)}
 .langsel{background:var(--panel2,#242828);color:inherit;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;cursor:pointer;max-width:100%}
+.bkbox{margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.bkbox b{color:var(--accent2,#c9955c)}
 </style></head><body>
 <header><a href="/super" style="text-decoration:none"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:34px;display:block"></a><span style="color:var(--mute);font-size:13px;padding-left:6px;border-left:1px solid var(--line)">Süper Yönetim</span><span style="flex:1"></span><span data-langpick></span><a class="btn ghost" href="/tv" target="_blank" style="text-decoration:none">TV sayfası</a><button class="btn ghost" onclick="pwDialog()">Şifremi değiştir</button><button class="btn ghost" onclick="logout()">Çıkış</button></header>
 <div class="stats" id="stats"></div>
@@ -64,11 +66,18 @@ tr.sub .br{color:var(--mute);margin-right:6px;font-weight:400}
   </div>
   <div class="row" style="margin-top:12px">
     <div><label>TMDB API anahtarı (sinema)</label><input id="s-tmdb_key" type="password" autocomplete="off"></div>
-    <div><label>Google Books API anahtarı (yeni kitaplar ve kapaklar)</label><input id="s-books_key" type="password" autocomplete="off"></div>
-    <div class="muted" style="font-size:13px;line-height:1.5"><span id="bk-info">…</span> <button class="btn g s" type="button" onclick="refreshBooks(this)">Kitapları şimdi yenile</button></div>
-    <div><label>Yeni kitap kaynağı</label><select id="s-books_source"><option value="">Google Books (anahtar varsa; olmazsa D&amp;R listesi)</option><option value="collect">Yalnız D&amp;R listesi (CollectAPI)</option></select></div>
-    <div><label>Yeni kitaplar için yayınevleri (virgülle)</label><input id="s-books_publishers" type="text" placeholder="Can Yayınları, İletişim Yayınları, … (boş = hazır liste)"></div>
   </div>
+  <h3 style="margin:22px 0 4px;font-size:15px">Yeni çıkan kitaplar</h3>
+  <p class="hint">Liste D&amp;R (CollectAPI) ya da Google Books'tan gelir; ekranlarda yalnız kapağı indirilebilen kitaplar, havuzdan rastgele ve 3 saatte bir değişerek gösterilir.</p>
+  <div class="row">
+    <div><label>Yeni kitap kaynağı</label><select id="s-books_source"><option value="">Google Books (anahtar varsa; olmazsa D&amp;R listesi)</option><option value="collect">Yalnız D&amp;R listesi (CollectAPI)</option></select></div>
+    <div><label>Google Books API anahtarı</label><input id="s-books_key" type="password" autocomplete="off"></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <div><label>Google Books için yayınevleri (virgülle)</label><input id="s-books_publishers" type="text" placeholder="Can Yayınları, İletişim Yayınları, … (boş = hazır liste)"></div>
+  </div>
+  <div id="bk-info" class="bkbox">…</div>
+  <div class="row" style="margin-top:10px"><button class="btn g s" type="button" onclick="refreshBooks(this)">Kitapları şimdi yenile</button><span class="muted" style="font-size:12px;flex:1;align-self:center">Ayarları kaydettikten sonra basın.</span></div>
   <div class="row" style="margin-top:12px">
     <div><label>İBB trafik Worker adresi (isteğe bağlı)</label><input id="s-traffic_api" placeholder="https://trafik.kullanici.workers.dev"></div>
     <div><label>Worker imza anahtarı (TRAFFIC_SECRET olarak girin)</label><input id="s-traffic_secret" readonly></div>
@@ -112,7 +121,15 @@ async function load() {
   D = await call('GET', '/api/super/overview');
   const t = D.totals;
   $('stats').innerHTML = [['İşletme', t.tenants], ['Ekranı açık', t.live], ['Kayıtlı TV', t.devices], ['Şu an bağlı', t.online]].map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
-  if (D.books && $('bk-info')) { const b = D.books; $('bk-info').textContent = `Kitaplar: kaynak ${b.kaynak || '—'} · havuz ${b.adet} · gerçek kapak ${b.kapak}/${b.adet}${b.alanlar ? ' · D&R alanları: ' + b.alanlar : ''} · Google anahtarı ${b.anahtar ? 'var' : 'YOK'}${b.hata ? ' · uyarı: ' + b.hata : ''}${b.kapakHata ? ' · kapak hatası: ' + b.kapakHata : ''}`; }
+  if (D.books && $('bk-info')) {
+    const b = D.books, L = [];
+    L.push(`Kaynak: ${b.kaynak === 'google' ? 'Google Books' : b.kaynak === 'collect' ? 'D&R (CollectAPI)' : '—'} · Havuz: ${b.adet} kitap · Kapağı indirilen: ${b.kapakli}/${b.adet} · Google anahtarı: ${b.anahtar ? 'var' : 'YOK'}`);
+    if (b.hata) L.push('Uyarı: ' + b.hata);
+    if (b.kapakHata) L.push('Kapak hatası: ' + b.kapakHata);
+    if (b.alanlar) L.push('D&R alanları: ' + b.alanlar);
+    if (b.ornek) L.push('D&R ilk kayıt: ' + b.ornek);
+    $('bk-info').textContent = L.join('\n');
+  }
   if (D.google && $('g-use')) $('g-use').textContent = `· bu ay ${D.google.calls} / ${D.google.cap}`;
   if (!window.__setLoaded) { for (const [k, v] of Object.entries(D.settings)) if ($('s-' + k)) $('s-' + k).value = v || ''; window.__setLoaded = true; }
   $('mailst').textContent = D.mail ? 'SMTP ayarlı: e-posta uyarıları açık.' : 'SMTP henüz ayarlı değil.';

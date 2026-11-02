@@ -519,17 +519,25 @@ async function googleNewBooks() {
   if (items.length < 1) throw new Error(`Google Books: bu hafta çıkan kitap bulunamadı (${items.length}; ${dbg})${firstErr ? ' · ' + firstErr : ''}`);
   return items.slice(0, 8);
 }
-let booksRaw = '';
+let booksRaw = '', booksSample = '';
+const IMG_URL = /^(https?:)?\/\/[^\s]+\.(jpe?g|png|webp|gif)(\?[^\s]*)?$/i;
+const IMG_KEY = /img|image|resim|gorsel|görsel|cover|kapak|foto|thumb|poster/i;
+const rawImage = b => { // bilinen alanlar, yoksa görsel gibi görünen herhangi bir alan
+  for (const k of ['image', 'resim', 'img', 'gorsel', 'cover', 'kapak', 'foto', 'thumbnail']) if (typeof b[k] === 'string' && /^(https?:)?\/\//.test(b[k].trim())) return b[k].trim();
+  for (const [k, v] of Object.entries(b)) if (typeof v === 'string' && /^(https?:)?\/\//.test(v.trim()) && (IMG_URL.test(v.trim()) || IMG_KEY.test(k))) return v.trim();
+  return '';
+};
 async function collectNewBooks(key) {
   const j = await collectFetch(`${config.PHARM_BASE}/book/newBook`, key, 'books');
   const seen = new Set(), items = [];
   for (const b of j.result || []) {
     const title = String(b.title || '').trim(); if (!title || seen.has(title) || AUDIO.test(title + ' ' + (b['yayın'] || b.yayin || ''))) continue; seen.add(title);
-    items.push({ image: String(b.image || b.resim || b.img || b.gorsel || b.cover || '').trim(), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
+    items.push({ image: rawImage(b), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
     if (items.length >= 40) break;
   }
   if (!items.length) throw new Error('kitap listesi boş');
-  booksRaw = Object.keys((j.result || [])[0] || {}).join(',');
+  const r0 = (j.result || [])[0] || {};
+  booksRaw = Object.keys(r0).join(', '); booksSample = JSON.stringify(r0, (k, v) => typeof v === 'string' && v.length > 80 ? v.slice(0, 80) + '…' : v).slice(0, 400);
   return items;
 }
 let booksSource = '';
@@ -780,7 +788,7 @@ module.exports = {
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
-  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, kapakli: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, kaynak: (books && books.source) || '', adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, anahtar: !!gbKey(), hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await fillCovers(); }, get booksSource() { return (books && books.source) || ''; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
+  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, ornek: booksSample, kapakli: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, kaynak: (books && books.source) || '', adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, anahtar: !!gbKey(), hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await fillCovers(); }, get booksSource() { return (books && books.source) || ''; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,
