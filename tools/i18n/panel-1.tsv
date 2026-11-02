@@ -1,0 +1,186 @@
+hiç ¦ never ¦ nie ¦ أبدًا
+az önce ¦ just now ¦ gerade eben ¦ الآن
+dk önce ¦ min ago ¦ Min. her ¦ د مضت
+saat önce ¦ h ago ¦ Std. her ¦ س مضت
+gün önce ¦ d ago ¦ T. her ¦ ي مضت
+{} dk önce ¦ {} min ago ¦ vor {} Min. ¦ منذ {} د
+{} saat önce ¦ {} h ago ¦ vor {} Std. ¦ منذ {} س
+{} gün önce ¦ {} d ago ¦ vor {} T. ¦ منذ {} ي
+Oturum kapandı ¦ Session expired ¦ Sitzung abgelaufen ¦ انتهت الجلسة
+İşlem yapılamadı ( ¦ Action failed ( ¦ Aktion fehlgeschlagen ( ¦ تعذّر تنفيذ العملية (
+İşlem yapılamadı ({}) ¦ Action failed ({}) ¦ Aktion fehlgeschlagen ({}) ¦ تعذّر تنفيذ العملية ({})
+TV önizleme ¦ TV preview ¦ TV-Vorschau ¦ معاينة التلفاز
+Özet ¦ Overview ¦ Übersicht ¦ نظرة عامة
+Tasarım ¦ Design ¦ Design ¦ التصميم
+Medya ¦ Media ¦ Medien ¦ الوسائط
+Fiyat Listesi ¦ Price List ¦ Preisliste ¦ قائمة الأسعار
+Spor ¦ Sports ¦ Sport ¦ الرياضة
+Duyurular ¦ Announcements ¦ Ankündigungen ¦ الإعلانات
+Kutlamalar ¦ Celebrations ¦ Feiern ¦ التهاني
+Bilgi Bandı ¦ Info Ticker ¦ Infoband ¦ شريط المعلومات
+İstatistik ¦ Statistics ¦ Statistiken ¦ الإحصاءات
+Ayarlar ¦ Settings ¦ Einstellungen ¦ الإعدادات
+Düzende kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı? ¦ You have unsaved changes in the layout. Leave without saving? ¦ Das Layout enthält ungespeicherte Änderungen. Ohne Speichern verlassen? ¦ يوجد تغييرات غير محفوظة في التخطيط. هل تريد المغادرة دون حفظ؟
+Süper yönetici olarak ¦ You are viewing ¦ Sie sehen ¦ أنت تعرض الآن
+işletmesini görüntülüyorsunuz. ¦ as a super admin. ¦ als Super-Admin. ¦ بصفتك المدير العام.
+Süper yönetici olarak <0>{}</0> işletmesini görüntülüyorsunuz. ¦ You are viewing <0>{}</0> as a super admin. ¦ Sie sehen <0>{}</0> als Super-Admin. ¦ أنت تعرض منشأة <0>{}</0> بصفتك المدير العام.
+Süper yönetime dön ¦ Back to super admin ¦ Zurück zur Super-Verwaltung ¦ العودة إلى الإدارة العامة
+Hesabınız askıya alındı. ¦ Your account has been suspended. ¦ Ihr Konto wurde gesperrt. ¦ تم تعليق حسابك.
+Abonelik süreniz doldu. ¦ Your subscription has expired. ¦ Ihr Abonnement ist abgelaufen. ¦ انتهى اشتراكك.
+Hesap silme talebi var. ¦ A deletion request is pending. ¦ Eine Löschanfrage liegt vor. ¦ يوجد طلب حذف للحساب.
+{} tarihinde tüm veriler kalıcı olarak silinecek. ¦ All data will be permanently deleted on {}. ¦ Am {} werden alle Daten endgültig gelöscht. ¦ سيتم حذف جميع البيانات نهائيًا في {}.
+<0>Hesap silme talebi var.</0> {} tarihinde tüm veriler kalıcı olarak silinecek. ¦ <0>A deletion request is pending.</0> All data will be permanently deleted on {}. ¦ <0>Eine Löschanfrage liegt vor.</0> Am {} werden alle Daten endgültig gelöscht. ¦ <0>يوجد طلب حذف للحساب.</0> سيتم حذف جميع البيانات نهائيًا في {}.
+<0>{}</0> Pro pakette. Ayarlarınızı şimdiden yapabilirsiniz; ekranda görünmesi için paketinizi yükseltin. ¦ <0>{}</0> is part of the Pro plan. You can set it up now; upgrade your plan to show it on screen. ¦ <0>{}</0> gehört zum Pro-Paket. Sie können es schon jetzt einrichten; für die Anzeige auf dem Bildschirm Paket upgraden. ¦ <0>{}</0> ضمن باقة Pro. يمكنك إعداده الآن، وللظهور على الشاشة قم بترقية باقتك.
+<0>{}</0> Ekranınız şu an kapalı; paketiniz yenilenince kendiliğinden açılır. ¦ <0>{}</0> Your screen is currently off; it turns back on automatically when your plan is renewed. ¦ <0>{}</0> Ihr Bildschirm ist derzeit aus; er geht nach Verlängerung des Pakets automatisch wieder an. ¦ <0>{}</0> شاشتك متوقفة حاليًا، وستعمل تلقائيًا عند تجديد الباقة.
+Vazgeç ¦ Cancel ¦ Abbrechen ¦ تراجع
+TV kutusu ¦ TV box ¦ TV-Box ¦ جهاز العرض
+<0>{}</0> {} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin. ¦ <0>{}</0> has been offline since {}. Check the box's power, internet and that the app is open. ¦ <0>{}</0> ist seit {} offline. Prüfen Sie Strom, Internet und ob die App geöffnet ist. ¦ <0>{}</0> غير متصل منذ {}. تحقق من الكهرباء والإنترنت وأن التطبيق مفتوح.
+{} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin. ¦ Offline since {}. Check the box's power, internet and that the app is open. ¦ Seit {} offline. Prüfen Sie Strom, Internet und ob die App geöffnet ist. ¦ غير متصل منذ {}. تحقق من الكهرباء والإنترنت وأن التطبيق مفتوح.
+Deneme süreniz ¦ Your trial ends in ¦ Ihre Testphase endet in ¦ تنتهي تجربتك بعد
+{} gün ¦ {} days ¦ {} Tagen ¦ {} أيام
+sonra ({}) bitiyor. Deneme boyunca tüm Pro özellikler açık. ¦ ({}). All Pro features are on during the trial. ¦ ({}). Während der Testphase sind alle Pro-Funktionen aktiv. ¦ ({}). جميع ميزات Pro مفعّلة أثناء التجربة.
+Deneme süreniz <0>{} gün</0> sonra ({}) bitiyor. Deneme boyunca tüm Pro özellikler açık. ¦ Your trial ends in <0>{} days</0> ({}). All Pro features are on during the trial. ¦ Ihre Testphase endet in <0>{} Tagen</0> ({}). Während der Testphase sind alle Pro-Funktionen aktiv. ¦ تنتهي تجربتك بعد <0>{} أيام</0> ({}). جميع ميزات Pro مفعّلة أثناء التجربة.
+Logo ve renkler ¦ Logo and colours ¦ Logo und Farben ¦ الشعار والألوان
+Logonuzu yükleyin, renklerinizi seçin ¦ Upload your logo, pick your colours ¦ Logo hochladen, Farben wählen ¦ ارفع شعارك واختر ألوانك
+Medya ekleyin ¦ Add media ¦ Medien hinzufügen ¦ أضف وسائط
+Tanıtım videoları ve fotoğraflar ¦ Promo videos and photos ¦ Werbevideos und Fotos ¦ مقاطع ترويجية وصور
+TV kutusunu bağlayın ¦ Connect the TV box ¦ TV-Box verbinden ¦ اربط جهاز العرض
+Android kutuya ya da Windows bilgisayara uygulamayı kurun, kodu girin ¦ Install the app on an Android box or Windows PC and enter the code ¦ App auf Android-Box oder Windows-PC installieren und Code eingeben ¦ ثبّت التطبيق على جهاز أندرويد أو حاسوب ويندوز وأدخل الرمز
+Şehrinizi seçin ¦ Choose your city ¦ Stadt wählen ¦ اختر مدينتك
+Hava durumu için ¦ For the weather ¦ Für das Wetter ¦ لعرض حالة الطقس
+Fiyat listesi ¦ Price list ¦ Preisliste ¦ قائمة الأسعار
+Ürünlerinizi ve fiyatlarınızı girin ¦ Enter your products and prices ¦ Produkte und Preise eingeben ¦ أدخل منتجاتك وأسعارها
+Ekranınızın durumu, kurulum adımları ve hızlı işlemler. ¦ Your screen's status, setup steps and quick actions. ¦ Status Ihres Bildschirms, Einrichtungsschritte und Schnellaktionen. ¦ حالة شاشتك وخطوات الإعداد وإجراءات سريعة.
+📺 TV ekranını aç ¦ 📺 Open TV screen ¦ 📺 TV-Bildschirm öffnen ¦ 📺 افتح شاشة التلفاز
+Canlı önizleme ¦ Live preview ¦ Live-Vorschau ¦ معاينة مباشرة
+TV'lerinizde şu an görünen ekran. ¦ What is on your TVs right now. ¦ Was gerade auf Ihren Fernsehern zu sehen ist. ¦ ما يظهر الآن على شاشات التلفاز لديك.
+Cihaz bağlı ¦ Device connected ¦ Gerät verbunden ¦ الجهاز متصل
+Cihaz şu an çevrimdışı ¦ Device is offline ¦ Gerät ist offline ¦ الجهاز غير متصل الآن
+Henüz cihaz bağlanmadı ¦ No device connected yet ¦ Noch kein Gerät verbunden ¦ لم يتم ربط أي جهاز بعد
+Kurulum adımları ¦ Setup steps ¦ Einrichtungsschritte ¦ خطوات الإعداد
+Kurulum adımları <0>· {}/{}</0> ¦ Setup steps <0>· {}/{}</0> ¦ Einrichtungsschritte <0>· {}/{}</0> ¦ خطوات الإعداد <0>· {}/{}</0>
+Sırayla tamamlayın; her adım ilgili sayfayı açar. ¦ Complete them in order; each step opens the relevant page. ¦ Der Reihe nach erledigen; jeder Schritt öffnet die passende Seite. ¦ أكملها بالترتيب؛ كل خطوة تفتح الصفحة المناسبة.
+Her şey hazır 🎉 ¦ All set 🎉 ¦ Alles bereit 🎉 ¦ كل شيء جاهز 🎉
+Hızlı işlemler ¦ Quick actions ¦ Schnellaktionen ¦ إجراءات سريعة
+Ekranda anında bir gösterim başlatır; ayarlarınızı değiştirmez. ¦ Starts an instant demo on screen; your settings stay unchanged. ¦ Startet sofort eine Demo auf dem Bildschirm; Ihre Einstellungen bleiben unverändert. ¦ يبدأ عرضًا فوريًا على الشاشة دون تغيير إعداداتك.
+🎁 Kampanya kartını göster ¦ 🎁 Show campaign card ¦ 🎁 Aktionskarte anzeigen ¦ 🎁 عرض بطاقة العرض
+🎂 Doğum günü kutlamasını göster ¦ 🎂 Show birthday greeting ¦ 🎂 Geburtstagsgruß anzeigen ¦ 🎂 عرض تهنئة عيد الميلاد
+🏟 Büyük maç görselini dene ¦ 🏟 Try the big-match visual ¦ 🏟 Großspiel-Grafik testen ¦ 🏟 تجربة صورة المباراة الكبرى
+⚽ Gol animasyonunu dene ¦ ⚽ Try the goal animation ¦ ⚽ Torjubel-Animation testen ¦ ⚽ تجربة حركة الهدف
+↻ TV'yi yenile ¦ ↻ Refresh TV ¦ ↻ TV aktualisieren ¦ ↻ تحديث التلفاز
+Deneme · ¦ Trial · ¦ Test · ¦ تجربة ·
+tarihine kadar ¦ until ¦ bis ¦ حتى
+Deneme · {} tarihine kadar ¦ Trial · until {} ¦ Test · bis {} ¦ تجربة · حتى {}
+Süresi doldu ¦ Expired ¦ Abgelaufen ¦ منتهية
+Video ve fotoğraf ¦ Video and photos ¦ Video und Fotos ¦ فيديو وصور
+Bağlı cihaz ¦ Connected devices ¦ Verbundene Geräte ¦ الأجهزة المتصلة
+Ekranınızın düzeni, renkleri, logosu ve TV ayarları. Kaydedince TV anında güncellenir. ¦ Your screen's layout, colours, logo and TV settings. The TV updates instantly when you save. ¦ Layout, Farben, Logo und TV-Einstellungen Ihres Bildschirms. Der Fernseher aktualisiert sich beim Speichern sofort. ¦ تخطيط شاشتك وألوانها وشعارها وإعدادات التلفاز. يتحدّث التلفاز فور الحفظ.
+Düzeni kaydet ¦ Save layout ¦ Layout speichern ¦ حفظ التخطيط
+⟲ Varsayılana sıfırla ¦ ⟲ Reset to default ¦ ⟲ Auf Standard zurücksetzen ¦ ⟲ إعادة الضبط الافتراضي
+↶ Geri al ¦ ↶ Undo ¦ ↶ Rückgängig ¦ ↶ تراجع
+Düzen ¦ Layout ¦ Layout ¦ التخطيط
+Renk ve logo ¦ Colours and logo ¦ Farben und Logo ¦ الألوان والشعار
+TV ayarları ¦ TV settings ¦ TV-Einstellungen ¦ إعدادات التلفاز
+Başlangıç paketleri ¦ Starter packs ¦ Starterpakete ¦ حزم البدء
+Hazır düzenler ¦ Ready-made layouts ¦ Fertige Layouts ¦ تخطيطات جاهزة
+Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin. ¦ Pick one, then adjust it below as you like. ¦ Wählen Sie eines und passen Sie es unten nach Wunsch an. ¦ اختر أحدها ثم عدّله أدناه كما تشاء.
+Kutuları sürükleyerek taşıyın, sağ alt köşesinden boyutlandırın, tıklayınca ayarları sağda açılır. ¦ Drag boxes to move them, resize from the bottom-right corner; click a box to open its settings on the right. ¦ Kästen per Ziehen verschieben, an der unteren rechten Ecke skalieren; ein Klick öffnet rechts die Einstellungen. ¦ اسحب المربعات لنقلها وغيّر حجمها من الزاوية السفلية؛ وعند النقر تظهر إعداداتها على الجانب.
+Widget ekle ¦ Add widget ¦ Widget hinzufügen ¦ إضافة عنصر
+Kaydedilmiş hâli ¦ Saved version ¦ Gespeicherter Stand ¦ النسخة المحفوظة
+TV'de şu an görünen. Kaydetmediğiniz değişiklikler burada görünmez. ¦ What the TV shows right now. Unsaved changes do not appear here. ¦ Aktuell auf dem Fernseher. Ungespeicherte Änderungen erscheinen hier nicht. ¦ ما يظهر حاليًا على التلفاز. التغييرات غير المحفوظة لا تظهر هنا.
+✨ Logonuzdan önerilen renkler ¦ ✨ Colours suggested from your logo ¦ ✨ Aus Ihrem Logo vorgeschlagene Farben ¦ ✨ ألوان مقترحة من شعارك
+Logonuzdaki renklerden TV'de okunaklı kalacak şekilde üretildi. Tıklayınca hemen uygulanır. ¦ Generated from your logo's colours so they stay legible on TV. Click to apply instantly. ¦ Aus den Farben Ihres Logos erzeugt, damit sie auf dem Fernseher lesbar bleiben. Ein Klick wendet sie sofort an. ¦ مستخرجة من ألوان شعارك بحيث تبقى مقروءة على التلفاز. انقر لتطبيقها فورًا.
+Logo inceleniyor… ¦ Analysing logo… ¦ Logo wird analysiert… ¦ جارٍ تحليل الشعار…
+Hazır renkler ¦ Preset colours ¦ Farbvorlagen ¦ ألوان جاهزة
+Tıklayınca hemen uygulanır. ¦ Click to apply instantly. ¦ Ein Klick wendet es sofort an. ¦ انقر لتطبيقها فورًا.
+Logo ¦ Logo ¦ Logo ¦ الشعار
+Arkası şeffaf PNG en iyisidir. Logo yoksa işletme adınız yazı olarak görünür. ¦ A PNG with a transparent background works best. Without a logo, your business name is shown as text. ¦ Ein PNG mit transparentem Hintergrund eignet sich am besten. Ohne Logo erscheint Ihr Betriebsname als Text. ¦ الأفضل صورة PNG بخلفية شفافة. إن لم يوجد شعار يظهر اسم منشأتك كنص.
+Logo yüklenmedi ¦ No logo uploaded ¦ Kein Logo hochgeladen ¦ لم يتم رفع شعار
+Logoyu değiştir ¦ Change logo ¦ Logo ändern ¦ تغيير الشعار
+Logo yükle ¦ Upload logo ¦ Logo hochladen ¦ رفع الشعار
+Kaldır ¦ Remove ¦ Entfernen ¦ إزالة
+Kendi renkleriniz ¦ Your own colours ¦ Eigene Farben ¦ ألوانك الخاصة
+Koyu arka planlar TV'de daha iyi görünür. ¦ Dark backgrounds look better on TV. ¦ Dunkle Hintergründe wirken auf dem Fernseher besser. ¦ الخلفيات الداكنة تظهر بشكل أفضل على التلفاز.
+Arka plan ¦ Background ¦ Hintergrund ¦ الخلفية
+Ana renk ¦ Main colour ¦ Hauptfarbe ¦ اللون الأساسي
+Vurgu rengi ¦ Accent colour ¦ Akzentfarbe ¦ لون التمييز
+Yazı rengi ¦ Text colour ¦ Textfarbe ¦ لون النص
+Logo zemini ¦ Logo backdrop ¦ Logo-Hintergrund ¦ خلفية الشعار
+Şeffaf (açık renkli logolar) ¦ Transparent (light logos) ¦ Transparent (helle Logos) ¦ شفافة (للشعارات الفاتحة)
+Beyaz zemin (koyu logolar) ¦ White backdrop (dark logos) ¦ Weißer Hintergrund (dunkle Logos) ¦ خلفية بيضاء (للشعارات الداكنة)
+Yazı tipi ¦ Font ¦ Schriftart ¦ الخط
+Renkleri kaydet ¦ Save colours ¦ Farben speichern ¦ حفظ الألوان
+Önizleme ¦ Preview ¦ Vorschau ¦ معاينة
+Kenar payı (TV görüntüyü kırpıyorsa) ¦ Safe margin (if the TV crops the picture) ¦ Randabstand (falls der Fernseher das Bild beschneidet) ¦ الهامش الآمن (إذا كان التلفاز يقصّ الصورة)
+Sol ¦ Left ¦ Links ¦ يسار
+Sağ ¦ Right ¦ Rechts ¦ يمين
+Üst ¦ Top ¦ Oben ¦ أعلى
+Alt ¦ Bottom ¦ Unten ¦ أسفل
+Sol: <0>{}</0>% ¦ Left: <0>{}</0>% ¦ Links: <0>{}</0>% ¦ يسار: <0>{}</0>%
+Sağ: <0>{}</0>% ¦ Right: <0>{}</0>% ¦ Rechts: <0>{}</0>% ¦ يمين: <0>{}</0>%
+Üst: <0>{}</0>% ¦ Top: <0>{}</0>% ¦ Oben: <0>{}</0>% ¦ أعلى: <0>{}</0>%
+Alt: <0>{}</0>% ¦ Bottom: <0>{}</0>% ¦ Unten: <0>{}</0>% ¦ أسفل: <0>{}</0>%
+Hizalama çerçevesini göster ¦ Show alignment frame ¦ Ausrichtungsrahmen anzeigen ¦ إظهار إطار المحاذاة
+Sıfırla ¦ Reset ¦ Zurücksetzen ¦ إعادة الضبط
+Görsel efektler ¦ Visual effects ¦ Visuelle Effekte ¦ المؤثرات البصرية
+Ekran takılıyorsa efektleri azaltın. ¦ If the screen stutters, reduce the effects. ¦ Wenn der Bildschirm ruckelt, Effekte reduzieren. ¦ إذا كانت الشاشة بطيئة فقلّل المؤثرات.
+Efekt modu ¦ Effects mode ¦ Effektmodus ¦ وضع المؤثرات
+Otomatik (TV kutusunda hafif) ¦ Automatic (light on TV boxes) ¦ Automatisch (auf TV-Boxen leicht) ¦ تلقائي (خفيف على أجهزة العرض)
+Hafif (her yerde) ¦ Light (everywhere) ¦ Leicht (überall) ¦ خفيف (في كل مكان)
+Tam (her yerde) ¦ Full (everywhere) ¦ Voll (überall) ¦ كامل (في كل مكان)
+Bazı TV'ler görüntünün kenarlarını keser. Önce TV'nin görüntü ayarından "Tam ekran / Ekrana sığdır / Just Scan" seçeneğini deneyin; olmazsa buradan küçültün. ¦ Some TVs crop the edges of the picture. First try "Full screen / Fit to screen / Just Scan" in the TV's picture settings; if that doesn't help, shrink the picture here. ¦ Manche Fernseher beschneiden die Bildränder. Versuchen Sie zuerst in den Bildeinstellungen des Fernsehers „Vollbild / An Bildschirm anpassen / Just Scan“; hilft das nicht, verkleinern Sie das Bild hier. ¦ بعض أجهزة التلفاز تقصّ حواف الصورة. جرّب أولًا من إعدادات الصورة في التلفاز خيار «ملء الشاشة / ملاءمة الشاشة / Just Scan»؛ وإن لم يُجدِ فصغّر الصورة من هنا.
+TV'de yeşil bir çerçeve çıkar; dört kenarı görünene kadar payları artırın, sonra kapatın. ¦ A green frame appears on the TV; increase the margins until all four edges are visible, then switch it off. ¦ Auf dem Fernseher erscheint ein grüner Rahmen; erhöhen Sie die Abstände, bis alle vier Kanten sichtbar sind, und schalten Sie ihn dann aus. ¦ يظهر إطار أخضر على التلفاز؛ زد الهوامش حتى تظهر الحواف الأربع ثم أوقفه.
+Videolar ve fotoğraflar ¦ Videos and photos ¦ Videos und Fotos ¦ الفيديوهات والصور
+Maçlar ¦ Matches ¦ Spiele ¦ المباريات
+QR kodlar ¦ QR codes ¦ QR-Codes ¦ رموز QR
+Ürünler ¦ Products ¦ Produkte ¦ المنتجات
+Skorlar, kurlar, haberler ve bilgiler sırayla kayar. ¦ Scores, rates, news and info scroll by in turn. ¦ Ergebnisse, Kurse, Nachrichten und Infos laufen nacheinander durch. ¦ تمرّ النتائج والأسعار والأخبار والمعلومات بالتتابع.
+Kaydedilmemiş değişiklikler var. ¦ There are unsaved changes. ¦ Es gibt ungespeicherte Änderungen. ¦ توجد تغييرات غير محفوظة.
+Widget ayarları ¦ Widget settings ¦ Widget-Einstellungen ¦ إعدادات العنصر
+Ayarlarını görmek için bir kutuya tıklayın. ¦ Click a box to see its settings. ¦ Klicken Sie auf einen Kasten, um seine Einstellungen zu sehen. ¦ انقر على مربع لعرض إعداداته.
+Saniyeyi göster ¦ Show seconds ¦ Sekunden anzeigen ¦ إظهار الثواني
+Hava durumu ¦ Weather ¦ Wetter ¦ الطقس
+Döviz, altın, borsa ¦ Currencies, gold, stocks ¦ Devisen, Gold, Börse ¦ العملات والذهب والأسهم
+Solda saat kutusu ¦ Clock box on the left ¦ Uhr-Kasten links ¦ مربع الساعة على اليسار
+Başlık ¦ Title ¦ Titel ¦ العنوان
+Sağa ¦ Right ¦ Rechts ¦ يمين
+Küçük ¦ Small ¦ Klein ¦ صغير
+Büyük ¦ Large ¦ Groß ¦ كبير
+Resim yükle ¦ Upload image ¦ Bild hochladen ¦ رفع صورة
+Yerleşim ¦ Fit ¦ Anpassung ¦ الملاءمة
+Kutuyu doldur ¦ Fill the box ¦ Kasten füllen ¦ ملء المربع
+Tamamı görünsün ¦ Show whole image ¦ Ganzes Bild zeigen ¦ إظهار الصورة كاملة
+Başlık (boşsa fiyat listesinin başlığı) ¦ Title (price list title if empty) ¦ Titel (leer = Titel der Preisliste) ¦ العنوان (إن تُرك فارغًا يُستخدم عنوان قائمة الأسعار)
+başlık ¦ title ¦ Titel ¦ العنوان
+Çeviriler ¦ Translations ¦ Übersetzungen ¦ الترجمات
+Geri alınacak değişiklik yok ¦ Nothing to undo ¦ Nichts rückgängig zu machen ¦ لا توجد تغييرات للتراجع عنها
+Bu widget düzende zaten var ¦ This widget is already in the layout ¦ Dieses Widget ist bereits im Layout ¦ هذا العنصر موجود بالفعل في التخطيط
+Boş yer yok: kutu sol üste kondu, diğerlerini küçültüp yerleştirin ¦ No free space: the box was placed top-left; shrink the others and arrange them ¦ Kein Platz frei: Der Kasten wurde oben links platziert; verkleinern Sie die anderen und ordnen Sie sie an ¦ لا توجد مساحة: وُضع المربع في أعلى اليسار، صغّر الباقي ورتّبها
+"{}" paketi uygulansın mı? Ekran düzeniniz ve renkleriniz değişir (medya, logo ve diğer ayarlar korunur). ¦ Apply the "{}" pack? Your screen layout and colours will change (media, logo and other settings are kept). ¦ Paket „{}“ anwenden? Layout und Farben ändern sich (Medien, Logo und übrige Einstellungen bleiben erhalten). ¦ هل تريد تطبيق حزمة «{}»؟ سيتغير تخطيط شاشتك وألوانها (تبقى الوسائط والشعار والإعدادات الأخرى).
+Mevcut fiyat listenizin yerine örnek liste konsun mu? Tamam: örnek liste gelir (eski liste silinir) İptal: fiyat listeniz korunur ¦ Replace your current price list with the sample list? OK: the sample list is used (the old list is deleted) Cancel: your price list is kept ¦ Aktuelle Preisliste durch die Beispielliste ersetzen? OK: Beispielliste wird verwendet (alte Liste wird gelöscht) Abbrechen: Ihre Preisliste bleibt erhalten ¦ هل تريد استبدال قائمة أسعارك الحالية بالقائمة النموذجية؟ موافق: تُستخدم القائمة النموذجية (تُحذف القديمة) إلغاء: تبقى قائمة أسعارك
+Paket uygulandı ¦ Pack applied ¦ Paket angewendet ¦ تم تطبيق الحزمة
+Mevcut düzenin yerine bu şablon konsun mu? ¦ Replace the current layout with this template? ¦ Aktuelles Layout durch diese Vorlage ersetzen? ¦ هل تريد استبدال التخطيط الحالي بهذا القالب؟
+Şablon uygulandı; beğendiyseniz "Düzeni kaydet"e basın ¦ Template applied; press "Save layout" if you like it ¦ Vorlage angewendet; gefällt sie Ihnen, klicken Sie auf „Layout speichern“ ¦ تم تطبيق القالب؛ إن أعجبك اضغط «حفظ التخطيط»
+Bazı kutular üst üste biniyor (kırmızı). Önce düzeltin. ¦ Some boxes overlap (red). Fix that first. ¦ Einige Kästen überlappen sich (rot). Bitte zuerst korrigieren. ¦ بعض المربعات متداخلة (باللون الأحمر). أصلحها أولًا.
+Düzen kaydedildi, TV güncellendi ¦ Layout saved, TV updated ¦ Layout gespeichert, Fernseher aktualisiert ¦ تم حفظ التخطيط وتحديث التلفاز
+Düzen (widget yerleşimi ve ayarları) ¦ Layout (widget placement and settings) ¦ Layout (Widget-Anordnung und Einstellungen) ¦ التخطيط (مواضع العناصر وإعداداتها)
+Renkler ve yazı tipi (logonuz kalır) ¦ Colours and font (your logo is kept) ¦ Farben und Schriftart (Ihr Logo bleibt) ¦ الألوان والخط (يبقى شعارك)
+TV ayarları (kenar payı, efekt) ¦ TV settings (safe margin, effects) ¦ TV-Einstellungen (Randabstand, Effekte) ¦ إعدادات التلفاز (الهامش الآمن والمؤثرات)
+varsayılana döndürülsün mü? Bu işlem geri alınamaz. ¦ be reset to default? This cannot be undone. ¦ auf Standard zurücksetzen? Das kann nicht rückgängig gemacht werden. ¦ هل تريد إعادته إلى الافتراضي؟ لا يمكن التراجع عن هذا الإجراء.
+{} varsayılana döndürülsün mü? Bu işlem geri alınamaz. ¦ Reset {} to default? This cannot be undone. ¦ {} auf Standard zurücksetzen? Das kann nicht rückgängig gemacht werden. ¦ هل تريد إعادة {} إلى الافتراضي؟ لا يمكن التراجع عن هذا الإجراء.
+Varsayılana döndürüldü, TV güncellendi ¦ Reset to default, TV updated ¦ Auf Standard zurückgesetzt, Fernseher aktualisiert ¦ تمت إعادة الضبط الافتراضي وتحديث التلفاز
+Renkler kaydedildi ¦ Colours saved ¦ Farben gespeichert ¦ تم حفظ الألوان
+Logo yüklendi, renkler logonuza göre ayarlandı ¦ Logo uploaded, colours adjusted to your logo ¦ Logo hochgeladen, Farben an Ihr Logo angepasst ¦ تم رفع الشعار وضبط الألوان وفقًا له
+Logo yüklendi ¦ Logo uploaded ¦ Logo hochgeladen ¦ تم رفع الشعار
+Logodan · gümüş ¦ From logo · silver ¦ Aus Logo · Silber ¦ من الشعار · فضي
+Logodan · altın ¦ From logo · gold ¦ Aus Logo · Gold ¦ من الشعار · ذهبي
+Logodan · kahve ¦ From logo · coffee ¦ Aus Logo · Kaffee ¦ من الشعار · قهوة
+Logodan · canlı ¦ From logo · vivid ¦ Aus Logo · lebhaft ¦ من الشعار · نابض
+Logodan · iki renk ¦ From logo · two-tone ¦ Aus Logo · zweifarbig ¦ من الشعار · لونان
+Logodan · yan ton ¦ From logo · analogous ¦ Aus Logo · verwandte Töne ¦ من الشعار · درجات متجاورة
+Logodan · sade ¦ From logo · plain ¦ Aus Logo · schlicht ¦ من الشعار · بسيط
+Logodan · gece ¦ From logo · night ¦ Aus Logo · Nacht ¦ من الشعار · ليلي
+Logodan renk çıkarılamadı. ¦ Could not extract colours from the logo. ¦ Aus dem Logo konnten keine Farben ermittelt werden. ¦ تعذّر استخراج الألوان من الشعار.
+Logo kaldırıldı ¦ Logo removed ¦ Logo entfernt ¦ تمت إزالة الشعار
+Kenar payları kaydedildi ¦ Safe margins saved ¦ Randabstände gespeichert ¦ تم حفظ الهوامش
+Kenar payları sıfırlandı ¦ Safe margins reset ¦ Randabstände zurückgesetzt ¦ تمت إعادة ضبط الهوامش

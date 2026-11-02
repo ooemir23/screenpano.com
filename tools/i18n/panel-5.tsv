@@ -1,0 +1,284 @@
+Süper yönetici olarak {} işletmesini görüntülüyorsunuz. ¦ You are viewing {} as a super admin. ¦ Sie sehen {} als Super-Admin. ¦ أنت تعرض منشأة {} بصفتك المدير العام.
+Ekranı açık ¦ Screens on ¦ Bildschirme an ¦ الشاشات المفتوحة
+Kayıtlı TV ¦ Registered TVs ¦ Registrierte Fernseher ¦ التلفازات المسجّلة
+SMTP ayarlı: e-posta uyarıları açık. ¦ SMTP is set up: e-mail alerts are on. ¦ SMTP ist eingerichtet: E-Mail-Warnungen sind aktiv. ¦ تم إعداد SMTP: تنبيهات البريد الإلكتروني مفعّلة.
+SMTP henüz ayarlı değil. ¦ SMTP is not set up yet. ¦ SMTP ist noch nicht eingerichtet. ¦ لم يتم إعداد SMTP بعد.
+{} önce ¦ {} ago ¦ vor {} ¦ منذ {}
+Panele gir ¦ Open panel ¦ Panel öffnen ¦ دخول اللوحة
+, R2'de {} gün ¦ , {} days on R2 ¦ , {} Tage auf R2 ¦ ، {} يومًا على R2
+henüz yok ¦ none yet ¦ noch keine ¦ لا يوجد بعد
+(R2'ye de gönderildi) ¦ (also sent to R2) ¦ (auch an R2 gesendet) ¦ (أُرسلت إلى R2 أيضًا)
+Sunucudaki yedek ¦ Backups on the server ¦ Sicherungen auf dem Server ¦ النسخ الاحتياطية على الخادم
+R2'de {} yedek var (en yenisi {}). ¦ There are {} backups on R2 (newest {}). ¦ Auf R2 liegen {} Sicherungen (neueste {}). ¦ يوجد {} نسخة احتياطية على R2 (الأحدث {}).
+R2 yedek listesi alınamadı: {} ¦ Could not fetch the R2 backup list: {} ¦ R2-Sicherungsliste konnte nicht abgerufen werden: {} ¦ تعذّر جلب قائمة نسخ R2 الاحتياطية: {}
+· herkese açık adres: ¦ · public address: ¦ · öffentliche Adresse: ¦ · العنوان العام:
+· dosyalar sunucu üzerinden aktarılıyor ¦ · files are streamed through the server ¦ · Dateien werden über den Server übertragen ¦ · تُنقل الملفات عبر الخادم
+Cloudflare R2 açık · kova ¦ Cloudflare R2 on · bucket ¦ Cloudflare R2 aktiv · Bucket ¦ Cloudflare R2 مفعّل · الحاوية
+R2 ayarı hatalı: {}. Dokploy → Environment'ta değeri düzeltip yeniden deploy edin. ¦ R2 setting is wrong: {}. Fix the value in Dokploy → Environment and redeploy. ¦ R2-Einstellung fehlerhaft: {}. Wert in Dokploy → Environment korrigieren und neu deployen. ¦ إعداد R2 خاطئ: {}. صحّح القيمة في Dokploy ← Environment وأعد النشر.
+Şimdi eşitle ¦ Sync now ¦ Jetzt synchronisieren ¦ مزامنة الآن
+Eşitleme başladı ¦ Sync started ¦ Synchronisierung gestartet ¦ بدأت المزامنة
+Veritabanının tamamı (işletmeler, kullanıcılar, cihazlar, içerik ayarları) her gece 04:00'ten sonra sıkıştırılıp yedeklenir; sunucuda {} gün{} saklanır. Son yedek: ¦ The entire database (businesses, users, devices, content settings) is compressed and backed up every night after 04:00; kept on the server for {} days{}. Last backup: ¦ Die gesamte Datenbank (Betriebe, Benutzer, Geräte, Inhaltseinstellungen) wird jede Nacht nach 04:00 Uhr komprimiert und gesichert; auf dem Server {} Tage{} aufbewahrt. Letzte Sicherung: ¦ تُضغط قاعدة البيانات كاملة (المنشآت والمستخدمون والأجهزة وإعدادات المحتوى) وتُنسخ احتياطيًا كل ليلة بعد الساعة 04:00؛ وتُحفظ على الخادم {} يومًا{}. آخر نسخة:
+Şimdi yedekle ¦ Back up now ¦ Jetzt sichern ¦ نسخ احتياطي الآن
+Medya depolama ¦ Media storage ¦ Medienspeicher ¦ تخزين الوسائط
+Yedek alınıyor… ¦ Backing up… ¦ Sicherung läuft… ¦ جارٍ النسخ الاحتياطي…
+Yedek alındı: ¦ Backup created: ¦ Sicherung erstellt: ¦ تم النسخ الاحتياطي:
+Adres yazın ¦ Enter an address ¦ Adresse eingeben ¦ اكتب العنوان
+Gönderiliyor… ¦ Sending… ¦ Wird gesendet… ¦ جارٍ الإرسال…
+Gönderildi: port {}. Gelen kutusunu ve spam klasörünü kontrol edin ¦ Sent via port {}. Check the inbox and the spam folder ¦ Gesendet über Port {}. Prüfen Sie Posteingang und Spam-Ordner ¦ تم الإرسال عبر المنفذ {}. تحقق من البريد الوارد ومجلد الرسائل غير المرغوب فيها
+Gönderilemedi: ¦ Could not send: ¦ Senden fehlgeschlagen: ¦ تعذّر الإرسال:
+Deneme mesajı gönderildi ¦ Test message sent ¦ Testnachricht gesendet ¦ تم إرسال رسالة تجريبية
+döndü ¦ returned ¦ lieferte ¦ أعاد
+Askıda ¦ Suspended ¦ Gesperrt ¦ معلّق
+KVKK silme talebi ¦ KVKK deletion request ¦ KVKK-Löschanfrage ¦ طلب حذف KVKK
+Silinecek {} ¦ To be deleted {} ¦ Wird gelöscht {} ¦ سيُحذف {}
+Şube · ¦ Branch · ¦ Filiale · ¦ فرع ·
+Şube · {} ¦ Branch · {} ¦ Filiale · {} ¦ فرع · {}
+· zincir ( ¦ · chain ( ¦ · Kette ( ¦ · سلسلة (
+· zincir ({} şube) ¦ · chain ({} branches) ¦ · Kette ({} Filialen) ¦ · سلسلة ({} فروع)
+Düzenle ¦ Edit ¦ Bearbeiten ¦ تعديل
+İşletme yok ¦ No businesses ¦ Keine Betriebe ¦ لا توجد منشآت
+Yeni işletme ¦ New business ¦ Neuer Betrieb ¦ منشأة جديدة
+＋ Yeni işletme ¦ ＋ New business ¦ ＋ Neuer Betrieb ¦ ＋ منشأة جديدة
+Deneme günü ¦ Trial days ¦ Testtage ¦ أيام التجربة
+Ödenmiş gün (0 = yalnız deneme) ¦ Paid days (0 = trial only) ¦ Bezahlte Tage (0 = nur Test) ¦ الأيام المدفوعة (0 = تجربة فقط)
+Oluştur ¦ Create ¦ Erstellen ¦ إنشاء
+İşletme oluşturuldu ¦ Business created ¦ Betrieb erstellt ¦ تم إنشاء المنشأة
+Paket, durum ve süreleri zincirin tüm şubelerine uygula ¦ Apply plan, status and terms to all branches in the chain ¦ Paket, Status und Laufzeiten auf alle Filialen der Kette anwenden ¦ تطبيق الباقة والحالة والمدد على جميع فروع السلسلة
+KVKK silme talebi: {} tarihinde silinecek. ¦ KVKK deletion request: will be deleted on {}. ¦ KVKK-Löschanfrage: wird am {} gelöscht. ¦ طلب حذف KVKK: سيُحذف في {}.
+Sözleşme/KVKK onayı: {} ¦ Agreement/KVKK consent: {} ¦ Vertrags-/KVKK-Zustimmung: {} ¦ موافقة العقد/KVKK: {}
+Sahip: {} · Kayıt: {} ¦ Owner: {} · Registered: {} ¦ Inhaber: {} · Registriert: {} ¦ المالك: {} · التسجيل: {}
+Deneme bitişi ¦ Trial end ¦ Testende ¦ انتهاء التجربة
+Ödeme bitişi ¦ Paid-until date ¦ Bezahlt bis ¦ انتهاء الدفع
++30 gün ¦ +30 days ¦ +30 Tage ¦ +30 يومًا
++1 yıl ¦ +1 year ¦ +1 Jahr ¦ +1 سنة
+Şifre sıfırla ¦ Reset password ¦ Passwort zurücksetzen ¦ إعادة تعيين كلمة المرور
+{} gün eklendi ¦ {} days added ¦ {} Tage hinzugefügt ¦ تمت إضافة {} يومًا
+Yeni şifre (boş bırakırsanız rastgele üretilir): ¦ New password (generated randomly if left empty): ¦ Neues Passwort (bei leerem Feld zufällig erzeugt): ¦ كلمة المرور الجديدة (تُولَّد عشوائيًا إن تُركت فارغة):
+Kullanıcı: {} Yeni şifre: {} ¦ User: {} New password: {} ¦ Benutzer: {} Neues Passwort: {} ¦ المستخدم: {} كلمة المرور الجديدة: {}
+Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler. Onaylamak için işletme adını aynen yazın: {} ¦ This permanently deletes all of the business's data and media. To confirm, type the business name exactly: {} ¦ Dies löscht alle Daten und Medien des Betriebs endgültig. Geben Sie zur Bestätigung den Betriebsnamen exakt ein: {} ¦ سيحذف هذا الإجراء جميع بيانات المنشأة ووسائطها نهائيًا. للتأكيد اكتب اسم المنشأة تمامًا كما هو: {}
+Platform ayarları kaydedildi ¦ Platform settings saved ¦ Plattformeinstellungen gespeichert ¦ تم حفظ إعدادات المنصة
+Şifre değiştir ¦ Change password ¦ Passwort ändern ¦ تغيير كلمة المرور
+Yeni (en az 10) ¦ New (min. 10) ¦ Neu (mind. 10) ¦ الجديدة (10 على الأقل)
+Ara (ad, kullanıcı, telefon) ¦ Search (name, user, phone) ¦ Suchen (Name, Benutzer, Telefon) ¦ بحث (الاسم أو المستخدم أو الهاتف)
+örn. Natro Hosting (Türkiye) ¦ e.g. Natro Hosting (Türkiye) ¦ z. B. Natro Hosting (Türkei) ¦ مثال: Natro Hosting (تركيا)
+örn. 499 ₺ / ay ¦ e.g. 499 ₺ / month ¦ z. B. 499 ₺ / Monat ¦ مثال: 499 ₺ / شهر
+örn. 899 ₺ / ay ¦ e.g. 899 ₺ / month ¦ z. B. 899 ₺ / Monat ¦ مثال: 899 ₺ / شهر
+ScreenPano — Süper Yönetim ¦ ScreenPano — Super Admin ¦ ScreenPano — Super-Verwaltung ¦ ScreenPano — الإدارة العامة
+Süper Yönetim ¦ Super Admin ¦ Super-Verwaltung ¦ الإدارة العامة
+TV sayfası ¦ TV page ¦ TV-Seite ¦ صفحة التلفاز
+Çıkış ¦ Sign out ¦ Abmelden ¦ خروج
+İşletmeler ¦ Businesses ¦ Betriebe ¦ المنشآت
+Bitiş ¦ Ends ¦ Ende ¦ الانتهاء
+Son giriş ¦ Last login ¦ Letzte Anmeldung ¦ آخر دخول
+Durum ¦ Status ¦ Status ¦ الحالة
+Platform anahtarları ¦ Platform keys ¦ Plattformschlüssel ¦ مفاتيح المنصة
+Bu anahtarlar tüm işletmeler için ortaktır; işletmeler hiçbir anahtar görmez. Veri her kaynaktan bir kez çekilip herkese dağıtılır. Ticari kullanım şartlarını kaynağın sitesinden kontrol edin. ¦ These keys are shared by all businesses; businesses never see any key. Data is fetched once from each source and distributed to everyone. Check the commercial-use terms on each source's site. ¦ Diese Schlüssel gelten für alle Betriebe; Betriebe sehen keinen Schlüssel. Die Daten werden pro Quelle einmal abgerufen und an alle verteilt. Prüfen Sie die Bedingungen für die kommerzielle Nutzung auf der Seite der jeweiligen Quelle. ¦ هذه المفاتيح مشتركة بين جميع المنشآت ولا ترى المنشآت أي مفتاح. تُجلب البيانات من كل مصدر مرة واحدة وتُوزَّع على الجميع. راجع شروط الاستخدام التجاري في موقع كل مصدر.
+CollectAPI anahtarı (eczane, haber, kitap) ¦ CollectAPI key (pharmacies, news, books) ¦ CollectAPI-Schlüssel (Apotheken, Nachrichten, Bücher) ¦ مفتاح CollectAPI (الصيدليات والأخبار والكتب)
+CollectAPI planı ¦ CollectAPI plan ¦ CollectAPI-Tarif ¦ باقة CollectAPI
+Ücretsiz (kota korumalı) ¦ Free (quota-protected) ¦ Kostenlos (kontingentgeschützt) ¦ مجانية (محمية بحصة)
+Ücretli (kota sınırı yok) ¦ Paid (no quota limit) ¦ Kostenpflichtig (kein Kontingentlimit) ¦ مدفوعة (بلا حد للحصة)
+Google Places API anahtarı (Google yorumları) ¦ Google Places API key (Google reviews) ¦ Google-Places-API-Schlüssel (Google-Bewertungen) ¦ مفتاح Google Places API (تقييمات Google)
+Google aylık çağrı sınırı ¦ Google monthly call limit ¦ Google-Monatslimit für Aufrufe ¦ الحد الشهري لطلبات Google
+Google aylık çağrı sınırı <0>{}</0> ¦ Google monthly call limit <0>{}</0> ¦ Google-Monatslimit für Aufrufe <0>{}</0> ¦ الحد الشهري لطلبات Google <0>{}</0>
+· bu ay {} / {} ¦ · this month {} / {} ¦ · diesen Monat {} / {} ¦ · هذا الشهر {} / {}
+900 (boş = 900) ¦ 900 (empty = 900) ¦ 900 (leer = 900) ¦ 900 (فارغ = 900)
+TMDB API anahtarı (sinema) ¦ TMDB API key (cinema) ¦ TMDB-API-Schlüssel (Kino) ¦ مفتاح TMDB API (السينما)
+Google Books API anahtarı (kitap kapakları) ¦ Google Books API key (book covers) ¦ Google-Books-API-Schlüssel (Buchcover) ¦ مفتاح Google Books API (أغلفة الكتب)
+İBB trafik Worker adresi (isteğe bağlı) ¦ IBB traffic Worker address (optional) ¦ IBB-Verkehrs-Worker-Adresse (optional) ¦ عنوان Worker لحركة مرور IBB (اختياري)
+Worker imza anahtarı (TRAFFIC_SECRET olarak girin) ¦ Worker signing key (enter as TRAFFIC_SECRET) ¦ Worker-Signaturschlüssel (als TRAFFIC_SECRET eintragen) ¦ مفتاح توقيع Worker (أدخله كـ TRAFFIC_SECRET)
+Deneme e-postası gönder ¦ Send test e-mail ¦ Test-E-Mail senden ¦ إرسال بريد تجريبي
+Gönder ¦ Send ¦ Senden ¦ إرسال
+Webhook adresi (https://…) ¦ Webhook address (https://…) ¦ Webhook-Adresse (https://…) ¦ عنوان Webhook (https://…)
+Bir TV kutusu 10 dakikadan uzun çevrimdışı kalınca bu adrese {"text": "..."} gönderilir (Slack, Discord ya da Telegram köprüsü). İşletmelere e-posta için sunucuda SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM ortam değişkenlerini girin. ¦ When a TV box stays offline for more than 10 minutes, {"text": "..."} is sent to this address (Slack, Discord or a Telegram bridge). For e-mails to businesses, set the SMTP_HOST, SMTP_USER, SMTP_PASS and SMTP_FROM environment variables on the server. ¦ Bleibt eine TV-Box länger als 10 Minuten offline, wird {"text": "..."} an diese Adresse gesendet (Slack, Discord oder Telegram-Brücke). Für E-Mails an Betriebe setzen Sie auf dem Server die Umgebungsvariablen SMTP_HOST, SMTP_USER, SMTP_PASS und SMTP_FROM. ¦ عندما يبقى جهاز عرض غير متصل أكثر من 10 دقائق يُرسل {"text": "..."} إلى هذا العنوان (Slack أو Discord أو جسر Telegram). لإرسال بريد إلى المنشآت أدخل متغيرات البيئة SMTP_HOST وSMTP_USER وSMTP_PASS وSMTP_FROM على الخادم.
+Yasal bilgiler (KVKK ve sözleşme sayfalarında görünür) ¦ Legal details (shown on the KVKK and agreement pages) ¦ Rechtliche Angaben (erscheinen auf den KVKK- und Vertragsseiten) ¦ البيانات القانونية (تظهر في صفحات KVKK والعقود)
+Şirket unvanı ¦ Company name ¦ Firmenbezeichnung ¦ اسم الشركة
+MERSİS no ¦ MERSIS no. ¦ MERSIS-Nr. ¦ رقم MERSİS
+Açık adres ¦ Full address ¦ Vollständige Adresse ¦ العنوان الكامل
+KVKK başvuru e-postası ¦ KVKK contact e-mail ¦ KVKK-Kontakt-E-Mail ¦ بريد طلبات KVKK
+KEP adresi (varsa) ¦ KEP address (if any) ¦ KEP-Adresse (falls vorhanden) ¦ عنوان KEP (إن وُجد)
+Sunucu sağlayıcısı ve ülkesi (KVKK metninde görünür) ¦ Hosting provider and country (shown in the KVKK text) ¦ Hosting-Anbieter und Land (erscheint im KVKK-Text) ¦ مزوّد الاستضافة وبلده (يظهر في نص KVKK)
+Metinler başlangıç taslağıdır; yayına almadan önce bir avukata kontrol ettirin. Sayfalar: <0>/kvkk</0> · <1>/kosullar</1> · <2>/gizlilik</2> ¦ The texts are initial drafts; have a lawyer review them before publishing. Pages: <0>/kvkk</0> · <1>/kosullar</1> · <2>/gizlilik</2> ¦ Die Texte sind Entwürfe; lassen Sie sie vor der Veröffentlichung von einem Anwalt prüfen. Seiten: <0>/kvkk</0> · <1>/kosullar</1> · <2>/gizlilik</2> ¦ النصوص مسودات أولية؛ اعرضها على محامٍ قبل النشر. الصفحات: <0>/kvkk</0> · <1>/kosullar</1> · <2>/gizlilik</2>
+Tanıtım sitesi ¦ Marketing website ¦ Marketing-Website ¦ الموقع التعريفي
+Ana sayfadaki (<0>önizle</0>) fiyatlar ve iletişim düğmeleri. Fiyat boşsa "Fiyat için bize ulaşın" yazar. ¦ Prices and contact buttons on the home page (<0>preview</0>). If a price is empty it says "Contact us for pricing". ¦ Preise und Kontakt-Schaltflächen auf der Startseite (<0>Vorschau</0>). Ist ein Preis leer, steht dort „Preis auf Anfrage“. ¦ الأسعار وأزرار التواصل في الصفحة الرئيسية (<0>معاينة</0>). إن كان السعر فارغًا يظهر «تواصل معنا لمعرفة السعر».
+Başlangıç fiyatı ¦ Starter price ¦ Starter-Preis ¦ سعر البداية
+Pro fiyatı ¦ Pro price ¦ Pro-Preis ¦ سعر Pro
+WhatsApp numarası ¦ WhatsApp number ¦ WhatsApp-Nummer ¦ رقم واتساب
+Telefon ¦ Phone ¦ Telefon ¦ الهاتف
+Yedekler ve depolama ¦ Backups and storage ¦ Sicherungen und Speicher ¦ النسخ الاحتياطية والتخزين
+Çevrimdışı cihazlar ¦ Offline devices ¦ Offline-Geräte ¦ الأجهزة غير المتصلة
+Son görülme ¦ Last seen ¦ Zuletzt gesehen ¦ آخر ظهور
+Boyut ¦ Size ¦ Größe ¦ الحجم
+R2 kapalı: medya sunucunun diskinde duruyor. Açmak için ortam değişkenlerine R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY ve R2_BUCKET girin; ¦ R2 is off: media stays on the server's disk. To enable it, set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY and R2_BUCKET in the environment variables; ¦ R2 ist aus: Medien bleiben auf der Festplatte des Servers. Zum Aktivieren tragen Sie R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY und R2_BUCKET in die Umgebungsvariablen ein; ¦ R2 متوقف: تبقى الوسائط على قرص الخادم. لتفعيله أدخل R2_ACCOUNT_ID وR2_ACCESS_KEY_ID وR2_SECRET_ACCESS_KEY وR2_BUCKET في متغيرات البيئة؛
+Yeni (en az 10) ¦ New (min. 10) ¦ Neu (mind. 10) ¦ الجديدة (10 على الأقل)
+· Giriş ¦ · Sign in ¦ · Anmeldung ¦ · تسجيل الدخول
+Boş başlangıç ¦ Blank start ¦ Leerer Start ¦ بداية فارغة
+{} gün boyunca tüm özellikler ücretsiz. Kredi kartı gerekmez. ¦ All features are free for {} days. No credit card required. ¦ Alle Funktionen sind {} Tage lang kostenlos. Keine Kreditkarte nötig. ¦ جميع الميزات مجانية لمدة {} أيام. لا حاجة إلى بطاقة ائتمان.
+Bir hata oluştu ¦ Something went wrong ¦ Es ist ein Fehler aufgetreten ¦ حدث خطأ
+örn. Sahil Kafe ¦ e.g. Sahil Café ¦ z. B. Café am Strand ¦ مثال: مقهى الشاطئ
+Giriş ¦ Sign in ¦ Anmelden ¦ دخول
+İşletmenizin ekranları, <0>tek panelden</0>. ¦ Your venue's screens, <0>from a single panel</0>. ¦ Die Bildschirme Ihres Betriebs, <0>aus einem einzigen Panel</0>. ¦ شاشات منشأتك، <0>من لوحة واحدة</0>.
+Video döngüsü, duyuru panoları, anlık bilgi kartları, dijital fiyat ve ürün tarifesi, kampanyalar ve QR kodlar. Logonuz ve kurumsal renklerinizle, dakikalar içinde. ¦ Video loops, announcement boards, live info cards, digital price and product lists, campaigns and QR codes. With your logo and brand colours, in minutes. ¦ Videoschleifen, Ankündigungstafeln, Live-Infokarten, digitale Preis- und Produkttafeln, Aktionen und QR-Codes. Mit Ihrem Logo und Ihren Markenfarben, in wenigen Minuten. ¦ دورات فيديو ولوحات إعلانات وبطاقات معلومات فورية وقوائم أسعار ومنتجات رقمية وعروض ورموز QR. بشعارك وألوان علامتك، خلال دقائق.
+<0>📺</0> Tek Android kutu, HDMI ile mekândaki tüm ekranlara; kullanıcı adı ve şifreyle giriş ¦ <0>📺</0> One Android box feeds all screens in the venue over HDMI; sign in with username and password ¦ <0>📺</0> Eine Android-Box versorgt per HDMI alle Bildschirme im Lokal; Anmeldung mit Benutzername und Passwort ¦ <0>📺</0> جهاز أندرويد واحد يغذّي جميع الشاشات في المكان عبر HDMI؛ تسجيل الدخول باسم المستخدم وكلمة المرور
+<0>🎨</0> Widget'larla kendi düzeninizi kurun, kurumsal renk ve logonuzu ekleyin ¦ <0>🎨</0> Build your own layout with widgets, add your brand colours and logo ¦ <0>🎨</0> Erstellen Sie mit Widgets Ihr eigenes Layout, fügen Sie Markenfarben und Logo hinzu ¦ <0>🎨</0> ابنِ تخطيطك بالعناصر وأضف ألوان علامتك وشعارك
+<0>🧾</0> Mevzuata uygun dijital fiyat ve ürün tarifesi ¦ <0>🧾</0> Regulation-compliant digital price and product list ¦ <0>🧾</0> Gesetzeskonforme digitale Preis- und Produkttafel ¦ <0>🧾</0> قائمة أسعار ومنتجات رقمية متوافقة مع اللوائح
+<0>⚡</0> Canlı bilgi bandı, haberler, hava durumu ve anlık bildirimler ¦ <0>⚡</0> Live info ticker, news, weather and instant notifications ¦ <0>⚡</0> Live-Infoband, Nachrichten, Wetter und sofortige Benachrichtigungen ¦ <0>⚡</0> شريط معلومات مباشر وأخبار وطقس وإشعارات فورية
+İşletme paneli ¦ Business panel ¦ Betriebs-Panel ¦ لوحة المنشأة
+Giriş yap ¦ Sign in ¦ Anmelden ¦ تسجيل الدخول
+Ücretsiz dene ¦ Try it free ¦ Kostenlos testen ¦ جرّب مجانًا
+İşletme türü <0>(hazır ekran ve renkleri getirir)</0> ¦ Business type <0>(brings a ready-made screen and colours)</0> ¦ Betriebsart <0>(bringt fertigen Bildschirm und Farben mit)</0> ¦ نوع النشاط <0>(يأتي بشاشة وألوان جاهزة)</0>
+İşletme türü ¦ Business type ¦ Betriebsart ¦ نوع النشاط
+Şifre (en az 8 karakter) ¦ Password (at least 8 characters) ¦ Passwort (mindestens 8 Zeichen) ¦ كلمة المرور (8 أحرف على الأقل)
+Telefon (isteğe bağlı) ¦ Phone (optional) ¦ Telefon (optional) ¦ الهاتف (اختياري)
+3-32 karakter; harf, rakam, nokta, tire ¦ 3–32 characters; letters, digits, dot, hyphen ¦ 3–32 Zeichen; Buchstaben, Ziffern, Punkt, Bindestrich ¦ من 3 إلى 32 حرفًا؛ أحرف وأرقام ونقطة وشرطة
+<0>Kullanım Koşulları</0>'nı ve eki <1>Veri İşleme Sözleşmesi</1>'ni okudum, kabul ediyorum; kişisel verilerimin <2>KVKK Aydınlatma Metni</2> kapsamında işleneceğini biliyorum. ¦ I have read and accept the <0>Terms of Use</0> and its annex, the <1>Data Processing Agreement</1>; I understand my personal data will be processed as described in the <2>KVKK Privacy Notice</2>. ¦ Ich habe die <0>Nutzungsbedingungen</0> und die Anlage <1>Auftragsverarbeitungsvertrag</1> gelesen und akzeptiere sie; mir ist bekannt, dass meine personenbezogenen Daten gemäß dem <2>KVKK-Informationstext</2> verarbeitet werden. ¦ لقد قرأت <0>شروط الاستخدام</0> وملحقها <1>اتفاقية معالجة البيانات</1> وأوافق عليهما؛ وأعلم أن بياناتي الشخصية ستُعالَج وفق <2>نص الإفصاح عن KVKK</2>.
+Yeni özellik ve kampanyalardan haberdar olmak için <0>Açık Rıza Metni</0> kapsamında ileti almak istiyorum (isteğe bağlı). ¦ I would like to receive messages about new features and campaigns under the <0>Explicit Consent Notice</0> (optional). ¦ Ich möchte Nachrichten zu neuen Funktionen und Aktionen im Rahmen des <0>Einwilligungstextes</0> erhalten (optional). ¦ أرغب في تلقي رسائل عن الميزات والعروض الجديدة وفق <0>نص الموافقة الصريحة</0> (اختياري).
+Hesabı oluştur ¦ Create account ¦ Konto erstellen ¦ إنشاء الحساب
+Gizlilik ¦ Privacy ¦ Datenschutz ¦ الخصوصية
+Kafe / kahveci ¦ Café / coffee shop ¦ Café / Kaffeehaus ¦ مقهى
+Spor barı ¦ Sports bar ¦ Sportbar ¦ بار رياضي
+Restoran ¦ Restaurant ¦ Restaurant ¦ مطعم
+Bar / lounge ¦ Bar / lounge ¦ Bar / Lounge ¦ بار / صالة
+Vitrin / giriş ekranı ¦ Shop window / entrance screen ¦ Schaufenster / Eingangsbildschirm ¦ واجهة / شاشة المدخل
+Medya, yanda fiyat tarifesi, saat ve hava. Sıcak sıcak kahve renkleri. ¦ Media, a price list on the side, clock and weather. Warm coffee colours. ¦ Medien, seitlich Preistafel, Uhr und Wetter. Warme Kaffeefarben. ¦ وسائط وقائمة أسعار على الجانب وساعة وطقس. بألوان القهوة الدافئة.
+Büyük medya, sağda maçlar ve kurlar, altta yorumlar ve kayan bant. Canlı skor için. ¦ Large media, matches and rates on the right, reviews and ticker at the bottom. For live scores. ¦ Große Medienfläche, rechts Spiele und Kurse, unten Bewertungen und Laufband. Für Live-Ergebnisse. ¦ وسائط كبيرة، المباريات والأسعار على اليمين، التقييمات والشريط المتحرك في الأسفل. للنتائج المباشرة.
+Büyük fiyat listesi, logo ve QR menü. Koyu bordo renkler. ¦ Large price list, logo and QR menu. Dark burgundy colours. ¦ Große Preisliste, Logo und QR-Speisekarte. Dunkle Bordeauxtöne. ¦ قائمة أسعار كبيرة وشعار وقائمة QR. بألوان العنابي الداكن.
+Medya ve fiyat listesi, mor neon renkler. Akşam mekânları için. ¦ Media and price list in purple neon colours. For evening venues. ¦ Medien und Preisliste in violetten Neonfarben. Für Abendlokale. ¦ وسائط وقائمة أسعار بألوان النيون البنفسجية. لأماكن السهر.
+Kapı önü ekranı: büyük fiyat listesi, logo, saat ve QR. Siyah altın. ¦ Entrance screen: large price list, logo, clock and QR. Black and gold. ¦ Eingangsbildschirm: große Preisliste, Logo, Uhr und QR. Schwarz-Gold. ¦ شاشة المدخل: قائمة أسعار كبيرة وشعار وساعة ورمز QR. بالأسود والذهبي.
+Yalnızca sade düzen. Her şeyi kendiniz kurarsınız. ¦ Just a plain layout. You set everything up yourself. ¦ Nur ein schlichtes Layout. Alles andere richten Sie selbst ein. ¦ تخطيط بسيط فقط. تُعدّ كل شيء بنفسك.
+Spor kafe (klasik) ¦ Sports café (classic) ¦ Sportcafé (klassisch) ¦ مقهى رياضي (كلاسيكي)
+Büyük medya, sağda maçlar ve kurlar, altta yorumlar ve kayan bant ¦ Large media, matches and rates on the right, reviews and ticker at the bottom ¦ Große Medienfläche, rechts Spiele und Kurse, unten Bewertungen und Laufband ¦ وسائط كبيرة، المباريات والأسعار على اليمين، التقييمات والشريط المتحرك في الأسفل
+Kahveci / pastane ¦ Coffee shop / pastry shop ¦ Kaffeehaus / Konditorei ¦ مقهى / حلويات
+Medya, yanda fiyat tarifesi, saat ve hava ¦ Media, a price list on the side, clock and weather ¦ Medien, seitlich Preistafel, Uhr und Wetter ¦ وسائط وقائمة أسعار على الجانب وساعة وطقس
+Vitrin / fiyat tarifesi ¦ Shop window / price list ¦ Schaufenster / Preistafel ¦ واجهة / قائمة أسعار
+Giriş kapısı ekranı: büyük fiyat listesi, logo ve QR ¦ Entrance screen: large price list, logo and QR ¦ Eingangsbildschirm: große Preisliste, Logo und QR ¦ شاشة المدخل: قائمة أسعار كبيرة وشعار ورمز QR
+Temel ¦ Basic ¦ Basis ¦ أساسي
+Medya, logo, saat, hava ve kurlar, QR ve kayan bant (Başlangıç paketine uygun) ¦ Media, logo, clock, weather and rates, QR and ticker (suits the Starter plan) ¦ Medien, Logo, Uhr, Wetter und Kurse, QR und Laufband (passend für das Starter-Paket) ¦ وسائط وشعار وساعة وطقس وأسعار صرف ورمز QR وشريط متحرك (مناسب لباقة البداية)
+Sade ¦ Plain ¦ Schlicht ¦ بسيط
+Tam ekran medya ve altta kayan bant ¦ Full-screen media with a ticker at the bottom ¦ Vollbild-Medien mit Laufband unten ¦ وسائط بملء الشاشة وشريط متحرك في الأسفل
+Medya oynatıcı ¦ Media player ¦ Medienplayer ¦ مشغّل الوسائط
+Video ve fotoğraf döngüsü; kampanya, büyük maç ve fragmanlar da burada çıkar ¦ Video and photo loop; campaigns, big matches and trailers also appear here ¦ Video- und Fotoschleife; Aktionen, Großspiele und Trailer erscheinen ebenfalls hier ¦ دورة فيديو وصور؛ وتظهر هنا أيضًا العروض والمباريات الكبرى والمقاطع الدعائية
+İşletme logosu ¦ Business logo ¦ Betriebslogo ¦ شعار المنشأة
+Saat ve tarih ¦ Clock and date ¦ Uhr und Datum ¦ الساعة والتاريخ
+Büyük saat ve tarih ¦ Large clock and date ¦ Große Uhr und großes Datum ¦ ساعة وتاريخ كبيران
+Hava ve piyasalar ¦ Weather and markets ¦ Wetter und Märkte ¦ الطقس والأسواق
+Hava durumu, döviz, altın, BIST, Bitcoin ¦ Weather, currencies, gold, BIST, Bitcoin ¦ Wetter, Devisen, Gold, BIST, Bitcoin ¦ الطقس والعملات والذهب وبورصة إسطنبول والبيتكوين
+Kayan bant ¦ Ticker ¦ Laufband ¦ الشريط المتحرك
+Skorlar, haberler, kurlar ve bilgiler kayar ¦ Scores, news, rates and info scroll by ¦ Ergebnisse, Nachrichten, Kurse und Infos laufen durch ¦ تمرّ النتائج والأخبار والأسعار والمعلومات
+Duyuru metni ¦ Announcement text ¦ Ankündigungstext ¦ نص الإعلان
+Başlık ve kısa metin ¦ Title and short text ¦ Titel und Kurztext ¦ عنوان ونص قصير
+Görsel ¦ Image ¦ Bild ¦ صورة
+Sabit afiş veya fotoğraf ¦ A fixed poster or photo ¦ Festes Plakat oder Foto ¦ ملصق أو صورة ثابتة
+QR kart ¦ QR card ¦ QR-Karte ¦ بطاقة QR
+QR kodlarınız sırayla döner (Wi-Fi, menü, Instagram) ¦ Your QR codes rotate in turn (Wi-Fi, menu, Instagram) ¦ Ihre QR-Codes wechseln nacheinander (WLAN, Speisekarte, Instagram) ¦ تتناوب رموز QR لديك (Wi-Fi والقائمة وInstagram)
+Maçlar ve bilgi sayfaları ¦ Matches and info pages ¦ Spiele und Infoseiten ¦ المباريات وصفحات المعلومات
+Maçlar, puan durumu, nöbetçi eczane, haber, sinema, tarihte bugün, trafik ¦ Matches, standings, duty pharmacy, news, cinema, on this day, traffic ¦ Spiele, Tabellen, Notdienst-Apotheke, Nachrichten, Kino, Heute in der Geschichte, Verkehr ¦ المباريات وجدول الترتيب والصيدلية المناوبة والأخبار والسينما وحدث في مثل هذا اليوم وحركة المرور
+Google yorumları ¦ Google reviews ¦ Google-Bewertungen ¦ تقييمات Google
+Müşteri yorumları şeridi ¦ Customer review strip ¦ Streifen mit Kundenbewertungen ¦ شريط تقييمات العملاء
+Fiyat tarifesi ¦ Price list ¦ Preistafel ¦ قائمة الأسعار
+Kategori, ürün ve fiyat listesi (Fiyat Etiketi Yönetmeliği için) ¦ Category, product and price list (for the Price Labelling Regulation) ¦ Kategorie-, Produkt- und Preisliste (für die Preisauszeichnungsverordnung) ¦ قائمة فئات ومنتجات وأسعار (للوائح بطاقات الأسعار)
+Koyu Kahve ¦ Dark Coffee ¦ Dunkler Kaffee ¦ قهوة داكنة
+Spor Bar ¦ Sports Bar ¦ Sportbar ¦ بار رياضي
+Neon Lounge ¦ Neon Lounge ¦ Neon-Lounge ¦ صالة نيون
+Bordo ¦ Burgundy ¦ Bordeaux ¦ عنابي
+Deniz ¦ Sea ¦ Meer ¦ البحر
+Siyah Altın ¦ Black Gold ¦ Schwarzgold ¦ ذهبي أسود
+Türkiye ¦ Türkiye ¦ Türkei ¦ تركيا
+Avrupa Kupaları ¦ European cups ¦ Europapokale ¦ الكؤوس الأوروبية
+Şampiyonlar Ligi ¦ Champions League ¦ Champions League ¦ دوري أبطال أوروبا
+Avrupa Ligi ¦ Europa League ¦ Europa League ¦ الدوري الأوروبي
+Konferans Ligi ¦ Conference League ¦ Conference League ¦ دوري المؤتمر الأوروبي
+UEFA Uluslar Ligi ¦ UEFA Nations League ¦ UEFA Nations League ¦ دوري أمم أوروبا
+Şampiyonlar Ligi Eleme ¦ Champions League qualifiers ¦ Champions-League-Qualifikation ¦ تصفيات دوري أبطال أوروبا
+Avrupa Şampiyonası ¦ European Championship ¦ Europameisterschaft ¦ بطولة أوروبا
+İspanya ¦ Spain ¦ Spanien ¦ إسبانيا
+İngiltere ¦ England ¦ England ¦ إنجلترا
+Premier Lig ¦ Premier League ¦ Premier League ¦ الدوري الإنجليزي الممتاز
+İtalya ¦ Italy ¦ Italien ¦ إيطاليا
+Almanya ¦ Germany ¦ Deutschland ¦ ألمانيا
+Fransa ¦ France ¦ Frankreich ¦ فرنسا
+Diğer Ülkeler ¦ Other countries ¦ Weitere Länder ¦ دول أخرى
+Hollanda Eredivisie ¦ Dutch Eredivisie ¦ Niederländische Eredivisie ¦ الدوري الهولندي
+Portekiz Ligi ¦ Portuguese League ¦ Portugiesische Liga ¦ الدوري البرتغالي
+Belçika Ligi ¦ Belgian League ¦ Belgische Liga ¦ الدوري البلجيكي
+İskoçya Ligi ¦ Scottish League ¦ Schottische Liga ¦ الدوري الاسكتلندي
+Yunanistan Süper Ligi ¦ Greek Super League ¦ Griechische Super League ¦ الدوري اليوناني الممتاز
+Avusturya Ligi ¦ Austrian League ¦ Österreichische Liga ¦ الدوري النمساوي
+İsviçre Ligi ¦ Swiss League ¦ Schweizer Liga ¦ الدوري السويسري
+Rusya Ligi ¦ Russian League ¦ Russische Liga ¦ الدوري الروسي
+Brezilya Serie A ¦ Brazilian Serie A ¦ Brasilianische Serie A ¦ الدوري البرازيلي
+Arjantin Ligi ¦ Argentine League ¦ Argentinische Liga ¦ الدوري الأرجنتيني
+Dünya Kupası ¦ World Cup ¦ Weltmeisterschaft ¦ كأس العالم
+Giriş gerekli ¦ Sign-in required ¦ Anmeldung erforderlich ¦ تسجيل الدخول مطلوب
+Bu işlem için işletme sahibi yetkisi gerekir ¦ This action requires business-owner permission ¦ Für diese Aktion ist die Berechtigung des Betriebsinhabers erforderlich ¦ يتطلب هذا الإجراء صلاحية مالك المنشأة
+Depolama kotası doldu ({} / {} MB). Eski dosyaları silin ya da paketinizi yükseltin. ¦ Storage quota is full ({} / {} MB). Delete old files or upgrade your plan. ¦ Speicherkontingent ausgeschöpft ({} / {} MB). Löschen Sie alte Dateien oder erweitern Sie Ihr Paket. ¦ امتلأت حصة التخزين ({} / {} م.ب). احذف الملفات القديمة أو قم بترقية باقتك.
+Şehir araması yapılamadı ¦ City search failed ¦ Städtesuche fehlgeschlagen ¦ تعذّر البحث عن المدينة
+Geçersiz konum ¦ Invalid location ¦ Ungültiger Standort ¦ موقع غير صالح
+Mevcut şifre yanlış ¦ Current password is wrong ¦ Aktuelles Passwort ist falsch ¦ كلمة المرور الحالية خاطئة
+Yeni şifre en az 8 karakter olmalı ¦ The new password must be at least 8 characters ¦ Das neue Passwort muss mindestens 8 Zeichen lang sein ¦ يجب ألا تقل كلمة المرور الجديدة عن 8 أحرف
+Kullanıcı adı 3-32 karakter; harf, rakam, nokta, tire ¦ Username: 3–32 characters; letters, digits, dot, hyphen ¦ Benutzername: 3–32 Zeichen; Buchstaben, Ziffern, Punkt, Bindestrich ¦ اسم المستخدم: من 3 إلى 32 حرفًا؛ أحرف وأرقام ونقطة وشرطة
+Şifre en az 8 karakter olmalı ¦ The password must be at least 8 characters ¦ Das Passwort muss mindestens 8 Zeichen lang sein ¦ يجب ألا تقل كلمة المرور عن 8 أحرف
+Paketinizde en çok {} kullanıcı var ¦ Your plan allows at most {} users ¦ Ihr Paket erlaubt höchstens {} Benutzer ¦ تتيح باقتك {} مستخدمين كحد أقصى
+Bu kullanıcı adı alınmış ¦ This username is taken ¦ Dieser Benutzername ist vergeben ¦ اسم المستخدم هذا مستخدم بالفعل
+Bu kullanıcı silinemez ¦ This user cannot be deleted ¦ Dieser Benutzer kann nicht gelöscht werden ¦ لا يمكن حذف هذا المستخدم
+Geçersiz paket ¦ Invalid pack ¦ Ungültiges Paket ¦ حزمة غير صالحة
+Geçersiz kapsam ¦ Invalid scope ¦ Ungültiger Bereich ¦ نطاق غير صالح
+dosya yok ¦ no file ¦ keine Datei ¦ لا يوجد ملف
+PNG/JPG/WEBP/SVG ve en çok 5 MB olmalı ¦ Must be PNG/JPG/WEBP/SVG and at most 5 MB ¦ Muss PNG/JPG/WEBP/SVG und höchstens 5 MB groß sein ¦ يجب أن يكون PNG/JPG/WEBP/SVG وبحجم أقصاه 5 م.ب
+Resim dosyası ve en çok 15 MB olmalı ¦ Must be an image file of at most 15 MB ¦ Muss eine Bilddatei mit höchstens 15 MB sein ¦ يجب أن يكون ملف صورة بحجم أقصاه 15 م.ب
+Düzende en az bir Medya oynatıcı ya da Fiyat listesi olmalı ¦ The layout needs at least one Media player or Price list ¦ Das Layout braucht mindestens einen Medienplayer oder eine Preisliste ¦ يجب أن يحتوي التخطيط على مشغّل وسائط أو قائمة أسعار واحدة على الأقل
+Ağ adı (SSID) gerekli ¦ Network name (SSID) is required ¦ Netzwerkname (SSID) erforderlich ¦ اسم الشبكة (SSID) مطلوب
+Link ya da metin gerekli ¦ A link or text is required ¦ Link oder Text erforderlich ¦ الرابط أو النص مطلوب
+Etiket gerekli (örn. "Menü için okutun") ¦ A label is required (e.g. "Scan for the menu") ¦ Beschriftung erforderlich (z. B. „Für die Speisekarte scannen“) ¦ التسمية مطلوبة (مثال: «امسح للاطلاع على القائمة»)
+İçerik çok uzun ¦ Content is too long ¦ Inhalt ist zu lang ¦ المحتوى طويل جدًا
+bulunamadı ¦ not found ¦ nicht gefunden ¦ غير موجود
+Nöbetçi eczane servisi henüz platformda etkin değil ¦ The duty-pharmacy service is not enabled on the platform yet ¦ Der Notdienst-Apotheken-Dienst ist auf der Plattform noch nicht aktiv ¦ خدمة الصيدليات المناوبة غير مفعّلة على المنصة بعد
+En az bir ilçe girin ¦ Enter at least one district ¦ Geben Sie mindestens einen Bezirk ein ¦ أدخل منطقة واحدة على الأقل
+Sinema servisi henüz platformda etkin değil ¦ The cinema service is not enabled on the platform yet ¦ Der Kino-Dienst ist auf der Plattform noch nicht aktiv ¦ خدمة السينما غير مفعّلة على المنصة بعد
+Haber servisi henüz platformda etkin değil ¦ The news service is not enabled on the platform yet ¦ Der Nachrichten-Dienst ist auf der Plattform noch nicht aktiv ¦ خدمة الأخبار غير مفعّلة على المنصة بعد
+geçersiz ad ¦ invalid name ¦ ungültiger Name ¦ اسم غير صالح
+yedek dosyası geçerli değil ¦ the backup file is not valid ¦ die Sicherungsdatei ist ungültig ¦ ملف النسخة الاحتياطية غير صالح
+geçersiz istek ¦ invalid request ¦ ungültige Anfrage ¦ طلب غير صالح
+bilinmeyen gün ¦ unknown day ¦ unbekannter Tag ¦ يوم غير معروف
+geçersiz gün ¦ invalid day ¦ ungültiger Tag ¦ يوم غير صالح
+JPG/PNG/WEBP ve en çok 8 MB olmalı ¦ Must be JPG/PNG/WEBP and at most 8 MB ¦ Muss JPG/PNG/WEBP und höchstens 8 MB groß sein ¦ يجب أن يكون JPG/PNG/WEBP وبحجم أقصاه 8 م.ب
+Bir güne en fazla 12 fotoğraf eklenebilir ¦ At most 12 photos can be added per day ¦ Pro Tag können höchstens 12 Fotos hinzugefügt werden ¦ يمكن إضافة 12 صورة كحد أقصى لكل يوم
+Geçerli bir web adresi (https://...) girin ¦ Enter a valid web address (https://...) ¦ Geben Sie eine gültige Webadresse (https://...) ein ¦ أدخل عنوان ويب صالحًا (https://...)
+Önce kampanyanın bağlantısını (örn. Google yorum linki) girin ¦ Enter the campaign link first (e.g. a Google review link) ¦ Geben Sie zuerst den Link der Aktion ein (z. B. Google-Bewertungslink) ¦ أدخل رابط العرض أولًا (مثل رابط تقييم Google)
+Önce bağlantıyı kaydedin ¦ Save the link first ¦ Speichern Sie zuerst den Link ¦ احفظ الرابط أولًا
+isim, metin ve 4 veya 5 yıldız gerekli ¦ A name, text and 4 or 5 stars are required ¦ Name, Text und 4 oder 5 Sterne sind erforderlich ¦ الاسم والنص و4 أو 5 نجوم مطلوبة
+isim gerekli ¦ A name is required ¦ Name erforderlich ¦ الاسم مطلوب
+kutlama yazısı gerekli ¦ A greeting text is required ¦ Glückwunschtext erforderlich ¦ نص التهنئة مطلوب
+Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin. ¦ Too many failed attempts. Try again in 10 minutes. ¦ Zu viele Fehlversuche. Versuchen Sie es in 10 Minuten erneut. ¦ محاولات خاطئة كثيرة. أعد المحاولة بعد 10 دقائق.
+Kullanıcı adı ya da şifre yanlış ¦ Wrong username or password ¦ Benutzername oder Passwort falsch ¦ اسم المستخدم أو كلمة المرور خاطئة
+Yeni kayıt şu an kapalı ¦ New sign-ups are closed right now ¦ Neuregistrierungen sind derzeit geschlossen ¦ التسجيل الجديد مغلق حاليًا
+Çok fazla deneme. Biraz sonra tekrar deneyin. ¦ Too many attempts. Try again shortly. ¦ Zu viele Versuche. Bitte versuchen Sie es gleich noch einmal. ¦ محاولات كثيرة. أعد المحاولة بعد قليل.
+Devam etmek için Kullanım Koşulları ve KVKK Aydınlatma Metni'ni onaylayın ¦ Accept the Terms of Use and the KVKK Privacy Notice to continue ¦ Akzeptieren Sie zum Fortfahren die Nutzungsbedingungen und den KVKK-Informationstext ¦ وافق على شروط الاستخدام ونص الإفصاح عن KVKK للمتابعة
+Şablon seçin ¦ Choose a template ¦ Wählen Sie eine Vorlage ¦ اختر قالبًا
+Yalnız fotoğraf yüklenebilir ¦ Only photos can be uploaded ¦ Es können nur Fotos hochgeladen werden ¦ يمكن رفع الصور فقط
+Geçerli bir e-posta adresi girin ¦ Enter a valid e-mail address ¦ Geben Sie eine gültige E-Mail-Adresse ein ¦ أدخل عنوان بريد إلكتروني صالحًا
+E-posta gönderimi sunucuda ayarlı değil (SMTP) ¦ E-mail sending is not set up on the server (SMTP) ¦ Der E-Mail-Versand ist auf dem Server nicht eingerichtet (SMTP) ¦ إرسال البريد الإلكتروني غير مُعدّ على الخادم (SMTP)
+Önce e-posta adresinizi kaydedin ¦ Save your e-mail address first ¦ Speichern Sie zuerst Ihre E-Mail-Adresse ¦ احفظ عنوان بريدك الإلكتروني أولًا
+E-posta gönderilemedi ¦ The e-mail could not be sent ¦ Die E-Mail konnte nicht gesendet werden ¦ تعذّر إرسال البريد الإلكتروني
+Cihaz şu an çevrimdışı ¦ The device is offline ¦ Das Gerät ist offline ¦ الجهاز غير متصل الآن
+işletme bulunamadı ¦ business not found ¦ Betrieb nicht gefunden ¦ لم يتم العثور على المنشأة
+Şube adı gerekli ¦ A branch name is required ¦ Filialname erforderlich ¦ اسم الفرع مطلوب
+Şube bulunamadı ¦ Branch not found ¦ Filiale nicht gefunden ¦ لم يتم العثور على الفرع
+Şube değiştirmek için işletme sahibi yetkisi gerekir ¦ Switching branches requires business-owner permission ¦ Für den Filialwechsel ist die Berechtigung des Betriebsinhabers erforderlich ¦ يتطلب تبديل الفروع صلاحية مالك المنشأة
+{}: depolama kotası doldu ¦ {}: storage quota is full ¦ {}: Speicherkontingent ausgeschöpft ¦ {}: امتلأت حصة التخزين
+Önce işletmenizi seçin ¦ Select your business first ¦ Wählen Sie zuerst Ihren Betrieb ¦ اختر منشأتك أولًا
+Yorumlar az önce yenilendi; 10 dakika sonra tekrar deneyin ¦ Reviews were just refreshed; try again in 10 minutes ¦ Bewertungen wurden gerade aktualisiert; versuchen Sie es in 10 Minuten erneut ¦ تم تحديث التقييمات للتو؛ أعد المحاولة بعد 10 دقائق
+Önce Instagram hesabınızı bağlayın ¦ Connect your Instagram account first ¦ Verbinden Sie zuerst Ihr Instagram-Konto ¦ اربط حساب Instagram أولًا
+Şifre yanlış ¦ Wrong password ¦ Passwort falsch ¦ كلمة المرور خاطئة
+Süper yönetici girişi gerekli ¦ Super-admin sign-in required ¦ Super-Admin-Anmeldung erforderlich ¦ تسجيل دخول المدير العام مطلوب
+işletme sahibi bulunamadı ¦ business owner not found ¦ Betriebsinhaber nicht gefunden ¦ لم يتم العثور على مالك المنشأة
+Silmek için işletme adını aynen yazın ¦ Type the business name exactly to delete ¦ Geben Sie zum Löschen den Betriebsnamen exakt ein ¦ اكتب اسم المنشأة تمامًا للحذف
+Yeni şifre en az 10 karakter olmalı ¦ The new password must be at least 10 characters ¦ Das neue Passwort muss mindestens 10 Zeichen lang sein ¦ يجب ألا تقل كلمة المرور الجديدة عن 10 أحرف
+Önce webhook adresini kaydedin ¦ Save the webhook address first ¦ Speichern Sie zuerst die Webhook-Adresse ¦ احفظ عنوان Webhook أولًا
+SMTP ayarlı değil (SMTP_HOST ortam değişkeni yok) ¦ SMTP is not set up (no SMTP_HOST environment variable) ¦ SMTP ist nicht eingerichtet (Umgebungsvariable SMTP_HOST fehlt) ¦ SMTP غير مُعدّ (متغير البيئة SMTP_HOST غير موجود)
+meşgul ¦ busy ¦ ausgelastet ¦ مشغول
+İşletme adı gerekli ¦ A business name is required ¦ Betriebsname erforderlich ¦ اسم المنشأة مطلوب
+Kullanıcı adı 3-32 karakter olmalı; harf, rakam, nokta ve tire kullanılabilir ¦ The username must be 3–32 characters; letters, digits, dot and hyphen are allowed ¦ Der Benutzername muss 3–32 Zeichen lang sein; Buchstaben, Ziffern, Punkt und Bindestrich sind erlaubt ¦ يجب أن يتراوح اسم المستخدم بين 3 و32 حرفًا؛ يُسمح بالأحرف والأرقام والنقطة والشرطة
+SMTP ayarlı değil ¦ SMTP is not set up ¦ SMTP ist nicht eingerichtet ¦ SMTP غير مُعدّ
+Google Places anahtarı platformda tanımlı değil (süper yönetim → Platform anahtarları) ¦ The Google Places key is not set on the platform (super admin → Platform keys) ¦ Der Google-Places-Schlüssel ist auf der Plattform nicht hinterlegt (Super-Verwaltung → Plattformschlüssel) ¦ مفتاح Google Places غير مُعرّف على المنصة (الإدارة العامة ← مفاتيح المنصة)
+Google araması bu ay için sınıra ulaştı; ay başında tekrar deneyin ya da destekle iletişime geçin ¦ The Google search limit for this month has been reached; try again at the start of next month or contact support ¦ Das Google-Suchlimit für diesen Monat ist erreicht; versuchen Sie es zu Monatsbeginn erneut oder kontaktieren Sie den Support ¦ تم بلوغ حد البحث في Google لهذا الشهر؛ أعد المحاولة مطلع الشهر القادم أو تواصل مع الدعم
+dosya bulunamadı ¦ file not found ¦ Datei nicht gefunden ¦ لم يتم العثور على الملف

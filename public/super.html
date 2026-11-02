@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="tr"><head><meta charset="utf-8"><script src="/i18n.js"></script><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
 <title>ScreenPano — Süper Yönetim</title>
 <style>
@@ -44,8 +44,9 @@ tr.sub .br{color:var(--mute);margin-right:6px;font-weight:400}
 .toast.err{border-left-color:var(--bad)}
 .scroll{overflow-x:auto}
 .hint a{color:var(--accent2,#c9955c)}
+.langsel{background:var(--panel2,#242828);color:inherit;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;cursor:pointer;max-width:100%}
 </style></head><body>
-<header><a href="/super" style="text-decoration:none"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:34px;display:block"></a><span style="color:var(--mute);font-size:13px;padding-left:6px;border-left:1px solid var(--line)">Süper Yönetim</span><span style="flex:1"></span><a class="btn ghost" href="/tv" target="_blank" style="text-decoration:none">TV sayfası</a><button class="btn ghost" onclick="pwDialog()">Şifremi değiştir</button><button class="btn ghost" onclick="logout()">Çıkış</button></header>
+<header><a href="/super" style="text-decoration:none"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:34px;display:block"></a><span style="color:var(--mute);font-size:13px;padding-left:6px;border-left:1px solid var(--line)">Süper Yönetim</span><span style="flex:1"></span><span data-langpick></span><a class="btn ghost" href="/tv" target="_blank" style="text-decoration:none">TV sayfası</a><button class="btn ghost" onclick="pwDialog()">Şifremi değiştir</button><button class="btn ghost" onclick="logout()">Çıkış</button></header>
 <div class="stats" id="stats"></div>
 <div class="card"><h2>İşletmeler</h2>
   <div class="row" style="margin-bottom:14px"><div><input id="flt" placeholder="Ara (ad, kullanıcı, telefon)" oninput="renderList()"></div><button class="btn" onclick="newDialog()">＋ Yeni işletme</button></div>
@@ -92,7 +93,7 @@ tr.sub .br{color:var(--mute);margin-right:6px;font-weight:400}
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const fmt = ms => ms ? new Date(ms).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+const fmt = ms => ms ? new Date(ms).toLocaleDateString(I18N.locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
 const ago = ms => { if (!ms) return '-'; const m = Math.round((Date.now() - ms) / 60000); return m < 60 ? m + ' dk' : m < 1440 ? Math.round(m / 60) + ' sa' : Math.round(m / 1440) + ' gün'; };
 let D = null;
 function toast(m, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = m; $('toasts').appendChild(t); setTimeout(() => t.remove(), 4000); }
@@ -122,7 +123,7 @@ async function renderBk() {
   let list = { local: [], remote: [] };
   try { list = await call('GET', '/api/super/backups'); } catch (e) {}
   $('bk').innerHTML = `<p class="hint">Veritabanının tamamı (işletmeler, kullanıcılar, cihazlar, içerik ayarları) her gece 04:00'ten sonra sıkıştırılıp yedeklenir; sunucuda ${b.keepLocal} gün${b.remoteEnabled ? `, R2'de ${b.keepRemote} gün` : ''} saklanır.
-      Son yedek: <b>${b.at ? new Date(b.at).toLocaleString('tr-TR') : 'henüz yok'}</b>${b.remote ? ' (R2\'ye de gönderildi)' : ''}${b.error ? ` · <span style="color:var(--bad)">Son hata: ${esc(b.error)}</span>` : ''}</p>
+      Son yedek: <b>${b.at ? new Date(b.at).toLocaleString(I18N.locale) : 'henüz yok'}</b>${b.remote ? ' (R2\'ye de gönderildi)' : ''}${b.error ? ` · <span style="color:var(--bad)">Son hata: ${esc(b.error)}</span>` : ''}</p>
     <div class="row" style="margin-bottom:12px"><button class="btn" onclick="runBk()">Şimdi yedekle</button></div>
     ${list.local.length ? `<div class="scroll"><table><thead><tr><th>Sunucudaki yedek</th><th>Boyut</th><th></th></tr></thead><tbody>${list.local.slice(0, 8).map(x => `<tr><td>${esc(x.name)}</td><td>${size(x.size)}</td><td><a class="btn ghost sm" href="/api/super/backups/${encodeURIComponent(x.name)}">İndir</a></td></tr>`).join('')}</tbody></table></div>` : ''}
     ${list.remote.length ? `<p class="hint" style="margin-top:10px">R2'de ${list.remote.length} yedek var (en yenisi ${esc(list.remote[0].name)}).</p>` : list.remoteError ? `<p class="hint" style="color:var(--bad)">R2 yedek listesi alınamadı: ${esc(list.remoteError)}</p>` : ''}

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="tr"><head><meta charset="utf-8"><script src="/i18n.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <title>Panel</title>
 <style>
@@ -245,12 +245,14 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 #brsw{padding:0 6px 12px;margin-bottom:10px;border-bottom:1px solid var(--line)}
 #brsw select{width:100%;font-size:13.5px;padding:8px 10px}
 @media (max-width:760px){.ped{grid-template-columns:1fr}}
+.langsel{background:var(--panel2,#242828);color:inherit;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;cursor:pointer;max-width:100%}
 </style></head><body>
 <div id="app">
   <aside id="side">
     <div id="brand"><b>…</b></div>
     <nav id="nav"></nav>
     <div id="sidefoot">
+      <div data-langpick style="padding:2px 0 6px"></div>
       <a href="/tv?preview=1" target="_blank">📺 TV ekranını aç</a>
       <a href="/app.apk">📱 Android uygulaması (APK)</a>
       <a href="/app.exe">💻 Windows uygulaması</a>

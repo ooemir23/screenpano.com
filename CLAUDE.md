@@ -6,3 +6,4 @@
 - Logo: `python3 tools/brand/make_logos.py` (yazı çizime çevrilir; SVG'de `<text>` kullanma).
 - Paket sınırlarını `server/plans.js`'te değiştir; site tablosu oradan okur.
 - Sitede yalnız uygulamanın gerçekten yaptığı şeyleri yaz; Pro'ya özel özellikler için `server/state.js`'teki `pro` kontrollerine bak.
+- Panel, süper yönetim ve giriş sayfası da dört dilli (`public/i18n.js` çalışma anında çevirir; kaynak Türkçe metindir). **Arayüze yeni Türkçe metin eklediğinde** `tools/i18n/panel-*.tsv`'ye `tr ¦ en ¦ de ¦ ar` satırı ekle, sonra `python3 tools/i18n/build.py` çalıştır (`public/i18n/*.js` üretilir, commit'e girer). Değişken kısım `{}`, satır içi etiket `<0>…</0>` olarak yazılır. Eksik çeviri Türkçe görünür.

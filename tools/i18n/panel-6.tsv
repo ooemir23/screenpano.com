@@ -1,0 +1,102 @@
+İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz. ¦ Choose your business type: the screen layout, colours and a sample product list come with it. Your media, logo and other settings are not deleted; you enter the prices yourself. ¦ Wählen Sie Ihre Betriebsart: Bildschirmlayout, Farben und eine Beispiel-Produktliste werden mitgeliefert. Ihre Medien, Ihr Logo und andere Einstellungen bleiben erhalten; die Preise tragen Sie selbst ein. ¦ اختر نوع نشاطك: يأتي معه تخطيط الشاشة والألوان وقائمة منتجات نموذجية. لا تُحذف وسائطك وشعارك وإعداداتك الأخرى؛ وتُدخل الأسعار بنفسك.
+Bazı TV'ler görüntünün kenarlarını keser. Önce TV'nin görüntü ayarından "Tam ekran / Ekrana sığdır / Just Scan" seçeneğini deneyin; olmazsa buradan küçültün. Kutu tüm TV'lere aynı görüntüyü verdiği için ayar hepsini etkiler. ¦ Some TVs crop the edges of the picture. First try "Full screen / Fit to screen / Just Scan" in the TV's picture settings; if that doesn't help, shrink it here. Because the box sends the same picture to all TVs, this setting affects all of them. ¦ Manche Fernseher schneiden die Bildränder ab. Versuchen Sie zuerst in den Bildeinstellungen des Fernsehers „Vollbild / An Bildschirm anpassen / Just Scan“; hilft das nicht, verkleinern Sie hier. Da die Box allen Fernsehern dasselbe Bild liefert, wirkt sich die Einstellung auf alle aus. ¦ بعض أجهزة التلفاز تقصّ حواف الصورة. جرّب أولًا خيار «ملء الشاشة / ملاءمة الشاشة / Just Scan» من إعدادات الصورة في التلفاز؛ وإن لم ينجح فصغّرها من هنا. ولأن الجهاز يرسل الصورة نفسها إلى كل التلفازات فإن الإعداد يؤثر عليها جميعًا.
+Turist müşterileriniz için fiyat listesi, duyuru metni ve afişler seçtiğiniz dillerde sırayla döner. Türkçe her zaman ilk dildir; çevirileri aşağıdaki alanlara siz yazarsınız. ¦ For your tourist customers, the price list, announcement text and posters rotate through the languages you choose. Turkish is always the first language; you type the translations in the fields below. ¦ Für Ihre ausländischen Gäste wechseln Preisliste, Ankündigungstext und Plakate nacheinander in den gewählten Sprachen. Türkisch ist immer die erste Sprache; die Übersetzungen tragen Sie in die Felder unten ein. ¦ لعملائك السياح تتناوب قائمة الأسعار ونص الإعلان والملصقات بين اللغات التي تختارها. التركية هي اللغة الأولى دائمًا؛ وتكتب الترجمات في الحقول أدناه.
+Instagram hesabınızın <0>işletme</0> ya da <1>içerik üreticisi</1> hesabı olması gerekir. Meta for Developers'ta "Instagram API with Instagram Login" ile uzun ömürlü erişim anahtarı (access token) alıp buraya yapıştırın; anahtar her hafta kendiliğinden yenilenir. ¦ Your Instagram account must be a <0>business</0> or <1>creator</1> account. In Meta for Developers, get a long-lived access token via "Instagram API with Instagram Login" and paste it here; the token renews itself every week. ¦ Ihr Instagram-Konto muss ein <0>Business-</0> oder <1>Creator-</1>Konto sein. Holen Sie in Meta for Developers über „Instagram API with Instagram Login“ ein langlebiges Zugriffstoken und fügen Sie es hier ein; das Token erneuert sich jede Woche automatisch. ¦ يجب أن يكون حساب Instagram الخاص بك حساب <0>نشاط تجاري</0> أو <1>صانع محتوى</1>. احصل من Meta for Developers على رمز وصول طويل الأمد عبر «Instagram API with Instagram Login» والصقه هنا؛ يتجدد الرمز تلقائيًا كل أسبوع.
+<0>Android uygulamasını (APK) indirin</0> ve kutuya kurun. Kutu yerine televizyona bağlı bir <1>Windows bilgisayar</1> kullanacaksanız <2>Windows uygulamasını indirin</2>; televizyon ikinci ekransa yayın oraya açılır. ¦ <0>Download the Android app (APK)</0> and install it on the box. If you will use a <1>Windows computer</1> connected to the TV instead of a box, <2>download the Windows app</2>; if the TV is a second screen, the broadcast opens there. ¦ <0>Laden Sie die Android-App (APK) herunter</0> und installieren Sie sie auf der Box. Wenn Sie statt einer Box einen am Fernseher angeschlossenen <1>Windows-Rechner</1> nutzen, <2>laden Sie die Windows-App herunter</2>; ist der Fernseher ein zweiter Bildschirm, öffnet sich die Wiedergabe dort. ¦ <0>نزّل تطبيق أندرويد (APK)</0> وثبّته على الجهاز. وإن كنت ستستخدم <1>حاسوب Windows</1> موصولًا بالتلفاز بدل الجهاز فـ<2>نزّل تطبيق Windows</2>؛ وإذا كان التلفاز شاشة ثانية فسيُفتح البث عليه.
+Hesabınız, kullanıcılarınız, cihazlarınız ve tüm içerik ayarlarınız tek bir JSON dosyası olarak iner (KVKK m.11). Medya dosyaları dahil değildir; onları Medya bölümünden indirebilirsiniz. ¦ Your account, users, devices and all content settings are downloaded as a single JSON file (KVKK art. 11). Media files are not included; you can download them from the Media section. ¦ Ihr Konto, Ihre Benutzer, Geräte und alle Inhaltseinstellungen werden als eine einzige JSON-Datei heruntergeladen (KVKK Art. 11). Mediendateien sind nicht enthalten; diese können Sie im Bereich Medien herunterladen. ¦ يُنزَّل حسابك ومستخدموك وأجهزتك وجميع إعدادات المحتوى كملف JSON واحد (المادة 11 من KVKK). ملفات الوسائط غير مشمولة؛ ويمكنك تنزيلها من قسم الوسائط.
+Bu anahtarlar tüm işletmeler için ortaktır; işletmeler hiçbir anahtar görmez. Veri her kaynaktan bir kez çekilip herkese dağıtılır. Ticari kullanım şartlarını her sağlayıcıdan kontrol edin. ¦ These keys are shared by all businesses; businesses never see any key. Data is fetched once from each source and distributed to everyone. Check the commercial-use terms with each provider. ¦ Diese Schlüssel gelten für alle Betriebe; Betriebe sehen keinen Schlüssel. Die Daten werden pro Quelle einmal abgerufen und an alle verteilt. Prüfen Sie die Bedingungen für die kommerzielle Nutzung bei jedem Anbieter. ¦ هذه المفاتيح مشتركة بين جميع المنشآت ولا ترى المنشآت أي مفتاح. تُجلب البيانات من كل مصدر مرة واحدة وتُوزَّع على الجميع. راجع شروط الاستخدام التجاري لدى كل مزوّد.
+Bir TV kutusu 10 dakikadan uzun çevrimdışı kalınca bu adrese {"text": "..."} gönderilir (Slack, Discord ya da Telegram köprüsü). İşletmelere e-posta için sunucuda SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM ortam değişkenlerini girin. <0></0> ¦ When a TV box stays offline for more than 10 minutes, {"text": "..."} is sent to this address (Slack, Discord or a Telegram bridge). For e-mails to businesses, set the SMTP_HOST, SMTP_USER, SMTP_PASS and SMTP_FROM environment variables on the server. <0></0> ¦ Bleibt eine TV-Box länger als 10 Minuten offline, wird {"text": "..."} an diese Adresse gesendet (Slack, Discord oder Telegram-Brücke). Für E-Mails an Betriebe setzen Sie auf dem Server die Umgebungsvariablen SMTP_HOST, SMTP_USER, SMTP_PASS und SMTP_FROM. <0></0> ¦ عندما يبقى جهاز عرض غير متصل أكثر من 10 دقائق يُرسل {"text": "..."} إلى هذا العنوان (Slack أو Discord أو جسر Telegram). لإرسال بريد إلى المنشآت أدخل متغيرات البيئة SMTP_HOST وSMTP_USER وSMTP_PASS وSMTP_FROM على الخادم. <0></0>
+Veritabanının tamamı (işletmeler, kullanıcılar, cihazlar, içerik ayarları) her gece 04:00'ten sonra sıkıştırılıp yedeklenir; sunucuda {} gün saklanır. Son yedek: <0>{}</0> ¦ The entire database (businesses, users, devices, content settings) is compressed and backed up every night after 04:00; kept on the server for {} days. Last backup: <0>{}</0> ¦ Die gesamte Datenbank (Betriebe, Benutzer, Geräte, Inhaltseinstellungen) wird jede Nacht nach 04:00 Uhr komprimiert und gesichert; auf dem Server {} Tage aufbewahrt. Letzte Sicherung: <0>{}</0> ¦ تُضغط قاعدة البيانات كاملة (المنشآت والمستخدمون والأجهزة وإعدادات المحتوى) وتُنسخ احتياطيًا كل ليلة بعد الساعة 04:00؛ وتُحفظ على الخادم {} يومًا. آخر نسخة: <0>{}</0>
+Veritabanının tamamı (işletmeler, kullanıcılar, cihazlar, içerik ayarları) her gece 04:00'ten sonra sıkıştırılıp yedeklenir; sunucuda {} gün saklanır. Son yedek: ¦ The entire database (businesses, users, devices, content settings) is compressed and backed up every night after 04:00; kept on the server for {} days. Last backup: ¦ Die gesamte Datenbank (Betriebe, Benutzer, Geräte, Inhaltseinstellungen) wird jede Nacht nach 04:00 Uhr komprimiert und gesichert; auf dem Server {} Tage aufbewahrt. Letzte Sicherung: ¦ تُضغط قاعدة البيانات كاملة (المنشآت والمستخدمون والأجهزة وإعدادات المحتوى) وتُنسخ احتياطيًا كل ليلة بعد الساعة 04:00؛ وتُحفظ على الخادم {} يومًا. آخر نسخة:
+R2 kapalı: medya sunucunun diskinde duruyor. Açmak için ortam değişkenlerine R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY ve R2_BUCKET girin; mevcut dosyalar arka planda R2'ye taşınır. ¦ R2 is off: media stays on the server's disk. To enable it, set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY and R2_BUCKET in the environment variables; existing files are moved to R2 in the background. ¦ R2 ist aus: Medien bleiben auf der Festplatte des Servers. Zum Aktivieren tragen Sie R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY und R2_BUCKET in die Umgebungsvariablen ein; vorhandene Dateien werden im Hintergrund nach R2 verschoben. ¦ R2 متوقف: تبقى الوسائط على قرص الخادم. لتفعيله أدخل R2_ACCOUNT_ID وR2_ACCESS_KEY_ID وR2_SECRET_ACCESS_KEY وR2_BUCKET في متغيرات البيئة؛ وتُنقل الملفات الحالية إلى R2 في الخلفية.
+Google aylık çağrı sınırı <0></0> ¦ Google monthly call limit <0></0> ¦ Google-Monatslimit für Aufrufe <0></0> ¦ الحد الشهري لطلبات Google <0></0>
+0 <0></0> ¦ 0 <0></0> ¦ 0 <0></0> ¦ 0 <0></0>
+Deneme Kafe <0> · şu an burada</0> <1>· ana hesap</1> ¦ Deneme Kafe <0> · şu an burada</0> <1>· ana hesap</1> ¦ Deneme Kafe <0> · şu an burada</0> <1>· ana hesap</1> ¦ Deneme Kafe <0> · şu an burada</0> <1>· ana hesap</1>
+{} <0> · şu an burada</0> <1>· ana hesap</1> ¦ {} <0> · here now</0> <1>· main account</1> ¦ {} <0> · gerade hier</0> <1>· Hauptkonto</1> ¦ {} <0> · أنت هنا الآن</0> <1>· الحساب الرئيسي</1>
+{} <0> · şu an burada</0> ¦ {} <0> · here now</0> ¦ {} <0> · gerade hier</0> ¦ {} <0> · أنت هنا الآن</0>
+{} <0>· ana hesap</0> ¦ {} <0>· main account</0> ¦ {} <0>· Hauptkonto</0> ¦ {} <0>· الحساب الرئيسي</0>
+İşletme sahibi · son giriş: hiç ¦ Business owner · last login: never ¦ Betriebsinhaber · letzte Anmeldung: nie ¦ مالك المنشأة · آخر دخول: أبدًا
+hiç ¦ never ¦ nie ¦ أبدًا
+<0>Başlangıç</0>{} cihaz · {} GB · {} kullanıcı<br>✓ Medya, logo, saat, hava, kurlar<br>✓ Kampanya kartı ve QR<br><1>Köşede ürün adı görünür</1> ¦ <0>Starter</0>{} device · {} GB · {} user<br>✓ Media, logo, clock, weather, rates<br>✓ Campaign card and QR<br><1>Product name shown in the corner</1> ¦ <0>Starter</0>{} Gerät · {} GB · {} Benutzer<br>✓ Medien, Logo, Uhr, Wetter, Kurse<br>✓ Aktionskarte und QR<br><1>Produktname erscheint in der Ecke</1> ¦ <0>البداية</0>{} جهاز · {} غيغابايت · {} مستخدم<br>✓ وسائط وشعار وساعة وطقس وأسعار صرف<br>✓ بطاقة العروض ورمز QR<br><1>يظهر اسم المنتج في الزاوية</1>
+<0>Pro</0>{} cihaz · {} GB · {} kullanıcı<br>✓ Maçlar ve canlı skor<br>✓ Fiyat listesi<br>✓ Bilgi bandı, yorumlar, doğum günü ¦ <0>Pro</0>{} devices · {} GB · {} users<br>✓ Matches and live scores<br>✓ Price list<br>✓ Info ticker, reviews, birthdays ¦ <0>Pro</0>{} Geräte · {} GB · {} Benutzer<br>✓ Spiele und Live-Ergebnisse<br>✓ Preisliste<br>✓ Infoband, Bewertungen, Geburtstage ¦ <0>Pro</0>{} أجهزة · {} غيغابايت · {} مستخدمين<br>✓ المباريات والنتائج المباشرة<br>✓ قائمة الأسعار<br>✓ شريط المعلومات والتقييمات وأعياد الميلاد
+＋ Ürün ¦ ＋ Product ¦ ＋ Produkt ¦ ＋ منتج
+▣ QR kodlar ¦ ▣ QR codes ¦ ▣ QR-Codes ¦ ▣ رموز QR
+🎞 Medya oynatıcı ✓ ¦ 🎞 Media player ✓ ¦ 🎞 Medienplayer ✓ ¦ 🎞 مشغّل الوسائط ✓
+🏷 Logo ✓ ¦ 🏷 Logo ✓ ¦ 🏷 Logo ✓ ¦ 🏷 الشعار ✓
+🕒 Saat ve tarih ¦ 🕒 Clock and date ¦ 🕒 Uhr und Datum ¦ 🕒 الساعة والتاريخ
+💱 Hava ve piyasalar ✓ ¦ 💱 Weather and markets ✓ ¦ 💱 Wetter und Märkte ✓ ¦ 💱 الطقس والأسواق ✓
+📰 Kayan bant ✓ ¦ 📰 Ticker ✓ ¦ 📰 Laufband ✓ ¦ 📰 الشريط المتحرك ✓
+📝 Duyuru metni ¦ 📝 Announcement text ¦ 📝 Ankündigungstext ¦ 📝 نص الإعلان
+🖼 Görsel ¦ 🖼 Image ¦ 🖼 Bild ¦ 🖼 صورة
+▣ QR kart ¦ ▣ QR card ¦ ▣ QR-Karte ¦ ▣ بطاقة QR
+⚽ Maçlar ve bilgi sayfaları ✓ ¦ ⚽ Matches and info pages ✓ ¦ ⚽ Spiele und Infoseiten ✓ ¦ ⚽ المباريات وصفحات المعلومات ✓
+★ Google yorumları ✓ ¦ ★ Google reviews ✓ ¦ ★ Google-Bewertungen ✓ ¦ ★ تقييمات Google ✓
+🧾 Fiyat tarifesi ¦ 🧾 Price list ¦ 🧾 Preistafel ¦ 🧾 قائمة الأسعار
+<0>🎞</0>Medya oynatıcı<1>{}</1><2></2> ¦ <0>🎞</0>Media player<1>{}</1><2></2> ¦ <0>🎞</0>Medienplayer<1>{}</1><2></2> ¦ <0>🎞</0>مشغّل الوسائط<1>{}</1><2></2>
+<0>★</0>Google yorumları<1>{}</1><2></2> ¦ <0>★</0>Google reviews<1>{}</1><2></2> ¦ <0>★</0>Google-Bewertungen<1>{}</1><2></2> ¦ <0>★</0>تقييمات Google<1>{}</1><2></2>
+<0>🏷</0>Logo<1>{}</1><2></2> ¦ <0>🏷</0>Logo<1>{}</1><2></2> ¦ <0>🏷</0>Logo<1>{}</1><2></2> ¦ <0>🏷</0>الشعار<1>{}</1><2></2>
+<0>⚽</0>Maçlar ve bilgi sayfaları<1>{}</1><2></2> ¦ <0>⚽</0>Matches and info pages<1>{}</1><2></2> ¦ <0>⚽</0>Spiele und Infoseiten<1>{}</1><2></2> ¦ <0>⚽</0>المباريات وصفحات المعلومات<1>{}</1><2></2>
+<0>💱</0>Hava ve piyasalar<1>{}</1><2></2> ¦ <0>💱</0>Weather and markets<1>{}</1><2></2> ¦ <0>💱</0>Wetter und Märkte<1>{}</1><2></2> ¦ <0>💱</0>الطقس والأسواق<1>{}</1><2></2>
+<0>📰</0>Kayan bant<1>{}</1><2></2> ¦ <0>📰</0>Ticker<1>{}</1><2></2> ¦ <0>📰</0>Laufband<1>{}</1><2></2> ¦ <0>📰</0>الشريط المتحرك<1>{}</1><2></2>
+<0>🕒</0>Saat ve tarih<1>{}</1><2></2> ¦ <0>🕒</0>Clock and date<1>{}</1><2></2> ¦ <0>🕒</0>Uhr und Datum<1>{}</1><2></2> ¦ <0>🕒</0>الساعة والتاريخ<1>{}</1><2></2>
+<0>📝</0>Duyuru metni<1>{}</1><2></2> ¦ <0>📝</0>Announcement text<1>{}</1><2></2> ¦ <0>📝</0>Ankündigungstext<1>{}</1><2></2> ¦ <0>📝</0>نص الإعلان<1>{}</1><2></2>
+<0>🖼</0>Görsel<1>{}</1><2></2> ¦ <0>🖼</0>Image<1>{}</1><2></2> ¦ <0>🖼</0>Bild<1>{}</1><2></2> ¦ <0>🖼</0>صورة<1>{}</1><2></2>
+<0>▣</0>QR kart<1>{}</1><2></2> ¦ <0>▣</0>QR card<1>{}</1><2></2> ¦ <0>▣</0>QR-Karte<1>{}</1><2></2> ¦ <0>▣</0>بطاقة QR<1>{}</1><2></2>
+<0>🧾</0>Fiyat tarifesi<1>{}</1><2></2> ¦ <0>🧾</0>Price list<1>{}</1><2></2> ¦ <0>🧾</0>Preistafel<1>{}</1><2></2> ¦ <0>🧾</0>قائمة الأسعار<1>{}</1><2></2>
+<0>▦</0>Özet ¦ <0>▦</0>Overview ¦ <0>▦</0>Übersicht ¦ <0>▦</0>الملخص
+<0>🎨</0>Tasarım ¦ <0>🎨</0>Design ¦ <0>🎨</0>Design ¦ <0>🎨</0>التصميم
+<0>🎞</0>Medya ¦ <0>🎞</0>Media ¦ <0>🎞</0>Medien ¦ <0>🎞</0>الوسائط
+<0>🧾</0>Fiyat Listesi ¦ <0>🧾</0>Price List ¦ <0>🧾</0>Preisliste ¦ <0>🧾</0>قائمة الأسعار
+<0>⚽</0>Spor ¦ <0>⚽</0>Sports ¦ <0>⚽</0>Sport ¦ <0>⚽</0>الرياضة
+<0>📣</0>Duyurular ¦ <0>📣</0>Announcements ¦ <0>📣</0>Ankündigungen ¦ <0>📣</0>الإعلانات
+<0>🎉</0>Kutlamalar ¦ <0>🎉</0>Celebrations ¦ <0>🎉</0>Feiern ¦ <0>🎉</0>الاحتفالات
+<0>📰</0>Bilgi Bandı ¦ <0>📰</0>Info Ticker ¦ <0>📰</0>Infoband ¦ <0>📰</0>شريط المعلومات
+<0>📊</0>İstatistik ¦ <0>📊</0>Statistics ¦ <0>📊</0>Statistik ¦ <0>📊</0>الإحصاءات
+<0>⚙</0>Ayarlar ¦ <0>⚙</0>Settings ¦ <0>⚙</0>Einstellungen ¦ <0>⚙</0>الإعدادات
+23 Nisan Ulusal Egemenlik ve Çocuk Bayramı ¦ 23 April National Sovereignty and Children's Day ¦ 23. April – Tag der nationalen Souveränität und des Kindes ¦ 23 نيسان – عيد السيادة الوطنية والطفل
+19 Mayıs Atatürk'ü Anma, Gençlik ve Spor Bayramı ¦ 19 May Commemoration of Atatürk, Youth and Sports Day ¦ 19. Mai – Gedenken an Atatürk, Tag der Jugend und des Sports ¦ 19 أيار – ذكرى أتاتورك وعيد الشباب والرياضة
+30 Ağustos Zafer Bayramı ¦ 30 August Victory Day ¦ 30. August – Tag des Sieges ¦ 30 آب – عيد النصر
+29 Ekim Cumhuriyet Bayramı ¦ 29 October Republic Day ¦ 29. Oktober – Tag der Republik ¦ 29 تشرين الأول – عيد الجمهورية
+10 Kasım Atatürk'ü Anma Günü ¦ 10 November Atatürk Memorial Day ¦ 10. November – Atatürk-Gedenktag ¦ 10 تشرين الثاني – يوم ذكرى أتاتورك
+Süper Lig ¦ Süper Lig ¦ Süper Lig ¦ الدوري التركي الممتاز
+TFF 1. Lig ¦ TFF 1. Lig ¦ TFF 1. Lig ¦ دوري الدرجة الأولى التركي
+Galatasaray ¦ Galatasaray ¦ Galatasaray ¦ غلطة سراي
+Fenerbahçe ¦ Fenerbahçe ¦ Fenerbahçe ¦ فنربخشة
+Beşiktaş ¦ Beşiktaş ¦ Beşiktaş ¦ بشكتاش
+Trabzonspor ¦ Trabzonspor ¦ Trabzonspor ¦ طرابزون سبور
+Happy Hour ¦ Happy Hour ¦ Happy Hour ¦ ساعة التخفيضات
+Tüm kokteyllerde %30 indirim ¦ 30% off all cocktails ¦ 30 % Rabatt auf alle Cocktails ¦ خصم 30% على جميع المشروبات
+Serpme Kahvaltı ¦ Turkish Breakfast Spread ¦ Türkisches Frühstücksbüfett ¦ فطور تركي متنوع
+Hafta sonu 09:00 – 13:00 ¦ Weekends 09:00 – 13:00 ¦ Am Wochenende 09:00 – 13:00 ¦ عطلة نهاية الأسبوع 09:00 – 13:00
+Sınırsız çay ile ¦ With unlimited tea ¦ Mit unbegrenztem Tee ¦ مع شاي غير محدود
+Kahvaltı ¦ Breakfast ¦ Frühstück ¦ فطور
+Tüm tatlılarda indirim ¦ Discount on all desserts ¦ Rabatt auf alle Desserts ¦ خصم على جميع الحلويات
+Bu hafta boyunca ¦ All this week ¦ Die ganze Woche ¦ طوال هذا الأسبوع
+İndirim ¦ Discount ¦ Rabatt ¦ خصم
+Yeni ¦ New ¦ Neu ¦ جديد
+Fıstıklı Latte ¦ Pistachio Latte ¦ Pistazien-Latte ¦ لاتيه الفستق
+Antep fıstığı, espresso, süt köpüğü ¦ Antep pistachio, espresso, milk foam ¦ Antep-Pistazie, Espresso, Milchschaum ¦ فستق عنتاب وإسبريسو ورغوة الحليب
+Yeni ürün ¦ New product ¦ Neues Produkt ¦ منتج جديد
+Günün Menüsü ¦ Menu of the Day ¦ Tagesmenü ¦ قائمة اليوم
+Mercimek çorbası ¦ Lentil soup ¦ Linsensuppe ¦ شوربة العدس
+Tavuk sote, pilav ¦ Chicken sauté, rice ¦ Hähnchen-Sauté, Reis ¦ دجاج سوتيه مع الأرز
+Salata ¦ Salad ¦ Salat ¦ سلطة
+Ayran ¦ Ayran ¦ Ayran ¦ عيران
+Günün menüsü ¦ Menu of the day ¦ Tagesmenü ¦ قائمة اليوم
+Canlı Müzik ¦ Live Music ¦ Livemusik ¦ موسيقى حية
+Canlı müzik ¦ Live music ¦ Livemusik ¦ موسيقى حية
+Cuma 21:00 ¦ Friday 21:00 ¦ Freitag 21:00 ¦ الجمعة 21:00
+Bu akşam ¦ Tonight ¦ Heute Abend ¦ هذا المساء
+Maç Gecesi ¦ Match Night ¦ Spielabend ¦ ليلة المباراة
+Dev ekranda canlı yayın ¦ Live on the big screen ¦ Live auf der Großleinwand ¦ بث مباشر على الشاشة الكبيرة
+Masanızı ayırtın ¦ Book your table ¦ Reservieren Sie Ihren Tisch ¦ احجز طاولتك
+Etkinlik ¦ Event ¦ Veranstaltung ¦ فعالية
+Ücretsiz Wi-Fi ¦ Free Wi-Fi ¦ Kostenloses WLAN ¦ واي فاي مجاني
+Ağ: Kafe_Misafir ¦ Network: Kafe_Misafir ¦ Netzwerk: Kafe_Misafir ¦ الشبكة: Kafe_Misafir
+Şifre: hosgeldiniz ¦ Password: hosgeldiniz ¦ Passwort: hosgeldiniz ¦ كلمة المرور: hosgeldiniz
+Wi-Fi ¦ Wi-Fi ¦ WLAN ¦ Wi-Fi
+Bizi tercih ettiğiniz için teşekkürler ¦ Thank you for choosing us ¦ Danke, dass Sie sich für uns entschieden haben ¦ شكرًا لاختياركم لنا
+Paylaşımlarınızda bizi etiketleyin ¦ Tag us in your posts ¦ Markieren Sie uns in Ihren Beiträgen ¦ أشيروا إلينا في منشوراتكم
+Teşekkür ¦ Thanks ¦ Danke ¦ شكر
+🎉 Sevgili Ahmet, nice mutlu yıllara! 🎂 ¦ 🎉 Dear Ahmet, happy birthday! 🎂 ¦ 🎉 Lieber Ahmet, alles Gute zum Geburtstag! 🎂 ¦ 🎉 عزيزي أحمد، كل عام وأنت بخير! 🎂
+Akustik gece · rezervasyon önerilir ¦ Acoustic night · reservations recommended ¦ Akustik-Abend · Reservierung empfohlen ¦ أمسية أكوستيك · يُنصح بالحجز

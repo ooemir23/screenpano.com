@@ -731,6 +731,26 @@
           "text": "شغّل أي عدد من الشاشات عبر موزّع HDMI."
         }
       }
+    },
+    {
+      "icon": "🌐",
+      "title": "Panel dört dilde",
+      "text": "Yönetim paneli Türkçe, İngilizce, Almanca ve Arapça (sağdan sola) kullanılabilir.",
+      "added": "2026-11-02",
+      "i18n": {
+        "en": {
+          "title": "Panel in four languages",
+          "text": "The management panel is available in Turkish, English, German and Arabic (right-to-left)."
+        },
+        "de": {
+          "title": "Panel in vier Sprachen",
+          "text": "Das Verwaltungspanel ist auf Türkisch, Englisch, Deutsch und Arabisch (rechts nach links) verfügbar."
+        },
+        "ar": {
+          "title": "اللوحة بأربع لغات",
+          "text": "لوحة الإدارة متاحة بالتركية والإنجليزية والألمانية والعربية (من اليمين إلى اليسار)."
+        }
+      }
     }
   ],
   "shots": {

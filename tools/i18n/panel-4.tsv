@@ -1,0 +1,131 @@
+İşletmeniz ¦ Your business ¦ Ihr Betrieb ¦ منشأتك
+{} ★ · {} değerlendirme · ¦ {} ★ · {} reviews · ¦ {} ★ · {} Bewertungen · ¦ {} ★ · {} تقييمًا ·
+güncellendi ¦ updated ¦ aktualisiert ¦ تم التحديث
+henüz alınmadı ¦ not fetched yet ¦ noch nicht abgerufen ¦ لم يتم الجلب بعد
+{}{} yorum ekranda · {} ¦ {}{} reviews on screen · {} ¦ {}{} Bewertungen auf dem Bildschirm · {} ¦ {}{} تقييمات على الشاشة · {}
+İşletme adı ve semt, ya da Google Haritalar bağlantısı ¦ Business name and area, or a Google Maps link ¦ Betriebsname und Stadtteil oder ein Google-Maps-Link ¦ اسم المنشأة والحي، أو رابط خرائط Google
+★ Google yorumları ¦ ★ Google reviews ¦ ★ Google-Bewertungen ¦ ★ تقييمات Google
+Google Haritalar'daki yorumlarınız otomatik gelir ve medyanın altındaki şeritte döner (düzende "Google yorumları" widget'ı olmalı). ¦ Your Google Maps reviews arrive automatically and rotate in the strip under the media (the layout needs a "Google reviews" widget). ¦ Ihre Google-Maps-Bewertungen kommen automatisch und laufen im Streifen unter den Medien (das Layout braucht ein Widget „Google-Bewertungen“). ¦ تصل تقييماتك على خرائط Google تلقائيًا وتتناوب في الشريط أسفل الوسائط (يجب أن يحتوي التخطيط على عنصر «تقييمات Google»).
+İşletmenizin adını yazın ¦ Type your business name ¦ Geben Sie Ihren Betriebsnamen ein ¦ اكتب اسم منشأتك
+Aranıyor… ¦ Searching… ¦ Wird gesucht… ¦ جارٍ البحث…
+Bu benim ¦ This is mine ¦ Das ist meiner ¦ هذه منشأتي
+Bulunamadı. Adı ve semti birlikte yazmayı deneyin. ¦ Not found. Try typing the name and area together. ¦ Nicht gefunden. Versuchen Sie, Namen und Stadtteil zusammen einzugeben. ¦ لم يتم العثور عليها. جرّب كتابة الاسم والحي معًا.
+Google işletmeniz bağlandı ¦ Your Google business is connected ¦ Ihr Google-Eintrag ist verbunden ¦ تم ربط منشأتك على Google
+📷 Instagram paylaşımları ¦ 📷 Instagram posts ¦ 📷 Instagram-Beiträge ¦ 📷 منشورات Instagram
+Son paylaşımlarınızın fotoğrafları medya döngüsüne kendiliğinden girer; yeni paylaşım yaptığınızda bir saat içinde ekrana gelir. ¦ Photos from your latest posts join the media loop automatically; a new post appears on screen within an hour. ¦ Fotos Ihrer letzten Beiträge gelangen automatisch in die Medienschleife; ein neuer Beitrag erscheint innerhalb einer Stunde auf dem Bildschirm. ¦ تدخل صور آخر منشوراتك في دورة الوسائط تلقائيًا؛ وعند نشر منشور جديد يظهر على الشاشة خلال ساعة.
+Kaç içerikte bir ¦ Once every how many items ¦ Einmal pro wie vielen Inhalten ¦ مرة كل كم محتوى
+Kaç paylaşım ¦ How many posts ¦ Wie viele Beiträge ¦ كم منشورًا
+Ekranda kalma (sn) ¦ On-screen time (s) ¦ Anzeigedauer (Sek.) ¦ مدة الظهور (ث)
+{} paylaşım · {} ¦ {} posts · {} ¦ {} Beiträge · {} ¦ {} منشورات · {}
+Instagram erişim anahtarı ¦ Instagram access token ¦ Instagram-Zugriffstoken ¦ مفتاح وصول Instagram
+Instagram hesabınızın <0>işletme</0> ya da <1>içerik üreticisi</1> hesabı olması gerekir. Meta for Developers'ta "Instagram API with Instagram Login" ile uzun ömürlü erişim anahtarı (access token) alıp buraya yapıştırın. Anahtar otomatik uzatılır. ¦ Your Instagram account must be a <0>business</0> or <1>creator</1> account. Get a long-lived access token via "Instagram API with Instagram Login" on Meta for Developers and paste it here. The token is renewed automatically. ¦ Ihr Instagram-Konto muss ein <0>Business-</0> oder <1>Creator-</1>Konto sein. Holen Sie sich bei Meta for Developers über „Instagram API with Instagram Login“ ein langlebiges Zugriffstoken und fügen Sie es hier ein. Das Token wird automatisch verlängert. ¦ يجب أن يكون حساب Instagram حساب <0>أعمال</0> أو <1>منشئ محتوى</1>. احصل على مفتاح وصول طويل الأمد عبر «Instagram API with Instagram Login» في Meta for Developers والصقه هنا. يُجدَّد المفتاح تلقائيًا.
+Instagram hesabınızın ¦ Your Instagram account must be a ¦ Ihr Instagram-Konto muss ein ¦ يجب أن يكون حساب Instagram
+işletme ¦ business ¦ Business- ¦ أعمال
+içerik üreticisi ¦ creator ¦ Creator- ¦ منشئ محتوى
+Erişim anahtarını yapıştırın ¦ Paste the access token ¦ Zugriffstoken einfügen ¦ الصق مفتاح الوصول
+Bağlanamadı: ¦ Could not connect: ¦ Verbindung fehlgeschlagen: ¦ تعذّر الاتصال:
+Instagram bağlandı ¦ Instagram connected ¦ Instagram verbunden ¦ تم ربط Instagram
+★ Elle eklenen yorumlar ¦ ★ Manually added reviews ¦ ★ Manuell hinzugefügte Bewertungen ¦ ★ تقييمات مضافة يدويًا
+Puan ¦ Rating ¦ Bewertung ¦ التقييم
+gün ¦ days ¦ Tage ¦ أيام
+Cihaz durumu ¦ Device status ¦ Gerätestatus ¦ حالة الجهاز
+Kutular dakikada bir durum bildirir. Ekran görüntüsü yalnız Android uygulamasında alınır. ¦ Boxes report their status every minute. Screenshots are only available in the Android app. ¦ Die Boxen melden ihren Status jede Minute. Screenshots gibt es nur in der Android-App. ¦ تُبلغ الأجهزة عن حالتها كل دقيقة. لقطات الشاشة متاحة في تطبيق أندرويد فقط.
+Bağlı ¦ Connected ¦ Verbunden ¦ متصل
+Çevrimdışı · son görülme ¦ Offline · last seen ¦ Offline · zuletzt gesehen ¦ غير متصل · آخر ظهور
+dir açık ¦ uptime ¦ Laufzeit ¦ مدة التشغيل
+Şu an: {} ¦ Now: {} ¦ Jetzt: {} ¦ الآن: {}
+Çevrimdışı önbellek: {} dosya{} ¦ Offline cache: {} files{} ¦ Offline-Cache: {} Dateien{} ¦ التخزين المؤقت دون اتصال: {} ملفات{}
+Son hata: {} ¦ Last error: {} ¦ Letzter Fehler: {} ¦ آخر خطأ: {}
+📷 Ekran görüntüsü ¦ 📷 Screenshot ¦ 📷 Screenshot ¦ 📷 لقطة شاشة
+Bağlı cihaz yok ¦ No connected devices ¦ Keine verbundenen Geräte ¦ لا توجد أجهزة متصلة
+Uyarılar ¦ Alerts ¦ Warnungen ¦ التنبيهات
+Kutu {} dakikadan uzun süre bağlantı vermezse burada ve e-postanızda uyarı görürsünüz. ¦ If a box stays offline for more than {} minutes, you get an alert here and by e-mail. ¦ Wenn eine Box länger als {} Minuten offline ist, erhalten Sie hier und per E-Mail eine Warnung. ¦ إذا انقطع اتصال الجهاز أكثر من {} دقيقة تصلك تنبيهات هنا وعبر بريدك الإلكتروني.
+Kutu 10 dakikadan uzun süre bağlantı vermezse burada ve e-postanızda uyarı görürsünüz. ¦ If a box stays offline for more than 10 minutes, you get an alert here and by e-mail. ¦ Wenn eine Box länger als 10 Minuten offline ist, erhalten Sie hier und per E-Mail eine Warnung. ¦ إذا انقطع اتصال الجهاز أكثر من 10 دقائق تصلك تنبيهات هنا وعبر بريدك الإلكتروني.
+E-posta ¦ E-mail ¦ E-Mail ¦ البريد الإلكتروني
+Ekran kapanınca ¦ When the screen goes off ¦ Wenn der Bildschirm ausgeht ¦ عند توقف الشاشة
+Ekran geri açılınca ¦ When the screen comes back ¦ Wenn der Bildschirm wieder an ist ¦ عند عودة الشاشة
+Uyarı yok. ¦ No alerts. ¦ Keine Warnungen. ¦ لا توجد تنبيهات.
+Uyarı ayarları kaydedildi ¦ Alert settings saved ¦ Warneinstellungen gespeichert ¦ تم حفظ إعدادات التنبيهات
+Sunucuda e-posta gönderimi henüz ayarlı değil; uyarılar şimdilik yalnız burada görünür. ¦ E-mail sending is not set up on the server yet; alerts only appear here for now. ¦ Der E-Mail-Versand ist auf dem Server noch nicht eingerichtet; Warnungen erscheinen vorerst nur hier. ¦ إرسال البريد الإلكتروني غير مُعدّ على الخادم بعد؛ تظهر التنبيهات هنا فقط حاليًا.
+Ekran görüntüsü isteniyor… ¦ Requesting screenshot… ¦ Screenshot wird angefordert… ¦ جارٍ طلب لقطة الشاشة…
+{} · videolar bazı kutularda siyah görünebilir ¦ {} · videos may appear black on some boxes ¦ {} · Videos können auf manchen Boxen schwarz erscheinen ¦ {} · قد تظهر الفيديوهات سوداء على بعض الأجهزة
+Görüntü gelmedi. Kutudaki uygulama güncel değilse (sürüm 2.1 öncesi) bu özellik çalışmaz. ¦ No image arrived. This feature does not work if the app on the box is out of date (before version 2.1). ¦ Kein Bild angekommen. Diese Funktion geht nicht, wenn die App auf der Box veraltet ist (vor Version 2.1). ¦ لم تصل صورة. لا تعمل هذه الميزة إذا كان التطبيق على الجهاز قديمًا (قبل الإصدار 2.1).
+Ekranınız ne kadar açık kaldı, hangi içerik kaç kez oynadı. ¦ How long your screen stayed on and how many times each item played. ¦ Wie lange Ihr Bildschirm an war und wie oft jeder Inhalt lief. ¦ مدة بقاء شاشتك مفتوحة وعدد مرات عرض كل محتوى.
+{} saat ¦ {} hours ¦ {} Std. ¦ {} ساعة
+Ekran açık kaldı ({} gün) ¦ Screen on time ({} days) ¦ Bildschirm war an ({} Tage) ¦ مدة تشغيل الشاشة ({} أيام)
+İçerik oynatıldı ¦ Items played ¦ Inhalte abgespielt ¦ مرات عرض المحتوى
+Açık olduğu günlerde ortalama ¦ Average on days it was on ¦ Durchschnitt an Tagen mit Betrieb ¦ المتوسط في أيام التشغيل
+Günlük ekran süresi ¦ Daily screen time ¦ Tägliche Bildschirmzeit ¦ مدة تشغيل الشاشة اليومية
+Saat cinsinden; bağlı tüm kutuların toplamı. ¦ In hours; total of all connected boxes. ¦ In Stunden; Summe aller verbundenen Boxen. ¦ بالساعات؛ مجموع كل الأجهزة المتصلة.
+{}: {} saat, {} oynatma ¦ {}: {} h, {} plays ¦ {}: {} Std., {} Wiedergaben ¦ {}: {} ساعة، {} مرة عرض
+Günlük ekran süresi grafiği ¦ Daily screen time chart ¦ Diagramm der täglichen Bildschirmzeit ¦ مخطط مدة التشغيل اليومية
+İçerikler ¦ Content ¦ Inhalte ¦ المحتويات
+En çok oynayandan aza. ¦ From most to least played. ¦ Vom meistgespielten zum am wenigsten gespielten. ¦ من الأكثر عرضًا إلى الأقل.
+İçerik ¦ Item ¦ Inhalt ¦ المحتوى
+Toplam süre ¦ Total time ¦ Gesamtdauer ¦ المدة الإجمالية
+Henüz veri yok. Ekran açık kaldıkça burada görünür. ¦ No data yet. It appears here as the screen stays on. ¦ Noch keine Daten. Sie erscheinen hier, sobald der Bildschirm läuft. ¦ لا توجد بيانات بعد. ستظهر هنا مع استمرار تشغيل الشاشة.
+Ekran düzeni ¦ Screen layout ¦ Bildschirmlayout ¦ تخطيط الشاشة
+Renkler ve logo ¦ Colours and logo ¦ Farben und Logo ¦ الألوان والشعار
+Medya ve afişler ¦ Media and posters ¦ Medien und Plakate ¦ الوسائط والملصقات
+Kampanya ve QR kodlar ¦ Campaign and QR codes ¦ Aktion und QR-Codes ¦ العروض ورموز QR
+Şubeleriniz ¦ Your branches ¦ Ihre Filialen ¦ فروعك
+Her şubenin kendi ekranı, cihazları ve içeriği olur; hepsine bu hesapla girersiniz. Şubeye geçince panel o şubeyi yönetir. ¦ Each branch has its own screen, devices and content; you sign in to all of them with this account. When you switch to a branch, the panel manages that branch. ¦ Jede Filiale hat eigenen Bildschirm, eigene Geräte und Inhalte; Sie melden sich mit diesem Konto bei allen an. Nach dem Wechsel verwaltet das Panel diese Filiale. ¦ لكل فرع شاشته وأجهزته ومحتواه؛ وتدخل إليها جميعًا بهذا الحساب. عند التبديل إلى فرع تدير اللوحة ذلك الفرع.
+· şu an burada ¦ · you are here ¦ · Sie sind hier ¦ · أنت هنا
+· ana hesap ¦ · main account ¦ · Hauptkonto ¦ · الحساب الرئيسي
+süresi dolmuş ¦ expired ¦ abgelaufen ¦ منتهية
+Bu şubeye geç ¦ Switch to this branch ¦ Zu dieser Filiale wechseln ¦ التبديل إلى هذا الفرع
+{}/{} cihaz bağlı · {} içerik · {} ¦ {}/{} devices connected · {} items · {} ¦ {}/{} Geräte verbunden · {} Inhalte · {} ¦ {}/{} أجهزة متصلة · {} محتوى · {}
+Yeni şube ¦ New branch ¦ Neue Filiale ¦ فرع جديد
+Paketinizde {} şubeye kadar açabilirsiniz ({}/{}). Yeni şube bu şubenin düzeni, renkleri ve logosuyla açılır; süresi ana hesabınızla aynıdır. ¦ Your plan allows up to {} branches ({}/{}). A new branch opens with this branch's layout, colours and logo; its term matches your main account. ¦ Ihr Paket erlaubt bis zu {} Filialen ({}/{}). Eine neue Filiale startet mit Layout, Farben und Logo dieser Filiale; die Laufzeit entspricht Ihrem Hauptkonto. ¦ تتيح باقتك فتح حتى {} فروع ({}/{}). يُفتح الفرع الجديد بتخطيط هذا الفرع وألوانه وشعاره؛ وتكون مدته مثل حسابك الرئيسي.
+örn. Kadıköy şubesi ¦ e.g. Kadıköy branch ¦ z. B. Filiale Kadıköy ¦ مثال: فرع Kadıköy
+Şube aç ¦ Open branch ¦ Filiale anlegen ¦ فتح فرع
+Diğer şubelere kopyala ¦ Copy to other branches ¦ In andere Filialen kopieren ¦ نسخ إلى الفروع الأخرى
+Kopyalamak için önce bir şube daha açın. ¦ Open another branch first to copy. ¦ Legen Sie zum Kopieren zuerst eine weitere Filiale an. ¦ افتح فرعًا آخر أولًا لتتمكن من النسخ.
+Hedef şubeler ¦ Target branches ¦ Zielfilialen ¦ الفروع المستهدفة
+Hedefteki medyayı silip yerine koy (işaretsizse sona eklenir) ¦ Delete the target's media and replace it (if unchecked, added at the end) ¦ Medien im Ziel löschen und ersetzen (ohne Haken: am Ende hinzufügen) ¦ حذف وسائط الفرع المستهدف واستبدالها (إن لم يُحدَّد تُضاف في النهاية)
+Şube adını yazın ¦ Enter the branch name ¦ Geben Sie den Filialnamen ein ¦ اكتب اسم الفرع
+Şube açıldı ¦ Branch opened ¦ Filiale angelegt ¦ تم فتح الفرع
+Yeni şubeye şimdi geçilsin mi? ¦ Switch to the new branch now? ¦ Jetzt zur neuen Filiale wechseln? ¦ هل تريد التبديل إلى الفرع الجديد الآن؟
+Şube adı: ¦ Branch name: ¦ Filialname: ¦ اسم الفرع:
+Şube ve kopyalanacak içerik seçin ¦ Choose a branch and what to copy ¦ Wählen Sie Filiale und zu kopierenden Inhalt ¦ اختر الفرع والمحتوى المراد نسخه
+{} şubeye kopyalansın mı? Seçilen bölümler hedefte bununla değişir. ¦ Copy to {} branches? The selected sections will be replaced with these at the target. ¦ In {} Filialen kopieren? Die gewählten Bereiche werden im Ziel dadurch ersetzt. ¦ هل تريد النسخ إلى {} فروع؟ ستُستبدل الأقسام المحددة في الفرع المستهدف بهذه.
+Kopyalanıyor… medya çoksa biraz sürebilir ¦ Copying… may take a while if there is a lot of media ¦ Wird kopiert… kann bei vielen Medien etwas dauern ¦ جارٍ النسخ… قد يستغرق وقتًا إن كانت الوسائط كثيرة
+{} şubeye kopyalandı{} ¦ Copied to {} branches{} ¦ In {} Filialen kopiert{} ¦ تم النسخ إلى {} فروع{}
+Şube ¦ Branch ¦ Filiale ¦ الفرع
+Verilerinizi indirin ¦ Download your data ¦ Laden Sie Ihre Daten herunter ¦ نزّل بياناتك
+Hesabınız, kullanıcılarınız, cihazlarınız ve tüm içerik ayarlarınız tek bir JSON dosyası olarak iner (KVKK m.11). Medya dosyaları dahil değildir; onları Medya sayfasından ayrıca indirebilirsiniz. ¦ Your account, users, devices and all content settings download as a single JSON file (KVKK art. 11). Media files are not included; you can download them separately on the Media page. ¦ Ihr Konto, Ihre Benutzer, Geräte und alle Inhaltseinstellungen werden als eine JSON-Datei heruntergeladen (KVKK Art. 11). Mediendateien sind nicht enthalten; sie können separat auf der Seite „Medien“ heruntergeladen werden. ¦ تُنزَّل بيانات حسابك ومستخدميك وأجهزتك وكل إعدادات المحتوى في ملف JSON واحد (المادة 11 من KVKK). ملفات الوسائط غير مشمولة؛ ويمكنك تنزيلها منفصلة من صفحة الوسائط.
+Verilerimi indir ¦ Download my data ¦ Meine Daten herunterladen ¦ تنزيل بياناتي
+Bu işlem için işletme sahibi yetkisi gerekir. ¦ This action requires business-owner permission. ¦ Für diese Aktion ist die Berechtigung des Betriebsinhabers erforderlich. ¦ يتطلب هذا الإجراء صلاحية مالك المنشأة.
+Hesabı sil ¦ Delete account ¦ Konto löschen ¦ حذف الحساب
+ve ana hesapsa tüm şubeleri ¦ and, for a main account, all its branches ¦ und bei einem Hauptkonto alle Filialen ¦ وجميع فروعها إن كان حسابًا رئيسيًا
+Silme talebiniz alındı. ¦ Your deletion request has been received. ¦ Ihre Löschanfrage ist eingegangen. ¦ تم استلام طلب الحذف.
+tarihinde bu işletmenin tüm verileri, medyası, cihazları{} kalıcı olarak silinecek. O tarihe kadar vazgeçebilirsiniz. ¦ on that date all of this business's data, media and devices{} will be permanently deleted. You can cancel until then. ¦ an diesem Datum werden alle Daten, Medien und Geräte dieses Betriebs{} endgültig gelöscht. Bis dahin können Sie abbrechen. ¦ في ذلك التاريخ ستُحذف جميع بيانات هذه المنشأة ووسائطها وأجهزتها{} نهائيًا. يمكنك التراجع حتى ذلك الحين.
+Silme talebini iptal et ¦ Cancel deletion request ¦ Löschanfrage zurückziehen ¦ إلغاء طلب الحذف
+Şifreniz ¦ Your password ¦ Ihr Passwort ¦ كلمة مرورك
+Hesabı silme talebi oluştur ¦ Request account deletion ¦ Kontolöschung beantragen ¦ تقديم طلب حذف الحساب
+Onay tarihi: {} (sürüm {}) ¦ Consent date: {} (version {}) ¦ Zustimmungsdatum: {} (Version {}) ¦ تاريخ الموافقة: {} (الإصدار {})
+Belgeler ¦ Documents ¦ Dokumente ¦ المستندات
+KVKK Aydınlatma Metni ¦ KVKK Privacy Notice ¦ KVKK-Informationstext ¦ نص الإفصاح وفق KVKK
+Kullanım Koşulları ¦ Terms of Use ¦ Nutzungsbedingungen ¦ شروط الاستخدام
+Gizlilik ve Çerezler ¦ Privacy and Cookies ¦ Datenschutz und Cookies ¦ الخصوصية وملفات الارتباط
+Veri İşleme Sözleşmesi ¦ Data Processing Agreement ¦ Auftragsverarbeitungsvertrag ¦ اتفاقية معالجة البيانات
+Ekranda gösterdiğiniz müşteri isimleri (doğum günü gibi) bakımından veri sorumlusu işletmenizdir; bu kişilerin iznini almayı unutmayın. ¦ For customer names you show on screen (such as birthdays), your business is the data controller; remember to obtain these people's consent. ¦ Für Kundennamen, die Sie auf dem Bildschirm zeigen (z. B. Geburtstage), ist Ihr Betrieb der Verantwortliche; denken Sie daran, die Einwilligung dieser Personen einzuholen. ¦ بالنسبة لأسماء العملاء التي تعرضها على الشاشة (مثل أعياد الميلاد) فإن منشأتك هي المسؤولة عن البيانات؛ لا تنسَ الحصول على موافقة هؤلاء الأشخاص.
+Onay için şifrenizi girin ¦ Enter your password to confirm ¦ Geben Sie zur Bestätigung Ihr Passwort ein ¦ أدخل كلمة مرورك للتأكيد
+30 gün sonra tüm veriler kalıcı olarak silinecek. Devam edilsin mi? ¦ After 30 days all data will be permanently deleted. Continue? ¦ Nach 30 Tagen werden alle Daten endgültig gelöscht. Fortfahren? ¦ بعد 30 يومًا ستُحذف جميع البيانات نهائيًا. هل تريد المتابعة؟
+Silme talebi alındı ¦ Deletion request received ¦ Löschanfrage eingegangen ¦ تم استلام طلب الحذف
+Talebinizden 30 gün sonra bu işletmenin tüm verileri ve medyası kalıcı olarak silinir. Bu sürede vazgeçebilirsiniz; ekranınız bu süre boyunca çalışmaya devam eder. ¦ 30 days after your request, all of this business's data and media are permanently deleted. You can cancel in that time; your screen keeps running meanwhile. ¦ 30 Tage nach Ihrer Anfrage werden alle Daten und Medien dieses Betriebs endgültig gelöscht. In dieser Zeit können Sie abbrechen; Ihr Bildschirm läuft währenddessen weiter. ¦ بعد 30 يومًا من طلبك تُحذف جميع بيانات هذه المنشأة ووسائطها نهائيًا. يمكنك التراجع خلال هذه المدة، وتبقى شاشتك تعمل في الأثناء.
+Panel yüklenemedi: {} ¦ Could not load the panel: {} ¦ Panel konnte nicht geladen werden: {} ¦ تعذّر تحميل اللوحة: {}
+Menü ¦ Menu ¦ Menü ¦ القائمة
+📱 Android uygulaması (APK) ¦ 📱 Android app (APK) ¦ 📱 Android-App (APK) ¦ 📱 تطبيق أندرويد (APK)
+💻 Windows uygulaması ¦ 💻 Windows app ¦ 💻 Windows-App ¦ 💻 تطبيق ويندوز
+↩ Çıkış yap ¦ ↩ Sign out ¦ ↩ Abmelden ¦ ↩ تسجيل الخروج
+Hata ¦ Error ¦ Fehler ¦ خطأ
+Var ¦ Yes ¦ Ja ¦ نعم
+Ara ¦ Search ¦ Suchen ¦ بحث
+Not ¦ Note ¦ Notiz ¦ ملاحظة
+⏱ Zamanla ¦ ⏱ Schedule ¦ ⏱ Zeitplan ¦ ⏱ جدولة
+⏱ Her zaman ¦ ⏱ Always ¦ ⏱ Immer ¦ ⏱ دائمًا
+. Kategori satırı ¦ . Category line ¦ . Kategoriezeile ¦ . سطر الفئة
+Pro ¦ Pro ¦ Pro ¦ Pro
+Deneme ¦ Trial ¦ Test ¦ تجربة
+Yükleniyor… ¦ Loading… ¦ Wird geladen… ¦ جارٍ التحميل…

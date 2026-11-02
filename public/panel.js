@@ -4,7 +4,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const S = { me: null, db: null, cat: null, scr: null, lg: null };
 let TAB = 'home', PREV = null, SUB = {};
 const ICON = { media: '🎞', logo: '🏷', clock: '🕒', rates: '💱', ticker: '📰', text: '📝', image: '🖼', qr: '▣', info: '⚽', reviews: '★', menu: '🧾' };
-const fmtDate = ms => ms ? new Date(ms).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+const fmtDate = ms => ms ? new Date(ms).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
 const ago = ms => { if (!ms) return 'hiç'; const m = Math.round((Date.now() - ms) / 60000); return m < 2 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.round(m / 60) + ' saat önce' : Math.round(m / 1440) + ' gün önce'; };
 const fmtSize = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : b >= 1048576 ? Math.round(b / 1048576) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
 const pro = () => S.me && S.me.tenant.plan.pro;
@@ -500,7 +500,7 @@ SECTIONS.sport = {
     try {
       const j = await req('GET', '/bigmatch');
       $('bgphotos').innerHTML = j.photos.map(p => `<div class="t" title="${esc(p.name)}"><img src="${esc(p.url)}"><button onclick="act('DELETE','/bigmatch/photo/${p.id}',undefined,'Silindi')">✕</button></div>`).join('');
-      $('bglist').textContent = j.items.length ? 'Yaklaşan: ' + j.items.map(m => `${m.home} – ${m.away} (${new Date(m.ts).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })})`).join(', ') : 'Şu an duyurulacak büyük maç yok.';
+      $('bglist').textContent = j.items.length ? 'Yaklaşan: ' + j.items.map(m => `${m.home} – ${m.away} (${new Date(m.ts).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'short' })})`).join(', ') : 'Şu an duyurulacak büyük maç yok.';
     } catch (e) {}
   },
 };
@@ -663,7 +663,7 @@ SECTIONS.settings = {
     }
     if (sub === 'backup') {
       const bs = await req('GET', '/backups').catch(() => []);
-      $('blist').innerHTML = bs.length ? bs.map(b => `<div class="it"><div class="b"><b>${new Date(b.time).toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' })}</b><span>${esc(b.name.replace(/^db-|\.json$/g, '').split('-').pop())} · ${fmtSize(b.size)}</span></div><a class="btn xs g" href="/api/admin/backups/${encodeURIComponent(b.name)}/download">İndir</a>${owner() ? `<button class="btn xs g" onclick="restore('${b.name}')">Geri yükle</button>` : ''}</div>`).join('') : '<div class="empty">Henüz yedek yok</div>';
+      $('blist').innerHTML = bs.length ? bs.map(b => `<div class="it"><div class="b"><b>${new Date(b.time).toLocaleString(I18N.locale, { dateStyle: 'medium', timeStyle: 'short' })}</b><span>${esc(b.name.replace(/^db-|\.json$/g, '').split('-').pop())} · ${fmtSize(b.size)}</span></div><a class="btn xs g" href="/api/admin/backups/${encodeURIComponent(b.name)}/download">İndir</a>${owner() ? `<button class="btn xs g" onclick="restore('${b.name}')">Geri yükle</button>` : ''}</div>`).join('') : '<div class="empty">Henüz yedek yok</div>';
     }
     if (sub === 'devices') { drawDevStatus(); if ($('pcode').value) $('pcode').focus(); }
     if (sub === 'branches') drawBranches();
@@ -725,7 +725,7 @@ const restore = n => { if (confirm('Bu yedek geri yüklensin mi? Mevcut ayarlar 
 /* ================= ZAMANLAMA ================= */
 const DAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 const TYPE_NAMES = { video: 'Video', image: 'Fotoğraf', poster: 'Afiş' };
-const fmtD = d => d ? new Date(d + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : '';
+const fmtD = d => d ? new Date(d + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'short' }) : '';
 function daysText(d) {
   if (!d || !d.length) return '';
   const k = d.join();
@@ -892,7 +892,7 @@ async function drawDevStatus() {
       `${owner() ? `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" onclick="saveNotify()">Kaydet</button>${n.email && j.mail ? '<button class="btn g" onclick="act(\'POST\',\'/notify/test\',undefined,\'Deneme e-postası gönderildi\',false)">Dene</button>' : ''}</div>
        <div class="swr mt"><div class="b"><b>Ekran kapanınca</b></div>${sw(n.offline !== false, '', 'id="nt-off"')}</div><div class="swr"><div class="b"><b>Ekran geri açılınca</b></div>${sw(n.online !== false, '', 'id="nt-on"')}</div>
        ${j.mail ? '' : '<p class="muted" style="font-size:12.5px">Sunucuda e-posta gönderimi henüz ayarlı değil; uyarılar şimdilik yalnız burada görünür.</p>'}` : ''}
-       <div class="list mt">${(j.alerts || []).length ? j.alerts.slice(0, 12).map(a => `<div class="it"><span class="dot ${a.kind === 'online' ? 'on' : ''}"></span><div class="b"><b>${esc(a.text)}</b><span>${new Date(a.at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}</span></div></div>`).join('') + `<div class="row end"><button class="btn xs g" onclick="act('DELETE','/alerts',undefined,'Temizlendi',false).then(drawDevStatus)">Temizle</button></div>` : '<div class="muted">Uyarı yok.</div>'}</div>`)
+       <div class="list mt">${(j.alerts || []).length ? j.alerts.slice(0, 12).map(a => `<div class="it"><span class="dot ${a.kind === 'online' ? 'on' : ''}"></span><div class="b"><b>${esc(a.text)}</b><span>${new Date(a.at).toLocaleString(I18N.locale, { dateStyle: 'short', timeStyle: 'short' })}</span></div></div>`).join('') + `<div class="row end"><button class="btn xs g" onclick="act('DELETE','/alerts',undefined,'Temizlendi',false).then(drawDevStatus)">Temizle</button></div>` : '<div class="muted">Uyarı yok.</div>'}</div>`)
     + `</div>`;
 }
 const saveNotify = () => act('PUT', '/notify', { email: $('nt-mail').value.trim(), offline: $('nt-off').checked, online: $('nt-on').checked }, 'Uyarı ayarları kaydedildi', false);
@@ -901,7 +901,7 @@ async function snapDev(id) {
   try { await req('POST', `/devices/${id}/snapshot`); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
   const t0 = Date.now();
   const poll = async () => {
-    try { const j = await req('GET', `/devices/${id}/snapshot`); if (j.at >= t0 - 1000) { box.innerHTML = `<img src="${j.data}" style="width:100%;border-radius:10px;margin-top:12px;background:#000"><p class="muted" style="font-size:12.5px">${new Date(j.at).toLocaleTimeString('tr-TR')} · videolar bazı kutularda siyah görünebilir</p>`; return; } } catch (e) {}
+    try { const j = await req('GET', `/devices/${id}/snapshot`); if (j.at >= t0 - 1000) { box.innerHTML = `<img src="${j.data}" style="width:100%;border-radius:10px;margin-top:12px;background:#000"><p class="muted" style="font-size:12.5px">${new Date(j.at).toLocaleTimeString(I18N.locale)} · videolar bazı kutularda siyah görünebilir</p>`; return; } } catch (e) {}
     if (Date.now() - t0 < 12000) setTimeout(poll, 1500); else box.innerHTML = '<p class="muted">Görüntü gelmedi. Kutudaki uygulama güncel değilse (sürüm 2.1 öncesi) bu özellik çalışmaz.</p>';
   };
   setTimeout(poll, 1200);
@@ -921,11 +921,11 @@ SECTIONS.stats = {
     const active = j.daily.filter(d => d.online > 0).length;
     $('stv').innerHTML = `<div class="grid g3" style="margin-bottom:18px">
         <div class="stat"><b>${hrs(j.totals.online)} saat</b><span>Ekran açık kaldı (${active} gün)</span></div>
-        <div class="stat"><b>${j.totals.plays.toLocaleString('tr-TR')}</b><span>İçerik oynatıldı</span></div>
+        <div class="stat"><b>${j.totals.plays.toLocaleString(I18N.locale)}</b><span>İçerik oynatıldı</span></div>
         <div class="stat"><b>${active ? hrs(j.totals.online / active) : '0'} saat</b><span>Açık olduğu günlerde ortalama</span></div></div>`
-      + card('Günlük ekran süresi', 'Saat cinsinden; bağlı tüm kutuların toplamı.', `<div class="bars" role="img" aria-label="Günlük ekran süresi grafiği">${j.daily.map(d => `<div title="${new Date(d.day + 'T12:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}: ${hrs(d.online)} saat, ${d.plays} oynatma"><i style="height:${Math.round(d.online / max * 100)}%"></i></div>`).join('')}</div>
+      + card('Günlük ekran süresi', 'Saat cinsinden; bağlı tüm kutuların toplamı.', `<div class="bars" role="img" aria-label="Günlük ekran süresi grafiği">${j.daily.map(d => `<div title="${new Date(d.day + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' })}: ${hrs(d.online)} saat, ${d.plays} oynatma"><i style="height:${Math.round(d.online / max * 100)}%"></i></div>`).join('')}</div>
         <div class="row" style="justify-content:space-between;font-size:12px" class="muted"><span class="muted">${fmtD(j.daily[0].day)}</span><span class="muted">${fmtD(j.daily[j.daily.length - 1].day)}</span></div>`)
-      + card('İçerikler', 'En çok oynayandan aza.', j.items.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>İçerik</th><th>Tür</th><th>Oynatma</th><th>Toplam süre</th><th>Son</th></tr></thead><tbody>${j.items.slice(0, 50).map(it => `<tr><td>${esc(it.name)}</td><td>${{ video: 'Video', image: 'Fotoğraf', poster: 'Afiş', instagram: 'Instagram', trailer: 'Fragman', gone: '—' }[it.type] || it.type}</td><td>${it.plays.toLocaleString('tr-TR')}</td><td>${it.sec ? (it.sec >= 3600 ? hrs(it.sec / 60) + ' sa' : Math.round(it.sec / 60) + ' dk') : '—'}</td><td>${fmtD(it.last)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>');
+      + card('İçerikler', 'En çok oynayandan aza.', j.items.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>İçerik</th><th>Tür</th><th>Oynatma</th><th>Toplam süre</th><th>Son</th></tr></thead><tbody>${j.items.slice(0, 50).map(it => `<tr><td>${esc(it.name)}</td><td>${{ video: 'Video', image: 'Fotoğraf', poster: 'Afiş', instagram: 'Instagram', trailer: 'Fragman', gone: '—' }[it.type] || it.type}</td><td>${it.plays.toLocaleString(I18N.locale)}</td><td>${it.sec ? (it.sec >= 3600 ? hrs(it.sec / 60) + ' sa' : Math.round(it.sec / 60) + ' dk') : '—'}</td><td>${fmtD(it.last)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>');
   },
 };
 

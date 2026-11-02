@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="tr"><head><meta charset="utf-8"><script src="/i18n.js"></script><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <title>Giriş</title>
 <style>
@@ -30,7 +30,9 @@ input:focus,select:focus{border-color:var(--accent2)}
 .note{color:var(--mute);font-size:12px;margin-top:14px;line-height:1.5}
 .ck{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:var(--mute);margin:12px 0 0;cursor:pointer}.ck input{width:18px;height:18px;flex:0 0 18px;margin:1px 0 0;accent-color:var(--accent2)}.ck a{color:inherit}
 .legal{margin-top:18px;font-size:12px;color:var(--mute);display:flex;gap:14px;flex-wrap:wrap}.legal a{color:inherit}
+.langsel{background:var(--panel2,#242828);color:inherit;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;cursor:pointer;max-width:100%}
 </style></head><body>
+<div data-langpick style="position:fixed;top:14px;inset-inline-end:14px;z-index:5"></div>
 <div class="wrap">
   <div class="pitch">
     <h1>İşletmenizin ekranları, <span>tek panelden</span>.</h1>

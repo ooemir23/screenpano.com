@@ -1,0 +1,168 @@
+"Maçlar ve bilgi sayfaları" widget'ında sırayla dönen ve kayan bantta akan bilgiler. Maç yokken ekranı canlı tutar. ¦ Information that rotates in the "Matches and info pages" widget and flows in the ticker. Keeps the screen lively when there are no matches. ¦ Informationen, die im Widget „Spiele und Infoseiten“ wechseln und im Laufband laufen. Hält den Bildschirm auch ohne Spiele lebendig. ¦ معلومات تتناوب في عنصر «المباريات وصفحات المعلومات» وتمرّ في الشريط المتحرك. تُبقي الشاشة نابضة بالحياة عند غياب المباريات.
+Sayfalar ¦ Pages ¦ Seiten ¦ الصفحات
+Açtıklarınız sırayla gösterilir. Veriler otomatik yenilenir; anahtar ya da ayar gerekmez. ¦ The ones you turn on are shown in turn. Data refreshes automatically; no key or setup needed. ¦ Aktivierte Seiten werden nacheinander gezeigt. Die Daten aktualisieren sich automatisch; kein Schlüssel nötig. ¦ تُعرض الصفحات التي تفعّلها بالتتابع. تتحدّث البيانات تلقائيًا دون الحاجة إلى مفتاح أو إعداد.
+Bilgi bandı ¦ Info ticker ¦ Infoband ¦ شريط المعلومات
+Türkiye gündeminden başlıklar ¦ Headlines from Turkey's news agenda ¦ Schlagzeilen aus der türkischen Nachrichtenlage ¦ عناوين من الأجندة الإخبارية في تركيا
+📰 Haberler ¦ 📰 News ¦ 📰 Nachrichten ¦ 📰 الأخبار
+Kategori ¦ Category ¦ Kategorie ¦ الفئة
+Genel ¦ General ¦ Allgemein ¦ عام
+Ekonomi ¦ Economy ¦ Wirtschaft ¦ الاقتصاد
+Teknoloji ¦ Technology ¦ Technologie ¦ التقنية
+💊 Nöbetçi eczaneler ¦ 💊 Duty pharmacies ¦ 💊 Notdienst-Apotheken ¦ 💊 الصيدليات المناوبة
+Seçtiğiniz ilçelerin bugünkü nöbetçi eczaneleri ¦ Today's duty pharmacies in the districts you choose ¦ Heutige Notdienst-Apotheken in den gewählten Bezirken ¦ الصيدليات المناوبة اليوم في المناطق التي تختارها
+İl ¦ Province ¦ Provinz ¦ المحافظة
+İstanbul ¦ Istanbul ¦ Istanbul ¦ إسطنبول
+İlçe(ler), virgülle (en fazla 2) ¦ District(s), comma-separated (max 2) ¦ Bezirk(e), durch Komma getrennt (max. 2) ¦ المنطقة/المناطق، مفصولة بفاصلة (حتى 2)
+örn. Kadıköy, Üsküdar ¦ e.g. Kadıköy, Üsküdar ¦ z. B. Kadıköy, Üsküdar ¦ مثال: Kadıköy, Üsküdar
+🎬 Sinemada bu hafta ¦ 🎬 In cinemas this week ¦ 🎬 Diese Woche im Kino ¦ 🎬 في السينما هذا الأسبوع
+Vizyondaki filmler; fragmanlar arada medya yerine oynar ¦ Films now showing; trailers play in between instead of media ¦ Aktuelle Kinofilme; Trailer laufen zwischendurch anstelle der Medien ¦ الأفلام المعروضة؛ تُعرض مقاطعها الدعائية بين الحين والآخر بدلًا من الوسائط
+Fragmanları oynat ¦ Play trailers ¦ Trailer abspielen ¦ تشغيل المقاطع الدعائية
+Sessiz, birkaç içerikte bir ¦ Muted, once every few items ¦ Stumm, nach einigen Inhalten einmal ¦ بدون صوت، مرة كل بضعة محتويات
+📚 Yeni çıkan kitaplar ¦ 📚 New book releases ¦ 📚 Neu erschienene Bücher ¦ 📚 كتب جديدة
+Haftanın yeni kitapları ¦ This week's new books ¦ Die neuen Bücher der Woche ¦ كتب الأسبوع الجديدة
+📜 Tarihte bugün ¦ 📜 On this day ¦ 📜 Heute in der Geschichte ¦ 📜 حدث في مثل هذا اليوم
+Vikipedi'den bugünün tarihinde yaşanan olaylar ¦ Events from Wikipedia that happened on today's date ¦ Ereignisse von Wikipedia, die sich an diesem Datum ereignet haben ¦ أحداث وقعت في تاريخ اليوم من ويكيبيديا
+🚗 Canlı trafik ¦ 🚗 Live traffic ¦ 🚗 Live-Verkehr ¦ 🚗 حركة المرور المباشرة
+İstanbul trafik haritası ve yoğunluk yüzdesi ¦ Istanbul traffic map and congestion percentage ¦ Istanbuler Verkehrskarte und Staubelastung in Prozent ¦ خريطة حركة المرور في إسطنبول ونسبة الازدحام
+Yalnızca İstanbul'daki işletmelerde gösterilir ¦ Shown only for businesses in Istanbul ¦ Wird nur für Betriebe in Istanbul angezeigt ¦ يظهر فقط للمنشآت في إسطنبول
+Eczane ayarı kaydedildi ¦ Pharmacy setting saved ¦ Apotheken-Einstellung gespeichert ¦ تم حفظ إعداد الصيدليات
+Sorgulanıyor… ¦ Checking… ¦ Wird abgefragt… ¦ جارٍ الاستعلام…
+Dene ¦ Test ¦ Testen ¦ تجربة
+{} nöbetçi eczane bulundu{} ¦ {} duty pharmacies found{} ¦ {} Notdienst-Apotheken gefunden{} ¦ تم العثور على {} صيدلية مناوبة{}
+7 gün ¦ 7 days ¦ 7 Tage ¦ 7 أيام
+30 gün ¦ 30 days ¦ 30 Tage ¦ 30 يومًا
+90 gün ¦ 90 days ¦ 90 Tage ¦ 90 يومًا
+İşletme bilgileri, TV kutusu, kullanıcılar, paket ve yedekler. ¦ Business details, TV box, users, plan and backups. ¦ Betriebsdaten, TV-Box, Benutzer, Paket und Sicherungen. ¦ بيانات المنشأة وجهاز العرض والمستخدمون والباقة والنسخ الاحتياطية.
+İşletme ¦ Business ¦ Betrieb ¦ المنشأة
+Cihazlar ¦ Devices ¦ Geräte ¦ الأجهزة
+Şubeler ¦ Branches ¦ Filialen ¦ الفروع
+Kullanıcılar ¦ Users ¦ Benutzer ¦ المستخدمون
+Paket ¦ Plan ¦ Paket ¦ الباقة
+Yedekler ¦ Backups ¦ Sicherungen ¦ النسخ الاحتياطية
+Verilerim ¦ My data ¦ Meine Daten ¦ بياناتي
+İşletme bilgileri ¦ Business details ¦ Betriebsdaten ¦ بيانات المنشأة
+İşletme adı ¦ Business name ¦ Betriebsname ¦ اسم المنشأة
+Şehir / ilçe (hava durumu için) ¦ City / district (for the weather) ¦ Stadt / Bezirk (für das Wetter) ¦ المدينة / المنطقة (لحالة الطقس)
+örn. Kadıköy ¦ e.g. Kadıköy ¦ z. B. Kadıköy ¦ مثال: Kadıköy
+📍 Konumumu otomatik bul ¦ 📍 Find my location automatically ¦ 📍 Meinen Standort automatisch finden ¦ 📍 تحديد موقعي تلقائيًا
+Konum aranıyor… ¦ Finding location… ¦ Standort wird gesucht… ¦ جارٍ تحديد الموقع…
+Şehir bulunamadı, yazımı kontrol edin ¦ City not found, check the spelling ¦ Stadt nicht gefunden, bitte Schreibweise prüfen ¦ لم يتم العثور على المدينة، تحقق من الكتابة
+Bu tarayıcı konum bulmayı desteklemiyor; şehri yazarak seçin ¦ This browser does not support location; type the city instead ¦ Dieser Browser unterstützt keine Standortbestimmung; geben Sie die Stadt ein ¦ هذا المتصفح لا يدعم تحديد الموقع؛ اكتب اسم المدينة
+Konum izni verilmedi; şehri yazarak seçebilirsiniz ¦ Location permission was not granted; you can type the city instead ¦ Standortfreigabe nicht erteilt; Sie können die Stadt eingeben ¦ لم يُمنح إذن الموقع؛ يمكنك كتابة اسم المدينة
+Konum alınamadı; şehri yazarak seçebilirsiniz ¦ Could not get your location; you can type the city instead ¦ Standort konnte nicht ermittelt werden; Sie können die Stadt eingeben ¦ تعذّر الحصول على الموقع؛ يمكنك كتابة اسم المدينة
+(varsayılan) ¦ (default) ¦ (Standard) ¦ (افتراضي)
+Şu anki konum: ¦ Current location: ¦ Aktueller Standort: ¦ الموقع الحالي:
+Şu anki konum: <0>{}</0>{} ¦ Current location: <0>{}</0>{} ¦ Aktueller Standort: <0>{}</0>{} ¦ الموقع الحالي: <0>{}</0>{}
+Şu anki konum: <0>{}</0> (varsayılan) ¦ Current location: <0>{}</0> (default) ¦ Aktueller Standort: <0>{}</0> (Standard) ¦ الموقع الحالي: <0>{}</0> (افتراضي)
+TV kutusunu bağla ¦ Connect the TV box ¦ TV-Box verbinden ¦ ربط جهاز العرض
+Mekândaki Android kutu, HDMI dağıtıcıyla tüm TV'lere aynı görüntüyü verir; tek kutu yeterli. ¦ One Android box in the venue feeds the same picture to all TVs through an HDMI splitter; a single box is enough. ¦ Eine Android-Box im Lokal liefert über einen HDMI-Verteiler allen Fernsehern dasselbe Bild; eine einzige Box genügt. ¦ جهاز أندرويد واحد في المكان يعرض الصورة نفسها على كل التلفازات عبر موزّع HDMI؛ ويكفي جهاز واحد.
+<0>Android uygulamasını (APK) indirin</0> ve kutuya kurun. Kutu yerine televizyona bağlı bir <1>Windows bilgisayar</1> kullanacaksanız <2>Windows uygulamasını indirin</2>; televizyon ikinci ekransa yayın oraya gider. ¦ <0>Download the Android app (APK)</0> and install it on the box. If you use a <1>Windows PC</1> connected to the TV instead of a box, <2>download the Windows app</2>; if the TV is a second display, the broadcast goes there. ¦ <0>Laden Sie die Android-App (APK) herunter</0> und installieren Sie sie auf der Box. Wenn Sie statt einer Box einen am Fernseher angeschlossenen <1>Windows-PC</1> verwenden, <2>laden Sie die Windows-App herunter</2>; ist der Fernseher ein zweiter Bildschirm, läuft die Übertragung dort. ¦ <0>نزّل تطبيق أندرويد (APK)</0> وثبّته على الجهاز. إذا كنت تستخدم <1>حاسوب ويندوز</1> متصلًا بالتلفاز بدلًا من الجهاز فـ<2>نزّل تطبيق ويندوز</2>؛ وإذا كان التلفاز شاشة ثانية يُبثّ العرض عليه.
+Android uygulamasını (APK) indirin ¦ Download the Android app (APK) ¦ Android-App (APK) herunterladen ¦ نزّل تطبيق أندرويد (APK)
+ve kutuya kurun. Kutu yerine televizyona bağlı bir ¦ and install it on the box. If you use a ¦ und auf der Box installieren. Wenn Sie statt einer Box einen am Fernseher angeschlossenen ¦ وثبّته على الجهاز. إذا كنت تستخدم
+Windows bilgisayar ¦ Windows PC ¦ Windows-PC ¦ حاسوب ويندوز
+kullanacaksanız ¦ connected to the TV instead of a box, ¦ verwenden, ¦ متصلًا بالتلفاز بدلًا من الجهاز
+Windows uygulamasını indirin ¦ download the Windows app ¦ laden Sie die Windows-App herunter ¦ نزّل تطبيق ويندوز
+Uygulamayı açın. Ekranda giriş formu ve 6 haneli bir kod çıkar. ¦ Open the app. A login form and a 6-digit code appear on screen. ¦ Öffnen Sie die App. Auf dem Bildschirm erscheinen ein Anmeldeformular und ein 6-stelliger Code. ¦ افتح التطبيق. يظهر على الشاشة نموذج تسجيل دخول ورمز من 6 أرقام.
+Kutuda kullanıcı adı ve şifrenizle giriş yapın, <0>ya da</0> kodu aşağıya yazın (TV'deki QR'ı telefonla okutursanız kendiliğinden dolar). ¦ Log in on the box with your username and password, <0>or</0> type the code below (it fills in automatically if you scan the QR on the TV with your phone). ¦ Melden Sie sich an der Box mit Benutzername und Passwort an, <0>oder</0> geben Sie unten den Code ein (er füllt sich automatisch, wenn Sie den QR-Code auf dem Fernseher mit dem Handy scannen). ¦ سجّل الدخول على الجهاز باسم المستخدم وكلمة المرور، <0>أو</0> اكتب الرمز أدناه (يُملأ تلقائيًا إن مسحت رمز QR على التلفاز بهاتفك).
+Kutuda kullanıcı adı ve şifrenizle giriş yapın, ¦ Log in on the box with your username and password, ¦ Melden Sie sich an der Box mit Benutzername und Passwort an, ¦ سجّل الدخول على الجهاز باسم المستخدم وكلمة المرور،
+kodu aşağıya yazın (TV'deki QR'ı telefonla okutursanız kendiliğinden dolar). ¦ type the code below (it fills in automatically if you scan the QR on the TV with your phone). ¦ geben Sie unten den Code ein (er füllt sich automatisch, wenn Sie den QR-Code auf dem Fernseher mit dem Handy scannen). ¦ اكتب الرمز أدناه (يُملأ تلقائيًا إن مسحت رمز QR على التلفاز بهاتفك).
+Bağla ¦ Connect ¦ Verbinden ¦ ربط
+Bağlı cihazlar ¦ Connected devices ¦ Verbundene Geräte ¦ الأجهزة المتصلة
+Bağlı cihazlar <0>· {}/{}</0> ¦ Connected devices <0>· {}/{}</0> ¦ Verbundene Geräte <0>· {}/{}</0> ¦ الأجهزة المتصلة <0>· {}/{}</0>
+Kutu değiştirirseniz eskisini buradan kaldırın. ¦ If you replace a box, remove the old one here. ¦ Wenn Sie eine Box austauschen, entfernen Sie die alte hier. ¦ إذا استبدلت الجهاز فأزل القديم من هنا.
+Şu an bağlı ¦ Connected now ¦ Gerade verbunden ¦ متصل الآن
+Son görülme: ¦ Last seen: ¦ Zuletzt gesehen: ¦ آخر ظهور:
+Adlandır ¦ Rename ¦ Umbenennen ¦ إعادة التسمية
+↻ Ekranı yenile ¦ ↻ Refresh screen ¦ ↻ Bildschirm aktualisieren ¦ ↻ تحديث الشاشة
+Henüz bağlı cihaz yok ¦ No connected devices yet ¦ Noch keine verbundenen Geräte ¦ لا توجد أجهزة متصلة بعد
+Kullanıcı adı ¦ Username ¦ Benutzername ¦ اسم المستخدم
+Şifre (en az 8) ¦ Password (min. 8) ¦ Passwort (mind. 8) ¦ كلمة المرور (8 على الأقل)
+Şifremi değiştir ¦ Change my password ¦ Mein Passwort ändern ¦ تغيير كلمة المرور
+Mevcut şifre ¦ Current password ¦ Aktuelles Passwort ¦ كلمة المرور الحالية
+Yeni şifre (en az 8) ¦ New password (min. 8) ¦ Neues Passwort (mind. 8) ¦ كلمة المرور الجديدة (8 على الأقل)
+Değiştir ¦ Change ¦ Ändern ¦ تغيير
+Aktif · ¦ Active · ¦ Aktiv · ¦ نشط ·
+Cihaz ¦ Device ¦ Gerät ¦ الجهاز
+Kullanıcı ¦ User ¦ Benutzer ¦ المستخدم
+Paketiniz ¦ Your plan ¦ Ihr Paket ¦ باقتك
+Paketler ¦ Plans ¦ Pakete ¦ الباقات
+Başlangıç ¦ Starter ¦ Starter ¦ البداية
+Paket değişikliği ve ödeme için bizimle iletişime geçin. ¦ Contact us for plan changes and payment. ¦ Für Paketwechsel und Zahlung kontaktieren Sie uns. ¦ للتواصل بشأن تغيير الباقة والدفع، راسلنا.
+✓ Maçlar ve canlı skor ¦ ✓ Matches and live scores ¦ ✓ Spiele und Live-Ergebnisse ¦ ✓ المباريات والنتائج المباشرة
+✓ Fiyat listesi ¦ ✓ Price list ¦ ✓ Preisliste ¦ ✓ قائمة الأسعار
+✓ Bilgi bandı, yorumlar, doğum günü ¦ ✓ Info ticker, reviews, birthdays ¦ ✓ Infoband, Bewertungen, Geburtstage ¦ ✓ شريط المعلومات والتقييمات وأعياد الميلاد
+✓ Medya, logo, saat, hava, kurlar ¦ ✓ Media, logo, clock, weather, exchange rates ¦ ✓ Medien, Logo, Uhr, Wetter, Kurse ¦ ✓ الوسائط والشعار والساعة والطقس وأسعار الصرف
+✓ Kampanya kartı ve QR ¦ ✓ Campaign card and QR ¦ ✓ Aktionskarte und QR ¦ ✓ بطاقة العرض ورمز QR
+Köşede ürün adı görünür ¦ The product name appears in the corner ¦ Der Produktname erscheint in der Ecke ¦ يظهر اسم المنتج في الزاوية
+{} cihaz · {} · {} kullanıcı ¦ {} devices · {} · {} users ¦ {} Geräte · {} · {} Benutzer ¦ {} أجهزة · {} · {} مستخدمين
+Şimdi yedek al ¦ Back up now ¦ Jetzt sichern ¦ نسخ احتياطي الآن
+Ayarlarınız (liste sırası, yorumlar, QR, doğum günleri, lig seçimi…) her gün otomatik yedeklenir; en yeni 30 yedek saklanır. Medya dosyaları yedeğe dahil değildir. ¦ Your settings (list order, reviews, QR, birthdays, league choice…) are backed up automatically every day; the 30 newest backups are kept. Media files are not included. ¦ Ihre Einstellungen (Listenreihenfolge, Bewertungen, QR, Geburtstage, Ligaauswahl …) werden täglich automatisch gesichert; die 30 neuesten Sicherungen bleiben erhalten. Mediendateien sind nicht enthalten. ¦ تُنسخ إعداداتك (ترتيب القائمة والتقييمات وQR وأعياد الميلاد واختيار الدوري…) احتياطيًا كل يوم تلقائيًا؛ وتُحفظ أحدث 30 نسخة. ملفات الوسائط غير مشمولة.
+İşletme sahibi ¦ Business owner ¦ Betriebsinhaber ¦ مالك المنشأة
+{} · son giriş: {} ¦ {} · last login: {} ¦ {} · letzte Anmeldung: {} ¦ {} · آخر دخول: {}
+Personel hesapları içerik ekleyebilir (medya, duyuru, doğum günü); yedek geri yükleme ve kullanıcı yönetimi yapamaz. ¦ Staff accounts can add content (media, announcements, birthdays); they cannot restore backups or manage users. ¦ Mitarbeiterkonten können Inhalte hinzufügen (Medien, Ankündigungen, Geburtstage); Sicherungen wiederherstellen und Benutzer verwalten können sie nicht. ¦ يمكن لحسابات الموظفين إضافة محتوى (وسائط وإعلانات وأعياد ميلاد)، ولا يمكنها استعادة النسخ الاحتياطية أو إدارة المستخدمين.
+Geri yükle ¦ Restore ¦ Wiederherstellen ¦ استعادة
+İndir ¦ Download ¦ Herunterladen ¦ تنزيل
+Henüz yedek yok ¦ No backups yet ¦ Noch keine Sicherungen ¦ لا توجد نسخ احتياطية بعد
+Sonuç yok ¦ No results ¦ Keine Ergebnisse ¦ لا توجد نتائج
+TV ekranındaki 6 haneli kodu girin ¦ Enter the 6-digit code shown on the TV screen ¦ Geben Sie den 6-stelligen Code vom Fernsehbildschirm ein ¦ أدخل الرمز المكوّن من 6 أرقام الظاهر على شاشة التلفاز
+Cihaz bağlandı; birkaç saniye içinde ekran açılacak ¦ Device connected; the screen will open in a few seconds ¦ Gerät verbunden; der Bildschirm öffnet sich in wenigen Sekunden ¦ تم ربط الجهاز؛ ستفتح الشاشة خلال ثوانٍ
+Cihaz adı (örn. Salon kutusu): ¦ Device name (e.g. Main hall box): ¦ Gerätename (z. B. Gastraum-Box): ¦ اسم الجهاز (مثال: جهاز الصالة):
+Bu cihazın oturumu kapatılsın mı? Kutu giriş ekranına döner. ¦ Sign this device out? The box returns to the login screen. ¦ Dieses Gerät abmelden? Die Box kehrt zum Anmeldebildschirm zurück. ¦ هل تريد تسجيل خروج هذا الجهاز؟ سيعود الجهاز إلى شاشة تسجيل الدخول.
+Cihaz kaldırıldı ¦ Device removed ¦ Gerät entfernt ¦ تمت إزالة الجهاز
+Kullanıcı eklendi ¦ User added ¦ Benutzer hinzugefügt ¦ تمت إضافة المستخدم
+Şifre değiştirildi ¦ Password changed ¦ Passwort geändert ¦ تم تغيير كلمة المرور
+Bu yedek geri yüklensin mi? Mevcut ayarlar önce yedeklenir. ¦ Restore this backup? Your current settings are backed up first. ¦ Diese Sicherung wiederherstellen? Die aktuellen Einstellungen werden zuvor gesichert. ¦ هل تريد استعادة هذه النسخة؟ سيتم نسخ إعداداتك الحالية احتياطيًا أولًا.
+Yedek geri yüklendi ¦ Backup restored ¦ Sicherung wiederhergestellt ¦ تمت استعادة النسخة الاحتياطية
+Çar ¦ Wed ¦ Mi ¦ أربعاء
+Fotoğraf ¦ Photo ¦ Foto ¦ صورة
+Afiş ¦ Poster ¦ Plakat ¦ ملصق
+Hafta içi ¦ Weekdays ¦ Wochentage ¦ أيام الأسبوع
+Hafta sonu ¦ Weekend ¦ Wochenende ¦ عطلة نهاية الأسبوع
+'e kadar ¦ until ¦ bis ¦ حتى
+Her gün ¦ Every day ¦ Täglich ¦ كل يوم
+gün boyu ¦ all day ¦ ganztägig ¦ طوال اليوم
+Kategori ne zaman görünsün? ¦ When should the category appear? ¦ Wann soll die Kategorie erscheinen? ¦ متى تظهر الفئة؟
+Kampanya ne zaman çıksın? ¦ When should the campaign run? ¦ Wann soll die Aktion laufen? ¦ متى يظهر العرض؟
+Bu içerik ne zaman oynasın? ¦ When should this content play? ¦ Wann soll dieser Inhalt laufen? ¦ متى يُعرض هذا المحتوى؟
+Başlangıç saati ¦ Start time ¦ Startzeit ¦ وقت البدء
+Bitiş saati ¦ End time ¦ Endzeit ¦ وقت الانتهاء
+İlk gün ¦ First day ¦ Erster Tag ¦ اليوم الأول
+Son gün ¦ Last day ¦ Letzter Tag ¦ اليوم الأخير
+Boş bırakılan alanlar sınır koymaz. Hiçbiri seçilmezse her zaman görünür. ¦ Empty fields set no limit. If none is chosen, it is always shown. ¦ Leere Felder setzen keine Grenze. Ohne Auswahl wird immer angezeigt. ¦ الحقول الفارغة لا تضع قيدًا. وإن لم يُختر شيء يظهر دائمًا.
+Günler ¦ Days ¦ Tage ¦ الأيام
+Bitiş başlangıçtan önceyse gece yarısını geçer (22:00 – 02:00 gibi). ¦ If the end is earlier than the start, it runs past midnight (like 22:00 – 02:00). ¦ Liegt das Ende vor dem Beginn, läuft es über Mitternacht (z. B. 22:00 – 02:00). ¦ إذا كان الانتهاء قبل البدء يمتد عبر منتصف الليل (مثل 22:00 – 02:00).
+Her zaman göster ¦ Always show ¦ Immer anzeigen ¦ إظهار دائمًا
+Saat aralığı için başlangıç ve bitiş saatinin ikisini de girin ¦ For a time range, enter both a start and an end time ¦ Für einen Zeitraum geben Sie Start- und Endzeit an ¦ لتحديد نطاق زمني أدخل وقتي البدء والانتهاء معًا
+Başlangıç ve bitiş saati aynı olamaz ¦ Start and end time cannot be the same ¦ Start- und Endzeit dürfen nicht gleich sein ¦ لا يمكن أن يتطابق وقت البدء مع وقت الانتهاء
+Son gün ilk günden önce olamaz ¦ The last day cannot be before the first day ¦ Der letzte Tag darf nicht vor dem ersten liegen ¦ لا يمكن أن يسبق اليوم الأخير اليوم الأول
+Zamanlama kaydedildi: ¦ Schedule saved: ¦ Zeitplan gespeichert: ¦ تم حفظ الجدولة:
+Zamanlama kaydedildi: {} ¦ Schedule saved: {} ¦ Zeitplan gespeichert: {} ¦ تم حفظ الجدولة: {}
+Her zaman gösterilecek ¦ Will always be shown ¦ Wird immer angezeigt ¦ سيظهر دائمًا
+Şablonlar ¦ Templates ¦ Vorlagen ¦ القوالب
+Afişleriniz ¦ Your posters ¦ Ihre Plakate ¦ ملصقاتك
+Afişleriniz <0>· {}</0> ¦ Your posters <0>· {}</0> ¦ Ihre Plakate <0>· {}</0> ¦ ملصقاتك <0>· {}</0>
+Henüz afiş yok. Yukarıdan bir şablon seçin. ¦ No posters yet. Pick a template above. ¦ Noch keine Plakate. Wählen Sie oben eine Vorlage. ¦ لا توجد ملصقات بعد. اختر قالبًا من الأعلى.
+Birini seçin, yazıları değiştirin. Renkler ekranınızın temasından gelir; Tasarım → Renk ve logo bölümünde renkleri değiştirince afişler de değişir. ¦ Pick one and edit the text. Colours come from your screen's theme; when you change them under Design → Colours and logo, the posters change too. ¦ Wählen Sie eine Vorlage und ändern Sie die Texte. Die Farben stammen aus dem Design Ihres Bildschirms; ändern Sie sie unter Design → Farben und Logo, passen sich die Plakate an. ¦ اختر قالبًا وعدّل النصوص. تأتي الألوان من مظهر شاشتك؛ وعند تغييرها من التصميم ← الألوان والشعار تتغير الملصقات أيضًا.
+Medya sırasında yer alırlar; sırayı "Medya ve sıra" sekmesinden değiştirebilirsiniz. ¦ They are part of the media order; you can change the order in the "Media and order" tab. ¦ Sie sind Teil der Medienreihenfolge; ändern Sie sie im Tab „Medien und Reihenfolge“. ¦ تدخل ضمن ترتيب الوسائط؛ ويمكنك تغيير الترتيب من تبويب «الوسائط والترتيب».
+Fotoğraf seç ¦ Choose photo ¦ Foto wählen ¦ اختر صورة
+Fotoğraf (isteğe bağlı) ¦ Photo (optional) ¦ Foto (optional) ¦ صورة (اختياري)
+Ekranda kalma süresi (saniye, boşsa fotoğraf süresi) ¦ On-screen duration (seconds; photo duration if empty) ¦ Anzeigedauer (Sekunden; leer = Fotodauer) ¦ مدة الظهور (بالثواني؛ إن تُركت فارغة تُستخدم مدة الصورة)
+Çeviriler ({}) ¦ Translations ({}) ¦ Übersetzungen ({}) ¦ الترجمات ({})
+Medyaya ekle ¦ Add to media ¦ Zu Medien hinzufügen ¦ إضافة إلى الوسائط
+Ekranda böyle görünür. ¦ This is how it looks on screen. ¦ So sieht es auf dem Bildschirm aus. ¦ هكذا تظهر على الشاشة.
+Afiş kaydedildi ¦ Poster saved ¦ Plakat gespeichert ¦ تم حفظ الملصق
+Afiş medya sırasının sonuna eklendi ¦ Poster added to the end of the media order ¦ Plakat am Ende der Medienreihenfolge hinzugefügt ¦ أُضيف الملصق إلى نهاية ترتيب الوسائط
+🌍 Diller ¦ 🌍 Languages ¦ 🌍 Sprachen ¦ 🌍 اللغات
+Dil ayarları ¦ Language settings ¦ Spracheinstellungen ¦ إعدادات اللغة
+Turist müşterileriniz için fiyat listesi, duyuru metni ve afişler seçtiğiniz dillerde sırayla döner. Türkçe her zaman ilk dildir; çevirileri aşağıdaki ilgili bölümlerde girersiniz. ¦ For your tourist customers, the price list, announcement text and posters rotate in the languages you pick. Turkish is always the first language; you enter the translations in the relevant sections below. ¦ Für Ihre ausländischen Gäste wechseln Preisliste, Ankündigungstext und Plakate in den gewählten Sprachen. Türkisch ist immer die erste Sprache; die Übersetzungen geben Sie in den jeweiligen Abschnitten unten ein. ¦ لعملائك السياح تتناوب قائمة الأسعار ونص الإعلان والملصقات باللغات التي تختارها. التركية هي اللغة الأولى دائمًا، وتُدخل الترجمات في الأقسام المعنية أدناه.
+Türkçe ¦ Turkish ¦ Türkisch ¦ التركية
+İngilizce ¦ English ¦ Englisch ¦ الإنجليزية
+Almanca ¦ German ¦ Deutsch ¦ الألمانية
+Rusça ¦ Russian ¦ Russisch ¦ الروسية
+Arapça ¦ Arabic ¦ Arabisch ¦ العربية
+Fransızca ¦ French ¦ Französisch ¦ الفرنسية
+İspanyolca ¦ Spanish ¦ Spanisch ¦ الإسبانية
+Dil değiştirme aralığı ¦ Language switch interval ¦ Sprachwechsel-Intervall ¦ فاصل تبديل اللغة
+En çok 3 ek dil seçebilirsiniz ¦ You can choose up to 3 extra languages ¦ Sie können bis zu 3 zusätzliche Sprachen wählen ¦ يمكنك اختيار حتى 3 لغات إضافية
+{} eklendi; çevirileri girin ¦ {} added; enter the translations ¦ {} hinzugefügt; geben Sie die Übersetzungen ein ¦ تمت إضافة {}؛ أدخل الترجمات
+{} kaldırıldı ¦ {} removed ¦ {} entfernt ¦ تمت إزالة {}
