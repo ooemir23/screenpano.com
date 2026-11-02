@@ -21,6 +21,7 @@ Sitedeki (`/`) özellik gezgini, "Ve dahası" kartları ve paket karşılaştır
 }
 ```
 
+- `i18n`: `{ "en": {…}, "de": {…}, "ar": {…} }` — aynı alanların (title, short, text, points, tags, compare) çevirisi; eksik alan Türkçe görünür.
 - `plan`: `all` (her pakette) ya da `pro`. Tablodaki Var/Yok buradan gelir.
 - `added`: bu tarihten sonraki 60 gün sitede **Yeni** rozeti çıkar.
 - `visual.type`: `tv` (TV görüntüsü, `img`), `win` (panel görüntüsü, `img`), `poster` (canlı afiş örneği), `schedule` (zamanlama tablosu). İsteğe bağlı `phone` (telefon görüntüsü) ve `win` (TV'nin altında panel).

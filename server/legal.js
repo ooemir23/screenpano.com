@@ -159,8 +159,9 @@ function render(key) {
   const i = Object.fromEntries(Object.entries(info()).map(([k, v]) => [k, esc(v)]));
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"><title>${p.title} · ${i.brand}</title>
-<link rel="stylesheet" href="/site.css?v=5"></head><body class="legal">
-<header class="lh"><a href="/" class="lg"><img src="/logo-light.svg" alt="${i.brand}" onerror="this.src='/logo.svg'"></a><nav>${NAV.map(([k, n]) => `<a href="/${k}"${k === key ? ' aria-current="page"' : ''}>${n}</a>`).join('')}</nav></header>
+<meta name="color-scheme" content="light dark"><script>(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()</script>
+<link rel="stylesheet" href="/site.css?v=6"></head><body class="legal">
+<header class="lh"><a href="/" class="lg"><img class="lg-l" src="/logo-light.svg?v=4" alt="${i.brand}"><img class="lg-d" src="/logo.svg?v=4" alt="${i.brand}"></a><nav>${NAV.map(([k, n]) => `<a href="/${k}"${k === key ? ' aria-current="page"' : ''}>${n}</a>`).join('')}</nav></header>
 <main class="lm"><h1>${p.title}</h1>${p.body(i)}</main>
 <footer class="lf"><a href="/">${i.brand}</a> · <a href="/login">Panele giriş</a> · Son güncelleme: ${VERSION}</footer></body></html>`;
 }

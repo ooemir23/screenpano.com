@@ -1,30 +1,40 @@
 <!doctype html>
-<html lang="tr" class="nojs"><head><script>document.documentElement.className="js"</script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ScreenPano · Kafe, restoran ve spor barlar için dijital ekran</title>
-<meta name="description" content="Menünüz, kampanyalarınız, canlı maç skorları ve duyurularınız mekânınızdaki tüm televizyonlarda. Tek Android kutu, telefondan yönetilen panel. 14 gün ücretsiz deneyin.">
-<meta name="theme-color" content="#f4f2ee">
+<html lang="{{LANG}}" dir="{{DIR}}" class="nojs"><head><script>(function(){var d=document.documentElement,t=null;d.className="js";try{t=localStorage.getItem("theme")}catch(e){}if(t==="dark"||t==="light")d.setAttribute("data-theme",t)})()</script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{t:meta.title}}</title>
+<meta name="description" content="{{t:meta.desc}}">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f4f2ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121415" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="canonical" href="https://screenpano.com/">
+<link rel="canonical" href="{{CANONICAL}}">
+{{HREFLANG}}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ScreenPano">
-<meta property="og:title" content="ScreenPano · Mekânınızdaki televizyonlar sizin için çalışsın">
-<meta property="og:description" content="Menü, kampanya, canlı skor ve duyurularınız tüm ekranlarda. Tek Android kutu, telefondan yönetim. 14 gün ücretsiz.">
+<meta property="og:locale" content="{{t:meta.locale}}">
+<meta property="og:url" content="{{CANONICAL}}">
+<meta property="og:title" content="{{t:og.title}}">
+<meta property="og:description" content="{{t:og.desc}}">
 <meta property="og:image" content="https://screenpano.com/site/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/site.css?v=4">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"ScreenPano","applicationCategory":"BusinessApplication","operatingSystem":"Android, Web","description":"Kafe, restoran ve spor barlar için dijital ekran ve menü panosu platformu.","url":"https://screenpano.com/","offers":{"@type":"Offer","price":"0","priceCurrency":"TRY","description":"14 gün ücretsiz deneme"}}</script>
+{{FONT_PRELOAD}}
+<link rel="stylesheet" href="/site.css?v=6">
+<script type="application/ld+json">{{LDJSON}}</script>
 </head><body>
-<a class="skip" href="#ana">İçeriğe geç</a>
+<a class="skip" href="#ana">{{t:skip}}</a>
 
 <header class="top" id="top">
   <div class="wrap bar">
-    <a class="lg" href="/" aria-label="ScreenPano ana sayfa"><img src="/logo-light.svg" alt="ScreenPano" width="152" height="40"></a>
-    <nav id="nav" aria-label="Ana menü">
-      <a href="#nasil">Nasıl çalışır</a><a href="#ekran">Ekran</a><a href="#ozellikler">Özellikler</a><a href="#panel">Panel</a><a href="#paketler">Paketler</a><a href="#sss">Sorular</a>
-      <span class="navcta"><a class="link" href="/login">Giriş yap</a><a class="btn sm" href="/login#signup">Ücretsiz dene</a></span>
+    <a class="lg" href="{{HOME}}" aria-label="{{t:home.aria}}"><img class="lg-l" src="/logo-light.svg?v=4" alt="ScreenPano" width="148" height="33"><img class="lg-d" src="/logo.svg?v=4" alt="ScreenPano" width="148" height="33"></a>
+    <nav id="nav" aria-label="{{t:nav.aria}}">
+      <a href="#nasil">{{t:nav.how}}</a><a href="#ekran">{{t:nav.screen}}</a><a href="#ozellikler">{{t:nav.features}}</a><a href="#panel">{{t:nav.panel}}</a><a href="#paketler">{{t:nav.plans}}</a><a href="#sss">{{t:nav.faq}}</a>
+      <span class="navcta"><a class="link" href="/login">{{t:nav.login}}</a><a class="btn sm" href="/login#signup">{{t:nav.try}}</a></span>
+      <div class="prefs prefs-m" aria-label="{{t:lang.label}}">{{LANG_LINKS}}</div>
     </nav>
-    <button class="burger" id="burger" aria-label="Menüyü aç" aria-expanded="false" aria-controls="nav"><span></span><span></span></button>
+    <div class="prefs prefs-d">{{LANG_MENU}}<button class="theme" type="button" aria-label="{{t:theme.label}}" title="{{t:theme.label}}"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1.5 12h3M19.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button></div>
+    <button class="theme theme-m" type="button" aria-label="{{t:theme.label}}" title="{{t:theme.label}}"><svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1.5 12h3M19.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
+    <button class="burger" id="burger" aria-label="{{t:menu.open}}" aria-expanded="false" aria-controls="nav"><span></span><span></span></button>
   </div>
 </header>
 
@@ -34,33 +44,33 @@
   <div class="wrap hero-g">
     <div class="hero-t">
       <div class="live"><i></i>{{LIVE}}</div>
-      <h1>Mekânınızdaki televizyonlar <em>sizin için</em> çalışsın.</h1>
-      <p class="lead">Menünüz, kampanyalarınız, canlı maç skorları ve duyurularınız bütün ekranlarda. Mekâna tek bir Android kutu koyarsınız, gerisini telefonunuzdan yönetirsiniz.</p>
-      <div class="cta"><a class="btn" href="/login#signup">14 gün ücretsiz dene <span aria-hidden="true">→</span></a><a class="btn ghost" href="#nasil">Nasıl çalışır?</a></div>
-      <ul class="ticks"><li>Kredi kartı gerekmez</li><li>Kurulum 5 dakika</li><li>Deneme boyunca tüm özellikler açık</li></ul>
+      <h1>{{t:hero.h1}}</h1>
+      <p class="lead">{{t:hero.lead}}</p>
+      <div class="cta"><a class="btn" href="/login#signup">{{t:hero.cta}} <span class="arr" aria-hidden="true">→</span></a><a class="btn ghost" href="#nasil">{{t:hero.how}}</a></div>
+      <ul class="ticks">{{t:hero.ticks}}</ul>
     </div>
     <div class="hero-v">
-      <div class="tvf" aria-label="ScreenPano ile hazırlanmış örnek TV ekranları">
+      <div class="tvf" aria-label="{{t:hero.tvAria}}">
         <div class="bezel"><div class="scr slides" id="heroSlides">
-          <img class="on" src="/site/tv-kafe.webp" width="1600" height="900" alt="Kafe ekranı: fotoğraflı kahvaltı afişi, fiyat listesi, saat ve kayan maç sonuçları" fetchpriority="high">
-          <img src="/site/tv-spor.webp" width="1600" height="900" alt="Spor bar ekranı: maç afişi, günün maçları, hava durumu, piyasalar ve Google yorumları" loading="lazy">
-          <img src="/site/tv-vitrin.webp" width="1600" height="900" alt="Pastane vitrin ekranı: büyük fiyat listesi, QR kod, saat ve hava durumu" loading="lazy">
+          <img class="on" src="/site/tv-kafe.webp" width="1600" height="900" alt="{{t:alt.tvKafe}}" fetchpriority="high">
+          <img src="/site/tv-spor.webp" width="1600" height="900" alt="{{t:alt.tvSpor}}" loading="lazy">
+          <img src="/site/tv-vitrin.webp" width="1600" height="900" alt="{{t:alt.tvVitrin}}" loading="lazy">
         </div></div>
         <div class="stand"></div>
       </div>
       <div class="phone hero-phone" aria-hidden="true"><img src="/site/m-ozet.webp" width="780" height="1688" alt=""></div>
-      <div class="chips" role="tablist" aria-label="Örnek ekranlar">
-        <button role="tab" aria-selected="true" data-i="0">☕ Kafe</button><button role="tab" aria-selected="false" data-i="1">⚽ Spor bar</button><button role="tab" aria-selected="false" data-i="2">🍰 Pastane</button>
+      <div class="chips" role="tablist" aria-label="{{t:chips.aria}}">
+        <button role="tab" aria-selected="true" data-i="0">☕ {{t:chip.kafe}}</button><button role="tab" aria-selected="false" data-i="1">⚽ {{t:chip.spor}}</button><button role="tab" aria-selected="false" data-i="2">🍰 {{t:chip.vitrin}}</button>
       </div>
-      <div class="tag"><i></i>Panelde kaydettiğiniz anda ekranda</div>
+      <div class="tag"><i></i>{{t:hero.tag}}</div>
     </div>
   </div>
   <div class="wrap">
     <ul class="facts">
-      <li><b>1 kutu</b><span>HDMI dağıtıcıyla bütün TV'lere aynı görüntü</span></li>
-      <li><b>Telefondan</b><span>Fiyat, video ve kampanyayı her yerden değiştirin</span></li>
-      <li><b>Çevrimdışı</b><span>İnternet kesilse de ekran kararmaz</span></li>
-      <li><b>14 gün</b><span>Ücretsiz, tüm Pro özelliklerle deneme</span></li>
+      <li><b>{{t:fact1.b}}</b><span>{{t:fact1.s}}</span></li>
+      <li><b>{{t:fact2.b}}</b><span>{{t:fact2.s}}</span></li>
+      <li><b>{{t:fact3.b}}</b><span>{{t:fact3.s}}</span></li>
+      <li><b>{{t:fact4.b}}</b><span>{{t:fact4.s}}</span></li>
     </ul>
   </div>
 </section>
@@ -68,11 +78,11 @@
 <!-- ============ NASIL ÇALIŞIR ============ -->
 <section id="nasil" class="sec">
   <div class="wrap">
-    <p class="eyebrow">Nasıl çalışır</p>
-    <h2>Üç adımda yayındasınız</h2>
-    <p class="intro">Teknik bilgi ya da pahalı donanım gerekmez. İçeriği panelde hazırlarsınız, mekândaki Android kutu bunu birkaç saniye içinde bütün televizyonlara taşır.</p>
+    <p class="eyebrow">{{t:how.eyebrow}}</p>
+    <h2>{{t:how.h2}}</h2>
+    <p class="intro">{{t:how.intro}}</p>
 
-    <figure class="flow" aria-label="Akış: panelde değişiklik yaparsınız, ScreenPano sunucusu kutuya iletir, kutu HDMI dağıtıcıyla bütün televizyonlara aynı görüntüyü verir">
+    <figure class="flow" dir="ltr" aria-label="{{t:flow.aria}}">
       <svg viewBox="0 0 1100 230" role="img" aria-hidden="true">
         <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
         <g class="fl-line"><path d="M178 115H292" marker-end="url(#ar)"/><path d="M452 115H566" marker-end="url(#ar)"/><path d="M694 115H770" marker-end="url(#ar)"/><path d="M880 115C910 115 912 52 942 52" marker-end="url(#ar)"/><path d="M880 115H938" marker-end="url(#ar)"/><path d="M880 115C910 115 912 178 942 178" marker-end="url(#ar)"/></g>
@@ -85,23 +95,23 @@
           <rect x="954" y="30" width="58" height="44" rx="3" class="fl-acc"/><rect x="954" y="93" width="58" height="44" rx="3" class="fl-acc"/><rect x="954" y="156" width="58" height="44" rx="3" class="fl-acc"/>
           <rect x="1018" y="30" width="24" height="44" rx="3" class="fl-dim2"/><rect x="1018" y="93" width="24" height="44" rx="3" class="fl-dim2"/><rect x="1018" y="156" width="24" height="44" rx="3" class="fl-dim2"/></g>
       </svg>
-      <figcaption class="fl-cap">
-        <span><b>Panel</b>Telefon ya da bilgisayar</span><span><b>ScreenPano</b>Değişikliği anında iletir</span><span><b>Android kutu</b>İçeriği saklar ve oynatır</span><span><b>HDMI dağıtıcı</b>İsteğe bağlı</span><span><b>Bütün TV'ler</b>Aynı görüntü</span>
+      <figcaption class="fl-cap" dir="{{DIR}}">
+        <span><b>{{t:flow.c1.b}}</b>{{t:flow.c1.s}}</span><span><b>ScreenPano</b>{{t:flow.c2.s}}</span><span><b>{{t:flow.c3.b}}</b>{{t:flow.c3.s}}</span><span><b>{{t:flow.c4.b}}</b>{{t:flow.c4.s}}</span><span><b>{{t:flow.c5.b}}</b>{{t:flow.c5.s}}</span>
       </figcaption>
     </figure>
 
     <ol class="steps">
       <li>
-        <div class="shot"><img class="zoom" src="/site/p-renk.webp" width="1440" height="900" alt="Panelde renk ve logo ayarları: hazır temalar ve kendi renkleriniz" loading="lazy"></div>
-        <h3>Hesabınızı açın</h3><p>İşletme adınız ve bir şifreyle kaydolun. Logonuzu yükleyin, altı hazır temadan birini seçin ya da kendi renklerinizi girin.</p>
+        <div class="shot"><img class="zoom" src="/site/p-renk.webp" width="1440" height="900" alt="{{t:step1.alt}}" loading="lazy"></div>
+        <h3>{{t:step1.h}}</h3><p>{{t:step1.p}}</p>
       </li>
       <li>
-        <div class="shot"><img class="zoom" src="/site/tv-eslestir.webp" width="1200" height="675" alt="TV ekranında eşleştirme: kullanıcı adı ve şifre formu, yanında QR kod ve 6 haneli kod" loading="lazy"></div>
-        <h3>Kutuyu bağlayın</h3><p>Uygulamayı Android TV kutusuna kurun. Ekrandaki QR kodu telefonunuzla okutun ya da 6 haneli kodu panele yazın. Şifre kutuda saklanmaz.</p>
+        <div class="shot"><img class="zoom" src="/site/tv-eslestir.webp" width="1200" height="675" alt="{{t:step2.alt}}" loading="lazy"></div>
+        <h3>{{t:step2.h}}</h3><p>{{t:step2.p}}</p>
       </li>
       <li>
-        <div class="shot"><img class="zoom" src="/site/p-ozet.webp" width="1440" height="900" alt="Panelin özet sayfası: canlı önizleme, kurulum adımları ve hızlı işlemler" loading="lazy"></div>
-        <h3>Panelden yönetin</h3><p>Video, fotoğraf, fiyat ve duyuru ekleyin. Kaydettiğiniz değişiklik birkaç saniye içinde ekrana gelir; canlı önizlemede görürsünüz.</p>
+        <div class="shot"><img class="zoom" src="/site/p-ozet.webp" width="1440" height="900" alt="{{t:step3.alt}}" loading="lazy"></div>
+        <h3>{{t:step3.h}}</h3><p>{{t:step3.p}}</p>
       </li>
     </ol>
   </div>
@@ -110,42 +120,39 @@
 <!-- ============ EKRAN / TASARIM ============ -->
 <section id="ekran" class="sec dark">
   <div class="wrap">
-    <p class="eyebrow">Ekran tasarımı</p>
-    <h2>Ekranın düzenini siz kurarsınız</h2>
-    <p class="intro">Hazır düzenlerden birini seçin, kutuları sürükleyip boyutlandırın. Her mekân için farklı bir ekran: spor barda maçlar öne çıkar, pastanede fiyat listesi.</p>
+    <p class="eyebrow">{{t:scr.eyebrow}}</p>
+    <h2>{{t:scr.h2}}</h2>
+    <p class="intro">{{t:scr.intro}}</p>
 
     <div class="gal" id="gal">
-      <div class="gal-tabs" role="tablist" aria-label="Hazır düzenler">
-        <button role="tab" aria-selected="true" data-i="0"><b>Spor kafe</b><span>Büyük medya, maçlar, piyasalar, yorumlar</span></button>
-        <button role="tab" aria-selected="false" data-i="1"><b>Kahveci / pastane</b><span>Medya, fiyat listesi, saat</span></button>
-        <button role="tab" aria-selected="false" data-i="2"><b>Vitrin</b><span>Kapı ekranı: büyük fiyat listesi ve QR</span></button>
-        <button role="tab" aria-selected="false" data-i="3"><b>Düzen editörü</b><span>24×24 ızgarada sürükle, bırak, boyutlandır</span></button>
+      <div class="gal-tabs" role="tablist" aria-label="{{t:gal.aria}}">
+        <button role="tab" aria-selected="true" data-i="0"><b>{{t:gal1.b}}</b><span>{{t:gal1.s}}</span></button>
+        <button role="tab" aria-selected="false" data-i="1"><b>{{t:gal2.b}}</b><span>{{t:gal2.s}}</span></button>
+        <button role="tab" aria-selected="false" data-i="2"><b>{{t:gal3.b}}</b><span>{{t:gal3.s}}</span></button>
+        <button role="tab" aria-selected="false" data-i="3"><b>{{t:gal4.b}}</b><span>{{t:gal4.s}}</span></button>
       </div>
       <div class="gal-view">
         <div class="tvf flat"><div class="bezel"><div class="scr slides" id="galSlides">
-          <img class="on zoom" src="/site/tv-spor.webp" width="1600" height="900" alt="Spor kafe düzeni" loading="lazy">
-          <img class="zoom" src="/site/tv-kafe.webp" width="1600" height="900" alt="Kahveci düzeni" loading="lazy">
-          <img class="zoom" src="/site/tv-vitrin.webp" width="1600" height="900" alt="Vitrin düzeni" loading="lazy">
-          <img class="zoom" src="/site/p-duzen.webp" width="1440" height="900" alt="Paneldeki sürükle-bırak düzen editörü ve hazır düzenler" loading="lazy">
+          <img class="on zoom" src="/site/tv-spor.webp" width="1600" height="900" alt="{{t:gal1.b}}" loading="lazy">
+          <img class="zoom" src="/site/tv-kafe.webp" width="1600" height="900" alt="{{t:gal2.b}}" loading="lazy">
+          <img class="zoom" src="/site/tv-vitrin.webp" width="1600" height="900" alt="{{t:gal3.b}}" loading="lazy">
+          <img class="zoom" src="/site/p-duzen.webp" width="1440" height="900" alt="{{t:gal4.alt}}" loading="lazy">
         </div></div></div>
       </div>
     </div>
 
     <div class="design-g">
       <div>
-        <h3>Ekrana koyabileceğiniz kutular</h3>
-        <ul class="wlist">
-          <li>🎞 Medya oynatıcı</li><li>🏷 Logo</li><li>🕘 Saat ve tarih</li><li>⛅ Hava ve piyasalar</li><li>📜 Kayan bant</li><li>✍️ Duyuru metni</li><li>🖼 Sabit görsel</li><li>🔳 QR kart</li>
-          <li class="pro">⚽ Maçlar ve bilgi sayfaları</li><li class="pro">⭐ Google yorumları</li><li class="pro">🧾 Fiyat tarifesi</li>
-        </ul>
+        <h3>{{t:design.widgets}}</h3>
+        <ul class="wlist">{{WIDGETS}}</ul>
       </div>
       <div>
-        <h3>Markanıza uyan renkler</h3>
-        <ul class="themes" aria-label="Hazır temalar">
-          <li style="--a:#151717;--b:#906538;--c:#c9955c">Koyu Kahve</li><li style="--a:#0e1420;--b:#1f6f43;--c:#3ecf7a">Spor Bar</li><li style="--a:#120d1c;--b:#6b2fb3;--c:#c77dff">Neon Lounge</li>
-          <li style="--a:#160e10;--b:#7a1f2b;--c:#d0606d">Bordo</li><li style="--a:#0b1519;--b:#1d5f73;--c:#4fb3cf">Deniz</li><li style="--a:#0c0c0c;--b:#8a6d1f;--c:#e2bd52">Siyah Altın</li>
+        <h3>{{t:design.colors}}</h3>
+        <ul class="themes" aria-label="{{t:themes.aria}}">
+          <li style="--a:#151717;--b:#906538;--c:#c9955c">{{t:theme.kahve}}</li><li style="--a:#0e1420;--b:#1f6f43;--c:#3ecf7a">{{t:theme.spor}}</li><li style="--a:#120d1c;--b:#6b2fb3;--c:#c77dff">{{t:theme.neon}}</li>
+          <li style="--a:#160e10;--b:#7a1f2b;--c:#d0606d">{{t:theme.bordo}}</li><li style="--a:#0b1519;--b:#1d5f73;--c:#4fb3cf">{{t:theme.deniz}}</li><li style="--a:#0c0c0c;--b:#8a6d1f;--c:#e2bd52">{{t:theme.altin}}</li>
         </ul>
-        <p class="note">Altı yazı tipi, kendi renkleriniz ve televizyonun kenarlarını kesmemesi için kenar payı ayarı.</p>
+        <p class="note">{{t:design.note}}</p>
       </div>
     </div>
   </div>
@@ -154,11 +161,11 @@
 <!-- ============ ÖZELLİKLER (public/site/features.json'dan çizilir) ============ -->
 <section id="ozellikler" class="sec">
   <div class="wrap">
-    <p class="eyebrow">Özellikler</p>
-    <h2>Ekranınızda neler olur</h2>
-    <p class="intro">Bir özelliğe dokunun, nasıl göründüğünü görün. Görüntülerin tamamı ScreenPano'nun gerçek ekranlarından; büyütmek için tıklayın.</p>
+    <p class="eyebrow">{{t:feat.eyebrow}}</p>
+    <h2>{{t:feat.h2}}</h2>
+    <p class="intro">{{t:feat.intro}}</p>
     {{FEATURES}}
-    <h3 class="more-h">Ve dahası</h3>
+    <h3 class="more-h">{{t:more.h}}</h3>
     <ul class="more">{{EXTRAS}}</ul>
   </div>
 </section>
@@ -166,42 +173,39 @@
 <!-- ============ PANEL ============ -->
 <section id="panel" class="sec dark">
   <div class="wrap">
-    <p class="eyebrow">Yönetim paneli</p>
-    <h2>Her şey cebinizde</h2>
-    <p class="intro">Panel telefonda da bilgisayardaki kadar rahat çalışır. Video yüklemek, fiyat değiştirmek ya da kampanyayı açıp kapatmak için tezgâhın arkasından ayrılmanız gerekmez.</p>
+    <p class="eyebrow">{{t:panel.eyebrow}}</p>
+    <h2>{{t:panel.h2}}</h2>
+    <p class="intro">{{t:panel.intro}}</p>
     <div class="phones">
-      <figure><div class="phone"><img class="zoom" src="/site/m-ozet.webp" width="780" height="1688" alt="Özet: canlı önizleme ve kurulum adımları" loading="lazy"></div><figcaption><b>Özet</b>Ekranınız şu an ne gösteriyor</figcaption></figure>
-      <figure><div class="phone"><img class="zoom" src="/site/m-medya.webp" width="780" height="1688" alt="Medya: gösterim sırası" loading="lazy"></div><figcaption><b>Medya</b>Sürükleyin, sıralayın, saat verin</figcaption></figure>
-      <figure><div class="phone"><img class="zoom" src="/site/m-fiyat.webp" width="780" height="1688" alt="Fiyat listesi düzenleme" loading="lazy"></div><figcaption><b>Fiyat listesi</b>Fiyatı değiştir, kaydet, bitti</figcaption></figure>
-      <figure><div class="phone"><img class="zoom" src="/site/m-istatistik.webp" width="780" height="1688" alt="İstatistik: günlük ekran süresi" loading="lazy"></div><figcaption><b>İstatistik</b>Ekran ne kadar açık kaldı</figcaption></figure>
+      <figure><div class="phone"><img class="zoom" src="/site/m-ozet.webp" width="780" height="1688" alt="{{t:ph1.b}}: {{t:ph1.s}}" loading="lazy"></div><figcaption><b>{{t:ph1.b}}</b>{{t:ph1.s}}</figcaption></figure>
+      <figure><div class="phone"><img class="zoom" src="/site/m-medya.webp" width="780" height="1688" alt="{{t:ph2.b}}: {{t:ph2.s}}" loading="lazy"></div><figcaption><b>{{t:ph2.b}}</b>{{t:ph2.s}}</figcaption></figure>
+      <figure><div class="phone"><img class="zoom" src="/site/m-fiyat.webp" width="780" height="1688" alt="{{t:ph3.b}}: {{t:ph3.s}}" loading="lazy"></div><figcaption><b>{{t:ph3.b}}</b>{{t:ph3.s}}</figcaption></figure>
+      <figure><div class="phone"><img class="zoom" src="/site/m-istatistik.webp" width="780" height="1688" alt="{{t:ph4.b}}: {{t:ph4.s}}" loading="lazy"></div><figcaption><b>{{t:ph4.b}}</b>{{t:ph4.s}}</figcaption></figure>
     </div>
-    <ul class="menu-map">
-      <li><b>Özet</b>Canlı önizleme, kurulum adımları</li><li><b>Tasarım</b>Düzen, renk, logo, TV ayarları</li><li><b>Medya</b>Video, fotoğraf, hazır afiş</li><li><b>Fiyat listesi</b>Kategori, ürün, çeviri</li>
-      <li><b>Spor</b>Ligler, maçlar, gol testi</li><li><b>Duyurular</b>Kampanya, QR, yorumlar</li><li><b>Kutlamalar</b>Doğum günü, resmî günler</li><li><b>Bilgi bandı</b>Haber, eczane, sinema</li>
-      <li><b>İstatistik</b>7, 30, 90 gün</li><li><b>Ayarlar</b>Cihazlar, şubeler, kullanıcılar, yedekler</li>
-    </ul>
+    <ul class="menu-map">{{t:panel.map}}</ul>
+    <p class="ui-note">{{t:panel.uiNote}}</p>
   </div>
 </section>
 
 <!-- ============ PAKETLER ============ -->
 <section id="paketler" class="sec">
   <div class="wrap">
-    <p class="eyebrow">Paketler</p>
-    <h2>Mekânınıza uygun paketi seçin</h2>
-    <p class="intro">Ödeme mekân başına, kutu sayısına göre. Her yeni hesap 14 gün Pro olarak açılır; deneme bitince içerikleriniz silinmez.</p>
+    <p class="eyebrow">{{t:plans.eyebrow}}</p>
+    <h2>{{t:plans.h2}}</h2>
+    <p class="intro">{{t:plans.intro}}</p>
     <div class="plans">
-      <div class="plan"><h3>Başlangıç</h3><p class="pnote">Tek ekranlı küçük işletmeler için</p><div class="price">{{PRICE_BASLANGIC}}</div>
-        <a class="btn ghost wide" href="/login#signup">Ücretsiz dene</a>
-        <ul><li>1 TV kutusu</li><li>2 GB medya alanı</li><li>Video, fotoğraf ve hazır afişler</li><li>Saat, hava durumu, döviz ve altın</li><li>QR kodlar ve kampanya kartı</li><li>Zamanlama ve çevrimdışı oynatma</li><li>Resmî günler, istatistik</li></ul></div>
-      <div class="plan pro"><span class="badge">Önerilen</span><h3>Pro</h3><p class="pnote">Kafe, restoran ve spor barlar için</p><div class="price">{{PRICE_PRO}}</div>
-        <a class="btn wide" href="/login#signup">14 gün ücretsiz dene</a>
-        <ul><li><b>Başlangıç'taki her şey</b></li><li>2 TV kutusu (biri yedek için)</li><li>20 GB medya alanı</li><li>Canlı maçlar, gol animasyonu, puan durumu</li><li>Fiyat listesi ve çoklu dil</li><li>Google yorumları ve Instagram</li><li>Bilgi bandı ve doğum günü kutlamaları</li><li>10 şubeye kadar, 3 kullanıcı</li><li>Köşede ürün ibaresi yok</li></ul></div>
+      <div class="plan"><h3>{{t:plan.b.name}}</h3><p class="pnote">{{t:plan.b.note}}</p><div class="price">{{PRICE_BASLANGIC}}</div>
+        <a class="btn ghost wide" href="/login#signup">{{t:plan.b.try}}</a>
+        <ul>{{t:plan.b.list}}</ul></div>
+      <div class="plan pro"><span class="badge">{{t:plan.pro.badge}}</span><h3>Pro</h3><p class="pnote">{{t:plan.pro.note}}</p><div class="price">{{PRICE_PRO}}</div>
+        <a class="btn wide" href="/login#signup">{{t:plan.pro.try}}</a>
+        <ul>{{t:plan.pro.list}}</ul></div>
     </div>
 
     <details class="cmp-w" id="cmp">
-      <summary>Tüm farkları karşılaştırın</summary>
+      <summary>{{t:cmp.summary}}</summary>
       <table class="cmp">
-        <thead><tr><th scope="col">Özellik</th><th scope="col">Başlangıç</th><th scope="col">Pro</th></tr></thead>
+        <thead><tr><th scope="col">{{t:cmp.feature}}</th><th scope="col">{{t:plan.b.name}}</th><th scope="col">Pro</th></tr></thead>
         <tbody>{{COMPARE}}</tbody>
       </table>
     </details>
@@ -212,21 +216,11 @@
 <section id="sss" class="sec">
   <div class="wrap faq-g">
     <div>
-      <p class="eyebrow">Sık sorulanlar</p>
-      <h2>Aklınıza takılanlar</h2>
-      <p class="intro">Burada cevabını bulamadığınız soru için bize yazın; kurulumda da yardımcı oluyoruz.</p>
+      <p class="eyebrow">{{t:faq.eyebrow}}</p>
+      <h2>{{t:faq.h2}}</h2>
+      <p class="intro">{{t:faq.intro}}</p>
     </div>
-    <div class="faq">
-      <details open><summary>Hangi cihaz gerekiyor?</summary><p>Android 5 ve üstü herhangi bir Android TV kutusu ya da Android işletim sistemli akıllı televizyon. Mekânınızda televizyona bağlı bir <b>Windows bilgisayar</b> varsa kutu almadan <a href="/app.exe">Windows uygulamasını</a> da kullanabilirsiniz. Uygulama açılınca giriş ekranı gelir; cihaz açıldığında kendiliğinden başlar.</p></details>
-      <details><summary>Bilgisayardan yayın nasıl çalışır?</summary><p>Windows uygulamasını kurun ve televizyonu bilgisayara HDMI ile bağlayın. Televizyon ikinci ekran olarak tanınırsa yayın kendiliğinden orada tam ekran açılır, bilgisayarınızı kullanmaya devam edebilirsiniz. Uygulama ekranı uyutmaz, bilgisayar açılınca kendiliğinden başlar ve yeni sürümleri gece kendisi kurar.</p></details>
-      <details><summary>Birden çok televizyonum var, her birine kutu mu gerekiyor?</summary><p>Hayır. Tek kutuyu bir HDMI dağıtıcıya (splitter) bağlarsanız bütün televizyonlarda aynı görüntü olur. Pro pakette ikinci kutu, yedek olarak ya da ayrı bir alan için kullanılabilir.</p></details>
-      <details><summary>İnternet kesilirse ne olur?</summary><p>Kutu daha önce indirdiği videoları, fotoğrafları ve ayarları oynatmaya devam eder; kutu yeniden başlasa da ekran gelir. Canlı skor ve döviz gibi bilgiler internet dönünce güncellenir.</p></details>
-      <details><summary>Telefondan yönetebilir miyim?</summary><p>Evet. Panel telefonda da çalışır; video yüklemek, fiyat değiştirmek ya da kampanyayı açıp kapatmak için bilgisayara gerek yok. Çalışanlarınıza ayrı kullanıcı da açabilirsiniz.</p></details>
-      <details><summary>Hangi dosyaları yükleyebilirim?</summary><p>MP4, MOV gibi videolar ve JPG, PNG fotoğraflar. Yüklenen videolar TV'de akıcı oynasın diye otomatik olarak küçültülür; hazır olduğunda kendiliğinden ekrana girer.</p></details>
-      <details><summary>Ekranda neyin ne zaman görüneceğini ayarlayabilir miyim?</summary><p>Evet. Her içerik ve fiyat listesi kategorisi için gün, saat aralığı ve tarih aralığı verebilirsiniz. Örneğin kahvaltı menüsü yalnızca hafta sonu sabah görünür.</p></details>
-      <details><summary>Deneme bitince ne olur?</summary><p>Ekran yayını durur ve TV'de bilgilendirme çıkar; içerikleriniz silinmez. Paketiniz başladığında ekran kendiliğinden geri gelir.</p></details>
-      <details><summary>Kişisel veriler nasıl korunuyor?</summary><p>Şifreler tek yönlü özetlenerek saklanır, bağlantılar şifrelidir ve veriler her gece yedeklenir. Panelden tüm verilerinizi indirebilir ve hesabınızı silebilirsiniz. Ayrıntılar <a href="/kvkk">KVKK Aydınlatma Metni</a>'nde.</p></details>
-    </div>
+    <div class="faq">{{FAQ}}</div>
   </div>
 </section>
 
@@ -234,8 +228,8 @@
 <section class="sec last">
   <div class="wrap">
     <div class="contact">
-      <div><h2>Mekânınızda deneyelim</h2><p>Kurulumda yardım, toplu şube fiyatı ya da sorularınız için bize yazın. Ya da hemen ücretsiz hesabınızı açın, 5 dakikada ekranınız hazır olsun.</p></div>
-      <div class="ways">{{CONTACT}}<a class="btn light" href="/login#signup">Ücretsiz dene</a></div>
+      <div><h2>{{t:contact.h2}}</h2><p>{{t:contact.p}}</p></div>
+      <div class="ways">{{CONTACT}}<a class="btn light" href="/login#signup">{{t:contact.try}}</a></div>
     </div>
   </div>
 </section>
@@ -243,28 +237,45 @@
 
 <footer class="sf">
   <div class="wrap sf-g">
-    <div class="sf-b"><img src="/logo-light.svg" alt="ScreenPano" width="136" height="36"><p>Kafe, restoran ve spor barlar için dijital ekran ve menü panosu.</p></div>
-    <nav aria-label="Ürün"><b>Ürün</b><a href="#nasil">Nasıl çalışır</a><a href="#ozellikler">Özellikler</a><a href="#paketler">Paketler</a><a href="#sss">Sorular</a></nav>
-    <nav aria-label="Hesap"><b>Hesap</b><a href="/login#signup">Ücretsiz dene</a><a href="/login">Panele giriş</a><a href="/app.apk">Android uygulaması</a><a href="/app.exe">Windows uygulaması</a></nav>
-    <nav aria-label="Yasal"><b>Yasal</b><a href="/kosullar">Kullanım Koşulları</a><a href="/kvkk">KVKK Aydınlatma Metni</a><a href="/gizlilik">Gizlilik ve Çerezler</a><a href="/acik-riza">Açık Rıza Metni</a><a href="/veri-isleme">Veri İşleme Sözleşmesi</a></nav>
+    <div class="sf-b"><img class="lg-l" src="/logo-light.svg?v=4" alt="ScreenPano" width="148" height="33"><img class="lg-d" src="/logo.svg?v=4" alt="ScreenPano" width="148" height="33"><p>{{t:footer.tag}}</p></div>
+    <nav aria-label="{{t:footer.product}}"><b>{{t:footer.product}}</b><a href="#nasil">{{t:nav.how}}</a><a href="#ozellikler">{{t:nav.features}}</a><a href="#paketler">{{t:nav.plans}}</a><a href="#sss">{{t:nav.faq}}</a></nav>
+    <nav aria-label="{{t:footer.account}}"><b>{{t:footer.account}}</b><a href="/login#signup">{{t:nav.try}}</a><a href="/login">{{t:footer.login}}</a><a href="/app.apk">{{t:footer.android}}</a><a href="/app.exe">{{t:footer.windows}}</a></nav>
+    <nav aria-label="{{t:footer.legal}}"><b>{{t:footer.legal}}</b><a href="/kosullar">{{t:legal.terms}}</a><a href="/kvkk">{{t:legal.kvkk}}</a><a href="/gizlilik">{{t:legal.privacy}}</a><a href="/acik-riza">{{t:legal.consent}}</a><a href="/veri-isleme">{{t:legal.dpa}}</a>{{t:legal.note}}</nav>
   </div>
-  <div class="wrap sf-c">© {{YEAR}} ScreenPano</div>
+  <div class="wrap sf-c"><span>© {{YEAR}} ScreenPano</span><span class="sf-l">{{LANG_LINKS}}</span></div>
 </footer>
 
-<div class="lb" id="lb" hidden><button class="lb-x" aria-label="Kapat">×</button><img alt=""></div>
+<div class="lb" id="lb" hidden><button class="lb-x" aria-label="{{t:lb.close}}">×</button><img alt=""></div>
 
+<script>window.T = {{JS_T}};</script>
 <script src="/posters.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const T = window.T || {};
+  const root = document.documentElement;
+
+  // tema: sistem ayarı ya da kullanıcının seçimi (localStorage)
+  const sysDark = matchMedia('(prefers-color-scheme: dark)');
+  const isDark = () => root.getAttribute('data-theme') ? root.getAttribute('data-theme') === 'dark' : sysDark.matches;
+  document.querySelectorAll('.theme').forEach(b => b.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('theme', next); } catch (e) {}
+  }));
+
+  // dil seçimi hatırlanır (sunucu kök adreste bakmaz; yalnız menüde işaretli gösterilir)
+  document.querySelectorAll('[data-lang]').forEach(a => a.addEventListener('click', () => { try { localStorage.setItem('lang', a.dataset.lang); } catch (e) {} }));
+  // dil menüsü (details) dışarı tıklanınca kapanır
+  document.addEventListener('click', e => document.querySelectorAll('details.lang[open]').forEach(d => { if (!d.contains(e.target)) d.open = false; }));
 
   // mobil menü
   const top = $('top'), burger = $('burger');
-  const setMenu = o => { top.classList.toggle('open', o); burger.setAttribute('aria-expanded', o); burger.setAttribute('aria-label', o ? 'Menüyü kapat' : 'Menüyü aç'); document.body.classList.toggle('nos', o); };
+  const setMenu = o => { top.classList.toggle('open', o); burger.setAttribute('aria-expanded', o); burger.setAttribute('aria-label', o ? T.menuClose : T.menuOpen); document.body.classList.toggle('nos', o); };
   burger.addEventListener('click', () => setMenu(!top.classList.contains('open')));
   addEventListener('keydown', e => { if (e.key === 'Escape' && top.classList.contains('open')) setMenu(false); });
-  $('nav').addEventListener('click', e => { if (e.target.closest('a')) setMenu(false); });
+  $('nav').addEventListener('click', e => { if (e.target.closest('a:not([data-lang])')) setMenu(false); });
   const onScroll = () => top.classList.toggle('sc', scrollY > 8); onScroll(); addEventListener('scroll', onScroll, { passive: true });
 
   // slayt + sekme grubu
@@ -282,6 +293,7 @@
   const fx = $('fx');
   if (fx) {
     const tabs = [...fx.querySelectorAll('[role=tab]')], panels = [...fx.querySelectorAll('.fx-p')], cnt = fx.querySelector('.fx-c');
+    const rtl = root.dir === 'rtl';
     let cur = 0;
     const box = fx.querySelector('.fx-panels');
     const go = (n, focus, ev) => {
@@ -290,38 +302,33 @@
       panels.forEach((p, k) => p.classList.toggle('on', k === cur));
       cnt.textContent = (cur + 1) + ' / ' + tabs.length;
       const t = tabs[cur], nav = t.parentNode;
-      nav.scrollTo({ left: t.offsetLeft - nav.clientWidth / 2 + t.clientWidth / 2, behavior: reduce ? 'auto' : 'smooth' });
-      if (focus) t.focus();
+      t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduce ? 'auto' : 'smooth' });
+      if (focus) t.focus({ preventScroll: true });
       // telefonda kartın başı ekranın üstünde kaldıysa kartın başına dön
-      if (ev !== 'init' && innerWidth <= 960) { const top = box.getBoundingClientRect().top - nav.getBoundingClientRect().bottom; if (top < -10) scrollBy({ top: top - 8, behavior: reduce ? 'auto' : 'smooth' }); }
+      if (ev !== 'init' && innerWidth <= 960) { const off = box.getBoundingClientRect().top - nav.getBoundingClientRect().bottom; if (off < -10) scrollBy({ top: off - 8, behavior: reduce ? 'auto' : 'smooth' }); }
       poster();
     };
     tabs.forEach((t, k) => t.addEventListener('click', () => go(k)));
     fx.querySelector('[role=tablist]').addEventListener('keydown', ev => {
-      const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[ev.key];
+      const fwd = rtl ? 'ArrowLeft' : 'ArrowRight', back = rtl ? 'ArrowRight' : 'ArrowLeft';
+      const d = { [fwd]: 1, ArrowDown: 1, [back]: -1, ArrowUp: -1 }[ev.key];
       if (d) { ev.preventDefault(); go(cur + d, true); }
     });
     fx.querySelector('.fx-prev').addEventListener('click', () => go(cur - 1));
     fx.querySelector('.fx-next').addEventListener('click', () => go(cur + 1));
-    // telefonda kartı sağa/sola kaydırarak geçiş
+    // telefonda kartı kaydırarak geçiş (sağdan sola dillerde yön tersine)
     let sx = 0, sy = 0;
     box.addEventListener('touchstart', ev => { sx = ev.touches[0].clientX; sy = ev.touches[0].clientY; }, { passive: true });
-    box.addEventListener('touchend', ev => { const dx = ev.changedTouches[0].clientX - sx, dy = ev.changedTouches[0].clientY - sy; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(cur + (dx < 0 ? 1 : -1)); }, { passive: true });
+    box.addEventListener('touchend', ev => { const dx = ev.changedTouches[0].clientX - sx, dy = ev.changedTouches[0].clientY - sy; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(cur + ((dx < 0) !== rtl ? 1 : -1)); }, { passive: true });
     if (location.hash.startsWith('#fx-')) { const k = panels.findIndex(p => '#' + p.id === location.hash); if (k > 0) go(k, false, 'init'); }
 
-    // hazır afiş örnekleri: uygulamanın kendi afiş motoru (posters.js)
-    const demo = [
-      { tpl: 'happy', fields: { title: 'Happy Hour', sub: '17:00 – 19:00', note: 'Tüm kokteyllerde %30 indirim' } },
-      { tpl: 'gunun', fields: { title: 'Günün Menüsü', body: 'Mercimek çorbası\nTavuk sote, pilav\nMevsim salata\nAyran', price: '280 ₺' } },
-      { tpl: 'indirim', fields: { badge: '%20', title: 'Tüm tatlılarda indirim', sub: 'Bu hafta boyunca' } },
-      { tpl: 'muzik', fields: { title: 'Canlı Müzik', sub: 'Cuma 21:00', note: 'Akustik gece · rezervasyon önerilir' } },
-      { tpl: 'wifi', fields: { title: 'Ücretsiz Wi-Fi', sub: 'Ağ: SahilKafe', note: 'Şifre: hosgeldiniz' } },
-    ];
+    // hazır afiş örnekleri: uygulamanın kendi afiş motoru (posters.js), metinler dile göre
+    const demo = T.posters || [];
     let pi = 0, ptm = null;
     function poster() {
       clearInterval(ptm);
       const el = panels[cur].querySelector('[data-poster]');
-      if (!el || !window.SPPoster) return;
+      if (!el || !window.SPPoster || !demo.length) return;
       const show = () => { el.innerHTML = SPPoster.html(demo[pi++ % demo.length]); SPPoster.fit(el.firstChild); };
       show(); if (!reduce) ptm = setInterval(show, 3500);
     }
@@ -336,7 +343,7 @@
   const close = () => { lb.hidden = true; document.body.classList.remove('nos'); };
   document.addEventListener('click', e => {
     const im = e.target.closest('img.zoom');
-    if (im) { lbi.src = im.currentSrc || im.src; lbi.alt = im.alt; lb.classList.toggle('tall', im.naturalHeight > im.naturalWidth); lb.hidden = false; document.body.classList.add('nos'); lb.querySelector('.lb-x').focus(); }
+    if (im) { lbi.src = im.currentSrc || im.src; lbi.alt = im.alt; lb.hidden = false; document.body.classList.add('nos'); lb.querySelector('.lb-x').focus(); }
     else if (!lb.hidden && (e.target === lb || e.target.closest('.lb-x'))) close();
   });
   addEventListener('keydown', e => { if (e.key === 'Escape' && !lb.hidden) close(); });

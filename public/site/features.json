@@ -1,5 +1,5 @@
 {
-  "_nasil": "Tanıtım sitesinin özellik listesi. Uygulamaya yeni bir özellik eklediğinizde buraya bir kayıt ekleyin; site (screenpano.com) ve paket karşılaştırma tablosu buradan çizilir. 'added' tarihinden sonraki 60 gün sitede 'Yeni' rozeti çıkar. 'shot' alanı olan görseller tools/site-shots ile otomatik çekilir (ayrıntı: tools/site-shots/README.md).",
+  "_nasil": "Tanıtım sitesinin özellik listesi. Uygulamaya yeni bir özellik eklediğinizde buraya bir kayıt ekleyin; site (screenpano.com) ve paket karşılaştırma tablosu buradan çizilir. 'added' tarihinden sonraki 60 gün sitede 'Yeni' rozeti çıkar. 'shot' alanı olan görseller tools/site-shots ile otomatik çekilir (ayrıntı: tools/site-shots/README.md). Her kaydın 'i18n' alanında en, de, ar çevirileri durur (title, short, text, points, tags, compare); eksik alan Türkçeye düşer.",
   "features": [
     {
       "id": "medya",
@@ -17,6 +17,41 @@
       "visual": {
         "type": "poster",
         "phone": "m-medya"
+      },
+      "i18n": {
+        "en": {
+          "title": "Videos, photos and ready-made posters",
+          "short": "Media & posters",
+          "compare": "Videos, photos and ready-made posters",
+          "text": "Upload your promo videos and photos, then drag them into the order you want. No designer? No problem: for happy hour, the lunch special, a new product or your Wi‑Fi password, simply edit the text on a ready-made poster.",
+          "points": [
+            "9 editable poster templates in your theme colours",
+            "Videos automatically optimised for TV",
+            "Add your own photo to any poster"
+          ]
+        },
+        "de": {
+          "title": "Videos, Fotos und fertige Plakate",
+          "short": "Medien & Plakate",
+          "compare": "Videos, Fotos und fertige Plakate",
+          "text": "Laden Sie Ihre Werbevideos und Fotos hoch und bringen Sie sie per Drag-and-drop in die gewünschte Reihenfolge. Kein Grafiker zur Hand? Kein Problem: Für Happy Hour, Mittagstisch, neue Produkte oder das WLAN-Passwort ändern Sie einfach den Text eines fertigen Plakats.",
+          "points": [
+            "9 anpassbare Plakatvorlagen in Ihren Designfarben",
+            "Videos werden automatisch für TV optimiert",
+            "Eigene Fotos für jedes Plakat"
+          ]
+        },
+        "ar": {
+          "title": "فيديوهات وصور وملصقات جاهزة",
+          "short": "الوسائط والملصقات",
+          "compare": "فيديوهات وصور وملصقات جاهزة",
+          "text": "ارفع فيديوهاتك الترويجية وصورك، ثم رتّبها بالسحب والإفلات. لا يوجد لديك مصمّم؟ لا مشكلة: للعروض الخاصة أو طبق اليوم أو منتج جديد أو كلمة مرور Wi‑Fi، يكفي أن تعدّل النص في ملصق جاهز.",
+          "points": [
+            "9 قوالب ملصقات قابلة للتعديل بألوان سمتك",
+            "تحسين الفيديوهات تلقائيًا للعرض على التلفاز",
+            "أضف صورتك الخاصة إلى أي ملصق"
+          ]
+        }
       }
     },
     {
@@ -37,6 +72,44 @@
         "type": "tv",
         "img": "tv-vitrin",
         "phone": "m-fiyat"
+      },
+      "i18n": {
+        "en": {
+          "title": "Price lists and menus, multilingual for tourists",
+          "short": "Price list",
+          "compare": "Price list in multiple languages",
+          "text": "Enter your categories and items, and the list pages through on screen. When a price changes, there's nothing to reprint: fix it on your phone and save. The list rotates through Turkish and up to three other languages.",
+          "points": [
+            "Entrance display compliant with Turkish price-labelling rules",
+            "Breakfast menu in the morning, cocktail list in the evening",
+            "English, German, Russian, Arabic, French, Spanish",
+            "Mark an item as sold out with a single tap"
+          ]
+        },
+        "de": {
+          "title": "Preislisten und Speisekarten, mehrsprachig für Gäste aus aller Welt",
+          "short": "Preisliste",
+          "compare": "Mehrsprachige Preisliste",
+          "text": "Geben Sie Kategorien und Artikel ein – die Liste blättert auf dem Bildschirm Seite für Seite um. Ändert sich ein Preis, muss nichts neu gedruckt werden: einfach am Smartphone korrigieren und speichern. Die Liste wechselt zwischen Türkisch und bis zu drei weiteren Sprachen.",
+          "points": [
+            "Eingangsbildschirm gemäß türkischer Preisauszeichnungsverordnung",
+            "Morgens die Frühstückskarte, abends die Cocktailkarte",
+            "Englisch, Deutsch, Russisch, Arabisch, Französisch, Spanisch",
+            "Ausverkaufte Artikel mit einem Fingertipp markieren"
+          ]
+        },
+        "ar": {
+          "title": "قوائم الأسعار والطعام بعدة لغات لضيوفك من السيّاح",
+          "short": "قائمة الأسعار",
+          "compare": "قائمة أسعار متعددة اللغات",
+          "text": "أدخل الفئات والأصناف، فتُعرض القائمة على الشاشة صفحةً تلو الأخرى. وعند تغيّر الأسعار لا داعي لإعادة الطباعة: عدّلها من هاتفك واحفظها. تتناوب القائمة بين التركية وما يصل إلى ثلاث لغات أخرى.",
+          "points": [
+            "شاشة مدخل متوافقة مع لائحة ملصقات الأسعار التركية",
+            "قائمة الإفطار صباحًا وقائمة المشروبات مساءً",
+            "الإنجليزية والألمانية والروسية والعربية والفرنسية والإسبانية",
+            "حدّد الصنف المنتهي بلمسة واحدة"
+          ]
+        }
       }
     },
     {
@@ -55,6 +128,41 @@
       "visual": {
         "type": "tv",
         "img": "tv-gol"
+      },
+      "i18n": {
+        "en": {
+          "title": "Match nights bring your screen to life",
+          "short": "Live matches",
+          "compare": "Live matches and goal animations",
+          "text": "Today's fixtures, live scores and league tables for the competitions you choose. Every goal triggers an on-screen animation and the day's results scroll along the ticker. Ahead of big games, the screen announces them along with your booking note.",
+          "points": [
+            "Turkish Süper Lig, 1. Lig, European cups and top European leagues",
+            "Goal animations and live scores",
+            "Your own match list with broadcast channels"
+          ]
+        },
+        "de": {
+          "title": "An Spieltagen wird Ihr Bildschirm lebendig",
+          "short": "Live-Spiele",
+          "compare": "Live-Spiele und Tor-Animation",
+          "text": "Die heutigen Begegnungen, Live-Ergebnisse und Tabellen der von Ihnen gewählten Ligen. Bei jedem Tor erscheint eine Animation, und im Laufband laufen die Ergebnisse des Tages. Vor Topspielen wird mit Ihrem Reservierungshinweis darauf aufmerksam gemacht.",
+          "points": [
+            "Süper Lig, 1. Lig, Europapokale und europäische Topligen",
+            "Tor-Animation und Live-Ergebnisse",
+            "Eigene Spielliste mit Sendern"
+          ]
+        },
+        "ar": {
+          "title": "أمسيات المباريات تُحيي شاشتك تلقائيًا",
+          "short": "المباريات المباشرة",
+          "compare": "المباريات المباشرة ورسوم الأهداف",
+          "text": "مباريات اليوم والنتائج المباشرة وجداول الترتيب للدوريات التي تختارها. مع كل هدف تظهر رسوم متحركة على الشاشة، وتمرّ نتائج اليوم في الشريط المتحرك. وقبل المباريات الكبرى يُعلَن عنها مع ملاحظة الحجز الخاصة بك.",
+          "points": [
+            "الدوري التركي الممتاز والدرجة الأولى والبطولات الأوروبية وكبرى الدوريات الأوروبية",
+            "رسوم متحركة للأهداف ونتائج مباشرة",
+            "قائمة مبارياتك الخاصة مع القنوات الناقلة"
+          ]
+        }
       }
     },
     {
@@ -74,13 +182,59 @@
         "type": "tv",
         "img": "tv-kampanya",
         "phone": "m-duyuru"
+      },
+      "i18n": {
+        "en": {
+          "title": "Promotion card, QR codes and Google reviews",
+          "short": "Promotions & QR",
+          "compare": "QR codes and promotion card",
+          "text": "At set intervals, a promotion card with a QR code takes over the media area, for example: \"Review us on Google and your coffee is on us\". QR codes for your menu, Wi‑Fi or Instagram rotate on screen, and your 4- and 5-star Google reviews scroll along the bottom.",
+          "points": [
+            "You choose how often and for how long it appears",
+            "Up to 6 QR codes; the Wi‑Fi code connects with one tap",
+            "Your Instagram posts join the media rotation"
+          ]
+        },
+        "de": {
+          "title": "Aktionskarte, QR-Codes und Google-Bewertungen",
+          "short": "Aktionen & QR",
+          "compare": "QR-Codes und Aktionskarte",
+          "text": "In festen Abständen ersetzt eine Aktionskarte mit QR-Code die Medienfläche, etwa: „Bewerten Sie uns bei Google – der Kaffee geht aufs Haus.“ QR-Codes für Speisekarte, WLAN oder Instagram wechseln sich ab, und Ihre 4- und 5-Sterne-Bewertungen von Google laufen am unteren Rand.",
+          "points": [
+            "Sie legen fest, wie oft und wie lange sie erscheint",
+            "Bis zu 6 QR-Codes; der WLAN-Code verbindet mit einem Tipp",
+            "Ihre Instagram-Beiträge laufen in der Medienschleife mit"
+          ]
+        },
+        "ar": {
+          "title": "بطاقة العروض ورموز QR وتقييمات Google",
+          "short": "العروض وQR",
+          "compare": "رموز QR وبطاقة العروض",
+          "text": "على فترات تحددها، تظهر بطاقة عرض تحمل رمز QR مكان الوسائط، مثل: «قيّمنا على Google وقهوتك علينا». وتتناوب على الشاشة رموز QR لقائمة الطعام أو شبكة Wi‑Fi أو Instagram، فيما تمرّ تقييماتك ذات الأربع والخمس نجوم على Google أسفل الشاشة.",
+          "points": [
+            "تحدّد عدد مرات ظهورها ومدته",
+            "حتى 6 رموز QR؛ ورمز Wi‑Fi يتصل بلمسة واحدة",
+            "تنضم منشوراتك على Instagram إلى دورة العرض"
+          ]
+        }
       }
     },
     {
       "id": "yorum",
       "hidden": true,
       "plan": "pro",
-      "compare": "Google yorumları ve Instagram"
+      "compare": "Google yorumları ve Instagram",
+      "i18n": {
+        "en": {
+          "compare": "Google reviews and Instagram"
+        },
+        "de": {
+          "compare": "Google-Bewertungen und Instagram"
+        },
+        "ar": {
+          "compare": "تقييمات Google وInstagram"
+        }
+      }
     },
     {
       "id": "kutlama",
@@ -99,6 +253,41 @@
         "type": "tv",
         "img": "tv-dogumgunu",
         "win": "p-kutlama"
+      },
+      "i18n": {
+        "en": {
+          "title": "Birthdays and national holidays",
+          "short": "Celebrations",
+          "compare": "Birthday greetings",
+          "text": "On a customer's or team member's birthday, a greeting appears on screen at the times you choose. On Turkey's national days (23 April, 19 May, 30 August, 29 October and 10 November), the screen switches automatically to flag and commemoration visuals.",
+          "points": [
+            "Names, messages and display times",
+            "Automatic on national days, or with your own photo",
+            "Consent confirmation when adding a birthday (KVKK)"
+          ]
+        },
+        "de": {
+          "title": "Geburtstage und Nationalfeiertage",
+          "short": "Anlässe",
+          "compare": "Geburtstagsgrüße",
+          "text": "Am Geburtstag eines Gastes oder Mitarbeitenden erscheint zu den von Ihnen gewählten Zeiten ein Glückwunsch auf dem Bildschirm. An den türkischen Nationalfeiertagen (23. April, 19. Mai, 30. August, 29. Oktober und 10. November) wechselt der Bildschirm automatisch zu Flaggen- und Gedenkmotiven.",
+          "points": [
+            "Namen, Nachrichten und Anzeigezeiten",
+            "Automatisch an Nationalfeiertagen, auf Wunsch mit eigenem Foto",
+            "Einwilligungsbestätigung beim Anlegen eines Geburtstags (KVKK)"
+          ]
+        },
+        "ar": {
+          "title": "أعياد الميلاد والمناسبات الوطنية",
+          "short": "المناسبات",
+          "compare": "تهاني أعياد الميلاد",
+          "text": "في يوم ميلاد أحد عملائك أو موظفيك تظهر رسالة تهنئة على الشاشة في الأوقات التي تحددها. وفي المناسبات الوطنية التركية (23 أبريل و19 مايو و30 أغسطس و29 أكتوبر و10 نوفمبر) تتحوّل الشاشة تلقائيًا إلى صور العلم والذكرى.",
+          "points": [
+            "الأسماء والرسائل وأوقات العرض",
+            "تلقائيًا في المناسبات الوطنية، أو بصورتك الخاصة",
+            "تأكيد الموافقة عند إضافة عيد ميلاد (KVKK)"
+          ]
+        }
       }
     },
     {
@@ -120,13 +309,68 @@
       "visual": {
         "type": "win",
         "img": "p-bilgi"
+      },
+      "i18n": {
+        "en": {
+          "title": "Info ticker: your screen is never empty",
+          "short": "Info ticker",
+          "compare": "Info ticker (news, pharmacies, cinema…)",
+          "text": "Between your media and prices, info pages that your guests care about rotate on screen. Switch each one on or off with a toggle; the data updates by itself.",
+          "tags": [
+            "Breaking news",
+            "Pharmacies on duty",
+            "Now in cinemas, with trailers",
+            "New book releases",
+            "On this day",
+            "Traffic (Istanbul)"
+          ]
+        },
+        "de": {
+          "title": "Infoband: Ihr Bildschirm ist nie leer",
+          "short": "Infoband",
+          "compare": "Infoband (Nachrichten, Apotheken, Kino…)",
+          "text": "Zwischen Medien und Preisen wechseln Infoseiten, die Ihre Gäste interessieren. Jede Seite schalten Sie per Schalter ein oder aus; die Daten aktualisieren sich automatisch.",
+          "tags": [
+            "Eilmeldungen",
+            "Apotheken-Notdienst",
+            "Neu im Kino, mit Trailern",
+            "Neue Bücher",
+            "Heute vor … Jahren",
+            "Verkehrslage (Istanbul)"
+          ]
+        },
+        "ar": {
+          "title": "شريط المعلومات: شاشتك لا تفرغ أبدًا",
+          "short": "شريط المعلومات",
+          "compare": "شريط المعلومات (أخبار، صيدليات، سينما…)",
+          "text": "بين الوسائط والأسعار تتناوب صفحات معلومات تهمّ ضيوفك. تشغّل كل صفحة أو توقفها بمفتاح بسيط، وتُحدَّث البيانات تلقائيًا.",
+          "tags": [
+            "آخر الأخبار",
+            "الصيدليات المناوبة",
+            "أفلام السينما مع الإعلانات",
+            "إصدارات الكتب الجديدة",
+            "حدث في مثل هذا اليوم",
+            "حالة المرور (إسطنبول)"
+          ]
+        }
       }
     },
     {
       "id": "piyasa",
       "hidden": true,
       "plan": "all",
-      "compare": "Saat, hava durumu, döviz ve altın"
+      "compare": "Saat, hava durumu, döviz ve altın",
+      "i18n": {
+        "en": {
+          "compare": "Clock, weather, exchange rates and gold prices"
+        },
+        "de": {
+          "compare": "Uhrzeit, Wetter, Wechselkurse und Goldpreis"
+        },
+        "ar": {
+          "compare": "الساعة والطقس وأسعار الصرف والذهب"
+        }
+      }
     },
     {
       "id": "zaman",
@@ -142,6 +386,38 @@
       "compare": "Zamanlama",
       "visual": {
         "type": "schedule"
+      },
+      "i18n": {
+        "en": {
+          "title": "Every item runs on its own schedule",
+          "short": "Scheduling",
+          "compare": "Scheduling",
+          "text": "Set days, time slots and date ranges for every video, photo, poster, promotion and price-list category. The breakfast poster shows only on weekend mornings, happy hour only in the early evening. Schedules keep working even without internet.",
+          "points": [
+            "Time slots that run past midnight (22:00 – 02:00)",
+            "Promotions with start and end dates"
+          ]
+        },
+        "de": {
+          "title": "Jeder Inhalt nach eigenem Zeitplan",
+          "short": "Zeitplanung",
+          "compare": "Zeitplanung",
+          "text": "Legen Sie für jedes Video, Foto, Plakat, jede Aktion und jede Kategorie der Preisliste Wochentage, Uhrzeiten und Zeiträume fest. Das Frühstücksplakat erscheint nur am Wochenende vormittags, die Happy Hour nur am frühen Abend. Die Zeitpläne funktionieren auch ohne Internet.",
+          "points": [
+            "Zeitfenster über Mitternacht hinaus (22:00 – 02:00)",
+            "Aktionen mit Start- und Enddatum"
+          ]
+        },
+        "ar": {
+          "title": "لكل محتوى توقيته الخاص",
+          "short": "الجدولة",
+          "compare": "الجدولة",
+          "text": "حدّد الأيام والفترات الزمنية والتواريخ لكل فيديو وصورة وملصق وعرض ولكل فئة في قائمة الأسعار. يظهر ملصق الإفطار صباح أيام العطلة فقط، وعروض المساء في ساعات المساء الأولى فقط. وتستمر الجداول في العمل حتى دون إنترنت.",
+          "points": [
+            "فترات زمنية تمتد بعد منتصف الليل (22:00 – 02:00)",
+            "عروض بتاريخ بداية ونهاية"
+          ]
+        }
       }
     },
     {
@@ -160,6 +436,41 @@
       "visual": {
         "type": "win",
         "img": "p-cihaz"
+      },
+      "i18n": {
+        "en": {
+          "title": "Playback continues offline, and you're alerted if a screen goes dark",
+          "short": "Offline & alerts",
+          "compare": "Offline playback and device alerts",
+          "text": "The box keeps a copy of your videos and latest settings, so the screen stays on even if the connection drops or the box restarts. If a box is offline for more than 10 minutes, you get an alert in the dashboard and by email.",
+          "points": [
+            "The app starts automatically when the box is switched on",
+            "Device status: version, resolution, what's playing",
+            "View a live screenshot from your phone and reload remotely"
+          ]
+        },
+        "de": {
+          "title": "Wiedergabe auch offline – und ein Hinweis, wenn ein Bildschirm ausfällt",
+          "short": "Offline & Warnungen",
+          "compare": "Offline-Wiedergabe und Gerätewarnungen",
+          "text": "Die Box speichert eine Kopie Ihrer Videos und der aktuellen Einstellungen. Selbst wenn die Verbindung abbricht oder die Box neu startet, bleibt der Bildschirm an. Ist eine Box länger als 10 Minuten offline, erhalten Sie eine Warnung im Dashboard und per E-Mail.",
+          "points": [
+            "Die App startet automatisch mit der Box",
+            "Gerätestatus: Version, Auflösung, laufender Inhalt",
+            "Aktuellen Screenshot per Smartphone abrufen und aus der Ferne neu laden"
+          ]
+        },
+        "ar": {
+          "title": "يستمر العرض دون إنترنت، وتصلك تنبيهات إذا توقفت الشاشة",
+          "short": "دون إنترنت والتنبيهات",
+          "compare": "العرض دون إنترنت وتنبيهات الأجهزة",
+          "text": "يحتفظ الجهاز بنسخة من فيديوهاتك وآخر إعداداتك، فتبقى الشاشة تعمل حتى إذا انقطع الاتصال أو أُعيد تشغيل الجهاز. وإذا انقطع الجهاز لأكثر من 10 دقائق، يصلك تنبيه في لوحة التحكم وعبر البريد الإلكتروني.",
+          "points": [
+            "يعمل التطبيق تلقائيًا عند تشغيل الجهاز",
+            "حالة الجهاز: الإصدار والدقة والمحتوى المعروض",
+            "اعرض لقطة حيّة للشاشة من هاتفك وأعد تحميلها عن بُعد"
+          ]
+        }
       }
     },
     {
@@ -179,6 +490,41 @@
         "type": "win",
         "img": "p-istatistik",
         "phone": "m-istatistik"
+      },
+      "i18n": {
+        "en": {
+          "title": "See how much your content was seen",
+          "short": "Statistics",
+          "compare": "Statistics",
+          "text": "How many hours your screen was on each day, and how often each video or poster played. Summaries for the last 7, 30 and 90 days, so you know your promotion really ran.",
+          "points": [
+            "Daily screen-time chart",
+            "Play count and duration for each item",
+            "No personal data collected"
+          ]
+        },
+        "de": {
+          "title": "Sehen Sie, wie oft Ihre Inhalte liefen",
+          "short": "Statistik",
+          "compare": "Statistik",
+          "text": "Wie viele Stunden Ihr Bildschirm täglich lief und wie oft jedes Video oder Plakat gezeigt wurde. Übersichten für die letzten 7, 30 und 90 Tage – so wissen Sie, dass Ihre Aktion wirklich zu sehen war.",
+          "points": [
+            "Diagramm der täglichen Laufzeit",
+            "Anzahl und Dauer der Wiedergaben je Inhalt",
+            "Keine personenbezogenen Daten"
+          ]
+        },
+        "ar": {
+          "title": "اعرف كم شوهد محتواك",
+          "short": "الإحصاءات",
+          "compare": "الإحصاءات",
+          "text": "كم ساعة عملت شاشتك يوميًا، وكم مرة عُرض كل فيديو أو ملصق. ملخصات لآخر 7 و30 و90 يومًا، لتتأكد أن عرضك ظهر فعلًا.",
+          "points": [
+            "رسم بياني لمدة التشغيل اليومية",
+            "عدد مرات العرض ومدته لكل محتوى",
+            "لا تُجمع أي بيانات شخصية"
+          ]
+        }
       }
     },
     {
@@ -196,6 +542,38 @@
       "visual": {
         "type": "win",
         "img": "p-sube"
+      },
+      "i18n": {
+        "en": {
+          "title": "Multiple branches, one account",
+          "short": "Branches",
+          "compare": "Multiple branches",
+          "text": "Each branch has its own screen and content, all managed from a single account. Prepare a menu or promotion in one branch and copy it to the others with one click, and give your staff their own logins.",
+          "points": [
+            "Switch between branches with one click",
+            "Copy layouts, colours, media, prices and announcements"
+          ]
+        },
+        "de": {
+          "title": "Mehrere Filialen, ein Konto",
+          "short": "Filialen",
+          "compare": "Mehrere Filialen",
+          "text": "Jede Filiale hat ihren eigenen Bildschirm und eigene Inhalte – verwaltet über ein einziges Konto. Erstellen Sie eine Speisekarte oder Aktion in einer Filiale und übernehmen Sie sie mit einem Klick in die anderen. Ihre Mitarbeitenden erhalten eigene Zugänge.",
+          "points": [
+            "Mit einem Klick zwischen Filialen wechseln",
+            "Layouts, Farben, Medien, Preise und Ankündigungen kopieren"
+          ]
+        },
+        "ar": {
+          "title": "فروع متعددة وحساب واحد",
+          "short": "الفروع",
+          "compare": "فروع متعددة",
+          "text": "لكل فرع شاشته ومحتواه الخاص، وتديرها جميعًا من حساب واحد. جهّز قائمة أو عرضًا في أحد الفروع وانسخه إلى بقية الفروع بنقرة واحدة، وامنح موظفيك حسابات دخول خاصة بهم.",
+          "points": [
+            "التنقّل بين الفروع بنقرة واحدة",
+            "نسخ التخطيطات والألوان والوسائط والأسعار والإعلانات"
+          ]
+        }
       }
     }
   ],
@@ -204,37 +582,135 @@
       "icon": "💻",
       "title": "Windows'tan da yayın",
       "text": "Kutu yerine televizyona bağlı bilgisayarınızdan yayın yapın.",
-      "added": "2026-11-02"
+      "added": "2026-11-02",
+      "i18n": {
+        "en": {
+          "title": "Play from Windows too",
+          "text": "Stream from the PC connected to your TV instead of a box."
+        },
+        "de": {
+          "title": "Auch vom Windows-PC",
+          "text": "Statt einer Box den PC am Fernseher nutzen."
+        },
+        "ar": {
+          "title": "العرض من Windows أيضًا",
+          "text": "اعرض من الحاسوب المتصل بالتلفاز بدلًا من الجهاز."
+        }
+      }
     },
     {
       "icon": "🔒",
       "title": "KVKK'ya uygun",
-      "text": "Aydınlatma onayı, verilerinizi indirme ve hesap silme."
+      "text": "Aydınlatma onayı, verilerinizi indirme ve hesap silme.",
+      "i18n": {
+        "en": {
+          "title": "KVKK compliant",
+          "text": "Consent records, data export and account deletion, in line with Turkish data protection law."
+        },
+        "de": {
+          "title": "KVKK-konform",
+          "text": "Einwilligungen, Datenexport und Kontolöschung gemäß türkischem Datenschutzrecht."
+        },
+        "ar": {
+          "title": "متوافق مع KVKK",
+          "text": "سجلات الموافقة وتصدير البيانات وحذف الحساب وفق قانون حماية البيانات التركي."
+        }
+      }
     },
     {
       "icon": "💾",
       "title": "Her gece yedek",
-      "text": "Panelden elle yedek alıp geri de yükleyebilirsiniz."
+      "text": "Panelden elle yedek alıp geri de yükleyebilirsiniz.",
+      "i18n": {
+        "en": {
+          "title": "Nightly backups",
+          "text": "Create a backup manually and restore it from the dashboard."
+        },
+        "de": {
+          "title": "Nächtliche Backups",
+          "text": "Backups auch manuell anlegen und im Dashboard wiederherstellen."
+        },
+        "ar": {
+          "title": "نسخ احتياطي كل ليلة",
+          "text": "أنشئ نسخة احتياطية يدويًا واستعدها من لوحة التحكم."
+        }
+      }
     },
     {
       "icon": "📺",
       "title": "Kenar payı ayarı",
-      "text": "Kenarları kesen televizyonlar için ekranı içeri alın."
+      "text": "Kenarları kesen televizyonlar için ekranı içeri alın.",
+      "i18n": {
+        "en": {
+          "title": "Overscan adjustment",
+          "text": "Pull the picture inwards on TVs that crop the edges."
+        },
+        "de": {
+          "title": "Randanpassung",
+          "text": "Das Bild nach innen rücken, wenn der Fernseher Ränder abschneidet."
+        },
+        "ar": {
+          "title": "ضبط الهوامش",
+          "text": "أدخل الصورة إلى الداخل في الشاشات التي تقتطع الأطراف."
+        }
+      }
     },
     {
       "icon": "⚡",
       "title": "Anında güncelleme",
-      "text": "Kaydettiğiniz değişiklik birkaç saniyede ekranda."
+      "text": "Kaydettiğiniz değişiklik birkaç saniyede ekranda.",
+      "i18n": {
+        "en": {
+          "title": "Instant updates",
+          "text": "Your changes are on screen within seconds."
+        },
+        "de": {
+          "title": "Sofortige Aktualisierung",
+          "text": "Ihre Änderungen sind in Sekunden auf dem Bildschirm."
+        },
+        "ar": {
+          "title": "تحديث فوري",
+          "text": "تظهر تعديلاتك على الشاشة خلال ثوانٍ."
+        }
+      }
     },
     {
       "icon": "🔑",
       "title": "Güvenli eşleştirme",
-      "text": "Kutu şifrenizi değil, yalnızca kendi anahtarını saklar."
+      "text": "Kutu şifrenizi değil, yalnızca kendi anahtarını saklar.",
+      "i18n": {
+        "en": {
+          "title": "Secure pairing",
+          "text": "The box stores its own key, never your password."
+        },
+        "de": {
+          "title": "Sichere Kopplung",
+          "text": "Die Box speichert nur ihren eigenen Schlüssel, nie Ihr Passwort."
+        },
+        "ar": {
+          "title": "ربط آمن",
+          "text": "يحتفظ الجهاز بمفتاحه الخاص فقط، وليس بكلمة مرورك."
+        }
+      }
     },
     {
       "icon": "🧩",
       "title": "Tek kutu, tüm TV'ler",
-      "text": "HDMI dağıtıcıyla istediğiniz kadar televizyon."
+      "text": "HDMI dağıtıcıyla istediğiniz kadar televizyon.",
+      "i18n": {
+        "en": {
+          "title": "One box, every TV",
+          "text": "Use an HDMI splitter to drive as many TVs as you like."
+        },
+        "de": {
+          "title": "Eine Box, alle Fernseher",
+          "text": "Per HDMI-Splitter beliebig viele Fernseher bespielen."
+        },
+        "ar": {
+          "title": "جهاز واحد لكل الشاشات",
+          "text": "شغّل أي عدد من الشاشات عبر موزّع HDMI."
+        }
+      }
     }
   ],
   "shots": {

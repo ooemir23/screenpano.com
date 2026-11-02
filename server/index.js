@@ -27,10 +27,16 @@ app.get('/', (req, res) => {
   if (/; wv\)/.test(String(req.headers['user-agent'] || ''))) return res.redirect('/tv');
   const u = auth.sessionUser(req);
   if (u && req.query.site === undefined) return res.redirect(u.role === 'super' && !u.imp ? '/super' : '/panel');
-  res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(sitePage());
+  res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(sitePage('tr'));
+});
+// diğer diller: /en, /de, /ar (giriş yapmış kullanıcı da siteyi görür)
+app.get(/^\/(en|de|ar)\/?$/, (req, res) => {
+  if (req.path.endsWith('/')) return res.redirect(301, req.path.slice(0, -1));
+  res.setHeader('Cache-Control', 'no-cache'); res.setHeader('Content-Language', req.params[0]);
+  res.type('html').send(sitePage(req.params[0]));
 });
 // Tanıtım sitesi: şablon + public/site/features.json (server/site.js)
-const sitePage = () => require('./site').render(require('./store'), tenants, require('./plans').access);
+const sitePage = lang => require('./site').render(require('./store'), tenants, require('./plans').access, lang);
 for (const k of require('./legal').KEYS) app.get('/' + k, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(require('./legal').render(k)); });
 // TV çevrimdışı önbelleği: service worker kök kapsamda ve her zaman taze
 app.get('/sw.js', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.setHeader('Service-Worker-Allowed', '/'); res.type('js').sendFile(path.join(config.PUBLIC_DIR, 'sw.js')); });
