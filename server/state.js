@@ -123,7 +123,7 @@ function publicState(t) {
     showPharmacy: pro && (db.pharmacy || {}).enabled !== false,
     pharmacies: pro ? F.pharmFor(t) : null,
     bigMatches: pro && F.bigCfg(t).enabled ? F.activeBig(t) : [],
-    bigCfg: (({ note, info, everyMin, durSec }) => ({ note, info, everyMin, durSec }))(F.bigCfg(t)),
+    bigCfg: (({ note, info, everyMin, durSec, style }) => ({ note, info, everyMin, durSec, style }))(F.bigCfg(t)),
     celebration: F.activeCelebration(t),
     campaigns: (db.campaigns || []).filter(c => c.enabled && c.svg).map(pubCamp),
     safeInset: Math.max(0, Math.min(12, Number(db.safeInset) || 0)),
