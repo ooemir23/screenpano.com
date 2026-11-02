@@ -483,13 +483,9 @@ async function fillCovers() {
 const BOOK_PUBLISHERS = ['Can Yayınları', 'Yapı Kredi Yayınları', 'İletişim Yayınları', 'İş Bankası Kültür Yayınları', 'Doğan Kitap', 'Everest Yayınları', 'Domingo Yayınları', 'Timaş Yayınları', 'Epsilon Yayınevi', 'Metis Yayınları'];
 const bookPublishers = () => { const l = String(platformKey('books_publishers') || '').split(',').map(x => x.trim()).filter(Boolean); return l.length ? l.slice(0, 15) : BOOK_PUBLISHERS; };
 const AUDIO = /sesli|audio|dinle|\bmp3\b|podcast/i;
-const pubDate = d => { // YYYY-AA(-GG); yalnız yıl yazılıysa ve bu yılsa tarih bilinmiyor sayılıp yakın kabul edilir
-  const m = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(String(d || ''));
-  if (m) return Date.parse(`${m[1]}-${m[2]}-${m[3] || '15'}`);
-  return /^\d{4}$/.test(String(d || '')) && +d === new Date().getFullYear() ? Date.now() - 60 * 24 * HOUR : NaN;
-};
+const pubDate = d => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || '')); return m ? Date.parse(`${m[1]}-${m[2]}-${m[3]}`) : NaN; }; // yalnız gün-gün tarih: "o hafta çıkan" ancak böyle doğrulanır
 async function googleNewBooks() {
-  const key = gbKey(), since = Date.now() - 150 * 24 * HOUR, found = [];
+  const key = gbKey(), since = Date.now() - 7 * 24 * HOUR, found = []; // yalnız son 7 günde çıkanlar
   let calls = 0, firstErr = '';
   const st = { ham: 0, kapaksiz: 0, sesli: 0, yazarsiz: 0, tarih: 0, yayinevi: 0 };
   for (const pub of bookPublishers()) {
@@ -504,18 +500,18 @@ async function googleNewBooks() {
         if (AUDIO.test([vi.title, vi.subtitle, vi.publisher, (vi.categories || []).join(' ')].join(' '))) { st.sesli++; continue; } // sesli kitaplar alınmaz
         if (!u || !vi.title) { st.kapaksiz++; continue; }
         if (!(vi.authors || []).length) { st.yazarsiz++; continue; }
-        if (!isFinite(d) || d < since || d > Date.now() + 30 * 24 * HOUR) { st.tarih++; continue; }
+        if (!isFinite(d) || d < since || d > Date.now() + 3 * 24 * HOUR) { st.tarih++; continue; }
         if (norm(vi.publisher || '') && !norm(vi.publisher).includes(norm(pub).split(' ')[0])) { st.yayinevi++; continue; } // başka yayınevinin kitabı karışmasın
         list.push({ image: u.replace(/^http:/, 'https:').replace('&edge=curl', ''), title: [vi.title, vi.subtitle].filter(Boolean).join(' - ').slice(0, 90), author: vi.authors.slice(0, 2).join(', '), publisher: vi.publisher || pub, d });
       }
-      list.sort((a, b) => b.d - a.d); found.push(list.slice(0, 2));
+      list.sort((a, b) => b.d - a.d); found.push(list.slice(0, 3));
     } catch (e) { firstErr = firstErr || 'Google Books: ' + e.message; }
     await new Promise(r => setTimeout(r, 300));
   }
   const seen = new Set(), items = [];
-  for (let i = 0; i < 2 && items.length < 8; i++) for (const l of found) { const x = l[i]; if (!x || seen.has(norm(x.title))) continue; seen.add(norm(x.title)); const { d, ...rest } = x; items.push(rest); }
+  for (let i = 0; i < 3 && items.length < 8; i++) for (const l of found) { const x = l[i]; if (!x || seen.has(norm(x.title))) continue; seen.add(norm(x.title)); const { d, ...rest } = x; items.push(rest); }
   const dbg = `gelen ${st.ham}: kapaksız ${st.kapaksiz}, sesli ${st.sesli}, yazarsız ${st.yazarsiz}, tarih dışı ${st.tarih}, başka yayınevi ${st.yayinevi}`;
-  if (items.length < 4) throw new Error(`Google Books: yeterli yeni kitap bulunamadı (${items.length}; ${dbg})${firstErr ? ' · ' + firstErr : ''}`);
+  if (items.length < 1) throw new Error(`Google Books: bu hafta çıkan kitap bulunamadı (${items.length}; ${dbg})${firstErr ? ' · ' + firstErr : ''}`);
   return items.slice(0, 8);
 }
 async function collectNewBooks(key) {
