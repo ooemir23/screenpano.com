@@ -17,7 +17,7 @@ r.use((req, res, next) => {
   req.user = u; next();
 });
 
-const SETTINGS = ['collect_key', 'collect_paid', 'tmdb_key', 'books_key', 'traffic_api', 'google_places_key', 'alert_webhook',
+const SETTINGS = ['collect_key', 'collect_paid', 'tmdb_key', 'books_key', 'traffic_api', 'google_places_key', 'google_monthly_cap', 'alert_webhook',
   'legal_company', 'legal_address', 'legal_email', 'legal_phone', 'legal_mersis', 'legal_kep', 'legal_hosting',
   'site_url', 'site_phone', 'site_whatsapp', 'site_email', 'site_price_baslangic', 'site_price_pro'];
 
@@ -29,8 +29,9 @@ r.get('/overview', (req, res) => {
   });
   const settings = Object.fromEntries(SETTINGS.map(k => [k, store.setting(k)]));
   settings.traffic_secret = require('./feeds').trafficSecret();
+  const gUse = require('./social').googleUsage();
   const backup = require('./backup'), storage = require('./storage'), monitor = require('./monitor');
-  res.json({ backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
+  res.json({ google: gUse, backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
 });
 r.post('/tenants', (req, res) => {
   try {

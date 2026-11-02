@@ -1,5 +1,6 @@
 // Google yorumları (Places API) ve Instagram paylaşımları (Instagram Graph API).
-// Google: platform anahtarı (süper yönetim → google_places_key) + işletmenin Google Haritalar kaydı. 12 saatte bir yenilenir.
+// Google: platform anahtarı (süper yönetim → google_places_key) + işletmenin Google Haritalar kaydı. 24 saatte bir yenilenir.
+// Maliyet koruması: aylık çağrı sayısı sınırlıdır (varsayılan 900 ≈ Google'ın ücretsiz kotası); %80'de ve dolunca uyarı gider, dolunca çağrı yapılmaz, eski yorumlar gösterilmeye devam eder.
 // Instagram: işletme kendi hesabının uzun ömürlü erişim anahtarını girer; anahtar haftada bir otomatik uzatılır,
 // son paylaşımların görselleri işletmenin klasörüne indirilir (Instagram'ın görsel adresleri birkaç gün sonra geçersizleşir).
 const fs = require('fs');
@@ -18,10 +19,34 @@ async function jget(url, opt = {}) {
   return j;
 }
 
+
+// ---- Google maliyet koruması ----
+const gCap = () => Number(store.setting('google_monthly_cap', '')) || Number(process.env.GOOGLE_MONTHLY_CAP) || 900;
+const gMonth = () => new Date().toISOString().slice(0, 7);
+function googleUsage() { return { month: gMonth(), calls: Number(store.setting('google_calls_' + gMonth(), '0')) || 0, cap: gCap() }; }
+// Çağrıdan önce çağrılır: sınır dolduysa false; değilse sayacı artırır, eşiklerde yöneticiyi uyarır
+function gSpend() {
+  const u = googleUsage();
+  if (u.calls >= u.cap) { gWarn('full', u); return false; }
+  store.setSetting('google_calls_' + u.month, u.calls + 1);
+  if (u.calls + 1 >= Math.floor(u.cap * 0.8)) gWarn('near', { ...u, calls: u.calls + 1 });
+  return true;
+}
+function gWarn(kind, u) {
+  const k = `google_warn_${kind}_${u.month}`; if (store.setting(k, '')) return; store.setSetting(k, '1');
+  const text = kind === 'full'
+    ? `ScreenPano: Google Places aylık çağrı sınırı doldu (${u.calls}/${u.cap}). Ücret çıkmaması için ay sonuna kadar yeni çağrı yapılmayacak; ekranlarda son alınan yorumlar gösterilir. Sınırı süper yönetimden (google_monthly_cap) artırabilirsiniz.`
+    : `ScreenPano: Google Places çağrıları bu ay sınıra yaklaştı (${u.calls}/${u.cap}). Dolunca yeni çağrı yapılmaz.`;
+  console.log('[Google]', text);
+  const mon = require('./monitor'); mon.webhook(text);
+  mon.sendMail(store.setting('site_email', '') || store.setting('legal_email', ''), kind === 'full' ? 'Google Places sınırı doldu' : 'Google Places sınıra yaklaştı', text);
+}
+
 // ---- Google ----
 // İşletme adını/adresini ya da Google Haritalar bağlantısını arar; en fazla 5 aday döndürür
 async function googleSearch(text) {
   const key = gkey(); if (!key) throw new Error('Google Places anahtarı platformda tanımlı değil (süper yönetim → Platform anahtarları)');
+  if (!gSpend()) throw new Error('Google araması bu ay için sınıra ulaştı; ay başında tekrar deneyin ya da destekle iletişime geçin');
   const q = String(text || '').trim().slice(0, 200);
   const m = /[?&]q=([^&]+)/.exec(q) || /\/place\/([^/@]+)/.exec(q); // harita bağlantısından işletme adını çıkar
   const textQuery = m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : q;
@@ -34,6 +59,7 @@ async function googleSearch(text) {
 async function googleRefresh(t) {
   const g = t.db.google; if (!g || !g.placeId) return;
   const key = gkey(); if (!key) { g.error = 'Google Places anahtarı yok'; return; }
+  if (!gSpend()) { g.tried = Date.now(); return; } // sınır doldu: eski yorumlar kalır
   try {
     const j = await jget(`https://places.googleapis.com/v1/places/${encodeURIComponent(g.placeId)}?languageCode=tr`, { headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'id,displayName,rating,userRatingCount,reviews,googleMapsUri' } });
     g.name = (j.displayName || {}).text || g.name; g.rating = j.rating || null; g.count = j.userRatingCount || 0; g.url = j.googleMapsUri || '';
@@ -80,10 +106,10 @@ function tick() {
   const now = Date.now();
   for (const t of require('./tenants').all()) {
     const g = t.db.google, ig = t.db.instagram;
-    if (g && g.placeId && now - (g.updated || 0) > 12 * HOUR && now - (g.tried || 0) > HOUR) googleRefresh(t).catch(() => {});
+    if (g && g.placeId && now - (g.updated || 0) > 24 * HOUR && now - (g.tried || 0) > HOUR) googleRefresh(t).catch(() => {});
     if (ig && ig.token && ig.enabled !== false && now - (ig.updated || 0) > HOUR && now - (ig.tried || 0) > HOUR) igRefresh(t).catch(() => {});
   }
 }
 function start() { setTimeout(tick, 30000); setInterval(tick, 10 * 60000); }
 
-module.exports = { googleSearch, googleRefresh, igRefresh, start, hasGoogleKey: () => !!gkey() };
+module.exports = { googleUsage, googleSearch, googleRefresh, igRefresh, start, hasGoogleKey: () => !!gkey() };

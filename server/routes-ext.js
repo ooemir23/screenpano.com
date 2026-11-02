@@ -193,7 +193,7 @@ module.exports = function (r, { changed, upload, quota, ownerOnly, rmUpload, bac
     if (g.placeId && !g.updated) await social.googleRefresh(req.t);
     res.json({ ok: true, google: req.t.db.google });
   });
-  r.post('/google/refresh', async (req, res) => { if (!(req.t.db.google || {}).placeId) return res.status(400).json({ error: 'Önce işletmenizi seçin' }); await social.googleRefresh(req.t); res.json({ ok: true, google: req.t.db.google }); });
+  r.post('/google/refresh', async (req, res) => { const g0 = req.t.db.google || {}; if (!g0.placeId) return res.status(400).json({ error: 'Önce işletmenizi seçin' }); if (Date.now() - (g0.manualAt || 0) < 10 * 60000) return res.status(429).json({ error: 'Yorumlar az önce yenilendi; 10 dakika sonra tekrar deneyin' }); g0.manualAt = Date.now(); await social.googleRefresh(req.t); res.json({ ok: true, google: req.t.db.google }); });
   r.delete('/google', (req, res) => { delete req.t.db.google; changed(req.t); res.json({ ok: true }); });
 
   r.put('/instagram', async (req, res) => {

@@ -88,4 +88,4 @@ function overview() { // süper yönetim: çevrimdışı cihazlar
 
 function start() { setInterval(tick, 60000); }
 
-module.exports = { report, connected, tick, start, deviceView, overview, snaps, live, sendMail, mailEnabled, pushAlert, OFFLINE_MIN };
+module.exports = { report, connected, tick, start, deviceView, overview, snaps, live, sendMail, webhook, mailEnabled, pushAlert, OFFLINE_MIN };

@@ -59,6 +59,7 @@ tr.sub .br{color:var(--mute);margin-right:6px;font-weight:400}
   </div>
   <div class="row" style="margin-top:12px">
     <div><label>Google Places API anahtarı (Google yorumları)</label><input id="s-google_places_key" type="password" autocomplete="off"></div>
+    <div><label>Google aylık çağrı sınırı <span id="g-use" style="color:var(--mute)"></span></label><input id="s-google_monthly_cap" type="number" min="0" placeholder="900 (boş = 900)"></div>
   </div>
   <div class="row" style="margin-top:12px">
     <div><label>TMDB API anahtarı (sinema)</label><input id="s-tmdb_key" type="password" autocomplete="off"></div>
@@ -106,6 +107,7 @@ async function load() {
   D = await call('GET', '/api/super/overview');
   const t = D.totals;
   $('stats').innerHTML = [['İşletme', t.tenants], ['Ekranı açık', t.live], ['Kayıtlı TV', t.devices], ['Şu an bağlı', t.online]].map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  if (D.google && $('g-use')) $('g-use').textContent = `· bu ay ${D.google.calls} / ${D.google.cap}`;
   if (!window.__setLoaded) { for (const [k, v] of Object.entries(D.settings)) if ($('s-' + k)) $('s-' + k).value = v || ''; window.__setLoaded = true; }
   $('mailst').textContent = D.mail ? 'SMTP ayarlı: e-posta uyarıları açık.' : 'SMTP henüz ayarlı değil.';
   renderList(); renderOff(); renderBk();
