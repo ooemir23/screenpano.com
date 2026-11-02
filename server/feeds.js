@@ -477,21 +477,58 @@ async function fillCovers() {
   }
   if (n) { cachePut('books', books); hub.pushAll(); }
 }
+// ---- Yeni kitaplar: Google Books (yayınevine göre en yeniler, kapaklı) — başarısız ya da az çıkarsa CollectAPI (D&R) listesine dönülür ----
+const BOOK_PUBLISHERS = ['Can Yayınları', 'Yapı Kredi Yayınları', 'İletişim Yayınları', 'İş Bankası Kültür Yayınları', 'Doğan Kitap', 'Everest Yayınları', 'Domingo Yayınları', 'Timaş Yayınları', 'Epsilon Yayınevi', 'Metis Yayınları'];
+const bookPublishers = () => { const l = String(platformKey('books_publishers') || '').split(',').map(x => x.trim()).filter(Boolean); return l.length ? l.slice(0, 15) : BOOK_PUBLISHERS; };
+const pubDate = d => { const m = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(String(d || '')); return m ? Date.parse(`${m[1]}-${m[2]}-${m[3] || '15'}`) : NaN; }; // yalnız yıl yazılıysa güvenilmez: atlanır
+async function googleNewBooks() {
+  const key = gbKey(), since = Date.now() - 150 * 24 * HOUR, found = [];
+  let calls = 0, firstErr = '';
+  for (const pub of bookPublishers()) {
+    try {
+      calls++;
+      const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(`inpublisher:"${pub}"`)}&orderBy=newest&langRestrict=tr&printType=books&maxResults=15&key=${encodeURIComponent(key)}`, { signal: AbortSignal.timeout(12000) });
+      if (!r.ok) { firstErr = firstErr || 'Google Books ' + r.status; if (r.status === 403 || r.status === 429) break; continue; }
+      const list = [];
+      for (const v of (await r.json()).items || []) {
+        const vi = v.volumeInfo || {}, l = vi.imageLinks, u = l && (l.thumbnail || l.smallThumbnail), d = pubDate(vi.publishedDate);
+        if (!u || !vi.title || !(vi.authors || []).length || !isFinite(d) || d < since || d > Date.now() + 30 * 24 * HOUR) continue;
+        if (norm(vi.publisher || '') && !norm(vi.publisher).includes(norm(pub).split(' ')[0])) continue; // başka yayınevinin kitabı karışmasın
+        list.push({ image: u.replace(/^http:/, 'https:').replace('&edge=curl', ''), title: [vi.title, vi.subtitle].filter(Boolean).join(' - ').slice(0, 90), author: vi.authors.slice(0, 2).join(', '), publisher: vi.publisher || pub, d });
+      }
+      list.sort((a, b) => b.d - a.d); found.push(list.slice(0, 2));
+    } catch (e) { firstErr = firstErr || 'Google Books: ' + e.message; }
+    await new Promise(r => setTimeout(r, 300));
+  }
+  const seen = new Set(), items = [];
+  for (let i = 0; i < 2 && items.length < 8; i++) for (const l of found) { const x = l[i]; if (!x || seen.has(norm(x.title))) continue; seen.add(norm(x.title)); const { d, ...rest } = x; items.push(rest); }
+  if (items.length < 4) throw new Error(`Google Books: yeterli yeni kitap bulunamadı (${items.length})${firstErr ? ' · ' + firstErr : ''}`);
+  return items.slice(0, 8);
+}
+async function collectNewBooks(key) {
+  const j = await collectFetch(`${config.PHARM_BASE}/book/newBook`, key, 'books');
+  const seen = new Set(), items = [];
+  for (const b of j.result || []) {
+    const title = String(b.title || '').trim(); if (!title || seen.has(title)) continue; seen.add(title);
+    items.push({ image: String(b.image || b.resim || b.img || b.gorsel || b.cover || '').trim(), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
+    if (items.length >= 8) break;
+  }
+  if (!items.length) throw new Error('kitap listesi boş');
+  return items;
+}
+let booksSource = '';
 async function refreshBooks(force) {
-  const key = collectKey();
-  if (!key || !proTenants().some(t => t.db.showBooks !== false)) return;
-  if (!force && books && cacheAge('books') < 24 * HOUR) return;
+  const want = platformKey('books_source') === 'collect' ? 'collect' : 'google', ck = collectKey();
+  if (!(want === 'google' && gbKey()) && !ck) return;
+  if (!proTenants().some(t => t.db.showBooks !== false)) return;
+  const switchNow = want === 'google' && gbKey() && books && books.source !== 'google'; // kaynak değiştirildi: ilk açılışta hemen dene (başarısızsa 3 saat sonra)
+  if (!force && books && cacheAge('books') < 24 * HOUR && !switchNow) return;
   if (!force && Date.now() - booksFailAt < 3 * HOUR) return;
+  let items = null, src = '', gerr = '';
+  if (want === 'google' && gbKey()) { try { items = await googleNewBooks(); src = 'google'; } catch (e) { gerr = e.message; console.error('Google Books listesi alınamadı:', e.message); } }
   try {
-    const j = await collectFetch(`${config.PHARM_BASE}/book/newBook`, key, 'books');
-    const seen = new Set(), items = [];
-    for (const b of j.result || []) {
-      const title = String(b.title || '').trim(); if (!title || seen.has(title)) continue; seen.add(title);
-      items.push({ image: String(b.image || b.resim || b.img || b.gorsel || b.cover || '').trim(), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
-      if (items.length >= 8) break;
-    }
-    if (!items.length) throw new Error('kitap listesi boş');
-    books = { items, coverVer: 2, updated: new Date().toISOString() }; booksError = ''; cachePut('books', books); fillCovers(); hub.pushAll();
+    if (!items) { if (!ck) throw new Error(gerr || 'kitap kaynağı yok'); items = await collectNewBooks(ck); src = 'collect'; }
+    books = { items, coverVer: 2, source: src, updated: new Date().toISOString() }; booksSource = src; booksError = gerr ? 'Google yedeğe düştü: ' + gerr : ''; cachePut('books', books); fillCovers(); hub.pushAll();
   } catch (e) { booksError = e.message; booksFailAt = Date.now(); console.error('Kitaplar alınamadı:', e.message); }
 }
 
@@ -713,11 +750,11 @@ module.exports = {
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
-  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
+  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, get booksSource() { return (books && books.source) || ''; }, get coverErr() { return coverErr; }, refreshBooks, fillCovers,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,
   get traffic() { return traffic; }, reportTraffic, trafficSecret, wantsTraffic, renderMap, maybeRenderMap, MAP_FILE, get mapAt() { return mapAt; }, get mapErr() { return mapErr; },
   localLogo, makeLogo, runCmd, runFfmpeg,
-  calories, cacheAge, get quota() { return quota; }, QUOTA, collectStats, refreshWeather,
+  calories, googleNewBooks, cacheAge, get quota() { return quota; }, QUOTA, collectStats, refreshWeather,
 };

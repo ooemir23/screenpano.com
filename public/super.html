@@ -64,7 +64,9 @@ tr.sub .br{color:var(--mute);margin-right:6px;font-weight:400}
   </div>
   <div class="row" style="margin-top:12px">
     <div><label>TMDB API anahtarı (sinema)</label><input id="s-tmdb_key" type="password" autocomplete="off"></div>
-    <div><label>Google Books API anahtarı (kitap kapakları)</label><input id="s-books_key" type="password" autocomplete="off"></div>
+    <div><label>Google Books API anahtarı (yeni kitaplar ve kapaklar)</label><input id="s-books_key" type="password" autocomplete="off"></div>
+    <div><label>Yeni kitap kaynağı</label><select id="s-books_source"><option value="">Google Books (anahtar varsa; olmazsa D&amp;R listesi)</option><option value="collect">Yalnız D&amp;R listesi (CollectAPI)</option></select></div>
+    <div><label>Yeni kitaplar için yayınevleri (virgülle)</label><input id="s-books_publishers" type="text" placeholder="Can Yayınları, İletişim Yayınları, … (boş = hazır liste)"></div>
   </div>
   <div class="row" style="margin-top:12px">
     <div><label>İBB trafik Worker adresi (isteğe bağlı)</label><input id="s-traffic_api" placeholder="https://trafik.kullanici.workers.dev"></div>

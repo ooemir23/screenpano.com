@@ -356,7 +356,7 @@ r.get('/cache', (req, res) => {
     tarihteBugun: F.onThisDay ? F.onThisDay.date : null,
     harita: { dk: F.mapAt ? Math.round((Date.now() - F.mapAt) / 60000) : null, hata: F.mapErr },
     haber: nw ? { adet: nw.items.length, hata: F.newsError } : (F.newsError ? { hata: F.newsError } : null),
-    kitap: bk ? { adet: bk.items.length, dk: age('books'), hata: F.booksError, kapak: bk.items.filter(b => b.image).length + '/' + bk.items.length, kapakHata: F.coverErr } : null,
+    kitap: bk ? { kaynak: F.booksSource, adet: bk.items.length, dk: age('books'), hata: F.booksError, kapak: bk.items.filter(b => b.image).length + '/' + bk.items.length, kapakHata: F.coverErr } : null,
     nobetci: ph ? { adet: ph.items.length, guncel: true } : null, nobetciHata: F.pharmError,
     puanDurumu: Object.fromEntries([...F.standings.keys()].map(c => [c, age('standings:' + c)])),
   });

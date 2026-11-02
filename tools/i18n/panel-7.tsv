@@ -19,3 +19,9 @@ TRT Haber son dakika başlıkları; haberler sayfasından ayrı olarak alt bantt
 Ekranda bildirim bandı ¦ On-screen alert bar ¦ Hinweisleiste auf dem Bildschirm ¦ شريط التنبيه على الشاشة
 Yeni son dakika gelince birkaç saniye üstte kırmızı bantla gösterilir ¦ When a new breaking story arrives it is shown for a few seconds in a red bar at the top ¦ Bei einer neuen Eilmeldung erscheint für einige Sekunden oben eine rote Leiste ¦ عند وصول خبر عاجل جديد يظهر لبضع ثوانٍ في شريط أحمر في الأعلى
 🚨 Son dakika ¦ 🚨 Breaking news ¦ 🚨 Eilmeldungen ¦ 🚨 آخر الأخبار
+Google Books API anahtarı (yeni kitaplar ve kapaklar) ¦ Google Books API key (new books and covers) ¦ Google-Books-API-Schlüssel (Neuerscheinungen und Cover) ¦ مفتاح Google Books API (الكتب الجديدة والأغلفة)
+Yeni kitap kaynağı ¦ New-book source ¦ Quelle für Neuerscheinungen ¦ مصدر الكتب الجديدة
+Google Books (anahtar varsa; olmazsa D&R listesi) ¦ Google Books (if a key is set; otherwise the D&R list) ¦ Google Books (falls ein Schlüssel gesetzt ist; sonst D&R-Liste) ¦ Google Books (إن وُجد مفتاح؛ وإلا قائمة D&R)
+Yalnız D&R listesi (CollectAPI) ¦ D&R list only (CollectAPI) ¦ Nur D&R-Liste (CollectAPI) ¦ قائمة D&R فقط (CollectAPI)
+Yeni kitaplar için yayınevleri (virgülle) ¦ Publishers for new books (comma-separated) ¦ Verlage für Neuerscheinungen (kommagetrennt) ¦ دور النشر للكتب الجديدة (مفصولة بفواصل)
+Can Yayınları, İletişim Yayınları, … (boş = hazır liste) ¦ Can Yayınları, İletişim Yayınları, … (empty = built-in list) ¦ Can Yayınları, İletişim Yayınları, … (leer = vorgegebene Liste) ¦ Can Yayınları, İletişim Yayınları, … (فارغ = القائمة الجاهزة)
