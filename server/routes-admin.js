@@ -192,6 +192,14 @@ r.delete('/devices/:id', (req, res) => { store.q.deviceDel.run(req.params.id, re
 r.post('/devices/reload', (req, res) => { sendTo(req.t, { type: 'reload' }); res.json({ ok: true }); });
 
 // ================= FİYAT TARİFESİ =================
+// Ürün adından kalori: aynı ad bir daha API'ye gitmez (sonuç süresiz önbellekte)
+r.post('/calories', async (req, res) => {
+  try {
+    const q = String((req.body || {}).query || '').trim().slice(0, 60);
+    const r2 = await F.calories(q);
+    res.json(r2 ? { ok: true, kcal: r2.kcal, name: r2.name } : { ok: false, error: 'Bu ürün için kalori bilgisi bulunamadı' });
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
 r.put('/menu', (req, res) => {
   const b = req.body || {}, s = (v, n) => String(v ?? '').trim().slice(0, n), SCH = require('./sched'), LANGS = require('./state').LANGS;
   // çeviriler: { en: 'Hot drinks' } ya da { en: { name, desc } }
@@ -199,7 +207,7 @@ r.put('/menu', (req, res) => {
   const cats = (Array.isArray(b.categories) ? b.categories : []).slice(0, 20).map(c => ({
     name: s(c.name, 40), sch: SCH.clean(c.sch) || undefined, t: tr(c.t, v => s(v, 40)),
     items: (Array.isArray(c.items) ? c.items : []).slice(0, 60).map(i => ({
-      name: s(i.name, 60), price: s(i.price, 16), desc: s(i.desc, 90), off: i.off === true || undefined,
+      name: s(i.name, 60), price: s(i.price, 16), desc: s(i.desc, 90), off: i.off === true || undefined, kcal: s(i.kcal, 14) || undefined,
       t: tr(i.t, v => { const n = s(v && v.name, 60), d = s(v && v.desc, 90); return n || d ? { name: n, desc: d } : null; }),
     })).filter(i => i.name),
   })).filter(c => c.name || c.items.length);

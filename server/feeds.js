@@ -233,7 +233,7 @@ async function refreshOnThisDay() {
 const dutyDay = () => ymd(new Date(Date.now() - 9 * HOUR)); // nöbet sabah 09:00'da değişir
 const collectKey = () => platformKey('collect_key');
 const collectPaid = () => platformKey('collect_paid') === '1';
-const QUOTA = { pharm: { limit: 100, cap: 92 }, news: { limit: 1000, cap: 960 }, books: { limit: 1000, cap: 150 } };
+const QUOTA = { pharm: { limit: 100, cap: 92 }, news: { limit: 1000, cap: 960 }, books: { limit: 1000, cap: 150 }, cal: { limit: 100, cap: 90 } };
 const monthKey = () => ymd(new Date()).slice(0, 7);
 let quota = cacheGet('quota') || {};
 if (quota.month !== monthKey()) quota = { month: monthKey(), pharm: 0, news: 0, books: 0 };
@@ -252,6 +252,28 @@ async function collectFetch(url, key, svc) {
   if (r.status === 429) throw new Error('İstek sınırı aşıldı (429)');
   if (!r.ok || j.success === false) throw new Error(j.message || j.error || ('HTTP ' + r.status));
   return j;
+}
+
+// ---- Kalori (CollectAPI /food/calories): her ürün adı için yalnız BİR kez çağrılır, sonuç diskte süresiz saklanır (bulunamayanlar 60 gün) ----
+let calDb = cacheGet('calories') || {}; let calPending = Promise.resolve();
+const calKey = q => norm(q).replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+async function calories(query) {
+  const k = calKey(query); if (!k) throw new Error('Ürün adı gerekli');
+  const hit = calDb[k];
+  if (hit && (hit.kcal || Date.now() - hit.at < 60 * 24 * HOUR)) return hit.kcal ? { name: hit.name, kcal: hit.kcal, cached: true } : null;
+  const key = collectKey(); if (!key) throw new Error('Kalori servisi henüz platformda etkin değil');
+  const run = calPending.then(async () => {
+    if (calDb[k] && (calDb[k].kcal || Date.now() - calDb[k].at < 60 * 24 * HOUR)) return calDb[k]; // sırada bekleyen aynı istek zaten çözüldü
+    const j = await collectFetch(`${config.PHARM_BASE}/food/calories?query=${encodeURIComponent(query.trim())}`, key, 'cal');
+    const list = (j.result || []).filter(x => x && x.kalori);
+    const pick = list.find(x => calKey(x.name) === k) || list.find(x => calKey(x.name).startsWith(k)) || list[0];
+    calDb[k] = pick ? { name: String(pick.name || query), kcal: String(pick.kalori).trim(), at: Date.now() } : { name: '', kcal: '', at: Date.now() };
+    cachePut('calories', calDb);
+    return calDb[k];
+  });
+  calPending = run.catch(() => {});
+  const r = await run;
+  return r.kcal ? { name: r.name, kcal: r.kcal } : null;
 }
 
 const pharmCfg = t => t.db.pharmacy || {};
@@ -640,5 +662,5 @@ module.exports = {
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,
   get traffic() { return traffic; }, reportTraffic, trafficSecret, wantsTraffic, renderMap, maybeRenderMap, MAP_FILE, get mapAt() { return mapAt; }, get mapErr() { return mapErr; },
   localLogo, makeLogo, runCmd, runFfmpeg,
-  cacheAge, get quota() { return quota; }, QUOTA, collectStats, refreshWeather,
+  calories, cacheAge, get quota() { return quota; }, QUOTA, collectStats, refreshWeather,
 };

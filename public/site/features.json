@@ -771,6 +771,26 @@
           "text": "تظهر الكتب الصادرة حديثًا بملء الشاشة مع صور أغلفتها ضمن دورة الوسائط."
         }
       }
+    },
+    {
+      "icon": "🔥",
+      "title": "Ürünlerde kalori bilgisi",
+      "text": "Fiyat listesinde ürünün yanında kalori değeri gösterilir; ürün adından tek tuşla getirilir.",
+      "added": "2026-11-02",
+      "i18n": {
+        "en": {
+          "title": "Calories on products",
+          "text": "The price list can show calories next to each product, fetched from the product name with one click."
+        },
+        "de": {
+          "title": "Kalorien bei den Produkten",
+          "text": "In der Preisliste können Kalorien neben jedem Produkt stehen, per Klick anhand des Produktnamens abgerufen."
+        },
+        "ar": {
+          "title": "السعرات الحرارية للمنتجات",
+          "text": "يمكن عرض السعرات الحرارية بجانب كل منتج في قائمة الأسعار، وتُجلب من اسم المنتج بنقرة واحدة."
+        }
+      }
     }
   ],
   "shots": {
