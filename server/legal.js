@@ -52,6 +52,7 @@ const PAGES = {
 ${r2() ? '<li><b>Dosya depolama ve yedek:</b> Cloudflare, Inc. (ABD) — R2 hizmeti. Yüklediğiniz medya dosyaları ve şifreli bağlantıyla gönderilen veritabanı yedekleri.</li>' : ''}
 ${smtpHost() ? `<li><b>E-posta gönderimi:</b> ${esc(smtpHost())} — yalnız size gönderilen uyarı e-postaları için e-posta adresiniz ve işletme adınız.</li>` : ''}
 <li><b>Google LLC ve Meta Platforms, Inc. (ABD):</b> yalnız ilgili özelliği açarsanız. Google yorumları için işletmenizin Google kaydı sorgulanır; Instagram bağlantısında sizin verdiğiniz erişim anahtarıyla paylaşımlarınız alınır. TV ekranı yazı tipleri ve film fragmanları için Google sunucularına bağlanabilir.</li>
+<li><b>Konum / şehir araması:</b> Panelde işletme şehrini ararken yazdığınız şehir adı Open-Meteo'ya, "Konumumu otomatik bul" düğmesini kullanırsanız tarayıcınızın verdiği konum (yaklaşık 1 km'ye yuvarlanmış koordinat) BigDataCloud'a (Avustralya) sunucumuz üzerinden gönderilir. Yalnızca bu düğmeyi kullandığınızda çalışır; kullanıcı adınız ya da başka bir kimlik bilginiz gönderilmez, konum izni yalnız tarayıcınızda verilir ve işletmenizin konumu olarak kaydedilir.</li>
 <li><b>Yetkili kamu kurum ve kuruluşları:</b> kanunen zorunlu hâllerde, talep edilen ölçüde.</li>
 </ul>
 <p>Maç, döviz, hava durumu, haber, eczane gibi bilgi kaynaklarına <b>kişisel veri gönderilmez</b>; bu veriler sunucumuz tarafından genel olarak çekilir.</p>
