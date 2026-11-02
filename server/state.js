@@ -42,7 +42,12 @@ function mediaList(t) {
   }
   const bk = F.booksView();
   const covers = require('./plans').plan(t).pro && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR
-    ? bk.items.map(b => { const ok = b.image && F.coverReady(b.image); return { id: 'bk' + F.coverHash(b.title), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: b.title, sub: b.author || '', note: b.publisher || '' }, image: ok ? '/cover/' + F.coverHash(b.image) + '.jpg' : null, dur: 10 }; }) : [];
+    ? (() => { // her slaytta 2 kitap (kapak, ad, yazar, yayınevi, açıklama); tek kalan kitap tek başına
+      const cards = bk.items.map(b => ({ title: b.title, author: b.author || '', publisher: b.publisher || '', desc: b.desc || '', image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : null }));
+      const out2 = [];
+      for (let i = 0; i < cards.length; i += 2) { const pair = cards.slice(i, i + 2); out2.push({ id: 'bk' + F.coverHash(pair.map(x => x.title).join('|')), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: pair[0].title, sub: pair[0].author, note: pair[0].publisher }, books: pair, image: pair[0].image, dur: 14 }); }
+      return out2;
+    })() : [];
   const withBooks = list => { // her 4 içerikte bir yeni çıkan kitap kapağı
     if (!covers.length) return list;
     if (!list.length) return covers.slice(0, 1);

@@ -72,6 +72,19 @@
 .spp.t-kitap h1{font-size:3.2em;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .spp.t-kitap .sub{font-size:1.9em}
 .spp.t-kitap .note{font-size:1.5em}
+/* yeni çıkan kitap: 2 kitap yan yana */
+.spp.t-kitap.multi{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr;gap:2%;padding:3.5% 3%;align-items:center}
+.spp.t-kitap.multi.n1{grid-template-columns:1fr}
+.spp.t-kitap.multi .bkc{display:flex;gap:4%;align-items:center;min-width:0}
+.spp.t-kitap.multi .cv{flex:0 0 36%;aspect-ratio:2/3;align-self:center;background-size:contain;background-repeat:no-repeat;background-position:center;filter:drop-shadow(0 .4em .8em rgba(0,0,0,.6))}
+.spp.t-kitap.multi .cv.gen{background:linear-gradient(160deg,hsl(var(--h) 45% 32%),hsl(var(--h) 50% 16%));display:flex;align-items:center;padding:6%;border-radius:.3em .6em .6em .3em;box-shadow:inset .4em 0 0 rgba(0,0,0,.25);filter:none}
+.spp.t-kitap.multi .cv.gen b{font-size:1.3em;line-height:1.1;font-weight:800;color:#fff;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.spp.t-kitap.multi .tx{min-width:0;display:flex;flex-direction:column;gap:.35em;justify-content:center}
+.spp.t-kitap.multi .badge{font-size:.8em;padding:.2em .6em}
+.spp.t-kitap.multi h2{margin:0;font-size:1.7em;line-height:1.08;font-weight:800;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.spp.t-kitap.multi .sub{font-size:1.15em}
+.spp.t-kitap.multi .note{font-size:.95em}
+.spp.t-kitap.multi p{margin:.3em 0 0;font-size:.95em;line-height:1.3;opacity:.85;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 /* instagram */
 .spp.t-insta{background:var(--bg)}
 .spp.t-insta .ph{right:auto;width:56.25%;background-size:contain;background-repeat:no-repeat;background-color:#000}
@@ -94,6 +107,14 @@
     if (tpl === 'insta') {
       const ig = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>';
       return `<div class="${cls}"${dir}>${img}<div class="in"><div class="ig">${ig}${f('sub')}</div><div class="cap">${f('title')}</div></div></div>`;
+    }
+    if (tpl === 'kitap' && item.books && item.books.length) { // 2 kitap yan yana: kapak + ad + yazar + yayınevi + açıklama
+      const card = b => {
+        const hue = [...String(b.title || '')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);
+        const cv = b.image ? `<div class="cv" style="background-image:url('${esc(b.image)}')"></div>` : `<div class="cv gen" style="--h:${hue}"><b>${esc(b.title)}</b></div>`;
+        return `<div class="bkc">${cv}<div class="tx"><div class="badge">${esc(base.badge)}</div><h2>${esc(b.title)}</h2>${b.author ? `<div class="sub">${esc(b.author)}</div>` : ''}${b.publisher ? `<div class="note">${esc(b.publisher)}</div>` : ''}${b.desc ? `<p>${esc(b.desc)}</p>` : ''}</div></div>`;
+      };
+      return `<div class="spp t-kitap multi n${item.books.length}"${dir}>${item.books.slice(0, 2).map(card).join('')}</div>`;
     }
     if (tpl === 'kitap' && !item.image) {
       const hue = [...String(base.title || '')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);

@@ -507,7 +507,7 @@ async function googleNewBooks() {
         if (!(vi.authors || []).length) { st.yazarsiz++; continue; }
         if (!isFinite(d) || d < since || d > Date.now() + 3 * 24 * HOUR) { st.tarih++; continue; }
         if (norm(vi.publisher || '') && !norm(vi.publisher).includes(norm(pub).split(' ')[0])) { st.yayinevi++; continue; } // başka yayınevinin kitabı karışmasın
-        list.push({ image: u.replace(/^http:/, 'https:').replace('&edge=curl', ''), title: [vi.title, vi.subtitle].filter(Boolean).join(' - ').slice(0, 90), author: vi.authors.slice(0, 2).join(', '), publisher: vi.publisher || pub, d });
+        list.push({ image: u.replace(/^http:/, 'https:').replace('&edge=curl', ''), desc: cleanDesc(vi.description), title: [vi.title, vi.subtitle].filter(Boolean).join(' - ').slice(0, 90), author: vi.authors.slice(0, 2).join(', '), publisher: vi.publisher || pub, d });
       }
       list.sort((a, b) => b.d - a.d); found.push(list.slice(0, 3));
     } catch (e) { firstErr = firstErr || 'Google Books: ' + e.message; }
@@ -520,6 +520,9 @@ async function googleNewBooks() {
   return items.slice(0, 8);
 }
 let booksRaw = '', booksSample = '';
+const DESC_KEY = /a[cç][iı]klama|desc|[oö]zet|summary|detay|konu|tan[iı]t[iı]m|about/i;
+const cleanDesc = v => String(v || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 280);
+const rawDesc = b => { for (const [k, v] of Object.entries(b)) if (DESC_KEY.test(k) && typeof v === 'string' && v.trim().length > 20) return cleanDesc(v); return ''; };
 const IMG_URL = /^(https?:)?\/\/[^\s]+\.(jpe?g|png|webp|gif)(\?[^\s]*)?$/i;
 const IMG_KEY = /img|image|resim|gorsel|görsel|cover|kapak|foto|thumb|poster/i;
 const rawImage = b => { // bilinen alanlar, yoksa görsel gibi görünen herhangi bir alan
@@ -532,7 +535,7 @@ async function collectNewBooks(key) {
   const seen = new Set(), items = [];
   for (const b of j.result || []) {
     const title = String(b.title || '').trim(); if (!title || seen.has(title) || AUDIO.test(title + ' ' + (b['yayın'] || b.yayin || ''))) continue; seen.add(title);
-    items.push({ image: rawImage(b), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
+    items.push({ image: rawImage(b), desc: rawDesc(b), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
     if (items.length >= 40) break;
   }
   if (!items.length) throw new Error('kitap listesi boş');
