@@ -421,6 +421,55 @@ async function downloadCovers() { // inmemiş kapakları indir (inmeyen bir sonr
   }
   if (fresh) hub.pushAll();
 }
+// ---- Kitap açıklaması: D&R ürün sayfası her kitap için bir kez okunur, süresiz saklanır ----
+const bookDesc = cacheGet('bookDesc') || {}; // url -> { d: açıklama, at: son deneme, n: deneme sayısı }
+let descErr = '', descBusy = false;
+const htmlText = h => String(h || '').replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<br\s*\/?>/gi, ' ').replace(/<\/(p|div|li|h\d)>/gi, ' ').replace(/<[^>]+>/g, ' ')
+  .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#(\d+);/g, (m, n) => String.fromCharCode(+n)).replace(/\s+/g, ' ').trim();
+const GENERIC = /d\s*&\s*r|dr\.com|uygun fiyat|indirim|kargo|sat[ıi]n al|taksit/i;
+const shortDesc = t => { t = String(t || '').trim(); if (t.length <= 300) return t; const c = t.slice(0, 300); const i = Math.max(c.lastIndexOf('. '), c.lastIndexOf('! '), c.lastIndexOf('? ')); return (i > 120 ? c.slice(0, i + 1) : c.replace(/\s+\S*$/, '') + '…'); };
+function pickDesc(html) {
+  // 1) JSON-LD (schema.org Book/Product) açıklaması
+  for (const m of html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+    try { const walk = o => { if (!o || typeof o !== 'object') return ''; if (typeof o.description === 'string' && htmlText(o.description).length > 40 && !GENERIC.test(htmlText(o.description).slice(0, 120))) return htmlText(o.description); for (const v of Object.values(o)) { const r = walk(v); if (r) return r; } return ''; }; const r = walk(JSON.parse(m[1])); if (r) return r; } catch (e) { /* bozuk JSON-LD */ }
+  }
+  // 2) "Ürün Açıklaması" başlığından sonraki metin
+  const i = html.search(/[ÜU]r[üu]n\s+A[çc][ıi]klamas[ıi]/i);
+  if (i >= 0) {
+    let t = htmlText(html.slice(i, i + 20000)).replace(/^[ÜU]r[üu]n\s+A[çc][ıi]klamas[ıi]\s*/i, '');
+    t = t.split(/\s(?:[ÜU]r[üu]n Bilgileri|Kitap Bilgileri|[ÖO]zellikler|Yorumlar|De[ğg]erlendirme|Benzer [ÜU]r[üu]nler|Yay[ıi]n Tarihi|Sayfa Say[ıi]s[ıi])\b/i)[0].trim();
+    if (t.length > 40) return t;
+  }
+  // 3) sayfa özeti (satış metni değilse)
+  const meta = /<meta[^>]+(?:property="og:description"|name="description")[^>]+content="([^"]*)"/i.exec(html) || /<meta[^>]+content="([^"]*)"[^>]+(?:property="og:description"|name="description")/i.exec(html);
+  const md = meta ? htmlText(meta[1]) : '';
+  if (md.length > 60 && !GENERIC.test(md)) return md;
+  return '';
+}
+async function fillDescs() {
+  if (!books || descBusy) return;
+  descBusy = true;
+  let got = 0, blocked = 0;
+  try {
+    for (const b of books.items) {
+      if (!b.url) continue;
+      const c = bookDesc[b.url];
+      if (c && c.d) { if (!b.desc) { b.desc = c.d; got++; } continue; }
+      if (c && (c.n >= 3 || Date.now() - c.at < 12 * HOUR)) continue; // başarısız sayfa en çok 3 kez, 12 saat arayla denenir
+      const rec = bookDesc[b.url] = { d: '', at: Date.now(), n: ((c && c.n) || 0) + 1 };
+      try {
+        const r = await fetch(b.url, { signal: AbortSignal.timeout(15000), redirect: 'follow', headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36', accept: 'text/html,application/xhtml+xml', 'accept-language': 'tr-TR,tr;q=0.9' } });
+        if (!r.ok) { descErr = `D&R sayfası açılamadı (${r.status})`; if (r.status === 403 || r.status === 429) { if (++blocked >= 3) break; } }
+        else { const d = shortDesc(pickDesc(await r.text())); if (d) { rec.d = d; b.desc = d; got++; descErr = ''; } else descErr = 'D&R sayfasında açıklama bulunamadı'; }
+      } catch (e) { descErr = 'D&R sayfası açılamadı: ' + e.message; }
+      await new Promise(x => setTimeout(x, 3000)); // D&R'ı yormamak için kitap başına 3 sn
+    }
+  } finally {
+    descBusy = false;
+    cachePut('bookDesc', bookDesc);
+    if (got) { cachePut('books', books); hub.pushAll(); }
+  }
+}
 const AUDIO = /sesli|audio|dinle|\bmp3\b|podcast/i;
 let booksRaw = '', booksSample = '';
 const DESC_KEY = /a[cç][iı]klama|desc|[oö]zet|summary|detay|konu|tan[iı]t[iı]m|about/i;
@@ -440,7 +489,7 @@ async function collectNewBooks(key) {
   const seen = new Set(), items = [];
   for (const b of j.result || []) {
     const title = String(b.title || '').trim(); if (!title || seen.has(title) || AUDIO.test(title + ' ' + (b['yayın'] || b.yayin || '') + ' ' + (b.url || ''))) continue; seen.add(title);
-    items.push({ image: rawImage(b), desc: rawDesc(b), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
+    items.push({ image: rawImage(b), url: drUrl(b.url, 'https://www.dr.com.tr'), desc: rawDesc(b), title, author: String(b.yazar || '').trim(), publisher: String(b['yayın'] || b.yayin || '').trim() });
     if (items.length >= 40) break;
   }
   if (!items.length) throw new Error('kitap listesi boş');
@@ -466,13 +515,13 @@ async function refreshBooks(force) {
   const ck = collectKey();
   if (!ck) return;
   if (!proTenants().some(t => t.db.showBooks !== false)) return;
-  const stale = books && (books.source !== 'collect' || books.v !== 3); // eski liste (Google ya da kısaltılmış görsel adresleri) kaldıysa hemen yenile // eski (Google) listesi kaldıysa hemen D&R'den yenile
+  const stale = books && (books.source !== 'collect' || books.v !== 4); // eski liste (Google ya da kısaltılmış görsel adresleri) kaldıysa hemen yenile // eski (Google) listesi kaldıysa hemen D&R'den yenile
   if (!force && books && !stale && cacheAge('books') < 24 * HOUR) return;
   if (!force && !stale && Date.now() - booksFailAt < 3 * HOUR) return;
   try {
     const items = await collectNewBooks(ck);
-    books = { items, source: 'collect', v: 3, updated: new Date().toISOString() }; booksError = ''; cachePut('books', books);
-    hub.pushAll(); downloadCovers();
+    books = { items, source: 'collect', v: 4, updated: new Date().toISOString() }; booksError = ''; cachePut('books', books);
+    hub.pushAll(); downloadCovers().then(fillDescs);
   } catch (e) { booksError = e.message; booksFailAt = Date.now(); console.error('Kitaplar alınamadı:', e.message); }
 }
 
@@ -678,7 +727,7 @@ function start() {
   setTimeout(refreshNews, 6000); setInterval(refreshNews, 5 * MIN); setTimeout(refreshBreaking, 7000); setInterval(refreshBreaking, 3 * MIN);
   setTimeout(refreshBigMatches, 7000); setInterval(refreshBigMatches, 30 * MIN);
   setTimeout(refreshBooks, 9000); setInterval(refreshBooks, 30 * MIN);
-  setTimeout(downloadCovers, 12000); setInterval(downloadCovers, 30 * MIN);
+  setTimeout(() => downloadCovers().then(fillDescs), 12000); setInterval(() => downloadCovers().then(fillDescs), 30 * MIN);
   setTimeout(refreshMovies, 11000); setInterval(refreshMovies, 30 * MIN);
   setTimeout(maybeRenderMap, 20000); setInterval(maybeRenderMap, 3 * MIN);
   // yeni işletme ya da lig seçimi değişince maç listesini beklemeden yenile
@@ -694,7 +743,7 @@ module.exports = {
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
-  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, ornek: booksSample, adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, gorselli: books ? books.items.filter(b => b.image).length : 0, hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await downloadCovers(); }, get coverErr() { return coverErr; }, refreshBooks,
+  coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, ornek: booksSample, adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, gorselli: books ? books.items.filter(b => b.image).length : 0, aciklama: books ? books.items.filter(b => b.desc).length : 0, aciklamaHata: descErr, hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await downloadCovers(); fillDescs(); }, get coverErr() { return coverErr; }, refreshBooks,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,

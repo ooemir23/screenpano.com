@@ -116,7 +116,8 @@ async function load() {
   $('stats').innerHTML = [['İşletme', t.tenants], ['Ekranı açık', t.live], ['Kayıtlı TV', t.devices], ['Şu an bağlı', t.online]].map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
   if (D.books && $('bk-info')) {
     const b = D.books, L = [];
-    L.push(`Havuz: ${b.adet} kitap · Görsel adresi olan: ${b.gorselli} · Kapağı indirilen: ${b.kapak}`);
+    L.push(`Havuz: ${b.adet} kitap · Görsel adresi olan: ${b.gorselli} · Kapağı indirilen: ${b.kapak} · Açıklaması olan: ${b.aciklama}`);
+    if (b.aciklamaHata) L.push('Açıklama: ' + b.aciklamaHata);
     if (b.hata) L.push('Uyarı: ' + b.hata);
     if (b.kapakHata) L.push('Kapak hatası: ' + b.kapakHata);
     if (b.alanlar) L.push('D&R alanları: ' + b.alanlar);
