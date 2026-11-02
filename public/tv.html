@@ -100,6 +100,8 @@ video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100
 #trailer .tt small{display:block;font-size:2.1vh;font-weight:800;color:var(--accent2);letter-spacing:.14em;margin-bottom:.8vh}
 .bk{display:flex;gap:.9vw;align-items:center;padding:.8vh .9vw}
 .bk img{height:15vh;width:10vh;object-fit:cover;border-radius:.6vh;flex:none;background:#222}
+.bk .gc{height:15vh;width:10vh;flex:none;border-radius:.4vh .8vh .8vh .4vh;background:linear-gradient(160deg,hsl(var(--h) 45% 32%),hsl(var(--h) 50% 16%));box-shadow:inset .5vh 0 0 rgba(0,0,0,.25);padding:1vh .8vh;display:flex;align-items:center;overflow:hidden}
+.bk .gc b{font-size:1.45vh;line-height:1.15;font-weight:800;color:#fff;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;padding-left:.5vh}
 .bk .bt{font-size:2.8vh;font-weight:700;line-height:1.25;color:var(--white);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .bk .bm{font-size:2.1vh;color:var(--accent2);font-weight:600;margin-top:.5vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
@@ -599,7 +601,9 @@ const pharmCard = p => `<div class="m ph"><div class="pn">${esc(p.name)}</div><d
 const fmtPhone = t => { const d = String(t || '').replace(/\D/g, ''); return /^0\d{10}$/.test(d) ? `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}` : String(t || ''); };
 const ago = iso => { const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return !isFinite(m) || m < 0 ? '' : m < 1 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.floor(m / 60) + ' saat önce' : Math.floor(m / 1440) + ' gün önce'; };
 const newsCard = n => `<div class="m nw"><div class="nt">${esc(n.title)}</div><div class="nm2">${esc(n.source)}${n.date ? ' · ' + esc(ago(n.date)) : ''}</div></div>`;
-const bookCard = b => `<div class="m bk">${b.image ? `<img src="${esc(b.image)}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">` : ''}<div style="min-width:0"><div class="bt">${esc(b.title)}</div><div class="bm">${esc([b.author, b.publisher].filter(Boolean).join(' · '))}</div></div></div>`;
+const bookHue = t => [...String(t || '')].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) % 360, 7);
+const bookGen = b => `<div class="gc" style="--h:${bookHue(b.title)}"><b>${esc(b.title)}</b></div>`; // kapağı bulunamayan kitap için üretilmiş kapak
+const bookCard = b => `<div class="m bk">${b.image ? `<img src="${esc(b.image)}" alt="" onerror="this.outerHTML=bookGen(${esc(JSON.stringify({ title: b.title }))})">` : bookGen(b)}<div style="min-width:0"><div class="bt">${esc(b.title)}</div><div class="bm">${esc([b.author, b.publisher].filter(Boolean).join(' · '))}</div></div></div>`;
 const trDate = d => { const [, m, dd] = String(d).split('-'); return m ? Number(dd) + ' ' + MONTHS[Number(m) - 1] : ''; };
 const movieCard = m => `<div class="m mv">${m.poster ? `<img src="${esc(m.poster)}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<div><div class="mt">${esc(m.title)}</div><div class="mm">${esc(trDate(m.date))}${m.rating ? ' · ★ ' + esc(String(m.rating).replace('.', ',')) : ''}${m.trailer ? ' · ▶ Fragman' : ''}</div></div></div>`;
 const dayCard = e => `<div class="m od"><b class="oy">${esc(e.year)}</b><p>${esc(e.text)}</p></div>`;
