@@ -535,10 +535,12 @@ async function tmdb(p, key) {
   return j;
 }
 async function fetchMovies(key) {
-  const now = new Date(), dow = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short' }).format(now);
-  const back = { Fri: 0, Sat: 1, Sun: 2, Mon: 3, Tue: 4, Wed: 5, Thu: 6 }[dow];
-  const from = ymd(new Date(now.getTime() - (back + 14) * 24 * HOUR)), to = ymd(new Date(now.getTime() + (6 - back) * 24 * HOUR));
-  const j = await tmdb(`/discover/movie?region=TR&with_release_type=3&release_date.gte=${from}&release_date.lte=${to}&language=tr-TR&sort_by=popularity.desc&include_adult=false`, key);
+  // Bu hafta vizyona girecekler: bugünden itibaren 7 gün (Türkiye'de vizyon günü cuma); liste boşsa 14 güne genişler
+  const now = new Date(), from = ymd(now);
+  let to = ymd(new Date(now.getTime() + 7 * 24 * HOUR));
+  const disc = t => tmdb(`/discover/movie?region=TR&with_release_type=2%7C3&release_date.gte=${from}&release_date.lte=${t}&language=tr-TR&sort_by=popularity.desc&include_adult=false`, key);
+  let j = await disc(to);
+  if (!(j.results || []).length) { to = ymd(new Date(now.getTime() + 14 * 24 * HOUR)); j = await disc(to); }
   const items = [];
   for (const m of (j.results || []).slice(0, 10)) {
     let alts = [];
@@ -556,13 +558,14 @@ async function fetchMovies(key) {
     } catch (e) { /* fragmansız */ }
     items.push({ id: m.id, title: m.title, original: m.original_title !== m.title ? m.original_title : '', date: m.release_date || '', rating: m.vote_average ? Math.round(m.vote_average * 10) / 10 : 0, poster: m.poster_path ? 'https://image.tmdb.org/t/p/w185' + m.poster_path : '', trailer: alts[0] || '', alts });
   }
-  if (!items.length) throw new Error('bu hafta için vizyon listesi boş');
-  return { from, to, items };
+  if (!items.length) throw new Error('bu hafta vizyona girecek film bulunamadı');
+  items.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  return { mode: 'upcoming', from, to, items };
 }
 async function refreshMovies(force) {
   const key = platformKey('tmdb_key');
   if (!key || !proTenants().some(t => (t.db.movies || {}).enabled !== false)) return;
-  if (!force && movies && cacheAge('movies') < 12 * HOUR) return;
+  if (!force && movies && movies.mode === 'upcoming' && cacheAge('movies') < 12 * HOUR) return; // eski (vizyondakiler) liste kaldıysa hemen yenile
   if (!force && Date.now() - moviesFailAt < 3 * HOUR) return;
   try { movies = { ...(await fetchMovies(key)), updated: new Date().toISOString() }; moviesError = ''; cachePut('movies', movies); hub.pushAll(); }
   catch (e) { moviesError = e.message; moviesFailAt = Date.now(); console.error('Filmler alınamadı:', e.message); }
