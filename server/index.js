@@ -17,6 +17,12 @@ tenants.all();
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', true);
+// www.screenpano.com -> screenpano.com (tek adres; arama motorları için kalıcı yönlendirme)
+app.use((req, res, next) => {
+  const host = String(req.headers.host || '');
+  if (/^www\./i.test(host)) return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
+  next();
+});
 app.use(require('compression')());
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); next(); });
