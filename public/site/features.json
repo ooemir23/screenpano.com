@@ -871,6 +871,26 @@
           "text": "يمكن عرض إعلان الديربي ومباريات البطولات الأوروبية بأحد خمسة تصاميم: كلاسيكي، كلاسيكي (متوافق مع الشاشة)، وجهًا لوجه، بسيط، ولوحة النتائج."
         }
       }
+    },
+    {
+      "icon": "🔳",
+      "title": "QR kartına QR atama",
+      "text": "Ekran düzenine birden çok QR kartı eklenir; her birine gösterilecek QR seçilir ya da hepsi sırayla döner. QR kartı medyanın ve diğer kutuların üstüne konabilir.",
+      "added": "2026-11-03",
+      "i18n": {
+        "en": {
+          "title": "Assign a QR to each QR card",
+          "text": "Add several QR cards to the screen layout and choose which QR each one shows, or let them all rotate. A QR card can sit on top of the media and other boxes."
+        },
+        "de": {
+          "title": "QR-Code pro QR-Karte wählen",
+          "text": "Mehrere QR-Karten im Bildschirmlayout; für jede wählen Sie den angezeigten QR-Code oder lassen alle wechseln. Eine QR-Karte kann über den Medien und anderen Feldern liegen."
+        },
+        "ar": {
+          "title": "تعيين رمز QR لكل بطاقة",
+          "text": "أضف عدة بطاقات QR إلى تخطيط الشاشة واختر الرمز الذي تعرضه كل بطاقة أو اتركها تتناوب. يمكن وضع بطاقة QR فوق الوسائط والمربعات الأخرى."
+        }
+      }
     }
   ],
   "shots": {

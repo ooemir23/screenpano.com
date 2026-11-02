@@ -10,7 +10,7 @@ const WIDGETS = {
   ticker:  { name: 'Kayan bant', desc: 'Skorlar, haberler, kurlar ve bilgiler kayar', pro: false, min: [10, 2], props: { clock: true } },
   text:    { name: 'Duyuru metni', desc: 'Başlık ve kısa metin', pro: false, min: [4, 2], props: { title: 'Hoş geldiniz', body: '', align: 'center', size: 'm' } },
   image:   { name: 'Görsel', desc: 'Sabit afiş veya fotoğraf', pro: false, min: [3, 3], props: { url: '', fit: 'cover' } },
-  qr:      { name: 'QR kart', desc: 'QR kodlarınız sırayla döner (Wi-Fi, menü, Instagram)', pro: false, min: [4, 5] },
+  qr:      { name: 'QR kart', desc: 'Seçtiğiniz QR kodu ya da tüm QR kodlarınızı sırayla gösterir; birden çok eklenebilir ve diğer kutuların üstüne konabilir', pro: false, min: [3, 4], multi: 6, props: { qr: '' } },
   info:    { name: 'Maçlar ve bilgi sayfaları', desc: 'Maçlar, puan durumu, nöbetçi eczane, haber, sinema, tarihte bugün, trafik', pro: true, min: [5, 8] },
   reviews: { name: 'Google yorumları', desc: 'Müşteri yorumları şeridi', pro: true, min: [8, 2] },
   menu:    { name: 'Fiyat tarifesi', desc: 'Kategori, ürün ve fiyat listesi (Fiyat Etiketi Yönetmeliği için)', pro: true, min: [5, 6], props: { title: 'Fiyat Listesi' } },
@@ -54,12 +54,13 @@ const FONTS = ['Montserrat', 'Poppins', 'Oswald', 'Nunito', 'Playfair Display', 
 const DEFAULT_TEMPLATE = 'spor';
 const defaultLayout = (tpl = DEFAULT_TEMPLATE) => ({ cols: COLS, rows: ROWS, widgets: JSON.parse(JSON.stringify((TEMPLATES[tpl] || TEMPLATES[DEFAULT_TEMPLATE]).widgets)) });
 
-// Panelden gelen düzeni doğrula: bilinmeyen tür, taşan kutu, tekrar eden widget ayıklanır
+// Panelden gelen düzeni doğrula: bilinmeyen tür, taşan kutu, tekrar eden widget ayıklanır (QR kartı en çok 6 kez olabilir)
 const HEX = /^#[0-9a-f]{6}$/i;
 function cleanLayout(l) {
-  const seen = new Set(), out = [];
+  const seen = new Set(), count = {}, out = [];
   for (const w of (l && Array.isArray(l.widgets) ? l.widgets : []).slice(0, 20)) {
     if (!w || !WIDGETS[w.type] || seen.has(w.type)) continue;
+    if ((count[w.type] = (count[w.type] || 0) + 1) > (WIDGETS[w.type].multi || 1)) continue;
     const n = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
     const x = n(w.x, 0, COLS - 1), y = n(w.y, 0, ROWS - 1);
     const item = { type: w.type, x, y, w: n(w.w, 1, COLS - x), h: n(w.h, 1, ROWS - y) };
@@ -80,7 +81,8 @@ function cleanLayout(l) {
         if (Object.keys(tr).length) item.props.i18n = tr;
       }
     }
-    seen.add(w.type); out.push(item);
+    if (!WIDGETS[w.type].multi) seen.add(w.type);
+    out.push(item);
   }
   return { cols: COLS, rows: ROWS, widgets: out };
 }

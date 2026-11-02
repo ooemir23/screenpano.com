@@ -404,12 +404,14 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #wimage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 #wimage.contain img{object-fit:contain}
 #wimage .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:1.8vh}
-#wqr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;padding:1.6vh 1vw;transition:opacity .45s}
-#wqr.out{opacity:0}
-#wqr .code{background:#fff;border-radius:1.4vh;padding:.7vh;box-shadow:0 1vh 3vh rgba(0,0,0,.45);border:.25vh solid rgba(var(--a2),.85)}
-#wqr .code svg{width:100%;height:100%;display:block}
-#wqr .lbl{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--white);text-align:center;font-size:2.2vh;line-height:1.25}
-#wqr .lbl small{display:block;margin-top:.5vh;font-size:1.7vh;letter-spacing:.04em;text-transform:none;color:var(--al);font-weight:600}
+.cell.qrcell{z-index:20} /* QR kutuları diğer widget'ların üstünde durabilir */
+.cell.qrcell .wqr{background:rgba(14,13,12,.78);backdrop-filter:blur(.6vh)}
+.wqr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;padding:1.6vh 1vw;transition:opacity .45s}
+.wqr.out{opacity:0}
+.wqr .code{background:#fff;border-radius:1.4vh;padding:.7vh;box-shadow:0 1vh 3vh rgba(0,0,0,.45);border:.25vh solid rgba(var(--a2),.85)}
+.wqr .code svg{width:100%;height:100%;display:block}
+.wqr .lbl{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--white);text-align:center;font-size:2.2vh;line-height:1.25}
+.wqr .lbl small{display:block;margin-top:.5vh;font-size:1.7vh;letter-spacing:.04em;text-transform:none;color:var(--al);font-weight:600}
 #wmenu{display:flex;flex-direction:column;padding:1.8vh 1.4vw 1.2vh}
 #wmenu .mh{display:flex;align-items:baseline;justify-content:space-between;gap:1vw;padding-bottom:1.2vh;margin-bottom:.6vh;border-bottom:max(1px,.15vh) solid rgba(var(--a2),.5)}
 #wmenu .mh h3{font-size:3vh;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--white)}
@@ -467,7 +469,6 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
   <div class="cell" data-w="clock"><div id="wclock" class="wbox"><b id="wc-time">--:--</b><small id="wc-date"></small></div></div>
   <div class="cell" data-w="text"><div id="wtext" class="wbox"><h3></h3><p></p></div></div>
   <div class="cell" data-w="image"><div id="wimage" class="wbox"><img alt=""></div></div>
-  <div class="cell" data-w="qr"><div id="wqr" class="wbox"></div></div>
   <div class="cell" data-w="menu"><div id="wmenu" class="wbox"><div class="mh"><h3></h3><span class="pg"></span></div><div class="mb"></div></div></div>
 </div>
 <div id="bday"><p id="btxt"></p></div>
@@ -1424,27 +1425,35 @@ function applyLayout(l) {
   app.style.gridTemplateColumns = `repeat(${cols},minmax(0,1fr))`;
   app.style.gridTemplateRows = `repeat(${rows},minmax(0,1fr))`;
   const used = new Set(); WPROPS = {};
+  app.querySelectorAll('.cell.qrcell').forEach(c => c.remove()); qrTile.cells = [];
   for (const w of l.widgets) {
+    if (w.type === 'qr') { // birden çok QR kutusu olabilir; her biri seçilen QR'ı (ya da hepsini sırayla) gösterir
+      const c = document.createElement('div'); c.className = 'cell qrcell'; c.dataset.w = 'qr';
+      c.innerHTML = '<div class="wbox wqr"></div>';
+      c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+      app.appendChild(c); qrTile.cells.push({ el: c.firstChild, qr: (w.props && w.props.qr) || '', idx: 0 });
+      used.add('qr'); WPROPS.qr = w.props || {}; continue;
+    }
     const c = document.querySelector(`.cell[data-w="${w.type}"]`);
     if (!c || used.has(w.type)) continue;
     c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
     c.classList.toggle('edge-b', w.type === 'ticker' && w.y + w.h >= rows && w.x === 0 && w.w >= cols);
     app.appendChild(c); used.add(w.type); WPROPS[w.type] = w.props || {};
   }
-  for (const c of [...app.querySelectorAll('.cell')]) if (!used.has(c.dataset.w)) { c.style.gridArea = ''; park.appendChild(c); }
+  for (const c of [...app.querySelectorAll('.cell:not(.qrcell)')]) if (!used.has(c.dataset.w)) { c.style.gridArea = ''; park.appendChild(c); }
   const wasOn = MEDIA_ON; MEDIA_ON = used.has('media');
   if (!MEDIA_ON) els.forEach(v => v.pause());
   $id('tclock').style.display = WPROPS.ticker && WPROPS.ticker.clock === false ? 'none' : '';
   renderText(); renderImage();
   window.fitted = false; pagesDirty = true; window.__panelSig = ''; window.__lastTick = ''; tickKey = '';
   requestAnimationFrame(() => {
-    sizeBg(); fitWidgets();
+    sizeBg(); fitWidgets(); showQrTile();
     try { if (matches.length || pages.length) render(); } catch (e) {}
     setTicker(matches); renderPanel(); renderMenuW(true); tickClock();
     if (MEDIA_ON && !wasOn && videos.length) { current = null; play(); }
   });
 }
-addEventListener('resize', () => { fitWidgets(); renderMenuW(false); });
+addEventListener('resize', () => { fitWidgets(); renderMenuW(false); showQrTile(); });
 
 // ---- boş widget'ın yerini komşusu kaplasın: yorum yoksa yorum şeridinin yerini üstündeki medya alır ----
 let fillSig = '';
@@ -1553,19 +1562,27 @@ tickClock = function () {
 setInterval(tickClock, 1000);
 
 // ---- QR kart widget'ı ----
-const qrTile = { list: [], idx: 0, timer: null, sig: '' };
-function showQrTile() {
-  const el = $id('wqr'), q = qrTile.list[qrTile.idx % qrTile.list.length];
+const qrTile = { list: [], cells: [], timer: null, sig: '' };
+// Her QR kutusu: seçili QR varsa hep onu, yoksa (ya da silinmişse) tüm QR'ları sırayla gösterir
+const qrOf = c => { const pick = c.qr && qrTile.list.find(q => q.id === c.qr); return pick ? [pick] : qrTile.list; };
+function drawQrCell(c) {
+  const el = c.el, list = qrOf(c), q = list[c.idx % Math.max(1, list.length)];
   if (!q) { el.innerHTML = '<div class="lbl"><small>Panelden QR kod ekleyin</small></div>'; return; }
   const s = Math.max(40, Math.min(el.clientHeight * 0.68, el.clientWidth * 0.82));
   el.innerHTML = `<div class="code" style="width:${s}px;height:${s}px">${q.svg}</div><div class="lbl">${esc(q.label)}${q.marquee ? `<small>Şifre: ${esc(q.marquee)}</small>` : ''}</div>`;
 }
+function showQrTile() { qrTile.cells.forEach(drawQrCell); }
 function setQrTile(list) {
   const sig = JSON.stringify(list || []);
-  if (sig === qrTile.sig && $id('wqr').innerHTML) return;
-  qrTile.sig = sig; qrTile.list = list || []; qrTile.idx = 0; showQrTile();
+  if (sig === qrTile.sig) return;
+  qrTile.sig = sig; qrTile.list = list || []; qrTile.cells.forEach(c => { c.idx = 0; }); showQrTile();
   clearInterval(qrTile.timer);
-  qrTile.timer = setInterval(() => { if (qrTile.list.length < 2) return showQrTile(); const el = $id('wqr'); el.classList.add('out'); setTimeout(() => { qrTile.idx++; showQrTile(); el.classList.remove('out'); }, 450); }, 12000);
+  qrTile.timer = setInterval(() => {
+    for (const c of qrTile.cells) {
+      if (qrOf(c).length < 2) continue; // tek QR: değişmez
+      c.el.classList.add('out'); setTimeout(() => { c.idx++; drawQrCell(c); c.el.classList.remove('out'); }, 450);
+    }
+  }, 12000);
 }
 
 // ---- fiyat tarifesi widget'ı: sayfalara bölünür, 12 sn'de bir döner ----

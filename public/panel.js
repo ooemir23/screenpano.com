@@ -171,15 +171,17 @@ SECTIONS.design = {
   },
 };
 const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-const badSet = () => { const ws = EDIT.layout.widgets, bad = new Set(); ws.forEach((a, i) => ws.forEach((b, j) => { if (i < j && overlap(a, b)) { bad.add(i); bad.add(j); } })); return bad; };
+const floats = (a, b) => (a.type === 'qr') !== (b.type === 'qr'); // QR kartı diğer kutuların üstüne konabilir
+const badSet = () => { const ws = EDIT.layout.widgets, bad = new Set(); ws.forEach((a, i) => ws.forEach((b, j) => { if (i < j && overlap(a, b) && !floats(a, b)) { bad.add(i); bad.add(j); } })); return bad; };
 function drawCanvas() {
   const c = $('cv'); if (!c) return;
   const bad = badSet();
-  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}" data-i="${i}" style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"><span class="ic">${ICON[w.type] || '▢'}</span>${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.w + '×' + w.h}</small><i class="rz"></i></div>`; }).join('');
+  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"><span class="ic">${ICON[w.type] || '▢'}</span>${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small><i class="rz"></i></div>`; }).join('');
 }
 function drawPal() {
   const used = new Set(EDIT.layout.widgets.map(w => w.type));
-  $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => `<span class="chip ${used.has(k) ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} ${esc(d.name)}${d.pro && !pro() ? ' 🔒' : used.has(k) ? ' ✓' : ''}</span>`).join('');
+  const n = k => EDIT.layout.widgets.filter(w => w.type === k).length;
+  $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} ${esc(d.name)}${d.pro && !pro() ? ' 🔒' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
 }
 const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Yorumlar <a href="#promo">Duyurular</a> sayfasından eklenir.', qr: 'QR kodlar <a href="#promo">Duyurular</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
 function drawProps() {
@@ -196,6 +198,7 @@ function drawProps() {
   if (w.type === 'image') f = `${p.url ? `<img src="${esc(p.url)}" style="width:100%;max-height:150px;object-fit:contain;background:#000;border-radius:8px;margin-top:8px">` : ''}<input type="file" id="assetf" accept="image/*" hidden onchange="upAsset(this)"><div class="row mt"><button class="btn s" onclick="$('assetf').click()">Resim yükle</button></div>`
     + fl('Yerleşim', `<select onchange="setP('fit',this.value)"><option value="cover" ${p.fit !== 'contain' ? 'selected' : ''}>Kutuyu doldur</option><option value="contain" ${p.fit === 'contain' ? 'selected' : ''}>Tamamı görünsün</option></select>`)
     + ((S.db.assets || []).length ? `<div class="thumbs">${S.db.assets.slice(-10).reverse().map(a => `<div class="t" style="cursor:pointer" onclick="setP('url','${S.me.upBase}${a.file}');drawProps()"><img src="${S.me.upBase}${a.file}"></div>`).join('')}</div>` : '');
+  if (w.type === 'qr') { const qs = S.db.qrs || []; f = qs.length ? fl('Gösterilecek QR', `<select onchange="setP('qr',this.value);drawCanvas()"><option value="">Tümü (sırayla döner)</option>${qs.map(q => `<option value="${q.id}" ${p.qr === q.id ? 'selected' : ''}>${esc(q.label)}</option>`).join('')}</select>`) + (p.qr && qs.find(q => q.id === p.qr) ? `<div style="width:120px;background:#fff;border-radius:10px;padding:6px;margin-top:10px">${qs.find(q => q.id === p.qr).svg}</div>` : '') + '<p class="muted mt" style="font-size:12px">QR kartı diğer kutuların (ör. medyanın) üstüne konabilir. Birden çok QR kartı ekleyip her birine ayrı QR seçebilirsiniz.</p>' : '<p class="muted mt">Henüz QR kod yok</p>'; }
   if (w.type === 'menu') f = fl('Başlık (boşsa fiyat listesinin başlığı)', `<input type="text" maxlength="40" value="${esc(p.title || '')}" onchange="setP('title',this.value)">`);
   // çoklu dil açıksa: başlık ve metnin çevirileri
   const LL = langList();
@@ -209,14 +212,18 @@ function setP(k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; s
 function rmW(i) { snap(); EDIT.layout.widgets.splice(i, 1); EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
 function addW(type) {
   const d = S.cat.widgets[type];
-  if (EDIT.layout.widgets.some(w => w.type === type)) return toast('Bu widget düzende zaten var', true);
+  const cnt = EDIT.layout.widgets.filter(w => w.type === type).length;
+  if (d.multi ? cnt >= d.multi : cnt) return toast(d.multi ? `En fazla ${d.multi} tane eklenebilir` : 'Bu widget düzende zaten var', true);
   if (d.pro && !pro()) toast('Bu widget Pro pakette; paketinizde ekranda görünmez', true);
   const [mw, mh] = d.min || [4, 3]; let spot = null;
   for (let y = 0; y <= 24 - mh && !spot; y++) for (let x = 0; x <= 24 - mw && !spot; x++) { const c = { x, y, w: mw, h: mh }; if (!EDIT.layout.widgets.some(w => overlap(w, c))) spot = c; }
+  if (!spot && type === 'qr') { const m = EDIT.layout.widgets.find(w => w.type === 'media') || { x: 0, y: 0, w: 24, h: 24 }; const off = cnt * mw; spot = { x: Math.max(0, m.x + m.w - mw - 1 - off), y: Math.max(0, m.y + m.h - mh - 1), w: mw, h: mh }; if (EDIT.layout.widgets.some(w => w.type === 'qr' && overlap(w, spot))) spot = null; else spot.float = true; }
   snap();
-  EDIT.layout.widgets.push({ type, ...(spot || { x: 0, y: 0, w: mw, h: mh }), ...(d.props ? { props: clone(d.props) } : {}) });
+  const pos = spot ? { x: spot.x, y: spot.y, w: spot.w, h: spot.h } : { x: 0, y: 0, w: mw, h: mh };
+  EDIT.layout.widgets.push({ type, ...pos, ...(d.props ? { props: clone(d.props) } : {}) });
   EDIT.sel = EDIT.layout.widgets.length - 1; drawCanvas(); drawProps(); drawPal();
   if (!spot) toast('Boş yer yok: kutu sol üste kondu, diğerlerini küçültüp yerleştirin', true);
+  else if (spot.float) toast('QR kartı medyanın üstüne kondu; sürükleyip istediğiniz yere taşıyın');
 }
 async function applyStarter(k) {
   const v = (S.cat.starters || []).find(x => x.key === k); if (!v) return;
