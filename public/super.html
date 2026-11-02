@@ -68,6 +68,7 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
   </div>
   <h3 style="margin:22px 0 4px;font-size:15px">Uyarılar</h3>
   <p class="hint">Bir TV kutusu 10 dakikadan uzun çevrimdışı kalınca bu adrese {"text": "..."} gönderilir (Slack, Discord ya da Telegram köprüsü). İşletmelere e-posta için sunucuda SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM ortam değişkenlerini girin. <span id="mailst"></span></p>
+  <div class="row" style="margin-bottom:12px"><div><label>Deneme e-postası gönder</label><input id="mt-to" type="email" placeholder="ornek@alanadi.com"></div><div style="max-width:160px;align-self:flex-end"><button class="btn ghost" onclick="testMail()">Gönder</button></div></div>
   <div class="row"><div><label>Webhook adresi (https://…)</label><input id="s-alert_webhook" placeholder="https://hooks.slack.com/services/…"></div><div style="max-width:160px;align-self:flex-end"><button class="btn ghost" onclick="testHook()">Dene</button></div></div>
   <h3 style="margin:22px 0 4px;font-size:15px">Yasal bilgiler (KVKK ve sözleşme sayfalarında görünür)</h3>
   <p class="hint">Metinler başlangıç taslağıdır; yayına almadan önce bir avukata kontrol ettirin. Sayfalar: <a href="/kvkk" target="_blank">/kvkk</a> · <a href="/kosullar" target="_blank">/kosullar</a> · <a href="/gizlilik" target="_blank">/gizlilik</a></p>
@@ -126,6 +127,7 @@ async function renderBk() {
     ${st.enabled ? '<button class="btn ghost sm" onclick="call(\'POST\',\'/api/super/storage/sync\').then(()=>toast(\'Eşitleme başladı\'))">Şimdi eşitle</button>' : ''}`;
 }
 async function runBk() { toast('Yedek alınıyor…'); try { const j = await call('POST', '/api/super/backups'); toast('Yedek alındı: ' + j.name); load(); } catch (e) { toast(e.message, true); } }
+async function testMail() { const to = $('mt-to').value.trim(); if (!to) return toast('Adres yazın', true); toast('Gönderiliyor…'); try { await call('POST', '/api/super/mail/test', { to }); toast('Gönderildi; gelen kutusunu (ve spam klasörünü) kontrol edin'); } catch (e) { toast('Gönderilemedi: ' + e.message, true); } }
 async function testHook() { try { const j = await call('POST', '/api/super/alert/test'); toast(j.ok ? 'Deneme mesajı gönderildi' : 'Webhook ' + j.status + ' döndü', !j.ok); } catch (e) { toast(e.message, true); } }
 function stTag(x) {
   if (!x.access.ok) return x.access.reason === 'suspended' ? '<span class="tag bad">Askıda</span>' : '<span class="tag bad">Süresi doldu</span>';

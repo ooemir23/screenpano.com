@@ -100,6 +100,18 @@ r.post('/backups', async (req, res) => { try { res.json({ ok: true, name: await 
 r.get('/backups/:name', (req, res) => { const f = require('./backup').filePath(req.params.name); if (!f || !fs.existsSync(f)) return res.status(404).end(); res.download(f); });
 r.post('/storage/sync', (req, res) => { require('./storage').syncTick().catch(() => {}); res.json({ ok: true }); });
 r.post('/alert/test', async (req, res) => { const url = store.setting('alert_webhook', ''); if (!url) return res.status(400).json({ error: 'Önce webhook adresini kaydedin' }); try { const r2 = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'ScreenPano deneme uyarısı', content: 'ScreenPano deneme uyarısı' }) }); res.json({ ok: r2.ok, status: r2.status }); } catch (e) { res.status(502).json({ error: e.message }); } });
+// SMTP denemesi: verilen adrese deneme e-postası
+r.post('/mail/test', async (req, res) => {
+  const to = String((req.body || {}).to || '').trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi girin' });
+  const m = require('./monitor');
+  if (!m.mailEnabled()) return res.status(400).json({ error: 'SMTP ayarlı değil (SMTP_HOST ortam değişkeni yok)' });
+  try {
+    const t = require('nodemailer').createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT) || 587, secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465, auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined, connectionTimeout: 15000 });
+    await t.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject: 'ScreenPano deneme e-postası', text: 'Bu e-posta geldiyse ScreenPano uyarı e-postaları çalışıyor.' });
+    res.json({ ok: true });
+  } catch (e) { res.status(502).json({ error: e.message }); }
+});
 // silme talebini iptal et / hemen uygula
 r.delete('/tenants/:id/deletion', (req, res) => { const t = tenants.get(req.params.id); if (!t) return res.status(404).end(); delete t.db.deletion; tenants.save(t); res.json({ ok: true }); });
 
