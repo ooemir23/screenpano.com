@@ -337,7 +337,10 @@ async function upLogo(inp) {
   try {
     const j = await req('POST', '/logo', fd); S.me.tenant.logo = j.url; drawBrand();
     const th = (await themesFromLogo(j.url))[0];
-    if (th) { const r = await req('PUT', '/theme', th); S.me.tenant.theme = r.theme; drawBrand(); toast('Logo yüklendi, renkler logonuza göre ayarlandı'); }
+    if (th) {
+      th.plate = false;
+      const r = await req('PUT', '/theme', th); S.me.tenant.theme = r.theme; drawBrand(); toast('Logo yüklendi, renkler logonuza göre ayarlandı');
+    }
     else toast('Logo yüklendi');
     render(true);
   } catch (e) { toast(e.message, true); }
@@ -395,7 +398,7 @@ function logoColors(url) {
 async function themesFromLogo(url) {
   const p = await logoColors(url);
   if (!p) return [];
-  const font = (S.me.tenant.theme || {}).font || 'Montserrat', plate = !!p.darkLogo;
+  const font = (S.me.tenant.theme || {}).font || 'Montserrat', plate = false;
   if (!p.colorful) { // siyah-beyaz logo: nötr, altın ya da gümüş vurgulu temalar
     return [
       { name: 'Logodan · gümüş', bg: '#111214', accent: '#4a4f57', accent2: '#c9ced6', text: '#f7f8fa', font, plate },
