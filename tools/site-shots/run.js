@@ -69,7 +69,7 @@ async function seed(key) {
   const t = TENANTS[key];
   const r = await request.newContext({ baseURL: B });
   const ok = async (p, what) => { const x = await p; if (!x.ok()) throw new Error(`${key} ${what}: ${x.status()} ${await x.text()}`); return x.json(); };
-  await ok(r.post('/api/auth/signup', { data: { business: t.name, username: t.user, password: PASS, accept: true } }), 'kayıt');
+  await ok(r.post('/api/auth/signup', { data: { business: t.name, username: t.user, password: PASS, email: `${t.user}@example.com`, accept: true } }), 'kayıt');
   await ok(r.put('/api/admin/theme', { data: t.theme }), 'tema');
   await ok(r.put('/api/admin/screen', { data: { layout: { cols: 24, rows: 24, widgets: t.layout } } }), 'düzen');
   await ok(r.put('/api/admin/menu', { data: MENU }), 'menü');
@@ -85,8 +85,6 @@ async function seed(key) {
   }
   for (const [author, rating, text] of [['Elif K.', 5, 'Kahveleri harika, ortam çok sıcak. Maç akşamları ayrı bir keyif!'], ['Murat D.', 5, "San Sebastian'ı mutlaka deneyin. Personel çok ilgili."], ['Selin A.', 4, 'Hafta sonu kahvaltısı için favori mekânımız oldu.']])
     await ok(r.post('/api/admin/reviews', { data: { author, rating, text } }), 'yorum');
-  for (const [home, away, time, league, channel] of [['Galatasaray', 'Fenerbahçe', '20:00', 'Süper Lig', 'beIN Sports 1'], ['Beşiktaş', 'Trabzonspor', '19:00', 'Süper Lig', 'beIN Sports 2']])
-    await ok(r.post('/api/admin/matches', { data: { home, away, time, league, channel } }), 'maç');
   await ok(r.post('/api/admin/qrs', { data: { label: 'Menü için okutun', kind: 'link', text: 'https://screenpano.com' } }), 'qr');
   await ok(r.put('/api/admin/options', { data: { wifiText: 'Wi-Fi: Misafir · Şifre: hosgeldiniz', showQr: true } }), 'seçenekler');
   if (t.campaign) await ok(r.put('/api/admin/campaigns/google-yorum', { data: { url: 'https://g.page/r/ornek/review', headline: 'Yorumunuz bizim için çok değerli!', sub: "Google'da bizi değerlendirin", note: 'Kasada gösterin, kahveniz bizden', enabled: true } }), 'kampanya');
@@ -94,6 +92,13 @@ async function seed(key) {
   const token = (await ok(r.post('/api/tv/login', { data: { username: t.user, password: PASS } }), 'tv')).deviceToken;
   t.token = token; t.state = await r.storageState();
   await r.dispose();
+}
+
+// Maç listesi örnek: sunucunun maç önbelleğine bugünün iki maçı yazılır
+function fakeMatches(dataDir) {
+  const day = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(new Date());
+  const mk = (id, home, away, time, channel) => ({ id, league: 'Süper Lig', home, away, ts: Date.parse(`${day}T${time}:00+03:00`), day: 'Bugün', time, hl: null, al: null, live: false, final: false, hs: null, as: null, clock: null, lastGoal: null, channel });
+  fs.writeFileSync(path.join(dataDir, 'cache.json'), JSON.stringify({ matches: { at: Date.now(), data: [mk('demo1', 'Galatasaray', 'Fenerbahçe', '20:00', 'beIN Sports 1'), mk('demo2', 'Beşiktaş', 'Trabzonspor', '19:00', 'beIN Sports 2')] } }));
 }
 
 // son 30 günün kullanım istatistiği (panel/istatistik görüntüsü boş görünmesin)
@@ -121,6 +126,7 @@ async function save(buf, name, width) {
 
 (async () => {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sp-shots-'));
+  fakeMatches(dataDir);
   const srv = spawn(process.execPath, ['server/index.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir, SUPER_PASS: PASS + 'x', ALLOW_SIGNUP: 'true', LOGIN_LIMIT: 'off' }, stdio: ['ignore', 'pipe', 'pipe'] });
   srv.stderr.on('data', d => process.stderr.write(d));
   let browser;
