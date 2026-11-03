@@ -630,17 +630,18 @@ async function saveLeagues() { const enabled = [...document.querySelectorAll('[d
 async function togTable(c) { const h = S.lg.hideTables || []; S.lg.hideTables = h.includes(c) ? h.filter(x => x !== c) : [...h, c]; await act('PUT', '/options', { hideTables: S.lg.hideTables }, 'Kaydedildi', false); render(true); }
 // Büyük maç tasarımları: kart ön izlemesi panelde gerçek TV sayfasıyla (?bigdemo=) gösterilir
 const BIG_STYLES = [
-  ['klasik', 'Klasik', 'Takım renkleri, büyük armalar ve oyuncu fotoğrafları'],
-  ['uyum', 'Klasik (ekrana uyumlu)', 'Klasik tasarım; medya alanının boyutuna göre ölçeklenir'],
+  ['uyum', 'Klasik (ekrana uyumlu)', 'Takım renkleri, büyük armalar ve oyuncu fotoğrafları; medya alanına göre ölçeklenir'],
   ['stadyum', 'Stadyum', 'Takım renkleriyle çapraz sahne, ışık huzmeleri, parlayan armalar'],
   ['bant', 'Yayın bandı', 'TV yayınlarındaki gibi alt skorbord; medya arkada oynamaya devam eder'],
-  ['sayac', 'Geri sayım', 'Maça kalan süre büyük rakamlarla canlı geri sayar'],
+  ['sayac', 'Geri sayım', 'Takım renkli dev parlayan armalar ve canlı geri sayan dev saat'],
   ['poster', 'Poster', 'Dev tipografi ve çift çerçeveyle maç afişi'],
-  ['duello', 'Düello', 'İki takımdan birer oyuncu karşı karşıya; duman, kıvılcım ve ışık efektleri'],
-  ['turnuva', 'Düello (Turnuva Logolu)', 'Düello sahnesi; ortada şimşek yerine turnuvanın logosu yer alır'],
-  ['arena', 'Şampiyonlar Arenası', '3D döner turnuva halkası, çift renkli enerji monolitleri, dev armalar ve perspektif saha'],
+  ['duello', 'Düello', 'İki takım karşı karşıya; ortada 3D dönen büyük turnuva logosu, duman ve kıvılcım efektleri'],
+  ['turnuva', 'Düello (Turnuva Madalyonlu)', 'Düello sahnesi; merkezde altın turnuva madalyonu ve stadyum ışık huzmeleri'],
+  ['arena', 'Şampiyonlar Arenası', 'Dev altın yıldız kemerli stadyum sahnesi, 3D yansımalı podyumlar, dönen turnuva küresi ve takım ışımaları'],
+  ['matchday', 'Canlı Yayın (Matchday)', 'Gerçek stadyum çimi, projektörler, havai fişekler, takım renkli tribün dumanları ve TV yayın bantları'],
+  ['neonarena', 'Neon Arena', 'Fütüristik sekizgen kalkan çerçeveler, siber ızgara ve neon lazer hüzmeleri'],
 ];
-const bigCur = () => { const st = (S.db.bigMatch || {}).style; return BIG_STYLES.some(x => x[0] === st) ? st : 'klasik'; };
+const bigCur = () => { const st = (S.db.bigMatch || {}).style; return BIG_STYLES.some(x => x[0] === st) ? st : 'uyum'; };
 function bigPreview(k) {
   const x = BIG_STYLES.find(y => y[0] === k) || BIG_STYLES[0];
   openModal(`<div class="bpv"><div class="row" style="justify-content:space-between;width:100%"><div><h3 style="margin:0">${x[1]}</h3><p class="muted" style="margin:4px 0 0">${x[2]}</p></div>

@@ -400,21 +400,25 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-bant .ytick b{color:#fff;font-weight:800}
 #big.d-bant .ytick span{letter-spacing:.06em;text-transform:uppercase;font-size:.9em}
 
-/* 3) Geri sayım: maça kalan süre büyük, canlı sayan rakamlarla */
-#big.d-sayac{background:radial-gradient(ellipse 55% 85% at 0% 50%,color-mix(in srgb,var(--c1) 65%,transparent),transparent 70%),radial-gradient(ellipse 55% 85% at 100% 50%,color-mix(in srgb,var(--c2) 65%,transparent),transparent 70%),#07080b}
-#big.d-sayac .ygrid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:calc(6*var(--u)) calc(6*var(--u));-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,#000,transparent);mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,#000,transparent)}
-#big.d-sayac .yvsrow{display:flex;align-items:center;justify-content:center;gap:calc(3*var(--w));width:100%}
-#big.d-sayac .yt{--ms:12;flex:1;display:flex;align-items:center;justify-content:flex-end;gap:calc(2*var(--u));min-width:0;text-align:right}
-#big.d-sayac .yt.a{justify-content:flex-start;text-align:left}
-#big.d-sayac .yt .ylg,#big.d-sayac .yt .ymono{height:calc(12*var(--u));width:calc(12*var(--u));flex:none}
-#big.d-sayac .yvsrow i{font-style:normal;font-size:calc(3.4*var(--u));font-weight:900;color:#f4c04f;letter-spacing:.1em}
+/* 3) Geri sayım: maça kalan süre büyük, canlı sayan rakamlarla + takım renkli dev parlayan armalar */
+#big.d-sayac{background:radial-gradient(ellipse 58% 88% at 10% 44%,var(--c1) 0%,color-mix(in srgb,var(--c1b,var(--c1)) 65%,transparent) 48%,transparent 74%),radial-gradient(ellipse 58% 88% at 90% 44%,var(--c2) 0%,color-mix(in srgb,var(--c2b,var(--c2)) 65%,transparent) 48%,transparent 74%),#06070b}
+#big.d-sayac:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 62% 92% at 12% 44%,var(--c1b,var(--c1)) 0%,color-mix(in srgb,var(--c1) 70%,transparent) 50%,transparent 76%),radial-gradient(ellipse 62% 92% at 88% 44%,var(--c2b,var(--c2)) 0%,color-mix(in srgb,var(--c2) 70%,transparent) 50%,transparent 76%);animation:yglowmorph 3.2s ease-in-out infinite alternate;pointer-events:none}
+#big.d-sayac .ygrid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:calc(6*var(--u)) calc(6*var(--u));-webkit-mask-image:radial-gradient(ellipse 65% 65% at 50% 50%,#000,transparent);mask-image:radial-gradient(ellipse 65% 65% at 50% 50%,#000,transparent)}
+#big.d-sayac .yvsrow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;gap:calc(2.4*var(--w));width:100%}
+#big.d-sayac .yt{--ms:22;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(1.4*var(--u));min-width:0;text-align:center;width:100%}
+#big.d-sayac .ysc-ring{position:relative;width:calc(29*var(--u));height:calc(29*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.22),color-mix(in srgb,var(--tc) 38%,rgba(10,12,20,.88)) 68%,rgba(5,7,12,.95) 100%);border:calc(.32*var(--u)) solid color-mix(in srgb,var(--tc2,var(--tc)) 75%,#fff 25%);box-shadow:0 calc(1.8*var(--u)) calc(4.5*var(--u)) rgba(0,0,0,.9),0 0 calc(4.5*var(--u)) var(--tc),0 0 calc(8*var(--u)) color-mix(in srgb,var(--tc2,var(--tc)) 80%,transparent),inset 0 0 calc(2.4*var(--u)) color-mix(in srgb,var(--tc2,var(--tc)) 55%,transparent)}
+#big.d-sayac .ysc-ring:before{content:"";position:absolute;inset:-28%;border-radius:50%;background:radial-gradient(circle,var(--tc) 0%,var(--tc2,var(--tc)) 48%,transparent 72%);filter:blur(calc(2.4*var(--u)));opacity:.9;animation:yaura1 3s ease-in-out infinite alternate;pointer-events:none;z-index:-1}
+#big.d-sayac .ysc-ring .yaura{position:absolute;inset:-32%;border-radius:50%;background:radial-gradient(circle,var(--tc2,var(--tc)) 0%,var(--tc) 52%,transparent 74%);filter:blur(calc(2.6*var(--u)));animation:yaura2 3s ease-in-out infinite alternate;pointer-events:none;z-index:-1}
+#big.d-sayac .ysc-ring:after{content:"";position:absolute;inset:calc(-1.1*var(--u));border-radius:50%;border:calc(.2*var(--u)) solid color-mix(in srgb,var(--tc) 65%,#fff 35%);box-shadow:0 0 calc(2.2*var(--u)) var(--tc2,var(--tc));animation:yaura2 3s ease-in-out infinite alternate;pointer-events:none}
+#big.d-sayac .yt .ylg,#big.d-sayac .yt .ymono{position:relative;z-index:2;height:82%;width:82%;flex:none;filter:drop-shadow(0 calc(1*var(--u)) calc(2.2*var(--u)) rgba(0,0,0,.9)) drop-shadow(0 0 calc(1.2*var(--u)) rgba(255,255,255,.45))}
+#big.d-sayac .yvsrow i{font-style:normal;font-size:calc(5.2*var(--u));font-weight:900;color:#ffe28a;letter-spacing:.1em;text-shadow:0 0 calc(2*var(--u)) rgba(255,200,80,.7),0 calc(.5*var(--u)) calc(1.5*var(--u)) #000}
 #big.d-sayac .ycd{display:flex;align-items:flex-start;justify-content:center;gap:calc(1.6*var(--w))}
-#big.d-sayac .ycd div{display:flex;flex-direction:column;align-items:center;gap:calc(1*var(--u))}
-#big.d-sayac .ycd b{position:relative;display:block;min-width:calc(17*var(--u));padding:calc(1.4*var(--u)) calc(1.6*var(--u));border-radius:calc(1.6*var(--u));background:linear-gradient(#20222b 0 50%,#16171e 50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 calc(1.2*var(--u)) calc(3.4*var(--u)) rgba(0,0,0,.6);font-size:min(calc(12*var(--u)),calc(7.4*var(--w)));font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:#fff;text-align:center}
+#big.d-sayac .ycd div{display:flex;flex-direction:column;align-items:center;gap:calc(.8*var(--u))}
+#big.d-sayac .ycd b{position:relative;display:block;min-width:calc(16*var(--u));padding:calc(1.1*var(--u)) calc(1.5*var(--u));border-radius:calc(1.5*var(--u));background:linear-gradient(#20222b 0 50%,#16171e 50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 calc(1.2*var(--u)) calc(3.4*var(--u)) rgba(0,0,0,.7);font-size:min(calc(10.5*var(--u)),calc(6.8*var(--w)));font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:#fff;text-align:center}
 #big.d-sayac .ycd b:after{content:"";position:absolute;left:0;right:0;top:50%;height:calc(.25*var(--u));background:rgba(0,0,0,.55)}
 #big.d-sayac .ycd small{font-size:calc(1.9*var(--u));font-weight:800;letter-spacing:.26em;color:#f4c04f}
-#big.d-sayac .ycd>i{font-style:normal;font-size:calc(9*var(--u));font-weight:900;color:rgba(255,255,255,.3);line-height:1;padding-top:calc(1.6*var(--u))}
-#big.d-sayac .ywhen{margin-top:calc(2.2*var(--u));font-size:calc(2.8*var(--u));font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.88)}
+#big.d-sayac .ycd>i{font-style:normal;font-size:calc(8*var(--u));font-weight:900;color:rgba(255,255,255,.35);line-height:1;padding-top:calc(1.2*var(--u))}
+#big.d-sayac .ywhen{margin-top:calc(1.4*var(--u));font-size:calc(2.8*var(--u));font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.92)}
 #big.on.d-sayac .ycdw{animation:yrise .9s .5s both}
 #big.on.d-sayac .yvsrow{animation:yrise .9s .35s both}
 
@@ -536,10 +540,8 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-bant .ytag{font-size:calc(2.4*var(--u))}
 #big.d-bant .ytick{font-size:calc(2.7*var(--u))}
 /* Geri sayım */
-#big.d-sayac .yt .ylg,#big.d-sayac .yt .ymono{height:calc(17*var(--u));width:calc(17*var(--u))}
-#big.d-sayac .yvsrow i{font-size:calc(4.4*var(--u))}
-#big.d-sayac .ywhen{font-size:calc(3.4*var(--u));font-weight:800;color:#fff}
-#big.d-sayac .ycd small{font-size:calc(2.4*var(--u))}
+#big.d-sayac .ywhen{font-size:calc(3.2*var(--u));font-weight:800;color:#fff}
+#big.d-sayac .ycd small{font-size:calc(2.2*var(--u))}
 /* Poster */
 #big.d-poster .ydisc{width:calc(25*var(--u));height:calc(25*var(--u));background:radial-gradient(circle,rgba(255,255,255,.28),rgba(255,255,255,.06) 70%);border-width:calc(.45*var(--u))}
 #big.d-poster .ydisc .ylg{width:78%;height:78%}
@@ -547,17 +549,20 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-poster .yinfo .t{font-size:calc(7.4*var(--u))}
 #big.d-poster .ynote{font-size:calc(3.2*var(--u))}
 #big.d-poster .yft{font-size:calc(2.3*var(--u));color:#fff}
-/* Düello */
+/* Düello: ortada şimşek yerine 3D dönen büyük turnuva logosu */
 #big.d-duello .ybigc{top:20%;width:calc(42*var(--u));height:calc(42*var(--u))}
 #big.d-duello .ybigc:before{opacity:.95;inset:-30%}
 #big.d-duello .ybigc .ylg,#big.d-duello .ybigc .ymono{width:84%;height:84%}
 #big.d-duello .ycrests .ylg,#big.d-duello .ycrests .ymono{width:calc(14*var(--u));height:calc(14*var(--u))}
-#big.d-duello .ybolt{width:calc(6.5*var(--u));height:calc(9*var(--u))}
+#big.d-duello .yduel-tlogo{position:relative;width:calc(22*var(--u));height:calc(22*var(--u));border-radius:50%;display:grid;place-items:center;margin:calc(.6*var(--u)) 0;background:radial-gradient(circle,rgba(255,215,120,.26) 0%,rgba(255,180,60,.08) 55%,transparent 75%);perspective:calc(70*var(--u))}
+#big.d-duello .yduel-tlogo:before{content:"";position:absolute;inset:calc(-.8*var(--u));border-radius:50%;border:calc(.2*var(--u)) solid rgba(255,215,125,.55);box-shadow:0 0 calc(3*var(--u)) rgba(255,190,70,.55),inset 0 0 calc(2*var(--u)) rgba(255,215,120,.25);animation:yaura1 3s ease-in-out infinite alternate;pointer-events:none}
+#big.d-duello .yduel-tlogo .ytlg{width:84%;height:84%;object-fit:contain;filter:drop-shadow(0 calc(1*var(--u)) calc(2.2*var(--u)) rgba(0,0,0,.9)) drop-shadow(0 0 calc(1.6*var(--u)) var(--lc2,rgba(255,220,130,.75)));animation:yturn3d 6.5s cubic-bezier(.45,.05,.55,.95) infinite}
+@keyframes yturn3d{0%{transform:rotateY(-20deg) rotateX(6deg) scale(1)}38%{transform:rotateY(20deg) rotateX(-6deg) scale(1.06)}76%{transform:rotateY(-18deg) rotateX(4deg) scale(1)}100%{transform:rotateY(340deg) rotateX(6deg) scale(1)}}
 #big.d-duello .yvenue{font-size:calc(3.4*var(--u));font-weight:900}
 #big.d-duello .ymatch{font-size:min(calc(6.4*var(--u)),calc(3.8*var(--w)));max-width:none;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:.4em}
 #big.d-duello .ymatch span:first-child{text-align:right}#big.d-duello .ymatch span:last-child{text-align:left}#big.d-duello .ymatch i{margin:0}
 #big.d-duello .ylea{font-size:calc(2.8*var(--u))}
-/* Düello (Turnuva Logolu): yayıncı kalitesinde dev 3D armalar, merkezde büyük turnuva madalyonu ve stadyum ışık huzmeleri */
+/* Düello (Turnuva Madalyonlu): yayıncı kalitesinde dev 3D armalar, merkezde büyük turnuva madalyonu ve stadyum ışık huzmeleri */
 #big.d-turnuva{background:#05060a}
 #big.d-turnuva .yflare{display:none}
 #big.d-turnuva .yglow{opacity:.94;background:radial-gradient(ellipse 50% 78% at 14% 46%,var(--c1) 0%,color-mix(in srgb,var(--c1b,var(--c1)) 65%,transparent) 46%,transparent 70%),radial-gradient(ellipse 50% 78% at 86% 46%,var(--c2) 0%,color-mix(in srgb,var(--c2b,var(--c2)) 65%,transparent) 46%,transparent 70%),radial-gradient(ellipse 44% 52% at 50% 42%,rgba(255,195,95,.18),transparent 72%)}
@@ -571,47 +576,137 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-turnuva .ybigc .ylg,#big.d-turnuva .ybigc .ymono{width:82%;height:82%;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.92)) drop-shadow(0 0 calc(1.4*var(--u)) rgba(255,255,255,.45))}
 #big.d-turnuva .ytmid{position:absolute;left:50%;top:39%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;gap:calc(3.2*var(--u));z-index:2;pointer-events:none}
 #big.d-turnuva .ytmid:before{content:"";position:absolute;width:calc(54*var(--u));height:calc(.24*var(--u));background:linear-gradient(90deg,transparent,rgba(255,212,128,.75) 28%,#fff 50%,rgba(255,212,128,.75) 72%,transparent);box-shadow:0 0 calc(1.8*var(--u)) rgba(255,195,90,.8);z-index:-1}
-#big.d-turnuva .ytstage{position:relative;width:calc(30*var(--u));height:calc(30*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,rgba(38,45,64,.95),rgba(12,15,24,.97) 68%,rgba(5,7,12,.99) 100%);border:calc(.32*var(--u)) solid rgba(255,212,125,.85);box-shadow:0 0 calc(5*var(--u)) rgba(255,190,75,.48),0 calc(2.2*var(--u)) calc(5*var(--u)) rgba(0,0,0,.95),inset 0 0 calc(2.8*var(--u)) rgba(255,255,255,.18)}
+#big.d-turnuva .ytstage{position:relative;width:calc(30*var(--u));height:calc(30*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,rgba(38,45,64,.95),rgba(12,15,24,.97) 68%,rgba(5,7,12,.99) 100%);border:calc(.32*var(--u)) solid rgba(255,212,125,.85);box-shadow:0 0 calc(5*var(--u)) rgba(255,190,75,.48),0 calc(2.2*var(--u)) calc(5*var(--u)) rgba(0,0,0,.95),inset 0 0 calc(2.8*var(--u)) rgba(255,255,255,.18);perspective:calc(80*var(--u))}
 #big.d-turnuva .ytstage:before{content:"";position:absolute;inset:calc(-1.3*var(--u));border-radius:50%;border:calc(.16*var(--u)) solid rgba(255,255,255,.28);box-shadow:0 0 calc(2.5*var(--u)) rgba(255,210,120,.35)}
-#big.d-turnuva .ytstage .ytlg{width:82%;height:82%;object-fit:contain;filter:drop-shadow(0 calc(.8*var(--u)) calc(1.8*var(--u)) rgba(0,0,0,.9)) drop-shadow(0 0 calc(1.2*var(--u)) rgba(255,255,255,.35))}
+#big.d-turnuva .ytstage .ytlg{width:82%;height:82%;object-fit:contain;filter:drop-shadow(0 calc(.8*var(--u)) calc(1.8*var(--u)) rgba(0,0,0,.9)) drop-shadow(0 0 calc(1.2*var(--u)) rgba(255,255,255,.35));animation:yturn3d 8s ease-in-out infinite}
 #big.d-turnuva .ytcrest{width:calc(21*var(--u));height:calc(21*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.2),rgba(10,13,20,.82) 70%);border:calc(.24*var(--u)) solid rgba(255,255,255,.38);box-shadow:0 calc(1.5*var(--u)) calc(3.5*var(--u)) rgba(0,0,0,.9),0 0 calc(3.5*var(--u)) color-mix(in srgb,var(--tc) 75%,#fff 25%);--ms:16}
 #big.d-turnuva .ytcrest .ylg,#big.d-turnuva .ytcrest .ymono{width:82%;height:82%}
 #big.d-turnuva .ylea{padding:calc(.55*var(--u)) calc(2.2*var(--w));border-radius:99px;background:linear-gradient(180deg,rgba(20,24,36,.88),rgba(8,10,16,.94));border:calc(.18*var(--u)) solid rgba(255,212,125,.65);box-shadow:0 calc(.8*var(--u)) calc(2.4*var(--u)) rgba(0,0,0,.8);font-size:calc(2.7*var(--u));letter-spacing:.28em;color:#ffeab3}
 #big.d-turnuva .yvenue{margin-top:calc(.3*var(--u));padding:calc(.4*var(--u)) calc(1.8*var(--w));border-radius:calc(.9*var(--u));background:rgba(6,8,14,.72);border:1px solid rgba(255,255,255,.14);font-size:calc(3.1*var(--u))}
 #big.d-turnuva .ymatch{padding:calc(1.1*var(--u)) calc(2.6*var(--w));border-radius:calc(1.6*var(--u));background:linear-gradient(90deg,transparent 0%,rgba(10,13,20,.88) 12%,rgba(14,18,28,.94) 50%,rgba(10,13,20,.88) 88%,transparent 100%);border-top:calc(.2*var(--u)) solid rgba(255,210,115,.6);border-bottom:calc(.2*var(--u)) solid rgba(255,210,115,.6);font-size:min(calc(6.6*var(--u)),calc(3.9*var(--w)))}
 #big.d-turnuva .ymatch i{display:inline-grid;place-items:center;width:calc(5.8*var(--u));height:calc(5.8*var(--u));border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe79e,#d98a1c 68%,#784204 100%);border:calc(.22*var(--u)) solid #fff;box-shadow:0 0 calc(2*var(--u)) rgba(255,195,85,.75);color:#140d04;font-size:calc(3.4*var(--u));font-weight:900;line-height:1}
-/* 7) Şampiyonlar Arenası (d-arena): 3D döner turnuva jiroskopu, çift renkli enerji dalgalı cam monolitler ve perspektif saha */
-#big.d-arena{background:#04060c}
-#big.d-arena .abg{position:absolute;inset:0;background:radial-gradient(ellipse 58% 85% at 14% 48%,var(--c1) 0%,color-mix(in srgb,var(--c1b,var(--c1)) 65%,transparent) 48%,transparent 74%),radial-gradient(ellipse 58% 85% at 86% 48%,var(--c2) 0%,color-mix(in srgb,var(--c2b,var(--c2)) 65%,transparent) 48%,transparent 74%);opacity:.88}
-#big.d-arena .abg:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 62% 90% at 14% 48%,var(--c1b,var(--c1)) 0%,color-mix(in srgb,var(--c1) 75%,transparent) 52%,transparent 76%),radial-gradient(ellipse 62% 90% at 86% 48%,var(--c2b,var(--c2)) 0%,color-mix(in srgb,var(--c2) 75%,transparent) 52%,transparent 76%);animation:yglowmorph 3.2s ease-in-out infinite alternate}
-#big.d-arena .afloor{position:absolute;left:-15%;right:-15%;bottom:-18%;height:52%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px calc(5*var(--w))),repeating-linear-gradient(0deg,rgba(255,215,130,.06) 0 1px,transparent 1px calc(4*var(--u))),radial-gradient(ellipse 70% 55% at 50% 30%,rgba(255,205,100,.16),transparent 70%);transform:perspective(calc(55*var(--u))) rotateX(64deg);transform-origin:center bottom;-webkit-mask-image:linear-gradient(transparent 5%,#000 55%);mask-image:linear-gradient(transparent 5%,#000 55%);pointer-events:none}
-#big.d-arena .aspots{position:absolute;inset:0;background:conic-gradient(from 142deg at 16% -8%,transparent 0deg,rgba(255,255,255,.16) 14deg,transparent 30deg),conic-gradient(from 188deg at 84% -8%,transparent 0deg,rgba(255,255,255,.16) 14deg,transparent 30deg);mix-blend-mode:screen;animation:ysweep 5s ease-in-out infinite alternate;pointer-events:none}
-@keyframes ysweep{from{transform:scaleX(.96);opacity:.75}to{transform:scaleX(1.04);opacity:1}}
-#big.d-arena .yemb{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-#big.d-arena .yemb i{position:absolute;bottom:-2%;width:calc(.55*var(--u));height:calc(.55*var(--u));border-radius:50%;background:#ffd478;box-shadow:0 0 calc(.8*var(--u)) calc(.25*var(--u)) rgba(255,170,50,.85);opacity:0;animation:yember linear infinite}
-#big.d-arena .astage{position:relative;flex:1;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:calc(2.2*var(--w));padding:0 calc(1.5*var(--w));z-index:2}
-#big.d-arena .acard{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(3.2*var(--u)) calc(2*var(--w)) calc(2.4*var(--u));border-radius:calc(2.6*var(--u));background:linear-gradient(165deg,rgba(255,255,255,.13) 0%,rgba(12,16,26,.78) 48%,rgba(6,8,14,.92) 100%);border:calc(.24*var(--u)) solid color-mix(in srgb,var(--tc2,var(--tc)) 65%,#fff 35%);box-shadow:0 calc(2.5*var(--u)) calc(6*var(--u)) rgba(0,0,0,.9),0 0 calc(5*var(--u)) color-mix(in srgb,var(--tc) 75%,transparent),inset 0 calc(.25*var(--u)) calc(2*var(--u)) rgba(255,255,255,.22);backdrop-filter:blur(12px);overflow:hidden}
-#big.d-arena .acard.l{transform:perspective(calc(90*var(--u))) rotateY(7deg)}
-#big.d-arena .acard.r{transform:perspective(calc(90*var(--u))) rotateY(-7deg)}
-#big.d-arena .acard:before{content:"";position:absolute;inset:-30%;background:radial-gradient(circle at 50% 38%,var(--tc) 0%,var(--tc2,var(--tc)) 45%,transparent 70%);opacity:.75;filter:blur(calc(2.5*var(--u)));animation:yaura1 3.2s ease-in-out infinite alternate;pointer-events:none}
-#big.d-arena .acard .yaura{position:absolute;inset:-35%;background:radial-gradient(circle at 50% 38%,var(--tc2,var(--tc)) 0%,var(--tc) 48%,transparent 72%);filter:blur(calc(2.8*var(--u)));animation:yaura2 3.2s ease-in-out infinite alternate;pointer-events:none}
-#big.d-arena .acard:after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:calc(.65*var(--u));border-radius:99px;background:linear-gradient(90deg,var(--tc),var(--tc2,var(--tc)),var(--tc));box-shadow:0 0 calc(2*var(--u)) var(--tc2,var(--tc))}
-#big.d-arena .acrest{position:relative;width:calc(36*var(--u));height:calc(36*var(--u));display:grid;place-items:center;z-index:1;--ms:28}
-#big.d-arena .acrest:before{content:"";position:absolute;inset:calc(-1.5*var(--u));border-radius:50%;border:calc(.18*var(--u)) dashed rgba(255,255,255,.28);animation:spin 26s linear infinite}
-#big.d-arena .acrest .ylg,#big.d-arena .acrest .ymono{width:88%;height:88%;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.92)) drop-shadow(0 0 calc(1.5*var(--u)) rgba(255,255,255,.45))}
-#big.d-arena .apl{height:calc(40*var(--u));max-width:95%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.92));z-index:1}
-#big.d-arena .aname{position:relative;z-index:1;margin-top:calc(1.6*var(--u));font-size:min(calc(5.6*var(--u)),calc(3.4*var(--w)));font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 calc(.4*var(--u)) calc(1.4*var(--u)) #000}
-#big.d-arena .aname.sm{font-size:min(calc(4.2*var(--u)),calc(2.6*var(--w)))}
-#big.d-arena .acenter{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(1.6*var(--u));z-index:3}
-#big.d-arena .agyro{position:relative;width:calc(31*var(--u));height:calc(31*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,rgba(36,44,64,.96),rgba(10,13,22,.98) 70%,#04060b 100%);border:calc(.34*var(--u)) solid rgba(255,212,120,.9);box-shadow:0 0 calc(5.5*var(--u)) rgba(255,190,75,.52),0 calc(2.2*var(--u)) calc(5*var(--u)) rgba(0,0,0,.95),inset 0 0 calc(3*var(--u)) rgba(255,255,255,.2)}
-#big.d-arena .agyro:before{content:"";position:absolute;inset:calc(-1.8*var(--u));border-radius:50%;border:calc(.22*var(--u)) solid transparent;border-top-color:#ffe49e;border-bottom-color:#ffe49e;filter:drop-shadow(0 0 calc(1*var(--u)) #ffb84d);animation:spin 14s linear infinite}
-#big.d-arena .agyro:after{content:"";position:absolute;inset:calc(-3.1*var(--u));border-radius:50%;border:1px dashed rgba(255,215,130,.42);animation:spin 24s linear infinite reverse}
-#big.d-arena .agyro .ytlg{width:82%;height:82%;object-fit:contain;filter:drop-shadow(0 calc(.8*var(--u)) calc(1.8*var(--u)) rgba(0,0,0,.92)) drop-shadow(0 0 calc(1.2*var(--u)) rgba(255,255,255,.38))}
-#big.d-arena .avs{padding:calc(.45*var(--u)) calc(2*var(--w));border-radius:99px;background:linear-gradient(135deg,#ffe8a3,#d68818 65%,#7d4503);border:calc(.2*var(--u)) solid #fff;box-shadow:0 0 calc(2.4*var(--u)) rgba(255,195,85,.75);color:#140d04;font-size:calc(2.8*var(--u));font-weight:900;font-style:italic;letter-spacing:.12em}
-#big.d-arena .ameta{display:flex;flex-direction:column;align-items:center;gap:calc(.7*var(--u));padding:calc(1.1*var(--u)) calc(2.2*var(--w));border-radius:calc(1.6*var(--u));background:rgba(8,11,18,.88);border:1px solid rgba(255,212,125,.45);box-shadow:0 calc(1.2*var(--u)) calc(3.2*var(--u)) rgba(0,0,0,.85)}
-#big.d-arena .ameta .tm{font-size:calc(6.4*var(--u));font-weight:900;line-height:1;color:#fff;text-shadow:0 0 calc(2*var(--u)) rgba(255,205,100,.45)}
-#big.d-arena .ameta .vn{font-size:calc(2.3*var(--u));font-weight:800;color:#ffe49e;letter-spacing:.05em;text-align:center}
-#big.d-arena .ylea{padding:calc(.5*var(--u)) calc(2.2*var(--w));border-radius:99px;background:rgba(10,14,24,.88);border:calc(.18*var(--u)) solid rgba(255,212,125,.65);font-size:calc(2.6*var(--u));letter-spacing:.28em;color:#ffeab3}
+/* 7) Şampiyonlar Arenası (d-arena): Dev Yıldız Kemerli UEFA Stadyum Sahnesi, 3D Podyumlar ve Dönen Turnuva Küresi */
+#big.d-arena{position:absolute;inset:0;overflow:hidden;background:#03050c;color:#fff;user-select:none}
+#big.d-arena .ar-bg{position:absolute;inset:-4%;background:url(/site/bg-arena.jpg) center/cover no-repeat;filter:saturate(1.15) contrast(1.08);z-index:1;animation:md-zoom 24s ease-in-out infinite alternate}
+#big.d-arena .ar-lea-sky{position:absolute;inset:-10%;z-index:2;pointer-events:none;background:radial-gradient(ellipse 55% 38% at 50% 18%,color-mix(in srgb,var(--lc1,#1a5cff) 62%,transparent) 0%,color-mix(in srgb,var(--lc2,#ffe08a) 28%,transparent) 48%,transparent 75%);mix-blend-mode:screen}
+#big.d-arena .ar-tint-l,#big.d-arena .ar-tint-r{position:absolute;inset:-16%;pointer-events:none;z-index:2;mix-blend-mode:screen}
+#big.d-arena .ar-tint-l{background:radial-gradient(ellipse 42% 58% at 18% 48%,var(--c1) 0%,color-mix(in srgb,var(--c1b,var(--c1)) 75%,transparent) 44%,transparent 72%),radial-gradient(ellipse 32% 22% at 24% 82%,var(--c1b,var(--c1)) 0%,transparent 68%);opacity:.85;animation:matchday-pulse-left 5s ease-in-out infinite alternate}
+#big.d-arena .ar-tint-r{background:radial-gradient(ellipse 42% 58% at 82% 48%,var(--c2) 0%,color-mix(in srgb,var(--c2b,var(--c2)) 75%,transparent) 44%,transparent 72%),radial-gradient(ellipse 32% 22% at 76% 82%,var(--c2b,var(--c2)) 0%,transparent 68%);opacity:.85;animation:matchday-pulse-right 5s ease-in-out infinite alternate-reverse}
+#big.d-arena .ar-vig{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 50% 48%,transparent 35%,rgba(2,4,10,.78) 100%),linear-gradient(180deg,rgba(2,4,12,.72) 0%,transparent 24%,transparent 72%,rgba(2,4,12,.88) 100%)}
+#big.d-arena .yemb{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:4}
+#big.d-arena .yemb i{position:absolute;bottom:-2%;width:calc(.55*var(--u));height:calc(.55*var(--u));border-radius:50%;background:var(--lc2,#ffe08a);box-shadow:0 0 calc(.9*var(--u)) calc(.3*var(--u)) var(--lc1,rgba(255,185,55,.9));opacity:0;animation:yember linear infinite}
+#big.d-arena .ar-wrap{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(2.2*var(--u)) calc(4*var(--w)) calc(2.4*var(--u));box-sizing:border-box}
+/* Üst Kraliyet Kemeri & Turnuva Tacı */
+#big.d-arena .ar-header{display:flex;flex-direction:column;align-items:center;gap:calc(.6*var(--u));width:100%}
+#big.d-arena .ar-crown{display:flex;align-items:center;justify-content:center;gap:calc(1.8*var(--w));padding:calc(.75*var(--u)) calc(4.2*var(--w));background:linear-gradient(180deg,color-mix(in srgb,var(--lc1,#1a5cff) 32%,rgba(14,20,38,.95)) 0%,rgba(6,9,18,.98) 100%);border:calc(.22*var(--u)) solid var(--lc2,#ffd87a);box-shadow:0 calc(1*var(--u)) calc(3.2*var(--u)) rgba(0,0,0,.9),0 0 calc(2.8*var(--u)) color-mix(in srgb,var(--lc1,#1a5cff) 55%,transparent),inset 0 0 calc(1.8*var(--u)) color-mix(in srgb,var(--lc2,#ffd87a) 25%,transparent);clip-path:polygon(calc(2.2*var(--u)) 0,calc(100% - 2.2*var(--u)) 0,100% 50%,calc(100% - 2.2*var(--u)) 100%,calc(2.2*var(--u)) 100%,0 50%)}
+#big.d-arena .ar-crown img{height:calc(4.4*var(--u));width:calc(4.4*var(--u));object-fit:contain;filter:drop-shadow(0 0 calc(.8*var(--u)) rgba(255,230,150,.85))}
+#big.d-arena .ar-crown-txt{display:flex;flex-direction:column;align-items:center}
+#big.d-arena .ar-crown-lea{font-size:calc(2.7*var(--u));font-weight:900;letter-spacing:.26em;text-transform:uppercase;background:linear-gradient(180deg,#fff 20%,var(--lc2,#ffe18d) 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+#big.d-arena .ar-crown-sub{font-size:calc(1.65*var(--u));font-weight:800;letter-spacing:.22em;color:#d6e4ff;margin-top:calc(.15*var(--u))}
+/* Orta Sahne: Sol ve Sağ 3D Podyumlar + Merkez Turnuva Küresi */
+#big.d-arena .ar-stage{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;width:100%;gap:calc(2*var(--w));margin:auto 0}
+#big.d-arena .ar-podium{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;max-width:calc(36*var(--w))}
+#big.d-arena .ar-orb{position:relative;width:calc(33*var(--u));height:calc(33*var(--u));border-radius:50%;display:grid;place-items:center;--ms:25;background:radial-gradient(circle at 35% 26%,rgba(255,255,255,.22) 0%,color-mix(in srgb,var(--tc) 42%,rgba(8,12,24,.9)) 64%,rgba(4,6,14,.98) 100%);border:calc(.36*var(--u)) solid #ffe08a;box-shadow:0 calc(2.4*var(--u)) calc(5.5*var(--u)) rgba(0,0,0,.95),0 0 calc(5.5*var(--u)) var(--tc),0 0 calc(9*var(--u)) color-mix(in srgb,var(--tc2,var(--tc)) 80%,transparent),inset 0 0 calc(3*var(--u)) color-mix(in srgb,var(--tc2,var(--tc)) 65%,transparent)}
+#big.d-arena .ar-orb:before{content:"";position:absolute;inset:-28%;border-radius:50%;background:radial-gradient(circle,var(--tc) 0%,var(--tc2,var(--tc)) 48%,transparent 72%);filter:blur(calc(2.6*var(--u)));opacity:.92;animation:yaura1 3.2s ease-in-out infinite alternate;pointer-events:none;z-index:-1}
+#big.d-arena .ar-orb .yaura{position:absolute;inset:-34%;border-radius:50%;background:radial-gradient(circle,var(--tc2,var(--tc)) 0%,var(--tc) 52%,transparent 74%);filter:blur(calc(2.8*var(--u)));animation:yaura2 3.2s ease-in-out infinite alternate;pointer-events:none;z-index:-1}
+#big.d-arena .ar-orb:after{content:"";position:absolute;inset:calc(-1.3*var(--u));border-radius:50%;border:calc(.22*var(--u)) solid color-mix(in srgb,var(--tc2,var(--tc)) 75%,#fff 25%);box-shadow:0 0 calc(2.5*var(--u)) var(--tc2,var(--tc));animation:spin 22s linear infinite;pointer-events:none}
+#big.d-arena .ar-orb .ylg,#big.d-arena .ar-orb .ymono{position:relative;z-index:2;width:82%;height:82%;object-fit:contain;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.95)) drop-shadow(0 0 calc(1.5*var(--u)) rgba(255,255,255,.5))}
+#big.d-arena .ar-pl{height:calc(36*var(--u));max-width:95%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.95)) drop-shadow(0 0 calc(2.5*var(--u)) var(--tc));z-index:2}
+/* Podyum Tabanı & Takım İsim Plakası */
+#big.d-arena .ar-pedestal{position:relative;width:100%;margin-top:calc(1.4*var(--u));padding:calc(1.1*var(--u)) calc(2*var(--w));background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 48%,rgba(12,16,30,.95)) 0%,rgba(6,9,18,.98) 100%);border:calc(.22*var(--u)) solid #ffe08a;border-top:calc(.36*var(--u)) solid color-mix(in srgb,var(--tc2,var(--tc)) 75%,#ffe08a 25%);box-shadow:0 calc(1.6*var(--u)) calc(4*var(--u)) rgba(0,0,0,.92),0 0 calc(3.2*var(--u)) color-mix(in srgb,var(--tc) 65%,transparent);clip-path:polygon(calc(1.6*var(--u)) 0,calc(100% - 1.6*var(--u)) 0,100% 100%,0 100%);text-align:center}
+#big.d-arena .ar-role{font-size:calc(1.45*var(--u));font-weight:800;letter-spacing:.26em;color:color-mix(in srgb,var(--tc2,var(--tc)) 75%,#fff 25%);margin-bottom:calc(.25*var(--u))}
+#big.d-arena .ar-tname{font-size:min(calc(5.2*var(--u)),calc(3.1*var(--w)));font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 calc(.4*var(--u)) calc(1.4*var(--u)) #000}
+#big.d-arena .ar-tname.sm{font-size:min(calc(4*var(--u)),calc(2.4*var(--w)))}
+/* Merkez 3D Astrolab / Turnuva Küresi */
+#big.d-arena .ar-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(1.4*var(--u));z-index:5}
+#big.d-arena .ar-core{position:relative;width:calc(26*var(--u));height:calc(26*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,color-mix(in srgb,var(--lc1,#2a3654) 55%,rgba(20,26,44,.96)),rgba(10,14,26,.98) 70%,#04060c 100%);border:calc(.34*var(--u)) solid var(--lc2,#ffe08a);box-shadow:0 0 calc(6*var(--u)) color-mix(in srgb,var(--lc1,#ffc850) 75%,transparent),0 calc(2*var(--u)) calc(5*var(--u)) rgba(0,0,0,.95),inset 0 0 calc(3*var(--u)) color-mix(in srgb,var(--lc2,#ffdc82) 35%,transparent);perspective:calc(80*var(--u))}
+#big.d-arena .ar-core:before{content:"";position:absolute;inset:calc(-1.8*var(--u));border-radius:50%;border:calc(.24*var(--u)) solid transparent;border-top-color:var(--lc2,#ffe49e);border-bottom-color:var(--lc2,#ffe49e);filter:drop-shadow(0 0 calc(1.2*var(--u)) var(--lc1,#ffb84d));animation:spin 12s linear infinite}
+#big.d-arena .ar-core:after{content:"";position:absolute;inset:calc(-3.2*var(--u));border-radius:50%;border:calc(.16*var(--u)) dashed color-mix(in srgb,var(--lc2,#ffdc8c) 65%,transparent);animation:spin 20s linear infinite reverse}
+#big.d-arena .ar-core .ytlg{width:80%;height:80%;object-fit:contain;filter:drop-shadow(0 calc(.8*var(--u)) calc(1.8*var(--u)) rgba(0,0,0,.92)) drop-shadow(0 0 calc(1.4*var(--u)) rgba(255,230,150,.6));animation:yturn3d 6.5s cubic-bezier(.45,.05,.55,.95) infinite}
+#big.d-arena .ar-vs-pill{padding:calc(.45*var(--u)) calc(2.2*var(--w));border-radius:99px;background:linear-gradient(135deg,#fff0b8,#dfa028 58%,#874c04);border:calc(.2*var(--u)) solid #fff;box-shadow:0 0 calc(2.6*var(--u)) rgba(255,200,85,.85);color:#140d04;font-size:calc(3*var(--u));font-weight:900;font-style:italic;letter-spacing:.14em}
+#big.d-arena .ar-time-box{display:flex;flex-direction:column;align-items:center;gap:calc(.3*var(--u));padding:calc(.9*var(--u)) calc(2.2*var(--w));border-radius:calc(1.4*var(--u));background:rgba(6,10,20,.92);border:calc(.18*var(--u)) solid color-mix(in srgb,var(--lc2,#ffd77d) 65%,transparent);box-shadow:0 calc(1.2*var(--u)) calc(3*var(--u)) rgba(0,0,0,.9)}
+#big.d-arena .ar-time-box b{font-size:calc(5.8*var(--u));font-weight:900;line-height:1;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 0 calc(2*var(--u)) rgba(255,210,100,.55)}
+#big.d-arena .ar-time-box span{font-size:calc(2*var(--u));font-weight:800;color:var(--lc2,#ffe294);letter-spacing:.1em;text-transform:uppercase}
+/* Alt Yayın Bandı */
+#big.d-arena .ar-footer{width:88%;padding:calc(.9*var(--u)) calc(3*var(--w));background:linear-gradient(90deg,transparent,rgba(8,12,24,.95) 12%,rgba(12,18,34,.98) 50%,rgba(8,12,24,.95) 88%,transparent);border-top:calc(.22*var(--u)) solid color-mix(in srgb,var(--lc2,#ffd87a) 80%,transparent);border-bottom:calc(.22*var(--u)) solid color-mix(in srgb,var(--lc1,#ffd87a) 55%,transparent);display:flex;flex-direction:column;align-items:center;gap:calc(.4*var(--u));text-align:center}
+#big.d-arena .ar-f-note{font-size:calc(2.8*var(--u));font-weight:900;color:#fff;letter-spacing:.05em;text-shadow:0 calc(.3*var(--u)) calc(1*var(--u)) #000}
+#big.d-arena .ar-f-info{display:flex;gap:calc(2.5*var(--w));font-size:calc(2*var(--u));font-weight:800;color:var(--lc2,#ffe294)}
+/* ===== Canlı Yayın & Stadyum Grafik Konsepti (d-matchday — beIN / UCL Stadyum Yayını) ===== */
+#big.d-matchday{position:absolute;inset:0;overflow:hidden;font-family:'Montserrat','Rajdhani',sans-serif;background:#040805;color:#fff;user-select:none}
+#big.d-matchday .md-bg{position:absolute;inset:-4%;background:url(/site/bg-matchday.jpg) center/cover no-repeat;filter: saturate(1.18) contrast(1.08);z-index:1;animation:md-zoom 22s ease-in-out infinite alternate}
+@keyframes md-zoom{0%{transform:scale(1)}100%{transform:scale(1.05)}}
+/* Sol ve sağ tribün dumanlarını takımların 1. ve 2. rengine boyayan dinamik katman */
+#big.d-matchday .md-tint-l,#big.d-matchday .md-tint-r{position:absolute;inset:-16%;pointer-events:none;z-index:2;mix-blend-mode:screen}
+#big.d-matchday .md-tint-l{background:radial-gradient(ellipse 46% 52% at 14% 44%,var(--c1) 0%,color-mix(in srgb,var(--c1b) 75%,transparent) 45%,transparent 76%),radial-gradient(circle at 24% 52%,var(--c1b) 0%,transparent 38%);opacity:.88;animation:matchday-pulse-left 6s ease-in-out infinite alternate}
+#big.d-matchday .md-tint-r{background:radial-gradient(ellipse 46% 52% at 86% 44%,var(--c2) 0%,color-mix(in srgb,var(--c2b) 75%,transparent) 45%,transparent 76%),radial-gradient(circle at 76% 52%,var(--c2b) 0%,transparent 38%);opacity:.88;animation:matchday-pulse-right 6s ease-in-out infinite alternate-reverse}
+#big.d-matchday .md-center-glow{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 32% 40% at 50% 54%,rgba(255,205,95,.55) 0%,rgba(255,160,40,.18) 52%,transparent 78%),linear-gradient(to top,rgba(2,6,3,.82) 0%,rgba(4,12,6,.25) 28%,transparent 65%,rgba(2,5,10,.65) 100%)}
+#big.d-matchday .main-container{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(2*var(--u)) calc(3.8*var(--w)) calc(2.2*var(--u));box-sizing:border-box}
+/* Üst Çift Kanatlı Metalik Turnuva Barı */
+#big.d-matchday .md-header{display:flex;flex-direction:column;align-items:center;gap:calc(.6*var(--u));width:100%;animation:matchday-slide-down .7s cubic-bezier(.16,1,.3,1) forwards}
+#big.d-matchday .md-brand{height:calc(4.4*var(--u));padding:calc(.35*var(--u)) calc(1.4*var(--w));border-radius:calc(.9*var(--u));background:rgba(10,14,22,.82);border:1px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;box-shadow:0 calc(.6*var(--u)) calc(1.8*var(--u)) rgba(0,0,0,.7)}
+#big.d-matchday .md-brand img,#big.d-matchday .md-brand .ybrand{height:100%;max-height:calc(3.6*var(--u));object-fit:contain}
+#big.d-matchday .md-top-hud{position:relative;display:grid;grid-template-columns:calc(9.5*var(--u)) minmax(calc(34*var(--w)),auto) calc(9.5*var(--u));align-items:center;padding:calc(.7*var(--u)) calc(2.2*var(--w));background:linear-gradient(180deg,rgba(42,56,82,.95) 0%,rgba(16,22,36,.98) 55%,rgba(8,12,22,.98) 100%);clip-path:polygon(0 0,100% 0,94% 100%,6% 100%);border-top:calc(.28*var(--u)) solid #b8dcff;border-bottom:calc(.26*var(--u)) solid #ffd26a;box-shadow:0 calc(1.4*var(--u)) calc(3.8*var(--u)) rgba(0,0,0,.85),0 0 calc(3*var(--u)) rgba(120,190,255,.45)}
+#big.d-matchday .md-top-wing{width:calc(7.6*var(--u));height:calc(7.6*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#1e2b45 30%,#080d18 100%);border:calc(.2*var(--u)) solid rgba(255,220,140,.8);box-shadow:0 0 calc(1.8*var(--u)) rgba(140,205,255,.55);margin:0 auto}
+#big.d-matchday .md-top-wing img{width:82%;height:82%;object-fit:contain;filter:drop-shadow(0 0 calc(.6*var(--u)) #fff)}
+#big.d-matchday .md-top-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 calc(1.8*var(--w));text-align:center}
+#big.d-matchday .md-top-lea{font-size:calc(3*var(--u));font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#fff;text-shadow:0 calc(.25*var(--u)) calc(.9*var(--u)) #000,0 0 calc(1.4*var(--u)) rgba(255,215,120,.55);padding-bottom:calc(.35*var(--u));border-bottom:1px solid rgba(255,215,120,.45);width:100%}
+#big.d-matchday .md-top-time{margin-top:calc(.35*var(--u));font-size:calc(2.35*var(--u));font-weight:900;letter-spacing:.14em;color:#ffe28a;text-shadow:0 calc(.2*var(--u)) calc(.8*var(--u)) #000}
+/* Orta Saha: 3B Dev Takım Armaları ve Merkez Turnuva Kupası/Logosu */
+#big.d-matchday .md-pitch-stage{flex:1;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;gap:calc(1.5*var(--w));min-height:0;margin:calc(.4*var(--u)) 0}
+#big.d-matchday .md-crest-zone{position:relative;width:calc(41*var(--u));height:calc(41*var(--u));display:grid;place-items:center}
+#big.d-matchday .md-crest-halo{position:absolute;inset:-8%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--tc2) 85%,#fff 15%) 0%,var(--tc) 48%,transparent 72%);filter:blur(calc(1.8*var(--u)));opacity:.92;animation:md-halo 4s ease-in-out infinite alternate}
+@keyframes md-halo{0%{transform:scale(.94);opacity:.78}100%{transform:scale(1.08);opacity:1}}
+#big.d-matchday .md-crest-ring{position:relative;z-index:2;width:calc(36*var(--u));height:calc(36*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.22),color-mix(in srgb,var(--tc) 42%,rgba(10,14,22,.86)) 68%,rgba(6,8,14,.94) 100%);border:calc(.38*var(--u)) solid rgba(255,222,135,.92);box-shadow:0 calc(2.2*var(--u)) calc(4.5*var(--u)) rgba(0,0,0,.92),0 0 calc(4.5*var(--u)) var(--tc),0 0 calc(2.5*var(--u)) var(--tc2),inset 0 0 calc(2.8*var(--u)) rgba(255,255,255,.35)}
+#big.d-matchday .md-crest-ring .ylg,#big.d-matchday .md-crest-ring .ymono{width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 calc(1.2*var(--u)) calc(2.2*var(--u)) rgba(0,0,0,.9)) drop-shadow(0 0 calc(1.2*var(--u)) rgba(255,255,255,.4))}
+#big.d-matchday .md-pl{position:relative;z-index:2;height:calc(41*var(--u));max-width:96%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.95))}
+#big.d-matchday .md-center-trophy{position:relative;width:calc(27*var(--u));height:calc(27*var(--u));display:grid;place-items:center}
+#big.d-matchday .md-center-trophy::before{content:'';position:absolute;inset:-22%;border-radius:50%;background:radial-gradient(circle,rgba(255,220,120,.85) 0%,rgba(255,165,40,.35) 45%,transparent 72%);filter:blur(calc(1.4*var(--u)))}
+#big.d-matchday .md-center-trophy img{position:relative;z-index:2;width:90%;height:90%;object-fit:contain;filter:drop-shadow(0 calc(1.2*var(--u)) calc(2.6*var(--u)) rgba(0,0,0,.95)) drop-shadow(0 0 calc(2.2*var(--u)) rgba(255,215,110,.85))}
+/* Alt Paralelkenar EV SAHİBİ · VS · DEPLASMAN Yayın Bandı */
+#big.d-matchday .md-lower-grid{width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:calc(1.6*var(--w));margin-bottom:calc(1*var(--u))}
+#big.d-matchday .md-team-banner-wrap{display:flex;flex-direction:column;align-items:center;gap:calc(.45*var(--u))}
+#big.d-matchday .md-role{font-size:calc(1.85*var(--u));font-weight:800;letter-spacing:.26em;color:#fff;text-transform:uppercase;text-shadow:0 calc(.2*var(--u)) calc(.8*var(--u)) #000}
+#big.d-matchday .md-name-bar{position:relative;width:100%;padding:calc(1.05*var(--u)) calc(2.2*var(--w));clip-path:polygon(4% 0,100% 0,96% 100%,0 100%);background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 82%,#090d16),rgba(14,19,30,.96) 50%,color-mix(in srgb,var(--tc2) 68%,#090d16));border-top:calc(.24*var(--u)) solid #ffe08a;border-bottom:calc(.24*var(--u)) solid #d49424;box-shadow:0 calc(1.2*var(--u)) calc(3*var(--u)) rgba(0,0,0,.9);text-align:center}
+#big.d-matchday .md-name-bar::before,#big.d-matchday .md-name-bar::after{content:'';position:absolute;top:0;bottom:0;width:calc(.75*var(--w));background:linear-gradient(180deg,#fff3b8,#eab038,#8f5b08)}
+#big.d-matchday .md-name-bar::before{left:1.8%;transform:skewX(-18deg)}
+#big.d-matchday .md-name-bar::after{right:1.8%;transform:skewX(-18deg)}
+#big.d-matchday .md-tname{font-size:min(calc(5.1*var(--u)),calc(3.2*var(--w)));font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#fff;text-shadow:0 calc(.3*var(--u)) calc(1*var(--u)) #000}
+#big.d-matchday .md-tname.sm{font-size:min(calc(3.9*var(--u)),calc(2.5*var(--w)))}
+#big.d-matchday .md-subvenue{font-size:calc(1.9*var(--u));font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#f3ead2;text-shadow:0 calc(.2*var(--u)) calc(.8*var(--u)) #000}
+#big.d-matchday .md-vs{font-size:calc(5.2*var(--u));font-weight:900;letter-spacing:.06em;background:linear-gradient(180deg,#fff7cc 0%,#f5bd42 55%,#9e6408 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 calc(.4*var(--u)) calc(1.2*var(--u)) rgba(0,0,0,.95))}
+/* En Alt BÜYÜK MAÇ & Rezervasyon Metalik Yayın Bandı */
+#big.d-matchday .md-footer-hud{position:relative;width:82%;padding:calc(.75*var(--u)) calc(4*var(--w));clip-path:polygon(3% 0,97% 0,100% 100%,0 100%);background:linear-gradient(180deg,rgba(26,32,44,.95),rgba(9,12,18,.98));border-top:calc(.22*var(--u)) solid rgba(255,220,140,.75);border-bottom:calc(.24*var(--u)) solid #f5be45;box-shadow:0 calc(1*var(--u)) calc(3*var(--u)) rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;gap:calc(.25*var(--u));text-align:center}
+#big.d-matchday .md-footer-hud::before{content:'';position:absolute;left:2.5%;top:0;bottom:0;width:calc(2.6*var(--w));background:repeating-linear-gradient(90deg,var(--c1) 0 calc(.55*var(--w)),var(--c1b) calc(.55*var(--w)) calc(1.1*var(--w)),transparent calc(1.1*var(--w)) calc(1.45*var(--w)));transform:skewX(-24deg)}
+#big.d-matchday .md-footer-hud::after{content:'';position:absolute;right:2.5%;top:0;bottom:0;width:calc(2.6*var(--w));background:repeating-linear-gradient(90deg,var(--c2) 0 calc(.55*var(--w)),var(--c2b) calc(.55*var(--w)) calc(1.1*var(--w)),transparent calc(1.1*var(--w)) calc(1.45*var(--w)));transform:skewX(-24deg)}
+#big.d-matchday .md-f-tag{font-size:calc(2.2*var(--u));font-weight:900;letter-spacing:.22em;color:#ffe28a;text-transform:uppercase}
+#big.d-matchday .md-f-note{font-size:calc(2.5*var(--u));font-weight:900;letter-spacing:.08em;color:#fff;text-transform:uppercase;text-shadow:0 calc(.2*var(--u)) calc(.8*var(--u)) #000}
+@keyframes matchday-pulse-left{0%{opacity:.68;transform:scale(.96)}100%{opacity:.98;transform:scale(1.08)}}
+@keyframes matchday-pulse-right{0%{opacity:.68;transform:scale(.96)}100%{opacity:.98;transform:scale(1.08)}}
+@keyframes matchday-slide-down{0%{opacity:0;transform:translateY(-15%)}100%{opacity:1;transform:translateY(0)}}
+/* ===== Fütüristik Neon Arena Grafiği (d-neonarena) ===== */
+#big.d-neonarena{position:absolute;inset:0;overflow:hidden;font-family:'Rajdhani','Montserrat',sans-serif;background:#060913;color:#fff;user-select:none}
+#big.d-neonarena .bg-cyber{position:absolute;inset:0;background:radial-gradient(circle at 12% 50%,color-mix(in srgb,var(--c1) 55%,transparent) 0%,transparent 62%),radial-gradient(circle at 88% 50%,color-mix(in srgb,var(--c2) 55%,transparent) 0%,transparent 62%),linear-gradient(135deg,#060913 0%,#0d1222 100%);z-index:1}
+#big.d-neonarena .bg-cyber::before{content:'';position:absolute;inset:-40%;background-image:linear-gradient(45deg,transparent 44%,var(--c1) 48%,var(--c1b) 50%,transparent 54%),linear-gradient(-45deg,transparent 44%,var(--c2) 48%,var(--c2b) 50%,transparent 54%);opacity:.24;mix-blend-mode:screen;filter:blur(4px);animation:spin 38s linear infinite;pointer-events:none}
+#big.d-neonarena .cyber-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:calc(4*var(--u)) calc(4*var(--u));transform:perspective(500px) rotateX(60deg) scale(2) translateY(-18%);opacity:.42;z-index:2}
+#big.d-neonarena .main-container{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(2.6*var(--u)) calc(5*var(--w));z-index:10;box-sizing:border-box}
+#big.d-neonarena .header-bar{display:flex;flex-direction:column;align-items:center;gap:calc(.6*var(--u))}
+#big.d-neonarena .tournament-panel{display:flex;align-items:center;justify-content:center;gap:calc(1.2*var(--w));background:rgba(12,17,30,.95);border:calc(.2*var(--u)) solid rgba(255,255,255,.22);padding:calc(.65*var(--u)) calc(4.5*var(--w));clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);box-shadow:0 0 calc(2.5*var(--u)) rgba(0,0,0,.85)}
+#big.d-neonarena .tournament-panel .ytlg{height:calc(4.2*var(--u));width:calc(4.2*var(--u));object-fit:contain;filter:drop-shadow(0 0 calc(.5*var(--u)) #fff)}
+#big.d-neonarena .tournament-name{font-size:calc(2.4*var(--u));font-weight:900;text-transform:uppercase;letter-spacing:.28em;color:#e8f0ff}
+#big.d-neonarena .match-arena{flex:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;gap:calc(2.5*var(--w));min-height:0}
+#big.d-neonarena .team-card{display:flex;flex-direction:column;align-items:center;position:relative}
+#big.d-neonarena .crest-wrapper{position:relative;width:calc(36*var(--u));height:calc(36*var(--u));display:flex;align-items:center;justify-content:center;margin-bottom:calc(1.4*var(--u))}
+#big.d-neonarena .crest-bg-glow{position:absolute;inset:-12%;border-radius:35%;filter:blur(calc(2.8*var(--u)));opacity:.78}
+#big.d-neonarena .team-card.home .crest-bg-glow{background:radial-gradient(circle,var(--c1) 20%,var(--c1b) 75%)}
+#big.d-neonarena .team-card.away .crest-bg-glow{background:radial-gradient(circle,var(--c2) 20%,var(--c2b) 75%)}
+#big.d-neonarena .crest-border{position:absolute;inset:0;border:calc(.32*var(--u)) solid rgba(255,255,255,.25);clip-path:polygon(15% 0%,85% 0%,100% 15%,100% 85%,85% 100%,15% 100%,0% 85%,0% 15%);background:rgba(10,15,28,.65);box-shadow:inset 0 0 calc(2.5*var(--u)) rgba(255,255,255,.12)}
+#big.d-neonarena .team-card.home .crest-border{border-color:var(--c1b);box-shadow:0 0 calc(3*var(--u)) var(--c1),inset 0 0 calc(2*var(--u)) var(--c1b)}
+#big.d-neonarena .team-card.away .crest-border{border-color:var(--c2b);box-shadow:0 0 calc(3*var(--u)) var(--c2),inset 0 0 calc(2*var(--u)) var(--c2b)}
+#big.d-neonarena .crest-wrapper .ylg,#big.d-neonarena .crest-wrapper .ymono{width:80%;height:80%;object-fit:contain;filter:drop-shadow(0 calc(1*var(--u)) calc(2*var(--u)) rgba(0,0,0,.9));z-index:3}
+#big.d-neonarena .team-status{font-size:calc(1.6*var(--u));font-weight:800;letter-spacing:.26em;margin-bottom:calc(.5*var(--u))}
+#big.d-neonarena .team-card.home .team-status{color:var(--c1b)}
+#big.d-neonarena .team-card.away .team-status{color:var(--c2b)}
+#big.d-neonarena .team-name-panel{width:100%;padding:calc(1.1*var(--u)) calc(2*var(--w));background:rgba(14,20,36,.95);border:calc(.22*var(--u)) solid rgba(255,255,255,.15);border-top:calc(.45*var(--u)) solid var(--tc);clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);text-align:center;font-size:min(calc(5*var(--u)),calc(3*var(--w)));font-weight:900;text-transform:uppercase;letter-spacing:.05em}
 /* Klasik ve Klasik (ekrana uyumlu) */
 #big .bbg{filter:drop-shadow(0 0 1.2vh rgba(255,255,255,.55)) drop-shadow(0 1vh 2.4vh rgba(0,0,0,.85))}
 #big .bk1{font-size:3vh;font-weight:900;color:#fff;text-shadow:0 .3vh 1vh #000}
@@ -1570,7 +1665,7 @@ function bigUnits(el) { // ek tasarımlar medya alanının boyutuna göre ölçe
   el.style.setProperty('--u', Math.min(H, W * 9 / 16) / 100 + 'px'); el.style.setProperty('--w', W / 100 + 'px');
 }
 addEventListener('resize', () => { const el = document.getElementById('big'); if (el && el.className.includes('d-')) bigUnits(el); });
-const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena'];
+const BIG_STYLES = ['uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena', 'matchday', 'neonarena'];
 function teamPair(name, c1, c2, raw1, raw2) {
   const n = String(name || '').toLocaleLowerCase('tr-TR');
   if (n.includes('galatasaray')) return ['#c9082a', '#ffb800'];
@@ -1600,6 +1695,9 @@ function bigDesign(el, m, cfg, design, o) {
   const top = `<div class="ytop">${brand}<div class="ykick">${kick}</div>${!m.derby && league ? `<div class="ylea">${esc(league)}</div>` : ''}</div>`;
   const infos = o.info.map((t, i) => `<span>${o.icons[i % 3]} ${esc(t)}</span>`).join('');
   const end = `<div class="yend">${cfg.note ? `<div class="ynote">${esc(cfg.note)}</div>` : ''}${infos ? `<div class="yft">${infos}</div>` : ''}</div>`;
+  const llogo = m.ll || ({ 'Süper Lig': '/logo/l-18.png?v=2', 'Şampiyonlar Ligi': '/logo/l-2.png?v=2', 'Şampiyonlar Ligi Eleme': '/logo/l-2.png?v=2', 'Avrupa Ligi': '/logo/l-2310.png?v=2', 'Konferans Ligi': '/logo/l-20296.png?v=2' }[m.league]) || (m.derby ? '/logo/l-18.png?v=2' : '/logo/l-2.png?v=2');
+  const [lc1, lc2] = ({ 'Süper Lig': ['#e30a17', '#ffd478'], 'Avrupa Ligi': ['#ff6b00', '#ffb800'], 'Konferans Ligi': ['#00d65b', '#a8ff78'], 'Şampiyonlar Ligi': ['#1a5cff', '#ffe08a'], 'Şampiyonlar Ligi Eleme': ['#1a5cff', '#ffe08a'] }[m.league]) || (m.derby ? ['#e30a17', '#ffd478'] : ['#1a5cff', '#ffe08a']);
+  el.style.setProperty('--lc1', lc1); el.style.setProperty('--lc2', lc2);
   let h;
   if (design === 'stadyum') h = `<div class="yh l"></div><div class="yh r"></div><div class="yseam"></div><div class="ybeam"></div>`
     + (m.hp ? `<img class="yph" style="left:0" src="${esc(m.hp)}" alt="">` : '') + (m.ap ? `<img class="yph" style="right:0" src="${esc(m.ap)}" alt="">` : '') + `<div class="yvig"></div>`
@@ -1610,15 +1708,36 @@ function bigDesign(el, m, cfg, design, o) {
     + `<div class="yrow"><div class="ys h">${H}${nm(m.home, 'yn')}</div><div class="yc"><b>${esc(o.tm)}</b><small>${esc(o.dayTxt)}</small></div><div class="ys a">${A}${nm(m.away, 'yn')}</div></div>`
     + (cfg.note || infos ? `<div class="ytick">${cfg.note ? `<b>${esc(cfg.note)}</b>` : ''}${infos}</div>` : '') + `</div>`;
   else if (design === 'sayac') h = `<div class="ygrid"></div><div class="ywrap">${top}`
-    + `<div class="yvsrow"><div class="yt">${nm(m.home)}${H}</div><i>VS</i><div class="yt a">${A}${nm(m.away)}</div></div>`
+    + `<div class="yvsrow"><div class="yt" style="--tc:${esc(c1)};--tc2:${esc(c1b)}"><div class="ysc-ring"><div class="yaura"></div>${H}</div>${nm(m.home)}</div><i>VS</i><div class="yt a" style="--tc:${esc(c2)};--tc2:${esc(c2b)}"><div class="ysc-ring"><div class="yaura"></div>${A}</div>${nm(m.away)}</div></div>`
     + `<div class="ycdw"><div class="ycd" id="ycd"></div><div class="ywhen">${esc(o.dayName)} · ${esc(o.tm)}</div></div>${end}</div>`;
   else if (design === 'arena') {
-    const emb = Array.from({ length: 24 }, () => `<i style="left:${(Math.random() * 100).toFixed(1)}%;--dx:calc(${(Math.random() * 16 - 8).toFixed(1)}*var(--u));animation-duration:${(5 + Math.random() * 6).toFixed(1)}s;animation-delay:${(-Math.random() * 10).toFixed(1)}s"></i>`).join('');
-    const llogo = m.ll || ({ 'Süper Lig': '/logo/l-18.png?v=2', 'Şampiyonlar Ligi': '/logo/l-2.png?v=2', 'Şampiyonlar Ligi Eleme': '/logo/l-2.png?v=2', 'Avrupa Ligi': '/logo/l-2310.png?v=2', 'Konferans Ligi': '/logo/l-20296.png?v=2' }[m.league]) || (m.derby ? '/logo/l-18.png?v=2' : '/logo/l-2.png?v=2');
-    const card = (photo, crestHtml, name, col, col2, cls) => `<div class="acard ${cls}" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="yaura"></div>${photo ? `<img class="apl" src="${esc(photo)}" alt="">` : `<div class="acrest">${crestHtml}</div>`}${nm(name, 'aname', 13)}</div>`;
-    h = `<div class="abg"></div><div class="afloor"></div><div class="aspots"></div><div class="yemb">${emb}</div><div class="yvig"></div>`
-      + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">⚽ ${esc(league || kick)}</div></div>`
-      + `<div class="astage">${card(m.hp, H, m.home, c1, c1b, 'l')}<div class="acenter"><div class="agyro"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div><div class="avs">VS</div><div class="ameta"><div class="tm">${esc(o.tm)}</div><div class="yday">${esc(o.dayTxt)}</div>${m.venue ? `<div class="vn">🏟 ${esc(m.venue)}</div>` : ''}</div></div>${card(m.ap, A, m.away, c2, c2b, 'r')}</div>`
+    const emb = Array.from({ length: 28 }, () => `<i style="left:${(Math.random() * 100).toFixed(1)}%;--dx:calc(${(Math.random() * 16 - 8).toFixed(1)}*var(--u));animation-duration:${(5 + Math.random() * 6).toFixed(1)}s;animation-delay:${(-Math.random() * 10).toFixed(1)}s"></i>`).join('');
+    const pod = (role, photo, crestHtml, name, col, col2) => `<div class="ar-podium" style="--tc:${esc(col)};--tc2:${esc(col2)}">${photo ? `<img class="ar-pl" src="${esc(photo)}" alt="">` : `<div class="ar-orb"><div class="yaura"></div>${crestHtml}</div>`}<div class="ar-pedestal"><div class="ar-role">${role}</div><div class="ar-tname${String(name).length > 13 ? ' sm' : ''}"${lng(name)}>${esc(name)}</div></div></div>`;
+    const footNote = cfg.note || 'REZERVASYON YAPTIRMAYI UNUTMAYIN!';
+    h = `<div class="ar-bg"></div><div class="ar-lea-sky"></div><div class="ar-tint-l"></div><div class="ar-tint-r"></div><div class="ar-vig"></div><div class="yemb">${emb}</div>`
+      + `<div class="ar-wrap">`
+      + `<div class="ar-header">${LOGO ? brand : ''}<div class="ar-crown"><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"><div class="ar-crown-txt"><div class="ar-crown-lea">${esc(league || kick)}</div><div class="ar-crown-sub">${esc(m.venue ? m.venue + ' · ' + o.dayTxt : o.dayTxt)}</div></div><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div></div>`
+      + `<div class="ar-stage">${pod('EV SAHİBİ', m.hp, H, m.home, c1, c1b)}<div class="ar-center"><div class="ar-core"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div><div class="ar-vs-pill">VS</div><div class="ar-time-box"><b>${esc(o.tm)}</b><span>${esc(o.dayTxt)}</span></div></div>${pod('DEPLASMAN', m.ap, A, m.away, c2, c2b)}</div>`
+      + `<div class="ar-footer"><div class="ar-f-note">${esc(footNote)}</div>${infos ? `<div class="ar-f-info">${infos}</div>` : ''}</div>`
+      + `</div>`;
+  }
+  else if (design === 'matchday') {
+    const czone = (photo, crestHtml, col, col2) => `<div class="md-crest-zone" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="md-crest-halo"></div>${photo ? `<img class="md-pl" src="${esc(photo)}" alt="">` : `<div class="md-crest-ring">${crestHtml}</div>`}</div>`;
+    const nbar = (role, name, col, col2, sub) => `<div class="md-team-banner-wrap" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="md-role">${role}</div><div class="md-name-bar"><div class="md-tname${String(name).length > 13 ? ' sm' : ''}"${lng(name)}>${esc(name)}</div></div>${sub ? `<div class="md-subvenue">${esc(sub)}</div>` : ''}</div>`;
+    const footNote = cfg.note || (o.info && o.info.filter(Boolean).join(' · ')) || 'REZERVASYON YAPTIRMAYI UNUTMAYIN!';
+    h = `<div class="md-bg"></div><div class="md-tint-l"></div><div class="md-tint-r"></div><div class="md-center-glow"></div>`
+      + `<div class="main-container">`
+      + `<div class="md-header">${LOGO ? `<div class="md-brand">${brand}</div>` : ''}<div class="md-top-hud"><div class="md-top-wing"><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div><div class="md-top-mid"><div class="md-top-lea">${esc(league || kick)}</div><div class="md-top-time">${esc(o.dayTxt)} · ${esc(o.tm)}</div></div><div class="md-top-wing"><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div></div></div>`
+      + `<div class="md-pitch-stage">${czone(m.hp, H, c1, c1b)}<div class="md-center-trophy"><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div>${czone(m.ap, A, c2, c2b)}</div>`
+      + `<div class="md-lower-grid">${nbar('EV SAHİBİ', m.home, c1, c1b, m.venue || '')}<div class="md-vs">VS</div>${nbar('DEPLASMAN', m.away, c2, c2b, m.venue || o.tm)}</div>`
+      + `<div class="md-footer-hud"><div class="md-f-tag">${m.derby ? 'BÜYÜK DERBİ' : 'BÜYÜK MAÇ'}</div><div class="md-f-note">${esc(footNote)}</div></div>`
+      + `</div>`;
+  }
+  else if (design === 'neonarena') {
+    const tcard = (sideCls, statusTxt, crestHtml, name, col, col2) => `<div class="team-card ${sideCls}" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="crest-wrapper"><div class="crest-bg-glow"></div><div class="crest-border"></div>${crestHtml}</div><div class="team-status">${statusTxt}</div><div class="team-name-panel"${lng(name)}>${esc(name)}</div></div>`;
+    h = `<div class="bg-cyber"></div><div class="cyber-grid"></div>`
+      + `<div class="main-container"><div class="header-bar">${LOGO ? `<div class="brand-logo-area">${brand}</div>` : ''}<div class="tournament-panel"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"><div class="tournament-name">${esc(league || kick)}</div></div></div>`
+      + `<div class="match-arena">${tcard('home', 'EV SAHİBİ', H, m.home, c1, c1b)}<div class="vs-hub" style="display:flex;flex-direction:column;align-items:center;gap:calc(1.2*var(--u))"><div style="font-size:calc(5.8*var(--u));font-weight:900;color:#ffe28a;text-shadow:0 0 calc(2*var(--u)) rgba(255,210,100,.65)">${esc(o.tm)}</div><div class="yday">${esc(o.dayTxt)}</div>${m.venue ? `<div style="font-size:calc(2.1*var(--u));font-weight:800;color:#b8dcff">🏟 ${esc(m.venue)}</div>` : ''}</div>${tcard('away', 'DEPLASMAN', A, m.away, c2, c2b)}</div>`
       + `${end}</div>`;
   }
   else if (design === 'duello' || design === 'turnuva') {
@@ -1627,7 +1746,6 @@ function bigDesign(el, m, cfg, design, o) {
     const side = (photo, crestHtml, col, col2, s2) => photo ? `<img class="ypl ${s2}" src="${esc(photo)}" alt="">` : `<div class="ybigc ${s2}" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="yaura"></div>${crestHtml}</div>`;
     const where = [m.venue, o.tm].filter(Boolean).map((x, i) => i ? `<b>${esc(x)}</b>` : esc(x)).join(' · ');
     if (design === 'turnuva') {
-      const llogo = m.ll || ({ 'Süper Lig': '/logo/l-18.png?v=2', 'Şampiyonlar Ligi': '/logo/l-2.png?v=2', 'Şampiyonlar Ligi Eleme': '/logo/l-2.png?v=2', 'Avrupa Ligi': '/logo/l-2310.png?v=2', 'Konferans Ligi': '/logo/l-20296.png?v=2' }[m.league]) || (m.derby ? '/logo/l-18.png?v=2' : '/logo/l-2.png?v=2');
       const tstage = `<div class="ytstage"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div>`;
       const mid = (m.hp || m.ap)
         ? `<div class="ytmid"><div class="ytcrest" style="--tc:${esc(c1)};--tc2:${esc(c1b)}">${H}</div>${tstage}<div class="ytcrest" style="--tc:${esc(c2)};--tc2:${esc(c2b)}">${A}</div></div>`
@@ -1637,10 +1755,10 @@ function bigDesign(el, m, cfg, design, o) {
         + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">⚽ ${esc(league || kick)}</div>${where ? `<div class="yvenue">${where}</div>` : ''}</div>`
         + `<div class="ymidd"></div><div class="ybot"><div class="ymatch"${lng(m.home + m.away)}><span>${esc(m.home)}</span><i>×</i><span>${esc(m.away)}</span></div><div class="yday">${esc(o.dayTxt)}</div></div>${end}</div>`;
     } else {
-      const bolt = '<svg class="ybolt" viewBox="0 0 20 28"><path d="M12 0 2 16h6l-2 12L18 10h-6l2-10z" fill="#ffcf6e"/></svg>';
+      const tspin = `<div class="yduel-tlogo"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div>`;
       h = `<div class="yglow"></div><div class="ysmk"></div><div class="ysmk b"></div><div class="ysmk c"></div><div class="yflare"></div>`
         + side(m.hp, H, c1, c1b, 'l') + side(m.ap, A, c2, c2b, 'r') + `<div class="yemb">${emb}</div><div class="yvig"></div>`
-        + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">${esc(league || kick)}</div>${m.hp || m.ap ? `<div class="ycrests">${H}${bolt}${A}</div>` : bolt}<div class="yvenue">${where}</div></div>`
+        + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">${esc(league || kick)}</div>${m.hp || m.ap ? `<div class="ycrests">${H}${tspin}${A}</div>` : tspin}<div class="yvenue">${where}</div></div>`
         + `<div class="ymidd"></div><div class="ybot"><div class="ymatch"${lng(m.home + m.away)}><span>${esc(m.home)}</span><i>×</i><span>${esc(m.away)}</span></div><div class="yday">${esc(o.dayTxt)}</div></div>${end}</div>`;
     }
   }
@@ -1685,12 +1803,12 @@ function bigShow(m, cfg) {
     : (logo ? `<img class="bbg" style="${left ? 'left' : 'right'}:7%" src="${esc(logo)}" alt="" referrerpolicy="no-referrer">` : ''));
   const sub = m.derby ? '' : `<div class="bk1">${esc((m.league || '').toLocaleUpperCase('tr-TR'))}</div>`;
   const dayTxt = days <= 0 ? 'BUGÜN' : days === 1 ? 'YARIN' : dayName;
-  const design = BIG_STYLES.includes(cfg.style) ? cfg.style : 'klasik';
-  el.className = (el.classList.contains('on') ? 'on ' : '') + (design === 'klasik' ? '' : (design === 'turnuva' ? 'd-duello d-turnuva' : 'd-' + design)); // art arda maçlarda kart sönmesin
-  const U = n => design === 'uyum' ? `calc(${n}*var(--u))` : n + 'vh'; // satır içi ölçüler
+  const design = BIG_STYLES.includes(cfg.style) ? cfg.style : 'uyum';
+  el.className = (el.classList.contains('on') ? 'on ' : '') + (design === 'turnuva' ? 'd-duello d-turnuva' : 'd-' + design); // art arda maçlarda kart sönmesin
+  const U = n => `calc(${n}*var(--u))`; // satır içi ölçüler
   if (design === 'uyum') bigUnits(el);
   clearInterval(big.tick);
-  if (design !== 'klasik' && design !== 'uyum') bigDesign(el, m, cfg, design, { dayTxt, dayName, tm, info, icons });
+  if (design !== 'uyum') bigDesign(el, m, cfg, design, { dayTxt, dayName, tm, info, icons });
   else
   el.innerHTML = '<div class="bl"></div><div class="br"></div><div class="bsh"></div>' + side(m.hl, m.hp, true) + side(m.al, m.ap, false)
     + `<div class="bc"><div style="text-align:center">${LOGO ? '<img class="blogo" src="' + esc(LOGO) + '" alt="">' : '<div class="bk1" style="font-size:' + U(3) + ';letter-spacing:.2em">' + esc(BNAME.toLocaleUpperCase('tr-TR')) + '</div>'}<div class="bt1" style="margin-top:${U(1.4)}">${m.derby ? 'BÜYÜK DERBİ' : 'AVRUPA GECESİ'}</div>${sub}</div>`
