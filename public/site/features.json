@@ -176,7 +176,7 @@
         "En çok 6 QR kod; Wi‑Fi QR'ı tek dokunuşla bağlanır",
         "Instagram paylaşımlarınız medya döngüsüne girer",
         "QR kartı her zaman en üstte kalsın ya da video, fotoğraf gibi seçtiğiniz içeriklerde gizlensin",
-        "Hava ve piyasalar kutusuna QR da eklenebilir: 2 QR yan yana, 3 ve fazlası tek tek geçişli gösterilir"
+        "Hava ve piyasalar kutusuna QR da eklenebilir: önce hava ve piyasa, sonra seçtiğiniz QR'lar ayrı sayfada gösterilir"
       ],
       "plan": "all",
       "compare": "QR kodlar ve kampanya kartı",
@@ -196,7 +196,7 @@
             "Up to 6 QR codes; the Wi‑Fi code connects with one tap",
             "Your Instagram posts join the media rotation",
             "Keep a QR card always on top, or hide it during the content you choose, such as videos or photos",
-            "The weather and markets box can also show QR codes: two side by side, three or more one at a time with a fade"
+            "The weather and markets box can also show QR codes: first weather and markets, then your chosen codes on a separate page"
           ]
         },
         "de": {
@@ -209,7 +209,7 @@
             "Bis zu 6 QR-Codes; der WLAN-Code verbindet mit einem Tipp",
             "Ihre Instagram-Beiträge laufen in der Medienschleife mit",
             "QR-Karte immer im Vordergrund halten oder bei gewählten Inhalten wie Videos oder Fotos ausblenden",
-            "Das Wetter- und Märkte-Feld kann auch QR-Codes zeigen: zwei nebeneinander, ab drei einzeln mit Überblendung"
+            "Das Wetter- und Märkte-Feld kann auch QR-Codes zeigen: zuerst Wetter und Märkte, danach Ihre gewählten Codes auf einer eigenen Seite"
           ]
         },
         "ar": {
@@ -222,7 +222,7 @@
             "حتى 6 رموز QR؛ ورمز Wi‑Fi يتصل بلمسة واحدة",
             "تنضم منشوراتك على Instagram إلى دورة العرض",
             "أبقِ بطاقة QR فوق كل شيء دائمًا، أو أخفها أثناء المحتوى الذي تختاره مثل الفيديو والصور",
-            "يمكن إضافة رموز QR إلى مربع الطقس والأسواق: رمزان جنبًا إلى جنب، وثلاثة فأكثر واحدًا تلو الآخر بانتقال تدريجي"
+            "يمكن إضافة رموز QR إلى مربع الطقس والأسواق: يظهر الطقس والأسواق أولًا ثم الرموز المختارة في صفحة منفصلة"
           ]
         }
       },
