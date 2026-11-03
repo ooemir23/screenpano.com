@@ -1180,6 +1180,7 @@ function setRates(r) { lastRates = r; renderPanel(); if (window.__tickerInfo) se
 function setWeather(w) { lastWeather = w; renderPanel(); if (window.__tickerInfo) setTicker(matches); }
 const goalQueue = []; let goalBusy = false;
 function showGoal(g) {
+  wsSend({ type: 'shown', kind: 'goal' });
   goalQueue.push(g);
   if (!goalBusy) nextGoal();
 }
@@ -1292,7 +1293,7 @@ setInterval(() => {
 const camp = { list: [], last: {}, showing: false, due: null, after: null, started: Date.now() };
 function campShow(c) {
   if (camp.showing || !c) return;
-  camp.showing = true; camp.last[c.id] = Date.now();
+  camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp' });
   let el = document.getElementById('camp');
   if (!el) { el = document.createElement('div'); el.id = 'camp'; document.getElementById('frame').appendChild(el); }
   const esc = t => String(t || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -1328,7 +1329,7 @@ function bigDesign(el, m, cfg, design, o) {
 function setBig(list, cfg) { big.list = list || []; big.cfg = cfg || big.cfg; }
 function bigShow(m, cfg) {
   if (big.showing || !m) return;
-  big.showing = true; camp.showing = true; big.last = Date.now();
+  big.showing = true; camp.showing = true; big.last = Date.now(); wsSend({ type: 'shown', kind: 'big' });
   cfg = cfg || big.cfg;
   const z = { timeZone: 'Europe/Istanbul' };
   const d0 = new Date(m.ts), dk = x => new Intl.DateTimeFormat('en-CA', z).format(x);

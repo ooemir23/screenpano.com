@@ -104,6 +104,7 @@ module.exports = function (r, { changed, upload, quota, ownerOnly, rmUpload, bac
   });
 
   // ================= İSTATİSTİK =================
+  r.get('/stats.csv', (req, res) => { const d = [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 30; res.set('Content-Disposition', `attachment; filename="istatistik-${d}-gun.csv"`).type('text/csv; charset=utf-8').send(stats.csv(req.t, d)); });
   r.get('/stats', (req, res) => res.json(stats.summary(req.t, [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 30)));
 
   // ================= ŞUBELER =================
@@ -164,7 +165,7 @@ module.exports = function (r, { changed, upload, quota, ownerOnly, rmUpload, bac
         }
         if (parts.includes('menu')) t.db.menu = JSON.parse(JSON.stringify(src.db.menu));
         if (parts.includes('lang')) t.db.lang = JSON.parse(JSON.stringify(src.db.lang || {}));
-        if (parts.includes('promo')) { t.db.campaigns = JSON.parse(JSON.stringify(src.db.campaigns || [])); t.db.qrs = JSON.parse(JSON.stringify(src.db.qrs || [])); }
+        if (parts.includes('promo')) { t.db.campaigns = JSON.parse(JSON.stringify(src.db.campaigns || [])); t.db.qrs = JSON.parse(JSON.stringify(src.db.qrs || [])); await require('./qrtrack').ensure(t); } // kopyalanan QR'lar yeni sayaç kodu alır
         if (parts.includes('media')) {
           if (mode === 'replace') { for (const v of t.db.videos) { if (v.file) rmUpload(t, v.file); if (v.image) rmUpload(t, v.image); } t.db.videos = []; }
           for (const v of src.db.videos) {

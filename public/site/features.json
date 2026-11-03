@@ -487,11 +487,13 @@
       "icon": "📊",
       "title": "Ne kadar izlendi, görün",
       "short": "İstatistik",
-      "text": "Ekranınız günde kaç saat açık kaldı, hangi video ya da afiş kaç kez oynadı. Son 7, 30 ve 90 gün için özet; kampanyanın gerçekten gösterildiğinden emin olursunuz.",
+      "text": "Ekranınız günde kaç saat açık kaldı, hangi video ya da afiş kaç kez oynadı, QR kodlarınız kaç kez okutuldu. Son 7, 30 ve 90 gün için özet ve önceki dönemle karşılaştırma; kampanyanın gerçekten gösterildiğinden emin olursunuz.",
       "points": [
-        "Günlük ekran süresi grafiği",
+        "Günlük ekran süresi grafiği ve ekran kesintileri",
         "İçerik bazında oynatma sayısı ve süresi",
-        "Kişisel veri tutulmaz"
+        "Bağlantı QR'ları kaç kez okutuldu; iPhone/Android ayrımı ve en yoğun saat",
+        "Gün ve saate göre yoğunluk haritası, önceki dönemle karşılaştırma",
+        "Excel'e (CSV) aktarma; kişisel veri tutulmaz"
       ],
       "plan": "all",
       "compare": "İstatistik",
@@ -505,36 +507,43 @@
           "title": "See how much your content was seen",
           "short": "Statistics",
           "compare": "Statistics",
-          "text": "How many hours your screen was on each day, and how often each video or poster played. Summaries for the last 7, 30 and 90 days, so you know your promotion really ran.",
+          "text": "How many hours your screen stayed on each day, how many times each video or poster played and how many times your QR codes were scanned. A summary for the last 7, 30 and 90 days with a comparison to the previous period, so you know your campaign was really shown.",
           "points": [
-            "Daily screen-time chart",
-            "Play count and duration for each item",
-            "No personal data collected"
+            "Daily screen-time chart and screen outages",
+            "Plays and play time for each item",
+            "How many times link QR codes were scanned, with iPhone/Android split and busiest hour",
+            "Activity map by day and hour, comparison with the previous period",
+            "Export to Excel (CSV); no personal data is stored"
           ]
         },
         "de": {
           "title": "Sehen Sie, wie oft Ihre Inhalte liefen",
           "short": "Statistik",
           "compare": "Statistik",
-          "text": "Wie viele Stunden Ihr Bildschirm täglich lief und wie oft jedes Video oder Plakat gezeigt wurde. Übersichten für die letzten 7, 30 und 90 Tage – so wissen Sie, dass Ihre Aktion wirklich zu sehen war.",
+          "text": "Wie viele Stunden Ihr Bildschirm täglich lief, wie oft jedes Video oder Plakat gespielt wurde und wie oft Ihre QR-Codes gescannt wurden. Übersicht für die letzten 7, 30 und 90 Tage mit Vergleich zum Vorzeitraum – so sehen Sie, dass Ihre Aktion wirklich lief.",
           "points": [
-            "Diagramm der täglichen Laufzeit",
-            "Anzahl und Dauer der Wiedergaben je Inhalt",
-            "Keine personenbezogenen Daten"
+            "Diagramm der täglichen Laufzeit und Bildschirm-Ausfälle",
+            "Wiedergaben und Spielzeit je Inhalt",
+            "Wie oft Link-QR-Codes gescannt wurden, mit iPhone/Android-Aufteilung und stärkster Stunde",
+            "Aktivitätskarte nach Tag und Uhrzeit, Vergleich mit dem Vorzeitraum",
+            "Export nach Excel (CSV); es werden keine personenbezogenen Daten gespeichert"
           ]
         },
         "ar": {
           "title": "اعرف كم شوهد محتواك",
           "short": "الإحصاءات",
           "compare": "الإحصاءات",
-          "text": "كم ساعة عملت شاشتك يوميًا، وكم مرة عُرض كل فيديو أو ملصق. ملخصات لآخر 7 و30 و90 يومًا، لتتأكد أن عرضك ظهر فعلًا.",
+          "text": "كم ساعة بقيت شاشتك تعمل يوميًا، وكم مرة عُرض كل فيديو أو ملصق، وكم مرة مُسحت رموز QR. ملخص لآخر 7 و30 و90 يومًا مع مقارنة بالفترة السابقة، لتتأكد أن حملتك عُرضت فعلًا.",
           "points": [
-            "رسم بياني لمدة التشغيل اليومية",
-            "عدد مرات العرض ومدته لكل محتوى",
-            "لا تُجمع أي بيانات شخصية"
+            "مخطط يومي لمدة التشغيل وانقطاعات الشاشة",
+            "عدد مرات التشغيل ومدته لكل محتوى",
+            "عدد مرات مسح رموز QR للروابط مع التفريق بين iPhone وAndroid وساعة الذروة",
+            "خريطة النشاط حسب اليوم والساعة ومقارنة بالفترة السابقة",
+            "تصدير إلى Excel (CSV) دون تخزين أي بيانات شخصية"
           ]
         }
-      }
+      },
+      "added": "2026-11-03"
     },
     {
       "id": "sube",

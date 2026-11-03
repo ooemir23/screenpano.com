@@ -9,6 +9,8 @@ module.exports = {
   DATA_DIR,
   PUBLIC_DIR: path.join(ROOT, 'public'),
   PORT: Number(process.env.PORT) || 3000,
+  // QR kısa adresleri (okutma sayacı) bu adrese yazılır: adres değişirse QR'lar yeniden üretilmelidir
+  BASE_URL: (process.env.PUBLIC_URL || 'https://screenpano.com').replace(/\/+$/, ''),
   TZ: process.env.TZ_NAME || 'Europe/Istanbul',
   // Ürün adı: TV menüsünde, panelde ve Başlangıç paketindeki köşe ibaresinde görünür
   BRAND: process.env.BRAND_NAME || 'ScreenPano',

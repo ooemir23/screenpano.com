@@ -55,6 +55,7 @@ function onMessage(ws, raw) {
   if (!m || typeof m !== 'object') return;
   if (m.type === 'status') require('./monitor').report(ws.tid, ws.deviceId, m);
   else if (m.type === 'play') require('./stats').play(ws.tid, String(m.id || ''), m.sec);
+  else if (m.type === 'shown') require('./stats').shown(ws.tid, String(m.kind || ''));
   else if (m.type === 'snap' && typeof m.data === 'string' && /^data:image\/(jpeg|png);base64,/.test(m.data)) require('./monitor').snaps.set(ws.deviceId, { at: Date.now(), data: m.data });
 }
 
@@ -71,6 +72,7 @@ function attach(server) {
       Object.assign(ws, { tid: d.tenant_id, deviceId: d.id });
       store.q.deviceSeen.run(Date.now(), d.id);
       const t0 = tenants.get(d.tenant_id); if (t0) require('./monitor').connected(t0, d);
+      try { require('./stats').deviceUp(d.tenant_id, d.id); } catch (e) {}
     } else if (preview) { // panelin canlı önizlemesi: oturum çerezi gerekir
       const u = auth.sessionUser(req);
       const tid = u && require('./routes-admin').activeTenantId(u);
@@ -80,7 +82,7 @@ function attach(server) {
     clients.add(ws);
     ws.isAlive = true;
     ws.on('pong', () => { ws.isAlive = true; });
-    ws.on('close', () => clients.delete(ws));
+    ws.on('close', () => { clients.delete(ws); if (ws.deviceId && ![...clients].some(c => c.deviceId === ws.deviceId)) { try { require('./stats').deviceDown(ws.tid, ws.deviceId); } catch (e) {} } });
     ws.on('message', raw => onMessage(ws, raw));
     sendRaw(ws, { type: 'version', build: BUILD, now: Date.now() });
     sendState(ws);

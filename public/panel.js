@@ -1046,20 +1046,48 @@ async function snapDev(id) {
 let STDAYS = 30;
 SECTIONS.stats = {
   html() {
-    return head('İstatistik', 'Ekranınız ne kadar açık kaldı, hangi içerik kaç kez oynadı.', `<div class="tabs" style="margin:0">${[7, 30, 90].map(d => `<button class="${STDAYS === d ? 'on' : ''}" onclick="STDAYS=${d};render(true)">${d} gün</button>`).join('')}</div>`)
+    return head('İstatistik', 'Ekranınız ne kadar açık kaldı, hangi içerik kaç kez oynadı, QR kodlarınız kaç kez okutuldu.', `<div class="row" style="gap:10px;align-items:center"><div class="tabs" style="margin:0">${[7, 30, 90].map(d => `<button class="${STDAYS === d ? 'on' : ''}" onclick="STDAYS=${d};render(true)">${d} gün</button>`).join('')}</div><a class="btn xs g" href="/api/admin/stats.csv?days=${STDAYS}">Excel (CSV) indir</a></div>`)
       + '<div id="stv"><div class="loading">Yükleniyor…</div></div>';
   },
   async after() {
     let j; try { j = await req('GET', '/stats?days=' + STDAYS); } catch (e) { $('stv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
     const hrs = m => (m / 60).toFixed(m < 600 ? 1 : 0).replace('.', ',');
+    const nf = n => Number(n || 0).toLocaleString(I18N.locale);
+    const T = I18N.t, dur = sec => sec >= 3600 ? hrs(sec / 60) + ' ' + T('sa') : Math.max(1, Math.round(sec / 60)) + ' ' + T('dk');
+    // önceki dönemle karşılaştırma; goodUp=false ise artış kötüdür (kesinti)
+    const dl = (cur, prev, goodUp = true) => { if (!prev) return ''; const p = Math.round((cur - prev) / prev * 100); if (!p) return ''; const good = (p > 0) === goodUp; return `<br><b class="dl ${good ? 'up' : 'dn'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p)}%</b> <span>önceki döneme göre</span>`; };
     const max = Math.max(60, ...j.daily.map(d => d.online));
     const active = j.daily.filter(d => d.online > 0).length;
-    $('stv').innerHTML = `<div class="grid g3" style="margin-bottom:18px">
-        <div class="stat"><b>${hrs(j.totals.online)} saat</b><span>Ekran açık kaldı (${active} gün)</span></div>
-        <div class="stat"><b>${j.totals.plays.toLocaleString(I18N.locale)}</b><span>İçerik oynatıldı</span></div>
-        <div class="stat"><b>${active ? hrs(j.totals.online / active) : '0'} saat</b><span>Açık olduğu günlerde ortalama</span></div></div>`
+    const wd = i => new Date(2024, 0, 1 + i).toLocaleDateString(I18N.locale, { weekday: 'long' });
+    const wds = i => new Date(2024, 0, 1 + i).toLocaleDateString(I18N.locale, { weekday: 'short' });
+    const hh = h => String(h).padStart(2, '0') + ':00';
+    // en yoğun gün-saat
+    let pk = { v: 0, d: 0, h: 0 }; j.heat.forEach((row, d) => row.forEach((v, h) => { if (v > pk.v) pk = { v, d, h }; }));
+    const hmax = Math.max(1, ...j.heat.flat());
+    const stat = (b, label, extra = '') => `<div class="stat"><b>${b}</b><span>${label}</span>${extra ? `<span class="dlw">${extra}</span>` : ''}</div>`;
+    const dvTxt = d => { const n = d.ios + d.android + d.other; if (!n) return ''; const p = v => Math.round(v / n * 100) + '%'; return [d.ios ? 'iPhone ' + p(d.ios) : '', d.android ? 'Android ' + p(d.android) : '', d.other ? T('Diğer') + ' ' + p(d.other) : ''].filter(Boolean).join(' · '); };
+    const qrRow = q => {
+      if (!q.tracked) return `<div class="it"><div class="b"><b>${esc(q.label)}</b><span>${q.kind === 'wifi' ? 'Wi-Fi QR\'ı sayılamaz (telefon doğrudan ağa bağlanır)' : 'Düz metin QR\'ı sayılamaz (yalnızca bağlantı QR\'ları sayılır)'}</span></div></div>`;
+      const mx = Math.max(1, ...q.daily), ph = q.hours.indexOf(Math.max(...q.hours));
+      return `<div class="it qst"><div class="b"><b>${esc(q.label)}${q.kind === 'camp' ? ' <span class="muted" style="font-weight:400">· Kampanya kartı</span>' : ''}</b>
+          <span>${q.scans ? `${T('En yoğun saat')}: ${hh(ph)}${dvTxt(q.dev) ? ' · ' + dvTxt(q.dev) : ''}` : 'Bu dönemde okutulmadı'}</span></div>
+        <div class="mini" role="img" aria-label="Günlük okutma">${q.daily.map((v, i) => `<div title="${fmtD(j.daily[i].day)}: ${v}"><i style="height:${Math.round(v / mx * 100)}%"></i></div>`).join('')}</div>
+        <div class="big">${nf(q.scans)}</div></div>`;
+    };
+    $('stv').innerHTML = `<div class="grid g3" style="margin-bottom:18px">`
+      + stat(hrs(j.totals.online) + ' ' + T('saat'), `Ekran açık kaldı (${active} gün)`, dl(j.totals.online, j.prev.online))
+      + stat(nf(j.totals.plays), 'İçerik oynatıldı', dl(j.totals.plays, j.prev.plays))
+      + stat(nf(j.totals.scans), 'QR okutuldu', dl(j.totals.scans, j.prev.scans))
+      + stat(nf(j.totals.drops), j.totals.drops ? `Kesinti (toplam ${dur(j.totals.dropsec)})` : 'Kesinti', dl(j.totals.drops, j.prev.drops, false))
+      + stat((active ? hrs(j.totals.online / active) : '0') + ' ' + T('saat'), 'Açık olduğu günlerde ortalama')
+      + stat(pk.v ? `${wd(pk.d)} ${hh(pk.h)}` : '—', 'İçeriklerin en çok gösterildiği zaman')
+      + `</div>`
       + card('Günlük ekran süresi', 'Saat cinsinden; bağlı tüm kutuların toplamı.', `<div class="bars" role="img" aria-label="Günlük ekran süresi grafiği">${j.daily.map(d => `<div title="${new Date(d.day + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' })}: ${hrs(d.online)} saat, ${d.plays} oynatma"><i style="height:${Math.round(d.online / max * 100)}%"></i></div>`).join('')}</div>
         <div class="row" style="justify-content:space-between;font-size:12px" class="muted"><span class="muted">${fmtD(j.daily[0].day)}</span><span class="muted">${fmtD(j.daily[j.daily.length - 1].day)}</span></div>`)
+      + card('QR okutmaları', 'Bağlantı QR\'ları ve kampanya QR\'ı kaç kez okutuldu. Aynı telefonun kısa sürede tekrar açması ve bot ziyaretleri sayılmaz; kişisel bilgi saklanmaz.', j.qr.length ? `<div class="list">${j.qr.map(qrRow).join('')}</div>` : '<div class="empty">Henüz QR kod yok. QR Kodlar sayfasından ekleyin.</div>')
+      + card('Saat bazında yoğunluk', 'İçeriklerin gün ve saate göre gösterilme yoğunluğu (koyu renk daha yoğun).', pk.v ? `<div class="heat"><div></div>${Array.from({ length: 24 }, (_, h) => `<span class="hl">${h % 3 === 0 ? h : ''}</span>`).join('')}${j.heat.map((row, d) => `<span class="dn">${wds(d)}</span>${row.map((v, h) => `<i title="${wd(d)} ${hh(h)}: ${v}" style="background:rgba(var(--a2),${v ? (0.12 + v / hmax * 0.88).toFixed(2) : 0.04})"></i>`).join('')}`).join('')}</div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>')
+      + `<div class="grid g2">` + card('Kesintiler', 'Ekranın internet bağlantısı 2 dakikadan uzun koptuğunda sayılır.', j.totals.drops ? `<div class="scroll"><table class="tbl"><thead><tr><th>Gün</th><th>Kesinti</th><th>Toplam süre</th></tr></thead><tbody>${j.daily.filter(d => d.drops).reverse().slice(0, 14).map(d => `<tr><td>${fmtD(d.day)}</td><td>${d.drops}</td><td>${dur(d.dropsec)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Bu dönemde kesinti olmadı.</div>')
+      + card('Özel kartlar', 'Ekranlarda kaç kez gösterildi.', `<div class="grid g3">${stat(nf(j.shown.camp), 'Kampanya kartı')}${stat(nf(j.shown.big), 'Büyük maç kartı')}${stat(nf(j.shown.goal), 'Gol bildirimi')}</div>`) + `</div>`
       + card('İçerikler', 'En çok oynayandan aza.', j.items.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>İçerik</th><th>Tür</th><th>Oynatma</th><th>Toplam süre</th><th>Son</th></tr></thead><tbody>${j.items.slice(0, 50).map(it => `<tr><td>${esc(it.name)}</td><td>${{ video: 'Video', image: 'Fotoğraf', poster: 'Afiş', instagram: 'Instagram', trailer: 'Fragman', gone: '—' }[it.type] || it.type}</td><td>${it.plays.toLocaleString(I18N.locale)}</td><td>${it.sec ? (it.sec >= 3600 ? hrs(it.sec / 60) + ' sa' : Math.round(it.sec / 60) + ' dk') : '—'}</td><td>${fmtD(it.last)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>');
   },
 };

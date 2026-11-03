@@ -66,3 +66,30 @@ Hava durumu, döviz, altın, BIST, Bitcoin ve istenirse QR kodlar (2 QR yan yana
 Gösterilecek QR'lar (seçmezseniz hepsi) ¦ QR codes to show (all if none selected) ¦ Anzuzeigende QR-Codes (alle, wenn keiner gewählt) ¦ رموز QR المعروضة (الكل إن لم تختر)
 1-2 QR yan yana gösterilir; 3 ve fazlası tek tek, geçişli olarak sırayla değişir. ¦ 1-2 QR codes are shown side by side; 3 or more appear one at a time, fading in turn. ¦ 1-2 QR-Codes werden nebeneinander gezeigt; ab 3 erscheinen sie einzeln und blenden nacheinander über. ¦ يُعرض رمزا QR جنبًا إلى جنب، وإن كانت 3 أو أكثر فتظهر واحدًا تلو الآخر بانتقال تدريجي.
 Önce <0>QR Kodlar</0> sayfasından QR ekleyin. ¦ First add QR codes on the <0>QR Codes</0> page. ¦ Fügen Sie zuerst auf der Seite <0>QR-Codes</0> QR-Codes hinzu. ¦ أضف رموز QR أولًا من صفحة <0>رموز QR</0>.
+Ekranınız ne kadar açık kaldı, hangi içerik kaç kez oynadı, QR kodlarınız kaç kez okutuldu. ¦ How long your screen stayed on, how many times each content played and how many times your QR codes were scanned. ¦ Wie lange Ihr Bildschirm lief, wie oft jeder Inhalt gespielt wurde und wie oft Ihre QR-Codes gescannt wurden. ¦ مدة تشغيل شاشتك، وعدد مرات تشغيل كل محتوى، وعدد مرات مسح رموز QR.
+Excel (CSV) indir ¦ Download Excel (CSV) ¦ Excel (CSV) herunterladen ¦ تنزيل Excel (CSV)
+önceki döneme göre ¦ vs. previous period ¦ gegenüber dem Vorzeitraum ¦ مقارنة بالفترة السابقة
+QR okutuldu ¦ QR scans ¦ QR-Scans ¦ مرات مسح QR
+Kesinti ¦ Outages ¦ Unterbrechungen ¦ انقطاعات
+Kesinti (toplam {}) ¦ Outages (total {}) ¦ Unterbrechungen (gesamt {}) ¦ انقطاعات (المجموع {})
+İçeriklerin en çok gösterildiği zaman ¦ Busiest time for content ¦ Hauptzeit der Inhaltswiedergabe ¦ وقت الذروة لعرض المحتوى
+QR okutmaları ¦ QR scans ¦ QR-Scans ¦ مرات مسح QR
+Bağlantı QR'ları ve kampanya QR'ı kaç kez okutuldu. Aynı telefonun kısa sürede tekrar açması ve bot ziyaretleri sayılmaz; kişisel bilgi saklanmaz. ¦ How many times link QR codes and the promotion QR were scanned. Repeat opens from the same phone within moments and bot visits are not counted; no personal data is stored. ¦ Wie oft Link-QR-Codes und der Aktions-QR gescannt wurden. Wiederholte Aufrufe desselben Telefons in kurzer Zeit und Bot-Besuche werden nicht gezählt; es werden keine personenbezogenen Daten gespeichert. ¦ عدد مرات مسح رموز QR الخاصة بالروابط ورمز QR للعروض. لا تُحتسب إعادة الفتح من الهاتف نفسه خلال وقت قصير ولا زيارات الروبوتات، ولا تُخزَّن أي بيانات شخصية.
+Henüz QR kod yok. QR Kodlar sayfasından ekleyin. ¦ No QR codes yet. Add them on the QR Codes page. ¦ Noch keine QR-Codes. Fügen Sie sie auf der Seite „QR-Codes“ hinzu. ¦ لا توجد رموز QR بعد. أضفها من صفحة رموز QR.
+Wi-Fi QR'ı sayılamaz (telefon doğrudan ağa bağlanır) ¦ Wi-Fi QR codes cannot be counted (the phone connects straight to the network) ¦ WLAN-QR-Codes können nicht gezählt werden (das Telefon verbindet sich direkt mit dem Netz) ¦ لا يمكن احتساب رمز Wi-Fi (يتصل الهاتف بالشبكة مباشرة)
+Düz metin QR'ı sayılamaz (yalnızca bağlantı QR'ları sayılır) ¦ Plain-text QR codes cannot be counted (only link QR codes are) ¦ Reintext-QR-Codes können nicht gezählt werden (nur Link-QR-Codes) ¦ لا يمكن احتساب رمز النص العادي (تُحتسب رموز الروابط فقط)
+· Kampanya kartı ¦ · Promotion card ¦ · Aktionskarte ¦ · بطاقة العروض
+En yoğun saat ¦ Busiest hour ¦ Stärkste Stunde ¦ ساعة الذروة
+Bu dönemde okutulmadı ¦ Not scanned in this period ¦ In diesem Zeitraum nicht gescannt ¦ لم يُمسح في هذه الفترة
+Diğer ¦ Other ¦ Sonstige ¦ أخرى
+Saat bazında yoğunluk ¦ Activity by hour ¦ Auslastung nach Uhrzeit ¦ الكثافة حسب الساعة
+İçeriklerin gün ve saate göre gösterilme yoğunluğu (koyu renk daha yoğun). ¦ How often content is shown by day and hour (darker means busier). ¦ Wie oft Inhalte nach Tag und Uhrzeit gezeigt werden (dunkler = mehr). ¦ كثافة عرض المحتوى حسب اليوم والساعة (اللون الداكن أكثر ازدحامًا).
+Kesintiler ¦ Outages ¦ Unterbrechungen ¦ الانقطاعات
+Ekranın internet bağlantısı 2 dakikadan uzun koptuğunda sayılır. ¦ Counted when the screen loses its internet connection for more than 2 minutes. ¦ Wird gezählt, wenn die Internetverbindung des Bildschirms länger als 2 Minuten unterbrochen ist. ¦ تُحتسب عندما ينقطع اتصال الشاشة بالإنترنت لأكثر من دقيقتين.
+Gün ¦ Day ¦ Tag ¦ اليوم
+Bu dönemde kesinti olmadı. ¦ No outages in this period. ¦ Keine Unterbrechungen in diesem Zeitraum. ¦ لا توجد انقطاعات في هذه الفترة.
+Özel kartlar ¦ Special cards ¦ Sonderkarten ¦ البطاقات الخاصة
+Ekranlarda kaç kez gösterildi. ¦ How many times they were shown on screens. ¦ Wie oft sie auf den Bildschirmen gezeigt wurden. ¦ عدد مرات عرضها على الشاشات.
+sa ¦ h ¦ Std. ¦ س
+dk ¦ min ¦ Min. ¦ د
+saat ¦ hours ¦ Std. ¦ ساعة
