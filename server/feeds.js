@@ -532,7 +532,7 @@ async function refreshBooks(force) {
   if (!ck) return;
   if (!proTenants().some(t => t.db.showBooks !== false)) return;
   const stale = books && (books.source !== 'collect' || books.v !== 4); // eski liste (Google ya da kısaltılmış görsel adresleri) kaldıysa hemen yenile // eski (Google) listesi kaldıysa hemen D&R'den yenile
-  if (!force && books && !stale && cacheAge('books') < 24 * HOUR) return;
+  if (!force && books && !stale && cacheAge('books') < 8 * HOUR) return;
   if (!force && !stale && Date.now() - booksFailAt < 3 * HOUR) return;
   try {
     const items = await collectNewBooks(ck);
