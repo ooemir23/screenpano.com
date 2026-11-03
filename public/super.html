@@ -243,7 +243,7 @@ function drawRows() {
   const list = D.tenants.filter(x => inF(x) && (!q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q))).sort(cmp);
   $('list').innerHTML = list.map(x => { const h = !x.owner && x.org ? headOf(x.org) : null; return `<tr class="click" onclick="openTenant('${x.id}')"><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : h ? T('Şube') + ' · ' + esc(h.name) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}</span></td>
     <td>${esc(planName(x))}</td><td>${stTag(x)}</td><td>${x.unlimited ? '∞' : fmt(end(x))}</td>
-    <td class="num">${x.devices}${x.online ? ` <span style="color:var(--ok)">● ${x.online}</span>` : ''}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
+    <td class="num">${x.devices} / ${x.unlimited ? '∞' : (x.deviceLimit || 1)}${x.online ? ` <span style="color:var(--ok)">● ${x.online}</span>` : ''}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
     <td onclick="event.stopPropagation()"><div class="acts"><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">İşletme yok</td></tr>';
 }
 
@@ -255,11 +255,11 @@ function newDialog() {
   openDrawer(`<h2>Yeni işletme</h2>
   <div class="row">${field('İşletme adı', 'n-name')}${field('Telefon', 'n-phone')}</div>
   <div class="row">${field('Kullanıcı adı', 'n-user')}${field('Şifre (en az 8)', 'n-pass')}</div>
-  <div class="row"><div><label>Paket</label><select id="n-plan">${planOpts('pro')}</select></div>${field('Ödenmiş gün (0 = yalnız deneme)', 'n-days', 0, 'type="number"')}${field('Deneme günü', 'n-trial', 3, 'type="number"')}</div>
+  <div class="row"><div><label>Paket</label><select id="n-plan" onchange="const p=D.plans[this.value];if(p)$('n-devs').value=p.devices">${planOpts('pro')}</select></div>${field('Bağlanacak TV / Cihaz', 'n-devs', 2, 'type="number" min="1" max="999"')}${field('Ödenmiş gün (0 = yalnız deneme)', 'n-days', 0, 'type="number"')}${field('Deneme günü', 'n-trial', 3, 'type="number"')}</div>
   <div class="cardfoot"><button class="btn ghost" onclick="closeDrawer()">Vazgeç</button><button class="btn" onclick="createT()">Oluştur</button></div>`);
 }
 async function createT() {
-  try { await api('POST', '/tenants', { name: $('n-name').value, phone: $('n-phone').value, username: $('n-user').value, password: $('n-pass').value, plan: $('n-plan').value, days: Number($('n-days').value), trialDays: Number($('n-trial').value) }); closeDrawer(); toast('İşletme oluşturuldu'); await load(); }
+  try { await api('POST', '/tenants', { name: $('n-name').value, phone: $('n-phone').value, username: $('n-user').value, password: $('n-pass').value, plan: $('n-plan').value, devices: Number($('n-devs').value) || 1, days: Number($('n-days').value), trialDays: Number($('n-trial').value) }); closeDrawer(); toast('İşletme oluşturuldu'); await load(); }
   catch (e) { toast(e.message, true); }
 }
 function openTenant(id) {
@@ -268,12 +268,12 @@ function openTenant(id) {
   const h = !x.owner && x.org ? headOf(x.org) : null;
   openDrawer(`<h2 style="margin-bottom:4px">${esc(x.name)}</h2><p class="hint">${stTag(x)} ${esc(planName(x))}${h ? ' · ' + T('Şube') + ' · ' + esc(h.name) : ''}</p>
   <div class="acts" style="margin-bottom:14px"><button class="btn sm" onclick="imp('${id}')">Panele gir</button><button class="btn ghost sm" onclick="ST.tid='${id}';ST.days=30;closeDrawer();go('stats');render()">İstatistikleri gör</button></div>
-  <dl class="kv" style="margin-bottom:12px"><dt>Sahip</dt><dd>${esc(x.owner || '-')}</dd><dt>E-posta</dt><dd>${esc(x.email || '-')}</dd><dt>Kayıt</dt><dd>${fmt(x.created)}</dd><dt>Son giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : '-'}</dd><dt>Cihaz</dt><dd>${x.devices}${x.online ? ` <span style="color:var(--ok)">● ${x.online} ${T('bağlı')}</span>` : ''}</dd><dt>Depolama</dt><dd>${x.storageMB} MB</dd>${x.consent ? `<dt>Sözleşme/KVKK onayı</dt><dd>${fmt(x.consent)}</dd>` : ''}</dl>
+  <dl class="kv" style="margin-bottom:12px"><dt>Sahip</dt><dd>${esc(x.owner || '-')}</dd><dt>E-posta</dt><dd>${esc(x.email || '-')}</dd><dt>Kayıt</dt><dd>${fmt(x.created)}</dd><dt>Son giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : '-'}</dd><dt>Cihaz</dt><dd>${x.devices} / ${x.unlimited ? '∞' : (x.deviceLimit || 1)}${x.online ? ` <span style="color:var(--ok)">● ${x.online} ${T('bağlı')}</span>` : ''}</dd><dt>Depolama</dt><dd>${x.storageMB} MB</dd>${x.consent ? `<dt>Sözleşme/KVKK onayı</dt><dd>${fmt(x.consent)}</dd>` : ''}</dl>
   <div class="stats" id="dstats" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px"></div>
   ${x.deletion ? `<div class="att bad"><div class="b"><b>KVKK silme talebi</b><span>${fmt(x.deletion)} tarihinde silinecek.</span></div><button class="btn ghost sm" onclick="api('DELETE','/tenants/${id}/deletion').then(()=>{closeDrawer();load()})">Talebi iptal et</button></div>` : ''}
   <h3>Düzenle</h3>
   <div class="row">${field('İşletme adı', 'e-name', x.name)}${field('Telefon', 'e-phone', x.phone || '')}</div>
-  <div class="row"><div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div><div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
+  <div class="row"><div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div><div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div>${field('Cihaz limiti (TV sayısı)', 'e-devs', x.customDevices || x.deviceLimit || 1, 'type="number" min="1" max="999"')}</div>
   <div class="row">${field('Deneme bitişi', 'e-trial', d(x.trialUntil), 'type="date"')}${field('Ödeme bitişi', 'e-paid', d(x.paidUntil), 'type="date"')}</div>
   <div class="row">${field('Kullanıcı adı (giriş)', 'e-user', x.owner || '', 'autocomplete="off" autocapitalize="none"')}${field('E-posta (durum uyarıları)', 'e-mail', x.email || '', 'type="email"')}</div>
   <div class="row">${field('Not', 'e-note', x.note || '')}</div>
@@ -286,7 +286,7 @@ function openTenant(id) {
 }
 const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
 async function saveT(id) {
-  try { await api('PUT', '/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, username: $('e-user').value, email: $('e-mail').value, unlimited: $('e-unl').checked, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast('Kaydedildi'); await load(); }
+  try { await api('PUT', '/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, devices: Number($('e-devs').value) || 1, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, username: $('e-user').value, email: $('e-mail').value, unlimited: $('e-unl').checked, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast('Kaydedildi'); await load(); }
   catch (e) { toast(e.message, true); }
 }
 async function extend(id, days) { try { await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast(`${days} gün eklendi`); await load(); } catch (e) { toast(e.message, true); } }

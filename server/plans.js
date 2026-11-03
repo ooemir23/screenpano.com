@@ -7,7 +7,12 @@ const PLANS = {
 // Süper yöneticinin "sınırsız" işaretlediği (kendi) işletmeler: tüm Pro özellikler, süre ve limit yok. Sitede ve kayıtta görünmez.
 const UNLIMITED = { id: 'sinirsiz', name: 'Sınırsız', devices: 999, storageMB: 1048576, users: 99, pro: true, badge: false, branches: 99 };
 const isUnlimited = t => !!(t && t.db && t.db.unlimited);
-const plan = t => isUnlimited(t) ? UNLIMITED : (PLANS[t.plan] || PLANS.baslangic);
+const plan = t => {
+  if (isUnlimited(t)) return UNLIMITED;
+  const base = PLANS[t.plan] || PLANS.baslangic;
+  const customDevices = t && t.db && typeof t.db.devices === 'number' && t.db.devices > 0 ? t.db.devices : null;
+  return customDevices ? { ...base, devices: customDevices } : base;
+};
 
 // Ekran çalışıyor mu? Askıya alınmış, denemesi ya da ödemesi bitmiş işletmenin ekranı kapanır.
 function access(t) {

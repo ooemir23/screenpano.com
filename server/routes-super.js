@@ -25,7 +25,7 @@ r.get('/overview', (req, res) => {
   const online = hub.onlineDeviceIds();
   const list = tenants.all().map(t => {
     const devs = store.q.devicesOf.all(t.id), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
-    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576) };
+    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576) };
   });
   const settings = Object.fromEntries(SETTINGS.map(k => [k, store.setting(k)]));
   settings.traffic_secret = require('./feeds').trafficSecret();
@@ -45,7 +45,15 @@ r.post('/tenants', (req, res) => {
   try {
     const b = req.body || {};
     const days = Math.max(0, Math.min(3650, Number(b.days) || 0));
-    const t = createTenant({ name: b.name, username: b.username, password: b.password, phone: b.phone, plan: PLANS[b.plan] ? b.plan : 'pro', paidUntil: days ? Date.now() + days * DAY : null, trialDays: Number(b.trialDays) || config.TRIAL_DAYS });
+    const p = PLANS[b.plan] ? b.plan : 'pro';
+    const devs = b.devices !== undefined && b.devices !== '' ? Math.max(1, Math.min(999, Number(b.devices) || 1)) : (PLANS[p] || PLANS.baslangic).devices;
+    const t = createTenant({
+      name: b.name, username: b.username, password: b.password, phone: b.phone,
+      plan: p,
+      paidUntil: days ? Date.now() + days * DAY : null,
+      trialDays: Number(b.trialDays) || config.TRIAL_DAYS,
+      doc: { devices: devs }
+    });
     res.json({ ok: true, id: t.id });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
@@ -85,6 +93,10 @@ r.put('/tenants/:id', (req, res) => {
   const ids = b.applyOrg && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
   // sınırsız (kendi işletmem): süre ve limit yok; zincirde istenirse tüm şubelere
   if (typeof b.unlimited === 'boolean') for (const id of ids) { const x = tenants.get(id); if (x) { if (b.unlimited) x.db.unlimited = true; else delete x.db.unlimited; tenants.save(x); } }
+  if (b.devices !== undefined && b.devices !== '') {
+    const nd = Math.max(1, Math.min(999, Number(b.devices) || 1));
+    for (const id of ids) { const x = tenants.get(id); if (x) { x.db.devices = nd; tenants.save(x); } }
+  }
   if (typeof b.email === 'string') tenants.save(t);
   for (const id of ids) { const ff = id === t.id ? f : Object.fromEntries(Object.entries(f).filter(([k]) => ['plan', 'status', 'paid_until', 'trial_until'].includes(k))); store.updateTenant(id, ff); tenants.refreshRow(id); hub.pushTenant(id); }
   res.json({ ok: true, count: ids.length });
