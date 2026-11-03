@@ -1,4 +1,5 @@
-// Medya optimizasyonu (ffmpeg): videolar en fazla 1080p/30fps/6 Mbps H.264, sessiz, hızlı başlatmalı; fotoğraflar en fazla 1920 piksel.
+// Medya optimizasyonu (ffmpeg): videolar en fazla 1080p/60fps/8 Mbps H.264, sessiz, hızlı başlatmalı; fotoğraflar en fazla 1920 piksel.
+// Kare hızı yukarı dönüştürülmez: kaynağın fps'i korunur, yalnız 60'ı aşarsa 60'a iner (30 fps kaynak 30 kalır, 60 fps kaynak 60 kalır).
 // Tüm işletmeler için tek kuyruk; sunucuyu boğmamak için aynı anda bir dosya işlenir.
 const fs = require('fs');
 const path = require('path');
@@ -32,7 +33,7 @@ async function optimizeItem(tid, id) {
     ? (keepAlpha
         ? ['-y', '-i', src, '-vf', SCALE + ',format=rgba', '-frames:v', '1', '-compression_level', '9', out]
         : ['-y', '-i', src, '-vf', SCALE, '-frames:v', '1', '-q:v', '3', out])
-    : ['-y', '-i', src, '-vf', SCALE + ',fps=30,format=yuv420p', '-c:v', 'libx264', '-profile:v', 'high', '-level', '4.1', '-preset', 'veryfast', '-crf', '23', '-maxrate', '6M', '-bufsize', '12M', '-an', '-movflags', '+faststart', '-threads', '2', out];
+    : ['-y', '-i', src, '-vf', SCALE + ",fps=fps='min(source_fps,60)',format=yuv420p", '-c:v', 'libx264', '-profile:v', 'high', '-level', '4.2', '-preset', 'veryfast', '-crf', '23', '-maxrate', '8M', '-bufsize', '16M', '-an', '-movflags', '+faststart', '-threads', '2', out];
   const before = fs.statSync(src).size;
   try {
     await runFfmpeg(args);
