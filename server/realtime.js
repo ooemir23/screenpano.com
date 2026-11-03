@@ -48,15 +48,21 @@ hub.onlineDeviceIds = () => new Set([...clients].filter(c => c.deviceId).map(c =
 hub.sendDevice = (id, msg) => { let n = 0; for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, msg); n++; } return n; };
 hub.kickDevice = id => { for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, { type: 'auth', error: 'revoked' }); ws.close(); } };
 
-// TV'den gelen mesajlar: durum raporu, oynatma kaydı, ekran görüntüsü (önizleme bağlantıları sayılmaz)
+// TV'den gelen mesajlar: durum raporu, oynatma kaydı, ekran görüntüsü ve müzik listesi sorgusu
 function onMessage(ws, raw) {
-  if (!ws.deviceId || raw.length > 900000) return;
+  if ((!ws.deviceId && !ws.preview) || raw.length > 900000) return;
   let m; try { m = JSON.parse(raw); } catch { return; }
   if (!m || typeof m !== 'object') return;
+  if (m.type === 'music_now') { require('./musicnow').report(ws.tid, ws.deviceId || 'preview', m); return; }
+  if (m.type === 'music_tracks' && m.listId) {
+    const t = tenants.get(ws.tid);
+    if (t) require('./youtube').tracks(t, String(m.listId)).then(items => sendRaw(ws, { type: 'music_tracks', listId: m.listId, items: (items || []).map(x => ({ v: x.videoId, t: x.title, c: x.channel })) })).catch(() => sendRaw(ws, { type: 'music_tracks', listId: m.listId, items: [] }));
+    return;
+  }
+  if (!ws.deviceId) return;
   if (m.type === 'status') require('./monitor').report(ws.tid, ws.deviceId, m);
   else if (m.type === 'play') require('./stats').play(ws.tid, String(m.id || ''), m.sec);
   else if (m.type === 'shown') require('./stats').shown(ws.tid, String(m.kind || ''));
-  else if (m.type === 'music_now') require('./musicnow').report(ws.tid, ws.deviceId, m);
   else if (m.type === 'snap' && typeof m.data === 'string' && /^data:image\/(jpeg|png);base64,/.test(m.data)) require('./monitor').snaps.set(ws.deviceId, { at: Date.now(), data: m.data });
 }
 

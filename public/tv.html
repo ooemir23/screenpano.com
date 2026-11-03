@@ -1906,8 +1906,9 @@ document.addEventListener('keydown', e => {
   page = (page + (e.key === 'ArrowDown' ? 1 : -1) + pages.length) % pages.length;
   render(); schedule();
 });
-document.addEventListener('keydown', e => { // kumanda OK tuşu menüyü açar (menü açıkken düğmeyi çalıştırır)
+document.addEventListener('keydown', e => { // kumanda OK tuşu menüyü açar (menü açıkken düğmeyi çalıştırır; ses kilidi açıksa önce sesi açar)
   if (window.__auth || $m('menu').classList.contains('on')) return;
+  if (MUS.needUnlock) { e.preventDefault(); unlockAudioNow(); return; }
   if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 23) { e.preventDefault(); window.__menu(); }
 });
 // =====================================================================
@@ -2281,6 +2282,7 @@ function connect() {
     else if (m.type === 'bigmatch') { if (m.force) { big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
     else if (m.type === 'music_cmd') onMusicCmd(m);
+    else if (m.type === 'music_tracks') onMusicTracks(m);
   };
   ws.onclose = () => { if (!authFail) setTimeout(connect, 3000); };
 }
@@ -2291,7 +2293,7 @@ let ALLV = [], TZ = 'Europe/Istanbul', LANGS = ['tr'], LANG = 'tr', LANG_I = 0, 
 const BOOT = Date.now(), ERR = { n: 0, last: '' };
 addEventListener('error', e => { ERR.n++; ERR.last = String(e.message || e.type).slice(0, 180); });
 addEventListener('unhandledrejection', e => { ERR.n++; ERR.last = String((e.reason && e.reason.message) || e.reason).slice(0, 180); });
-const wsSend = o => { try { if (!PREVIEW && window.__ws && window.__ws.readyState === 1) window.__ws.send(JSON.stringify(o)); } catch (e) {} };
+const wsSend = o => { try { if ((!PREVIEW || (o && (o.type === 'music_now' || o.type === 'music_tracks') && !IN_IFRAME)) && window.__ws && window.__ws.readyState === 1) window.__ws.send(JSON.stringify(o)); } catch (e) {} };
 
 // zamanlama kuralı: { days:[1..7], from, to, start, end } (sunucudaki sched.js ile aynı)
 function nowParts() {
@@ -2524,16 +2526,38 @@ function loadYtMusicEngine(cb) {
   };
   const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
 }
+function onMusicTracks(msg) {
+  const it = activeMusicItem(MUS.cfg);
+  if (!it || it.listId !== msg.listId || !Array.isArray(msg.items) || !msg.items.length) return;
+  MUS.ytTracks = msg.items;
+  // Eğer anonim playlist yüklemesi başlamadıysa veya gizli liste hatası verdiyse doğrudan şarkıların videoId'siyle çal
+  if (MUS.ytPlayer && MUS.ytReady) {
+    let st = -1; try { st = MUS.ytPlayer.getPlayerState(); } catch (e) {}
+    if (st !== 1 && st !== 3) {
+      MUS.err = ''; MUS.errRun = 0;
+      const ix = Math.max(0, Math.min(MUS.ytTracks.length - 1, MUS.ytIdx || 0));
+      MUS.ytIdx = ix;
+      try {
+        MUS.ytPlayer.unMute(); MUS.ytPlayer.setVolume(MUS.vol);
+        MUS.ytPlayer.loadVideoById(MUS.ytTracks[ix].v);
+        if (MUS.cfg && MUS.cfg.playing) { MUS.ytPlayer.playVideo(); checkYtStarted(it, MUS.cfg); }
+      } catch (e) {}
+    }
+  }
+}
 function playYtItem(it, m) {
   stopAllMusicEngines('yt');
   ensureMusicHosts();
+  clearTimeout(MUS.errTimer);
+  MUS.errRun = 0; MUS.ytTracks = null;
+  const st0 = it.listId && MUS.startAt ? MUS.startAt : null; MUS.startAt = null; // panelde seçilen şarkıdan başla
+  MUS.ytIdx = st0 ? (st0.index || 0) : 0;
+  if (it.listId) wsSend({ type: 'music_tracks', listId: it.listId });
   // jfKfPfyJRdk yayını YouTube'da gömülü oynatmaya kapalıysa lTRiuFIWV54 (Lofi Girl) kullan
-  const vid = (it.videoId === 'jfKfPfyJRdk' ? 'lTRiuFIWV54' : it.videoId) || '';
+  const vid = (st0 && st0.videoId) || (it.videoId === 'jfKfPfyJRdk' ? 'lTRiuFIWV54' : it.videoId) || '';
   loadYtMusicEngine(() => {
-    const vars = { autoplay: m.playing ? 1 : 0, controls: 0, rel: 0, playsinline: 1, loop: 1, enablejsapi: 1 };
-    if (it.listId) { vars.listType = 'playlist'; vars.list = it.listId; }
-    const st0 = it.listId && MUS.startAt ? MUS.startAt : null; MUS.startAt = null; // panelde seçilen şarkıdan başla
-    if (st0) vars.index = st0.index;
+    const vars = { autoplay: m.playing ? 1 : 0, controls: 0, rel: 0, playsinline: 1, loop: 1, enablejsapi: 1, origin: location.origin };
+    if (it.listId && !vid) { vars.listType = 'playlist'; vars.list = it.listId; if (st0) vars.index = st0.index; }
     if (!MUS.ytPlayer) {
       MUS.ytReady = false;
       MUS.ytPlayer = new YT.Player('yt-music-box', {
@@ -2543,44 +2567,69 @@ function playYtItem(it, m) {
         events: {
           onReady: e => {
             MUS.ytReady = true;
+            const cur = activeMusicItem(MUS.cfg) || it;
             try {
               const ifr = e.target.getIframe && e.target.getIframe();
               if (ifr) ifr.setAttribute('allow', 'autoplay; encrypted-media');
               e.target.unMute();
               e.target.setVolume(MUS.vol);
             } catch (x) {}
-            if (it.listId && !vid) { try { e.target.loadPlaylist({ list: it.listId, listType: 'playlist', index: st0 ? st0.index : 0 }); } catch (x) {} }
-            if (MUS.cfg && MUS.cfg.playing) {
+            if (MUS.ytTracks && MUS.ytTracks.length) {
+              const ix = Math.max(0, Math.min(MUS.ytTracks.length - 1, MUS.ytIdx || 0));
+              try { e.target.loadVideoById(MUS.ytTracks[ix].v); } catch (x) {}
+            } else if (cur.listId && !vid) {
+              try { e.target.loadPlaylist({ list: cur.listId, listType: 'playlist', index: MUS.ytIdx || 0 }); } catch (x) {}
+            } else if (MUS.cfg && MUS.cfg.playing) {
               try { e.target.playVideo(); } catch (x) {}
-              checkYtStarted(it, m);
-            } else { try { e.target.pauseVideo(); } catch (x) {} }
+            }
+            if (MUS.cfg && MUS.cfg.playing) checkYtStarted(cur, MUS.cfg);
+            else { try { e.target.pauseVideo(); } catch (x) {} }
           },
           onStateChange: e => {
+            const cur = activeMusicItem(MUS.cfg) || it;
             if (e.data === 1) { // PLAYING
-              MUS.errRun = 0; clearTimeout(MUS.ytCheckTimer); musicOk();
+              MUS.errRun = 0; clearTimeout(MUS.ytCheckTimer); clearTimeout(MUS.errTimer); musicOk();
               showUnlockPrompt(false);
               try {
                 e.target.unMute(); e.target.setVolume(MUS.vol);
                 const vd = e.target.getVideoData();
                 if (vd && vd.title) {
-                  MUS.trackTitle = vd.title; MUS.trackSub = vd.author || it.title || 'YouTube Music';
+                  MUS.trackTitle = vd.title; MUS.trackSub = vd.author || cur.title || 'YouTube Music';
                   if (vd.video_id) MUS.trackThumb = `https://i.ytimg.com/vi/${vd.video_id}/mqdefault.jpg`;
                   renderMusicBar();
-                  let ix = -1; try { ix = e.target.getPlaylistIndex(); } catch (x) {}
+                  let ix = MUS.ytTracks ? MUS.ytIdx : -1;
+                  if (ix < 0) { try { ix = e.target.getPlaylistIndex(); } catch (x) {} }
                   reportNow({ videoId: vd.video_id || '', index: typeof ix === 'number' ? ix : -1, playing: true });
                 }
               } catch (x) {}
             } else if (e.data === 2) { // PAUSED
               reportNow({ ...JSON.parse(NOW_SIG || '{}'), playing: false });
             } else if (e.data === 0) { // ENDED
-              try { if (it.listId) e.target.nextVideo(); else { e.target.seekTo(0); e.target.playVideo(); } } catch (x) {}
+              try {
+                if (MUS.ytTracks && MUS.ytTracks.length) {
+                  MUS.ytIdx = ((MUS.ytIdx || 0) + 1) % MUS.ytTracks.length;
+                  e.target.loadVideoById(MUS.ytTracks[MUS.ytIdx].v);
+                } else if (cur.listId) e.target.nextVideo();
+                else { e.target.seekTo(0); e.target.playVideo(); }
+              } catch (x) {}
             }
           },
           onError: e => {
-            // listede çalınamayan şarkı atlanır; art arda 8 şarkı çalınamazsa (gizli liste, gömülü oynatma kapalı) ekranda neden yazar
+            const cur = activeMusicItem(MUS.cfg) || it;
             MUS.errRun = (MUS.errRun || 0) + 1;
-            try { if (it.listId && MUS.ytPlayer && MUS.errRun < 8) { MUS.ytPlayer.nextVideo(); return; } } catch (x) {}
-            if (it.listId) { musicFail('Listedeki şarkılar TV\'de oynatılamıyor: liste gizli olabilir ya da sahipleri başka yerlerde oynatmaya izin vermiyor'); return; }
+            clearTimeout(MUS.errTimer);
+            if (MUS.ytTracks && MUS.ytTracks.length && MUS.errRun < Math.min(20, MUS.ytTracks.length)) {
+              MUS.errTimer = setTimeout(() => {
+                MUS.ytIdx = ((MUS.ytIdx || 0) + 1) % MUS.ytTracks.length;
+                try { MUS.ytPlayer.loadVideoById(MUS.ytTracks[MUS.ytIdx].v); } catch (x) {}
+              }, 300);
+              return;
+            }
+            if (cur.listId && MUS.ytPlayer && MUS.errRun < 12) {
+              MUS.errTimer = setTimeout(() => { try { MUS.ytPlayer.nextVideo(); } catch (x) {} }, 350);
+              return;
+            }
+            if (cur.listId) { musicFail('Listedeki şarkılar TV\'de oynatılamıyor: liste gizli olabilir ya da sahipleri başka yerlerde oynatmaya izin vermiyor'); return; }
             const c = e && e.data;
             musicFail(c === 101 || c === 150 ? 'Sahibi bu videonun başka yerlerde oynatılmasına izin vermiyor' : c === 100 ? 'Video bulunamadı ya da kaldırılmış' : 'YouTube videosu oynatılamadı');
           }
@@ -2590,9 +2639,10 @@ function playYtItem(it, m) {
       try {
         MUS.ytPlayer.unMute();
         MUS.ytPlayer.setVolume(MUS.vol);
-        if (it.listId) MUS.ytPlayer.loadPlaylist({ list: it.listId, listType: 'playlist', index: st0 ? st0.index : 0 });
+        if (st0 && st0.videoId) MUS.ytPlayer.loadVideoById(st0.videoId);
+        else if (it.listId) MUS.ytPlayer.loadPlaylist({ list: it.listId, listType: 'playlist', index: st0 ? st0.index : 0 });
         else if (vid) MUS.ytPlayer.loadVideoById(vid);
-        if (m.playing) { MUS.ytPlayer.playVideo(); checkYtStarted(it, m); }
+        if (m.playing) { if (!it.listId || (st0 && st0.videoId)) MUS.ytPlayer.playVideo(); checkYtStarted(it, m); }
         else setTimeout(() => { try { MUS.ytPlayer.pauseVideo(); } catch (x) {} }, 400);
       } catch (x) {}
     }
@@ -2769,7 +2819,14 @@ function onMusicCmd(msg) {
   if (MUS.startAt && !IN_IFRAME) { // aynı liste zaten çalıyorsa yalnız şarkı değişir
     const it = activeMusicItem(MUS.cfg), st = MUS.startAt, ytList = it && it.listId && (it.provider === 'yt' || it.provider === 'ytm');
     if (!ytList) MUS.startAt = null;
-    else if (MUS.ytPlayer && MUS.ytReady && MUS.curId === it.id) { MUS.startAt = null; try { MUS.ytPlayer.loadPlaylist({ list: it.listId, listType: 'playlist', index: st.index }); } catch (e) {} }
+    else if (MUS.ytPlayer && MUS.ytReady && MUS.curId === it.id) {
+      MUS.startAt = null; MUS.err = ''; MUS.errRun = 0; MUS.ytIdx = st.index || 0;
+      try {
+        if (st.videoId) MUS.ytPlayer.loadVideoById(st.videoId);
+        else if (MUS.ytTracks && MUS.ytTracks[MUS.ytIdx]) MUS.ytPlayer.loadVideoById(MUS.ytTracks[MUS.ytIdx].v);
+        else MUS.ytPlayer.loadPlaylist({ list: it.listId, listType: 'playlist', index: st.index });
+      } catch (e) {}
+    }
     // oynatıcı henüz hazır değilse playYtItem başlangıç şarkısını kullanır
   }
   if (IN_IFRAME) return;
@@ -2782,7 +2839,15 @@ function onMusicCmd(msg) {
     }
     const it = activeMusicItem(MUS.cfg);
     if (it && (it.provider === 'yt' || it.provider === 'ytm') && it.listId && MUS.ytPlayer && MUS.ytReady) {
-      try { cmd === 'next' ? MUS.ytPlayer.nextVideo() : MUS.ytPlayer.previousVideo(); return; } catch (e) {}
+      try {
+        if (MUS.ytTracks && MUS.ytTracks.length) {
+          MUS.ytIdx = ((MUS.ytIdx || 0) + (cmd === 'next' ? 1 : MUS.ytTracks.length - 1)) % MUS.ytTracks.length;
+          MUS.ytPlayer.loadVideoById(MUS.ytTracks[MUS.ytIdx].v);
+        } else {
+          cmd === 'next' ? MUS.ytPlayer.nextVideo() : MUS.ytPlayer.previousVideo();
+        }
+        return;
+      } catch (e) {}
     }
     const list = (MUS.cfg && MUS.cfg.playlists) || [];
     if (list.length > 1) {
