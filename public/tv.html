@@ -1046,7 +1046,15 @@ function cleanupLayers(keep) {
     if (keep !== img && img.style.display === 'block') { hide(img); img.style.display = 'none'; }
   }, window.__lite ? 500 : 1800);
 }
-function showEl(el) { img.style.zIndex = '1'; els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; }); cleanupLayers(el); }
+function showEl(el) {
+  if (window.__lite) { // hafif modda kesme geçiş: solma yok, iki katman hiç üst üste binmez (zayıf GPU'da takılmayı keser)
+    els.forEach(e => { if (e === el) { e.style.transition = 'none'; e.style.zIndex = '2'; e.style.opacity = '1'; } else { e.style.transition = 'none'; e.style.opacity = '0'; e.style.zIndex = '1'; } });
+    if (img.style.display === 'block' && el !== img) { img.style.opacity = '0'; img.style.display = 'none'; }
+    void el.offsetWidth; els.forEach(e => { e.style.transition = ''; });
+    return;
+  }
+  img.style.zIndex = '1'; els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; }); cleanupLayers(el);
+}
 // sıradaki videoyu boştaki öğeye önceden yükle: geçişte boşluk ve "play" simgesi çıkmaz
 function prepNext() {
   if (videos.length < 2) { prepared = { id: null }; return; }
@@ -1079,7 +1087,7 @@ function play() {
   if (it.type === 'image') {
     els.forEach(e => e.pause());
     const showImg = () => { els.forEach(e => e.style.zIndex = '1'); img.style.zIndex = '2'; img.style.display = 'block'; img.src = it.url; const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (current === it.id) { img.style.opacity = '1'; cleanupLayers(img); } })); if (img.decode) img.decode().then(go, go); else go(); };
-    if (img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, window.__lite ? 250 : 800); } // fotoğraftan fotoğrafa: önce söner, sonra yenisi belirir (hafif modda bekleme kısa)
+    if (!window.__lite && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); } // fotoğraftan fotoğrafa: önce söner, sonra yenisi belirir (hafif modda bekleme yok)
     else { img.style.opacity = '0'; showImg(); }
     timer = setTimeout(next, imageSeconds * 1000);
     setTimeout(prepNext, 500);
