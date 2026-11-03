@@ -825,6 +825,12 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #music-bar .mtit{font-size:1.95vh;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw;text-shadow:0 .2vh .6vh #000}
 #music-bar .msub{font-size:1.35vh;font-weight:600;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw}
 #music-bar .meq{display:flex;align-items:flex-end;gap:.22vw;height:2.1vh;margin-left:.2vw;flex:none}
+/* yerleşimde kayan bant varsa çip bandın içine yerleşir (saatın soluna) — kayan metnin üstüne binmez */
+#music-bar.dock{position:static;left:auto;bottom:auto;transform:none;transition:opacity .45s ease;flex:none;margin:1vh 0 1vh 1.2vw;max-width:34vw;box-shadow:0 .4vh 1.6vh rgba(0,0,0,.55)}
+#music-bar.dock .mcov{width:3.6vh;height:3.6vh}
+#music-bar.dock .mlbl{font-size:1.05vh}
+#music-bar.dock .mtit{font-size:1.7vh;max-width:16vw}
+#music-bar.dock .msub{font-size:1.2vh;max-width:16vw}
 #music-bar .meq i{width:.24vw;min-width:2.5px;background:#1ed760;border-radius:2px;animation:meqbar .85s ease-in-out infinite alternate}
 #music-bar.yt .meq i{background:#ff4e5e}
 #music-bar.rd .meq i{background:var(--al)}
@@ -2063,6 +2069,7 @@ function applyLayout(l) {
     sizeBg(); fitWidgets(); showQrTile();
     try { if (matches.length || pages.length) render(); } catch (e) {}
     setTicker(matches); renderPanel(); renderMenuW(true); tickClock();
+    dockMusicBar(); // yerleşim değişti: bant açıldıysa/kapandıysa müzik çipini yerine taşı
     if (MEDIA_ON && !wasOn && videos.length) { current = null; play(); }
   });
 }
@@ -2603,15 +2610,26 @@ function activeMusicItem(m) {
   if (!m || !Array.isArray(m.playlists) || !m.playlists.length) return null;
   return m.playlists.find(x => x.id === m.activeId) || m.playlists[0];
 }
+// müzik çipi: yerleşimde kayan bant görünür durumdaysa çip bandın içine yerleşir (saatin soluna),
+// bant yoksa/çok kolonlu düzenlerde eskisi gibi köşede yüzer — kayan metnin üstüne binmesin diye
+function dockMusicBar() {
+  const bar = $id('music-bar'); if (!bar) return;
+  const on = bar.className.indexOf('on') === 0;
+  const tick = document.getElementById('ticker'), frame = document.getElementById('frame');
+  const tickOk = !!(tick && tick.offsetParent !== null);
+  if (on && tickOk) { if (bar.parentElement !== tick) tick.insertBefore(bar, tick.firstChild); bar.classList.add('dock'); }
+  else { if (frame && bar.parentElement !== frame) frame.appendChild(bar); bar.classList.remove('dock'); }
+}
 function renderMusicBar() {
   const bar = $id('music-bar'); if (!bar) return;
   const m = MUS.cfg;
   const spLive = MUS.spConnectTrack;
-  if (!spLive && (!m || !m.enabled || m.showNowPlaying === false)) { bar.className = ''; return; }
+  if (!spLive && (!m || !m.enabled || m.showNowPlaying === false)) { bar.className = ''; dockMusicBar(); return; }
   const it = activeMusicItem(m);
-  if (!spLive && !it) { bar.className = ''; return; }
+  if (!spLive && !it) { bar.className = ''; dockMusicBar(); return; }
   if (MUS.err && !spLive && m && m.enabled) { // çalınamadı: ayar kapalı olsa da görünür ki personel fark etsin
     bar.className = 'on err paused';
+    dockMusicBar();
     bar.onclick = null;
     bar.innerHTML = `<div class="mcov">⚠</div><div class="mmeta"><div class="mlbl"><span>ÇALINAMADI</span></div><div class="mtit">${esc((it && it.title) || 'Müzik')}</div><div class="msub">${esc(MUS.err)}</div></div>`;
     return;
@@ -2629,6 +2647,7 @@ function renderMusicBar() {
   bar.innerHTML = `<div class="mcov">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ic}</div>`
     + `<div class="mmeta"><div class="mlbl"><span>${badge}</span></div><div class="mtit">${esc(title)}</div><div class="msub">${esc(sub)}</div></div>`
     + `<div class="meq"><i></i><i></i><i></i><i></i></div>`;
+  dockMusicBar();
 }
 function stopAllMusicEngines(except) {
   clearTimeout(MUS.ytCheckTimer);
