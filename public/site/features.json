@@ -874,20 +874,20 @@
     {
       "icon": "🏟️",
       "title": "Büyük maç kartında tasarım seçimi",
-      "text": "Derbi ve Avrupa maçı duyurusu altı tasarımdan biriyle gösterilir: Klasik, Klasik (ekrana uyumlu), Stadyum, Yayın bandı, Geri sayım ve Poster. Panelde tasarıma tıklayınca kendi logonuz ve renklerinizle ön izlenir.",
+      "text": "Derbi ve Avrupa maçı duyurusu yedi tasarımdan biriyle gösterilir: Klasik, Klasik (ekrana uyumlu), Stadyum, Yayın bandı, Geri sayım, Poster ve iki takımdan birer oyuncunun karşı karşıya geldiği Düello. Panelde tasarıma tıklayınca kendi logonuz ve renklerinizle ön izlenir.",
       "added": "2026-11-03",
       "i18n": {
         "en": {
           "title": "Choose a design for big-match cards",
-          "text": "Derby and European match announcements can use one of six designs: Classic, Classic (fits the screen), Stadium, Broadcast bar, Countdown and Poster. Click a design in the panel to preview it with your own logo and colours."
+          "text": "Derby and European match announcements can use one of seven designs: Classic, Classic (fits the screen), Stadium, Broadcast bar, Countdown, Poster and Duel, where one player from each team faces off. Click a design in the panel to preview it with your own logo and colours."
         },
         "de": {
           "title": "Design-Auswahl für Topspiel-Karten",
-          "text": "Ankündigungen für Derbys und Europapokalspiele gibt es in sechs Designs: Klassisch, Klassisch (an Fläche angepasst), Stadion, TV-Bauchbinde, Countdown und Poster. Ein Klick auf ein Design im Panel zeigt die Vorschau mit Ihrem Logo und Ihren Farben."
+          "text": "Ankündigungen für Derbys und Europapokalspiele gibt es in sieben Designs: Klassisch, Klassisch (an Fläche angepasst), Stadion, TV-Bauchbinde, Countdown, Poster und Duell, bei dem sich je ein Spieler beider Teams gegenüberstehen. Ein Klick auf ein Design im Panel zeigt die Vorschau mit Ihrem Logo und Ihren Farben."
         },
         "ar": {
           "title": "اختيار تصميم بطاقة المباراة الكبرى",
-          "text": "يمكن عرض إعلان الديربي ومباريات البطولات الأوروبية بأحد ستة تصاميم: كلاسيكي، كلاسيكي (متوافق مع الشاشة)، الملعب، شريط البث، العد التنازلي، والملصق. انقر على تصميم في اللوحة لمعاينته بشعارك وألوانك."
+          "text": "يمكن عرض إعلان الديربي ومباريات البطولات الأوروبية بأحد سبعة تصاميم: كلاسيكي، كلاسيكي (متوافق مع الشاشة)، الملعب، شريط البث، العد التنازلي، الملصق، والمواجهة حيث يتقابل لاعب من كل فريق. انقر على تصميم في اللوحة لمعاينته بشعارك وألوانك."
         }
       }
     },

@@ -150,7 +150,7 @@ SECTIONS.home = {
       + card('Hızlı işlemler', 'Ekranda anında bir gösterim başlatır; ayarlarınızı değiştirmez.', `<div class="row">
           <button class="btn g" onclick="act('POST','/goal/test',undefined,'Gol animasyonu gönderildi',false)" ${pro() ? '' : 'disabled'}>⚽ Gol animasyonunu dene</button>
           <button class="btn g" onclick="act('POST','/birthday/fire',undefined,'Doğum günü kutlaması gönderildi (seçili kişi yoksa görünmez)',false)" ${pro() ? '' : 'disabled'}>🎂 Doğum günü kutlamasını göster</button>
-          <button class="btn g" onclick="act('POST','/bigmatch/test',undefined,'Büyük maç görseli gönderildi',false)" ${pro() ? '' : 'disabled'}>🏟 Büyük maç görselini dene</button>
+          <button class="btn g" onclick="bigTest()" ${pro() ? '' : 'disabled'}>🏟 Büyük maç görselini dene</button>
           ${camp ? `<button class="btn g" onclick="act('POST','/campaigns/${camp.id}/test',undefined,'Kampanya kartı gönderildi',false)">🎁 Kampanya kartını göster</button>` : ''}
         </div>`)
       + `<div class="grid g3">
@@ -601,7 +601,7 @@ SECTIONS.sport = {
          <div class="f mt">${fl('Alt not', `<input type="text" id="bg-note" maxlength="140" value="${esc(bc.note)}">`)}${fl('Kaç gün önceden', `<input type="number" id="bg-days" min="1" max="7" value="${bc.days}">`)}${fl('Kaç dakikada bir', `<input type="number" id="bg-every" min="2" max="60" value="${bc.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="bg-dur" min="5" max="60" value="${bc.durSec}">`)}</div>
          <div class="f mt">${[0, 1, 2].map(i => fl(`Alt bilgi ${i + 1}`, `<input type="text" id="bg-i${i}" maxlength="60" value="${esc((bc.info || [])[i] || '')}" placeholder="${['örn. adresiniz', 'örn. dev ekran', 'örn. rezervasyon tel.'][i]}">`)).join('')}</div></details>
          <div class="fl mt"><span>Takım / oyuncu fotoğrafları (isteğe bağlı, arkası şeffaf PNG en iyisi)</span><div class="row"><input type="text" id="bg-team" list="bgteams" placeholder="Takım adı" style="max-width:220px"><datalist id="bgteams"><option>Galatasaray</option><option>Fenerbahçe</option><option>Beşiktaş</option><option>Trabzonspor</option></datalist><input type="file" id="bg-file" accept="image/*" hidden onchange="upBigPhoto(this)"><button class="btn g s" onclick="$('bg-team').value.trim()?$('bg-file').click():toast('Önce takım adını yazın',true)">Fotoğraf yükle</button></div><div class="thumbs" id="bgphotos"></div></div>
-         <div class="row mt"><span id="bglist" class="muted" style="flex:1"></span><button class="btn g s" onclick="act('POST','/bigmatch/test',undefined,'Görsel TV\\'de gösteriliyor',false)">Şimdi dene</button><button class="btn" onclick="saveBig()">Kaydet</button></div>`,
+         <div class="row mt"><span id="bglist" class="muted" style="flex:1"></span><button class="btn g s" onclick="bigTest()">Şimdi dene</button><button class="btn" onclick="saveBig()">Kaydet</button></div>`,
         sw(bc.enabled, "act('PUT','/bigmatch',{enabled:this.checked},this.checked?'Açıldı':'Kapatıldı')"), bc.enabled ? '' : 'off')
 ) }[sec]();
     return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.', `<button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button>`)
@@ -634,6 +634,7 @@ const BIG_STYLES = [
   ['bant', 'Yayın bandı', 'TV yayınlarındaki gibi alt skorbord; medya arkada oynamaya devam eder'],
   ['sayac', 'Geri sayım', 'Maça kalan süre büyük rakamlarla canlı geri sayar'],
   ['poster', 'Poster', 'Dev tipografi ve çift çerçeveyle maç afişi'],
+  ['duello', 'Düello', 'İki takımdan birer oyuncu karşı karşıya; duman, kıvılcım ve ışık efektleri'],
 ];
 const bigCur = () => { const st = (S.db.bigMatch || {}).style; return BIG_STYLES.some(x => x[0] === st) ? st : 'klasik'; };
 function bigPreview(k) {
@@ -644,6 +645,14 @@ function bigPreview(k) {
     <p class="muted" style="margin:0">Logonuz, renkleriniz, alt notunuz ve alt bilgilerinizle gösterilir. Yaklaşan büyük maç yoksa örnek bir derbi kullanılır.</p>
     <div class="row end" style="width:100%"><button class="btn g" onclick="closeModal()">Kapat</button>${bigCur() === k ? '<span class="pill ok">Seçili tasarım</span>' : `<button class="btn" onclick="bigStyle('${k}').then(closeModal)">Bu tasarımı seç</button>`}</div></div>`);
   setTimeout(scalePv, 30); setTimeout(scalePv, 300);
+}
+// Büyük maç kartını bağlı TV'lerde seçili tasarımla hemen gösterir
+async function bigTest() {
+  try {
+    const j = await req('POST', '/bigmatch/test');
+    if (!j.online) toast('Şu an bağlı TV yok; TV açıkken tekrar deneyin', true);
+    else toast(j.sample ? 'Yaklaşan büyük maç yok; örnek maç TV\'de gösteriliyor' : 'Büyük maç kartı TV\'de gösteriliyor');
+  } catch (e) { toast(e.message, true); }
 }
 const bigStyle = async k => { if (await act('PUT', '/bigmatch', { style: k }, 'Tasarım seçildi', false)) { S.db.bigMatch = Object.assign({}, S.db.bigMatch, { style: k }); render(true); } };
 const saveBig = () => act('PUT', '/bigmatch', { note: $('bg-note').value, days: $('bg-days').value, everyMin: $('bg-every').value, durSec: $('bg-dur').value, info: [0, 1, 2].map(i => $('bg-i' + i).value) }, 'Kaydedildi');

@@ -345,8 +345,10 @@ r.delete('/bigmatch/photo/:id', (req, res) => {
 r.post('/bigmatch/test', (req, res) => {
   const t = req.t, items = F.activeBig(t), cfg = F.bigCfg(t);
   const m = items[0] || { id: 'ornek', league: 'Süper Lig', home: 'Fenerbahçe', away: 'Beşiktaş', ts: Date.now() + 3 * 24 * HOUR, hl: '/logo/436.png', al: '/logo/1895.png', hc: F.TEAM_COLORS.fenerbahce, ac: F.TEAM_COLORS.besiktas, hp: F.teamPhoto(t, 'Fenerbahçe'), ap: F.teamPhoto(t, 'Beşiktaş'), derby: true };
-  sendTo(t, { type: 'bigmatch', match: m, cfg: { note: cfg.note, info: cfg.info, durSec: cfg.durSec } });
-  res.json({ ok: true, sample: !items.length });
+  // seçili tasarımla gönderilir; force: TV'de başka kart açıksa beklemeden bu gösterilir
+  sendTo(t, { type: 'bigmatch', force: true, match: m, cfg: { note: cfg.note, info: cfg.info, durSec: cfg.durSec, style: cfg.style } });
+  const on = hub.onlineDeviceIds(), online = store.q.devicesOf.all(t.id).filter(d => on.has(d.id)).length;
+  res.json({ ok: true, sample: !items.length, online });
 });
 r.put('/movies', (req, res) => {
   const t = req.t, b = req.body || {}, cur = t.db.movies || {};

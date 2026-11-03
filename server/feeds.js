@@ -620,7 +620,7 @@ async function refreshMovies(force) {
 const isBig4 = name => ['galatasaray', 'fenerbahce', 'besiktas', 'trabzonspor'].some(k => norm(name).includes(k));
 const BIG_LEAGUES = [['tur.1', 'Süper Lig'], ['uefa.champions', 'Şampiyonlar Ligi'], ['uefa.europa', 'Avrupa Ligi'], ['uefa.europa.conf', 'Konferans Ligi'], ['uefa.champions_qual', 'Şampiyonlar Ligi Eleme']];
 // Büyük maç tasarımları; kaldırılan eski tasarımlar (yan, sade, skor) Klasik olarak gösterilir
-const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster'];
+const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello'];
 const bigCfg = t => { const c = { enabled: true, style: 'klasik', note: 'Rezervasyon yaptırmayı unutmayın!', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''], ...(t.db.bigMatch || {}) }; if (!BIG_STYLES.includes(c.style)) c.style = 'klasik'; return c; };
 let bigMatches = cacheGet('bigmatches') || [];
 let bigError = '';
@@ -640,7 +640,7 @@ async function refreshBigMatches() {
         if (!home || !away) continue;
         const hb = isBig4(home.team.displayName), ab = isBig4(away.team.displayName), derby = code === 'tur.1' && hb && ab;
         if (!derby && (code === 'tur.1' || !(hb || ab))) continue;
-        out.push({ id: e.id, league: label, home: trTeam(home.team.shortDisplayName || home.team.displayName), away: trTeam(away.team.shortDisplayName || away.team.displayName), ts: new Date(e.date).getTime(), hl: home.team.logo || null, al: away.team.logo || null, hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '', derby });
+        out.push({ id: e.id, league: label, venue: ((e.competitions[0].venue || {}).fullName || '').slice(0, 60), home: trTeam(home.team.shortDisplayName || home.team.displayName), away: trTeam(away.team.shortDisplayName || away.team.displayName), ts: new Date(e.date).getTime(), hl: home.team.logo || null, al: away.team.logo || null, hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '', derby });
       }
     } catch (err) { bigError = err.message; console.error('Büyük maç alınamadı', code, err.message); }
   }

@@ -442,6 +442,46 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-poster .ynote{background:none;border:0;padding:calc(.6*var(--u)) 0 0;font-size:calc(2.7*var(--u))}
 #big.d-poster .yft{background:none;padding:0;font-size:calc(1.8*var(--u));color:rgba(255,255,255,.75)}
 #big.d-poster .yend:empty{height:0}
+/* 5) Düello: iki oyuncu karşı karşıya; duman, kıvılcım, takım renginde sıcak ışık */
+#big.d-duello{background:#0a0705}
+#big.d-duello .yglow{position:absolute;inset:0;background:radial-gradient(ellipse 45% 75% at 12% 70%,color-mix(in srgb,var(--c1) 70%,#ff7a1a 30%),transparent 70%),radial-gradient(ellipse 45% 75% at 88% 70%,color-mix(in srgb,var(--c2) 70%,#ff7a1a 30%),transparent 70%),radial-gradient(ellipse 30% 60% at 50% 55%,rgba(255,170,70,.28),transparent 70%);opacity:.75;animation:yflick 3.2s ease-in-out infinite alternate}
+@keyframes yflick{0%{opacity:.62}40%{opacity:.8}70%{opacity:.68}100%{opacity:.85}}
+#big.d-duello .ysmk{position:absolute;width:90%;height:70%;left:5%;bottom:-10%;border-radius:50%;background:radial-gradient(ellipse at center,rgba(210,190,170,.16),transparent 65%);filter:blur(calc(3*var(--u)));animation:ysmk 18s ease-in-out infinite alternate}
+#big.d-duello .ysmk.b{left:-20%;bottom:20%;width:70%;height:55%;animation-duration:24s;animation-direction:alternate-reverse;opacity:.8}
+#big.d-duello .ysmk.c{left:50%;bottom:30%;width:70%;height:50%;animation-duration:21s;opacity:.7}
+@keyframes ysmk{from{transform:translateX(-6%) scale(1)}to{transform:translateX(8%) scale(1.15)}}
+#big.d-duello .yflare{position:absolute;left:50%;top:8%;bottom:0;width:calc(26*var(--w));transform:translateX(-50%);background:radial-gradient(ellipse 40% 60% at 50% 55%,rgba(255,214,140,.38),transparent 70%);mix-blend-mode:screen;animation:yflick 2.4s ease-in-out infinite alternate}
+#big.d-duello .yemb{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#big.d-duello .yemb i{position:absolute;bottom:-2%;width:calc(.55*var(--u));height:calc(.55*var(--u));border-radius:50%;background:#ffc46b;box-shadow:0 0 calc(.8*var(--u)) calc(.25*var(--u)) rgba(255,140,40,.85);opacity:0;animation:yember linear infinite}
+@keyframes yember{0%{transform:translate(0,0) scale(1);opacity:0}10%{opacity:1}70%{opacity:.8}100%{transform:translate(var(--dx),calc(-95*var(--u))) scale(.3);opacity:0}}
+#big.d-duello .ypl{position:absolute;bottom:0;height:92%;max-width:47%;object-fit:contain;object-position:bottom;-webkit-mask-image:linear-gradient(#000 72%,transparent);mask-image:linear-gradient(#000 72%,transparent);filter:drop-shadow(0 0 calc(3*var(--u)) rgba(0,0,0,.8)) contrast(1.05) saturate(1.05);opacity:0;transition:transform 1.3s cubic-bezier(.2,.8,.2,1),opacity 1.1s}
+#big.d-duello .ypl.l{left:2%;object-position:bottom left;transform:translateX(-18%)}
+#big.d-duello .ypl.r{right:2%;object-position:bottom right;transform:translateX(18%)}
+#big.on.d-duello .ypl{opacity:1;transform:none}
+#big.on.d-duello .ypl.l{animation:ybreath 6s 1.4s ease-in-out infinite alternate;transform-origin:bottom left}
+#big.on.d-duello .ypl.r{animation:ybreath 6s 1.4s ease-in-out infinite alternate-reverse;transform-origin:bottom right}
+@keyframes ybreath{from{transform:scale(1)}to{transform:scale(1.03)}}
+#big.d-duello .ybigc{position:absolute;top:24%;--ms:30;width:calc(34*var(--u));height:calc(34*var(--u));display:grid;place-items:center;opacity:0;transition:opacity 1s .4s,transform 1.2s cubic-bezier(.2,1.3,.4,1) .4s;transform:scale(.7)}
+#big.d-duello .ybigc.l{left:7%}#big.d-duello .ybigc.r{right:7%}
+#big.d-duello .ybigc:before{content:"";position:absolute;inset:-25%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--tc) 70%,#ffb15c 30%),transparent 65%);opacity:.65;filter:blur(calc(2*var(--u)))}
+#big.d-duello .ybigc .ylg,#big.d-duello .ybigc .ymono{position:relative;width:78%;height:78%}
+#big.on.d-duello .ybigc{opacity:1;transform:none}
+#big.d-duello .yvig{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.75),transparent 26%,transparent 62%,rgba(0,0,0,.88)),radial-gradient(ellipse 80% 80% at 50% 50%,transparent 50%,rgba(0,0,0,.6))}
+#big.d-duello .ywrap{z-index:2}
+#big.d-duello .ycrests{display:flex;align-items:center;gap:calc(2.4*var(--u));--ms:9}
+#big.d-duello .ycrests .ylg,#big.d-duello .ycrests .ymono{width:calc(9*var(--u));height:calc(9*var(--u))}
+#big.d-duello .ybolt{width:calc(5*var(--u));height:calc(7*var(--u));filter:drop-shadow(0 0 calc(1.2*var(--u)) #ffb547);animation:ybolt 2.6s infinite}
+@keyframes ybolt{0%,100%{opacity:1}48%{opacity:1}50%{opacity:.35}52%{opacity:1}54%{opacity:.5}56%{opacity:1}}
+#big.d-duello .yvenue{font-size:calc(2.5*var(--u));font-weight:800;letter-spacing:.06em;color:#fff;text-shadow:0 calc(.3*var(--u)) calc(1*var(--u)) #000}
+#big.d-duello .yvenue b{color:#ffcf6e}
+#big.d-duello .ymidd{flex:1}
+#big.d-duello .ybot{display:flex;flex-direction:column;align-items:center;gap:calc(1.2*var(--u));margin-bottom:calc(1.4*var(--u))}
+#big.d-duello .ymatch{font-size:min(calc(4.4*var(--u)),calc(2.8*var(--w)));font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#fff;text-shadow:0 calc(.4*var(--u)) calc(1.4*var(--u)) #000;max-width:56%}
+#big.d-duello .ymatch i{font-style:normal;color:#ffcf6e;margin:0 .35em}
+#big.d-duello .yend{background:none}
+#big.d-duello .ynote{background:linear-gradient(90deg,transparent,rgba(0,0,0,.7) 25%,rgba(0,0,0,.7) 75%,transparent);border-top:0;position:relative}
+#big.d-duello .ynote:before{content:"";position:absolute;left:20%;right:20%;top:0;height:calc(.2*var(--u));background:linear-gradient(90deg,transparent,#ffcf6e,transparent)}
+#big.on.d-duello .ybot{animation:yrise .9s 1.1s both}
 #big .bl,#big .br{position:absolute;inset:0}
 #big .bl{background:linear-gradient(160deg,var(--c1) 0%,#0a0a0c 120%);clip-path:polygon(0 0,57% 0,43% 100%,0 100%)}
 #big .br{background:linear-gradient(200deg,var(--c2) 0%,#0a0a0c 120%);clip-path:polygon(57% 0,100% 0,100% 100%,43% 100%)}
@@ -1379,7 +1419,7 @@ function bigUnits(el) { // ek tasarımlar medya alanının boyutuna göre ölçe
   el.style.setProperty('--u', Math.min(H, W * 9 / 16) / 100 + 'px'); el.style.setProperty('--w', W / 100 + 'px');
 }
 addEventListener('resize', () => { const el = document.getElementById('big'); if (el && el.className.includes('d-')) bigUnits(el); });
-const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster'];
+const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello'];
 function bigDesign(el, m, cfg, design, o) {
   bigUnits(el); clearInterval(big.tick);
   const up = t => String(t || '').toLocaleUpperCase('tr-TR');
@@ -1406,6 +1446,17 @@ function bigDesign(el, m, cfg, design, o) {
   else if (design === 'sayac') h = `<div class="ygrid"></div><div class="ywrap">${top}`
     + `<div class="yvsrow"><div class="yt">${nm(m.home)}${H}</div><i>VS</i><div class="yt a">${A}${nm(m.away)}</div></div>`
     + `<div class="ycdw"><div class="ycd" id="ycd"></div><div class="ywhen">${esc(o.dayName)} · ${esc(o.tm)}</div></div>${end}</div>`;
+  else if (design === 'duello') {
+    // kıvılcımlar: rastgele konum, hız ve sapma
+    const emb = Array.from({ length: 28 }, () => `<i style="left:${(Math.random() * 100).toFixed(1)}%;--dx:calc(${(Math.random() * 16 - 8).toFixed(1)}*var(--u));animation-duration:${(5 + Math.random() * 6).toFixed(1)}s;animation-delay:${(-Math.random() * 10).toFixed(1)}s"></i>`).join('');
+    const side = (photo, crestHtml, col, s2) => photo ? `<img class="ypl ${s2}" src="${esc(photo)}" alt="">` : `<div class="ybigc ${s2}" style="--tc:${esc(col)}">${crestHtml}</div>`;
+    const bolt = '<svg class="ybolt" viewBox="0 0 20 28"><path d="M12 0 2 16h6l-2 12L18 10h-6l2-10z" fill="#ffcf6e"/></svg>';
+    const where = [m.venue, o.tm].filter(Boolean).map((x, i) => i ? `<b>${esc(x)}</b>` : esc(x)).join(' · ');
+    h = `<div class="yglow"></div><div class="ysmk"></div><div class="ysmk b"></div><div class="ysmk c"></div><div class="yflare"></div>`
+      + side(m.hp, H, c1, 'l') + side(m.ap, A, c2, 'r') + `<div class="yemb">${emb}</div><div class="yvig"></div>`
+      + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">${esc(league || kick)}</div>${m.hp || m.ap ? `<div class="ycrests">${H}${bolt}${A}</div>` : bolt}<div class="yvenue">${where}</div></div>`
+      + `<div class="ymidd"></div><div class="ybot"><div class="ymatch"${lng(m.home + m.away)}>${esc(m.home)}<i>×</i>${esc(m.away)}</div><div class="yday">${esc(o.dayTxt)}</div></div>${end}</div>`;
+  }
   else h = `<div class="ybg"></div><div class="yframe"></div><div class="ywrap"><div class="ytop">${brand}<div class="ykick">${m.derby ? kick : esc(league || kick)}</div></div>`
     + `<div class="ypost"><div class="ydisc">${H}</div><div class="ystack">${nm(m.home, 'ybig', 11)}<div class="yvsl">vs</div>${nm(m.away, 'ybig', 11)}</div><div class="ydisc">${A}</div></div>`
     + `<div class="yinfo"><span class="d">${esc(o.dayName)}</span><i></i><span class="t">${esc(o.tm)}</span>${o.dayTxt !== o.dayName ? `<i></i><span class="d">${esc(o.dayTxt)}</span>` : ''}</div>${end}</div>`;
@@ -1462,7 +1513,7 @@ function bigShow(m, cfg) {
     + (cfg.note ? `<div class="bnote">${esc(cfg.note)}</div>` : '')
     + (info.length ? `<div class="bft">${info.map((t, i) => `<span>${icons[i % 3]} ${esc(t)}</span>`).join('')}</div>` : '<div style="height:' + U(1.4) + '"></div>') + '</div></div>';
   setTimeout(() => el.classList.add('on'), 60);
-  setTimeout(() => { if (big.queue.length) { big.showing = false; bigShow(big.queue.shift()); return; } /* sıradaki maç: arada medya/kampanya görünmesin, kart doğrudan değişir */ if (big.after) { const f = big.after; big.after = null; f(); } /* fragman/medya kartın arkasında hazırlanır: kart sönünce eski medya görünmez */ clearInterval(big.tick); el.classList.remove('on'); setTimeout(() => { big.showing = false; camp.showing = false; }, 1500); }, (cfg.durSec || 15) * 1000);
+  clearTimeout(big.hideT); big.hideT = setTimeout(() => { if (big.queue.length) { big.showing = false; bigShow(big.queue.shift()); return; } /* sıradaki maç: arada medya/kampanya görünmesin, kart doğrudan değişir */ if (big.after) { const f = big.after; big.after = null; f(); } /* fragman/medya kartın arkasında hazırlanır: kart sönünce eski medya görünmez */ clearInterval(big.tick); el.classList.remove('on'); setTimeout(() => { big.showing = false; camp.showing = false; }, 1500); }, (cfg.durSec || 15) * 1000);
 }
 setInterval(() => {
   if (big.showing || big.due || camp.showing || trailerOn || !big.list.length || (window.__celeb && document.querySelector('#cphoto.on'))) return;
@@ -1922,7 +1973,7 @@ function connect() {
     else if (m.type === 'traffic') setTraffic(m.traffic);
     else if (m.type === 'goal') { if (m.goal && m.goal.at && Date.now() + (window.__srvOff || 0) - m.goal.at > 60000) return; showGoal(m.goal); }
     else if (m.type === 'campaign') campShow(m.camp);
-    else if (m.type === 'bigmatch') bigShow(m.match, m.cfg);
+    else if (m.type === 'bigmatch') { if (m.force) { big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
   };
   ws.onclose = () => { if (!authFail) setTimeout(connect, 3000); };
