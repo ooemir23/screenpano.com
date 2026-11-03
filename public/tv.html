@@ -2285,8 +2285,6 @@ if (!PREVIEW && 'serviceWorker' in navigator && (location.protocol === 'https:' 
   navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'cache') CACHE = e.data; });
   navigator.serviceWorker.addEventListener('controllerchange', () => { try { prefetchMedia(JSON.parse(localStorage.getItem('lastState') || 'null')); } catch (e) {} });
 }
-// açılışta son durumu hemen göster: internet yoksa da ekran boş kalmaz
-if (!PREVIEW && tokenGet()) { try { const last = JSON.parse(localStorage.getItem('lastState') || 'null'); if (last) setState(last); } catch (e) {} }
 
 // =====================================================================
 // Arka Plan Müzik Motoru: Spotify Connect (Web Playback SDK + Embed) + YouTube Music / YouTube + Radyo
@@ -2636,6 +2634,7 @@ function onMusicCmd(msg) {
   if (msg.music) { setMusic(msg.music); }
   if (IN_IFRAME) return;
   const cmd = msg.cmd;
+  if (msg.rotated) return; // sunucu sıradaki listeyi zaten seçti (tüm ekranlar aynı listeye geçer)
   if (cmd === 'next' || cmd === 'prev') {
     if (MUS.spConnectTrack && MUS.spPlayer) {
       try { cmd === 'next' ? MUS.spPlayer.nextTrack() : MUS.spPlayer.previousTrack(); } catch (e) {}
@@ -2654,5 +2653,7 @@ function onMusicCmd(msg) {
   }
 }
 
+// açılışta son durumu hemen göster: internet yoksa da ekran boş kalmaz (müzik motoru tanımlandıktan sonra: setState → setMusic MUS'u kullanır)
+if (!PREVIEW && tokenGet()) { try { const last = JSON.parse(localStorage.getItem('lastState') || 'null'); if (last) setState(last); } catch (e) {} }
 connect();
 </script></body></html>

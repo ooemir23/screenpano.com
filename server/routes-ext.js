@@ -324,8 +324,16 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     else if (cmd === 'enabled') { m.enabled = !!b.enabled; if (m.enabled) m.playing = true; }
     else if (cmd === 'volume' && b.volume !== undefined) { m.volume = Math.max(0, Math.min(100, Math.round(Number(b.volume)) || 0)); }
     else if (cmd === 'select' && typeof b.id === 'string') { m.activeId = b.id; m.enabled = true; m.playing = true; }
+    // Sonraki/önceki liste: YouTube çalma listesi ve bağlı Spotify kendi içinde şarkı atlar; diğerlerinde liste sunucuda değişir,
+    // böylece seçim kalıcı olur (sonraki durum güncellemesinde eski listeye dönmez) ve tüm ekranlar aynı listeyi çalar
+    let rotated = false;
+    if ((cmd === 'next' || cmd === 'prev') && m.playlists.length > 1) {
+      const i0 = Math.max(0, m.playlists.findIndex(x => x.id === m.activeId)), cur = m.playlists[i0];
+      const inner = (cur.provider === 'yt' || cur.provider === 'ytm') && cur.listId || cur.provider === 'spotify' && m.spotify.accessToken;
+      if (!inner) { m.activeId = m.playlists[(i0 + (cmd === 'next' ? 1 : m.playlists.length - 1)) % m.playlists.length].id; rotated = true; }
+    }
     tenants.save(req.t);
-    sendTo(req.t, { type: 'music_cmd', cmd, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: m });
+    sendTo(req.t, { type: 'music_cmd', cmd, rotated, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: m });
     hub.pushTenant(req.t.id);
     res.json({ ok: true, music: m });
   });
