@@ -1204,10 +1204,11 @@ function musicData() {
   if (!S.db.music.spotify || typeof S.db.music.spotify !== 'object') S.db.music.spotify = {};
   return S.db.music;
 }
-const PROV = p => p === 'spotify' ? 'Spotify' : p === 'ytm' ? 'YouTube Music' : p === 'yt' ? 'YouTube' : 'Canlı Radyo';
+const PROV = p => p === 'spotify' ? 'Spotify' : p === 'ytm' ? 'YouTube Music' : p === 'ytmix' ? 'Kendi Listem' : p === 'yt' ? 'YouTube' : 'Canlı Radyo';
 function musicBadge(p) {
   if (p === 'spotify') return '<span class="mtag sp">Spotify</span>';
   if (p === 'ytm') return '<span class="mtag yt">YouTube Music</span>';
+  if (p === 'ytmix') return '<span class="mtag yt">Kendi Listem</span>';
   if (p === 'yt') return '<span class="mtag yt">YouTube</span>';
   return '<span class="mtag rd">Canlı Radyo</span>';
 }
@@ -1225,12 +1226,12 @@ SECTIONS.music = {
     if (MV && MV.listId && (MV.provider === 'yt' || MV.provider === 'ytm')) loadTracks(MV.listId);
   },
   html() {
-    const sub = ['lib', 'yt', 'presets', 'add'].includes(SUB.music) ? SUB.music : 'lib';
+    const sub = ['lib', 'search', 'yt', 'presets', 'add'].includes(SUB.music) ? SUB.music : 'lib';
     if (MV && MV.src !== sub) MV = null;
     return head('Müzik', 'TV\'lerinizde çalan arka plan müziğini buradan ya da telefonunuzdan yönetin.')
       + `<div id="mnowbox">${nowBar()}</div>`
-      + tabs('music', [['lib', 'Kütüphanem'], ['yt', 'YouTube hesabım'], ['presets', 'Hazır listeler'], ['add', 'Bağlantı ekle']])
-      + (MV ? detailHtml() : { lib: libHtml, yt: () => '<div id="ytacc"><div class="muted">Yükleniyor…</div></div>', presets: presetHtml, add: addHtml }[sub]());
+      + tabs('music', [['lib', 'Kütüphanem'], ['search', 'Şarkı ara'], ['yt', 'YouTube hesabım'], ['presets', 'Hazır listeler'], ['add', 'Bağlantı ekle']])
+      + (MV ? detailHtml() : { lib: libHtml, search: searchHtml, yt: () => '<div id="ytacc"><div class="muted">Yükleniyor…</div></div>', presets: presetHtml, add: addHtml }[sub]());
   },
 };
 
@@ -1273,11 +1274,11 @@ function tile(it, onclick, extra = '') {
 }
 function libHtml() {
   const m = musicData();
-  if (!m.playlists.length) return `<div class="empty">Kütüphaneniz boş. <a href="#music/yt">YouTube hesabınızdan</a>, <a href="#music/presets">hazır listelerden</a> ya da <a href="#music/add">bağlantı yapıştırarak</a> liste ekleyin.</div>`;
+  if (!m.playlists.length) return `<div class="empty">Kütüphaneniz boş. <a href="#music/search">Şarkı arayıp kendi listenizi kurun</a>, <a href="#music/yt">YouTube hesabınızdan</a>, <a href="#music/presets">hazır listelerden</a> ya da <a href="#music/add">bağlantı yapıştırarak</a> liste ekleyin.</div>`;
   return `<div class="mgrid">${m.playlists.map(it => tile(it, `openList('lib','${it.id}')`, (it.category ? ` <small>${esc(it.category)}</small>` : '') + (isPriv(it.listId) ? ' <small class="privb">🔒 Gizli</small>' : ''))).join('')}</div>`;
 }
 function openList(src, id) {
-  if (src === 'lib') { const it = musicData().playlists.find(x => x.id === id); if (!it) return; MV = { src, id, listId: it.listId || '', title: it.title, thumb: it.thumb, provider: it.provider, url: it.url, videoId: it.videoId || '' }; }
+  if (src === 'lib') { const it = musicData().playlists.find(x => x.id === id); if (!it) return; MV = { src, id, listId: it.listId || '', title: it.title, thumb: it.thumb, provider: it.provider, url: it.url || '', videoId: it.videoId || '', tracks: it.provider === 'ytmix' ? (it.tracks || []) : null, count: it.provider === 'ytmix' ? (it.tracks || []).length : 0 }; }
   else { const p = (YTACC.items || []).find(x => x.id === id); if (!p) return; MV = { src, id, listId: p.id, title: p.title, thumb: p.thumb, provider: 'ytm', url: 'https://music.youtube.com/playlist?list=' + p.id, count: p.count }; }
   render(); scrollTo(0, 0);
 }
@@ -1289,17 +1290,24 @@ function detailHtml() {
   const v = MV, inLib = v.src === 'lib' ? musicData().playlists.find(x => x.id === v.id) : libByList(v.listId);
   const act = musicActive(), m = musicData(), cur = inLib && act && act.id === inLib.id;
   const btns = inLib
-    ? `<button class="btn" onclick="musicSelect('${inLib.id}')">${cur && m.enabled && m.playing ? '🔊 TV\'de Çalıyor' : '▶ TV\'de Çal'}</button><a class="btn g" href="${esc(v.url || inLib.url)}" target="_blank" rel="noopener">↗ Uygulamada Aç</a>${v.src === 'lib' ? `<button class="btn d" onclick="delMusicPlaylist('${inLib.id}')">Sil</button>` : '<span class="pill ok">Kütüphanede ✓</span>'}`
+    ? `<button class="btn" onclick="musicSelect('${inLib.id}')">${cur && m.enabled && m.playing ? '🔊 TV\'de Çalıyor' : '▶ TV\'de Çal'}</button>${(v.url || inLib.url) ? `<a class="btn g" href="${esc(v.url || inLib.url)}" target="_blank" rel="noopener">↗ Uygulamada Aç</a>` : ''}${v.provider === 'ytmix' ? `<button class="btn g" onclick="editCustom('${inLib.id}')">✎ Düzenle</button>` : ''}${v.src === 'lib' ? `<button class="btn d" onclick="delMusicPlaylist('${inLib.id}')">Sil</button>` : '<span class="pill ok">Kütüphanede ✓</span>'}`
     : `<button class="btn" onclick="ytAccAdd('${esc(v.listId)}',true)">▶ Ekle ve TV'de çal</button><button class="btn g" onclick="ytAccAdd('${esc(v.listId)}',false)">+ Kütüphaneye ekle</button>`;
   let body;
-  if (v.listId && (v.provider === 'yt' || v.provider === 'ytm')) body = '<div id="mtracks"><div class="muted">Şarkılar yükleniyor…</div></div>';
+  if (v.provider === 'ytmix' && Array.isArray(v.tracks)) {
+    const sum = v.tracks.reduce((a, t) => a + (t.d || 0), 0);
+    body = v.tracks.length
+      ? `<div class="trks">${v.tracks.map((t, i) => `<button type="button" class="trk ${MNOW && MNOW.videoId === t.v ? 'on' : ''}" data-v="${esc(t.v)}" onclick="playCustomTrack(${i})"><span class="n">${i + 1}</span>${t.th ? `<img src="${esc(t.th)}" alt="" loading="lazy">` : '<i></i>'}<span class="b"><b>${esc(t.t)}</b><span>${esc(t.c)}</span></span><span class="d">${fmtDur(t.d)}</span><span class="p">▶</span></button>`).join('')}</div>`
+      : '<div class="empty">Bu listede şarkı yok.</div>';
+    setTimeout(() => { const el = $('mcount'); if (el) el.textContent = `${v.tracks.length} şarkı · ${fmtDur(sum)}`; }, 0);
+  }
+  else if (v.listId && (v.provider === 'yt' || v.provider === 'ytm')) body = '<div id="mtracks"><div class="muted">Şarkılar yükleniyor…</div></div>';
   else if (v.provider === 'spotify') body = '<div class="empty">Spotify listelerinin şarkıları Spotify hesabı bağlantısı kurulunca burada görünecek.</div>';
   else if (v.provider === 'radio') body = '<div class="empty">Canlı radyo yayını; tek bir akıştır, şarkı listesi yoktur.</div>';
   else body = '<div class="empty">Tek bir video; liste değil.</div>';
   const privW = isPriv(v.listId) ? `<div class="bn trial" style="margin-bottom:14px"><span>Bu liste gizli: TV'deki oynatıcı sizin hesabınızla giriş yapmadığı için çalamaz. YouTube'da listeyi “Liste dışı” ya da “Herkese açık” yapın.</span></div>` : '';
   return `<a href="#" class="mback" onclick="MV=null;render();return false">← ${v.src === 'yt' ? 'YouTube listelerim' : 'Kütüphanem'}</a>
     <div class="mhead"><div class="mhead-cov">${v.thumb ? `<img src="${esc(v.thumb)}" alt="">` : `<i>${provIcon(v.provider)}</i>`}</div>
-      <div class="mhead-b">${musicBadge(v.provider)}<h2>${esc(v.title)}</h2><p class="muted" id="mcount">${v.count ? `${v.count} video` : ''}</p><div class="row">${btns}</div></div></div>
+      <div class="mhead-b">${musicBadge(v.provider)}<h2>${esc(v.title)}</h2><p class="muted" id="mcount">${v.count ? `${v.count} şarkı` : ''}</p><div class="row">${btns}</div></div></div>
     ${privW}${card('Şarkılar', 'Bir şarkıya dokununca liste TV\'de o şarkıdan başlar.', body)}`;
 }
 async function loadTracks(listId) {
@@ -1328,6 +1336,80 @@ async function playTrack(i) {
   }
   const j = await act('POST', '/music/cmd', { cmd: 'select', id: it.id, index: t.idx, videoId: t.videoId }, `TV'de çalıyor: ${t.title}`, false);
   if (j && j.music) { S.db.music = j.music; MNOW = { ...(MNOW || {}), itemId: it.id, title: t.title, artist: t.channel, thumb: `https://i.ytimg.com/vi/${t.videoId}/mqdefault.jpg`, videoId: t.videoId, err: '', at: Date.now() }; render(true); }
+}
+
+// ---- Şarkı ara + kendi listemi yap ----
+let MSEARCH = { q: '', items: null, busy: false, err: '' }; // arama durumu (bölüm değişince kaybolmaz)
+let MDRAFT = null; // kurulmakta olan liste: { id: düzenleme ise liste kimliği, title, tracks: [{v,t,c,th,d}] }
+function searchHtml() {
+  const r = MSEARCH, d = MDRAFT;
+  const res = r.busy ? '<div class="muted">Aranıyor…</div>'
+    : r.err ? `<div class="empty">${esc(r.err)}</div>`
+    : !r.items ? '<div class="muted">Şarkı ya da sanatçı yazıp Ara\'ya basın.</div>'
+    : r.items.length ? `<div class="trks">${r.items.map((t, i) => `<div class="trk"><span class="n">${i + 1}</span><img src="${esc(t.thumb)}" alt="" loading="lazy"><span class="b"><b>${esc(t.title)}</b><span>${esc(t.channel)}</span></span><span class="d">${fmtDur(t.dur)}</span><span class="row" style="gap:4px;align-self:center"><button class="btn xs g" title="Listeme ekle" onclick="draftAdd(${i})">＋</button><button class="btn xs" title="Tek şarkı olarak TV'de çal" onclick="playNowVideo(${i})">▶</button></span></div>`).join('')}</div>`
+    : '<div class="empty">Sonuç bulunamadı.</div>';
+  let out = card('Şarkı ara', 'YouTube\'da şarkı, sanatçı ya da yayın arayın; sonuçlardan kendi çalma listenizi kurun.',
+    `<div class="row"><input type="search" id="ms-q" placeholder="Şarkı ya da sanatçı adı…" value="${esc(r.q)}" onkeydown="if(event.key==='Enter')musicSearch()"><button class="btn g" onclick="musicSearch()">Ara</button></div><div style="margin-top:12px">${res}</div>`);
+  if (d) {
+    out += card(d.id ? 'Listemi düzenle' : 'Yeni listem', '', `
+      <div class="f"><input type="text" id="md-title" placeholder="Liste başlığı (örn. Akşam Listem)" value="${esc(d.title)}" maxlength="90"></div>
+      <div style="margin:10px 0">${d.tracks.length ? `<div class="trks">${d.tracks.map((t, i) => `<div class="trk"><span class="n">${i + 1}</span>${t.th ? `<img src="${esc(t.th)}" alt="" loading="lazy">` : '<i></i>'}<span class="b"><b>${esc(t.t)}</b><span>${esc(t.c)}</span></span><span class="d">${fmtDur(t.d)}</span><span class="row" style="gap:4px;align-self:center"><button class="btn xs" title="Yukarı taşı" onclick="draftMove(${i},-1)">↑</button><button class="btn xs" title="Aşağı taşı" onclick="draftMove(${i},1)">↓</button><button class="btn xs d" title="Listeden çıkar" onclick="draftDel(${i})">✕</button></span></div>`).join('')}</div>` : '<div class="empty">Henüz şarkı eklemediniz. Yukarıdaki arama sonuçlarından ＋ ile şarkı ekleyin.</div>'}</div>
+      <div class="row end"><button class="btn ghost d" onclick="draftClear()">Temizle</button><button class="btn" onclick="draftSave(false)">Kaydet</button><button class="btn g" onclick="draftSave(true)">Kaydet ve TV'de Çal ▶</button></div>`);
+  } else {
+    out += `<div class="empty" style="margin-top:14px">Arama sonuçlarından ＋ düğmesiyle şarkı topladıkça listeniz burada kurulur.</div>`;
+  }
+  return out;
+}
+async function musicSearch() {
+  const q = ($('ms-q').value || '').trim();
+  if (q.length < 2) return toast('En az 2 harf yazın', true);
+  MSEARCH = { q, items: null, busy: true, err: '' }; render(true);
+  try { MSEARCH = { q, items: (await req('GET', '/music/search?q=' + encodeURIComponent(q))).items, busy: false, err: '' }; }
+  catch (e) { MSEARCH = { q, items: null, busy: false, err: e.message }; }
+  render(true);
+}
+function draftAdd(i) {
+  const t = (MSEARCH.items || [])[i]; if (!t) return;
+  if (!MDRAFT) MDRAFT = { id: '', title: MSEARCH.q.slice(0, 60), tracks: [] };
+  if (MDRAFT.tracks.some(x => x.v === t.videoId)) return toast('Bu şarkı listede zaten var');
+  MDRAFT.tracks.push({ v: t.videoId, t: t.title, c: t.channel, th: t.thumb, d: t.dur });
+  render(true);
+}
+function draftMove(i, dir) {
+  const a = MDRAFT && MDRAFT.tracks, j = i + dir;
+  if (!a || j < 0 || j >= a.length) return;
+  [a[i], a[j]] = [a[j], a[i]]; render(true);
+}
+function draftDel(i) { if (MDRAFT) { MDRAFT.tracks.splice(i, 1); render(true); } }
+function draftClear() { MDRAFT = null; render(true); }
+async function draftSave(playNow) {
+  if (!MDRAFT || !MDRAFT.tracks.length) return toast('Listeye en az bir şarkı ekleyin', true);
+  const body = { title: ($('md-title').value || '').trim(), tracks: MDRAFT.tracks, playNow };
+  const j = MDRAFT.id
+    ? await act('PUT', '/music/custom/' + MDRAFT.id, body, '', false)
+    : await act('POST', '/music/custom', body, '', false);
+  if (j && j.music) {
+    S.db.music = j.music; MDRAFT = null;
+    toast(playNow ? 'Liste kaydedildi ve TV\'de başlatıldı' : 'Listeniz kaydedildi');
+    go('music/lib');
+  }
+}
+async function playNowVideo(i) { // arama sonucunu tek şarkı olarak TV'de çal
+  const t = (MSEARCH.items || [])[i]; if (!t) return;
+  const j = await act('POST', '/music/playlist', { url: 'https://music.youtube.com/watch?v=' + t.videoId, title: t.title, thumb: t.thumb, playNow: true }, '', false);
+  if (j && j.music) { S.db.music = j.music; MNOW = { ...(MNOW || {}), title: t.title, artist: t.channel, thumb: t.thumb, videoId: t.videoId, err: '', at: Date.now() }; render(true); }
+}
+function editCustom(id) {
+  const it = musicData().playlists.find(x => x.id === id);
+  if (!it || it.provider !== 'ytmix') return;
+  MDRAFT = { id: it.id, title: it.title, tracks: (it.tracks || []).map(t => ({ ...t })) };
+  MV = null; go('music/search'); scrollTo(0, 0);
+}
+async function playCustomTrack(i) {
+  const it = musicData().playlists.find(x => x.id === MV.id); if (!it) return;
+  const t = (it.tracks || [])[i]; if (!t) return;
+  const j = await act('POST', '/music/cmd', { cmd: 'select', id: it.id, index: i, videoId: t.v }, `TV'de çalıyor: ${t.t}`, false);
+  if (j && j.music) { S.db.music = j.music; MNOW = { ...(MNOW || {}), itemId: it.id, title: t.t, artist: t.c, thumb: t.th, videoId: t.v, err: '', at: Date.now() }; render(true); }
 }
 
 // ---- YouTube hesabım ----

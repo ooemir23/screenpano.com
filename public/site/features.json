@@ -930,6 +930,26 @@
           "text": "في أعلى كل صفحة من اللوحة عناوين الأقسام؛ انقر على أحدها للانتقال إليه مباشرة. ولرموز QR قائمة خاصة بها."
         }
       }
+    },
+    {
+      "icon": "🔎",
+      "title": "Şarkı arayıp kendi listenizi kurun",
+      "text": "Panele şarkı ya da sanatçı adı yazın; YouTube sonuçlarından tek dokunuşla kendi arka plan müziği listenizi oluşturun, sırasını değiştirin. TV'de kesintisiz çalar.",
+      "added": "2026-11-03",
+      "i18n": {
+        "en": {
+          "title": "Search songs and build your own playlist",
+          "text": "Type a song or artist in the panel; build your background-music playlist from YouTube results with one tap and reorder it. It plays non-stop on the TV."
+        },
+        "de": {
+          "title": "Lieder suchen und eigene Playlist erstellen",
+          "text": "Geben Sie im Panel ein Lied oder einen Künstler ein; stellen Sie Ihre Hintergrundmusik-Playlist aus den YouTube-Ergebnissen mit einem Tipp zusammen und ordnen Sie sie. Sie läuft am TV ohne Unterbrechung."
+        },
+        "ar": {
+          "title": "ابحث عن الأغاني وابنِ قائمتك الخاصة",
+          "text": "اكتب اسم أغنية أو فنان في اللوحة؛ وابنِ قائمة موسيقى الخلفية من نتائج يوتيوب بلمسة واحدة ورتّبها. وتعمل على التلفاز دون انقطاع."
+        }
+      }
     }
   ],
   "shots": {

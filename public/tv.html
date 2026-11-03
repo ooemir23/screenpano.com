@@ -2585,12 +2585,12 @@ function renderMusicBar() {
     return;
   }
   const isSp = spLive || (it && it.provider === 'spotify');
-  const isYt = !isSp && it && (it.provider === 'yt' || it.provider === 'ytm');
+  const isYt = !isSp && it && (it.provider === 'yt' || it.provider === 'ytm' || it.provider === 'ytmix');
   const paused = spLive ? spLive.paused : !m.playing;
   const title = spLive ? spLive.title : (MUS.trackTitle || (it && it.title) || 'Müzik');
   const sub = spLive ? spLive.artist : (MUS.trackSub || (it && it.category) || (isSp ? 'Spotify' : it && it.provider === 'ytm' ? 'YouTube Music' : isYt ? 'YouTube Müzik' : 'Canlı Radyo'));
   const thumb = spLive ? spLive.thumb : (MUS.trackThumb || (it && it.thumb) || '');
-  const badge = spLive ? 'SPOTIFY CONNECT · TELEFONDAN' : isSp ? 'SPOTIFY · ŞU AN ÇALIYOR' : (it && it.provider === 'ytm') ? 'YOUTUBE MUSIC · ŞU AN ÇALIYOR' : isYt ? 'YOUTUBE MÜZİK · ŞU AN ÇALIYOR' : 'RADYO · ŞU AN ÇALIYOR';
+  const badge = spLive ? 'SPOTIFY CONNECT · TELEFONDAN' : isSp ? 'SPOTIFY · ŞU AN ÇALIYOR' : (it && it.provider === 'ytmix') ? 'KENDİ LİSTEM · ŞU AN ÇALIYOR' : (it && it.provider === 'ytm') ? 'YOUTUBE MUSIC · ŞU AN ÇALIYOR' : isYt ? 'YOUTUBE MÜZİK · ŞU AN ÇALIYOR' : 'RADYO · ŞU AN ÇALIYOR';
   const ic = isSp ? '🎧' : isYt ? '▶' : '📻';
   bar.className = 'on ' + (isSp ? 'sp' : isYt ? 'yt' : 'rd') + (paused ? ' paused' : '');
   bar.onclick = () => { if (MUS.needUnlock) unlockAudioNow(); };
@@ -2657,6 +2657,8 @@ function playYtItem(it, m) {
   clearTimeout(MUS.errTimer);
   clearTimeout(MUS.listFallbackTimer);
   MUS.errRun = 0; MUS.ytTracks = null;
+  // kendi listesi (ytmix): şarkılar öğenin içinde gelir; sunucudan liste çekmeye gerek yok
+  if (it.provider === 'ytmix' && Array.isArray(it.tracks) && it.tracks.length) MUS.ytTracks = it.tracks.map(t => ({ v: t.v, t: t.t, c: t.c }));
   const st0 = it.listId && MUS.startAt ? MUS.startAt : null; MUS.startAt = null; // panelde seçilen şarkıdan başla
   MUS.ytIdx = st0 ? (st0.index || 0) : 0;
   if (it.listId) wsSend({ type: 'music_tracks', listId: it.listId });
@@ -2909,7 +2911,7 @@ function setMusic(m) {
     MUS.curId = it.id; MUS.provider = it.provider; MUS.err = '';
     MUS.trackTitle = it.title || ''; MUS.trackSub = it.category || ''; MUS.trackThumb = it.thumb || '';
     renderMusicBar();
-    if (it.provider === 'yt' || it.provider === 'ytm') playYtItem(it, m);
+    if (it.provider === 'yt' || it.provider === 'ytm' || it.provider === 'ytmix') playYtItem(it, m);
     else if (it.provider === 'spotify') playSpotifyItem(it, m);
     else if (it.provider === 'radio') playRadioItem(it, m);
     reportNow(); // panel en azından seçilen listeyi görsün; şarkı adı çalınca gelir
@@ -2930,7 +2932,7 @@ function applyMusicPlayState(playing) {
   }
   const it = activeMusicItem(MUS.cfg);
   if (!it) return;
-  if (it.provider === 'yt' || it.provider === 'ytm') {
+  if (it.provider === 'yt' || it.provider === 'ytm' || it.provider === 'ytmix') {
     if (MUS.ytPlayer && MUS.ytReady) {
       try {
         if (playing) { MUS.ytPlayer.unMute(); MUS.ytPlayer.setVolume(MUS.vol); MUS.ytPlayer.playVideo(); checkYtStarted(it, MUS.cfg); }
@@ -2952,7 +2954,7 @@ function onMusicCmd(msg) {
   if (msg.start && !IN_IFRAME) MUS.startAt = msg.start; // liste değişirse playYtItem kullanır
   if (msg.music) { setMusic(msg.music); }
   if (MUS.startAt && !IN_IFRAME) { // aynı liste zaten çalıyorsa yalnız şarkı değişir
-    const it = activeMusicItem(MUS.cfg), st = MUS.startAt, ytList = it && it.listId && (it.provider === 'yt' || it.provider === 'ytm');
+    const it = activeMusicItem(MUS.cfg), st = MUS.startAt, ytList = it && (it.listId && (it.provider === 'yt' || it.provider === 'ytm') || it.provider === 'ytmix' && (it.tracks || []).length);
     if (!ytList) MUS.startAt = null;
     else if (MUS.ytPlayer && MUS.ytReady && MUS.curId === it.id) {
       MUS.startAt = null; MUS.err = ''; MUS.errRun = 0; MUS.ytIdx = st.index || 0;
@@ -2973,11 +2975,14 @@ function onMusicCmd(msg) {
       return;
     }
     const it = activeMusicItem(MUS.cfg);
-    if (it && (it.provider === 'yt' || it.provider === 'ytm') && it.listId && MUS.ytPlayer && MUS.ytReady) {
+    if (it && (it.provider === 'ytmix' || (it.provider === 'yt' || it.provider === 'ytm') && it.listId) && MUS.ytPlayer && MUS.ytReady) {
       try {
         if (MUS.ytTracks && MUS.ytTracks.length) {
           MUS.ytIdx = ((MUS.ytIdx || 0) + (cmd === 'next' ? 1 : MUS.ytTracks.length - 1)) % MUS.ytTracks.length;
           MUS.ytPlayer.loadVideoById(MUS.ytTracks[MUS.ytIdx].v);
+        } else if (it.provider === 'ytmix' && (it.tracks || []).length) {
+          MUS.ytTracks = it.tracks.map(t => ({ v: t.v, t: t.t, c: t.c })); MUS.ytIdx = 0;
+          MUS.ytPlayer.loadVideoById(MUS.ytTracks[0].v);
         } else {
           cmd === 'next' ? MUS.ytPlayer.nextVideo() : MUS.ytPlayer.previousVideo();
         }

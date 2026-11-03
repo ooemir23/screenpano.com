@@ -336,7 +336,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     let rotated = false;
     if ((cmd === 'next' || cmd === 'prev') && m.playlists.length > 1) {
       const i0 = Math.max(0, m.playlists.findIndex(x => x.id === m.activeId)), cur = m.playlists[i0];
-      const inner = (cur.provider === 'yt' || cur.provider === 'ytm') && cur.listId || cur.provider === 'spotify' && m.spotify.accessToken;
+      const inner = (cur.provider === 'yt' || cur.provider === 'ytm') && cur.listId || cur.provider === 'ytmix' && (cur.tracks || []).length || cur.provider === 'spotify' && m.spotify.accessToken;
       if (!inner) { m.activeId = m.playlists[(i0 + (cmd === 'next' ? 1 : m.playlists.length - 1)) % m.playlists.length].id; rotated = true; }
     }
     tenants.save(req.t);
@@ -360,6 +360,51 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   r.get('/music/tracks', async (req, res) => {
     try { res.json({ items: await yt.tracks(req.t, String(req.query.list || '')) }); }
     catch (e) { res.status(e.code === 'reconnect' ? 409 : 502).json({ error: e.message, reconnect: e.code === 'reconnect' }); }
+  });
+  // Şarkı arama (panelin "Şarkı ara" sekmesi): InnerTube üzerinden, anahtar gerekmez
+  const searchHits = new Map();
+  r.get('/music/search', async (req, res) => {
+    const q = String(req.query.q || '').trim();
+    if (q.length < 2) return res.json({ items: [] });
+    const h = searchHits.get(req.t.id) || { n: 0, at: Date.now() };
+    if (Date.now() - h.at > 60000) { h.n = 0; h.at = Date.now(); }
+    if (++h.n > 20) return res.status(429).json({ error: 'Çok sık arama yapıyorsunuz; biraz bekleyin' });
+    searchHits.set(req.t.id, h);
+    try { res.json({ items: await yt.search(q) }); }
+    catch (e) { res.status(502).json({ error: 'Arama yapılamadı; tekrar deneyin' }); }
+  });
+  // Kendi çalma listesi: şarkılar işletmenin kendi verisinde durur (YouTube hesabına yazılmaz),
+  // TV listedeki videoId'leri sırayla çalar. tracks: [{ v, t, c, th, d }]
+  const cleanTracks = list => (Array.isArray(list) ? list : []).slice(0, 200).map(t => t && typeof t === 'object' ? {
+    v: /^[A-Za-z0-9_-]{11}$/.test(t.v || '') ? t.v : '',
+    t: s(t.t, 120), c: s(t.c, 80), th: s(t.th, 300), d: Math.max(0, Math.min(86400, Math.round(Number(t.d)) || 0)),
+  } : null).filter(t => t && t.v);
+  r.post('/music/custom', (req, res) => {
+    const m = ensureMusic(req.t.db), b = req.body || {}, tracks = cleanTracks(b.tracks);
+    if (!tracks.length) return res.status(400).json({ error: 'Listeye en az bir şarkı ekleyin' });
+    const item = { id: auth.uid(10), title: s(b.title, 90) || 'Listem', category: 'Kendi listem', thumb: tracks[0].th || '', provider: 'ytmix', videoId: '', listId: '', url: '', tracks, addedAt: Date.now() };
+    m.playlists.unshift(item);
+    m.playlists = m.playlists.slice(0, 50);
+    if (b.playNow || !m.activeId) { m.activeId = item.id; m.enabled = true; m.playing = true; }
+    changed(req.t);
+    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: item.id, music: m });
+    res.json({ ok: true, item, music: m });
+  });
+  r.put('/music/custom/:id', (req, res) => {
+    const m = ensureMusic(req.t.db), it = m.playlists.find(x => x.id === req.params.id);
+    if (!it || it.provider !== 'ytmix') return res.status(404).json({ error: 'Liste bulunamadı' });
+    const b = req.body || {};
+    if (typeof b.title === 'string' && b.title.trim()) it.title = s(b.title, 90);
+    if (Array.isArray(b.tracks)) {
+      const tracks = cleanTracks(b.tracks);
+      if (!tracks.length) return res.status(400).json({ error: 'Listeye en az bir şarkı ekleyin' });
+      it.tracks = tracks;
+      it.thumb = tracks[0].th || it.thumb;
+    }
+    if (b.playNow) { m.activeId = it.id; m.enabled = true; m.playing = true; }
+    changed(req.t);
+    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: it.id, music: m });
+    res.json({ ok: true, item: it, music: m });
   });
   // TV'nin bildirdiği o an çalan şarkı (panelin "Şimdi çalıyor" çubuğu için)
   r.get('/music/now', (req, res) => { const n = require('./musicnow').get(req.t.id); res.json(n || {}); });

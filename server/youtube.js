@@ -104,6 +104,40 @@ async function disconnect(t) {
 const trackCache = new Map();
 const isoDur = s => { const m = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s || ''); return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0; };
 const txtDur = s => { const p = String(s || '').split(':').map(Number); return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : 0; };
+
+// Şarkı arama (InnerTube, anahtar gerekmez): panelin "Şarkı ara" sekmesi ve kendi liste yapma için.
+// 1 dk önbellek; en çok 20 sonuç. Gayriresmî uç — liste yedeğinde (innerTubeTracks) zaten aynı yaklaşım kullanılıyor.
+const searchCache = new Map();
+async function search(q) {
+  q = String(q || '').trim().slice(0, 120);
+  if (!q) return [];
+  const key = q.toLowerCase(), c = searchCache.get(key);
+  if (c && Date.now() - c.at < 60000) return c.items;
+  const r = await fetch('https://www.youtube.com/youtubei/v1/search?prettyPrint=false', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+    body: JSON.stringify({ query: q, context: { client: { clientName: 'WEB', clientVersion: '2.20261101.01.00', hl: 'tr', gl: 'TR' } } }),
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!r.ok) throw new Error('YouTube ' + r.status);
+  const j = await r.json().catch(() => ({}));
+  const out = [];
+  const sections = (((((j.contents || {}).twoColumnSearchResultsRenderer || {}).primaryContents || {}).sectionListRenderer || {}).contents) || [];
+  outer: for (const sec of sections) {
+    for (const v of (((sec.itemSectionRenderer || {}).contents) || [])) {
+      const vr = v.videoRenderer;
+      if (!vr || !vr.videoId) continue; // kanal/çalma listesi kartları değil yalnız video
+      const title = ((vr.title && (vr.title.runs || [])[0]) || {}).text || '';
+      const ch = ((vr.ownerText && (vr.ownerText.runs || [])[0]) || {}).text || '';
+      if (!title) continue;
+      out.push({ videoId: vr.videoId, title: title.slice(0, 120), channel: ch.replace(/ - Topic$/, '').slice(0, 80), thumb: `https://i.ytimg.com/vi/${vr.videoId}/mqdefault.jpg`, dur: txtDur((vr.lengthText && vr.lengthText.simpleText) || '') });
+      if (out.length >= 20) break outer;
+    }
+  }
+  searchCache.set(key, { at: Date.now(), items: out });
+  return out;
+}
+
 async function innerTubeTracks(listId) {
   const r = await fetch('https://www.youtube.com/youtubei/v1/next?prettyPrint=false', {
     method: 'POST',
@@ -171,4 +205,4 @@ async function tracks(t, listId) {
 
 const status = t => { const a = t.db.ytAuth; return { configured: configured(), connected: !!(a && a.refresh && !a.expired), expired: !!(a && a.expired), name: (a && a.name) || '', at: (a && a.at) || 0 }; };
 
-module.exports = { configured, authUrl, callback, playlists, tracks, disconnect, status, redirectUri };
+module.exports = { configured, authUrl, callback, playlists, tracks, disconnect, status, redirectUri, search };
