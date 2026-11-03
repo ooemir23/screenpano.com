@@ -69,6 +69,7 @@ app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html'
 app.get('/super', (req, res, next) => { const u = auth.sessionUser(req); return u && u.role === 'super' ? page('super.html')(req, res, next) : res.redirect('/login'); });
 
 app.use('/api/auth', require('./routes-auth'));
+app.get('/api/oauth/google/callback', require('./youtube').callback); // YouTube hesabı bağlantısı dönüşü
 app.use('/api/tv', require('./routes-tv').router);
 app.use('/api/admin', require('./routes-admin').router);
 app.use('/api/super', require('./routes-super'));

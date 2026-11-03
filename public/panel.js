@@ -1220,6 +1220,7 @@ function musicEmbedHtml(it) {
   return `<div class="membed-box" style="padding:20px;display:flex;align-items:center;gap:14px"><b>📻 ${esc(it.title)}</b><audio controls src="${esc(it.url)}" style="flex:1"></audio></div>`;
 }
 SECTIONS.music = {
+  after() { ytAccLoad(); },
   html() {
     const m = musicData();
     const list = m.playlists;
@@ -1288,6 +1289,7 @@ SECTIONS.music = {
         `<div id="panel-music-embed">${musicEmbedHtml(embedIt)}</div>
         ${embedIt ? `<div class="row end mt"><span class="muted" style="margin-right:auto;font-size:12.5px">Şu an panelde açık: <b>${esc(embedIt.title)}</b></span><button class="btn s" onclick="musicSelect('${embedIt.id}')">📺 Bu Listeyi TV'de Çal</button></div>` : ''}`)
       + `</div>`
+      + card('▶ YouTube Hesabımdaki Listeler', 'YouTube hesabınızı bağlayın; YouTube ve YouTube Music\'te oluşturduğunuz çalma listeleri burada görünür, tek tıkla eklenir.', '<div id="ytacc"><div class="muted">Yükleniyor…</div></div>')
       + card('➕ Spotify veya YouTube Music Listesi Ekle', 'Spotify çalma listesi/albüm/şarkı linkini veya YouTube Music / YouTube linkini yapıştırın; sistem otomatik tanır ve kapak görseliyle ekler.',
         `<div class="grid g3" style="align-items:end">
           ${fl('Spotify / YouTube Music / YouTube Bağlantısı', `<input type="url" id="m-url" placeholder="https://open.spotify.com/playlist/... veya https://music.youtube.com/...">`)}
@@ -1328,6 +1330,57 @@ SECTIONS.music = {
         </div>`).join('')}</div>`);
   }
 };
+// ---- YouTube hesabı (Google ile bağlan): kendi listelerini çekme ----
+let YTACC = { st: null, items: null, err: '' };
+async function ytAccLoad(force) {
+  try {
+    YTACC.st = await req('GET', '/music/google');
+    YTACC.err = '';
+    if (YTACC.st.connected) {
+      try { YTACC.items = (await req('GET', '/music/google/playlists' + (force ? '?force=1' : ''))).items; }
+      catch (e) { YTACC.items = null; YTACC.err = e.message; YTACC.st = await req('GET', '/music/google'); }
+    }
+  } catch (e) { YTACC.err = e.message; }
+  ytAccDraw();
+}
+function ytAccDraw() {
+  const box = $('ytacc'); if (!box) return;
+  const st = YTACC.st || {};
+  const connectBtn = l => owner() ? `<a class="btn" href="/api/admin/music/google/connect">${l}</a>` : '<span class="muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</span>';
+  if (!st.configured) { box.innerHTML = '<div class="empty">YouTube hesabı bağlantısı henüz açılmadı. Platform yöneticisinin Google anahtarlarını girmesi gerekiyor.</div>'; return; }
+  if (st.expired) { box.innerHTML = `<div class="bn trial"><span>YouTube bağlantısının süresi doldu. Listelerinizi görmek için yeniden bağlanın.</span>${connectBtn('▶ Yeniden bağlan')}</div>`; return; }
+  if (!st.connected) { box.innerHTML = `<div class="row" style="justify-content:space-between;gap:14px"><span class="muted" style="flex:1;min-width:220px">Google hesabınızla giriş yapın; yalnız çalma listelerinizi okuma izni istenir, hiçbir şey değiştirilmez.</span>${connectBtn('▶ YouTube ile bağlan')}</div>`; return; }
+  const have = new Set(musicData().playlists.map(x => x.listId).filter(Boolean));
+  const head2 = `<div class="row" style="justify-content:space-between;margin-bottom:12px"><span>Bağlı hesap: <b>${esc(st.name || 'YouTube')}</b></span><div class="row"><button class="btn xs g" onclick="ytAccLoad(true)">↻ Listeleri yenile</button>${owner() ? '<button class="btn xs d" onclick="ytAccOff()">Bağlantıyı kes</button>' : ''}</div></div>`;
+  if (YTACC.err) { box.innerHTML = head2 + `<div class="empty">${esc(YTACC.err)}</div>`; return; }
+  const items = YTACC.items || [];
+  box.innerHTML = head2 + (items.length ? `<div class="list">${items.map(p => `<div class="it">
+      <div class="mrem-cov" style="width:44px;height:44px;border-radius:9px;font-size:20px">${p.thumb ? `<img src="${esc(p.thumb)}" alt="">` : '▶'}</div>
+      <div class="b"><b>${esc(p.title)}</b><span>${p.count} video</span></div>
+      <div class="row">${have.has(p.id) ? '<span class="pill ok">Eklendi ✓</span>' : `<button class="btn xs g" onclick="ytAccAdd('${esc(p.id)}',false)">+ Ekle</button><button class="btn xs" onclick="ytAccAdd('${esc(p.id)}',true)">📺 Ekle ve TV'de çal</button>`}</div>
+    </div>`).join('')}</div>` : '<div class="empty">Bu hesapta çalma listesi bulunamadı.</div>');
+}
+async function ytAccAdd(id, playNow) {
+  const p = (YTACC.items || []).find(x => x.id === id); if (!p) return;
+  const j = await act('POST', '/music/playlist', { url: 'https://music.youtube.com/playlist?list=' + encodeURIComponent(id), title: p.title, thumb: p.thumb, category: 'YouTube hesabım', playNow }, playNow ? 'Liste eklendi ve TV\'de başlatıldı' : 'Çalma listesi eklendi', false);
+  if (j && j.music) { S.db.music = j.music; if (j.item) PANEL_EMBED_ID = j.item.id; render(true); }
+}
+async function ytAccOff() {
+  if (!confirm('YouTube hesabının bağlantısı kesilsin mi? Eklediğiniz listeler kalır.')) return;
+  if (await act('DELETE', '/music/google', undefined, 'YouTube bağlantısı kesildi', false)) { YTACC = { st: null, items: null, err: '' }; ytAccLoad(); }
+}
+// Google'dan dönüşte sonucu bildir ve adres çubuğunu temizle
+(function ytReturn() {
+  const q = new URLSearchParams(location.search), c = q.get('yt'); if (!c) return;
+  history.replaceState(null, '', '/panel' + location.hash);
+  setTimeout(() => {
+    if (c === 'ok') toast('YouTube hesabı bağlandı');
+    else if (c === 'denied') toast('YouTube izni verilmedi', true);
+    else if (c === 'expired') toast('Giriş oturumunun süresi doldu; yeniden deneyin', true);
+    else if (c === 'nocfg') toast('YouTube bağlantısı henüz açılmadı', true);
+    else toast('YouTube hesabı bağlanamadı' + (q.get('ytm') ? ': ' + q.get('ytm') : ''), true);
+  }, 600);
+})();
 async function musicCmd(cmd, extra = {}) {
   const j = await act('POST', '/music/cmd', { cmd, ...extra }, '', false);
   if (j && j.music) { S.db.music = j.music; render(true); }

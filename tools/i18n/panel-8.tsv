@@ -269,3 +269,34 @@ Geçerli bir Spotify, YouTube Music, YouTube veya Radyo bağlantısı girin ¦ E
 Geçersiz komut ¦ Invalid command ¦ Ungültiger Befehl ¦ أمر غير صالح
 Tasarım <0>· ön izlemek için tıklayın</0> ¦ Design <0>· click to preview</0> ¦ Design <0>· zur Vorschau klicken</0> ¦ التصميم <0>· انقر للمعاينة</0>
 Gelişmiş ayarlar <0>· alt not, sıklık, süre, alt bilgiler</0> ¦ Advanced settings <0>· footnote, frequency, duration, extra lines</0> ¦ Erweiterte Einstellungen <0>· Fußnote, Häufigkeit, Dauer, Zusatzzeilen</0> ¦ إعدادات متقدمة <0>· ملاحظة سفلية، التكرار، المدة، أسطر إضافية</0>
+▶ YouTube Hesabımdaki Listeler ¦ ▶ Lists from my YouTube account ¦ ▶ Listen aus meinem YouTube-Konto ¦ ▶ القوائم في حسابي على YouTube
+YouTube hesabınızı bağlayın; YouTube ve YouTube Music'te oluşturduğunuz çalma listeleri burada görünür, tek tıkla eklenir. ¦ Connect your YouTube account; the playlists you created on YouTube and YouTube Music appear here and can be added in one click. ¦ Verbinden Sie Ihr YouTube-Konto; Ihre auf YouTube und YouTube Music erstellten Playlists erscheinen hier und lassen sich mit einem Klick hinzufügen. ¦ اربط حسابك على YouTube؛ تظهر هنا قوائم التشغيل التي أنشأتها على YouTube وYouTube Music وتُضاف بنقرة واحدة.
+Yükleniyor… ¦ Loading… ¦ Wird geladen… ¦ جارٍ التحميل…
+Hesap bağlamayı yalnız işletme sahibi yapabilir. ¦ Only the business owner can connect an account. ¦ Nur der Inhaber kann ein Konto verbinden. ¦ يمكن لمالك العمل فقط ربط الحساب.
+YouTube hesabı bağlantısı henüz açılmadı. Platform yöneticisinin Google anahtarlarını girmesi gerekiyor. ¦ YouTube account connection isn't available yet. The platform administrator needs to enter the Google keys. ¦ Die YouTube-Kontoverbindung ist noch nicht verfügbar. Der Plattformbetreiber muss die Google-Schlüssel eintragen. ¦ ربط حساب YouTube غير متاح بعد. يجب أن يُدخل مدير المنصة مفاتيح Google.
+YouTube bağlantısının süresi doldu. Listelerinizi görmek için yeniden bağlanın. ¦ Your YouTube connection has expired. Reconnect to see your lists. ¦ Ihre YouTube-Verbindung ist abgelaufen. Verbinden Sie sich erneut, um Ihre Listen zu sehen. ¦ انتهت صلاحية اتصال YouTube. أعد الاتصال لرؤية قوائمك.
+▶ Yeniden bağlan ¦ ▶ Reconnect ¦ ▶ Erneut verbinden ¦ ▶ إعادة الاتصال
+Google hesabınızla giriş yapın; yalnız çalma listelerinizi okuma izni istenir, hiçbir şey değiştirilmez. ¦ Sign in with your Google account; only permission to read your playlists is requested and nothing is changed. ¦ Melden Sie sich mit Ihrem Google-Konto an; es wird nur die Berechtigung zum Lesen Ihrer Playlists angefragt, nichts wird geändert. ¦ سجّل الدخول بحساب Google؛ يُطلب إذن قراءة قوائم التشغيل فقط ولا يُغيَّر أي شيء.
+▶ YouTube ile bağlan ¦ ▶ Connect with YouTube ¦ ▶ Mit YouTube verbinden ¦ ▶ الاتصال بـ YouTube
+Bağlı hesap: <0>{}</0> ¦ Connected account: <0>{}</0> ¦ Verbundenes Konto: <0>{}</0> ¦ الحساب المتصل: <0>{}</0>
+↻ Listeleri yenile ¦ ↻ Refresh lists ¦ ↻ Listen aktualisieren ¦ ↻ تحديث القوائم
+Bağlantıyı kes ¦ Disconnect ¦ Trennen ¦ قطع الاتصال
+{} video ¦ {} videos ¦ {} Videos ¦ {} فيديو
+Eklendi ✓ ¦ Added ✓ ¦ Hinzugefügt ✓ ¦ أُضيفت ✓
++ Ekle ¦ + Add ¦ + Hinzufügen ¦ + إضافة
+📺 Ekle ve TV'de çal ¦ 📺 Add and play on TV ¦ 📺 Hinzufügen und auf dem TV abspielen ¦ 📺 أضف وشغّل على التلفاز
+Bu hesapta çalma listesi bulunamadı. ¦ No playlists found in this account. ¦ In diesem Konto wurden keine Playlists gefunden. ¦ لم يُعثر على قوائم تشغيل في هذا الحساب.
+YouTube hesabının bağlantısı kesilsin mi? Eklediğiniz listeler kalır. ¦ Disconnect the YouTube account? Lists you've added will stay. ¦ YouTube-Konto trennen? Hinzugefügte Listen bleiben erhalten. ¦ هل تريد قطع اتصال حساب YouTube؟ تبقى القوائم التي أضفتها.
+YouTube bağlantısı kesildi ¦ YouTube disconnected ¦ YouTube getrennt ¦ تم قطع اتصال YouTube
+YouTube hesabı bağlandı ¦ YouTube account connected ¦ YouTube-Konto verbunden ¦ تم ربط حساب YouTube
+YouTube izni verilmedi ¦ YouTube permission was not granted ¦ YouTube-Berechtigung wurde nicht erteilt ¦ لم يُمنح إذن YouTube
+Giriş oturumunun süresi doldu; yeniden deneyin ¦ The sign-in session expired; please try again ¦ Die Anmeldesitzung ist abgelaufen; bitte erneut versuchen ¦ انتهت جلسة تسجيل الدخول؛ حاول مجددًا
+YouTube bağlantısı henüz açılmadı ¦ YouTube connection isn't available yet ¦ YouTube-Verbindung ist noch nicht verfügbar ¦ اتصال YouTube غير متاح بعد
+YouTube hesabı bağlanamadı ¦ Could not connect the YouTube account ¦ YouTube-Konto konnte nicht verbunden werden ¦ تعذر ربط حساب YouTube
+YouTube hesabı bağlanamadı: {} ¦ Could not connect the YouTube account: {} ¦ YouTube-Konto konnte nicht verbunden werden: {} ¦ تعذر ربط حساب YouTube: {}
+YouTube hesabım ¦ My YouTube account ¦ Mein YouTube-Konto ¦ حسابي على YouTube
+YouTube hesabı bağlı değil ¦ YouTube account is not connected ¦ YouTube-Konto ist nicht verbunden ¦ حساب YouTube غير متصل
+YouTube bağlantısının süresi doldu; yeniden bağlanın ¦ Your YouTube connection expired; reconnect ¦ Ihre YouTube-Verbindung ist abgelaufen; verbinden Sie sich erneut ¦ انتهت صلاحية اتصال YouTube؛ أعد الاتصال
+YouTube (Google girişi) ¦ YouTube (Google sign-in) ¦ YouTube (Google-Anmeldung) ¦ YouTube (تسجيل الدخول عبر Google)
+İşletmelerin kendi YouTube / YouTube Music çalma listelerini panele çekmesi için. Google Cloud'da oluşturduğunuz OAuth istemcisinin bilgileri. Yetkili yönlendirme URI'si olarak şunu ekleyin: ¦ Lets businesses pull their own YouTube / YouTube Music playlists into the panel. Details of the OAuth client you created in Google Cloud. Add this as an authorised redirect URI: ¦ Damit Betriebe ihre eigenen YouTube-/YouTube-Music-Playlists ins Panel holen können. Angaben des OAuth-Clients aus Google Cloud. Fügen Sie dies als autorisierte Weiterleitungs-URI hinzu: ¦ لتمكين الأعمال من جلب قوائم YouTube / YouTube Music الخاصة بها إلى اللوحة. بيانات عميل OAuth الذي أنشأته في Google Cloud. أضف هذا كعنوان إعادة توجيه مصرّح به:
+Uygulama Google'da test modundaysa yalnız test kullanıcısı olarak eklenen hesaplar bağlanabilir ve bağlantı 7 günde bir yenilenmelidir. ¦ While the app is in test mode at Google, only accounts added as test users can connect, and the connection must be renewed every 7 days. ¦ Solange die App bei Google im Testmodus ist, können sich nur als Testnutzer eingetragene Konten verbinden, und die Verbindung muss alle 7 Tage erneuert werden. ¦ ما دام التطبيق في وضع الاختبار لدى Google، لا يمكن الاتصال إلا للحسابات المضافة كمستخدمي اختبار، ويجب تجديد الاتصال كل 7 أيام.

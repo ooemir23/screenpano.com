@@ -225,7 +225,7 @@ r.get('/state', (req, res) => res.json(publicState(req.t)));
 // Aşağısı eski tek-kafe sürümünün yönetim uçları; davranış aynı, veri işletmeye ait.
 // ======================================================================
 r.get('/db', (req, res) => {
-  const { trafficSecret, instagram, ...rest } = req.t.db;
+  const { trafficSecret, instagram, ytAuth, ...rest } = req.t.db; // gizli anahtarlar panele gönderilmez
   if (instagram) { const { token, ...ig } = instagram; rest.instagram = { ...ig, connected: !!token }; }
   res.json(rest);
 });

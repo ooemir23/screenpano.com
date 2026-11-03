@@ -340,9 +340,23 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     res.json({ ok: true, music: m });
   });
 
+  // ================= YOUTUBE HESABI (Google OAuth, yalnız okuma) =================
+  const yt = require('./youtube');
+  r.get('/music/google', (req, res) => res.json(yt.status(req.t)));
+  // panelde bağlantıya tıklanınca tarayıcı buraya gelir ve Google'ın giriş sayfasına yönlendirilir
+  r.get('/music/google/connect', ownerOnly, (req, res) => {
+    if (!yt.configured()) return res.redirect('/panel?yt=nocfg#music');
+    res.redirect(yt.authUrl(req.t.id));
+  });
+  r.get('/music/google/playlists', async (req, res) => {
+    try { res.json({ items: await yt.playlists(req.t, req.query.force === '1') }); }
+    catch (e) { res.status(e.code === 'reconnect' ? 409 : 502).json({ error: e.message, reconnect: e.code === 'reconnect' }); }
+  });
+  r.delete('/music/google', ownerOnly, async (req, res) => { await yt.disconnect(req.t); res.json({ ok: true }); });
+
   // ================= KVKK: verilerim, hesap silme =================
   r.get('/privacy/export', ownerOnly, (req, res) => {
-    const t = req.t, { trafficSecret, ...db } = t.db;
+    const t = req.t, { trafficSecret, ytAuth, ...db } = t.db;
     if (db.instagram) db.instagram = { ...db.instagram, token: db.instagram.token ? '(gizli)' : '' };
     const out = {
       exportedAt: new Date().toISOString(), product: config.BRAND,
