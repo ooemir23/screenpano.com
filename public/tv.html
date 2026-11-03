@@ -166,6 +166,7 @@ position:absolute;top:.8vh;right:.8vw}
 #rates.out>#rmain,#rates.out>#rqr{opacity:0}
 #rqr.one .rq{flex-basis:62%}
 #rqr .rq{flex:0 1 calc(50% - .7vh);min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6vh;container-type:size}
+#rqr .rq.solo{flex-basis:100%}
 #rqr .rq .qw{display:contents}
 #rqr .rq .code{flex:none;width:min(100cqw,calc(100cqh - 4vh));height:min(100cqw,calc(100cqh - 4vh));background:#fff;border-radius:1vh;padding:.4vh;box-sizing:border-box;border:max(1px,.18vh) solid rgba(var(--a2),.85);box-shadow:0 .6vh 1.8vh rgba(0,0,0,.45)}
 #rqr .rq .code svg{width:100%;height:100%;display:block}
@@ -1153,7 +1154,7 @@ function renderPanel() {
   document.getElementById('rates').innerHTML = rp.qr ? `<div id="rmain">${main}</div><div id="rqr"></div>` : main; // QR açıksa hava/piyasa bir sayfa, QR'lar sonraki sayfa(lar)
   startRateSwap(); ratesQr();
 }
-// Hava ve piyasalar widget'ında sayfalar: 1) hava + piyasa, 2…) seçili QR'lar (seçim yoksa hepsi) ikişerli yan yana; 12 sn'de bir yumuşak geçişle döner
+// Hava ve piyasalar widget'ında sayfalar: 1) hava + piyasa, 2…) seçili QR'lar (seçim yoksa hepsi): 1-2 QR yan yana, 3 ve fazlası tek tek; 12 sn'de bir yumuşak geçişle döner
 const rQr = { i: 0, timer: null };
 function ratesQr() {
   clearInterval(rQr.timer); rQr.timer = null;
@@ -1162,14 +1163,14 @@ function ratesQr() {
   const rp = WPROPS.rates || {}, hasMain = rp.weather !== false || rp.rates !== false;
   const ids = String(rp.qrs || '').split(',').filter(Boolean);
   const all = qrTile.list || [], list = ids.length ? all.filter(q => ids.includes(q.id)) : all;
-  const pages = []; for (let i = 0; i < list.length; i += 2) pages.push(list.slice(i, i + 2));
+  const pages = list.length <= 2 ? (list.length ? [list] : []) : list.map(q => [q]); // 1-2 QR yan yana tek sayfa; 3 ve fazlası tek tek sırayla
   const views = (hasMain ? [-1] : []).concat(pages.map((_, i) => i)); // -1 = hava/piyasa
   if (!views.length) { main.style.display = ''; box.style.display = 'none'; return; }
   const show = v => {
     main.style.display = v === -1 ? '' : 'none'; box.style.display = v === -1 ? 'none' : 'flex';
     if (v === -1) return;
     const pg = pages[v];
-    box.innerHTML = pg.map(q => `<div class="rq"><div class="qw"><div class="code">${q.svg}</div></div><div class="lbl"><span class="wt">${esc(q.label)}</span></div></div>`).join('');
+    box.innerHTML = pg.map(q => `<div class="rq${pg.length === 1 ? ' solo' : ''}"><div class="qw"><div class="code">${q.svg}</div></div><div class="lbl"><span class="wt">${esc(q.label)}</span></div></div>`).join('');
     box.querySelectorAll('.rq').forEach((el, i) => { const q = pg[i]; clearTimeout(el._wt); if (q.marquee) wifiCycle(el, q); else fitLbl(el.querySelector('.lbl')); });
   };
   show(views[rQr.i % views.length]);
