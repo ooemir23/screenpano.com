@@ -623,12 +623,12 @@ SECTIONS.qr = {
         ${q.pin === false ? `<div class="qh"><span class="muted">Şu içeriklerde gizle:</span><div class="chips">${QR_HIDE.map(([k, l]) => `<span class="chip ${(q.hide || []).includes(k) ? 'on' : ''}" onclick="qrHide('${q.id}','${k}')">${l}</span>`).join('')}</div></div>` : ''}</div>`;
     return head('QR Kodlar', 'QR kodlarınız Tasarım → Ekran düzeni\'ndeki "QR kart" widget\'ı ile gösterilir; her karta ayrı QR seçebilirsiniz.')
       + card('▣ QR kodlar', '"Her zaman üstte" açıkken QR kart ekranda sürekli en üstte durur; kapalıyken seçtiğiniz içeriklerde (video, fotoğraf…) gizlenir.',
-        `${(db.qrs || []).length ? `<div class="list">${db.qrs.map(item).join('')}</div>` : '<div class="empty">Henüz QR kod yok</div>'}
-         <hr class="sep2"><div id="q-mode" class="muted" style="font-weight:700;margin-bottom:8px">Yeni QR ekle</div>
+        `<div id="q-mode" class="muted" style="font-weight:700;margin-bottom:8px">Yeni QR ekle</div>
          <div class="f">${fl('Tür', `<select id="q-kind" onchange="$('q-link').hidden=this.value==='wifi';$('q-wifi').hidden=this.value!=='wifi';if(this.value==='wifi'&&!$('q-label').value)$('q-label').placeholder='Wi-Fi Şifresi';qrPrev()"><option value="link">Bağlantı / metin</option><option value="wifi">Wi-Fi</option></select>`)}${fl('Etiket (QR altında)', '<input type="text" id="q-label" maxlength="40" placeholder="örn. Menü için okutun">')}</div>
          <div class="f mt" id="q-link">${fl('Bağlantı', '<input type="text" id="q-text" placeholder="https://instagram.com/..." oninput="qrPrev()">')}</div>
          <div class="f mt" id="q-wifi" hidden>${fl('Ağ adı (SSID)', '<input type="text" id="q-ssid" oninput="qrPrev()">')}${fl('Şifre', '<input type="text" id="q-pass" oninput="qrPrev()">')}${fl('Güvenlik', '<select id="q-sec" onchange="qrPrev()"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Şifresiz</option></select>')}${fl('Wi-Fi şifre yazısı (boşsa QR\'daki şifre)', `<input type="text" maxlength="120" value="${esc(db.wifiText || '')}" onchange="opt('wifiText',this.value)">`)}</div>
-         <div class="row mt" style="align-items:center"><div id="q-prev" class="qprev"><span class="muted">QR, bilgileri yazdıkça burada oluşur</span></div><span style="flex:1"></span><button class="btn g" id="q-cancel" onclick="qrCancel()" hidden>Vazgeç</button><button class="btn" id="q-save" onclick="addQr()">QR ekle</button></div>`);
+         <div class="row mt" style="align-items:center"><div id="q-prev" class="qprev"><span class="muted">QR, bilgileri yazdıkça burada oluşur</span></div><span style="flex:1"></span><button class="btn g" id="q-cancel" onclick="qrCancel()" hidden>Vazgeç</button><button class="btn" id="q-save" onclick="addQr()">QR ekle</button></div>
+         <hr class="sep2">${(db.qrs || []).length ? `<div class="list">${db.qrs.map(item).join('')}</div>` : '<div class="empty">Henüz QR kod yok</div>'}`);
   },
 };
 const qrPin = (id, v) => act('PATCH', '/qrs/' + id, { pin: v }, 'Kaydedildi');
