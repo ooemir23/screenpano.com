@@ -124,6 +124,7 @@ function publicState(t) {
     books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.map(b => ({ ...b, image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
     showMovies: pro && (db.movies || {}).enabled !== false,
     showTrailers: pro && (db.movies || {}).trailers !== false,
+    trailerEvery: (db.movies || {}).every || 4, trailerGapMin: (db.movies || {}).gapMin || 8, // fragman sıklığı: kaç içerikte bir / en az kaç dakika arayla
     movies: pro && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items } : null,
     showPharmacy: pro && (db.pharmacy || {}).enabled !== false,
     pharmacies: pro ? F.pharmFor(t) : null,

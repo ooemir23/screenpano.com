@@ -1031,7 +1031,7 @@ function next() {
   advance();
 }
 function advance() {
-  if (++trailerPlays >= 4 && trailerList.length && navigator.onLine !== false && Date.now() - trailerAt > 8 * 60 * 1000) { playTrailer(); return; }
+  if (++trailerPlays >= (window.__trailerEvery || 4) && trailerList.length && navigator.onLine !== false && Date.now() - trailerAt > (window.__trailerGapMin || 8) * 60 * 1000) { playTrailer(); return; }
   idx++; play();
 }
 // çapraz geçiş: yeni katman eskisinin üstünde belirir, eskisi tamamen kapanınca gizlenir (arada boşluk/ani değişim olmaz)
@@ -1135,7 +1135,7 @@ function card(m) {
   const corner = '';
   const dayl = '';
   const live = m.live ? `<div class="lv"><span class="pill live">CANLI ${esc(m.clock || '')}</span></div>` : m.final && hasScore ? '<div class="lv"><span class="pill fin">MS</span></div>' : '';
-  const mid = live + (hasScore ? `<div class="sc ${m.final ? 'fin' : ''}">${esc(m.hs)}<i>-</i>${esc(m.as)}</div>` : `<div class="tm">${esc(m.time)}</div>`);
+  const mid = live + (hasScore ? `<div class="sc ${m.final ? 'fin' : ''}">${esc(m.hs)}<i>-</i>${esc(m.as)}</div>` : `<div class="tm">${m.day && m.day !== 'Bugün' ? esc(m.day) + ' ' : ''}${esc(m.time)}</div>`);
   const chn = m.channel ? `<span class="chn">📺 ${esc(m.channel)}</span>` : '';
   return `<div class="m">${dayl}<span class="corner">${corner}</span><div class="tr3">${team(m.home, m.hl, m.final && aw)}<div class="mid">${mid}</div>${team(m.away, m.al, m.final && hw)}</div>${chn}</div>`.replace('class="m"', m.channel ? 'class="m hasch"' : 'class="m"');
 }
@@ -1473,6 +1473,7 @@ function setState(s) {
   setBig(s.bigMatches, s.bigCfg);
   if (BIGDEMO) bigDemo();
   trailerList = s.showTrailers !== false && s.movies ? s.movies.items.filter(m => m.trailer) : [];
+  window.__trailerEvery = s.trailerEvery || 4; window.__trailerGapMin = s.trailerGapMin || 8;
   setCeleb(s.celebration);
   applySafe(s.safe || { L: s.safeInset, R: s.safeInset, T: s.safeInset, B: s.safeInset }, s.safeGuide);
   if ((s.fxMode || 'auto') !== window.__fx) { window.__fx = s.fxMode || 'auto'; window.__applyFx(); }

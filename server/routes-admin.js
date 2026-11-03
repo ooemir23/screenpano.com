@@ -365,7 +365,9 @@ r.post('/bigmatch/test', (req, res) => {
 });
 r.put('/movies', (req, res) => {
   const t = req.t, b = req.body || {}, cur = t.db.movies || {};
-  t.db.movies = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, trailers: typeof b.trailers === 'boolean' ? b.trailers : cur.trailers !== false };
+  const every = Math.max(2, Math.min(20, Math.round(Number(b.every)) || cur.every || 4)); // kaç içerikte bir fragman
+  const gapMin = Math.max(5, Math.min(180, Math.round(Number(b.gapMin)) || cur.gapMin || 8)); // fragmanlar arası en az kaç dakika
+  t.db.movies = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, trailers: typeof b.trailers === 'boolean' ? b.trailers : cur.trailers !== false, every, gapMin };
   changed(t); res.json({ ok: true }); F.refreshMovies();
 });
 r.post('/movies/test', async (req, res) => {

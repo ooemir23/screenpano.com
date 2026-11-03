@@ -160,20 +160,25 @@ async function refreshMatches() {
   const offsetMs = Math.round((Date.parse(localNow.replace(' ', 'T') + 'Z') - nowMs) / 60000) * 60000;
   const todayStart = Date.parse(today + 'T00:00:00Z') - offsetMs;
   const MATCH_MS = 2 * 3600 * 1000;
-  for (const q of ['', '?dates=' + today.replace(/-/g, '')]) {
+  // gelecek maçlar da 4 güne kadar listelenir: hafta içi (maç günü olmayan günlerde) hafta sonu fikstürü görünsün
+  const WD = new Intl.DateTimeFormat('tr-TR', { timeZone: TZ, weekday: 'long' });
+  const tomorrow = ymd(new Date(nowMs + 86400000));
+  const qs = ['', '?dates=' + today.replace(/-/g, '')];
+  for (let k = 1; k <= 4; k++) qs.push('?dates=' + ymd(new Date(nowMs + k * 86400000)).replace(/-/g, ''));
+  for (const q of qs) {
     await Promise.all(leagues.map(async ([code, label]) => {
       try {
         const j = await (await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard${q}`)).json();
         for (const e of j.events || []) {
           const st = e.status.type.state, when = new Date(e.date);
           if (st === 'post' && when.getTime() < todayStart && when.getTime() + MATCH_MS <= todayStart) continue;
-          if (st === 'pre' && ymd(when) !== today) continue;
+          if (st === 'pre' && (when.getTime() < todayStart - 60000 || when.getTime() > todayStart + 4 * 86400000)) continue;
           const c = e.competitions[0].competitors;
           const home = c.find(x => x.homeAway === 'home'), away = c.find(x => x.homeAway === 'away');
           const d = ymd(when);
           out.push({
             id: e.id, league: label, home: trTeam(home.team.shortDisplayName || home.team.displayName), away: trTeam(away.team.shortDisplayName || away.team.displayName),
-            ts: when.getTime(), day: d >= today || st !== 'pre' ? (d > today ? 'Yarın' : 'Bugün') : 'Dün', time: hm(when),
+            ts: when.getTime(), day: st === 'pre' && d > today ? (d === tomorrow ? 'Yarın' : WD.format(when)) : (d > today ? 'Yarın' : 'Bugün'), time: hm(when),
             hl: home.team.logo || null, al: away.team.logo || null, live: st === 'in', final: st === 'post',
             hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '',
             hs: st === 'pre' ? null : home.score, as: st === 'pre' ? null : away.score, clock: st === 'in' ? e.status.displayClock : null,
