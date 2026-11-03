@@ -197,8 +197,9 @@ async function refreshMatches() {
     const cur = { h: +m.hs || 0, a: +m.as || 0 }, prev = prevScores.get(m.id);
     if (prev && (cur.h > prev.h || cur.a > prev.a)) {
       const g = m.lastGoal || {};
-      const hc = teamColor(m.home, m.hcol, m.hcol2), ac = teamColor(m.away, m.acol, m.acol2);
-      const goal = { at: Date.now(), id: m.id, league: m.league, home: m.home, away: m.away, hs: m.hs, as: m.as, side: cur.h > prev.h ? 'home' : 'away', minute: g.min || m.clock, player: g.player || '', own: !!g.own, pen: !!g.pen, hc, ac, hc2: teamColor2(m.home, m.hcol, m.hcol2, hc), ac2: teamColor2(m.away, m.acol, m.acol2, ac) };
+      const hc = goalCol(m.home, m.hcol, m.hcol2, TEAM_COLORS) || teamColor(m.home, m.hcol, m.hcol2);
+      const ac = goalCol(m.away, m.acol, m.acol2, TEAM_COLORS) || teamColor(m.away, m.acol, m.acol2);
+      const goal = { at: Date.now(), id: m.id, league: m.league, home: m.home, away: m.away, hs: m.hs, as: m.as, side: cur.h > prev.h ? 'home' : 'away', minute: g.min || m.clock, player: g.player || '', own: !!g.own, pen: !!g.pen, hc, ac, hc2: goalCol(m.home, m.hcol2, m.hcol, TEAM_COLORS2) || teamColor2(m.home, m.hcol, m.hcol2, hc), ac2: goalCol(m.away, m.acol2, m.acol, TEAM_COLORS2) || teamColor2(m.away, m.acol, m.acol2, ac) };
       // gol yalnızca o ligi seçmiş Pro işletmelerin ekranlarına gider
       hub.send(t => plan(t).pro && access(t).ok && enabledLeagues(t).some(([, l]) => l === m.league), { type: 'goal', goal });
     }
@@ -674,6 +675,12 @@ const teamColor2 = (name, c1, c2, primary) => {
   return primary || '#f4c04f';
 };
 const teamPhoto = (t, name) => { const p = (t.db.bigPhotos || []).find(x => norm(name).includes(x.key)); return p ? t.upBase + p.file : null; };
+// gol kartı: büyükler haricinde ESPN'in verdiği ham rengi olduğu gibi kullan (çok açık/koyuysa kontrastı ekran kendisi düzeltir)
+const goalCol = (name, c1, c2, overrides) => {
+  const k = Object.keys(overrides).find(x => norm(name).includes(x)); if (k) return overrides[k];
+  for (const c of [c1, c2]) { const m = /^#?([0-9a-f]{6})$/i.exec(String(c || '').trim()); if (m) return '#' + m[1].toLowerCase(); }
+  return null;
+};
 const activeBig = t => {
   const now = Date.now(), lim = Math.max(1, Math.min(7, Number(bigCfg(t).days) || 3)) * 24 * HOUR;
   return bigMatches.filter(m => m.ts > now && m.ts - now <= lim).map(m => {
