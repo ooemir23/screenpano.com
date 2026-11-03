@@ -184,3 +184,5 @@ Logodan renk çıkarılamadı. ¦ Could not extract colours from the logo. ¦ Au
 Logo kaldırıldı ¦ Logo removed ¦ Logo entfernt ¦ تمت إزالة الشعار
 Kenar payları kaydedildi ¦ Safe margins saved ¦ Randabstände gespeichert ¦ تم حفظ الهوامش
 Kenar payları sıfırlandı ¦ Safe margins reset ¦ Randabstände zurückgesetzt ¦ تمت إعادة ضبط الهوامش
+Logo yüklendi; beyaz arka planı otomatik kaldırıldı ¦ Logo uploaded; its white background was removed automatically ¦ Logo hochgeladen; der weiße Hintergrund wurde automatisch entfernt ¦ تم رفع الشعار؛ وأُزيلت خلفيته البيضاء تلقائيًا
+Logonun arka planı kalkık değil: şeffaf PNG/SVG yükleyin ya da Logo zemini seçeneğinden "Beyaz zemin"i seçin ¦ The logo's background is not removed: upload a transparent PNG/SVG or choose "White backdrop" in the Logo backdrop option ¦ Der Hintergrund des Logos wurde nicht entfernt: Laden Sie ein transparentes PNG/SVG hoch oder wählen Sie in der Option Logo-Hintergrund „Weißer Hintergrund“ ¦ لم تُزَل خلفية الشعار: ارفع ملف PNG/SVG شفافًا أو اختر «خلفية بيضاء» في خيار خلفية الشعار

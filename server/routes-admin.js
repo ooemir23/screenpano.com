@@ -153,12 +153,23 @@ r.post('/design/reset', (req, res) => {
   changed(t); res.json({ ok: true });
 });
 r.put('/theme', (req, res) => { req.t.db.theme = W.cleanTheme(req.body || {}, req.t.db.theme); changed(req.t); res.json({ ok: true, theme: req.t.db.theme }); });
-r.post('/logo', quota, upload.single('file'), (req, res) => {
+r.post('/logo', quota, upload.single('file'), async (req, res) => {
   const f = req.file, t = req.t;
-  if (!f) return res.status(400).json({ error: 'dosya yok' });
-  if (!/\.(png|jpe?g|webp|svg)$/i.test(f.originalname) || f.size > 5 * 1024 * 1024) { rmUpload(t, f.filename); return res.status(400).json({ error: 'PNG/JPG/WEBP/SVG ve en çok 5 MB olmalı' }); }
-  rmUpload(t, t.db.logo); t.db.logo = f.filename;
-  changed(t); res.json({ ok: true, url: t.upBase + f.filename });
+  try {
+    if (!f) return res.status(400).json({ error: 'dosya yok' });
+    if (!/\.(png|jpe?g|webp|svg)$/i.test(f.originalname) || f.size > 5 * 1024 * 1024) { rmUpload(t, f.filename); return res.status(400).json({ error: 'PNG/JPG/WEBP/SVG ve en çok 5 MB olmalı' }); }
+    // beyaz zeminli (alfasız) logolarda zemini kenardan şeffaf yap; şeffaf dosyalara ve SVG'ye dokunulmaz
+    let name = f.filename, bg = '';
+    if (/\.(png|jpe?g|webp)$/i.test(f.originalname)) {
+      try {
+        const c = await require('./logobg').clean(path.join(t.dirs.uploads, f.filename), t.dirs.uploads);
+        if (c.ok) { rmUpload(t, f.filename); name = c.name; bg = 'removed'; }
+        else if (c.mode === 'transparent' || c.mode === 'opaque') bg = c.mode;
+      } catch (e) { /* temizleme başarısızsa logo olduğu gibi kullanılır */ }
+    }
+    rmUpload(t, t.db.logo); t.db.logo = name;
+    changed(t); res.json({ ok: true, url: t.upBase + name, bg });
+  } catch (e) { res.status(500).json({ error: 'Logo kaydedilemedi' }); }
 });
 r.delete('/logo', (req, res) => { rmUpload(req.t, req.t.db.logo); req.t.db.logo = null; changed(req.t); res.json({ ok: true }); });
 // görsel widget'ı için resim

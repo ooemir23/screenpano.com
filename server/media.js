@@ -25,9 +25,13 @@ async function optimizeItem(tid, id) {
   if (!ffmpegOk) return done({ optimized: false, optError: 'ffmpeg yok' });
   const isImg = v.type === 'image';
   if (isImg && /\.(gif|svg)$/i.test(v.file)) return done({});
-  const outName = uid(16) + (isImg ? '.jpg' : '.mp4'), out = path.join(t.dirs.uploads, outName);
+  // PNG/WebP girdilerde alfa kanalı korunur (şeffaf logo/grafik siyah zeminli JPG'ye dönmesin)
+  const keepAlpha = isImg && /\.(png|webp)$/i.test(v.file);
+  const outName = uid(16) + (isImg ? (keepAlpha ? '.png' : '.jpg') : '.mp4'), out = path.join(t.dirs.uploads, outName);
   const args = isImg
-    ? ['-y', '-i', src, '-vf', SCALE, '-frames:v', '1', '-q:v', '3', out]
+    ? (keepAlpha
+        ? ['-y', '-i', src, '-vf', SCALE + ',format=rgba', '-frames:v', '1', '-compression_level', '9', out]
+        : ['-y', '-i', src, '-vf', SCALE, '-frames:v', '1', '-q:v', '3', out])
     : ['-y', '-i', src, '-vf', SCALE + ',fps=30,format=yuv420p', '-c:v', 'libx264', '-profile:v', 'high', '-level', '4.1', '-preset', 'veryfast', '-crf', '23', '-maxrate', '6M', '-bufsize', '12M', '-an', '-movflags', '+faststart', '-threads', '2', out];
   const before = fs.statSync(src).size;
   try {

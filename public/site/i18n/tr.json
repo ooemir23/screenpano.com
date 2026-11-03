@@ -62,7 +62,7 @@
   "flow.c5.s": "Aynı görüntü",
   "step1.alt": "Panelde renk ve logo ayarları: hazır temalar ve kendi renkleriniz",
   "step1.h": "Hesabınızı açın",
-  "step1.p": "İşletme adınız ve bir şifreyle kaydolun. Logonuzu yükleyin, altı hazır temadan birini seçin ya da kendi renklerinizi girin.",
+  "step1.p": "İşletme adınız ve bir şifreyle kaydolun. Logonuzu yükleyin (beyaz zemin varsa otomatik kaldırılır), altı hazır temadan birini seçin ya da kendi renklerinizi girin.",
   "step2.alt": "TV ekranında eşleştirme: kullanıcı adı ve şifre formu, yanında QR kod ve 6 haneli kod",
   "step2.h": "Kutuyu bağlayın",
   "step2.p": "Uygulamayı Android TV kutusuna ya da Windows bilgisayara kurun. Ekrandaki QR kodu telefonunuzla okutun ya da 6 haneli kodu panele yazın. Şifre cihazda saklanmaz.",

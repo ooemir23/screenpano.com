@@ -336,12 +336,16 @@ async function upLogo(inp) {
   const f = inp.files[0]; if (!f) return; const fd = new FormData(); fd.append('file', f);
   try {
     const j = await req('POST', '/logo', fd); S.me.tenant.logo = j.url; drawBrand();
+    let noted = false;
+    if (j.bg === 'removed') { toast('Logo yüklendi; beyaz arka planı otomatik kaldırıldı'); noted = true; }
+    else if (j.bg === 'opaque') { toast('Logonun arka planı kalkık değil: şeffaf PNG/SVG yükleyin ya da Logo zemini seçeneğinden "Beyaz zemin"i seçin'); noted = true; }
     const th = (await themesFromLogo(j.url))[0];
     if (th) {
       th.plate = false;
       const r = await req('PUT', '/theme', th); S.me.tenant.theme = r.theme; drawBrand(); toast('Logo yüklendi, renkler logonuza göre ayarlandı');
     }
-    else toast('Logo yüklendi');
+    else if (!noted) toast('Logo yüklendi');
+    inp.value = '';
     render(true);
   } catch (e) { toast(e.message, true); }
 }
