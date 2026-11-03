@@ -27,6 +27,7 @@ async function act(method, path, body, ok, reload = true) {
   catch (e) { toast(e.message, true); return false; }
 }
 const opt = (key, val, msg) => { S.db[key] = val; return act('PUT', '/options', { [key]: val }, msg || 'Kaydedildi', false); };
+const reoptAll = () => { if (confirm('Mevcut videolar seçtiğiniz kaliteyle yeniden küçültülsün mü? Orijinaller silindiği için kalite yalnızca düşebilir (küçük dosya, daha akıcı oynatım); işlem kuyrukta sırayla yapılır.')) act('POST', '/media/optimize-all', { force: true }, 'Yeniden küçültme başladı', false); };
 async function refresh() { [S.db, S.scr] = await Promise.all([req('GET', '/db'), req('GET', '/screen')]); render(true); }
 const sw = (on, js, attrs = '') => `<label class="sw"><input type="checkbox" ${on ? 'checked' : ''} onchange="${js}" ${attrs}><i></i></label>`;
 const card = (title, desc, body, right = '', cls = '') => `<div class="card ${cls}"><div class="ch"><div><h3>${title}</h3>${desc ? `<p>${desc}</p>` : ''}</div>${right}</div><div class="cb">${body}</div></div>`;
@@ -466,7 +467,10 @@ SECTIONS.media = {
       const [st, sys] = await Promise.all([req('GET', '/storage'), req('GET', '/system')]);
       const pct = Math.min(100, st.uploadsBytes / st.limitBytes * 100), unopt = S.db.videos.filter(v => !v.optimized && v.status !== 'processing').length;
       $('stor').innerHTML = `<div class="row"><b style="color:var(--text)">${fmtSize(st.uploadsBytes)}</b><span>/ ${fmtSize(st.limitBytes)} kullanılıyor</span></div><div class="meter"><i style="width:${Math.max(2, pct)}%"></i></div>`
-        + (!sys.ffmpeg ? '<p class="mt">Sunucuda video küçültme aracı (ffmpeg) yok; dosyalar olduğu gibi kullanılır.</p>' : unopt ? `<div class="row mt"><span>${unopt} dosya küçültülmemiş.</span><button class="btn s g" onclick="act('POST','/media/optimize-all',undefined,'Küçültme başladı')">Şimdi küçült</button></div>` : '');
+        + (!sys.ffmpeg ? '<p class="mt">Sunucuda video küçültme aracı (ffmpeg) yok; dosyalar olduğu gibi kullanılır.</p>' :
+          `<div class="row mt" style="align-items:center"><span style="flex:1">Video kalitesi — zayıf TV kutusunda takılma olursa 720p deneyin:</span><select style="width:190px" onchange="opt('videoMaxH',+this.value).then(()=>toast('Yeni yüklemeler bu kalitede işlenecek; eskiler için yeniden küçültmeye basın'))">${[[1080, '1080p (önerilen)'], [720, '720p (daha akıcı)'], [480, '480p (çok akıcı, bulanık)']].map(([v, l]) => `<option value="${v}"${(S.db.videoMaxH || 1080) === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`
+          + (unopt ? `<div class="row mt"><span>${unopt} dosya küçültülmemiş.</span><button class="btn s g" onclick="act('POST','/media/optimize-all',undefined,'Küçültme başladı')">Şimdi küçült</button></div>`
+            : (S.db.videos || []).some(v => v.type === 'video') ? `<div class="row mt"><span class="muted" style="flex:1">Mevcut videoları seçilen kaliteyle yeniden işlemek için:</span><button class="btn s" onclick="reoptAll()">Videoları yeniden küçült</button></div>` : ''));
     } catch (e) {}
   },
 };
