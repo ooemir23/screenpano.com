@@ -79,6 +79,21 @@ function summary(t, days = 30) {
   const tot = Object.values(daily).reduce((a, d) => ({ online: a.online + d.online, plays: a.plays + d.plays, sec: a.sec + d.sec, scans: a.scans + d.scans, drops: a.drops + d.drops, dropsec: a.dropsec + d.dropsec }), { online: 0, plays: 0, sec: 0, scans: 0, drops: 0, dropsec: 0 });
   return { days, from, daily: Object.entries(daily).map(([day, v]) => ({ day, ...v })), items: list, totals: tot, prev, heat, qr: qrList, shown };
 }
+// Süper yönetim: tüm platformun günlük toplamı ve işletme bazında özet
+function platform(days = 30) {
+  const from = shiftDay(days - 1), prevFrom = shiftDay(2 * days - 1);
+  const daily = {}; for (let i = days - 1; i >= 0; i--) daily[shiftDay(i)] = { online: 0, plays: 0, scans: 0, drops: 0 };
+  const tot = { online: 0, plays: 0, scans: 0, drops: 0 }, prev = { online: 0, plays: 0, scans: 0, drops: 0 };
+  const key = { online: 'online', play: 'plays', qr: 'scans', drop: 'drops' };
+  for (const r of store.q.statAllRange.all(prevFrom)) {
+    const k = key[r.kind]; if (!k) continue;
+    if (r.day < from) prev[k] += r.value; else if (daily[r.day]) { daily[r.day][k] += r.value; tot[k] += r.value; }
+  }
+  const per = {};
+  for (const r of store.q.statByTenant.all(from)) { const o = per[r.tenant_id] || (per[r.tenant_id] = { online: 0, plays: 0, scans: 0, drops: 0, dropsec: 0 }); const k = r.kind === 'dropsec' ? 'dropsec' : key[r.kind]; if (k) o[k] += r.value; }
+  return { days, from, daily: Object.entries(daily).map(([day, v]) => ({ day, ...v })), totals: tot, prev, per };
+}
+
 // Dışa aktarma (Excel için ; ayraçlı, UTF-8 BOM'lu)
 function csv(t, days = 30) {
   const j = summary(t, days), q = v => '"' + String(v).replace(/"/g, '""') + '"';
@@ -94,4 +109,4 @@ function csv(t, days = 30) {
 function purge() { store.q.statPurge.run(shiftDay(400)); }
 function start() { setInterval(purge, 24 * 3600 * 1000); setTimeout(purge, 60000); }
 
-module.exports = { play, online, scan, shown, deviceDown, deviceUp, summary, csv, start, dayOf };
+module.exports = { play, online, scan, shown, deviceDown, deviceUp, summary, platform, csv, start, dayOf };

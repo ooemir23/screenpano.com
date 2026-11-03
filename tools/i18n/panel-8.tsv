@@ -1,0 +1,109 @@
+Genel bakış ¦ Overview ¦ Übersicht ¦ نظرة عامة
+Veri kaynakları ¦ Data sources ¦ Datenquellen ¦ مصادر البيانات
+Bildirimler ¦ Notifications ¦ Benachrichtigungen ¦ الإشعارات
+Yasal ve site ¦ Legal and website ¦ Rechtliches und Website ¦ القانونية والموقع
+Yedek ve depolama ¦ Backup and storage ¦ Backup und Speicher ¦ النسخ الاحتياطي والتخزين
+Hesabım ¦ My account ¦ Mein Konto ¦ حسابي
+TV sayfası ↗ ¦ TV page ↗ ¦ TV-Seite ↗ ¦ صفحة التلفاز ↗
+Aç ¦ Open ¦ Öffnen ¦ فتح
+Kapat ¦ Close ¦ Schließen ¦ إغلاق
+Çevrimdışı kaldı ¦ Offline for ¦ Offline seit ¦ غير متصل منذ
+Deneme süresi bitiyor ¦ Trial ending ¦ Testphase endet ¦ التجربة على وشك الانتهاء
+Abonelik bitiyor ¦ Subscription ending ¦ Abo läuft aus ¦ الاشتراك على وشك الانتهاء
+CollectAPI anahtarı yok ¦ CollectAPI key missing ¦ CollectAPI-Schlüssel fehlt ¦ مفتاح CollectAPI غير موجود
+Eczane, haber ve kitap verileri çekilemez ¦ Pharmacy, news and book data cannot be fetched ¦ Apotheken-, Nachrichten- und Buchdaten können nicht abgerufen werden ¦ لا يمكن جلب بيانات الصيدليات والأخبار والكتب
+TMDB anahtarı yok ¦ TMDB key missing ¦ TMDB-Schlüssel fehlt ¦ مفتاح TMDB غير موجود
+Sinema verileri çekilemez ¦ Cinema data cannot be fetched ¦ Kinodaten können nicht abgerufen werden ¦ لا يمكن جلب بيانات السينما
+Son yedek başarısız ¦ Last backup failed ¦ Letztes Backup fehlgeschlagen ¦ فشلت النسخة الاحتياطية الأخيرة
+Yedek eski ya da yok ¦ Backup is old or missing ¦ Backup ist veraltet oder fehlt ¦ النسخة الاحتياطية قديمة أو غير موجودة
+Son yedek ¦ Last backup ¦ Letztes Backup ¦ آخر نسخة احتياطية
+Henüz yedek alınmadı ¦ No backup yet ¦ Noch kein Backup ¦ لم تؤخذ نسخة احتياطية بعد
+Medya depolama hatası ¦ Media storage error ¦ Medienspeicher-Fehler ¦ خطأ في تخزين الوسائط
+İşletmelere e-posta uyarısı gönderilemez ¦ Email alerts cannot be sent to businesses ¦ E-Mail-Warnungen können nicht an Betriebe gesendet werden ¦ لا يمكن إرسال تنبيهات البريد الإلكتروني إلى الأعمال
+deneme ¦ trial ¦ Testphase ¦ تجريبي
+son 30 günde ¦ in the last 30 days ¦ in den letzten 30 Tagen ¦ في آخر 30 يومًا
+{} gün eklendi ¦ {} days added ¦ {} Tage hinzugefügt ¦ تمت إضافة {} يومًا
+Yeni şifre ¦ New password ¦ Neues Passwort ¦ كلمة المرور الجديدة
+Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler. ¦ This permanently deletes all of the business's data and media. ¦ Dadurch werden alle Daten und Medien des Betriebs unwiderruflich gelöscht. ¦ سيؤدي هذا إلى حذف جميع بيانات العمل ووسائطه نهائيًا.
+Onaylamak için işletme adını aynen yazın ¦ To confirm, type the business name exactly ¦ Zur Bestätigung geben Sie den Betriebsnamen exakt ein ¦ للتأكيد، اكتب اسم العمل كما هو تمامًا
+Gönderildi: port ¦ Sent: port ¦ Gesendet: Port ¦ تم الإرسال: المنفذ
+Gelen kutusunu ve spam klasörünü kontrol edin ¦ Check your inbox and spam folder ¦ Prüfen Sie Posteingang und Spam-Ordner ¦ تحقق من البريد الوارد ومجلد الرسائل غير المرغوب فيها
+Gönderilemedi ¦ Could not be sent ¦ Senden fehlgeschlagen ¦ تعذر الإرسال
+Yedek alındı ¦ Backup created ¦ Backup erstellt ¦ تم أخذ النسخة الاحتياطية
+Ada göre ¦ By name ¦ Nach Name ¦ حسب الاسم
+Bitiş tarihine göre ¦ By end date ¦ Nach Enddatum ¦ حسب تاريخ الانتهاء
+Son girişe göre ¦ By last login ¦ Nach letzter Anmeldung ¦ حسب آخر تسجيل دخول
+Yeni kayıt önce ¦ Newest first ¦ Neueste zuerst ¦ الأحدث أولًا
+Çevrimdışı cihazı olan ¦ With offline devices ¦ Mit Offline-Geräten ¦ لديها أجهزة غير متصلة
+Süresi dolan ¦ Expired ¦ Abgelaufen ¦ منتهية
+Anahtar yok ¦ No key ¦ Kein Schlüssel ¦ لا يوجد مفتاح
+Adres yok ¦ No address ¦ Keine Adresse ¦ لا يوجد عنوان
+Bağlı ¦ Connected ¦ Verbunden ¦ متصل
+bağlı ¦ connected ¦ verbunden ¦ متصل
+Bir TV kutusu 10 dakikadan uzun çevrimdışı kalınca uyarı gönderilir. ¦ An alert is sent when a TV box stays offline for more than 10 minutes. ¦ Eine Warnung wird gesendet, wenn eine TV-Box länger als 10 Minuten offline ist. ¦ يُرسل تنبيه عندما يبقى صندوق التلفاز غير متصل لأكثر من 10 دقائق.
+Bu ay {} / {} çağrı ¦ This month {} / {} calls ¦ Diesen Monat {} / {} Aufrufe ¦ هذا الشهر {} / {} طلب
+CollectAPI anahtarı ¦ CollectAPI key ¦ CollectAPI-Schlüssel ¦ مفتاح CollectAPI
+Dikkat gerektirenler ¦ Needs attention ¦ Erfordert Aufmerksamkeit ¦ يتطلب الانتباه
+Her şey yolunda ¦ Everything is fine ¦ Alles in Ordnung ¦ كل شيء على ما يرام
+İlgilenmeniz gereken bir şey yok. ¦ Nothing needs your attention. ¦ Nichts erfordert Ihre Aufmerksamkeit. ¦ لا شيء يتطلب انتباهك.
+E-posta (SMTP) ¦ Email (SMTP) ¦ E-Mail (SMTP) ¦ البريد الإلكتروني (SMTP)
+Ekran açık kaldı ({} gün) ¦ Screen was on ({} days) ¦ Bildschirm war an ({} Tage) ¦ بقيت الشاشة تعمل ({} يومًا)
+Ekran kesintisi ¦ Screen outages ¦ Bildschirmausfälle ¦ انقطاعات الشاشة
+Ekran kesintisi ({} gün) ¦ Screen outages ({} days) ¦ Bildschirmausfälle ({} Tage) ¦ انقطاعات الشاشة ({} يومًا)
+Ekran süresi ¦ Screen time ¦ Bildschirmzeit ¦ مدة الشاشة
+Ekran süresi ({} gün) ¦ Screen time ({} days) ¦ Bildschirmzeit ({} Tage) ¦ مدة الشاشة ({} يومًا)
+Ekran kesintisi (30 gün) ¦ Screen outages (30 days) ¦ Bildschirmausfälle (30 Tage) ¦ انقطاعات الشاشة (30 يومًا)
+Ekran süresi (30 gün) ¦ Screen time (30 days) ¦ Bildschirmzeit (30 Tage) ¦ مدة الشاشة (30 يومًا)
+Oynatma (30 gün) ¦ Plays (30 days) ¦ Wiedergaben (30 Tage) ¦ مرات التشغيل (30 يومًا)
+QR okutma (30 gün) ¦ QR scans (30 days) ¦ QR-Scans (30 Tage) ¦ مرات مسح QR (30 يومًا)
+QR okutuldu (30 gün) ¦ QR scanned (30 days) ¦ QR gescannt (30 Tage) ¦ تم مسح QR (30 يومًا)
+İçerik oynatıldı (30 gün) ¦ Content played (30 days) ¦ Inhalte abgespielt (30 Tage) ¦ تم تشغيل المحتوى (30 يومًا)
+Toplam ekran süresi (30 gün) ¦ Total screen time (30 days) ¦ Gesamte Bildschirmzeit (30 Tage) ¦ إجمالي مدة الشاشة (30 يومًا)
+Toplam ekran süresi ¦ Total screen time ¦ Gesamte Bildschirmzeit ¦ إجمالي مدة الشاشة
+İçerik oynatıldı ¦ Content played ¦ Inhalte abgespielt ¦ تم تشغيل المحتوى
+Ekranı açık işletme ¦ Businesses with active screens ¦ Betriebe mit aktivem Bildschirm ¦ أعمال شاشاتها مفعّلة
+Ekranı açık işletmeler. ¦ Businesses with active screens. ¦ Betriebe mit aktivem Bildschirm. ¦ الأعمال التي شاشاتها مفعّلة.
+Google Places API anahtarı ¦ Google Places API key ¦ Google-Places-API-Schlüssel ¦ مفتاح Google Places API
+Google yorumları için. ¦ For Google reviews. ¦ Für Google-Bewertungen. ¦ لتقييمات Google.
+Günlük toplam ekran süresi ¦ Daily total screen time ¦ Tägliche Gesamtbildschirmzeit ¦ إجمالي مدة الشاشة اليومية
+KVKK ve sözleşme sayfalarında görünen şirket bilgileri ile tanıtım sitesindeki fiyat ve iletişim bilgileri. ¦ Company details shown on the privacy and terms pages, plus the prices and contact details on the marketing site. ¦ Firmendaten auf den Datenschutz- und Vertragsseiten sowie Preise und Kontaktdaten auf der Website. ¦ بيانات الشركة الظاهرة في صفحات الخصوصية والشروط، وكذلك الأسعار وبيانات الاتصال في موقع التعريف.
+Kayıt ¦ Registered ¦ Registriert ¦ التسجيل
+Kırmızılar acil, sarılar yakında ilgilenilecek işler. ¦ Red items are urgent, yellow ones need attention soon. ¦ Rote Einträge sind dringend, gelbe sollten bald erledigt werden. ¦ العناصر الحمراء عاجلة والصفراء تحتاج إلى اهتمام قريبًا.
+Mevcut ¦ Current ¦ Aktuell ¦ الحالية
+Nöbetçi eczane, haber ve yeni çıkan kitap verileri. ¦ Duty pharmacy, news and new book data. ¦ Daten zu Notdienst-Apotheken, Nachrichten und neuen Büchern. ¦ بيانات الصيدليات المناوبة والأخبار والكتب الجديدة.
+Oturum ¦ Session ¦ Sitzung ¦ الجلسة
+Oynatma ¦ Plays ¦ Wiedergaben ¦ مرات التشغيل
+Paket dağılımı ¦ Plan distribution ¦ Paketverteilung ¦ توزيع الباقات
+Platformun durumu ve ilgilenmeniz gerekenler. ¦ The state of the platform and what needs your attention. ¦ Zustand der Plattform und was Ihre Aufmerksamkeit braucht. ¦ حالة المنصة وما يحتاج إلى انتباهك.
+QR okutma ¦ QR scans ¦ QR-Scans ¦ مرات مسح QR
+Saat cinsinden; tüm işletmelerin toplamı. ¦ In hours; total of all businesses. ¦ In Stunden; Summe aller Betriebe. ¦ بالساعات؛ مجموع جميع الأعمال.
+Sahip ¦ Owner ¦ Inhaber ¦ المالك
+Satıra tıklayınca o işletmenin ayrıntılı istatistiği açılır. ¦ Click a row to open that business's detailed statistics. ¦ Klicken Sie auf eine Zeile, um die detaillierte Statistik des Betriebs zu öffnen. ¦ انقر على صف لفتح الإحصاءات التفصيلية لذلك العمل.
+Satıra tıklayınca sağda ayrıntıları, düzenleme ve istatistikleri açılır. ¦ Click a row to open details, editing and statistics on the right. ¦ Klicken Sie auf eine Zeile, um rechts Details, Bearbeitung und Statistik zu öffnen. ¦ انقر على صف لفتح التفاصيل والتعديل والإحصاءات على اليمين.
+Sinema (vizyona girecek filmler) için. ¦ For cinema (upcoming films). ¦ Für Kino (kommende Filme). ¦ للسينما (الأفلام القادمة).
+Son ¦ Last ¦ Zuletzt ¦ الأخير
+Son kayıt olanlar ¦ Recent sign-ups ¦ Neueste Anmeldungen ¦ آخر المسجلين
+Son 7 günde yeni kayıt ¦ New sign-ups in the last 7 days ¦ Neue Anmeldungen in den letzten 7 Tagen ¦ تسجيلات جديدة في آخر 7 أيام
+Sözleşme/KVKK onayı ¦ Terms/privacy consent ¦ Zustimmung zu Vertrag/Datenschutz ¦ الموافقة على الشروط/الخصوصية
+Süper yönetici hesabınız. ¦ Your super admin account. ¦ Ihr Super-Admin-Konto. ¦ حساب المشرف العام الخاص بك.
+TMDB API anahtarı ¦ TMDB API key ¦ TMDB-API-Schlüssel ¦ مفتاح TMDB API
+Tehlikeli işlemler ¦ Danger zone ¦ Gefährliche Aktionen ¦ إجراءات خطرة
+Tüm platform ¦ Whole platform ¦ Gesamte Plattform ¦ المنصة بأكملها
+← Tüm platform ¦ ← Whole platform ¦ ← Gesamte Plattform ¦ ← المنصة بأكملها
+Tüm platformun ya da seçtiğiniz işletmenin ekran süresi, içerik oynatma, QR okutma ve kesintileri. ¦ Screen time, content plays, QR scans and outages for the whole platform or a business you choose. ¦ Bildschirmzeit, Wiedergaben, QR-Scans und Ausfälle der gesamten Plattform oder eines gewählten Betriebs. ¦ مدة الشاشة وتشغيل المحتوى ومسح QR والانقطاعات للمنصة بأكملها أو لعمل تختاره.
+Veritabanı yedekleri ¦ Database backups ¦ Datenbank-Backups ¦ النسخ الاحتياطية لقاعدة البيانات
+Veritabanı yedekleri ve medya dosyalarının depolandığı yer. ¦ Database backups and where media files are stored. ¦ Datenbank-Backups und Speicherort der Mediendateien. ¦ النسخ الاحتياطية لقاعدة البيانات ومكان تخزين ملفات الوسائط.
+Webhook (Slack, Discord, Telegram) ¦ Webhook (Slack, Discord, Telegram) ¦ Webhook (Slack, Discord, Telegram) ¦ Webhook (Slack وDiscord وTelegram)
+Yasal bilgiler ¦ Legal information ¦ Rechtliche Angaben ¦ المعلومات القانونية
+Çevrimdışı uyarısı bu adrese {"text": "..."} olarak gönderilir. ¦ The offline alert is sent to this address as {"text": "..."}. ¦ Die Offline-Warnung wird als {"text": "..."} an diese Adresse gesendet. ¦ يُرسل تنبيه عدم الاتصال إلى هذا العنوان بصيغة {"text": "..."}.
+Çıkış yap ¦ Log out ¦ Abmelden ¦ تسجيل الخروج
+İBB trafik ¦ IBB traffic ¦ IBB-Verkehr ¦ حركة المرور IBB
+İBB trafik Worker adresi ¦ IBB traffic Worker address ¦ IBB-Verkehr-Worker-Adresse ¦ عنوان Worker لحركة المرور IBB
+İstatistikleri gör ¦ View statistics ¦ Statistik ansehen ¦ عرض الإحصاءات
+İsteğe bağlı: canlı trafik değeri bir Cloudflare Worker üzerinden gelir. ¦ Optional: the live traffic value comes through a Cloudflare Worker. ¦ Optional: Der Live-Verkehrswert kommt über einen Cloudflare Worker. ¦ اختياري: تأتي قيمة حركة المرور المباشرة عبر Cloudflare Worker.
+İşletme bazında ¦ By business ¦ Nach Betrieb ¦ حسب العمل
+İşletmelere e-posta uyarısı için sunucuda SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM ortam değişkenlerini girin. ¦ For email alerts to businesses, set SMTP_HOST, SMTP_USER, SMTP_PASS and SMTP_FROM environment variables on the server. ¦ Für E-Mail-Warnungen an Betriebe setzen Sie auf dem Server die Umgebungsvariablen SMTP_HOST, SMTP_USER, SMTP_PASS und SMTP_FROM. ¦ لإرسال تنبيهات البريد الإلكتروني إلى الأعمال، عيّن متغيرات البيئة SMTP_HOST وSMTP_USER وSMTP_PASS وSMTP_FROM على الخادم.
+Şu an bağlı TV ¦ TVs connected now ¦ Aktuell verbundene TVs ¦ أجهزة التلفاز المتصلة الآن
+Kayıtlı TV ¦ Registered TVs ¦ Registrierte TVs ¦ أجهزة التلفاز المسجلة
+R2 kapalı ¦ R2 off ¦ R2 aus ¦ R2 متوقف
+R2 açık ¦ R2 on ¦ R2 an ¦ R2 مفعّل

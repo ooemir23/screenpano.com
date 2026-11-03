@@ -33,6 +33,14 @@ r.get('/overview', (req, res) => {
   const backup = require('./backup'), storage = require('./storage'), monitor = require('./monitor');
   res.json({ books: require('./feeds').booksInfo(), google: gUse, backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
 });
+// ---- istatistik: tüm platform ve işletme bazında ----
+const STD = v => [7, 30, 90].includes(Number(v)) ? Number(v) : 30;
+r.get('/stats', (req, res) => {
+  const j = require('./stats').platform(STD(req.query.days));
+  j.tenants = tenants.all().map(t => ({ id: t.id, name: t.name, plan: t.plan, org: t.org_id || null, ok: access(t).ok, devices: store.q.devicesOf.all(t.id).length, ...(j.per[t.id] || { online: 0, plays: 0, scans: 0, drops: 0, dropsec: 0 }) }));
+  delete j.per; res.json(j);
+});
+r.get('/tenants/:id/stats', (req, res) => { const t = tenants.get(req.params.id); if (!t) return res.status(404).json({ error: 'bulunamadı' }); res.json(require('./stats').summary(t, STD(req.query.days))); });
 r.post('/tenants', (req, res) => {
   try {
     const b = req.body || {};

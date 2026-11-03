@@ -5,104 +5,125 @@
 <style>
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F}
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC}
-:root{--bg:#121414;--panel:#1c1f1f;--panel2:#242828;--line:rgba(255,255,255,.09);--text:#f4f1ea;--mute:#9aa0a0;--accent:#906538;--accent2:#c9955c;--ok:#3ecf4a;--bad:#ee5b4f}
+:root{--bg:#121414;--panel:#1c1f1f;--panel2:#242828;--line:rgba(255,255,255,.09);--text:#f4f1ea;--mute:#9aa0a0;--accent:#906538;--accent2:#c9955c;--a2:201,149,92;--ok:#3ecf4a;--bad:#ee5b4f;--warn:#e9b44c}
 *{box-sizing:border-box;margin:0}
-body{font-family:Montserrat,system-ui,sans-serif;background:var(--bg);color:var(--text);padding:28px 32px 80px;max-width:1500px;margin:0 auto}
+body{font-family:Montserrat,system-ui,sans-serif;background:var(--bg);color:var(--text)}
 button,input,select,textarea{font:inherit;color:inherit}
-header{display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap}
-h1{font-size:24px}
+a{color:var(--accent2)}
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+#side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;padding:20px 12px;background:var(--panel);border-right:1px solid var(--line)}
+#side .brand{display:flex;flex-direction:column;gap:6px;padding:4px 10px 16px;border-bottom:1px solid var(--line);margin-bottom:8px}
+#side .brand small{color:var(--mute);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:2px;flex:1;overflow:auto}
+.nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--text);text-decoration:none;font-size:14px;font-weight:500;opacity:.8}
+.nav a i{font-style:normal;width:20px;text-align:center}
+.nav a:hover{background:rgba(255,255,255,.05);opacity:1}
+.nav a.on{background:linear-gradient(135deg,rgba(var(--a2),.22),rgba(var(--a2),.08));opacity:1;box-shadow:inset 0 0 0 1px rgba(var(--a2),.35)}
+.nav a .n{margin-left:auto;background:var(--bad);color:#fff;border-radius:10px;font-size:11px;font-weight:700;padding:1px 7px}
+.sidefoot{display:flex;flex-direction:column;gap:8px;padding:10px 6px 0;border-top:1px solid var(--line);font-size:13px}
+.sidefoot a{color:var(--mute);text-decoration:none}.sidefoot a:hover{color:var(--text)}
+main{padding:28px 32px 80px;max-width:1380px;width:100%}
+h1{font-size:24px;margin-bottom:6px}
 h2{font-size:16px;margin-bottom:12px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+h3{font-size:14px;margin:16px 0 8px}
+.sub{color:var(--mute);font-size:13.5px;line-height:1.5;margin-bottom:20px;max-width:760px}
+.top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:6px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
-.stat b{display:block;font-size:28px;color:var(--accent2)}
-.stat span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.stat b{display:block;font-size:26px;color:var(--text);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--mute);line-height:1.5;display:block;margin-top:2px}
+.stat .dl{font-size:12px;font-weight:700;display:inline}.dl.up{color:var(--ok)}.dl.dn{color:var(--bad)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:20px}
-.hint{color:var(--mute);font-size:13px;line-height:1.5;margin-bottom:12px}
+.card>h2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hint{color:var(--mute);font-size:13px;line-height:1.55;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;color:var(--mute);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line)}
+th{text-align:left;color:var(--mute);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
-tr:hover td{background:rgba(255,255,255,.02)}
-.tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
-.tag.ok{background:rgba(62,207,74,.15);color:var(--ok)}.tag.trial{background:rgba(201,149,92,.18);color:var(--accent2)}.tag.bad{background:rgba(238,91,79,.15);color:var(--bad)}
-input,select{background:#141616;border:1px solid var(--line);border-radius:9px;padding:9px 11px;outline:none;width:100%}
-input:focus,select:focus{border-color:var(--accent2)}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-.row>div{flex:1;min-width:140px}
+tbody tr.click{cursor:pointer}tbody tr:hover td{background:rgba(255,255,255,.025)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.tag.ok{background:rgba(62,207,74,.15);color:var(--ok)}.tag.trial{background:rgba(201,149,92,.18);color:var(--accent2)}.tag.bad{background:rgba(238,91,79,.15);color:var(--bad)}.tag.warn{background:rgba(233,180,76,.16);color:var(--warn)}.tag.mute{background:rgba(255,255,255,.07);color:var(--mute)}
+input,select,textarea{background:#141616;border:1px solid var(--line);border-radius:9px;padding:9px 11px;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent2)}
+input[type=checkbox]{width:auto}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.row>div{flex:1;min-width:160px}
+.row:last-child{margin-bottom:0}
 label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
-.btn{background:linear-gradient(135deg,var(--accent2),var(--accent));border:0;border-radius:9px;padding:9px 16px;font-weight:600;cursor:pointer;color:#fff;white-space:nowrap}
-.btn.ghost{background:transparent;border:1px solid var(--line)}
-.btn.sm{padding:5px 10px;font-size:12px}
+.btn{background:linear-gradient(135deg,var(--accent2),var(--accent));border:0;border-radius:9px;padding:9px 16px;font-weight:600;cursor:pointer;color:#fff;white-space:nowrap;text-decoration:none;display:inline-block;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}.btn.ghost:hover{border-color:var(--accent2)}
+.btn.sm{padding:5px 11px;font-size:12px}
 .btn.danger{background:transparent;border:1px solid rgba(238,91,79,.45);color:var(--bad)}
-.acts{display:flex;gap:6px;flex-wrap:wrap}
-tr.sub td:first-child{padding-left:30px}
-tr.sub .br{color:var(--mute);margin-right:6px;font-weight:400}
-#dlg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
-#dlg.on{display:flex}
-#dlg .card{width:100%;max-width:620px;max-height:90vh;overflow:auto}
-#toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:20}
-.toast{background:#2b2f2f;border-left:4px solid var(--ok);padding:12px 16px;border-radius:10px;font-size:14px}
-.toast.err{border-left-color:var(--bad)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cardfoot{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:30px;background:var(--panel2);border:1px solid var(--line);cursor:pointer;font-size:13px;user-select:none}
+.chip:hover{border-color:var(--accent2)}.chip.on{background:rgba(var(--a2),.22);border-color:var(--accent2)}
+.chip b{font-weight:700;color:var(--mute);font-size:12px}
+.tabs{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:2px}
+.tabs button{background:none;border:0;border-radius:9px;padding:7px 16px;cursor:pointer;color:var(--mute);font-weight:600;font-size:13px}.tabs button.on{background:var(--panel2);color:var(--text)}
+.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar input[type=search],.toolbar .grow{flex:1;min-width:200px}
+.toolbar select{width:auto}
 .scroll{overflow-x:auto}
-.hint a{color:var(--accent2,#c9955c)}
-.langsel{background:var(--panel2,#242828);color:inherit;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;cursor:pointer;max-width:100%}
-.bkbox{margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-.bkbox b{color:var(--accent2,#c9955c)}
+.att{display:flex;gap:12px;align-items:center;padding:11px 14px;background:var(--panel2);border-radius:11px;margin-bottom:8px;border-left:3px solid var(--warn)}
+.att.bad{border-left-color:var(--bad)}.att.ok{border-left-color:var(--ok)}
+.att .b{flex:1;min-width:0;font-size:13.5px;line-height:1.5}.att .b span{color:var(--mute);display:block;font-size:12.5px}
+.bar{height:8px;border-radius:5px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent2)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}.kv dt{color:var(--mute)}.kv dd{margin:0}
+.bkbox{margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.bars{display:flex;align-items:flex-end;gap:3px;height:170px;padding:6px 0;border-bottom:1px solid var(--line);margin-bottom:6px}
+.bars div{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
+.bars i{display:block;width:100%;background:var(--accent2);border-radius:3px 3px 0 0;min-height:2px}.bars div:hover i{background:var(--text)}
+.axis{display:flex;justify-content:space-between;font-size:12px;color:var(--mute)}
+.it{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel2);border-radius:11px;margin-bottom:8px}
+.it .b{flex:1;min-width:0}.it .b span{display:block;color:var(--mute);font-size:12.5px;margin-top:2px}
+.mini{display:flex;align-items:flex-end;gap:2px;height:38px;width:34%;min-width:90px;flex:none}.mini div{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}.mini i{display:block;width:100%;background:var(--accent2);border-radius:2px 2px 0 0;min-height:2px}
+.big{font-size:24px;font-weight:700;min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.heat{display:grid;grid-template-columns:38px repeat(24,1fr);gap:3px;align-items:center}.heat i{display:block;height:22px;border-radius:4px}.heat .hl{font-size:10.5px;color:var(--mute);text-align:center}.heat .dn{font-size:12px;color:var(--mute)}
+.empty{color:var(--mute);text-align:center;padding:26px 10px;font-size:13.5px}
+#drawer{position:fixed;inset:0;z-index:30;display:none}
+#drawer.on{display:block}
+#drawer .bg{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+#drawer .pane{position:absolute;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:22px}
+#drawer .x{float:right;background:none;border:0;font-size:24px;cursor:pointer;color:var(--mute);line-height:1}
+#toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.toast{background:#2b2f2f;border-left:4px solid var(--ok);padding:12px 16px;border-radius:10px;font-size:14px}.toast.err{border-left-color:var(--bad)}
+.langsel{background:var(--panel2);color:inherit;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;cursor:pointer;max-width:100%;width:100%}
+@media(max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px 12px;border-right:0;border-bottom:1px solid var(--line)}
+  #side .brand{border:0;padding:0;margin:0;margin-right:auto}
+  .nav{flex-direction:row;flex:none;order:3;width:100%;overflow-x:auto;padding-bottom:4px}.nav a{white-space:nowrap;padding:8px 12px}
+  .sidefoot{flex-direction:row;border:0;padding:0;align-items:center}
+  main{padding:20px 16px 60px}.grid2{grid-template-columns:1fr}
+}
 </style></head><body>
-<header><a href="/super" style="text-decoration:none"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:34px;display:block"></a><span style="color:var(--mute);font-size:13px;padding-left:6px;border-left:1px solid var(--line)">Süper Yönetim</span><span style="flex:1"></span><span data-langpick></span><a class="btn ghost" href="/tv" target="_blank" style="text-decoration:none">TV sayfası</a><button class="btn ghost" onclick="pwDialog()">Şifremi değiştir</button><button class="btn ghost" onclick="logout()">Çıkış</button></header>
-<div class="stats" id="stats"></div>
-<div class="card"><h2>İşletmeler</h2>
-  <div class="row" style="margin-bottom:14px"><div><input id="flt" placeholder="Ara (ad, kullanıcı, telefon)" oninput="renderList()"></div><button class="btn" onclick="newDialog()">＋ Yeni işletme</button></div>
-  <div class="scroll"><table><thead><tr><th>İşletme</th><th>Paket</th><th>Durum</th><th>Bitiş</th><th>Cihaz</th><th>Depolama</th><th>Son giriş</th><th></th></tr></thead><tbody id="list"></tbody></table></div>
+<div class="app">
+  <aside id="side">
+    <div class="brand"><a href="/super" style="text-decoration:none"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:32px;display:block"></a><small>Süper Yönetim</small></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidefoot"><span data-langpick></span><a href="/tv" target="_blank">TV sayfası ↗</a></div>
+  </aside>
+  <main id="main"><div class="empty">Yükleniyor…</div></main>
 </div>
-<div class="card"><h2>Platform anahtarları</h2>
-  <p class="hint">Bu anahtarlar tüm işletmeler için ortaktır; işletmeler hiçbir anahtar görmez. Veri her kaynaktan bir kez çekilip herkese dağıtılır. Ticari kullanım şartlarını her sağlayıcıdan kontrol edin.</p>
-  <div class="row">
-    <div><label>CollectAPI anahtarı (eczane, haber, kitap)</label><input id="s-collect_key" type="password" autocomplete="off"></div>
-    <div style="max-width:220px"><label>CollectAPI planı</label><select id="s-collect_paid"><option value="">Ücretsiz (kota korumalı)</option><option value="1">Ücretli (kota sınırı yok)</option></select></div>
-  </div>
-  <div class="row" style="margin-top:12px">
-    <div><label>Google Places API anahtarı (Google yorumları)</label><input id="s-google_places_key" type="password" autocomplete="off"></div>
-    <div><label>Google aylık çağrı sınırı <span id="g-use" style="color:var(--mute)"></span></label><input id="s-google_monthly_cap" type="number" min="0" placeholder="900 (boş = 900)"></div>
-  </div>
-  <div class="row" style="margin-top:12px">
-    <div><label>TMDB API anahtarı (sinema)</label><input id="s-tmdb_key" type="password" autocomplete="off"></div>
-  </div>
-  <h3 style="margin:22px 0 4px;font-size:15px">Yeni çıkan kitaplar</h3>
-  <p class="hint">Liste D&amp;R yeni çıkanlarından (CollectAPI) günde bir alınır. Sesli kitaplar alınmaz; ekranlarda havuzdan rastgele 8 kitap gösterilir ve seçim 3 saatte bir değişir.</p>
-  <div id="bk-info" class="bkbox">…</div>
-  <div class="row" style="margin-top:10px"><button class="btn g s" type="button" onclick="refreshBooks(this)">Kitapları şimdi yenile</button></div>
-  <div class="row" style="margin-top:12px">
-    <div><label>İBB trafik Worker adresi (isteğe bağlı)</label><input id="s-traffic_api" placeholder="https://trafik.kullanici.workers.dev"></div>
-    <div><label>Worker imza anahtarı (TRAFFIC_SECRET olarak girin)</label><input id="s-traffic_secret" readonly></div>
-  </div>
-  <h3 style="margin:22px 0 4px;font-size:15px">Uyarılar</h3>
-  <p class="hint">Bir TV kutusu 10 dakikadan uzun çevrimdışı kalınca bu adrese {"text": "..."} gönderilir (Slack, Discord ya da Telegram köprüsü). İşletmelere e-posta için sunucuda SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM ortam değişkenlerini girin. <span id="mailst"></span></p>
-  <div class="row" style="margin-bottom:12px"><div><label>Deneme e-postası gönder</label><input id="mt-to" type="email" placeholder="ornek@alanadi.com"></div><div style="max-width:160px;align-self:flex-end"><button class="btn ghost" onclick="testMail()">Gönder</button></div></div>
-  <div class="row"><div><label>Webhook adresi (https://…)</label><input id="s-alert_webhook" placeholder="https://hooks.slack.com/services/…"></div><div style="max-width:160px;align-self:flex-end"><button class="btn ghost" onclick="testHook()">Dene</button></div></div>
-  <h3 style="margin:22px 0 4px;font-size:15px">Yasal bilgiler (KVKK ve sözleşme sayfalarında görünür)</h3>
-  <p class="hint">Metinler başlangıç taslağıdır; yayına almadan önce bir avukata kontrol ettirin. Sayfalar: <a href="/kvkk" target="_blank">/kvkk</a> · <a href="/kosullar" target="_blank">/kosullar</a> · <a href="/gizlilik" target="_blank">/gizlilik</a></p>
-  <div class="row"><div><label>Şirket unvanı</label><input id="s-legal_company"></div><div><label>MERSİS no</label><input id="s-legal_mersis"></div></div>
-  <div class="row" style="margin-top:12px"><div><label>Açık adres</label><input id="s-legal_address"></div></div>
-  <div class="row" style="margin-top:12px"><div><label>KVKK başvuru e-postası</label><input id="s-legal_email"></div><div><label>Telefon</label><input id="s-legal_phone"></div><div><label>KEP adresi (varsa)</label><input id="s-legal_kep"></div></div>
-  <div class="row" style="margin-top:12px"><div><label>Sunucu sağlayıcısı ve ülkesi (KVKK metninde görünür)</label><input id="s-legal_hosting" placeholder="örn. Natro Hosting (Türkiye)"></div></div>
-  <h3 style="margin:22px 0 4px;font-size:15px">Tanıtım sitesi</h3>
-  <p class="hint">Ana sayfadaki (<a href="/?site" target="_blank">önizle</a>) fiyatlar ve iletişim düğmeleri. Fiyat boşsa "Fiyat için bize ulaşın" yazar.</p>
-  <div class="row"><div><label>Başlangıç fiyatı</label><input id="s-site_price_baslangic" placeholder="örn. 499 ₺ / ay"></div><div><label>Pro fiyatı</label><input id="s-site_price_pro" placeholder="örn. 899 ₺ / ay"></div></div>
-  <div class="row" style="margin-top:12px"><div><label>WhatsApp numarası</label><input id="s-site_whatsapp" placeholder="905xxxxxxxxx"></div><div><label>Telefon</label><input id="s-site_phone"></div><div><label>E-posta</label><input id="s-site_email"></div></div>
-  <div class="row" style="margin-top:14px"><button class="btn" onclick="saveSettings()">Kaydet</button></div>
-</div>
-<div class="card"><h2>Yedekler ve depolama</h2><div id="bk"><p class="hint">Yükleniyor…</p></div></div>
-<div class="card" id="offc" style="display:none"><h2>Çevrimdışı cihazlar</h2><div class="scroll"><table><thead><tr><th>İşletme</th><th>Cihaz</th><th>Son görülme</th><th></th></tr></thead><tbody id="offl"></tbody></table></div></div>
-<div id="dlg" onclick="if(event.target===this)closeDlg()"><div class="card" id="dlgc"></div></div>
+<div id="drawer"><div class="bg" onclick="closeDrawer()"></div><div class="pane" id="pane"></div></div>
 <div id="toasts"></div>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const T = s => I18N.t(s);
+const nf = n => Number(n || 0).toLocaleString(I18N.locale);
 const fmt = ms => ms ? new Date(ms).toLocaleDateString(I18N.locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
-const ago = ms => { if (!ms) return '-'; const m = Math.round((Date.now() - ms) / 60000); return m < 60 ? m + ' dk' : m < 1440 ? Math.round(m / 60) + ' sa' : Math.round(m / 1440) + ' gün'; };
-let D = null;
-async function refreshBooks(btn) { btn.disabled = true; btn.textContent = 'Yenileniyor…'; try { const j = await call('POST', '/api/super/books/refresh'); toast('Kitaplar yenilendi'); if (typeof load === 'function') load(); } catch (e) { toast(e.message, true); } btn.disabled = false; btn.textContent = 'Kitapları şimdi yenile'; }
-function toast(m, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = m; $('toasts').appendChild(t); setTimeout(() => t.remove(), 4000); }
+const fmtD = d => d ? new Date(d + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'short' }) : '';
+const ago = ms => { if (!ms) return '-'; const m = Math.round((Date.now() - ms) / 60000); return m < 60 ? m + ' ' + T('dk') : m < 1440 ? Math.round(m / 60) + ' ' + T('sa') : Math.round(m / 1440) + ' ' + T('gün'); };
+const hrs = m => (m / 60).toFixed(m < 600 ? 1 : 0).replace('.', ',');
+const dur = sec => sec >= 3600 ? hrs(sec / 60) + ' ' + T('sa') : Math.max(1, Math.round(sec / 60)) + ' ' + T('dk');
+const size = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : b >= 1048576 ? Math.round(b / 1048576) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+function toast(m, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = T(m); $('toasts').appendChild(t); setTimeout(() => t.remove(), 4500); }
 async function call(method, url, body) {
   const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({}));
@@ -110,10 +131,250 @@ async function call(method, url, body) {
   if (!r.ok) throw new Error(j.error || 'Hata ' + r.status);
   return j;
 }
-async function load() {
-  D = await call('GET', '/api/super/overview');
-  const t = D.totals;
-  $('stats').innerHTML = [['İşletme', t.tenants], ['Ekranı açık', t.live], ['Kayıtlı TV', t.devices], ['Şu an bağlı', t.online]].map(([l, v]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+const api = (m, u, b) => call(m, '/api/super' + u, b);
+
+/* ---------- sayfa yapısı ---------- */
+const NAV = [['home', '▦', 'Genel bakış'], ['tenants', '🏢', 'İşletmeler'], ['stats', '📊', 'İstatistik'], ['sources', '🔌', 'Veri kaynakları'], ['notify', '🔔', 'Bildirimler'], ['legal', '📄', 'Yasal ve site'], ['backup', '💾', 'Yedek ve depolama'], ['account', '👤', 'Hesabım']];
+let D = null, page = 'home', P = null, PAT = 0;
+const ST = { days: 30, tid: 'all' }, TF = { q: '', f: 'all', sort: 'new' };
+const pageOf = () => { const h = (location.hash || '#home').slice(1).split('/')[0]; return NAV.some(n => n[0] === h) ? h : 'home'; };
+
+/* ---------- dikkat gerektirenler ---------- */
+function attention() {
+  const out = [], now = Date.now(), day = 86400000;
+  for (const o of D.offline) out.push({ lv: 'bad', t: `${o.tenant} · ${o.name || T('TV kutusu')}`, s: `${T('Çevrimdışı kaldı')}: ${ago(o.lastSeen)}`, act: [T('Panele gir'), `imp('${o.tenantId}')`] });
+  for (const x of D.tenants) {
+    const a = x.access;
+    if (x.deletion) out.push({ lv: 'bad', t: x.name, s: `${T('KVKK silme talebi')}: ${fmt(x.deletion)}`, act: [T('Aç'), `openTenant('${x.id}')`] });
+    else if (a.ok && a.kind === 'trial' && a.until - now <= 3 * day) out.push({ lv: 'warn', t: x.name, s: `${T('Deneme süresi bitiyor')}: ${fmt(a.until)}`, act: [T('Aç'), `openTenant('${x.id}')`] });
+    else if (a.ok && a.kind === 'paid' && a.until - now <= 7 * day) out.push({ lv: 'warn', t: x.name, s: `${T('Abonelik bitiyor')}: ${fmt(a.until)}`, act: [T('Aç'), `openTenant('${x.id}')`] });
+    else if (!a.ok && a.reason === 'expired' && now - Math.max(x.paidUntil || 0, x.trialUntil || 0) <= 14 * day) out.push({ lv: 'bad', t: x.name, s: `${T('Süresi doldu')}: ${fmt(Math.max(x.paidUntil || 0, x.trialUntil || 0))}`, act: [T('Aç'), `openTenant('${x.id}')`] });
+  }
+  const s = D.settings;
+  if (!s.collect_key) out.push({ lv: 'warn', t: T('CollectAPI anahtarı yok'), s: T('Eczane, haber ve kitap verileri çekilemez'), act: [T('Aç'), "go('sources')"] });
+  if (!s.tmdb_key) out.push({ lv: 'warn', t: T('TMDB anahtarı yok'), s: T('Sinema verileri çekilemez'), act: [T('Aç'), "go('sources')"] });
+  if (D.backup.error) out.push({ lv: 'bad', t: T('Son yedek başarısız'), s: D.backup.error, act: [T('Aç'), "go('backup')"] });
+  else if (!D.backup.at || now - D.backup.at > 36 * 3600000) out.push({ lv: 'warn', t: T('Yedek eski ya da yok'), s: D.backup.at ? `${T('Son yedek')}: ${new Date(D.backup.at).toLocaleString(I18N.locale)}` : T('Henüz yedek alınmadı'), act: [T('Aç'), "go('backup')"] });
+  if (D.storage.lastError) out.push({ lv: 'bad', t: T('Medya depolama hatası'), s: D.storage.lastError, act: [T('Aç'), "go('backup')"] });
+  if (!D.mail) out.push({ lv: 'warn', t: T('SMTP ayarlı değil'), s: T('İşletmelere e-posta uyarısı gönderilemez'), act: [T('Aç'), "go('notify')"] });
+  return out;
+}
+const attCount = () => D ? attention().filter(a => a.lv === 'bad').length : 0;
+
+/* ---------- gezinme ---------- */
+function drawNav() {
+  const n = D ? attCount() : 0;
+  $('nav').innerHTML = NAV.map(([k, ic, l]) => `<a href="#${k}" class="${page === k ? 'on' : ''}"><i>${ic}</i>${l}${k === 'home' && n ? `<span class="n">${n}</span>` : ''}</a>`).join('');
+}
+function go(p) { location.hash = p; }
+function render() {
+  page = pageOf(); drawNav();
+  if (!D) return;
+  const pg = PAGES[page]; $('main').innerHTML = pg.html(); if (pg.after) pg.after();
+  window.scrollTo(0, 0);
+}
+addEventListener('hashchange', () => { closeDrawer(); render(); });
+
+const head = (title, sub, right = '') => `<div class="top"><div><h1>${title}</h1><p class="sub">${sub}</p></div>${right}</div>`;
+const card = (title, sub, body, foot = '', badge = '') => `<div class="card"><h2>${title}${badge}</h2>${sub ? `<p class="hint">${sub}</p>` : ''}${body}${foot ? `<div class="cardfoot">${foot}</div>` : ''}</div>`;
+const field = (label, id, val = '', attrs = '') => `<div><label>${label}</label><input id="${id}" value="${esc(val)}" ${attrs}></div>`;
+const setting = (label, k, attrs = '') => field(label, 's-' + k, D.settings[k] || '', attrs);
+const stat = (b, label, extra = '') => `<div class="stat"><b>${b}</b><span>${T(label)}${extra}</span></div>`;
+const dl = (cur, prev, goodUp = true) => { if (!prev) return ''; const p = Math.round((cur - prev) / prev * 100); if (!p) return ''; const good = (p > 0) === goodUp; return `<br><b class="dl ${good ? 'up' : 'dn'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p)}%</b> <span style="display:inline">${T('önceki döneme göre')}</span>`; };
+const tabs = (cur, fn) => `<div class="tabs">${[7, 30, 90].map(d => `<button class="${cur === d ? 'on' : ''}" onclick="${fn}(${d})">${d} ${T('gün')}</button>`).join('')}</div>`;
+
+function stTag(x) {
+  if (!x.access.ok) return x.access.reason === 'suspended' ? '<span class="tag bad">Askıda</span>' : '<span class="tag bad">Süresi doldu</span>';
+  return (x.deletion ? `<span class="tag bad" title="KVKK silme talebi">Silinecek ${fmt(x.deletion)}</span> ` : '') + (x.access.kind === 'trial' ? '<span class="tag trial">Deneme</span>' : '<span class="tag ok">Aktif</span>');
+}
+const planName = x => (D.plans[x.plan] || {}).name || x.plan;
+const headOf = o => D.tenants.find(t => t.org === o && t.owner);
+
+const PAGES = {};
+
+/* ================= GENEL BAKIŞ ================= */
+PAGES.home = {
+  html() {
+    const t = D.totals, now = Date.now(), day = 86400000;
+    const att = attention(), recent = D.tenants.filter(x => x.owner || !x.org).sort((a, b) => b.created - a.created).slice(0, 6);
+    const live = D.tenants.filter(x => x.access.ok), by = {};
+    for (const x of live) by[x.plan] = (by[x.plan] || 0) + 1;
+    const mx = Math.max(1, ...Object.values(by));
+    const n7 = D.tenants.filter(x => (x.owner || !x.org) && now - x.created <= 7 * day).length, n30 = D.tenants.filter(x => (x.owner || !x.org) && now - x.created <= 30 * day).length;
+    const trials = live.filter(x => x.access.kind === 'trial').length;
+    return head('Genel bakış', 'Platformun durumu ve ilgilenmeniz gerekenler.')
+      + `<div class="stats">${stat(t.tenants, 'İşletme', ` · ${trials} ${T('deneme')}`)}${stat(t.live, 'Ekranı açık işletme')}${stat(t.devices, 'Kayıtlı TV')}${stat(`${t.online}`, 'Şu an bağlı TV', t.devices ? ` · %${Math.round(t.online / t.devices * 100)}` : '')}${stat(n7, 'Son 7 günde yeni kayıt', ` · ${n30} ${T('son 30 günde')}`)}</div>`
+      + `<div id="pstats"></div>`
+      + card('Dikkat gerektirenler', att.length ? 'Kırmızılar acil, sarılar yakında ilgilenilecek işler.' : '', att.length ? att.slice(0, 20).map(a => `<div class="att ${a.lv === 'bad' ? 'bad' : ''}"><div class="b"><b>${esc(a.t)}</b><span>${esc(a.s)}</span></div><button class="btn ghost sm" onclick="${a.act[1]}">${esc(a.act[0])}</button></div>`).join('') : '<div class="att ok"><div class="b"><b>Her şey yolunda</b><span>İlgilenmeniz gereken bir şey yok.</span></div></div>')
+      + `<div class="grid2">`
+      + card('Son kayıt olanlar', '', recent.length ? `<div class="scroll"><table><tbody>${recent.map(x => `<tr class="click" onclick="openTenant('${x.id}')"><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${esc(x.owner || '')}</span></td><td>${stTag(x)}</td><td class="num">${ago(x.created)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">İşletme yok</div>')
+      + card('Paket dağılımı', 'Ekranı açık işletmeler.', Object.keys(D.plans).length ? Object.values(D.plans).map(p => `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${esc(p.name)}</span><b>${by[p.id] || 0}</b></div><div class="bar"><i style="width:${Math.round((by[p.id] || 0) / mx * 100)}%"></i></div></div>`).join('') : '')
+      + `</div>`;
+  },
+  async after() {
+    try { if (!P || Date.now() - PAT > 60000) { P = await api('GET', '/stats?days=30'); PAT = Date.now(); } } catch (e) { return; }
+    const el = $('pstats'); if (!el) return;
+    el.innerHTML = `<div class="stats">${stat(hrs(P.totals.online) + ' ' + T('saat'), 'Toplam ekran süresi (30 gün)', dl(P.totals.online, P.prev.online))}${stat(nf(P.totals.plays), 'İçerik oynatıldı (30 gün)', dl(P.totals.plays, P.prev.plays))}${stat(nf(P.totals.scans), 'QR okutuldu (30 gün)', dl(P.totals.scans, P.prev.scans))}${stat(nf(P.totals.drops), 'Ekran kesintisi (30 gün)', dl(P.totals.drops, P.prev.drops, false))}</div>`;
+  },
+};
+
+/* ================= İŞLETMELER ================= */
+const FILTERS = [['all', 'Tümü'], ['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda'], ['expired', 'Süresi dolan'], ['offline', 'Çevrimdışı cihazı olan']];
+const inF = x => {
+  const a = x.access, off = D.offline.some(o => o.tenantId === x.id);
+  return { all: true, trial: a.ok && a.kind === 'trial', active: a.ok && a.kind === 'paid', suspended: !a.ok && a.reason === 'suspended', expired: !a.ok && a.reason === 'expired', offline: off }[TF.f];
+};
+PAGES.tenants = {
+  html() {
+    return head('İşletmeler', 'Satıra tıklayınca sağda ayrıntıları, düzenleme ve istatistikleri açılır.', '<button class="btn" onclick="newDialog()">＋ Yeni işletme</button>')
+      + `<div class="toolbar"><input type="search" id="flt" class="grow" placeholder="Ara (ad, kullanıcı, telefon)" value="${esc(TF.q)}" oninput="TF.q=this.value;drawRows()">
+        <select id="srt" onchange="TF.sort=this.value;drawRows()">${[['new', 'Yeni kayıt önce'], ['name', 'Ada göre'], ['end', 'Bitiş tarihine göre'], ['login', 'Son girişe göre']].map(([v, l]) => `<option value="${v}"${TF.sort === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`
+      + `<div class="chips" id="chips" style="margin-bottom:14px"></div>`
+      + `<div class="card" style="padding:8px 12px"><div class="scroll"><table><thead><tr><th>İşletme</th><th>Paket</th><th>Durum</th><th>Bitiş</th><th class="num">Cihaz</th><th class="num">Depolama</th><th>Son giriş</th><th></th></tr></thead><tbody id="list"></tbody></table></div></div>`;
+  },
+  after() { drawRows(); },
+};
+function drawRows() {
+  if (!$('list')) return;
+  const q = TF.q.trim().toLocaleLowerCase('tr-TR');
+  $('chips').innerHTML = FILTERS.map(([k, l]) => { const n = D.tenants.filter(x => ({ all: true, trial: x.access.ok && x.access.kind === 'trial', active: x.access.ok && x.access.kind === 'paid', suspended: !x.access.ok && x.access.reason === 'suspended', expired: !x.access.ok && x.access.reason === 'expired', offline: D.offline.some(o => o.tenantId === x.id) }[k])).length; return `<span class="chip ${TF.f === k ? 'on' : ''}" onclick="TF.f='${k}';drawRows()">${l} <b>${n}</b></span>`; }).join('');
+  const end = x => x.access.until || x.paidUntil || x.trialUntil || 0;
+  const cmp = { new: (a, b) => b.created - a.created, name: (a, b) => a.name.localeCompare(b.name, 'tr'), end: (a, b) => end(a) - end(b), login: (a, b) => (b.lastLogin || 0) - (a.lastLogin || 0) }[TF.sort];
+  const list = D.tenants.filter(x => inF(x) && (!q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q))).sort(cmp);
+  $('list').innerHTML = list.map(x => { const h = !x.owner && x.org ? headOf(x.org) : null; return `<tr class="click" onclick="openTenant('${x.id}')"><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : h ? T('Şube') + ' · ' + esc(h.name) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}</span></td>
+    <td>${esc(planName(x))}</td><td>${stTag(x)}</td><td>${fmt(end(x))}</td>
+    <td class="num">${x.devices}${x.online ? ` <span style="color:var(--ok)">● ${x.online}</span>` : ''}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
+    <td onclick="event.stopPropagation()"><div class="acts"><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">İşletme yok</td></tr>';
+}
+
+/* ---- yeni işletme / ayrıntı paneli ---- */
+const closeDrawer = () => $('drawer').classList.remove('on');
+const openDrawer = html => { $('pane').innerHTML = `<button class="x" onclick="closeDrawer()" aria-label="Kapat">×</button>` + html; $('drawer').classList.add('on'); };
+const planOpts = sel => Object.values(D.plans).map(p => `<option value="${p.id}"${p.id === sel ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+function newDialog() {
+  openDrawer(`<h2>Yeni işletme</h2>
+  <div class="row">${field('İşletme adı', 'n-name')}${field('Telefon', 'n-phone')}</div>
+  <div class="row">${field('Kullanıcı adı', 'n-user')}${field('Şifre (en az 8)', 'n-pass')}</div>
+  <div class="row"><div><label>Paket</label><select id="n-plan">${planOpts('pro')}</select></div>${field('Ödenmiş gün (0 = yalnız deneme)', 'n-days', 0, 'type="number"')}${field('Deneme günü', 'n-trial', 3, 'type="number"')}</div>
+  <div class="cardfoot"><button class="btn ghost" onclick="closeDrawer()">Vazgeç</button><button class="btn" onclick="createT()">Oluştur</button></div>`);
+}
+async function createT() {
+  try { await api('POST', '/tenants', { name: $('n-name').value, phone: $('n-phone').value, username: $('n-user').value, password: $('n-pass').value, plan: $('n-plan').value, days: Number($('n-days').value), trialDays: Number($('n-trial').value) }); closeDrawer(); toast('İşletme oluşturuldu'); await load(); }
+  catch (e) { toast(e.message, true); }
+}
+function openTenant(id) {
+  const x = D.tenants.find(t => t.id === id); if (!x) return;
+  const d = ms => ms ? new Date(ms).toISOString().slice(0, 10) : '';
+  const h = !x.owner && x.org ? headOf(x.org) : null;
+  openDrawer(`<h2 style="margin-bottom:4px">${esc(x.name)}</h2><p class="hint">${stTag(x)} ${esc(planName(x))}${h ? ' · ' + T('Şube') + ' · ' + esc(h.name) : ''}</p>
+  <div class="acts" style="margin-bottom:14px"><button class="btn sm" onclick="imp('${id}')">Panele gir</button><button class="btn ghost sm" onclick="ST.tid='${id}';ST.days=30;closeDrawer();go('stats');render()">İstatistikleri gör</button></div>
+  <dl class="kv" style="margin-bottom:12px"><dt>Sahip</dt><dd>${esc(x.owner || '-')}</dd><dt>Kayıt</dt><dd>${fmt(x.created)}</dd><dt>Son giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : '-'}</dd><dt>Cihaz</dt><dd>${x.devices}${x.online ? ` <span style="color:var(--ok)">● ${x.online} ${T('bağlı')}</span>` : ''}</dd><dt>Depolama</dt><dd>${x.storageMB} MB</dd>${x.consent ? `<dt>Sözleşme/KVKK onayı</dt><dd>${fmt(x.consent)}</dd>` : ''}</dl>
+  <div class="stats" id="dstats" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px"></div>
+  ${x.deletion ? `<div class="att bad"><div class="b"><b>KVKK silme talebi</b><span>${fmt(x.deletion)} tarihinde silinecek.</span></div><button class="btn ghost sm" onclick="api('DELETE','/tenants/${id}/deletion').then(()=>{closeDrawer();load()})">Talebi iptal et</button></div>` : ''}
+  <h3>Düzenle</h3>
+  <div class="row">${field('İşletme adı', 'e-name', x.name)}${field('Telefon', 'e-phone', x.phone || '')}</div>
+  <div class="row"><div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div><div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
+  <div class="row">${field('Deneme bitişi', 'e-trial', d(x.trialUntil), 'type="date"')}${field('Ödeme bitişi', 'e-paid', d(x.paidUntil), 'type="date"')}</div>
+  <div class="row">${field('Not', 'e-note', x.note || '')}</div>
+  ${x.org ? `<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="e-org"> Paket, durum ve süreleri zincirin tüm şubelerine uygula</label>` : ''}
+  <div class="acts"><button class="btn" onclick="saveT('${id}')">Kaydet</button><button class="btn ghost" onclick="extend('${id}',30)">+30 gün</button><button class="btn ghost" onclick="extend('${id}',365)">+1 yıl</button></div>
+  <h3 style="margin-top:24px">Tehlikeli işlemler</h3>
+  <div class="acts"><button class="btn ghost" onclick="resetPw('${id}')">Şifre sıfırla</button><button class="btn danger" onclick="delT('${id}')">Sil</button></div>`);
+  api('GET', `/tenants/${id}/stats?days=30`).then(j => { const el = $('dstats'); if (el) el.innerHTML = stat(hrs(j.totals.online) + ' ' + T('saat'), 'Ekran süresi (30 gün)') + stat(nf(j.totals.plays), 'Oynatma (30 gün)') + stat(nf(j.totals.scans), 'QR okutma (30 gün)'); }).catch(() => {});
+}
+const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
+async function saveT(id) {
+  try { await api('PUT', '/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast('Kaydedildi'); await load(); }
+  catch (e) { toast(e.message, true); }
+}
+async function extend(id, days) { try { await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast(`${days} gün eklendi`); await load(); } catch (e) { toast(e.message, true); } }
+async function resetPw(id) {
+  const pw = prompt('Yeni şifre (boş bırakırsanız rastgele üretilir):', ''); if (pw === null) return;
+  try { const j = await api('POST', `/tenants/${id}/password`, { password: pw }); alert(`${T('Kullanıcı')}: ${j.username}\n${T('Yeni şifre')}: ${j.password}`); } catch (e) { toast(e.message, true); }
+}
+async function delT(id) {
+  const x = D.tenants.find(t => t.id === id);
+  const c = prompt(`${T('Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler.')}\n${T('Onaylamak için işletme adını aynen yazın')}: ${x.name}`); if (c === null) return;
+  try { await api('DELETE', '/tenants/' + id, { confirm: c }); closeDrawer(); toast('Silindi'); await load(); } catch (e) { toast(e.message, true); }
+}
+async function imp(id) { try { const j = await api('POST', `/tenants/${id}/impersonate`); location.href = j.next; } catch (e) { toast(e.message, true); } }
+
+/* ================= İSTATİSTİK ================= */
+PAGES.stats = {
+  html() {
+    const opts = D.tenants.slice().sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+    return head('İstatistik', 'Tüm platformun ya da seçtiğiniz işletmenin ekran süresi, içerik oynatma, QR okutma ve kesintileri.', `<div class="acts"><select id="st-t" onchange="ST.tid=this.value;drawStats()" style="min-width:220px"><option value="all">Tüm platform</option>${opts.map(x => `<option value="${x.id}"${ST.tid === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select>${tabs(ST.days, 'setDays')}</div>`)
+      + '<div id="stv"><div class="empty">Yükleniyor…</div></div>';
+  },
+  after() { drawStats(); },
+};
+const setDays = d => { ST.days = d; render(); };
+function barsCard(title, sub, daily, key, fmtv) {
+  const mx = Math.max(1, ...daily.map(d => d[key]));
+  return card(title, sub, `<div class="bars" role="img">${daily.map(d => `<div title="${fmtD(d.day)}: ${fmtv(d[key])}"><i style="height:${Math.round(d[key] / mx * 100)}%"></i></div>`).join('')}</div><div class="axis"><span>${fmtD(daily[0].day)}</span><span>${fmtD(daily[daily.length - 1].day)}</span></div>`);
+}
+async function drawStats() {
+  const box = $('stv'); if (!box) return;
+  const tid = ST.tid, days = ST.days;
+  try {
+    if (tid === 'all') {
+      const j = await api('GET', '/stats?days=' + days); if (page !== 'stats' || ST.tid !== tid) return;
+      const rows = j.tenants.filter(x => x.online || x.plays || x.scans || x.drops).sort((a, b) => b.online - a.online);
+      box.innerHTML = `<div class="stats">${stat(hrs(j.totals.online) + ' ' + T('saat'), 'Toplam ekran süresi', dl(j.totals.online, j.prev.online))}${stat(nf(j.totals.plays), 'İçerik oynatıldı', dl(j.totals.plays, j.prev.plays))}${stat(nf(j.totals.scans), 'QR okutuldu', dl(j.totals.scans, j.prev.scans))}${stat(nf(j.totals.drops), 'Ekran kesintisi', dl(j.totals.drops, j.prev.drops, false))}</div>`
+        + barsCard('Günlük toplam ekran süresi', 'Saat cinsinden; tüm işletmelerin toplamı.', j.daily, 'online', v => hrs(v) + ' ' + T('saat'))
+        + card('İşletme bazında', 'Satıra tıklayınca o işletmenin ayrıntılı istatistiği açılır.', rows.length ? `<div class="scroll"><table><thead><tr><th>İşletme</th><th>Paket</th><th class="num">Ekran süresi</th><th class="num">Oynatma</th><th class="num">QR okutma</th><th class="num">Kesinti</th></tr></thead><tbody>${rows.map(x => `<tr class="click" onclick="ST.tid='${x.id}';render()"><td><b>${esc(x.name)}</b></td><td>${esc((D.plans[x.plan] || {}).name || x.plan)}</td><td class="num">${hrs(x.online)} ${T('sa')}</td><td class="num">${nf(x.plays)}</td><td class="num">${nf(x.scans)}</td><td class="num">${x.drops ? `${x.drops} · ${dur(x.dropsec)}` : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz veri yok.</div>');
+    } else {
+      const j = await api('GET', `/tenants/${tid}/stats?days=${days}`); if (page !== 'stats' || ST.tid !== tid) return;
+      box.innerHTML = `<p style="margin-bottom:16px"><a href="#stats" onclick="ST.tid='all';render();return false">← Tüm platform</a> &nbsp; <button class="btn ghost sm" onclick="imp('${tid}')">Panele gir</button></p>` + tenantStatsHtml(j);
+    }
+  } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+// işletme panelindeki İstatistik sayfasıyla aynı içerik
+function tenantStatsHtml(j) {
+  const active = j.daily.filter(d => d.online > 0).length;
+  const wd = i => new Date(2024, 0, 1 + i).toLocaleDateString(I18N.locale, { weekday: 'long' });
+  const wds = i => new Date(2024, 0, 1 + i).toLocaleDateString(I18N.locale, { weekday: 'short' });
+  const hh = h => String(h).padStart(2, '0') + ':00';
+  let pk = { v: 0, d: 0, h: 0 }; j.heat.forEach((row, d) => row.forEach((v, h) => { if (v > pk.v) pk = { v, d, h }; }));
+  const hmax = Math.max(1, ...j.heat.flat());
+  const dvTxt = d => { const n = d.ios + d.android + d.other; if (!n) return ''; const p = v => Math.round(v / n * 100) + '%'; return [d.ios ? 'iPhone ' + p(d.ios) : '', d.android ? 'Android ' + p(d.android) : '', d.other ? T('Diğer') + ' ' + p(d.other) : ''].filter(Boolean).join(' · '); };
+  const qrRow = q => {
+    if (!q.tracked) return `<div class="it"><div class="b"><b>${esc(q.label)}</b><span>${q.kind === 'wifi' ? "Wi-Fi QR'ı sayılamaz (telefon doğrudan ağa bağlanır)" : "Düz metin QR'ı sayılamaz (yalnızca bağlantı QR'ları sayılır)"}</span></div></div>`;
+    const mx = Math.max(1, ...q.daily), ph = q.hours.indexOf(Math.max(...q.hours));
+    return `<div class="it"><div class="b"><b>${esc(q.label)}${q.kind === 'camp' ? ` <span style="color:var(--mute);font-weight:400">${T('· Kampanya kartı')}</span>` : ''}</b><span>${q.scans ? `${T('En yoğun saat')}: ${hh(ph)}${dvTxt(q.dev) ? ' · ' + dvTxt(q.dev) : ''}` : 'Bu dönemde okutulmadı'}</span></div>
+      <div class="mini">${q.daily.map((v, i) => `<div title="${fmtD(j.daily[i].day)}: ${v}"><i style="height:${Math.round(v / mx * 100)}%"></i></div>`).join('')}</div><div class="big">${nf(q.scans)}</div></div>`;
+  };
+  return `<div class="stats">${stat(hrs(j.totals.online) + ' ' + T('saat'), `Ekran açık kaldı (${active} gün)`, dl(j.totals.online, j.prev.online))}${stat(nf(j.totals.plays), 'İçerik oynatıldı', dl(j.totals.plays, j.prev.plays))}${stat(nf(j.totals.scans), 'QR okutuldu', dl(j.totals.scans, j.prev.scans))}${stat(nf(j.totals.drops), j.totals.drops ? `Kesinti (toplam ${dur(j.totals.dropsec)})` : 'Kesinti', dl(j.totals.drops, j.prev.drops, false))}${stat((active ? hrs(j.totals.online / active) : '0') + ' ' + T('saat'), 'Açık olduğu günlerde ortalama')}${stat(pk.v ? `${wd(pk.d)} ${hh(pk.h)}` : '—', 'İçeriklerin en çok gösterildiği zaman')}</div>`
+    + barsCard('Günlük ekran süresi', 'Saat cinsinden; bağlı tüm kutuların toplamı.', j.daily, 'online', v => hrs(v) + ' ' + T('saat'))
+    + card('QR okutmaları', "Bağlantı QR'ları ve kampanya QR'ı kaç kez okutuldu. Aynı telefonun kısa sürede tekrar açması ve bot ziyaretleri sayılmaz; kişisel bilgi saklanmaz.", j.qr.length ? j.qr.map(qrRow).join('') : '<div class="empty">Bu işletmenin QR kodu yok.</div>')
+    + card('Saat bazında yoğunluk', 'İçeriklerin gün ve saate göre gösterilme yoğunluğu (koyu renk daha yoğun).', pk.v ? `<div class="heat"><div></div>${Array.from({ length: 24 }, (_, h) => `<span class="hl">${h % 3 === 0 ? h : ''}</span>`).join('')}${j.heat.map((row, d) => `<span class="dn">${wds(d)}</span>${row.map((v, h) => `<i title="${wd(d)} ${hh(h)}: ${v}" style="background:rgba(var(--a2),${v ? (0.12 + v / hmax * 0.88).toFixed(2) : 0.04})"></i>`).join('')}`).join('')}</div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>')
+    + `<div class="grid2">` + card('Kesintiler', 'Ekranın internet bağlantısı 2 dakikadan uzun koptuğunda sayılır.', j.totals.drops ? `<div class="scroll"><table><thead><tr><th>Gün</th><th class="num">Kesinti</th><th class="num">Toplam süre</th></tr></thead><tbody>${j.daily.filter(d => d.drops).reverse().slice(0, 14).map(d => `<tr><td>${fmtD(d.day)}</td><td class="num">${d.drops}</td><td class="num">${dur(d.dropsec)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Bu dönemde kesinti olmadı.</div>')
+    + card('Özel kartlar', 'Ekranlarda kaç kez gösterildi.', `<div class="stats" style="grid-template-columns:repeat(3,1fr);margin:0">${stat(nf(j.shown.camp), 'Kampanya kartı')}${stat(nf(j.shown.big), 'Büyük maç kartı')}${stat(nf(j.shown.goal), 'Gol bildirimi')}</div>`) + `</div>`
+    + card('İçerikler', 'En çok oynayandan aza.', j.items.length ? `<div class="scroll"><table><thead><tr><th>İçerik</th><th>Tür</th><th class="num">Oynatma</th><th class="num">Toplam süre</th><th>Son</th></tr></thead><tbody>${j.items.slice(0, 30).map(it => `<tr><td>${esc(it.name)}</td><td>${esc({ video: 'Video', image: 'Fotoğraf', poster: 'Afiş', instagram: 'Instagram', trailer: 'Fragman' }[it.type] || it.type || '—')}</td><td class="num">${nf(it.plays)}</td><td class="num">${it.sec ? dur(it.sec) : '—'}</td><td>${fmtD(it.last)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>');
+}
+
+/* ================= VERİ KAYNAKLARI ================= */
+const badge = ok => ok ? '<span class="tag ok">Bağlı</span>' : '<span class="tag bad">Anahtar yok</span>';
+async function saveKeys(keys, btn) {
+  const b = {}; for (const k of keys) if ($('s-' + k) && !$('s-' + k).readOnly) b[k] = $('s-' + k).value;
+  if (btn) btn.disabled = true;
+  try { await api('PUT', '/settings', b); Object.assign(D.settings, b); toast('Kaydedildi'); drawNav(); } catch (e) { toast(e.message, true); }
+  if (btn) btn.disabled = false;
+}
+const saveBtn = keys => `<button class="btn" onclick="saveKeys(${esc(JSON.stringify(keys))},this)">Kaydet</button>`;
+PAGES.sources = {
+  html() {
+    const s = D.settings;
+    return head('Veri kaynakları', 'Bu anahtarlar tüm işletmeler için ortaktır; işletmeler hiçbir anahtar görmez. Veri her kaynaktan bir kez çekilip herkese dağıtılır. Ticari kullanım şartlarını her sağlayıcıdan kontrol edin.')
+      + card('CollectAPI', 'Nöbetçi eczane, haber ve yeni çıkan kitap verileri.', `<div class="row">${setting('CollectAPI anahtarı', 'collect_key', 'type="password" autocomplete="off"')}<div style="max-width:260px"><label>CollectAPI planı</label><select id="s-collect_paid"><option value="">Ücretsiz (kota korumalı)</option><option value="1"${s.collect_paid ? ' selected' : ''}>Ücretli (kota sınırı yok)</option></select></div></div>`, saveBtn(['collect_key', 'collect_paid']), badge(s.collect_key))
+      + card('Yeni çıkan kitaplar', 'Liste D&R yeni çıkanlarından (CollectAPI) günde bir alınır. Sesli kitaplar alınmaz; ekranlarda havuzdan rastgele 8 kitap gösterilir ve seçim 3 saatte bir değişir.', '<div id="bk-info" class="bkbox">…</div>', `<button class="btn ghost" type="button" onclick="refreshBooks(this)">Kitapları şimdi yenile</button>`)
+      + card('Google Places', 'Google yorumları için.', `<div class="row">${setting('Google Places API anahtarı', 'google_places_key', 'type="password" autocomplete="off"')}${setting('Google aylık çağrı sınırı', 'google_monthly_cap', 'type="number" min="0" placeholder="900 (boş = 900)"')}</div><div id="g-use"></div>`, saveBtn(['google_places_key', 'google_monthly_cap']), badge(s.google_places_key))
+      + card('TMDB', 'Sinema (vizyona girecek filmler) için.', `<div class="row">${setting('TMDB API anahtarı', 'tmdb_key', 'type="password" autocomplete="off"')}</div>`, saveBtn(['tmdb_key']), badge(s.tmdb_key))
+      + card('İBB trafik', 'İsteğe bağlı: canlı trafik değeri bir Cloudflare Worker üzerinden gelir.', `<div class="row">${setting('İBB trafik Worker adresi', 'traffic_api', 'placeholder="https://trafik.kullanici.workers.dev"')}${setting('Worker imza anahtarı (TRAFFIC_SECRET olarak girin)', 'traffic_secret', 'readonly')}</div>`, saveBtn(['traffic_api']), badge(s.traffic_api));
+  },
+  after() { liveSources(); },
+};
+function liveSources() {
   if (D.books && $('bk-info')) {
     const b = D.books, L = [];
     L.push(`Havuz: ${b.adet} kitap · Görsel adresi olan: ${b.gorselli} · Kapağı indirilen: ${b.kapak} · Açıklaması olan: ${b.aciklama}`);
@@ -124,111 +385,76 @@ async function load() {
     if (b.ornek) L.push('D&R ilk kayıt: ' + b.ornek);
     $('bk-info').textContent = L.join('\n');
   }
-  if (D.google && $('g-use')) $('g-use').textContent = `· bu ay ${D.google.calls} / ${D.google.cap}`;
-  if (!window.__setLoaded) { for (const [k, v] of Object.entries(D.settings)) if ($('s-' + k)) $('s-' + k).value = v || ''; window.__setLoaded = true; }
-  $('mailst').textContent = D.mail ? 'SMTP ayarlı: e-posta uyarıları açık.' : 'SMTP henüz ayarlı değil.';
-  renderList(); renderOff(); renderBk();
+  if (D.google && $('g-use')) { const g = D.google, pc = Math.min(100, Math.round(g.calls / Math.max(1, g.cap) * 100)); $('g-use').innerHTML = `<p class="hint" style="margin:12px 0 0">Bu ay ${g.calls} / ${g.cap} çağrı</p><div class="bar"><i style="width:${pc}%;${pc > 85 ? 'background:var(--bad)' : ''}"></i></div>`; }
 }
-function renderOff() {
-  $('offc').style.display = D.offline.length ? '' : 'none';
-  $('offl').innerHTML = D.offline.map(o => `<tr><td>${esc(o.tenant)}</td><td>${esc(o.name || 'TV kutusu')}</td><td>${ago(o.lastSeen)} önce</td><td><button class="btn ghost sm" onclick="imp('${o.tenantId}')">Panele gir</button></td></tr>`).join('');
-}
-const size = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : b >= 1048576 ? Math.round(b / 1048576) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
-async function renderBk() {
-  const st = D.storage, b = D.backup;
-  let list = { local: [], remote: [] };
-  try { list = await call('GET', '/api/super/backups'); } catch (e) {}
-  $('bk').innerHTML = `<p class="hint">Veritabanının tamamı (işletmeler, kullanıcılar, cihazlar, içerik ayarları) her gece 04:00'ten sonra sıkıştırılıp yedeklenir; sunucuda ${b.keepLocal} gün${b.remoteEnabled ? `, R2'de ${b.keepRemote} gün` : ''} saklanır.
-      Son yedek: <b>${b.at ? new Date(b.at).toLocaleString(I18N.locale) : 'henüz yok'}</b>${b.remote ? ' (R2\'ye de gönderildi)' : ''}${b.error ? ` · <span style="color:var(--bad)">Son hata: ${esc(b.error)}</span>` : ''}</p>
-    <div class="row" style="margin-bottom:12px"><button class="btn" onclick="runBk()">Şimdi yedekle</button></div>
-    ${list.local.length ? `<div class="scroll"><table><thead><tr><th>Sunucudaki yedek</th><th>Boyut</th><th></th></tr></thead><tbody>${list.local.slice(0, 8).map(x => `<tr><td>${esc(x.name)}</td><td>${size(x.size)}</td><td><a class="btn ghost sm" href="/api/super/backups/${encodeURIComponent(x.name)}">İndir</a></td></tr>`).join('')}</tbody></table></div>` : ''}
-    ${list.remote.length ? `<p class="hint" style="margin-top:10px">R2'de ${list.remote.length} yedek var (en yenisi ${esc(list.remote[0].name)}).</p>` : list.remoteError ? `<p class="hint" style="color:var(--bad)">R2 yedek listesi alınamadı: ${esc(list.remoteError)}</p>` : ''}
-    <h3 style="margin:20px 0 4px;font-size:15px">Medya depolama</h3>
-    <p class="hint">${st.enabled ? `Cloudflare R2 açık · kova <b>${esc(st.bucket)}</b> · ${st.objects} dosya, ${size(st.bytes)}${st.pending ? ` · bekleyen ${st.pending}` : ''}${st.publicUrl ? ' · herkese açık adres: ' + esc(st.publicUrl) : ' · dosyalar sunucu üzerinden aktarılıyor'}${st.keepLocal ? ' · yerel kopyalar tutuluyor' : ''}${st.lastError ? ` · <span style="color:var(--bad)">${esc(st.lastError)}</span>` : ''}`
-      : st.configError ? `<span style="color:var(--bad)">R2 ayarı hatalı: ${esc(st.configError)}. Dokploy → Environment'ta değeri düzeltip yeniden deploy edin.</span>` : 'R2 kapalı: medya sunucunun diskinde duruyor. Açmak için ortam değişkenlerine R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY ve R2_BUCKET girin; mevcut dosyalar arka planda R2\'ye taşınır.'}</p>
-    ${st.enabled ? '<button class="btn ghost sm" onclick="call(\'POST\',\'/api/super/storage/sync\').then(()=>toast(\'Eşitleme başladı\'))">Şimdi eşitle</button>' : ''}`;
-}
-async function runBk() { toast('Yedek alınıyor…'); try { const j = await call('POST', '/api/super/backups'); toast('Yedek alındı: ' + j.name); load(); } catch (e) { toast(e.message, true); } }
-async function testMail() { const to = $('mt-to').value.trim(); if (!to) return toast('Adres yazın', true); toast('Gönderiliyor…'); try { const j = await call('POST', '/api/super/mail/test', { to }); toast(`Gönderildi: port ${j.mode || j.port}. Gelen kutusunu ve spam klasörünü kontrol edin`); } catch (e) { toast('Gönderilemedi: ' + e.message, true); } }
-async function testHook() { try { const j = await call('POST', '/api/super/alert/test'); toast(j.ok ? 'Deneme mesajı gönderildi' : 'Webhook ' + j.status + ' döndü', !j.ok); } catch (e) { toast(e.message, true); } }
-function stTag(x) {
-  if (!x.access.ok) return x.access.reason === 'suspended' ? '<span class="tag bad">Askıda</span>' : '<span class="tag bad">Süresi doldu</span>';
-  return (x.deletion ? `<span class="tag bad" title="KVKK silme talebi">Silinecek ${fmt(x.deletion)}</span> ` : '') + (x.access.kind === 'trial' ? '<span class="tag trial">Deneme</span>' : '<span class="tag ok">Aktif</span>');
-}
-function renderList() {
-  const q = $('flt').value.trim().toLocaleLowerCase('tr-TR');
-  const hit = x => [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q);
-  const head = o => D.tenants.find(t => t.org === o && t.owner);
-  const kids = o => D.tenants.filter(t => t.org === o && !t.owner).sort((a, b) => a.created - b.created);
-  // ana işletmeler (ve sahibi bulunamayan yetim şubeler) yeniden eskiye; şubeler sahibinin hemen altında
-  const tops = D.tenants.filter(x => x.owner || !x.org || !head(x.org)).sort((a, b) => b.created - a.created);
-  const list = [];
-  for (const x of tops) {
-    const ch = x.owner && x.org ? kids(x.org) : [];
-    // ana işletme ya da şubelerinden biri aramaya uyuyorsa zinciri birlikte göster
-    if (q && !hit(x) && !ch.some(hit)) continue;
-    list.push({ x, sub: false });
-    for (const c of ch) if (!q || hit(x) || hit(c)) list.push({ x: c, sub: true });
-  }
-  const orgName = o => { const h = head(o); return h ? h.name : ''; };
-  $('list').innerHTML = list.map(({ x, sub }) => `<tr${sub ? ' class="sub"' : ''}><td><b>${sub ? '<span class="br">↳</span>' : ''}${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : x.org ? 'Şube · ' + esc(orgName(x.org)) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}${x.org && x.owner ? ' · zincir (' + D.tenants.filter(t => t.org === x.org).length + ' şube)' : ''}</span></td>
-    <td>${esc((D.plans[x.plan] || {}).name || x.plan)}</td><td>${stTag(x)}</td><td>${fmt(x.access.until || x.paidUntil || x.trialUntil)}</td>
-    <td>${x.devices} <span style="color:var(--ok)">${x.online ? '● ' + x.online : ''}</span></td><td>${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
-    <td><div class="acts"><button class="btn sm" onclick="editDialog('${x.id}')">Düzenle</button><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`).join('') || '<tr><td colspan="8" style="color:var(--mute);text-align:center;padding:24px">İşletme yok</td></tr>';
-}
-const closeDlg = () => $('dlg').classList.remove('on');
-const openDlg = html => { $('dlgc').innerHTML = html; $('dlg').classList.add('on'); };
-const planOpts = sel => Object.values(D.plans).map(p => `<option value="${p.id}"${p.id === sel ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
-function newDialog() {
-  openDlg(`<h2>Yeni işletme</h2><div class="row"><div><label>İşletme adı</label><input id="n-name"></div><div><label>Telefon</label><input id="n-phone"></div></div>
-  <div class="row" style="margin-top:10px"><div><label>Kullanıcı adı</label><input id="n-user"></div><div><label>Şifre (en az 8)</label><input id="n-pass"></div></div>
-  <div class="row" style="margin-top:10px"><div><label>Paket</label><select id="n-plan">${planOpts('pro')}</select></div><div><label>Ödenmiş gün (0 = yalnız deneme)</label><input id="n-days" type="number" value="0"></div><div><label>Deneme günü</label><input id="n-trial" type="number" value="3"></div></div>
-  <div class="row" style="margin-top:16px"><button class="btn" onclick="createT()">Oluştur</button><button class="btn ghost" onclick="closeDlg()">Vazgeç</button></div>`);
-}
-async function createT() {
-  try { await call('POST', '/api/super/tenants', { name: $('n-name').value, phone: $('n-phone').value, username: $('n-user').value, password: $('n-pass').value, plan: $('n-plan').value, days: Number($('n-days').value), trialDays: Number($('n-trial').value) }); closeDlg(); toast('İşletme oluşturuldu'); load(); }
-  catch (e) { toast(e.message, true); }
-}
-function editDialog(id) {
-  const x = D.tenants.find(t => t.id === id);
-  const d = ms => ms ? new Date(ms).toISOString().slice(0, 10) : '';
-  openDlg(`<h2>${esc(x.name)}</h2><p class="hint">Sahip: ${esc(x.owner)} · Kayıt: ${fmt(x.created)}</p>
-  <div class="row"><div><label>İşletme adı</label><input id="e-name" value="${esc(x.name)}"></div><div><label>Telefon</label><input id="e-phone" value="${esc(x.phone || '')}"></div></div>
-  <div class="row" style="margin-top:10px"><div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div><div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
-  <div class="row" style="margin-top:10px"><div><label>Deneme bitişi</label><input id="e-trial" type="date" value="${d(x.trialUntil)}"></div><div><label>Ödeme bitişi</label><input id="e-paid" type="date" value="${d(x.paidUntil)}"></div></div>
-  <div class="row" style="margin-top:10px"><div><label>Not</label><input id="e-note" value="${esc(x.note || '')}"></div></div>
-  ${x.org ? `<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;color:var(--soft)"><input type="checkbox" id="e-org" style="width:auto"> Paket, durum ve süreleri zincirin tüm şubelerine uygula</label>` : ''}
-  ${x.deletion ? `<p class="hint" style="color:var(--bad);margin-top:10px">KVKK silme talebi: ${fmt(x.deletion)} tarihinde silinecek. <button class="btn ghost sm" onclick="call('DELETE','/api/super/tenants/${id}/deletion').then(()=>{closeDlg();load()})">Talebi iptal et</button></p>` : ''}
-  ${x.consent ? `<p class="hint" style="margin-top:6px">Sözleşme/KVKK onayı: ${fmt(x.consent)}</p>` : ''}
-  <div class="row" style="margin-top:16px"><button class="btn" onclick="saveT('${id}')">Kaydet</button>
-    <button class="btn ghost" onclick="extend('${id}',30)">+30 gün</button><button class="btn ghost" onclick="extend('${id}',365)">+1 yıl</button>
-    <button class="btn ghost" onclick="resetPw('${id}')">Şifre sıfırla</button><button class="btn danger" onclick="delT('${id}')">Sil</button></div>`);
-}
-const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
-async function saveT(id) {
-  try { await call('PUT', '/api/super/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDlg(); toast('Kaydedildi'); load(); }
-  catch (e) { toast(e.message, true); }
-}
-async function extend(id, days) { try { await call('PUT', '/api/super/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDlg(); toast(`${days} gün eklendi`); load(); } catch (e) { toast(e.message, true); } }
-async function resetPw(id) {
-  const pw = prompt('Yeni şifre (boş bırakırsanız rastgele üretilir):', ''); if (pw === null) return;
-  try { const j = await call('POST', `/api/super/tenants/${id}/password`, { password: pw }); alert(`Kullanıcı: ${j.username}\nYeni şifre: ${j.password}`); } catch (e) { toast(e.message, true); }
-}
-async function delT(id) {
-  const x = D.tenants.find(t => t.id === id);
-  const c = prompt(`Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler.\nOnaylamak için işletme adını aynen yazın: ${x.name}`); if (c === null) return;
-  try { await call('DELETE', '/api/super/tenants/' + id, { confirm: c }); closeDlg(); toast('Silindi'); load(); } catch (e) { toast(e.message, true); }
-}
-async function imp(id) { try { const j = await call('POST', `/api/super/tenants/${id}/impersonate`); location.href = j.next; } catch (e) { toast(e.message, true); } }
-async function saveSettings() {
-  const b = {}; for (const k of Object.keys(D.settings)) if ($('s-' + k) && !$('s-' + k).readOnly) b[k] = $('s-' + k).value;
-  try { await call('PUT', '/api/super/settings', b); toast('Platform ayarları kaydedildi'); } catch (e) { toast(e.message, true); }
-}
-function pwDialog() {
-  openDlg(`<h2>Şifre değiştir</h2><div class="row"><div><label>Mevcut</label><input id="p-cur" type="password"></div><div><label>Yeni (en az 10)</label><input id="p-new" type="password"></div></div><div class="row" style="margin-top:14px"><button class="btn" onclick="changePw()">Değiştir</button></div>`);
-}
-async function changePw() { try { await call('PUT', '/api/super/password', { current: $('p-cur').value, next: $('p-new').value }); closeDlg(); toast('Şifre değiştirildi'); } catch (e) { toast(e.message, true); } }
+async function refreshBooks(btn) { btn.disabled = true; const t = btn.textContent; btn.textContent = T('Yenileniyor…'); try { await api('POST', '/books/refresh'); toast('Kitaplar yenilendi'); await load(); } catch (e) { toast(e.message, true); } btn.disabled = false; btn.textContent = t; }
+
+/* ================= BİLDİRİMLER ================= */
+PAGES.notify = {
+  html() {
+    return head('Bildirimler', 'Bir TV kutusu 10 dakikadan uzun çevrimdışı kalınca uyarı gönderilir.')
+      + card('E-posta (SMTP)', 'İşletmelere e-posta uyarısı için sunucuda SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM ortam değişkenlerini girin.', `<div class="row"><div><label>Deneme e-postası gönder</label><input id="mt-to" type="email" placeholder="ornek@alanadi.com"></div><div style="flex:none;min-width:0"><button class="btn ghost" onclick="testMail()">Gönder</button></div></div>`, '', D.mail ? '<span class="tag ok">SMTP ayarlı</span>' : '<span class="tag warn">SMTP ayarlı değil</span>')
+      + card('Webhook (Slack, Discord, Telegram)', 'Çevrimdışı uyarısı bu adrese {"text": "..."} olarak gönderilir.', `<div class="row">${setting('Webhook adresi (https://…)', 'alert_webhook', 'placeholder="https://hooks.slack.com/services/…"')}</div>`, `<button class="btn ghost" onclick="testHook()">Dene</button>${saveBtn(['alert_webhook'])}`, badge(D.settings.alert_webhook).replace('Anahtar yok', 'Adres yok'));
+  },
+};
+async function testMail() { const to = $('mt-to').value.trim(); if (!to) return toast('Adres yazın', true); toast('Gönderiliyor…'); try { const j = await api('POST', '/mail/test', { to }); toast(`${T('Gönderildi: port')} ${j.mode || j.port}. ${T('Gelen kutusunu ve spam klasörünü kontrol edin')}`); } catch (e) { toast(T('Gönderilemedi') + ': ' + e.message, true); } }
+async function testHook() { try { const j = await api('POST', '/alert/test'); toast(j.ok ? 'Deneme mesajı gönderildi' : 'Webhook ' + j.status + ' döndü', !j.ok); } catch (e) { toast(e.message, true); } }
+
+/* ================= YASAL VE SİTE ================= */
+PAGES.legal = {
+  html() {
+    return head('Yasal ve site', 'KVKK ve sözleşme sayfalarında görünen şirket bilgileri ile tanıtım sitesindeki fiyat ve iletişim bilgileri.')
+      + card('Yasal bilgiler', 'Metinler başlangıç taslağıdır; yayına almadan önce bir avukata kontrol ettirin. Sayfalar: <a href="/kvkk" target="_blank">/kvkk</a> · <a href="/kosullar" target="_blank">/kosullar</a> · <a href="/gizlilik" target="_blank">/gizlilik</a>',
+        `<div class="row">${setting('Şirket unvanı', 'legal_company')}${setting('MERSİS no', 'legal_mersis')}</div><div class="row">${setting('Açık adres', 'legal_address')}</div><div class="row">${setting('KVKK başvuru e-postası', 'legal_email')}${setting('Telefon', 'legal_phone')}${setting('KEP adresi (varsa)', 'legal_kep')}</div><div class="row">${setting('Sunucu sağlayıcısı ve ülkesi (KVKK metninde görünür)', 'legal_hosting', 'placeholder="örn. Natro Hosting (Türkiye)"')}</div>`,
+        saveBtn(['legal_company', 'legal_mersis', 'legal_address', 'legal_email', 'legal_phone', 'legal_kep', 'legal_hosting']))
+      + card('Tanıtım sitesi', 'Ana sayfadaki (<a href="/?site" target="_blank">önizle</a>) fiyatlar ve iletişim düğmeleri. Fiyat boşsa "Fiyat için bize ulaşın" yazar.',
+        `<div class="row">${setting('Başlangıç fiyatı', 'site_price_baslangic', 'placeholder="örn. 499 ₺ / ay"')}${setting('Pro fiyatı', 'site_price_pro', 'placeholder="örn. 899 ₺ / ay"')}</div><div class="row">${setting('WhatsApp numarası', 'site_whatsapp', 'placeholder="905xxxxxxxxx"')}${setting('Telefon', 'site_phone')}${setting('E-posta', 'site_email')}</div>`,
+        saveBtn(['site_price_baslangic', 'site_price_pro', 'site_whatsapp', 'site_phone', 'site_email']));
+  },
+};
+
+/* ================= YEDEK VE DEPOLAMA ================= */
+PAGES.backup = {
+  html() { return head('Yedek ve depolama', 'Veritabanı yedekleri ve medya dosyalarının depolandığı yer.') + '<div id="bkv"><div class="empty">Yükleniyor…</div></div>'; },
+  async after() {
+    const st = D.storage, b = D.backup;
+    let list = { local: [], remote: [] };
+    try { list = await api('GET', '/backups'); } catch (e) {}
+    if (page !== 'backup' || !$('bkv')) return;
+    $('bkv').innerHTML = card('Veritabanı yedekleri', `Veritabanının tamamı (işletmeler, kullanıcılar, cihazlar, içerik ayarları) her gece 04:00'ten sonra sıkıştırılıp yedeklenir; sunucuda ${b.keepLocal} gün${b.remoteEnabled ? `, R2'de ${b.keepRemote} gün` : ''} saklanır. Son yedek: <b>${b.at ? new Date(b.at).toLocaleString(I18N.locale) : 'henüz yok'}</b>${b.remote ? " (R2'ye de gönderildi)" : ''}${b.error ? ` · <span style="color:var(--bad)">Son hata: ${esc(b.error)}</span>` : ''}`,
+      (list.local.length ? `<div class="scroll"><table><thead><tr><th>Sunucudaki yedek</th><th class="num">Boyut</th><th></th></tr></thead><tbody>${list.local.slice(0, 8).map(x => `<tr><td>${esc(x.name)}</td><td class="num">${size(x.size)}</td><td><a class="btn ghost sm" href="/api/super/backups/${encodeURIComponent(x.name)}">İndir</a></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz yedek yok</div>')
+        + (list.remote.length ? `<p class="hint" style="margin-top:10px">R2'de ${list.remote.length} yedek var (en yenisi ${esc(list.remote[0].name)}).</p>` : list.remoteError ? `<p class="hint" style="color:var(--bad)">R2 yedek listesi alınamadı: ${esc(list.remoteError)}</p>` : ''),
+      '<button class="btn" onclick="runBk()">Şimdi yedekle</button>')
+      + card('Medya depolama', '', `<p class="hint" style="margin:0">${st.enabled ? `Cloudflare R2 açık · kova <b>${esc(st.bucket)}</b> · ${st.objects} dosya, ${size(st.bytes)}${st.pending ? ` · bekleyen ${st.pending}` : ''}${st.publicUrl ? ' · herkese açık adres: ' + esc(st.publicUrl) : ' · dosyalar sunucu üzerinden aktarılıyor'}${st.keepLocal ? ' · yerel kopyalar tutuluyor' : ''}${st.lastError ? ` · <span style="color:var(--bad)">${esc(st.lastError)}</span>` : ''}`
+        : st.configError ? `<span style="color:var(--bad)">R2 ayarı hatalı: ${esc(st.configError)}. Dokploy → Environment'ta değeri düzeltip yeniden deploy edin.</span>` : "R2 kapalı: medya sunucunun diskinde duruyor. Açmak için ortam değişkenlerine R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY ve R2_BUCKET girin; mevcut dosyalar arka planda R2'ye taşınır."}</p>`,
+        st.enabled ? `<button class="btn ghost" onclick="api('POST','/storage/sync').then(()=>toast('Eşitleme başladı'))">Şimdi eşitle</button>` : '', st.enabled ? '<span class="tag ok">R2 açık</span>' : '<span class="tag mute">R2 kapalı</span>');
+  },
+};
+async function runBk() { toast('Yedek alınıyor…'); try { const j = await api('POST', '/backups'); toast(T('Yedek alındı') + ': ' + j.name); await load(); } catch (e) { toast(e.message, true); } }
+
+/* ================= HESABIM ================= */
+PAGES.account = {
+  html() {
+    return head('Hesabım', 'Süper yönetici hesabınız.')
+      + card('Şifre değiştir', '', `<div class="row"><div><label>Mevcut</label><input id="p-cur" type="password" autocomplete="current-password"></div><div><label>Yeni (en az 10)</label><input id="p-new" type="password" autocomplete="new-password"></div></div>`, '<button class="btn" onclick="changePw()">Değiştir</button>')
+      + card('Oturum', '', '<div class="acts"><a class="btn ghost" href="/tv" target="_blank">TV sayfası ↗</a><button class="btn ghost" onclick="logout()">Çıkış yap</button></div>');
+  },
+};
+async function changePw() { try { await api('PUT', '/password', { current: $('p-cur').value, next: $('p-new').value }); $('p-cur').value = ''; $('p-new').value = ''; toast('Şifre değiştirildi'); } catch (e) { toast(e.message, true); } }
 async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/login'; }
+
+/* ================= yükleme ve yenileme ================= */
+async function load() {
+  D = await api('GET', '/overview');
+  const first = !$('main').dataset.ready;
+  if (first) { $('main').dataset.ready = '1'; render(); return; }
+  drawNav();
+  // form içeren sayfalar yeniden çizilmez (yazdıklarınız silinmesin); yalnız canlı bölümler tazelenir
+  if (page === 'home') { $('main').innerHTML = PAGES.home.html(); PAGES.home.after(); }
+  else if (page === 'tenants') drawRows();
+  else if (page === 'sources') liveSources();
+  else if (page === 'backup') PAGES.backup.after();
+}
 load(); setInterval(load, 30000);
 </script>
 </body></html>
