@@ -185,9 +185,9 @@ const tabs = (cur, fn) => `<div class="tabs">${[7, 30, 90].map(d => `<button cla
 
 function stTag(x) {
   if (!x.access.ok) return x.access.reason === 'suspended' ? '<span class="tag bad">Askıda</span>' : '<span class="tag bad">Süresi doldu</span>';
-  return (x.deletion ? `<span class="tag bad" title="KVKK silme talebi">Silinecek ${fmt(x.deletion)}</span> ` : '') + (x.access.kind === 'trial' ? '<span class="tag trial">Deneme</span>' : '<span class="tag ok">Aktif</span>');
+  return (x.deletion ? `<span class="tag bad" title="KVKK silme talebi">Silinecek ${fmt(x.deletion)}</span> ` : '') + (x.access.kind === 'unlimited' ? '<span class="tag ok">∞ Sınırsız</span>' : x.access.kind === 'trial' ? '<span class="tag trial">Deneme</span>' : '<span class="tag ok">Aktif</span>');
 }
-const planName = x => (D.plans[x.plan] || {}).name || x.plan;
+const planName = x => x.unlimited ? 'Sınırsız' : (D.plans[x.plan] || {}).name || x.plan;
 const headOf = o => D.tenants.find(t => t.org === o && t.owner);
 
 const PAGES = {};
@@ -219,10 +219,10 @@ PAGES.home = {
 };
 
 /* ================= İŞLETMELER ================= */
-const FILTERS = [['all', 'Tümü'], ['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda'], ['expired', 'Süresi dolan'], ['offline', 'Çevrimdışı cihazı olan']];
+const FILTERS = [['all', 'Tümü'], ['trial', 'Deneme'], ['active', 'Aktif'], ['unlimited', 'Sınırsız'], ['suspended', 'Askıda'], ['expired', 'Süresi dolan'], ['offline', 'Çevrimdışı cihazı olan']];
+const inK = (x, k) => { const a = x.access; return { all: true, trial: a.ok && a.kind === 'trial', active: a.ok && a.kind === 'paid', unlimited: a.ok && a.kind === 'unlimited', suspended: !a.ok && a.reason === 'suspended', expired: !a.ok && a.reason === 'expired', offline: D.offline.some(o => o.tenantId === x.id) }[k]; };
 const inF = x => {
-  const a = x.access, off = D.offline.some(o => o.tenantId === x.id);
-  return { all: true, trial: a.ok && a.kind === 'trial', active: a.ok && a.kind === 'paid', suspended: !a.ok && a.reason === 'suspended', expired: !a.ok && a.reason === 'expired', offline: off }[TF.f];
+  return inK(x, TF.f);
 };
 PAGES.tenants = {
   html() {
@@ -237,12 +237,12 @@ PAGES.tenants = {
 function drawRows() {
   if (!$('list')) return;
   const q = TF.q.trim().toLocaleLowerCase('tr-TR');
-  $('chips').innerHTML = FILTERS.map(([k, l]) => { const n = D.tenants.filter(x => ({ all: true, trial: x.access.ok && x.access.kind === 'trial', active: x.access.ok && x.access.kind === 'paid', suspended: !x.access.ok && x.access.reason === 'suspended', expired: !x.access.ok && x.access.reason === 'expired', offline: D.offline.some(o => o.tenantId === x.id) }[k])).length; return `<span class="chip ${TF.f === k ? 'on' : ''}" onclick="TF.f='${k}';drawRows()">${l} <b>${n}</b></span>`; }).join('');
+  $('chips').innerHTML = FILTERS.map(([k, l]) => { const n = D.tenants.filter(x => inK(x, k)).length; return `<span class="chip ${TF.f === k ? 'on' : ''}" onclick="TF.f='${k}';drawRows()">${l} <b>${n}</b></span>`; }).join('');
   const end = x => x.access.until || x.paidUntil || x.trialUntil || 0;
   const cmp = { new: (a, b) => b.created - a.created, name: (a, b) => a.name.localeCompare(b.name, 'tr'), end: (a, b) => end(a) - end(b), login: (a, b) => (b.lastLogin || 0) - (a.lastLogin || 0) }[TF.sort];
   const list = D.tenants.filter(x => inF(x) && (!q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q))).sort(cmp);
   $('list').innerHTML = list.map(x => { const h = !x.owner && x.org ? headOf(x.org) : null; return `<tr class="click" onclick="openTenant('${x.id}')"><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : h ? T('Şube') + ' · ' + esc(h.name) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}</span></td>
-    <td>${esc(planName(x))}</td><td>${stTag(x)}</td><td>${fmt(end(x))}</td>
+    <td>${esc(planName(x))}</td><td>${stTag(x)}</td><td>${x.unlimited ? '∞' : fmt(end(x))}</td>
     <td class="num">${x.devices}${x.online ? ` <span style="color:var(--ok)">● ${x.online}</span>` : ''}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
     <td onclick="event.stopPropagation()"><div class="acts"><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">İşletme yok</td></tr>';
 }
@@ -275,8 +275,10 @@ function openTenant(id) {
   <div class="row">${field('İşletme adı', 'e-name', x.name)}${field('Telefon', 'e-phone', x.phone || '')}</div>
   <div class="row"><div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div><div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
   <div class="row">${field('Deneme bitişi', 'e-trial', d(x.trialUntil), 'type="date"')}${field('Ödeme bitişi', 'e-paid', d(x.paidUntil), 'type="date"')}</div>
+  <div class="row">${field('Kullanıcı adı (giriş)', 'e-user', x.owner || '', 'autocomplete="off" autocapitalize="none"')}${field('E-posta (durum uyarıları)', 'e-mail', x.email || '', 'type="email"')}</div>
   <div class="row">${field('Not', 'e-note', x.note || '')}</div>
-  ${x.org ? `<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="e-org"> Paket, durum ve süreleri zincirin tüm şubelerine uygula</label>` : ''}
+  <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:11px 13px;border-radius:10px;background:var(--panel2)"><input type="checkbox" id="e-unl" ${x.unlimited ? 'checked' : ''} style="margin-top:3px"><span><b>Sınırsız (kendi işletmem)</b><br><span class="hint" style="margin:0">Süre dolmaz; tüm Pro özellikler açık; TV kutusu, kullanıcı, şube ve depolama sınırı yok. Kapatınca seçili paket ve tarihler geçerli olur.</span></span></label>
+  ${x.org ? `<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="e-org"> Paket, durum, süre ve sınırsız ayarını zincirin tüm şubelerine uygula</label>` : ''}
   <div class="acts"><button class="btn" onclick="saveT('${id}')">Kaydet</button><button class="btn ghost" onclick="extend('${id}',30)">+30 gün</button><button class="btn ghost" onclick="extend('${id}',365)">+1 yıl</button></div>
   <h3 style="margin-top:24px">Tehlikeli işlemler</h3>
   <div class="acts"><button class="btn ghost" onclick="resetPw('${id}')">Şifre sıfırla</button><button class="btn danger" onclick="delT('${id}')">Sil</button></div>`);
@@ -284,7 +286,7 @@ function openTenant(id) {
 }
 const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
 async function saveT(id) {
-  try { await api('PUT', '/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast('Kaydedildi'); await load(); }
+  try { await api('PUT', '/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, username: $('e-user').value, email: $('e-mail').value, unlimited: $('e-unl').checked, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast('Kaydedildi'); await load(); }
   catch (e) { toast(e.message, true); }
 }
 async function extend(id, days) { try { await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast(`${days} gün eklendi`); await load(); } catch (e) { toast(e.message, true); } }

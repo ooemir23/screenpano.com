@@ -92,6 +92,7 @@ const q = {
   usersOf: sql.prepare('SELECT id, username, role, name, created, last_login FROM users WHERE tenant_id = ? ORDER BY created'),
   userIns: sql.prepare('INSERT INTO users (id, tenant_id, username, pass, role, name, created) VALUES (@id, @tenant_id, @username, @pass, @role, @name, @created)'),
   userPass: sql.prepare('UPDATE users SET pass = ? WHERE id = ?'),
+  userRename: sql.prepare('UPDATE users SET username = ? WHERE id = ?'),
   userLogin: sql.prepare('UPDATE users SET last_login = ? WHERE id = ?'),
   userDel: sql.prepare('DELETE FROM users WHERE id = ? AND tenant_id = ?'),
   screensOf: sql.prepare('SELECT * FROM screens WHERE tenant_id = ? ORDER BY sort, created'),

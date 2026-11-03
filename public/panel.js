@@ -158,7 +158,7 @@ SECTIONS.home = {
       + `<div class="grid g3">
           <div class="stat"><b>${db.videos.length}</b><span>Video ve fotoğraf</span></div>
           <div class="stat"><b>${online}/${devs.length}</b><span>Bağlı cihaz</span></div>
-          <div class="stat"><b>${esc(t.plan.name)}</b><span>${t.access.ok ? (t.access.kind === 'trial' ? 'Deneme · ' : '') + fmtDate(t.access.until) + ' tarihine kadar' : 'Süresi doldu'}</span></div>
+          <div class="stat"><b>${esc(t.plan.name)}</b><span>${t.access.kind === 'unlimited' ? 'Süresiz' : t.access.ok ? (t.access.kind === 'trial' ? 'Deneme · ' : '') + fmtDate(t.access.until) + ' tarihine kadar' : 'Süresi doldu'}</span></div>
         </div>`;
   },
 };
@@ -862,8 +862,8 @@ SECTIONS.settings = {
         + card('Şifremi değiştir', '', `<div class="f">${fl('Mevcut şifre', '<input type="password" id="pw-c" autocomplete="current-password">')}${fl('Yeni şifre (en az 8)', '<input type="password" id="pw-n" autocomplete="new-password">')}</div><div class="row end mt"><button class="btn" onclick="changePw()">Değiştir</button></div>`) + `</div>`;
     } else if (sub === 'plan') {
       const p = t.plan, u = S.me.usage, acc = t.access;
-      const m = (l, used, lim, f = x => x) => `<div class="row" style="justify-content:space-between;font-size:14px"><span>${l}</span><span class="muted">${f(used)} / ${f(lim)}</span></div><div class="meter" style="margin-bottom:12px"><i style="width:${Math.max(2, Math.min(100, used / lim * 100))}%"></i></div>`;
-      h += `<div class="grid g2">` + card('Paketiniz', '', `<div style="font-size:24px;font-weight:700;color:var(--accent2)">${esc(p.name)}</div><p class="muted" style="margin:2px 0 16px">${!acc.ok ? 'Süresi doldu' : (acc.kind === 'trial' ? 'Deneme · ' : 'Aktif · ') + fmtDate(acc.until) + ' tarihine kadar'}</p>
+      const m = (l, used, lim, f = x => x) => `<div class="row" style="justify-content:space-between;font-size:14px"><span>${l}</span><span class="muted">${f(used)} / ${p.id === 'sinirsiz' ? '∞' : f(lim)}</span></div><div class="meter" style="margin-bottom:12px"><i style="width:${Math.max(2, Math.min(100, used / lim * 100))}%"></i></div>`;
+      h += `<div class="grid g2">` + card('Paketiniz', '', `<div style="font-size:24px;font-weight:700;color:var(--accent2)">${esc(p.name)}</div><p class="muted" style="margin:2px 0 16px">${acc.kind === 'unlimited' ? 'Süresiz · tüm özellikler açık, sınır yok' : !acc.ok ? 'Süresi doldu' : (acc.kind === 'trial' ? 'Deneme · ' : 'Aktif · ') + fmtDate(acc.until) + ' tarihine kadar'}</p>
           ${m('Cihaz', u.devices, p.devices)}${m('Depolama', Math.round(u.storageBytes / 1048576), p.storageMB, x => x >= 1024 ? (x / 1024).toFixed(1) + ' GB' : x + ' MB')}${m('Kullanıcı', u.users, p.users)}`)
         + card('Paketler', 'Paket değişikliği ve ödeme için bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Maçlar ve canlı skor<br>✓ Fiyat listesi<br>✓ Bilgi bandı, yorumlar, doğum günü' : '✓ Medya, logo, saat, hava, kurlar<br>✓ Kampanya kartı ve QR<br><span class="muted">Köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div>`;
     } else if (sub === 'branches') {

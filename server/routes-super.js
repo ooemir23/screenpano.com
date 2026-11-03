@@ -25,7 +25,7 @@ r.get('/overview', (req, res) => {
   const online = hub.onlineDeviceIds();
   const list = tenants.all().map(t => {
     const devs = store.q.devicesOf.all(t.id), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
-    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576) };
+    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576) };
   });
   const settings = Object.fromEntries(SETTINGS.map(k => [k, store.setting(k)]));
   settings.traffic_secret = require('./feeds').trafficSecret();
@@ -59,9 +59,27 @@ r.put('/tenants/:id', (req, res) => {
   if (typeof b.phone === 'string') f.phone = b.phone.slice(0, 30);
   if (b.paidUntil !== undefined) f.paid_until = b.paidUntil ? Number(b.paidUntil) : null;
   if (b.trialUntil !== undefined) f.trial_until = b.trialUntil ? Number(b.trialUntil) : null;
+  // giriş adı (işletme sahibi): oturumlar ve TV'ler kullanıcı kimliğine bağlı olduğu için kapanmaz
+  if (typeof b.username === 'string' && b.username.trim()) {
+    const un = b.username.trim().toLowerCase(), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
+    if (owner && un !== owner.username) {
+      if (!require('./accounts').USERNAME.test(un)) return res.status(400).json({ error: 'Kullanıcı adı 3-32 karakter olmalı; harf, rakam, nokta ve tire kullanılabilir' });
+      const other = store.q.userByName.get(un); if (other && other.id !== owner.id) return res.status(400).json({ error: 'Bu kullanıcı adı alınmış' });
+      store.q.userRename.run(un, owner.id);
+    }
+  }
+  // durum uyarılarının gideceği e-posta
+  if (typeof b.email === 'string') {
+    const em = b.email.trim().slice(0, 120);
+    if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi girin' });
+    t.db.notify = { offline: true, online: true, ...(t.db.notify || {}), email: em };
+  }
   if (b.extendDays) { const base = Math.max(Date.now(), t.paid_until || 0); f.paid_until = base + Math.min(3650, Number(b.extendDays)) * DAY; if (t.status !== 'suspended') f.status = 'active'; }
   // zincirin tüm şubelerine uygula (paket, durum, süre)
   const ids = b.applyOrg && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
+  // sınırsız (kendi işletmem): süre ve limit yok; zincirde istenirse tüm şubelere
+  if (typeof b.unlimited === 'boolean') for (const id of ids) { const x = tenants.get(id); if (x) { if (b.unlimited) x.db.unlimited = true; else delete x.db.unlimited; tenants.save(x); } }
+  if (typeof b.email === 'string') tenants.save(t);
   for (const id of ids) { const ff = id === t.id ? f : Object.fromEntries(Object.entries(f).filter(([k]) => ['plan', 'status', 'paid_until', 'trial_until'].includes(k))); store.updateTenant(id, ff); tenants.refreshRow(id); hub.pushTenant(id); }
   res.json({ ok: true, count: ids.length });
 });
