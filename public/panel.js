@@ -44,13 +44,17 @@ const logout = async () => { await fetch('/api/auth/logout', { method: 'POST' })
 const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'POST' }); location.href = '/super'; };
 
 /* ================= gezinme ================= */
+// Metin olan satır grup başlığıdır; null ayraçtır
 const NAV = [
-  ['home', '▦', 'Özet'], ['design', '🎨', 'Tasarım'], ['media', '🎞', 'Medya'], ['menu', '🧾', 'Fiyat Listesi', 1], ['sport', '⚽', 'Spor', 1],
-  ['promo', '📣', 'Duyurular'], ['qr', '▣', 'QR Kodlar'], ['celeb', '🎉', 'Kutlamalar'], ['info', '📰', 'Bilgi Bandı', 1], ['stats', '📊', 'İstatistik'], null, ['settings', '⚙', 'Ayarlar'],
+  'Ekran', ['home', '▦', 'Özet'], ['design', '🎨', 'Tasarım'],
+  'İçerikler', ['media', '🎞', 'Medya'], ['menu', '🧾', 'Fiyat Listesi', 1], ['promo', '📣', 'Duyurular'], ['qr', '▣', 'QR Kodlar'], ['celeb', '🎉', 'Kutlamalar'],
+  'Canlı veri', ['sport', '⚽', 'Spor', 1], ['info', '📰', 'Bilgi Bandı', 1],
+  'Takip', ['stats', '📊', 'İstatistik'],
+  null, ['settings', '⚙', 'Ayarlar'],
 ];
 function drawNav() {
-  $('nav').innerHTML = NAV.map(n => n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}"><span class="i">${n[1]}</span>${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
-  const cur = NAV.find(n => n && n[0] === TAB); $('toptitle').textContent = cur ? cur[2] : '';
+  $('nav').innerHTML = NAV.map(n => typeof n === 'string' ? `<div class="grp">${n}</div>` : n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}"><span class="i">${n[1]}</span>${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
+  const cur = NAV.find(n => Array.isArray(n) && n[0] === TAB); $('toptitle').textContent = cur ? cur[2] : '';
 }
 function go(h) { if (location.hash !== '#' + h) location.hash = h; else route(); }
 function route() {
@@ -108,6 +112,20 @@ function drawBanner() {
 
 /* ================= ÖZET ================= */
 const SECTIONS = {};
+// Özet sayfasındaki "ilgilenmeniz gerekenler" listesi
+function attention(db, t, devs) {
+  const out = [], acc = t.access, now = Date.now(), day = 86400000;
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+  for (const d of devs.filter(d => !d.online && d.last_seen && now - d.last_seen > 10 * 60000 && now - d.last_seen < 7 * day))
+    out.push({ lv: 'bad', t: esc(d.name || 'TV kutusu'), s: `<span>Çevrimdışı, son görülme</span>: <span>${ago(d.last_seen)}</span>`, href: '#settings/devices' });
+  if (acc.ok && acc.until && acc.until - now <= (acc.kind === 'trial' ? 3 : 7) * day)
+    out.push({ lv: 'warn', t: acc.kind === 'trial' ? 'Deneme süreniz bitiyor' : 'Aboneliğiniz bitiyor', s: `<span>Bitiş tarihi</span>: ${fmtDate(acc.until)}`, href: '#settings/plan' });
+  const oldM = db.videos.filter(v => !v.hidden && v.sch && v.sch.end && v.sch.end < today);
+  if (oldM.length) out.push({ lv: 'warn', t: 'Süresi geçmiş medya var', s: `${oldM.length} <span>içeriğin gösterim tarihi bitti, ekranda görünmüyor</span>`, href: '#media' });
+  const oldC = (db.campaigns || []).filter(c => c.enabled && c.sch && c.sch.end && c.sch.end < today);
+  if (oldC.length) out.push({ lv: 'warn', t: 'Süresi geçmiş duyuru var', s: `${oldC.length} <span>duyurunun gösterim tarihi bitti</span>`, href: '#promo' });
+  return out;
+}
 SECTIONS.home = {
   html() {
     const db = S.db, t = S.me.tenant, devs = S.scr.devices, online = devs.filter(d => d.online).length;
@@ -120,7 +138,9 @@ SECTIONS.home = {
     if (pro()) steps.push([(db.menu.categories || []).length > 0, 'Fiyat listesi', 'Ürünlerinizi ve fiyatlarınızı girin', '#menu']);
     const done = steps.filter(s => s[0]).length;
     const camp = (db.campaigns || []).find(c => c.enabled && c.url);
+    const att = attention(db, t, S.scr.devices);
     return head(esc(t.name), 'Ekranınızın durumu, kurulum adımları ve hızlı işlemler.', `<a class="btn g" href="/tv?preview=1" target="_blank">📺 TV ekranını aç</a>`)
+      + (att.length ? card('İlgilenmeniz gerekenler', 'Kırmızılar acil, sarılar yakında ilgilenilecek işler.', att.map(a => `<a class="att ${a.lv}" href="${a.href}"><span class="b"><b>${a.t}</b><span>${a.s}</span></span><span>›</span></a>`).join(''), '', 'mb') : '')
       + `<div class="grid g2" style="margin-bottom:18px">`
       + card('Canlı önizleme', 'TV\'lerinizde şu an görünen ekran.', pvFrame() + `<div class="row mt">${devs.length ? `<span class="pill ${online ? 'ok' : 'warn'}"><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Cihaz bağlı' : 'Cihaz şu an çevrimdışı'}</span>` : '<span class="pill bad">Henüz cihaz bağlanmadı</span>'}<span style="flex:1"></span><button class="btn s g" onclick="act('POST','/devices/reload',undefined,'TV\\'lere yenileme komutu gönderildi',false)">↻ TV\'yi yenile</button></div>`)
       + card(`Kurulum adımları <span class="muted">· ${done}/${steps.length}</span>`, done === steps.length ? 'Her şey hazır 🎉' : 'Sırayla tamamlayın; her adım ilgili sayfayı açar.',
