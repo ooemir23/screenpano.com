@@ -1412,6 +1412,7 @@ function setTicker(list) {
   }
   window.__tickerInfo = segIsInfo || (!live.length && !shown.length && info.length > 0);
   const brkTi = !window.__tickerInfo && showBrk && breakData ? breakData.items.slice(0, 3).map(n => `<span class="ti"><span class="lg brk">SON DAKİKA</span><span>${esc(n.title)} <span class="ft">${esc(n.source)}</span></span></span>`).join('') : '';
+  if (brkTi) label = 'Son Dakika'; // bantta son dakika haberleri de kayarken etiket maç değil son dakikayı göstersin
   const items = window.__tickerInfo ? info.join('') : brkTi + shown.map(m => {
     const mid = m.hs != null ? `<span class="sc">${esc(m.hs)} - ${esc(m.as)}</span>` : '<span class="ft">vs</span>';
     const tag = m.live ? `<span class="lv">● ${esc(m.clock || 'CANLI')}</span>` : m.final ? '<span class="ft">MS</span>' : `<span class="ft">${esc(m.time)}</span>`;
@@ -2813,23 +2814,11 @@ function renderMusicBar() {
   const paused = spLive ? spLive.paused : !m.playing;
   const title = spLive ? spLive.title : (MUS.trackTitle || (it && it.title) || 'Müzik');
   const sub = spLive ? spLive.artist : ''; // hesap/etiket yazısı gösterilmez; yalnız Spotify'da sanatçı adı
-  // şarkı değişince çip açılır; 8 saniye sonra yalnız modern ekolayzer rozetine küçülür
-  const key = (isSp ? 'sp' : 'yt') + '|' + title;
-  const wasOn = bar.className.indexOf('on') === 0;
-  const changed = !wasOn || key !== (MUS.barKey || '');
-  MUS.barKey = key;
-  bar.className = 'on ' + (isSp ? 'sp' : isYt ? 'yt' : 'rd') + (paused ? ' paused' : '') + (!changed && bar.classList.contains('mini') ? ' mini' : '');
-  bar.onclick = () => {
-    if (MUS.needUnlock) unlockAudioNow();
-    if (bar.classList.contains('mini')) {
-      bar.classList.remove('mini');
-      clearTimeout(MUS.barTimer);
-      MUS.barTimer = setTimeout(() => { const b = $id('music-bar'); if (b && b.className.indexOf('on') === 0) b.classList.add('mini'); }, 8000);
-    }
-  };
+  // çip hiç genişlemez: hep yuvarlak ekolayzer rozeti; çubuklar çalarken oynar, duraklarken durur
+  bar.className = 'on ' + (isSp ? 'sp' : isYt ? 'yt' : 'rd') + ' mini' + (paused ? ' paused' : '');
+  bar.onclick = () => { if (MUS.needUnlock) unlockAudioNow(); };
   bar.innerHTML = `<div class="meq-icon"><div class="meq-bars"><i></i><i></i><i></i><i></i><i></i></div></div>`
     + `<div class="mmeta"><div class="mtit">${esc(title)}</div>${sub ? `<div class="msub">${esc(sub)}</div>` : ''}</div>`;
-  if (changed) { clearTimeout(MUS.barTimer); MUS.barTimer = setTimeout(() => { const b = $id('music-bar'); if (b && b.className.indexOf('on') === 0) b.classList.add('mini'); }, 8000); }
   dockMusicBar();
 }
 function stopAllMusicEngines(except) {
