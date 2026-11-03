@@ -562,13 +562,6 @@ r.post('/reviews', (req, res) => {
   changed(req.t); res.json({ ok: true });
 });
 r.delete('/reviews/:id', (req, res) => { req.t.db.reviews = req.t.db.reviews.filter(x => x.id !== req.params.id); changed(req.t); res.json({ ok: true }); });
-r.post('/matches', (req, res) => {
-  const { home, away, time, league, channel } = req.body;
-  if (!home || !away || !time) return res.status(400).json({ error: 'eksik alan' });
-  req.t.db.matches.push({ id: auth.uid(), home: String(home).slice(0, 40), away: String(away).slice(0, 40), time: String(time).slice(0, 5), league: String(league || '').slice(0, 40), channel: String(channel || '').slice(0, 40) });
-  changed(req.t); res.json({ ok: true });
-});
-r.delete('/matches/:id', (req, res) => { req.t.db.matches = req.t.db.matches.filter(x => x.id !== req.params.id); changed(req.t); res.json({ ok: true }); });
 r.post('/birthdays', (req, res) => {
   if (!req.body.name) return res.status(400).json({ error: 'isim gerekli' });
   const text = String(req.body.text || '').trim().slice(0, 200);

@@ -584,8 +584,8 @@ SECTIONS.sport = {
     const db = S.db, L = S.lg, bc = Object.assign({ enabled: true, note: '', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''] }, db.bigMatch || {});
     const groups = {}; L.catalog.forEach(l => (groups[l.group] = groups[l.group] || []).push(l));
     const tbl = L.catalog.filter(l => L.enabled.includes(l.code) && L.tables.includes(l.code));
-    const sec = SUB.sport || 'leagues';
-    const TABS = [['leagues', 'Maçlar ve ligler'], ['table', 'Puan durumu'], ['big', 'Büyük maç'], ['manual', 'Elle ekle']];
+    const sec = ['leagues', 'table', 'big'].includes(SUB.sport) ? SUB.sport : 'leagues'; // eski #sport/manual bağlantısı da açılsın
+    const TABS = [['leagues', 'Maçlar ve ligler'], ['table', 'Puan durumu'], ['big', 'Büyük maç']];
     const body = { leagues: () => (''
       + card('Takip edilen ligler', 'Seçtiğiniz liglerin bugünkü maçları ve canlı skorları gösterilir; gol olunca ekranda animasyon çıkar.',
         Object.entries(groups).map(([g, items]) => { const n = items.filter(l => L.enabled.includes(l.code)).length; return `<details class="lgrp" ${n ? 'open' : ''}><summary><b>${esc(g)}</b><span class="cnt" data-of="${items.length}">${n}/${items.length}</span></summary><div class="chips">${items.map(l => `<span class="chip ${L.enabled.includes(l.code) ? 'on' : ''}" data-code="${l.code}" onclick="this.classList.toggle('on');spCount()">${esc(l.label)}</span>`).join('')}</div></details>`; }).join('')
@@ -602,10 +602,7 @@ SECTIONS.sport = {
          <div class="fl mt"><span>Takım / oyuncu fotoğrafları (isteğe bağlı, arkası şeffaf PNG en iyisi)</span><div class="row"><input type="text" id="bg-team" list="bgteams" placeholder="Takım adı" style="max-width:220px"><datalist id="bgteams"><option>Galatasaray</option><option>Fenerbahçe</option><option>Beşiktaş</option><option>Trabzonspor</option></datalist><input type="file" id="bg-file" accept="image/*" hidden onchange="upBigPhoto(this)"><button class="btn g s" onclick="$('bg-team').value.trim()?$('bg-file').click():toast('Önce takım adını yazın',true)">Fotoğraf yükle</button></div><div class="thumbs" id="bgphotos"></div></div>
          <div class="row mt"><span id="bglist" class="muted" style="flex:1"></span><button class="btn g s" onclick="act('POST','/bigmatch/test',undefined,'Görsel TV\\'de gösteriliyor',false)">Şimdi dene</button><button class="btn" onclick="saveBig()">Kaydet</button></div>`,
         sw(bc.enabled, "act('PUT','/bigmatch',{enabled:this.checked},this.checked?'Açıldı':'Kapatıldı')"), bc.enabled ? '' : 'off')
-), manual: () => (''
-      + card('Elle maç ekle', 'Listede olmayan bir maçı ya da etkinliği bugünün listesine ekler.', `<div class="f">${fl('Ev sahibi', '<input type="text" id="mm-h" maxlength="40">')}${fl('Deplasman', '<input type="text" id="mm-a" maxlength="40">')}${fl('Saat', '<input type="time" id="mm-t">')}${fl('Lig / etkinlik', '<input type="text" id="mm-l" maxlength="40">')}${fl('Kanal', '<input type="text" id="mm-c" maxlength="40" placeholder="örn. beIN Sports 1">')}</div>
-        <div class="row end mt"><button class="btn" onclick="addMatch()">Ekle</button></div>
-        ${db.matches.length ? `<div class="list mt">${db.matches.map(m => `<div class="it"><div class="b"><b>${esc(m.home)} – ${esc(m.away)}</b><span>${esc(m.time)}${m.league ? ' · ' + esc(m.league) : ''}${m.channel ? ' · 📺 ' + esc(m.channel) : ''}</span></div><button class="btn xs d" onclick="act('DELETE','/matches/${m.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : ''}`)) }[sec]();
+) }[sec]();
     return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.', `<button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button>`)
       + lock('Maç ve spor özellikleri')
       + `<div class="spsum" id="sp-sum"></div>` + tabs('sport', TABS) + body;
@@ -631,7 +628,6 @@ async function togTable(c) { const h = S.lg.hideTables || []; S.lg.hideTables = 
 const bigStyle = async k => { if (await act('PUT', '/bigmatch', { style: k }, 'Tasarım seçildi', false)) { S.db.bigMatch = Object.assign({}, S.db.bigMatch, { style: k }); render(true); } };
 const saveBig = () => act('PUT', '/bigmatch', { note: $('bg-note').value, days: $('bg-days').value, everyMin: $('bg-every').value, durSec: $('bg-dur').value, info: [0, 1, 2].map(i => $('bg-i' + i).value) }, 'Kaydedildi');
 async function upBigPhoto(inp) { const f = inp.files[0]; if (!f) return; const fd = new FormData(); fd.append('team', $('bg-team').value.trim()); fd.append('file', f); try { await req('POST', '/bigmatch/photo', fd); toast('Fotoğraf yüklendi'); refresh(); } catch (e) { toast(e.message, true); } }
-async function addMatch() { const b = { home: $('mm-h').value.trim(), away: $('mm-a').value.trim(), time: $('mm-t').value, league: $('mm-l').value.trim(), channel: $('mm-c').value.trim() }; if (!b.home || !b.away || !b.time) return toast('Takımlar ve saat gerekli', true); act('POST', '/matches', b, 'Maç eklendi'); }
 
 /* ================= DUYURULAR ================= */
 SECTIONS.promo = {

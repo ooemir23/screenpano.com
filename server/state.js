@@ -98,7 +98,6 @@ function publicState(t) {
     langs: langList(db), langSec: Math.max(5, Math.min(60, Number((db.lang || {}).sec) || 12)),
     tz: config.TZ,
     matches: pro ? [
-      ...db.matches.slice().sort((a, b) => a.time.localeCompare(b.time)).map(m => ({ ...m, day: 'Bugün' })),
       ...F.autoMatches.filter(m => enabled.some(([, label]) => label === m.league)),
     ].slice(0, 30).map(m => ({ ...m, hl: F.localLogo(m.hl), al: F.localLogo(m.al) })) : [],
     showStandings: pro && db.showStandings !== false,
