@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld('TVNative', {
   saveToken: t => ipcRenderer.send('token:set', String(t || '')),
   versionName: () => ipcRenderer.sendSync('app:versionName'),
   versionCode: () => ipcRenderer.sendSync('app:versionCode'),
+  hwId: () => ipcRenderer.sendSync('hwid') || '',
+  model: () => ipcRenderer.sendSync('model') || '',
   snapshotAsync: () => ipcRenderer.invoke('snap'),
   checkUpdate: () => ipcRenderer.send('update:check'),
 });

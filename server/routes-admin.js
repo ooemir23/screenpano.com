@@ -185,7 +185,7 @@ r.post('/assets', quota, upload.single('file'), (req, res) => {
 // İşletme başına tek ekran: mekândaki kutu HDMI ile tüm TV'lere aynı görüntüyü verir.
 r.get('/screen', (req, res) => {
   const t = req.t, s = tenants.mainScreen(t), online = hub.onlineDeviceIds();
-  res.json({ layout: store.J(s.layout) || W.defaultLayout(), devices: store.q.devicesOf.all(t.id).map(d => ({ ...d, online: online.has(d.id) })), limit: plan(t).devices });
+  res.json({ layout: store.J(s.layout) || W.defaultLayout(), devices: store.q.devicesOf.all(t.id).map(d => ({ ...d, online: online.has(d.id) })), limit: plan(t).devices, offlineMin: require('./monitor').offlineMin(t) });
 });
 r.put('/screen', (req, res) => {
   const t = req.t, s = tenants.mainScreen(t), l = W.cleanLayout((req.body || {}).layout);

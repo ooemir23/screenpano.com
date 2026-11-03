@@ -75,14 +75,15 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const online = hub.onlineDeviceIds();
     res.json({
       devices: store.q.devicesOf.all(req.t.id).map(d => monitor.deviceView(d, online.has(d.id))),
-      alerts: (req.t.db.alerts || []).slice(0, 30), notify: req.t.db.notify || {}, mail: monitor.mailEnabled(), offlineMin: monitor.OFFLINE_MIN,
+      alerts: (req.t.db.alerts || []).slice(0, 30), notify: req.t.db.notify || {}, mail: monitor.mailEnabled(), offlineMin: monitor.offlineMin(req.t),
     });
   });
   r.delete('/alerts', (req, res) => { req.t.db.alerts = []; changed(req.t); res.json({ ok: true }); });
   r.put('/notify', ownerOnly, (req, res) => {
     const b = req.body || {}, email = s(b.email, 120);
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi girin' });
-    req.t.db.notify = { email, offline: b.offline !== false, online: b.online !== false };
+    const om = Math.round(Number(b.offlineMin));
+    req.t.db.notify = { email, offline: b.offline !== false, online: b.online !== false, offlineMin: om >= 1 && om <= 1440 ? om : undefined };
     changed(req.t); res.json({ ok: true });
   });
   r.post('/notify/test', ownerOnly, async (req, res) => {

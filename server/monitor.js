@@ -6,6 +6,7 @@ const store = require('./store');
 const hub = require('./hub');
 
 const OFFLINE_MIN = Number(process.env.OFFLINE_ALERT_MIN) || 10;
+const offlineMin = t => { const m = Number((t.db.notify || {}).offlineMin); return m >= 1 && m <= 1440 ? m : OFFLINE_MIN; }; // işletme özel eşiği yoksa varsayılan
 const live = new Map();    // cihaz -> son durum (bellekte; veritabanına da yazılır)
 const snaps = new Map();   // cihaz -> { at, data } ekran görüntüsü
 
@@ -32,10 +33,11 @@ function pushAlert(t, a) {
 }
 
 // TV'den gelen rapor
-function report(tid, deviceId, s) {
+function report(tid, deviceId, s, ip) {
   const clean = {
     at: Date.now(),
     app: String(s.app || '').slice(0, 20), build: String(s.build || '').slice(0, 40),
+    hwid: String(s.hwid || '').slice(0, 32), model: String(s.model || '').slice(0, 60), ip: String(ip || '').slice(0, 45),
     screen: String(s.screen || '').slice(0, 20), ua: String(s.ua || '').slice(0, 160),
     uptime: Math.max(0, Math.round(Number(s.uptime) || 0)), playing: String(s.playing || '').slice(0, 120),
     errors: Math.max(0, Math.round(Number(s.errors) || 0)), lastError: String(s.lastError || '').slice(0, 200),
@@ -61,9 +63,10 @@ function tick() {
   for (const d of store.q.devicesAll.all()) {
     if (online.has(d.id) || d.alerted || !d.last_seen) continue;
     const gone = now - d.last_seen;
-    if (gone < OFFLINE_MIN * 60000 || gone > 7 * 86400000) continue; // bir haftadır kapalı cihaz için tekrar tekrar uyarma
+    if (gone > 7 * 86400000) continue; // bir haftadır kapalı cihaz için tekrar tekrar uyarma
     const t = tenants.get(d.tenant_id); if (!t) continue;
     if (!require('./plans').access(t).ok) continue;
+    if (gone < offlineMin(t) * 60000) continue; // işletmenin eşiği (varsayılan OFFLINE_MIN) dolmadan bekle
     store.q.deviceAlerted.run(1, d.id);
     const name = d.name || 'TV kutusu', since = new Date(d.last_seen).toLocaleString('tr-TR', { timeZone: config.TZ, dateStyle: 'short', timeStyle: 'short' });
     pushAlert(t, { kind: 'offline', device: name, text: `${name} ${since} saatinden beri çevrimdışı.` });
@@ -88,4 +91,4 @@ function overview() { // süper yönetim: çevrimdışı cihazlar
 
 function start() { setInterval(tick, 60000); }
 
-module.exports = { report, connected, tick, start, deviceView, overview, snaps, live, sendMail, webhook, mailEnabled, pushAlert, OFFLINE_MIN };
+module.exports = { report, connected, tick, start, deviceView, overview, snaps, live, sendMail, webhook, mailEnabled, pushAlert, OFFLINE_MIN, offlineMin };

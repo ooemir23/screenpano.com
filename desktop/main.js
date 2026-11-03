@@ -64,6 +64,18 @@ ipcMain.on('token:get', e => { e.returnValue = cfg.load().token || ''; });
 ipcMain.on('token:set', (e, t) => { cfg.save({ token: t }); });
 ipcMain.on('app:versionName', e => { e.returnValue = app.getVersion() + ' Windows'; });
 ipcMain.on('app:versionCode', e => { const [a, b, c] = app.getVersion().split('.').map(Number); e.returnValue = a * 10000 + b * 100 + (c || 0); });
+// cihaz kimliği: ilk fiziksel ağ kartının MAC adresi (yoksa bilgisayar adı) — panelde "hangi cihaz" diye gösterilir
+ipcMain.on('hwid', e => {
+  try {
+    const os = require('os');
+    for (const list of Object.values(os.networkInterfaces())) {
+      const nic = (list || []).find(n => n && n.mac && n.mac !== '00:00:00:00:00:00' && !n.internal);
+      if (nic) { e.returnValue = nic.mac.replace(/-/g, ':').toLowerCase(); return; }
+    }
+    e.returnValue = os.hostname() || '';
+  } catch (err) { e.returnValue = ''; }
+});
+ipcMain.on('model', e => { try { e.returnValue = (require('os').hostname() || 'Windows') + ' · Windows'; } catch (err) { e.returnValue = 'Windows'; } });
 // panelden istenen ekran görüntüsü (en çok 960 px genişlik, JPEG)
 ipcMain.handle('snap', async () => {
   if (!win) return '';

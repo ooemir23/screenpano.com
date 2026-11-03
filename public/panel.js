@@ -106,7 +106,7 @@ function drawBanner() {
   if (S.me.user.impersonating) h += `<div class="bn imp"><span>Süper yönetici olarak <b>${esc(t.name)}</b> işletmesini görüntülüyorsunuz.</span><button class="btn s g" onclick="unimp()">Süper yönetime dön</button></div>`;
   if (!acc.ok) h += `<div class="bn bad"><span><b>${acc.reason === 'suspended' ? 'Hesabınız askıya alındı.' : 'Abonelik süreniz doldu.'}</b> Ekranınız şu an kapalı; paketiniz yenilenince kendiliğinden açılır.</span></div>`;
   if (S.db && S.db.deletion) h += `<div class="bn bad"><span><b>Hesap silme talebi var.</b> ${fmtDate(S.db.deletion.executeAt)} tarihinde tüm veriler kalıcı olarak silinecek.</span><a class="btn s g" href="#settings/privacy">Vazgeç</a></div>`;
-  const off = S.scr && S.scr.devices.filter(d => !d.online && d.last_seen && Date.now() - d.last_seen > 10 * 60000 && Date.now() - d.last_seen < 7 * 86400000);
+  const off = S.scr && S.scr.devices.filter(d => !d.online && d.last_seen && Date.now() - d.last_seen > (S.scr.offlineMin || 10) * 60000 && Date.now() - d.last_seen < 7 * 86400000);
   if (acc.ok && off && off.length) h += `<div class="bn trial"><span><b>${esc(off[0].name || 'TV kutusu')}</b> ${offSince(off[0].last_seen)} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin.</span><a class="btn s g" href="#settings/devices">Cihazlar</a></div>`;
   if (!acc.ok) {} else if (acc.kind === 'trial') h += `<div class="bn trial"><span>Deneme süreniz <b>${days} gün</b> sonra (${fmtDate(acc.until)}) bitiyor. Deneme boyunca tüm Pro özellikler açık.</span></div>`;
   $('banner').innerHTML = h;
@@ -1109,23 +1109,26 @@ async function igConnect() {
 
 /* ================= DURUM İZLEME ================= */
 const upFmt = s => s < 3600 ? Math.round(s / 60) + ' dk' : s < 86400 ? Math.round(s / 3600) + ' saat' : Math.round(s / 86400) + ' gün';
+const omLbl = m => m >= 1440 ? '1 gün' : m >= 60 ? (m >= 720 ? '12 saat' : (m / 60) + ' saat') : m + ' dakika';
 async function drawDevStatus() {
   const box = $('devstat'); if (!box) return;
   let j; try { j = await req('GET', '/devices/status'); } catch (e) { return; }
-  const n = j.notify || {};
+  const n = j.notify || {}, om = n.offlineMin || j.offlineMin;
   box.innerHTML = `<div class="grid g2">`
-    + card('Cihaz durumu', 'Kutular dakikada bir durum bildirir. Ekran görüntüsü yalnız Android uygulamasında alınır.', j.devices.length ? `<div class="list">${j.devices.map(d => { const r = d.report || {}; return `<div class="it" style="flex-wrap:wrap"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b" style="min-width:200px"><b>${esc(d.name || 'TV kutusu')}</b>
+    + card('Cihaz durumu', 'Kutular dakikada bir durum bildirir. Ekran görüntüsü yalnız Android uygulamasında alınır.', j.devices.length ? `<div class="list">${j.devices.map(d => { const r = d.report || {}; const id = [r.model, r.hwid ? 'ID ' + r.hwid.slice(0, 24) : '', r.ip ? 'IP ' + r.ip : ''].filter(Boolean); return `<div class="it" style="flex-wrap:wrap"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b" style="min-width:200px"><b>${esc(d.name || 'TV kutusu')}</b>
         <span>${d.online ? 'Bağlı' : 'Çevrimdışı · son görülme ' + ago(d.last_seen)}${r.app ? ' · uygulama ' + esc(r.app) : ''}${r.screen ? ' · ' + esc(r.screen) : ''}${r.uptime ? ' · ' + upFmt(r.uptime) + 'dir açık' : ''}</span>
+        ${id.length ? `<span class="muted" style="font-size:12px">${id.map(esc).join(' · ')}</span>` : ''}
         ${r.playing ? `<span>Şu an: ${esc(r.playing)}</span>` : ''}${r.cached ? `<span>Çevrimdışı önbellek: ${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}</span>` : ''}${r.lastError ? `<span style="color:var(--warn,#e6a23c)">Son hata: ${esc(r.lastError)}</span>` : ''}</div>
         ${d.online ? `<button class="btn xs g" onclick="snapDev('${d.id}')">📷 Ekran görüntüsü</button>` : ''}</div>`; }).join('')}</div><div id="snapbox"></div>` : '<div class="empty">Bağlı cihaz yok</div>')
-    + card('Uyarılar', `Kutu ${j.offlineMin} dakikadan uzun süre bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,
+    + card('Uyarılar', `Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,
       `${owner() ? `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" onclick="saveNotify()">Kaydet</button>${n.email && j.mail ? '<button class="btn g" onclick="act(\'POST\',\'/notify/test\',undefined,\'Deneme e-postası gönderildi\',false)">Dene</button>' : ''}</div>
+       <div class="row mt" style="align-items:center"><span style="flex:1">Kutunun uyarılmadan bağlantısız kalabileceği süre:</span><select id="nt-offmin" style="width:130px">${[5, 10, 15, 30, 60, 120, 360, 720, 1440].map(m => `<option value="${m}"${m === om ? ' selected' : ''}>${omLbl(m)}</option>`).join('')}</select></div>
        <div class="swr mt"><div class="b"><b>Ekran kapanınca</b></div>${sw(n.offline !== false, '', 'id="nt-off"')}</div><div class="swr"><div class="b"><b>Ekran geri açılınca</b></div>${sw(n.online !== false, '', 'id="nt-on"')}</div>
        ${j.mail ? '' : '<p class="muted" style="font-size:12.5px">Sunucuda e-posta gönderimi henüz ayarlı değil; uyarılar şimdilik yalnız burada görünür.</p>'}` : ''}
        <div class="list mt">${(j.alerts || []).length ? j.alerts.slice(0, 12).map(a => `<div class="it"><span class="dot ${a.kind === 'online' ? 'on' : ''}"></span><div class="b"><b>${esc(a.text)}</b><span>${new Date(a.at).toLocaleString(I18N.locale, { dateStyle: 'short', timeStyle: 'short' })}</span></div></div>`).join('') + `<div class="row end"><button class="btn xs g" onclick="act('DELETE','/alerts',undefined,'Temizlendi',false).then(drawDevStatus)">Temizle</button></div>` : '<div class="muted">Uyarı yok.</div>'}</div>`)
     + `</div>`;
 }
-const saveNotify = () => act('PUT', '/notify', { email: $('nt-mail').value.trim(), offline: $('nt-off').checked, online: $('nt-on').checked }, 'Uyarı ayarları kaydedildi', false);
+const saveNotify = () => act('PUT', '/notify', { email: $('nt-mail').value.trim(), offline: $('nt-off').checked, online: $('nt-on').checked, offlineMin: $('nt-offmin') ? +$('nt-offmin').value : undefined }, 'Uyarı ayarları kaydedildi', false);
 async function snapDev(id) {
   const box = $('snapbox'); box.innerHTML = '<p class="muted">Ekran görüntüsü isteniyor…</p>';
   try { await req('POST', `/devices/${id}/snapshot`); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }

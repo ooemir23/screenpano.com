@@ -60,7 +60,7 @@ function onMessage(ws, raw) {
     return;
   }
   if (!ws.deviceId) return;
-  if (m.type === 'status') require('./monitor').report(ws.tid, ws.deviceId, m);
+  if (m.type === 'status') require('./monitor').report(ws.tid, ws.deviceId, m, ws.ip);
   else if (m.type === 'play') require('./stats').play(ws.tid, String(m.id || ''), m.sec);
   else if (m.type === 'shown') require('./stats').shown(ws.tid, String(m.kind || ''));
   else if (m.type === 'snap' && typeof m.data === 'string' && /^data:image\/(jpeg|png);base64,/.test(m.data)) require('./monitor').snaps.set(ws.deviceId, { at: Date.now(), data: m.data });
@@ -76,7 +76,7 @@ function attach(server) {
     if (token) { // TV cihazı
       const d = store.q.deviceByHash.get(auth.hashToken(token));
       if (!d) { sendRaw(ws, { type: 'auth', error: 'invalid' }); return ws.close(); }
-      Object.assign(ws, { tid: d.tenant_id, deviceId: d.id });
+      Object.assign(ws, { tid: d.tenant_id, deviceId: d.id, ip: auth.clientIp(req) });
       store.q.deviceSeen.run(Date.now(), d.id);
       const t0 = tenants.get(d.tenant_id); if (t0) require('./monitor').connected(t0, d);
       try { require('./stats').deviceUp(d.tenant_id, d.id); } catch (e) {}

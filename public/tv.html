@@ -2498,6 +2498,7 @@ function sendStatus() {
   const n = window.__N, it = videos.find(x => x.id === current);
   wsSend({
     type: 'status', app: n && n.versionName ? n.versionName() : 'tarayıcı', build: window.__build || '',
+    hwid: n && n.hwId ? String(n.hwId()).slice(0, 32) : '', model: n && n.model ? String(n.model()).slice(0, 60) : '',
     screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
     playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
     cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,

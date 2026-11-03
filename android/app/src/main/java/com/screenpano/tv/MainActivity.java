@@ -248,6 +248,18 @@ public class MainActivity extends Activity {
             try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode; } catch (Exception e) { return 0; }
         }
 
+        /** Cihaz kimliği: ANDROID_ID (kurulumda sabit, fabrika ayarına dönülünce değişir).
+         *  MAC adresi Android 10'dan beri uygulamalara kapalı; bunun yerine bu kalıcı kimlik kullanılır. */
+        @JavascriptInterface public String hwId() {
+            try { return Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID); } catch (Exception e) { return ""; }
+        }
+
+        /** Kutunun marka/modeli (panelde "hangi cihaz" diye gösterilir). */
+        @JavascriptInterface public String model() {
+            String m = ((Build.MANUFACTURER + " " + Build.MODEL).trim());
+            return m.length() > 60 ? m.substring(0, 60) : m;
+        }
+
         /** Uzaktan durum izleme: ekranın küçük bir görüntüsü (960 px genişlik, JPEG, data: adresi). Çizim UI iş parçacığında yapılır. */
         @JavascriptInterface public String snapshot() {
             final String[] out = { "" };
