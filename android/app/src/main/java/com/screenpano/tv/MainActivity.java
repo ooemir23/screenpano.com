@@ -213,14 +213,17 @@ public class MainActivity extends Activity {
 
     /** Menü tuşu sayfadaki menüyü (sürüm, güncelleme kontrolü) açar/kapatır; geri tuşu menüyü kapatır ama uygulamadan çıkmaz (TV ekranı kapanmasın). */
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_MENU) {
+        if (keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_SETTINGS || keyCode == KeyEvent.KEYCODE_INFO) {
             web.evaluateJavascript("(window.__menu ? (window.__menu(), 1) : 0)", new ValueCallback<String>() {
                 @Override public void onReceiveValue(String v) { if (!"1".equals(v)) web.reload(); }
             });
             return true;
         }
         if (keyCode == KeyEvent.KEYCODE_F5) { web.reload(); return true; }
-        if (keyCode == KeyEvent.KEYCODE_BACK) { web.evaluateJavascript("window.__menuClose && window.__menuClose();", null); return true; }
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            web.evaluateJavascript("(window.__menuClose ? (window.__menuClose(), 1) : 0)", null);
+            return true;
+        }
         return super.onKeyDown(keyCode, event);
     }
 
@@ -283,7 +286,11 @@ public class MainActivity extends Activity {
 
     private void startUpdate(final String url) {
         if (updating) return;
-        if (!url.startsWith(BASE_URL + "/")) { updateStatus("Geçersiz güncelleme adresi"); return; }
+        String curHost = web != null && web.getUrl() != null ? web.getUrl().split("/tv")[0] : BASE_URL;
+        if (!url.startsWith(BASE_URL + "/") && !url.startsWith(curHost + "/")) {
+            updateStatus("Geçersiz güncelleme adresi");
+            return;
+        }
         if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
             // Android bu uygulamaya bir kez "bilinmeyen kaynaklardan yükleme" izni ister
             updateStatus("Açılan ekranda bu uygulama için izni açıp geri dönün, sonra tekrar OK'a basın");
@@ -301,6 +308,7 @@ public class MainActivity extends Activity {
                     f.getParentFile().mkdirs();
                     File tmp = new File(f.getParentFile(), "dl.tmp");
                     c = (HttpURLConnection) new URL(url).openConnection();
+                    c.setInstanceFollowRedirects(true);
                     c.setConnectTimeout(15000);
                     c.setReadTimeout(30000);
                     if (c.getResponseCode() != 200) throw new Exception("sunucu " + c.getResponseCode());
