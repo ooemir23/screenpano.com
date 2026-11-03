@@ -120,3 +120,20 @@ Süresi geçmiş medya var ¦ Some media has expired ¦ Abgelaufene Medien vorha
 içeriğin gösterim tarihi bitti, ekranda görünmüyor ¦ items have passed their end date and no longer show on screen ¦ Inhalte haben ihr Enddatum überschritten und werden nicht mehr angezeigt ¦ عناصر انتهى تاريخ عرضها ولم تعد تظهر على الشاشة
 Süresi geçmiş duyuru var ¦ Some announcements have expired ¦ Abgelaufene Ankündigungen vorhanden ¦ توجد إعلانات منتهية الصلاحية
 duyurunun gösterim tarihi bitti ¦ announcements have passed their end date ¦ Ankündigungen haben ihr Enddatum überschritten ¦ إعلانات انتهى تاريخ عرضها
+Maçlar ve ligler ¦ Matches and leagues ¦ Spiele und Ligen ¦ المباريات والدوريات
+Büyük maç ¦ Big match ¦ Großes Spiel ¦ المباراة الكبرى
+Elle ekle ¦ Add manually ¦ Manuell hinzufügen ¦ إضافة يدويًا
+lig açık ¦ leagues on ¦ Ligen aktiv ¦ دوريات مفعّلة
+Gelişmiş ayarlar ¦ Advanced settings ¦ Erweiterte Einstellungen ¦ إعدادات متقدمة
+· alt not, sıklık, süre, alt bilgiler ¦ · footnote, frequency, duration, extra lines ¦ · Fußnote, Häufigkeit, Dauer, Zusatzzeilen ¦ · ملاحظة سفلية، التكرار، المدة، أسطر إضافية
+Kaydedildi ¦ Saved ¦ Gespeichert ¦ تم الحفظ
+Bugünkü nöbetçi eczaneler; konumunuzdan otomatik ya da seçtiğiniz ilçelerden ¦ Today's duty pharmacies, found automatically from your location or from districts you choose ¦ Heutige Notdienst-Apotheken, automatisch nach Ihrem Standort oder aus gewählten Bezirken ¦ الصيدليات المناوبة اليوم، تلقائيًا حسب موقعك أو من الأحياء التي تختارها
+📍 Otomatik (konumum) ¦ 📍 Automatic (my location) ¦ 📍 Automatisch (mein Standort) ¦ 📍 تلقائي (موقعي)
+✍ Elle seç ¦ ✍ Choose manually ¦ ✍ Manuell wählen ¦ ✍ اختيار يدوي
+Konumunuz ¦ Your location ¦ Ihr Standort ¦ موقعك
+Nöbetçi eczaneler ¦ Duty pharmacies ¦ Notdienst-Apotheken ¦ الصيدليات المناوبة
+Konumunuz henüz seçilmemiş. <0>Ayarlar › İşletme</0> bölümünden konumunuzu seçin. ¦ Your location is not set yet. Choose it under <0>Settings › Business</0>. ¦ Ihr Standort ist noch nicht gewählt. Wählen Sie ihn unter <0>Einstellungen › Betrieb</0>. ¦ لم يتم اختيار موقعك بعد. اختره من <0>الإعدادات › العمل</0>.
+Konumunuzdan ilçe bulunuyor… Birkaç saniye sonra sayfayı yenileyin ya da elle seçin. ¦ Finding your district from your location… Refresh the page in a few seconds or choose manually. ¦ Bezirk wird aus Ihrem Standort ermittelt… Laden Sie die Seite in einigen Sekunden neu oder wählen Sie manuell. ¦ جارٍ تحديد الحي من موقعك… أعد تحميل الصفحة بعد ثوانٍ أو اختر يدويًا.
+Önce Ayarlar > İşletme bölümünden konumunuzu seçin ¦ First choose your location under Settings > Business ¦ Wählen Sie zuerst unter Einstellungen > Betrieb Ihren Standort ¦ اختر موقعك أولًا من الإعدادات > العمل
+Konumunuzdan ilçe bulunamadı; elle seçin ¦ Could not find a district from your location; choose manually ¦ Aus Ihrem Standort konnte kein Bezirk ermittelt werden; wählen Sie manuell ¦ تعذر تحديد الحي من موقعك؛ اختر يدويًا
+Konumdan ilçe bulunamadı; biraz sonra deneyin ya da elle seçin ¦ Could not find a district; try again shortly or choose manually ¦ Bezirk nicht gefunden; versuchen Sie es gleich erneut oder wählen Sie manuell ¦ تعذر تحديد الحي؛ حاول بعد قليل أو اختر يدويًا

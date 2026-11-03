@@ -276,7 +276,35 @@ async function calories(query) {
   return r.kcal ? { name: r.name, kcal: r.kcal } : null;
 }
 
-const pharmCfg = t => t.db.pharmacy || {};
+// Eczane ayarı: mode 'auto' ise il/ilçe işletmenin konumundan bulunur (db.pharmacy.auto), 'manual' ise elle girilen kullanılır.
+// Eski kayıtlarda mode yoktur: ilçesi girilmişse elle, girilmemişse otomatik sayılır.
+const pharmMode = c => c.mode === 'auto' || c.mode === 'manual' ? c.mode : ((c.districts || []).length ? 'manual' : 'auto');
+function pharmCfg(t) {
+  const c = t.db.pharmacy || {};
+  if (pharmMode(c) !== 'auto') return c;
+  const a = c.auto, loc = t.db.location || {};
+  return a && a.il && a.district && a.lat === loc.lat && a.lon === loc.lon ? { ...c, il: a.il, districts: [a.district] } : { ...c, districts: [] };
+}
+// Koordinattan il ve ilçe (BigDataCloud, ücretsiz; koordinat ~1 km'ye yuvarlanır)
+async function placeOf(lat, lon) {
+  const r = n => Math.round(Number(n) * 100) / 100;
+  const j = await (await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${r(lat)}&longitude=${r(lon)}&localityLanguage=tr`, { signal: AbortSignal.timeout(8000) })).json();
+  const adm = (j.localityInfo && j.localityInfo.administrative) || [];
+  const clean = x => String(x || '').replace(/\s+(İli|Province|İlçesi|District)$/i, '').trim();
+  const il = clean((adm.find(x => x.adminLevel === 4) || {}).name || j.principalSubdivision);
+  const district = clean((adm.find(x => x.adminLevel === 6) || {}).name);
+  return { il, district };
+}
+// Otomatik moddaki işletmenin il/ilçesini konumuna göre günceller; değişen olursa true döner
+async function resolvePharmacy(t) {
+  const c = t.db.pharmacy || {}, loc = t.db.location || {};
+  if (pharmMode(c) !== 'auto' || !loc.custom || !isFinite(loc.lat) || !isFinite(loc.lon)) return false;
+  if (c.auto && c.auto.lat === loc.lat && c.auto.lon === loc.lon && c.auto.district) return false;
+  const { il, district } = await placeOf(loc.lat, loc.lon);
+  t.db.pharmacy = { ...c, auto: { il, district, lat: loc.lat, lon: loc.lon, at: Date.now() } };
+  require('./tenants').save(t);
+  return true;
+}
 const pharmSig = t => JSON.stringify([pharmCfg(t).il || 'İstanbul', (pharmCfg(t).districts || []).map(d => norm(d)).sort()]);
 const pharmacies = new Map(Object.entries(cacheGet('pharmByLoc') || {}));
 const pharmFail = new Map(); let pharmError = '';
@@ -291,6 +319,7 @@ async function fetchPharmacies(il, districts, key) {
 async function refreshPharmacies(force) {
   const key = collectKey(); if (!key) return;
   const bySig = new Map();
+  for (const t of proTenants()) { try { if (pharmCfg(t).enabled !== false) await resolvePharmacy(t); } catch (e) { console.error('Eczane konumu çözülemedi:', e.message); } }
   for (const t of proTenants()) { const c = pharmCfg(t); if (c.enabled !== false && (c.districts || []).length) bySig.set(pharmSig(t), t); }
   const duty = dutyDay();
   for (const [sig, t] of bySig) {
@@ -760,7 +789,7 @@ module.exports = {
   get rates() { return rates; }, weatherFor: t => weather.get(locKey(t)) || null,
   get autoMatches() { return autoMatches; }, refreshMatches, refreshStandings,
   get onThisDay() { return onThisDay; },
-  pharmFor, fetchPharmacies, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
+  pharmFor, fetchPharmacies, resolvePharmacy, pharmCfg, pharmMode, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
   coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, ornek: booksSample, adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, gorselli: books ? books.items.filter(b => b.image).length : 0, aciklama: books ? books.items.filter(b => b.desc).length : 0, aciklamaHata: descErr, hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await downloadCovers(); fillDescs(); }, get coverErr() { return coverErr; }, refreshBooks,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,

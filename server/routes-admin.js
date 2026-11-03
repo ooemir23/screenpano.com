@@ -75,6 +75,7 @@ r.put('/profile', ownerOnly, (req, res) => {
     if (isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
       t.db.location = { city: b.location.city.trim().slice(0, 60), lat, lon, custom: true };
       F.refreshWeather();
+      F.resolvePharmacy(t).then(ok => ok && F.refreshPharmacies()).catch(() => {});
     }
   }
   changed(t); res.json({ ok: true });
@@ -286,18 +287,26 @@ r.patch('/qrs/:id', async (req, res) => {
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 r.delete('/qrs/:id', (req, res) => { req.t.db.qrs = (req.t.db.qrs || []).filter(x => x.id !== req.params.id); changed(req.t); res.json({ ok: true }); });
-r.put('/pharmacy', (req, res) => {
+r.put('/pharmacy', async (req, res) => {
   const t = req.t, b = req.body || {}, cur = t.db.pharmacy || {};
   const districts = Array.isArray(b.districts) ? b.districts.map(x => String(x).trim()).filter(Boolean).slice(0, 2) : cur.districts || [];
-  t.db.pharmacy = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, il: typeof b.il === 'string' && b.il.trim() ? b.il.trim().slice(0, 40) : cur.il || 'İstanbul', districts };
-  changed(t); res.json({ ok: true });
+  const mode = b.mode === 'auto' || b.mode === 'manual' ? b.mode : F.pharmMode(cur);
+  t.db.pharmacy = { ...cur, mode, enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, il: typeof b.il === 'string' && b.il.trim() ? b.il.trim().slice(0, 40) : cur.il || 'İstanbul', districts };
+  let warn = '';
+  if (mode === 'auto') {
+    const loc = t.db.location || {};
+    if (!loc.custom) warn = 'Önce Ayarlar > İşletme bölümünden konumunuzu seçin';
+    else try { await F.resolvePharmacy(t); if (!((t.db.pharmacy || {}).auto || {}).district) warn = 'Konumunuzdan ilçe bulunamadı; elle seçin'; } catch (e) { warn = 'Konumdan ilçe bulunamadı; biraz sonra deneyin ya da elle seçin'; }
+  }
+  changed(t); res.json({ ok: true, warn });
   F.refreshPharmacies();
 });
 r.post('/pharmacy/test', async (req, res) => {
   const b = req.body || {}, cur = req.t.db.pharmacy || {};
   const key = store.setting('collect_key');
   if (!key) return res.status(400).json({ error: 'Nöbetçi eczane servisi henüz platformda etkin değil' });
-  const il = (b.il || cur.il || 'İstanbul').trim(), districts = (Array.isArray(b.districts) && b.districts.length ? b.districts : cur.districts || []).map(x => String(x).trim()).filter(Boolean).slice(0, 2);
+  const eff = F.pharmCfg(req.t), auto = F.pharmMode(cur) === 'auto' && b.mode !== 'manual';
+  const il = ((auto ? eff.il : b.il || cur.il) || 'İstanbul').trim(), districts = (auto ? eff.districts || [] : Array.isArray(b.districts) && b.districts.length ? b.districts : cur.districts || []).map(x => String(x).trim()).filter(Boolean).slice(0, 2);
   if (!districts.length) return res.status(400).json({ error: 'En az bir ilçe girin' });
   try { const items = await F.fetchPharmacies(il, districts, key); res.json({ ok: true, count: items.length, sample: items.slice(0, 3) }); }
   catch (e) { res.status(502).json({ error: e.message }); }

@@ -584,32 +584,47 @@ SECTIONS.sport = {
     const db = S.db, L = S.lg, bc = Object.assign({ enabled: true, note: '', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''] }, db.bigMatch || {});
     const groups = {}; L.catalog.forEach(l => (groups[l.group] = groups[l.group] || []).push(l));
     const tbl = L.catalog.filter(l => L.enabled.includes(l.code) && L.tables.includes(l.code));
-    return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.')
-      + lock('Maç ve spor özellikleri')
+    const sec = SUB.sport || 'leagues';
+    const TABS = [['leagues', 'Maçlar ve ligler'], ['table', 'Puan durumu'], ['big', 'Büyük maç'], ['manual', 'Elle ekle']];
+    const body = { leagues: () => (''
       + card('Takip edilen ligler', 'Seçtiğiniz liglerin bugünkü maçları ve canlı skorları gösterilir; gol olunca ekranda animasyon çıkar.',
-        Object.entries(groups).map(([g, items]) => `<div class="grp"><h4>${esc(g)}</h4><div class="chips">${items.map(l => `<span class="chip ${L.enabled.includes(l.code) ? 'on' : ''}" data-code="${l.code}" onclick="this.classList.toggle('on')">${esc(l.label)}</span>`).join('')}</div></div>`).join('')
-        + `<div class="row end"><button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button><button class="btn" onclick="saveLeagues()">Ligleri kaydet</button></div>`)
+        Object.entries(groups).map(([g, items]) => { const n = items.filter(l => L.enabled.includes(l.code)).length; return `<details class="lgrp" ${n ? 'open' : ''}><summary><b>${esc(g)}</b><span class="cnt" data-of="${items.length}">${n}/${items.length}</span></summary><div class="chips">${items.map(l => `<span class="chip ${L.enabled.includes(l.code) ? 'on' : ''}" data-code="${l.code}" onclick="this.classList.toggle('on');spCount()">${esc(l.label)}</span>`).join('')}</div></details>`; }).join('')
+        + `<div class="row end"><button class="btn" onclick="saveLeagues()">Ligleri kaydet</button></div>`)
+), table: () => (''
       + card('Puan durumu', 'Lig maçlarının ardından o ligin puan tablosu gösterilir.', `<div class="chips">${tbl.map(l => `<span class="chip ${(L.hideTables || []).includes(l.code) ? '' : 'on'}" onclick="togTable('${l.code}')">${esc(l.label)}</span>`).join('') || '<span class="muted">Puan tablosu olan bir lig seçin.</span>'}</div>`,
         sw(db.showStandings !== false, "opt('showStandings',this.checked).then(()=>render(true))"), db.showStandings === false ? 'off' : '')
+), big: () => (''
       + card('Büyük maç duyurusu', 'Dört büyüklerin derbileri ve Avrupa maçları, başlamadan birkaç gün önce ekranda tam sayfa görselle duyurulur.',
         `<div class="fl"><span>Tasarım</span><div class="chips">${[['klasik', 'Klasik'], ['uyum', 'Klasik (ekrana uyumlu)'], ['yan', 'Karşı karşıya'], ['sade', 'Sade'], ['skor', 'Skorbord']].map(([k, l]) => `<span class="chip ${(bc.style || 'klasik') === k ? 'on' : ''}" onclick="bigStyle('${k}')">${l}</span>`).join('')}</div></div>
+         <details class="adv mt"><summary>Gelişmiş ayarlar <span class="muted">· alt not, sıklık, süre, alt bilgiler</span></summary>
          <div class="f mt">${fl('Alt not', `<input type="text" id="bg-note" maxlength="140" value="${esc(bc.note)}">`)}${fl('Kaç gün önceden', `<input type="number" id="bg-days" min="1" max="7" value="${bc.days}">`)}${fl('Kaç dakikada bir', `<input type="number" id="bg-every" min="2" max="60" value="${bc.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="bg-dur" min="5" max="60" value="${bc.durSec}">`)}</div>
-         <div class="f mt">${[0, 1, 2].map(i => fl(`Alt bilgi ${i + 1}`, `<input type="text" id="bg-i${i}" maxlength="60" value="${esc((bc.info || [])[i] || '')}" placeholder="${['örn. adresiniz', 'örn. dev ekran', 'örn. rezervasyon tel.'][i]}">`)).join('')}</div>
+         <div class="f mt">${[0, 1, 2].map(i => fl(`Alt bilgi ${i + 1}`, `<input type="text" id="bg-i${i}" maxlength="60" value="${esc((bc.info || [])[i] || '')}" placeholder="${['örn. adresiniz', 'örn. dev ekran', 'örn. rezervasyon tel.'][i]}">`)).join('')}</div></details>
          <div class="fl mt"><span>Takım / oyuncu fotoğrafları (isteğe bağlı, arkası şeffaf PNG en iyisi)</span><div class="row"><input type="text" id="bg-team" list="bgteams" placeholder="Takım adı" style="max-width:220px"><datalist id="bgteams"><option>Galatasaray</option><option>Fenerbahçe</option><option>Beşiktaş</option><option>Trabzonspor</option></datalist><input type="file" id="bg-file" accept="image/*" hidden onchange="upBigPhoto(this)"><button class="btn g s" onclick="$('bg-team').value.trim()?$('bg-file').click():toast('Önce takım adını yazın',true)">Fotoğraf yükle</button></div><div class="thumbs" id="bgphotos"></div></div>
          <div class="row mt"><span id="bglist" class="muted" style="flex:1"></span><button class="btn g s" onclick="act('POST','/bigmatch/test',undefined,'Görsel TV\\'de gösteriliyor',false)">Şimdi dene</button><button class="btn" onclick="saveBig()">Kaydet</button></div>`,
         sw(bc.enabled, "act('PUT','/bigmatch',{enabled:this.checked},this.checked?'Açıldı':'Kapatıldı')"), bc.enabled ? '' : 'off')
+), manual: () => (''
       + card('Elle maç ekle', 'Listede olmayan bir maçı ya da etkinliği bugünün listesine ekler.', `<div class="f">${fl('Ev sahibi', '<input type="text" id="mm-h" maxlength="40">')}${fl('Deplasman', '<input type="text" id="mm-a" maxlength="40">')}${fl('Saat', '<input type="time" id="mm-t">')}${fl('Lig / etkinlik', '<input type="text" id="mm-l" maxlength="40">')}${fl('Kanal', '<input type="text" id="mm-c" maxlength="40" placeholder="örn. beIN Sports 1">')}</div>
         <div class="row end mt"><button class="btn" onclick="addMatch()">Ekle</button></div>
-        ${db.matches.length ? `<div class="list mt">${db.matches.map(m => `<div class="it"><div class="b"><b>${esc(m.home)} – ${esc(m.away)}</b><span>${esc(m.time)}${m.league ? ' · ' + esc(m.league) : ''}${m.channel ? ' · 📺 ' + esc(m.channel) : ''}</span></div><button class="btn xs d" onclick="act('DELETE','/matches/${m.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : ''}`);
+        ${db.matches.length ? `<div class="list mt">${db.matches.map(m => `<div class="it"><div class="b"><b>${esc(m.home)} – ${esc(m.away)}</b><span>${esc(m.time)}${m.league ? ' · ' + esc(m.league) : ''}${m.channel ? ' · 📺 ' + esc(m.channel) : ''}</span></div><button class="btn xs d" onclick="act('DELETE','/matches/${m.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : ''}`)) }[sec]();
+    return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.', `<button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button>`)
+      + lock('Maç ve spor özellikleri')
+      + `<div class="spsum" id="sp-sum"></div>` + tabs('sport', TABS) + body;
   },
   async after() {
+    const n = S.lg.enabled.length;
+    const sum = (big) => { const el = $('sp-sum'); if (el) el.innerHTML = `<span><b>${n}</b> <span>lig açık</span></span><span>${big}</span>`; };
+    sum('');
     try {
       const j = await req('GET', '/bigmatch');
-      $('bgphotos').innerHTML = j.photos.map(p => `<div class="t" title="${esc(p.name)}"><img src="${esc(p.url)}"><button onclick="act('DELETE','/bigmatch/photo/${p.id}',undefined,'Silindi')">✕</button></div>`).join('');
-      $('bglist').textContent = j.items.length ? 'Yaklaşan: ' + j.items.map(m => `${m.home} – ${m.away} (${new Date(m.ts).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'short' })})`).join(', ') : 'Şu an duyurulacak büyük maç yok.';
+      if ($('bgphotos')) $('bgphotos').innerHTML = j.photos.map(p => `<div class="t" title="${esc(p.name)}"><img src="${esc(p.url)}"><button onclick="act('DELETE','/bigmatch/photo/${p.id}',undefined,'Silindi')">✕</button></div>`).join('');
+      const up = j.items.length ? 'Yaklaşan: ' + j.items.map(m => `${esc(m.home)} – ${esc(m.away)} (${new Date(m.ts).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'short' })})`).join(', ') : 'Şu an duyurulacak büyük maç yok.';
+      if ($('bglist')) $('bglist').innerHTML = up;
+      sum(up);
     } catch (e) {}
   },
 };
+// Lig gruplarındaki "seçili/toplam" sayaçları
+function spCount() { document.querySelectorAll('.lgrp').forEach(d => { const c = d.querySelector('.cnt'); if (c) c.textContent = d.querySelectorAll('.chip.on').length + '/' + c.dataset.of; }); }
 const testGoal = () => act('POST', '/goal/test', undefined, 'Gol animasyonu gönderildi', false);
 async function saveLeagues() { const enabled = [...document.querySelectorAll('[data-code].on')].map(x => x.dataset.code); if (await act('PUT', '/leagues', { enabled }, 'Ligler kaydedildi', false)) { S.lg = await req('GET', '/leagues'); render(true); } }
 async function togTable(c) { const h = S.lg.hideTables || []; S.lg.hideTables = h.includes(c) ? h.filter(x => x !== c) : [...h, c]; await act('PUT', '/options', { hideTables: S.lg.hideTables }, 'Kaydedildi', false); render(true); }
@@ -751,8 +766,7 @@ SECTIONS.info = {
           `<div class="swr"><div class="b"><b>Ekranda bildirim bandı</b><span>Yeni son dakika gelince birkaç saniye üstte kırmızı bantla gösterilir</span></div>${sw(bk.banner !== false, "act('PUT','/breaking',{banner:this.checked},'Kaydedildi',false)")}</div>`)
         + row('📰 Haberler', 'Türkiye gündeminden son dakika başlıkları (TRT, AA, NTV)', nw.enabled !== false, "act('PUT','/news',{enabled:this.checked},'Kaydedildi')",
           `<div class="f mt">${fl('Kategori', `<select onchange="act('PUT','/news',{tag:this.value},'Kaydedildi')">${[['mix', 'Son dakika · TRT + AA + NTV'], ['trt', 'Son dakika · TRT Haber'], ['aa', 'Son dakika · Anadolu Ajansı'], ['ntv', 'Gündem · NTV'], ['general', 'Genel'], ['economy', 'Ekonomi'], ['sport', 'Spor'], ['technology', 'Teknoloji']].map(([v, l]) => `<option value="${v}" ${(nw.tag || 'mix') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`)
-        + row('💊 Nöbetçi eczaneler', 'Seçtiğiniz ilçelerin bugünkü nöbetçi eczaneleri', ph.enabled !== false, "act('PUT','/pharmacy',{enabled:this.checked},'Kaydedildi')",
-          `<div class="f mt">${fl('İl', `<input type="text" id="ph-il" value="${esc(ph.il || 'İstanbul')}">`)}${fl('İlçe(ler), virgülle (en fazla 2)', `<input type="text" id="ph-d" value="${esc((ph.districts || []).join(', '))}" placeholder="örn. Kadıköy, Üsküdar">`)}</div><div class="row end mt"><span id="ph-res" class="muted" style="flex:1"></span><button class="btn g s" onclick="testPharm()">Dene</button><button class="btn s" onclick="savePharm()">Kaydet</button></div>`)
+        + row('💊 Nöbetçi eczaneler', 'Bugünkü nöbetçi eczaneler; konumunuzdan otomatik ya da seçtiğiniz ilçelerden', ph.enabled !== false, "act('PUT','/pharmacy',{enabled:this.checked},'Kaydedildi')", pharmBox(ph, db.location || {}))
         + row('🎬 Bu hafta vizyona girenler', 'Bu hafta vizyona girecek filmler; fragmanlar arada medya yerine oynar', mv.enabled !== false, "act('PUT','/movies',{enabled:this.checked},'Kaydedildi')",
           `<div class="swr"><div class="b"><b>Fragmanları oynat</b><span>Sessiz, birkaç içerikte bir</span></div>${sw(mv.trailers !== false, "act('PUT','/movies',{trailers:this.checked},'Kaydedildi',false)")}</div>`)
         + row('📚 Yeni çıkan kitaplar', 'Haftanın yeni kitapları', db.showBooks !== false, "opt('showBooks',this.checked)")
@@ -760,10 +774,33 @@ SECTIONS.info = {
         + row('🚗 Canlı trafik', ist ? 'İstanbul trafik haritası ve yoğunluk yüzdesi' : 'Yalnızca İstanbul\'daki işletmelerde gösterilir', db.showTraffic !== false, "opt('showTraffic',this.checked)"));
   },
 };
-const savePharm = () => act('PUT', '/pharmacy', { il: $('ph-il').value.trim(), districts: $('ph-d').value.split(',').map(x => x.trim()).filter(Boolean) }, 'Eczane ayarı kaydedildi');
+const IL81 = ['Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan', 'Artvin', 'Aydın', 'Balıkesir', 'Bartın', 'Batman', 'Bayburt', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Düzce', 'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkari', 'Hatay', 'Iğdır', 'Isparta', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Karabük', 'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kilis', 'Kırıkkale', 'Kırklareli', 'Kırşehir', 'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Muğla', 'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Osmaniye', 'Rize', 'Sakarya', 'Samsun', 'Şanlıurfa', 'Siirt', 'Sinop', 'Sivas', 'Şırnak', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Uşak', 'Van', 'Yalova', 'Yozgat', 'Zonguldak'];
+const pharmAuto = ph => ph.mode === 'auto' || ph.mode === 'manual' ? ph.mode === 'auto' : !(ph.districts || []).length;
+// Nöbetçi eczane ayarı: otomatik (konumdan) ya da elle (il + ilçe)
+function pharmBox(ph, loc) {
+  const auto = pharmAuto(ph), a = ph.auto || {};
+  const chips = `<div class="chips"><span class="chip ${auto ? 'on' : ''}" onclick="pharmMode('auto')">📍 Otomatik (konumum)</span><span class="chip ${auto ? '' : 'on'}" onclick="pharmMode('manual')">✍ Elle seç</span></div>`;
+  let body;
+  if (auto) {
+    const ok = loc.custom && a.district && a.lat === loc.lat && a.lon === loc.lon;
+    body = `<p class="muted mt" id="ph-auto">${!loc.custom ? 'Konumunuz henüz seçilmemiş. <a href="#settings/business">Ayarlar › İşletme</a> bölümünden konumunuzu seçin.' : ok ? `<span>Konumunuz</span>: ${esc(loc.city)}. <span>Nöbetçi eczaneler</span>: <b>${esc(a.district)}, ${esc(a.il)}</b>` : 'Konumunuzdan ilçe bulunuyor… Birkaç saniye sonra sayfayı yenileyin ya da elle seçin.'}</p>
+      <div class="row end mt"><span id="ph-res" class="muted" style="flex:1"></span><button class="btn g s" onclick="testPharm()">Dene</button></div>`;
+  } else {
+    body = `<div class="f mt">${fl('İl', `<select id="ph-il">${IL81.map(x => `<option ${x === (ph.il || 'İstanbul') ? 'selected' : ''}>${x}</option>`).join('')}</select>`)}${fl('İlçe(ler), virgülle (en fazla 2)', `<input type="text" id="ph-d" value="${esc((ph.districts || []).join(', '))}" placeholder="örn. Kadıköy, Üsküdar">`)}</div>
+      <div class="row end mt"><span id="ph-res" class="muted" style="flex:1"></span><button class="btn g s" onclick="testPharm()">Dene</button><button class="btn s" onclick="savePharm()">Kaydet</button></div>`;
+  }
+  return chips + body;
+}
+async function pharmMode(m) {
+  const j = await act('PUT', '/pharmacy', { mode: m }, '', false);
+  if (j && j.warn) toast(j.warn, true); else if (j) toast('Kaydedildi');
+  S.db = await req('GET', '/db'); render(true);
+}
+const pharmBody = () => pharmAuto(S.db.pharmacy || {}) ? { mode: 'auto' } : { mode: 'manual', il: $('ph-il').value.trim(), districts: $('ph-d').value.split(',').map(x => x.trim()).filter(Boolean) };
+const savePharm = () => act('PUT', '/pharmacy', pharmBody(), 'Eczane ayarı kaydedildi');
 async function testPharm() {
   $('ph-res').textContent = 'Sorgulanıyor…';
-  try { const j = await req('POST', '/pharmacy/test', { il: $('ph-il').value.trim(), districts: $('ph-d').value.split(',').map(x => x.trim()).filter(Boolean) }); $('ph-res').textContent = `${j.count} nöbetçi eczane bulundu${j.sample[0] ? ': ' + j.sample[0].name : ''}`; }
+  try { const j = await req('POST', '/pharmacy/test', pharmBody()); $('ph-res').textContent = `${j.count} nöbetçi eczane bulundu${j.sample[0] ? ': ' + j.sample[0].name : ''}`; }
   catch (e) { $('ph-res').textContent = e.message; }
 }
 

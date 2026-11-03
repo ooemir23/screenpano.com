@@ -307,7 +307,7 @@
       "text": "Medya ve fiyatların arasında müşterilerinizin ilgisini çeken bilgi sayfaları döner. Hangilerinin görüneceğini anahtarla açıp kapatırsınız; veriler kendiliğinden güncellenir.",
       "tags": [
         "Son dakika haberleri",
-        "Nöbetçi eczaneler",
+        "Nöbetçi eczaneler (konumunuza göre otomatik)",
         "Bu hafta vizyona giren filmler ve fragmanları",
         "Yeni çıkan kitaplar",
         "Tarihte bugün",
@@ -327,7 +327,7 @@
           "text": "Between your media and prices, info pages that your guests care about rotate on screen. Switch each one on or off with a toggle; the data updates by itself.",
           "tags": [
             "Breaking news",
-            "Pharmacies on duty",
+            "Pharmacies on duty (automatic by your location)",
             "This week's new releases in cinemas, with trailers",
             "New book releases",
             "On this day",
@@ -341,7 +341,7 @@
           "text": "Zwischen Medien und Preisen wechseln Infoseiten, die Ihre Gäste interessieren. Jede Seite schalten Sie per Schalter ein oder aus; die Daten aktualisieren sich automatisch.",
           "tags": [
             "Eilmeldungen",
-            "Apotheken-Notdienst",
+            "Apotheken-Notdienst (automatisch nach Standort)",
             "Kinostarts dieser Woche, mit Trailern",
             "Neue Bücher",
             "Heute vor … Jahren",
@@ -355,14 +355,15 @@
           "text": "بين الوسائط والأسعار تتناوب صفحات معلومات تهمّ ضيوفك. تشغّل كل صفحة أو توقفها بمفتاح بسيط، وتُحدَّث البيانات تلقائيًا.",
           "tags": [
             "آخر الأخبار",
-            "الصيدليات المناوبة",
+            "الصيدليات المناوبة (تلقائيًا حسب موقعك)",
             "أفلام تُعرض هذا الأسبوع لأول مرة مع إعلاناتها",
             "إصدارات الكتب الجديدة",
             "حدث في مثل هذا اليوم",
             "حالة المرور (إسطنبول)"
           ]
         }
-      }
+      },
+      "added": "2026-11-03"
     },
     {
       "id": "piyasa",
