@@ -69,9 +69,9 @@ const newDeviceToken = () => crypto.randomBytes(32).toString('hex');
 const hashToken = t => crypto.createHash('sha256').update(String(t)).digest('hex');
 
 // Deneme sınırı: aynı IP'den ya da aynı kullanıcı adına 10 dakikada en çok 5 hatalı giriş.
-// Kapatmak için LOGIN_LIMIT=off. Sınır dolunca 10 dakika beklenir; doğru girişte kullanıcı sayacı sıfırlanır.
+// Şimdilik kapalı (istek üzerine); açmak için ortam değişkeni LOGIN_LIMIT=on. Sınır dolunca 10 dakika beklenir; doğru girişte kullanıcı sayacı sıfırlanır.
 const fails = new Map();
-const LIMIT_ON = process.env.LOGIN_LIMIT !== 'off';
+const LIMIT_ON = process.env.LOGIN_LIMIT === 'on';
 const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS) || 5, WINDOW = 10 * 60 * 1000;
 const keys = (ip, user) => [ip && 'ip:' + ip, user && 'u:' + String(user).trim().toLowerCase()].filter(Boolean);
 function tooMany(ip, user) {
