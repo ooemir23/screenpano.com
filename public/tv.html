@@ -804,6 +804,8 @@ function trailerError() { // video bu ülkede/gömülü oynatılamıyor: aynı f
 let trailerFails = 0, trailerSeen = false;
 addEventListener('message', e => {
   if (!trailerOn || !/youtube\.com$/.test(new URL(e.origin).hostname)) return;
+  // yalnız fragman oynatıcısının mesajları: müzik oynatıcısı da YouTube'dan mesaj gönderir (liste değişince "bitti/hazır" olayları fragmanı kesiyordu)
+  const fr = trailerEl.querySelector('iframe'); if (!fr || e.source !== fr.contentWindow) return;
   try { const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; if (d.event === 'onStateChange' && (d.info === 0 || d.info === 5 && trailerSeen)) endTrailer(); else if (d.event === 'infoDelivery' && d.info && d.info.duration > 5 && d.info.currentTime > 0) { trailerSeen = true; if (d.info.currentTime >= d.info.duration - 1.2) endTrailer(); } else if (d.event === 'onError') trailerError(); } catch (x) {}
 });
 // YouTube altyazıları (otomatik İngilizce dahil) kapatılır: modül geç yüklenebildiği için birkaç kez denenir
