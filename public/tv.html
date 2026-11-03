@@ -329,53 +329,119 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-uyum .bnote{align-self:stretch;margin:calc(.4*var(--u)) calc(-3*var(--w)) 0;padding:calc(1.3*var(--u)) calc(3*var(--w));background:rgba(0,0,0,.6);border-top:calc(.2*var(--u)) solid rgba(244,192,79,.7);border-bottom:calc(.2*var(--u)) solid rgba(244,192,79,.7);color:#fff;font-size:calc(3.2*var(--u));font-weight:800;text-align:center}
 #big.d-uyum .bft{align-self:stretch;margin:0 calc(-3*var(--w));padding:calc(1.2*var(--u)) calc(3*var(--w)) calc(1.4*var(--u));display:flex;justify-content:space-around;gap:calc(2*var(--w));background:rgba(0,0,0,.72);font-size:calc(1.9*var(--u));font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--al)}
 #big.d-uyum .bft span{display:flex;align-items:center;gap:calc(.6*var(--w));text-align:center}
-/* büyük maç: ek tasarımlar (klasik dışındakiler). Ölçüler medya alanına göre: --u = yüksekliğin %1'i (16:9'a göre), --w = genişliğin %1'i; her şey akışta, üst üste binmez */
-#big[class*="d-"]:not(.d-uyum) .bx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(3*var(--u)) calc(3*var(--w)) 0;text-align:center}
-#big[class*="d-"]:not(.d-uyum) .xlogo{height:calc(8*var(--u));width:auto}
-#big[class*="d-"]:not(.d-uyum) .xbrand{font-size:calc(2.6*var(--u));font-weight:800;letter-spacing:.2em}
-#big[class*="d-"]:not(.d-uyum) .xt{font-size:calc(7*var(--u));font-weight:900;font-style:italic;line-height:1;letter-spacing:.01em;background:linear-gradient(#ffe9a8,#e8b13c 55%,#b9791a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 calc(.4*var(--u)) calc(.7*var(--u)) #000c)}
-#big[class*="d-"]:not(.d-uyum) .xl{font-size:calc(2.1*var(--u));font-weight:800;letter-spacing:.32em;opacity:.9;margin-top:calc(.8*var(--u))}
-#big[class*="d-"]:not(.d-uyum) .xnm{font-size:min(calc(5.4*var(--u)),calc(3.4*var(--w)));font-weight:900;line-height:1.05;text-transform:uppercase;color:#f4c04f;text-shadow:0 calc(.4*var(--u)) calc(1*var(--u)) #000;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-#big[class*="d-"]:not(.d-uyum) .xlg{object-fit:contain;filter:drop-shadow(0 calc(1*var(--u)) calc(2*var(--u)) #000b)}
-#big[class*="d-"]:not(.d-uyum) .xtime{display:flex;align-items:center;justify-content:center;gap:calc(1.2*var(--u));font-size:calc(9*var(--u));font-weight:900;line-height:1;text-shadow:0 calc(.4*var(--u)) calc(1*var(--u)) #000}
-#big[class*="d-"]:not(.d-uyum) .xtime svg{height:calc(7*var(--u));width:calc(7*var(--u))}
-#big[class*="d-"]:not(.d-uyum) .xday{display:inline-block;padding:calc(.7*var(--u)) calc(2.6*var(--u));border-radius:calc(.8*var(--u));background:linear-gradient(#f4c04f,#c98d22);color:#1a110a;font-size:calc(2.8*var(--u));font-weight:900;letter-spacing:.06em}
-#big[class*="d-"]:not(.d-uyum) .xnote{align-self:stretch;margin:0 calc(-3*var(--w));padding:calc(1.3*var(--u)) calc(3*var(--w));background:rgba(0,0,0,.6);border-top:1px solid rgba(244,192,79,.7);color:#fff;font-size:calc(3*var(--u));font-weight:800}
-#big[class*="d-"]:not(.d-uyum) .xft{align-self:stretch;margin:0 calc(-3*var(--w));padding:calc(1.1*var(--u)) calc(3*var(--w)) calc(1.3*var(--u));display:flex;justify-content:space-around;gap:calc(2*var(--w));background:rgba(0,0,0,.72);font-size:calc(1.9*var(--u));font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-#big[class*="d-"]:not(.d-uyum) .xend{align-self:stretch;display:flex;flex-direction:column}
-#big[class*="d-"]:not(.d-uyum) .xend:empty{height:calc(1.5*var(--u))}
-/* 1) Karşı karşıya: armalar büyük, adlar altında; ortada saat */
-#big.d-yan{background:linear-gradient(90deg,color-mix(in srgb,var(--c1) 70%,#000) 0,#0b0b0e 50%,color-mix(in srgb,var(--c2) 70%,#000) 100%)}
-#big.d-yan:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0,rgba(255,255,255,.16),transparent 70%),radial-gradient(ellipse 100% 50% at 50% 100%,rgba(0,0,0,.8),transparent 70%)}
-#big.d-yan .xrow{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:calc(2*var(--w));padding:calc(2*var(--u)) 0}
-#big.d-yan .xteam{display:flex;flex-direction:column;align-items:center;gap:calc(1.6*var(--u));min-width:0}
-#big.d-yan .xteam .xlg{height:calc(24*var(--u));width:calc(24*var(--u))}
-#big.d-yan .xmid{display:flex;flex-direction:column;align-items:center;gap:calc(1.6*var(--u))}
-#big.d-yan .xvs{width:calc(8*var(--u));height:calc(8*var(--u));border-radius:50%;display:grid;place-items:center;background:#f4c04f;color:#1a110a;font-weight:900;font-size:calc(3*var(--u))}
-/* 2) Sade: koyu zemin, ince çizgiler, tek satırda takımlar */
-#big.d-sade{background:#0d0d10}
-#big.d-sade:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 0 50%,color-mix(in srgb,var(--c1) 55%,transparent),transparent 45%),radial-gradient(circle at 100% 50%,color-mix(in srgb,var(--c2) 55%,transparent),transparent 45%)}
-#big.d-sade .xt{background:none;color:#fff;font-style:normal;font-weight:800;letter-spacing:.12em;font-size:calc(4.6*var(--u));filter:none}
-#big.d-sade .xl{color:#f4c04f}
-#big.d-sade .xline{width:calc(14*var(--u));height:2px;background:#f4c04f;margin:calc(1.6*var(--u)) auto 0}
-#big.d-sade .xrow{width:100%;display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:calc(2*var(--w))}
-#big.d-sade .xrow .xlg{height:calc(15*var(--u));width:calc(15*var(--u))}
-#big.d-sade .xrow .xnm{color:#fff}
-#big.d-sade .xrow i{font-style:normal;font-weight:300;font-size:calc(5*var(--u));color:#f4c04f}
-#big.d-sade .xtime{font-weight:300;font-size:calc(11*var(--u))}
-#big.d-sade .xday{background:none;border:2px solid #f4c04f;color:#f4c04f}
-/* 3) Skorbord: çim zemin ve stadyum skor tabelası */
-#big.d-skor{background:repeating-linear-gradient(90deg,#16602c 0 calc(7*var(--w)),#1b6d33 calc(7*var(--w)) calc(14*var(--w)))}
-#big.d-skor:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent calc(13*var(--u)),rgba(255,255,255,.35) calc(13*var(--u)) calc(13.3*var(--u)),transparent calc(13.4*var(--u))),linear-gradient(90deg,transparent calc(50% - 1px),rgba(255,255,255,.35) calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px)),radial-gradient(ellipse 120% 80% at 50% 40%,transparent 40%,rgba(0,0,0,.65))}
-#big.d-skor .xboard{width:min(100%,calc(150*var(--u)));display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;border-radius:calc(1.4*var(--u));overflow:hidden;box-shadow:0 calc(1.5*var(--u)) calc(4*var(--u)) rgba(0,0,0,.7);border:calc(.4*var(--u)) solid #222}
-#big.d-skor .xside{display:flex;align-items:center;gap:calc(1.6*var(--u));padding:calc(2*var(--u)) calc(2.2*var(--u));min-width:0}
-#big.d-skor .xside.h{background:linear-gradient(135deg,var(--c1),color-mix(in srgb,var(--c1) 55%,#000))}
-#big.d-skor .xside.a{background:linear-gradient(225deg,var(--c2),color-mix(in srgb,var(--c2) 55%,#000));flex-direction:row-reverse}
-#big.d-skor .xside .xlg{height:calc(13*var(--u));width:calc(13*var(--u));flex:none}
-#big.d-skor .xside .xnm{color:#fff;font-size:min(calc(4.6*var(--u)),calc(2.8*var(--w)))}
-#big.d-skor .xclock{background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 calc(2.6*var(--u));gap:calc(.6*var(--u))}
-#big.d-skor .xclock b{font-family:ui-monospace,Consolas,monospace;font-size:calc(8*var(--u));color:#ffcc33;text-shadow:0 0 calc(1.4*var(--u)) rgba(255,204,51,.7);line-height:1}
-#big.d-skor .xclock small{font-size:calc(2*var(--u));font-weight:800;letter-spacing:.2em;color:#fff}
+/* büyük maç: ek tasarımlar (Stadyum, Yayın bandı, Geri sayım, Poster). Ölçüler medya alanına göre: --u = yüksekliğin %1'i (16:9'a göre), --w = genişliğin %1'i */
+#big[class*="d-"]:not(.d-uyum) .ywrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(3*var(--u)) calc(3*var(--w)) 0;text-align:center}
+#big .ytop{display:flex;flex-direction:column;align-items:center;gap:calc(1*var(--u))}
+#big .ybrand{height:calc(7.5*var(--u));width:auto;max-width:calc(40*var(--w));object-fit:contain;filter:drop-shadow(0 calc(.4*var(--u)) calc(1*var(--u)) rgba(0,0,0,.6))}
+#big .ybrandt{font-size:calc(2.4*var(--u));font-weight:800;letter-spacing:.24em}
+#big .ykick{display:flex;align-items:center;gap:calc(1.6*var(--u));font-size:calc(2.3*var(--u));font-weight:800;letter-spacing:.38em;color:#f4c04f;text-transform:uppercase}
+#big .ykick:before,#big .ykick:after{content:"";width:calc(8*var(--u));height:calc(.25*var(--u));background:linear-gradient(90deg,transparent,#f4c04f)}
+#big .ykick:after{transform:scaleX(-1)}
+#big .ylea{font-size:calc(1.9*var(--u));font-weight:700;letter-spacing:.3em;opacity:.8}
+#big .ylg{object-fit:contain;filter:drop-shadow(0 calc(.8*var(--u)) calc(1.6*var(--u)) rgba(0,0,0,.55))}
+#big .ymono{display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--tc) 70%,#fff),var(--tc) 55%,color-mix(in srgb,var(--tc) 60%,#000));box-shadow:inset 0 0 0 calc(.35*var(--u)) rgba(255,255,255,.35),0 calc(.8*var(--u)) calc(2*var(--u)) rgba(0,0,0,.5);color:#fff;font-weight:900;letter-spacing:.02em;text-shadow:0 calc(.2*var(--u)) calc(.5*var(--u)) rgba(0,0,0,.5);font-size:calc(var(--ms,20)*.3*var(--u))}
+#big .yname{font-size:min(calc(5*var(--u)),calc(3.2*var(--w)));font-weight:900;line-height:1.05;text-transform:uppercase;color:#fff;text-shadow:0 calc(.4*var(--u)) calc(1.2*var(--u)) rgba(0,0,0,.8);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+#big .yname.sm{font-size:min(calc(3.8*var(--u)),calc(2.6*var(--w)))}
+#big .yend{align-self:stretch;margin:0 calc(-3*var(--w));display:flex;flex-direction:column}
+#big .yend:empty{height:calc(2.4*var(--u))}
+#big .ynote{padding:calc(1.2*var(--u)) calc(3*var(--w));background:linear-gradient(90deg,rgba(0,0,0,.35),rgba(0,0,0,.75) 25%,rgba(0,0,0,.75) 75%,rgba(0,0,0,.35));border-top:calc(.2*var(--u)) solid rgba(244,192,79,.65);color:#fff;font-size:calc(2.9*var(--u));font-weight:800}
+#big .yft{display:flex;justify-content:center;flex-wrap:wrap;gap:calc(1*var(--u)) calc(4*var(--w));padding:calc(1.1*var(--u)) calc(3*var(--w)) calc(1.4*var(--u));background:rgba(0,0,0,.82);font-size:calc(1.9*var(--u));font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.88)}
+#big .yday{display:inline-block;padding:calc(.7*var(--u)) calc(2.6*var(--u));border-radius:calc(5*var(--u));background:linear-gradient(#ffd877,#e0a12e);color:#1a110a;font-size:calc(2.4*var(--u));font-weight:900;letter-spacing:.08em;text-transform:uppercase;box-shadow:0 calc(.6*var(--u)) calc(1.6*var(--u)) rgba(0,0,0,.45)}
+@keyframes yrise{from{opacity:0;transform:translateY(calc(3*var(--u)))}to{opacity:1;transform:none}}
+#big.on .ytop{animation:yrise .9s .2s both}
+#big.on .yend{animation:yrise .9s .9s both}
+
+/* 1) Stadyum: takım renkleriyle çapraz sahne, ışık huzmeleri, parlayan armalar */
+#big.d-stadyum{background:#05060a}
+#big.d-stadyum .yh{position:absolute;inset:0;transition:transform 1.1s cubic-bezier(.2,.8,.2,1)}
+#big.d-stadyum .yh.l{background:linear-gradient(120deg,color-mix(in srgb,var(--c1) 92%,#fff) 0%,var(--c1) 25%,color-mix(in srgb,var(--c1) 30%,#000) 75%);clip-path:polygon(0 0,58% 0,42% 100%,0 100%);transform:translateX(-60%)}
+#big.d-stadyum .yh.r{background:linear-gradient(240deg,color-mix(in srgb,var(--c2) 92%,#fff) 0%,var(--c2) 25%,color-mix(in srgb,var(--c2) 30%,#000) 75%);clip-path:polygon(58% 0,100% 0,100% 100%,42% 100%);transform:translateX(60%)}
+#big.on.d-stadyum .yh{transform:none}
+#big.d-stadyum .yseam{position:absolute;inset:0;background:linear-gradient(#fff4c9,#e8b13c);clip-path:polygon(57.75% 0,58.25% 0,42.25% 100%,41.75% 100%);opacity:0;-webkit-mask-image:linear-gradient(transparent 14%,#000 30%,#000 80%,transparent);mask-image:linear-gradient(transparent 14%,#000 30%,#000 80%,transparent);transition:opacity .8s 1s}
+#big.on.d-stadyum .yseam{opacity:.9}
+#big.d-stadyum .ybeam{position:absolute;inset:-30% -10% 0;background:conic-gradient(from 180deg at 50% 0,transparent 0 150deg,rgba(255,255,255,.13) 160deg,transparent 167deg,rgba(255,255,255,.09) 176deg,transparent 181deg,rgba(255,255,255,.13) 193deg,transparent 200deg,transparent 360deg);animation:ybeam 7s ease-in-out infinite alternate;mix-blend-mode:screen;pointer-events:none}
+@keyframes ybeam{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+#big.d-stadyum .yph{position:absolute;bottom:0;height:84%;max-width:38%;object-fit:contain;object-position:bottom;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent);opacity:0;transition:opacity 1.2s .6s}
+#big.on.d-stadyum .yph{opacity:.9}
+#big.d-stadyum .yvig{position:absolute;inset:0;background:radial-gradient(ellipse 75% 65% at 50% 42%,transparent 35%,rgba(0,0,0,.7) 100%),linear-gradient(transparent 55%,rgba(0,0,0,.8))}
+#big.d-stadyum .ymid{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;width:100%;gap:calc(2*var(--w))}
+#big.d-stadyum .yteam{display:flex;flex-direction:column;align-items:center;gap:calc(1.8*var(--u));min-width:0}
+#big.d-stadyum .yring{--ms:22;width:calc(24*var(--u));height:calc(24*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(255,255,255,.16),rgba(255,255,255,.02) 68%);box-shadow:0 0 0 calc(.35*var(--u)) rgba(255,255,255,.22),0 0 calc(7*var(--u)) color-mix(in srgb,var(--tc) 75%,transparent);opacity:0;transform:scale(.55);transition:transform 1s cubic-bezier(.2,1.5,.4,1) .55s,opacity .6s .55s}
+#big.on.d-stadyum .yring{opacity:1;transform:none}
+#big.d-stadyum .yring .ylg{width:74%;height:74%}
+#big.d-stadyum .yring .ymono{width:80%;height:80%}
+#big.d-stadyum .yvs{display:flex;flex-direction:column;align-items:center;gap:calc(1.4*var(--u));opacity:0;transition:opacity .8s 1s}
+#big.on.d-stadyum .yvs{opacity:1}
+#big.d-stadyum .yvs b{font-size:calc(5.4*var(--u));font-weight:900;font-style:italic;line-height:1;background:linear-gradient(#fff,#ffe9a8 45%,#e8b13c);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 calc(.3*var(--u)) calc(.6*var(--u)) #000)}
+#big.d-stadyum .yclock{font-size:calc(9.5*var(--u));font-weight:900;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 calc(.5*var(--u)) calc(1.5*var(--u)) rgba(0,0,0,.8)}
+
+/* 2) Yayın bandı: TV yayınlarındaki gibi alt skorbord; arkada medya oynamaya devam eder */
+#big.d-bant{background:transparent;inset:0;border-radius:0}
+#big.d-bant .yshade{position:absolute;inset:auto 0 0;height:52%;background:linear-gradient(transparent,rgba(0,0,0,.78))}
+#big.d-bant .ybar{position:absolute;left:calc(3*var(--w));right:calc(3*var(--w));bottom:calc(4*var(--u));transform:translateY(160%);transition:transform 1s cubic-bezier(.2,.9,.2,1);filter:drop-shadow(0 calc(1*var(--u)) calc(3*var(--u)) rgba(0,0,0,.65))}
+#big.on.d-bant .ybar{transform:none}
+#big.d-bant .ytag{display:flex;align-items:stretch;font-size:calc(1.9*var(--u));font-weight:800;letter-spacing:.2em;text-transform:uppercase}
+#big.d-bant .ytag .k{background:linear-gradient(#ffd877,#e0a12e);color:#1a110a;font-weight:900;padding:calc(.7*var(--u)) calc(1.8*var(--u));clip-path:polygon(0 0,100% 0,calc(100% - 1.2*var(--u)) 100%,0 100%);padding-right:calc(2.8*var(--u))}
+#big.d-bant .ytag .lg{background:rgba(10,11,15,.94);color:#fff;padding:calc(.7*var(--u)) calc(2*var(--u)) calc(.7*var(--u)) calc(2.4*var(--u));margin-left:calc(-1.2*var(--u));clip-path:polygon(calc(1.2*var(--u)) 0,100% 0,calc(100% - 1.2*var(--u)) 100%,0 100%)}
+#big.d-bant .yrow{position:relative;overflow:hidden;display:grid;grid-template-columns:1fr auto 1fr;height:calc(13*var(--u));border-radius:0 calc(.8*var(--u)) 0 0}
+#big.d-bant .yrow:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.2) 50%,transparent 65%);transform:translateX(-100%);animation:ysheen 5s 1.4s ease-in-out infinite;pointer-events:none}
+@keyframes ysheen{0%{transform:translateX(-100%)}35%,100%{transform:translateX(100%)}}
+#big.d-bant .ys{--ms:9;display:flex;align-items:center;gap:calc(1.8*var(--u));padding:0 calc(2.4*var(--u));min-width:0;color:#fff}
+#big.d-bant .ys.h{background:linear-gradient(90deg,color-mix(in srgb,var(--c1) 55%,#000),var(--c1))}
+#big.d-bant .ys.a{background:linear-gradient(270deg,color-mix(in srgb,var(--c2) 55%,#000),var(--c2));flex-direction:row-reverse}
+#big.d-bant .ys .ylg,#big.d-bant .ys .ymono{height:calc(9*var(--u));width:calc(9*var(--u));flex:none}
+#big.d-bant .yn{flex:1;min-width:0;font-size:min(calc(4.4*var(--u)),calc(2.5*var(--w)));font-weight:900;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 calc(.2*var(--u)) calc(.6*var(--u)) rgba(0,0,0,.5)}
+#big.d-bant .ys.h .yn{text-align:right}
+#big.d-bant .ys.a .yn{text-align:left}
+#big.d-bant .yc{background:linear-gradient(#17181e,#0a0a0d);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 calc(3.2*var(--u));border-left:calc(.4*var(--u)) solid #f4c04f;border-right:calc(.4*var(--u)) solid #f4c04f}
+#big.d-bant .yc b{font-size:calc(6.2*var(--u));font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:#fff}
+#big.d-bant .yc small{font-size:calc(1.7*var(--u));font-weight:800;letter-spacing:.18em;color:#f4c04f;margin-top:calc(.6*var(--u));text-transform:uppercase;white-space:nowrap}
+#big.d-bant .ytick{display:flex;justify-content:center;flex-wrap:wrap;gap:calc(.6*var(--u)) calc(3.4*var(--w));background:rgba(10,11,15,.94);color:rgba(255,255,255,.9);border-top:calc(.25*var(--u)) solid #f4c04f;padding:calc(1*var(--u)) calc(2*var(--u));font-size:calc(2.1*var(--u));font-weight:700}
+#big.d-bant .ytick b{color:#fff;font-weight:800}
+#big.d-bant .ytick span{letter-spacing:.06em;text-transform:uppercase;font-size:.9em}
+
+/* 3) Geri sayım: maça kalan süre büyük, canlı sayan rakamlarla */
+#big.d-sayac{background:radial-gradient(ellipse 55% 85% at 0% 50%,color-mix(in srgb,var(--c1) 65%,transparent),transparent 70%),radial-gradient(ellipse 55% 85% at 100% 50%,color-mix(in srgb,var(--c2) 65%,transparent),transparent 70%),#07080b}
+#big.d-sayac .ygrid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:calc(6*var(--u)) calc(6*var(--u));-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,#000,transparent);mask-image:radial-gradient(ellipse 60% 60% at 50% 50%,#000,transparent)}
+#big.d-sayac .yvsrow{display:flex;align-items:center;justify-content:center;gap:calc(3*var(--w));width:100%}
+#big.d-sayac .yt{--ms:12;flex:1;display:flex;align-items:center;justify-content:flex-end;gap:calc(2*var(--u));min-width:0;text-align:right}
+#big.d-sayac .yt.a{justify-content:flex-start;text-align:left}
+#big.d-sayac .yt .ylg,#big.d-sayac .yt .ymono{height:calc(12*var(--u));width:calc(12*var(--u));flex:none}
+#big.d-sayac .yvsrow i{font-style:normal;font-size:calc(3.4*var(--u));font-weight:900;color:#f4c04f;letter-spacing:.1em}
+#big.d-sayac .ycd{display:flex;align-items:flex-start;justify-content:center;gap:calc(1.6*var(--w))}
+#big.d-sayac .ycd div{display:flex;flex-direction:column;align-items:center;gap:calc(1*var(--u))}
+#big.d-sayac .ycd b{position:relative;display:block;min-width:calc(17*var(--u));padding:calc(1.4*var(--u)) calc(1.6*var(--u));border-radius:calc(1.6*var(--u));background:linear-gradient(#20222b 0 50%,#16171e 50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),0 calc(1.2*var(--u)) calc(3.4*var(--u)) rgba(0,0,0,.6);font-size:min(calc(12*var(--u)),calc(7.4*var(--w)));font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:#fff;text-align:center}
+#big.d-sayac .ycd b:after{content:"";position:absolute;left:0;right:0;top:50%;height:calc(.25*var(--u));background:rgba(0,0,0,.55)}
+#big.d-sayac .ycd small{font-size:calc(1.9*var(--u));font-weight:800;letter-spacing:.26em;color:#f4c04f}
+#big.d-sayac .ycd>i{font-style:normal;font-size:calc(9*var(--u));font-weight:900;color:rgba(255,255,255,.3);line-height:1;padding-top:calc(1.6*var(--u))}
+#big.d-sayac .ywhen{margin-top:calc(2.2*var(--u));font-size:calc(2.8*var(--u));font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.88)}
+#big.on.d-sayac .ycdw{animation:yrise .9s .5s both}
+#big.on.d-sayac .yvsrow{animation:yrise .9s .35s both}
+
+/* 4) Poster: dev tipografi, çift çerçeve, maç afişi görünümü */
+#big.d-poster{background:#0b0a09}
+#big.d-poster .ybg{position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.028) 0 2px,transparent 2px 7px),linear-gradient(115deg,color-mix(in srgb,var(--c1) 75%,#000) 0 49.8%,color-mix(in srgb,var(--c2) 75%,#000) 50.2% 100%)}
+#big.d-poster .ybg:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 45%,rgba(0,0,0,.15),rgba(0,0,0,.78))}
+#big.d-poster .yframe{position:absolute;inset:calc(2.2*var(--u));border:calc(.2*var(--u)) solid rgba(244,192,79,.7);outline:1px solid rgba(244,192,79,.3);outline-offset:calc(-1*var(--u));pointer-events:none}
+#big.d-poster.d-poster .ywrap{padding:calc(5*var(--u)) calc(6*var(--w)) calc(4.6*var(--u))}
+#big.d-poster .ypost{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:calc(3*var(--w));width:100%}
+#big.d-poster .ydisc{--ms:16;width:calc(21*var(--u));height:calc(21*var(--u));border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:calc(.3*var(--u)) solid rgba(244,192,79,.6);box-shadow:0 0 0 calc(.9*var(--u)) rgba(0,0,0,.25)}
+#big.d-poster .ydisc .ylg{width:68%;height:68%}
+#big.d-poster .ydisc .ymono{width:84%;height:84%}
+#big.d-poster .ystack{display:flex;flex-direction:column;align-items:center;min-width:0}
+#big.d-poster .ybig{font-size:min(calc(10.5*var(--u)),calc(6.6*var(--w)));font-weight:900;line-height:.95;letter-spacing:-.01em;text-transform:uppercase;color:#fff;text-shadow:0 calc(.6*var(--u)) calc(2*var(--u)) rgba(0,0,0,.6);max-width:100%;overflow-wrap:anywhere}
+#big.d-poster .ybig.sm{font-size:min(calc(7.4*var(--u)),calc(4.8*var(--w)))}
+#big.d-poster .yvsl{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:calc(5.4*var(--u));color:#f4c04f;line-height:1.1}
+#big.on.d-poster .ypost{animation:yzoom 1.1s .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes yzoom{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+#big.d-poster .yinfo{display:flex;align-items:center;justify-content:center;gap:calc(2.6*var(--w));padding:calc(1.2*var(--u)) calc(3*var(--w));border-top:1px solid rgba(244,192,79,.45);border-bottom:1px solid rgba(244,192,79,.45)}
+#big.d-poster .yinfo i{align-self:stretch;width:1px;background:rgba(244,192,79,.45)}
+#big.d-poster .yinfo .d{font-size:calc(2.5*var(--u));font-weight:800;letter-spacing:.2em;text-transform:uppercase}
+#big.d-poster .yinfo .t{font-size:calc(6.4*var(--u));font-weight:900;line-height:1;color:#f4c04f;font-variant-numeric:tabular-nums}
+#big.d-poster .yend{margin:0;gap:calc(.6*var(--u))}
+#big.d-poster .ynote{background:none;border:0;padding:calc(.6*var(--u)) 0 0;font-size:calc(2.7*var(--u))}
+#big.d-poster .yft{background:none;padding:0;font-size:calc(1.8*var(--u));color:rgba(255,255,255,.75)}
+#big.d-poster .yend:empty{height:0}
 #big .bl,#big .br{position:absolute;inset:0}
 #big .bl{background:linear-gradient(160deg,var(--c1) 0%,#0a0a0c 120%);clip-path:polygon(0 0,57% 0,43% 100%,0 100%)}
 #big .br{background:linear-gradient(200deg,var(--c2) 0%,#0a0a0c 120%);clip-path:polygon(57% 0,100% 0,100% 100%,43% 100%)}
@@ -1021,6 +1087,7 @@ function setState(s) {
   checkUpdate(s.app);
   setCampaigns(s.campaigns);
   setBig(s.bigMatches, s.bigCfg);
+  if (BIGDEMO) bigDemo();
   trailerList = s.showTrailers !== false && s.movies ? s.movies.items.filter(m => m.trailer) : [];
   setCeleb(s.celebration);
   applySafe(s.safe || { L: s.safeInset, R: s.safeInset, T: s.safeInset, B: s.safeInset }, s.safeGuide);
@@ -1312,19 +1379,55 @@ function bigUnits(el) { // ek tasarımlar medya alanının boyutuna göre ölçe
   el.style.setProperty('--u', Math.min(H, W * 9 / 16) / 100 + 'px'); el.style.setProperty('--w', W / 100 + 'px');
 }
 addEventListener('resize', () => { const el = document.getElementById('big'); if (el && el.className.includes('d-')) bigUnits(el); });
+const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster'];
 function bigDesign(el, m, cfg, design, o) {
-  bigUnits(el);
-  const lg = (u, c) => u ? `<img class="xlg${c ? ' ' + c : ''}" src="${esc(u)}" alt="" referrerpolicy="no-referrer">` : '';
-  const nm = t => `<div class="xnm"${lng(t)}>${esc(t)}</div>`;
-  const title = m.derby ? 'BÜYÜK DERBİ' : 'AVRUPA GECESİ', league = m.derby ? '' : (m.league || '').toLocaleUpperCase('tr-TR');
-  const clock = `<div class="xtime"><svg viewBox="0 0 24 24" fill="none" stroke="#f4c04f" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2"/></svg>${esc(o.tm)}</div>`;
-  const head = `<div>${LOGO ? `<img class="xlogo" src="${esc(LOGO)}" alt="">` : `<div class="xbrand">${esc(BNAME.toLocaleUpperCase('tr-TR'))}</div>`}<div class="xt" style="margin-top:calc(1.2*var(--u))">${title}</div>${league ? `<div class="xl">${esc(league)}</div>` : ''}${design === 'sade' ? '<div class="xline"></div>' : ''}</div>`;
-  const end = `<div class="xend">${cfg.note ? `<div class="xnote">${esc(cfg.note)}</div>` : ''}${o.info.length ? `<div class="xft">${o.info.map((t, i) => `<span>${o.icons[i % 3]} ${esc(t)}</span>`).join('')}</div>` : ''}</div>`;
-  let body;
-  if (design === 'yan') body = `<div class="xrow"><div class="xteam">${lg(m.hl)}${nm(m.home)}</div><div class="xmid"><div class="xvs">VS</div>${clock}<div class="xday">${esc(o.dayTxt)}</div></div><div class="xteam">${lg(m.al)}${nm(m.away)}</div></div>`;
-  else if (design === 'sade') body = `<div class="xrow">${lg(m.hl) || '<span></span>'}${nm(m.home)}<i>–</i>${nm(m.away)}${lg(m.al) || '<span></span>'}</div><div>${clock}<div class="xday" style="margin-top:calc(1.4*var(--u))">${esc(o.dayTxt)}</div></div>`;
-  else body = `<div class="xboard"><div class="xside h">${lg(m.hl)}${nm(m.home)}</div><div class="xclock"><b>${esc(o.tm)}</b><small>${esc(o.dayTxt)}</small></div><div class="xside a">${lg(m.al)}${nm(m.away)}</div></div>`;
-  el.innerHTML = `<div class="bx">${head}${body}${end}</div>`;
+  bigUnits(el); clearInterval(big.tick);
+  const up = t => String(t || '').toLocaleUpperCase('tr-TR');
+  // arması yoksa takım renginde baş harfli rozet
+  const ini = t => { const w = String(t || '').trim().split(/\s+/).filter(Boolean); return up(w.length > 1 ? w.slice(0, 2).map(x => x[0]).join('') : (w[0] || '?').slice(0, 3)); };
+  const crest = (u, team, col) => u ? `<img class="ylg" src="${esc(u)}" alt="" referrerpolicy="no-referrer">` : `<div class="ymono" style="--tc:${esc(col)}">${esc(ini(team))}</div>`;
+  const c1 = m.hc || '#12307f', c2 = m.ac || '#2c2c30';
+  const H = crest(m.hl, m.home, c1), A = crest(m.al, m.away, c2);
+  const nm = (t, c = 'yname', n = 13) => `<div class="${c}${String(t).length > n ? ' sm' : ''}"${lng(t)}>${esc(t)}</div>`;
+  const kick = m.derby ? 'BÜYÜK DERBİ' : 'AVRUPA GECESİ', league = up(m.league);
+  const brand = LOGO ? `<img class="ybrand" src="${esc(LOGO)}" alt="">` : `<div class="ybrandt">${esc(up(BNAME))}</div>`;
+  const top = `<div class="ytop">${brand}<div class="ykick">${kick}</div>${!m.derby && league ? `<div class="ylea">${esc(league)}</div>` : ''}</div>`;
+  const infos = o.info.map((t, i) => `<span>${o.icons[i % 3]} ${esc(t)}</span>`).join('');
+  const end = `<div class="yend">${cfg.note ? `<div class="ynote">${esc(cfg.note)}</div>` : ''}${infos ? `<div class="yft">${infos}</div>` : ''}</div>`;
+  let h;
+  if (design === 'stadyum') h = `<div class="yh l"></div><div class="yh r"></div><div class="yseam"></div><div class="ybeam"></div>`
+    + (m.hp ? `<img class="yph" style="left:0" src="${esc(m.hp)}" alt="">` : '') + (m.ap ? `<img class="yph" style="right:0" src="${esc(m.ap)}" alt="">` : '') + `<div class="yvig"></div>`
+    + `<div class="ywrap">${top}<div class="ymid"><div class="yteam"><div class="yring" style="--tc:${esc(c1)}">${H}</div>${nm(m.home)}</div>`
+    + `<div class="yvs"><b>VS</b><div class="yclock">${esc(o.tm)}</div><div class="yday">${esc(o.dayTxt)}</div></div>`
+    + `<div class="yteam"><div class="yring" style="--tc:${esc(c2)}">${A}</div>${nm(m.away)}</div></div>${end}</div>`;
+  else if (design === 'bant') h = `<div class="yshade"></div><div class="ybar"><div class="ytag"><span class="k">${kick}</span><span class="lg">${esc([!m.derby && league, up(BNAME)].filter(Boolean).join(' · '))}</span></div>`
+    + `<div class="yrow"><div class="ys h">${H}${nm(m.home, 'yn')}</div><div class="yc"><b>${esc(o.tm)}</b><small>${esc(o.dayTxt)}</small></div><div class="ys a">${A}${nm(m.away, 'yn')}</div></div>`
+    + (cfg.note || infos ? `<div class="ytick">${cfg.note ? `<b>${esc(cfg.note)}</b>` : ''}${infos}</div>` : '') + `</div>`;
+  else if (design === 'sayac') h = `<div class="ygrid"></div><div class="ywrap">${top}`
+    + `<div class="yvsrow"><div class="yt">${nm(m.home)}${H}</div><i>VS</i><div class="yt a">${A}${nm(m.away)}</div></div>`
+    + `<div class="ycdw"><div class="ycd" id="ycd"></div><div class="ywhen">${esc(o.dayName)} · ${esc(o.tm)}</div></div>${end}</div>`;
+  else h = `<div class="ybg"></div><div class="yframe"></div><div class="ywrap"><div class="ytop">${brand}<div class="ykick">${m.derby ? kick : esc(league || kick)}</div></div>`
+    + `<div class="ypost"><div class="ydisc">${H}</div><div class="ystack">${nm(m.home, 'ybig', 11)}<div class="yvsl">vs</div>${nm(m.away, 'ybig', 11)}</div><div class="ydisc">${A}</div></div>`
+    + `<div class="yinfo"><span class="d">${esc(o.dayName)}</span><i></i><span class="t">${esc(o.tm)}</span>${o.dayTxt !== o.dayName ? `<i></i><span class="d">${esc(o.dayTxt)}</span>` : ''}</div>${end}</div>`;
+  el.innerHTML = h;
+  if (design === 'sayac') { // canlı geri sayım: 1 günden fazlaysa gün/saat/dakika, son 24 saatte saat/dakika/saniye
+    const p2 = n => String(n).padStart(2, '0');
+    const tick = () => {
+      const box = document.getElementById('ycd'); if (!box) return clearInterval(big.tick);
+      const s = Math.max(0, Math.floor((m.ts - Date.now()) / 1000)), d = Math.floor(s / 86400), hh = Math.floor(s % 86400 / 3600), mm = Math.floor(s % 3600 / 60);
+      const parts = d > 0 ? [[d, 'GÜN'], [hh, 'SAAT'], [mm, 'DAKİKA']] : [[hh, 'SAAT'], [mm, 'DAKİKA'], [s % 60, 'SANİYE']];
+      box.innerHTML = parts.map(([v, l]) => `<div><b>${p2(v)}</b><small>${l}</small></div>`).join('<i>:</i>');
+    };
+    tick(); big.tick = setInterval(tick, 1000);
+  }
+}
+// Panel ön izlemesi (?bigdemo=tasarım): kart ekranda sabit kalır; yaklaşan maç yoksa örnek derbi
+function bigDemo() {
+  const d = new Date(Date.now() + 2 * 864e5); d.setHours(20, 0, 0, 0);
+  const m = big.list[0] || { home: 'Galatasaray', away: 'Fenerbahçe', derby: true, league: 'Süper Lig', ts: d.getTime(), hc: '#a90432', ac: '#0d2a6e' };
+  const cfg = { ...big.cfg, style: BIGDEMO, durSec: 86400 }, key = JSON.stringify([m.id || m.home, m.ts, cfg]);
+  if (big.demoKey === key) return; // aynı içerikle gelen durum güncellemesi kartı baştan çizmesin
+  big.demoKey = key; big.showing = false; bigShow(m, cfg);
 }
 function setBig(list, cfg) { big.list = list || []; big.cfg = cfg || big.cfg; }
 function bigShow(m, cfg) {
@@ -1344,11 +1447,12 @@ function bigShow(m, cfg) {
     : (logo ? `<img class="bbg" style="${left ? 'left' : 'right'}:7%" src="${esc(logo)}" alt="" referrerpolicy="no-referrer">` : ''));
   const sub = m.derby ? '' : `<div class="bk1">${esc((m.league || '').toLocaleUpperCase('tr-TR'))}</div>`;
   const dayTxt = days <= 0 ? 'BUGÜN' : days === 1 ? 'YARIN' : dayName;
-  const design = ['uyum', 'yan', 'sade', 'skor'].includes(cfg.style) ? cfg.style : 'klasik';
+  const design = BIG_STYLES.includes(cfg.style) ? cfg.style : 'klasik';
   el.className = (el.classList.contains('on') ? 'on ' : '') + (design === 'klasik' ? '' : 'd-' + design); // art arda maçlarda kart sönmesin
   const U = n => design === 'uyum' ? `calc(${n}*var(--u))` : n + 'vh'; // satır içi ölçüler
   if (design === 'uyum') bigUnits(el);
-  if (design !== 'klasik' && design !== 'uyum') bigDesign(el, m, cfg, design, { dayTxt, tm, info, icons });
+  clearInterval(big.tick);
+  if (design !== 'klasik' && design !== 'uyum') bigDesign(el, m, cfg, design, { dayTxt, dayName, tm, info, icons });
   else
   el.innerHTML = '<div class="bl"></div><div class="br"></div><div class="bsh"></div>' + side(m.hl, m.hp, true) + side(m.al, m.ap, false)
     + `<div class="bc"><div style="text-align:center">${LOGO ? '<img class="blogo" src="' + esc(LOGO) + '" alt="">' : '<div class="bk1" style="font-size:' + U(3) + ';letter-spacing:.2em">' + esc(BNAME.toLocaleUpperCase('tr-TR')) + '</div>'}<div class="bt1" style="margin-top:${U(1.4)}">${m.derby ? 'BÜYÜK DERBİ' : 'AVRUPA GECESİ'}</div>${sub}</div>`
@@ -1358,7 +1462,7 @@ function bigShow(m, cfg) {
     + (cfg.note ? `<div class="bnote">${esc(cfg.note)}</div>` : '')
     + (info.length ? `<div class="bft">${info.map((t, i) => `<span>${icons[i % 3]} ${esc(t)}</span>`).join('')}</div>` : '<div style="height:' + U(1.4) + '"></div>') + '</div></div>';
   setTimeout(() => el.classList.add('on'), 60);
-  setTimeout(() => { if (big.queue.length) { big.showing = false; bigShow(big.queue.shift()); return; } /* sıradaki maç: arada medya/kampanya görünmesin, kart doğrudan değişir */ if (big.after) { const f = big.after; big.after = null; f(); } /* fragman/medya kartın arkasında hazırlanır: kart sönünce eski medya görünmez */ el.classList.remove('on'); setTimeout(() => { big.showing = false; camp.showing = false; }, 1500); }, (cfg.durSec || 15) * 1000);
+  setTimeout(() => { if (big.queue.length) { big.showing = false; bigShow(big.queue.shift()); return; } /* sıradaki maç: arada medya/kampanya görünmesin, kart doğrudan değişir */ if (big.after) { const f = big.after; big.after = null; f(); } /* fragman/medya kartın arkasında hazırlanır: kart sönünce eski medya görünmez */ clearInterval(big.tick); el.classList.remove('on'); setTimeout(() => { big.showing = false; camp.showing = false; }, 1500); }, (cfg.durSec || 15) * 1000);
 }
 setInterval(() => {
   if (big.showing || big.due || camp.showing || trailerOn || !big.list.length || (window.__celeb && document.querySelector('#cphoto.on'))) return;
@@ -1456,6 +1560,7 @@ document.addEventListener('keydown', e => { // kumanda OK tuşu menüyü açar (
 const $id = id => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
 const PREVIEW = Q.get('preview');
+const BIGDEMO = PREVIEW && BIG_STYLES.includes(Q.get('bigdemo')) ? Q.get('bigdemo') : '';
 let CITY = '', LOGO = null, BNAME = '', MEDIA_ON = true, WPROPS = {}, layoutSig = '', themeSig = '', brandSig = '';
 
 // ---- düzen: hücreler park alanından ızgaraya taşınır; düzende olmayanlar parkta kalır ----

@@ -619,7 +619,9 @@ async function refreshMovies(force) {
 // ================= BÜYÜK MAÇ DUYURUSU =================
 const isBig4 = name => ['galatasaray', 'fenerbahce', 'besiktas', 'trabzonspor'].some(k => norm(name).includes(k));
 const BIG_LEAGUES = [['tur.1', 'Süper Lig'], ['uefa.champions', 'Şampiyonlar Ligi'], ['uefa.europa', 'Avrupa Ligi'], ['uefa.europa.conf', 'Konferans Ligi'], ['uefa.champions_qual', 'Şampiyonlar Ligi Eleme']];
-const bigCfg = t => ({ enabled: true, style: 'klasik', note: 'Rezervasyon yaptırmayı unutmayın!', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''], ...(t.db.bigMatch || {}) });
+// Büyük maç tasarımları; kaldırılan eski tasarımlar (yan, sade, skor) Klasik olarak gösterilir
+const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster'];
+const bigCfg = t => { const c = { enabled: true, style: 'klasik', note: 'Rezervasyon yaptırmayı unutmayın!', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''], ...(t.db.bigMatch || {}) }; if (!BIG_STYLES.includes(c.style)) c.style = 'klasik'; return c; };
 let bigMatches = cacheGet('bigmatches') || [];
 let bigError = '';
 async function refreshBigMatches() {
@@ -793,7 +795,7 @@ module.exports = {
   newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
   coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, ornek: booksSample, adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, gorselli: books ? books.items.filter(b => b.image).length : 0, aciklama: books ? books.items.filter(b => b.desc).length : 0, aciklamaHata: descErr, hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await downloadCovers(); fillDescs(); }, get coverErr() { return coverErr; }, refreshBooks,
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
-  bigCfg, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
+  bigCfg, BIG_STYLES, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,
   get traffic() { return traffic; }, reportTraffic, trafficSecret, wantsTraffic, renderMap, maybeRenderMap, MAP_FILE, get mapAt() { return mapAt; }, get mapErr() { return mapErr; },
   localLogo, makeLogo, runCmd, runFfmpeg,
