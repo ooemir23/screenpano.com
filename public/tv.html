@@ -159,6 +159,15 @@ position:absolute;top:.8vh;right:.8vw}
 #wx .wd small{display:block;font-size:1.3vh;color:var(--mute);margin-top:.3vh;letter-spacing:.04em}
 #wx .city{font-size:1.2vh;letter-spacing:.28em;color:var(--accent2);font-weight:600;text-transform:uppercase;text-align:right}
 #wx .city small{display:block;letter-spacing:.04em;color:var(--mute);font-weight:400;text-transform:none;margin-top:.3vh;font-size:1.2vh}
+/* Hava ve piyasalar widget'ındaki QR bölümü: 2 QR yan yana, fazlası sırayla */
+#rqr{flex:1;min-height:0;display:flex;align-items:stretch;justify-content:center;gap:1.4vh;transition:opacity .45s}
+#rqr.out{opacity:0}
+#rqr .rq{flex:0 1 calc(50% - .7vh);min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;gap:.6vh}
+#rqr .rq .qw{flex:1;min-height:0;width:100%;display:flex;align-items:flex-end;justify-content:center;container-type:size}
+#rqr .rq .code{height:100%;aspect-ratio:1;width:min(100cqw,100cqh);height:min(100cqw,100cqh);background:#fff;border-radius:1vh;padding:.4vh;box-sizing:border-box;border:max(1px,.18vh) solid rgba(var(--a2),.85);box-shadow:0 .6vh 1.8vh rgba(0,0,0,.45)}
+#rqr .rq .code svg{width:100%;height:100%;display:block}
+#rqr .rq .lbl{flex:none;width:100%;box-sizing:border-box;height:3.2vh;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;background:rgba(10,8,6,.92);border:max(1px,.15vh) solid var(--al);border-radius:2vh;color:#fff;font-size:1.5vh;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:0 .6vw;text-shadow:0 .2vh .4vh #000}
+#rqr .rq .lbl.pw{text-transform:none;letter-spacing:.03em;color:var(--al);font-size:1.7vh}
 #rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:5.6vh;border-top:max(1px,.1vh) solid var(--line);padding-top:.9vh}
 #rrow div{min-width:0;overflow:hidden;text-align:center;border-right:max(1px,.1vh) solid var(--line)}
 #rrow div:last-child{border:0}
@@ -1137,8 +1146,25 @@ function renderPanel() {
     `<div><small>BIST 100${chg(r.bistCh)}</small><strong>${f(r.bist, 0)}</strong></div><div><small>BITCOIN${chg(r.btcCh)}</small><strong>${r.btc ? '$' + f(r.btc, 0) : '--'}</strong></div><div><small>STERLİN</small><strong>${f(r.gbp)}<i>₺</i></strong></div>`,
   ];
   const rp = WPROPS.rates || {};
-  document.getElementById('rates').innerHTML = (rp.weather === false ? '' : wx) + (rp.rates === false ? '' : `<div id="rrow" class="swap">${rateSets[rateIdx % rateSets.length]}</div>`);
-  startRateSwap();
+  document.getElementById('rates').innerHTML = (rp.weather === false ? '' : wx) + (rp.rates === false ? '' : `<div id="rrow" class="swap">${rateSets[rateIdx % rateSets.length]}</div>`) + (rp.qr ? '<div id="rqr"></div>' : '');
+  startRateSwap(); ratesQr();
+}
+// Hava ve piyasalar widget'ındaki QR bölümü: seçili QR'lar (seçim yoksa hepsi) ikişerli yan yana; ikiden fazlaysa 12 sn'de bir sıradaki çift gelir
+const rQr = { page: 0, timer: null };
+function ratesQr() {
+  clearInterval(rQr.timer); rQr.timer = null;
+  const box = document.getElementById('rqr'); if (!box) return;
+  const ids = String((WPROPS.rates || {}).qrs || '').split(',').filter(Boolean);
+  const all = qrTile.list || [], list = ids.length ? all.filter(q => ids.includes(q.id)) : all;
+  if (!list.length) { box.innerHTML = ''; return; }
+  const pages = []; for (let i = 0; i < list.length; i += 2) pages.push(list.slice(i, i + 2));
+  const draw = () => {
+    const pg = pages[rQr.page % pages.length];
+    box.innerHTML = pg.map(q => `<div class="rq"><div class="qw"><div class="code">${q.svg}</div></div><div class="lbl"><span class="wt">${esc(q.label)}</span></div></div>`).join('');
+    box.querySelectorAll('.rq').forEach((el, i) => { const q = pg[i]; clearTimeout(el._wt); if (q.marquee) wifiCycle(el, q); else fitLbl(el.querySelector('.lbl')); });
+  };
+  rQr.page = 0; draw();
+  if (pages.length > 1) rQr.timer = setInterval(() => { box.classList.add('out'); setTimeout(() => { rQr.page++; draw(); box.classList.remove('out'); }, 450); }, 12000);
 }
 function setRates(r) { lastRates = r; renderPanel(); if (window.__tickerInfo) setTicker(matches); }
 function setWeather(w) { lastWeather = w; renderPanel(); if (window.__tickerInfo) setTicker(matches); }
@@ -1620,7 +1646,7 @@ function showQrTile() { qrTile.cells.forEach(drawQrCell); qrVis(); }
 function setQrTile(list) {
   const sig = JSON.stringify(list || []);
   if (sig === qrTile.sig) return;
-  qrTile.sig = sig; qrTile.list = list || []; qrTile.cells.forEach(c => { c.idx = 0; }); showQrTile();
+  qrTile.sig = sig; qrTile.list = list || []; qrTile.cells.forEach(c => { c.idx = 0; }); showQrTile(); ratesQr();
   clearInterval(qrTile.timer);
   qrTile.timer = setInterval(() => {
     for (const c of qrTile.cells) {

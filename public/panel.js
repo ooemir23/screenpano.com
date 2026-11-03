@@ -208,10 +208,16 @@ function drawProps() {
   const box = $('props'), w = EDIT.layout.widgets[EDIT.sel];
   if (!w) { box.innerHTML = `<h4>Widget ayarları</h4><p class="muted">Ayarlarını görmek için bir kutuya tıklayın.</p>${badSet().size ? '<p class="muted mt" style="color:var(--bad)">Kırmızı kutular üst üste biniyor; kaydetmeden önce düzeltin.</p>' : ''}${EDIT.dirty ? '<p class="muted mt" style="color:var(--warn)">Kaydedilmemiş değişiklikler var.</p>' : ''}`; return; }
   const d = S.cat.widgets[w.type] || {}, p = w.props || {};
-  const tg = (k, label, def = true) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(p[k] === undefined ? def : p[k], `setP('${k}',this.checked)`)}</div>`;
+  const tg = (k, label, def = true) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(p[k] === undefined ? def : p[k], `setP('${k}',this.checked)${k === 'qr' ? ';drawProps()' : ''}`)}</div>`;
   let f = '';
   if (w.type === 'clock') f = tg('seconds', 'Saniyeyi göster', false);
-  if (w.type === 'rates') f = tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa');
+  if (w.type === 'rates') {
+    f = tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa') + tg('qr', 'QR kodlar', false);
+    if (p.qr) {
+      const qs = S.db.qrs || [], sel = String(p.qrs || '').split(',').filter(Boolean);
+      f += qs.length ? `<div class="fl mt"><span>Gösterilecek QR'lar (seçmezseniz hepsi)</span><div class="chips">${qs.map(q => `<span class="chip ${sel.includes(q.id) ? 'on' : ''}" onclick="rQrPick('${q.id}')">${esc(q.label)}</span>`).join('')}</div></div><p class="muted mt">QR'lar ikişerli yan yana gösterilir; ikiden fazlaysa sırayla değişir.</p>` : '<p class="muted mt">Önce <a href="#qr">QR Kodlar</a> sayfasından QR ekleyin.</p>';
+    }
+  }
   if (w.type === 'ticker') f = tg('clock', 'Solda saat kutusu');
   if (w.type === 'text') f = fl('Başlık', `<input type="text" maxlength="200" value="${esc(p.title || '')}" onchange="setP('title',this.value)">`) + fl('Metin', `<textarea maxlength="400" onchange="setP('body',this.value)">${esc(p.body || '')}</textarea>`)
     + `<div class="f">${fl('Hizalama', `<select onchange="setP('align',this.value)">${[['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']].map(([v, l]) => `<option value="${v}" ${(p.align || 'center') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}${fl('Boyut', `<select onchange="setP('size',this.value)">${[['s', 'Küçük'], ['m', 'Orta'], ['l', 'Büyük']].map(([v, l]) => `<option value="${v}" ${(p.size || 'm') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`;
@@ -228,6 +234,7 @@ function drawProps() {
 function snap() { EDIT.hist.push(clone(EDIT.layout)); if (EDIT.hist.length > 40) EDIT.hist.shift(); EDIT.dirty = true; }
 function undoL() { if (!EDIT.hist.length) return toast('Geri alınacak değişiklik yok'); EDIT.layout = EDIT.hist.pop(); EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
 function setPI(l, k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); const i = clone((w.props || {}).i18n || {}); i[l] = { ...(i[l] || {}), [k]: v }; w.props = { ...(w.props || {}), i18n: i }; }
+function rQrPick(id) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; const sel = new Set(String((w.props || {}).qrs || '').split(',').filter(Boolean)); sel.has(id) ? sel.delete(id) : sel.add(id); setP('qrs', [...sel].join(',')); drawProps(); }
 function setP(k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); w.props = { ...(w.props || {}), [k]: v }; }
 function rmW(i) { snap(); EDIT.layout.widgets.splice(i, 1); EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
 function addW(type) {

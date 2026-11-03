@@ -175,7 +175,8 @@
         "Kaç dakikada bir, kaç saniye görüneceğini siz seçin",
         "En çok 6 QR kod; Wi‑Fi QR'ı tek dokunuşla bağlanır",
         "Instagram paylaşımlarınız medya döngüsüne girer",
-        "QR kartı her zaman en üstte kalsın ya da video, fotoğraf gibi seçtiğiniz içeriklerde gizlensin"
+        "QR kartı her zaman en üstte kalsın ya da video, fotoğraf gibi seçtiğiniz içeriklerde gizlensin",
+        "Hava ve piyasalar kutusuna QR da eklenebilir: seçtiğiniz QR'lar ikişerli yan yana gösterilir"
       ],
       "plan": "all",
       "compare": "QR kodlar ve kampanya kartı",
@@ -194,7 +195,8 @@
             "You choose how often and for how long it appears",
             "Up to 6 QR codes; the Wi‑Fi code connects with one tap",
             "Your Instagram posts join the media rotation",
-            "Keep a QR card always on top, or hide it during the content you choose, such as videos or photos"
+            "Keep a QR card always on top, or hide it during the content you choose, such as videos or photos",
+            "The weather and markets box can also show QR codes: your chosen codes appear two side by side"
           ]
         },
         "de": {
@@ -206,7 +208,8 @@
             "Sie legen fest, wie oft und wie lange sie erscheint",
             "Bis zu 6 QR-Codes; der WLAN-Code verbindet mit einem Tipp",
             "Ihre Instagram-Beiträge laufen in der Medienschleife mit",
-            "QR-Karte immer im Vordergrund halten oder bei gewählten Inhalten wie Videos oder Fotos ausblenden"
+            "QR-Karte immer im Vordergrund halten oder bei gewählten Inhalten wie Videos oder Fotos ausblenden",
+            "Das Wetter- und Märkte-Feld kann auch QR-Codes zeigen: Ihre gewählten Codes erscheinen zu zweit nebeneinander"
           ]
         },
         "ar": {
@@ -218,7 +221,8 @@
             "تحدّد عدد مرات ظهورها ومدته",
             "حتى 6 رموز QR؛ ورمز Wi‑Fi يتصل بلمسة واحدة",
             "تنضم منشوراتك على Instagram إلى دورة العرض",
-            "أبقِ بطاقة QR فوق كل شيء دائمًا، أو أخفها أثناء المحتوى الذي تختاره مثل الفيديو والصور"
+            "أبقِ بطاقة QR فوق كل شيء دائمًا، أو أخفها أثناء المحتوى الذي تختاره مثل الفيديو والصور",
+            "يمكن إضافة رموز QR إلى مربع الطقس والأسواق: تُعرض الرموز المختارة اثنين جنبًا إلى جنب"
           ]
         }
       },

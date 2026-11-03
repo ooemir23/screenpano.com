@@ -6,7 +6,7 @@ const WIDGETS = {
   media:   { name: 'Medya oynatıcı', desc: 'Video ve fotoğraf döngüsü; kampanya, büyük maç ve fragmanlar da burada çıkar', pro: false, required: true, min: [8, 8] },
   logo:    { name: 'Logo', desc: 'İşletme logosu', pro: false, min: [3, 2] },
   clock:   { name: 'Saat ve tarih', desc: 'Büyük saat ve tarih', pro: false, min: [4, 3], props: { seconds: false } },
-  rates:   { name: 'Hava ve piyasalar', desc: 'Hava durumu, döviz, altın, BIST, Bitcoin', pro: false, min: [5, 4], props: { weather: true, rates: true } },
+  rates:   { name: 'Hava ve piyasalar', desc: 'Hava durumu, döviz, altın, BIST, Bitcoin ve istenirse QR kodlar (2 QR yan yana)', pro: false, min: [5, 4], props: { weather: true, rates: true, qr: false, qrs: '' } },
   ticker:  { name: 'Kayan bant', desc: 'Skorlar, haberler, kurlar ve bilgiler kayar', pro: false, min: [10, 2], props: { clock: true } },
   text:    { name: 'Duyuru metni', desc: 'Başlık ve kısa metin', pro: false, min: [4, 2], props: { title: 'Hoş geldiniz', body: '', align: 'center', size: 'm' } },
   image:   { name: 'Görsel', desc: 'Sabit afiş veya fotoğraf', pro: false, min: [3, 3], props: { url: '', fit: 'cover' } },
