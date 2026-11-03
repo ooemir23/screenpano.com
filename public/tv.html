@@ -1551,6 +1551,9 @@ const goalQueue = []; let goalBusy = false;
 // gol atan takımın renkleriyle kartı boyamak için küçük renk yardımcıları
 const glum = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return -1; const n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
 const gshade = (h, f) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return h; const ch = v => Math.round(f < 1 ? v * f : v + (255 - v) * (f - 1)); return '#' + [0, 2, 4].map(i => ch(parseInt(m[1].slice(i, i + 2), 16)).toString(16).padStart(2, '0')).join(''); };
+// renk gelmezse (ör. dağıtım sürerken eski sunucudan gelen olay) bilinen takımların renkleri istemcide de durur
+const gnorm = s => String(s || '').toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o');
+const GTEAM_COLORS = { galatasaray: ['#c9082a', '#ffb800'], fenerbahce: ['#123690', '#ffdd00'], besiktas: ['#22252c', '#e2e8f0'], trabzonspor: ['#800f34', '#29a8ff'], barcelona: ['#a50044', '#edbb00'], 'real madrid': ['#00529f', '#febe10'] };
 function showGoal(g) {
   wsSend({ type: 'shown', kind: 'goal' });
   goalQueue.push(g);
@@ -1568,7 +1571,8 @@ function nextGoal() {
     <div class="tr ${sc === 'away' ? 'sc' : ''}"><span>${esc(g.away)}</span><b>${esc(g.as)}</b></div></div>
     <div class="who">${esc(g.player || 'Gol!')}<small>${esc(g.minute || '')}${tag ? ' · ' + tag : ''}</small></div>`;
   // gol atan takımın renkleri: gradyan, çerçeve, parlama ve konfeti takım renklerinde akar
-  const c1 = (sc === 'home' ? g.hc : g.ac) || '', c2 = (sc === 'home' ? g.hc2 : g.ac2) || '';
+  let c1 = (sc === 'home' ? g.hc : g.ac) || '', c2 = (sc === 'home' ? g.hc2 : g.ac2) || '';
+  if (!c1) { const k = Object.keys(GTEAM_COLORS).find(x => gnorm(sc === 'home' ? g.home : g.away).includes(x)); if (k) { c1 = GTEAM_COLORS[k][0]; c2 = GTEAM_COLORS[k][1]; } }
   let cols = ['var(--al)', '#ffffff', 'var(--accent2)', '#ff6b6b', '#7ee0a0'];
   if (glum(c1) >= 0) {
     let p = c1, acc = c2 || '';
