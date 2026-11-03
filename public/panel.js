@@ -215,7 +215,7 @@ function drawProps() {
     f = tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa') + tg('qr', 'QR kodlar', false);
     if (p.qr) {
       const qs = S.db.qrs || [], sel = String(p.qrs || '').split(',').filter(Boolean);
-      f += qs.length ? `<div class="fl mt"><span>Gösterilecek QR'lar (seçmezseniz hepsi)</span><div class="chips">${qs.map(q => `<span class="chip ${sel.includes(q.id) ? 'on' : ''}" onclick="rQrPick('${q.id}')">${esc(q.label)}</span>`).join('')}</div></div><p class="muted mt">QR'lar ikişerli yan yana gösterilir; ikiden fazlaysa sırayla değişir.</p>` : '<p class="muted mt">Önce <a href="#qr">QR Kodlar</a> sayfasından QR ekleyin.</p>';
+      f += qs.length ? `<div class="fl mt"><span>Gösterilecek QR'lar (seçmezseniz hepsi)</span><div class="chips">${qs.map(q => `<span class="chip ${sel.includes(q.id) ? 'on' : ''}" onclick="rQrPick('${q.id}')">${esc(q.label)}</span>`).join('')}</div></div><p class="muted mt">1-2 QR yan yana gösterilir; 3 ve fazlası tek tek, geçişli olarak sırayla değişir.</p>` : '<p class="muted mt">Önce <a href="#qr">QR Kodlar</a> sayfasından QR ekleyin.</p>';
     }
   }
   if (w.type === 'ticker') f = tg('clock', 'Solda saat kutusu');
