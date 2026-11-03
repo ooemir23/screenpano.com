@@ -2532,7 +2532,7 @@ function connect() {
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.type === 'auth') { authFail = true; if (!PREVIEW) { tokenSet(''); showAuth(); } else { document.body.innerHTML = '<p style="color:#aaa;font:600 3vh sans-serif;padding:5vh">Önizleme için panele giriş yapın.</p>'; } return; }
-    if (m.type === 'version') { if (m.now) window.__srvOff = m.now - Date.now(); if (window.__build && window.__build !== m.build) location.reload(); window.__build = m.build; }
+    if (m.type === 'version') { if (m.now) window.__srvOff = m.now - Date.now(); if (m.build && window.__build && window.__build !== m.build) { try { const k = '__buildReloads', now = Date.now(), arr = (JSON.parse(sessionStorage.getItem(k) || '[]')).filter(t => now - t < 15000); arr.push(now); sessionStorage.setItem(k, JSON.stringify(arr)); if (arr.length <= 2) location.reload(); } catch (e) { location.reload(); } } window.__build = m.build; }
     else if (m.type === 'state') { setState(m.state); saveState(m.state); }
     else if (m.type === 'snap') sendSnap();
     else if (m.type === 'reload') location.reload();

@@ -22,6 +22,17 @@ async function networkFirst(req, key) {
     throw e;
   }
 }
+// TV sayfası: önbellekteki kopya ANINDA gösterilir (kutu elektrik kesintisinden sonra bile saniyede açılır),
+// ağ arka planda önbelleği tazeler. Yeni sürümü sunucu WS 'version' mesajıyla bildirir, sayfa kendini yeniler.
+async function tvInstant(req) {
+  const c = await caches.open(SHELL), key = '/tv';
+  const hit = await c.match(key, { ignoreSearch: true });
+  fetch(req).then(r => { if (r.ok) c.put(key, r.clone()); }).catch(() => {});
+  if (hit) return hit;
+  const r = await timeout(fetch(req), 5000);
+  if (r.ok) c.put(key, r.clone());
+  return r;
+}
 async function staleWhileRevalidate(req) {
   const c = await caches.open(SHELL), hit = await c.match(req);
   const net = fetch(req).then(r => { if (r.ok && r.type === 'basic') c.put(req, r.clone()); return r; }).catch(() => hit);
@@ -48,7 +59,7 @@ self.addEventListener('fetch', e => {
   const u = new URL(req.url); if (u.origin !== location.origin) return;
   if (u.pathname.startsWith('/api/') || u.pathname === '/ws' || u.pathname === '/sw.js' || u.pathname === '/app.apk') return;
   if (u.pathname.startsWith('/u/')) return e.respondWith(media(req));
-  if (u.pathname === '/tv' || (req.mode === 'navigate' && u.pathname === '/')) return e.respondWith(networkFirst(req, '/tv'));
+  if (u.pathname === '/tv' || (req.mode === 'navigate' && u.pathname === '/')) return e.respondWith(tvInstant(req));
   if (u.pathname === '/posters.js' || u.pathname === '/panel.js' || u.pathname.startsWith('/i18n/')) return e.respondWith(networkFirst(req)); // poster/panel/çeviri güncellenince eski kopya bir reload geride kalmasın (internet yoksa önbellekten)
   if (/^\/(fonts|celebrate|logo)\//.test(u.pathname) || /\.(js|svg|png|jpe?g|webp|woff2)$/.test(u.pathname)) return e.respondWith(staleWhileRevalidate(req));
 });
