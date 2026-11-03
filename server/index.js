@@ -85,11 +85,11 @@ app.get('/cover/:h.jpg', async (req, res) => {
   res.set({ 'Content-Type': c.type, 'Cache-Control': 'public, max-age=86400' }).send(c.buf);
 });
 app.get('/logo/:id.png', async (req, res) => {
-  if (!/^\d{1,8}$/.test(req.params.id)) return res.status(400).end();
+  if (!/^(?:l-)?\d{1,8}$/.test(req.params.id)) return res.status(400).end();
   try {
     if (!logoJobs.has(req.params.id)) logoJobs.set(req.params.id, feeds.makeLogo(req.params.id).finally(() => setTimeout(() => logoJobs.delete(req.params.id), 1000)));
     const file = await logoJobs.get(req.params.id);
-    res.set('Cache-Control', 'public, max-age=2592000, immutable'); res.sendFile(file);
+    res.set('Cache-Control', 'public, max-age=86400'); res.sendFile(file);
   } catch (e) { res.status(404).end(); }
 });
 

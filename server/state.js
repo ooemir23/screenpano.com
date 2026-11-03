@@ -131,6 +131,7 @@ function publicState(t) {
     qrSize: 17, // QR boyutu ayarı kaldırıldı: tüm QR'lar aynı boyutta
     qrs: (db.qrs || []).map(({ id, label, svg, kind, text, pin, hide }) => ({ id, label, svg, pin: pin !== false, hide: Array.isArray(hide) ? hide : [], marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
     menu: pro && has('menu') ? db.menu : null,
+    music: db.music || null,
     rates: F.rates,
     weather: F.weatherFor(t),
   };

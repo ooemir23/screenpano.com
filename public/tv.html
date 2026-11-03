@@ -442,10 +442,12 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-poster .ynote{background:none;border:0;padding:calc(.6*var(--u)) 0 0;font-size:calc(2.7*var(--u))}
 #big.d-poster .yft{background:none;padding:0;font-size:calc(1.8*var(--u));color:rgba(255,255,255,.75)}
 #big.d-poster .yend:empty{height:0}
-/* 5) Düello: iki oyuncu karşı karşıya; duman, kıvılcım, takım renginde sıcak ışık */
-#big.d-duello{background:#0a0705}
-#big.d-duello .yglow{position:absolute;inset:0;background:radial-gradient(ellipse 45% 75% at 12% 70%,color-mix(in srgb,var(--c1) 70%,#ff7a1a 30%),transparent 70%),radial-gradient(ellipse 45% 75% at 88% 70%,color-mix(in srgb,var(--c2) 70%,#ff7a1a 30%),transparent 70%),radial-gradient(ellipse 30% 60% at 50% 55%,rgba(255,170,70,.28),transparent 70%);opacity:.75;animation:yflick 3.2s ease-in-out infinite alternate}
-@keyframes yflick{0%{opacity:.62}40%{opacity:.8}70%{opacity:.68}100%{opacity:.85}}
+/* 5) Düello: iki oyuncu karşı karşıya; duman, kıvılcım, takımın iki ana rengi arasında sünerek geçiş yapan ışık */
+#big.d-duello{background:#070709}
+#big.d-duello .yglow{position:absolute;inset:0;background:radial-gradient(ellipse 46% 76% at 15% 58%,var(--c1) 0%,color-mix(in srgb,var(--c1b,var(--c1)) 60%,transparent) 48%,transparent 72%),radial-gradient(ellipse 46% 76% at 85% 58%,var(--c2) 0%,color-mix(in srgb,var(--c2b,var(--c2)) 60%,transparent) 48%,transparent 72%),radial-gradient(ellipse 30% 60% at 50% 55%,rgba(255,190,90,.22),transparent 70%);opacity:.85;animation:yflick 3.4s ease-in-out infinite alternate}
+#big.d-duello .yglow:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 52% 82% at 15% 58%,var(--c1b,var(--c1)) 0%,color-mix(in srgb,var(--c1) 70%,transparent) 52%,transparent 75%),radial-gradient(ellipse 52% 82% at 85% 58%,var(--c2b,var(--c2)) 0%,color-mix(in srgb,var(--c2) 70%,transparent) 52%,transparent 75%);animation:yglowmorph 3.2s ease-in-out infinite alternate;pointer-events:none}
+@keyframes yglowmorph{0%{opacity:.08;transform:scale(.88,.92)}50%{opacity:.88;transform:scale(1.08,1.04)}100%{opacity:.18;transform:scale(1.16,1.1)}}
+@keyframes yflick{0%{opacity:.72}40%{opacity:.88}70%{opacity:.76}100%{opacity:.92}}
 #big.d-duello .ysmk{position:absolute;width:90%;height:70%;left:5%;bottom:-10%;border-radius:50%;background:radial-gradient(ellipse at center,rgba(210,190,170,.16),transparent 65%);filter:blur(calc(3*var(--u)));animation:ysmk 18s ease-in-out infinite alternate}
 #big.d-duello .ysmk.b{left:-20%;bottom:20%;width:70%;height:55%;animation-duration:24s;animation-direction:alternate-reverse;opacity:.8}
 #big.d-duello .ysmk.c{left:50%;bottom:30%;width:70%;height:50%;animation-duration:21s;opacity:.7}
@@ -463,8 +465,11 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 @keyframes ybreath{from{transform:scale(1)}to{transform:scale(1.03)}}
 #big.d-duello .ybigc{position:absolute;top:24%;--ms:30;width:calc(34*var(--u));height:calc(34*var(--u));display:grid;place-items:center;opacity:0;transition:opacity 1s .4s,transform 1.2s cubic-bezier(.2,1.3,.4,1) .4s;transform:scale(.7)}
 #big.d-duello .ybigc.l{left:7%}#big.d-duello .ybigc.r{right:7%}
-#big.d-duello .ybigc:before{content:"";position:absolute;inset:-25%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--tc) 70%,#ffb15c 30%),transparent 65%);opacity:.65;filter:blur(calc(2*var(--u)))}
-#big.d-duello .ybigc .ylg,#big.d-duello .ybigc .ymono{position:relative;width:78%;height:78%}
+#big.d-duello .ybigc:before{content:"";position:absolute;inset:-28%;border-radius:50%;background:radial-gradient(circle,var(--tc) 0%,var(--tc2,var(--tc)) 48%,transparent 70%);opacity:.85;filter:blur(calc(2.2*var(--u)));animation:yaura1 3.2s ease-in-out infinite alternate}
+#big.d-duello .ybigc .yaura{position:absolute;inset:-32%;border-radius:50%;background:radial-gradient(circle,var(--tc2,var(--tc)) 0%,var(--tc) 52%,transparent 72%);filter:blur(calc(2.4*var(--u)));pointer-events:none;animation:yaura2 3.2s ease-in-out infinite alternate}
+@keyframes yaura1{0%{opacity:.95;transform:scale(1.12)}100%{opacity:.2;transform:scale(.86)}}
+@keyframes yaura2{0%{opacity:.15;transform:scale(.84)}100%{opacity:.95;transform:scale(1.18)}}
+#big.d-duello .ybigc .ylg,#big.d-duello .ybigc .ymono{position:relative;width:78%;height:78%;z-index:1}
 #big.on.d-duello .ybigc{opacity:1;transform:none}
 #big.d-duello .yvig{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.75),transparent 26%,transparent 62%,rgba(0,0,0,.88)),radial-gradient(ellipse 80% 80% at 50% 50%,transparent 50%,rgba(0,0,0,.6))}
 #big.d-duello .ywrap{z-index:2}
@@ -552,6 +557,61 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-duello .ymatch{font-size:min(calc(6.4*var(--u)),calc(3.8*var(--w)));max-width:none;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:.4em}
 #big.d-duello .ymatch span:first-child{text-align:right}#big.d-duello .ymatch span:last-child{text-align:left}#big.d-duello .ymatch i{margin:0}
 #big.d-duello .ylea{font-size:calc(2.8*var(--u))}
+/* Düello (Turnuva Logolu): yayıncı kalitesinde dev 3D armalar, merkezde büyük turnuva madalyonu ve stadyum ışık huzmeleri */
+#big.d-turnuva{background:#05060a}
+#big.d-turnuva .yflare{display:none}
+#big.d-turnuva .yglow{opacity:.94;background:radial-gradient(ellipse 50% 78% at 14% 46%,var(--c1) 0%,color-mix(in srgb,var(--c1b,var(--c1)) 65%,transparent) 46%,transparent 70%),radial-gradient(ellipse 50% 78% at 86% 46%,var(--c2) 0%,color-mix(in srgb,var(--c2b,var(--c2)) 65%,transparent) 46%,transparent 70%),radial-gradient(ellipse 44% 52% at 50% 42%,rgba(255,195,95,.18),transparent 72%)}
+#big.d-turnuva .yglow:after{background:radial-gradient(ellipse 54% 84% at 14% 46%,var(--c1b,var(--c1)) 0%,color-mix(in srgb,var(--c1) 72%,transparent) 50%,transparent 74%),radial-gradient(ellipse 54% 84% at 86% 46%,var(--c2b,var(--c2)) 0%,color-mix(in srgb,var(--c2) 72%,transparent) 50%,transparent 74%)}
+#big.d-turnuva .ytbeams{position:absolute;inset:0;pointer-events:none;background:conic-gradient(from 135deg at 12% -6%,transparent 0deg,rgba(255,255,255,.14) 16deg,transparent 36deg),conic-gradient(from 188deg at 88% -6%,transparent 0deg,rgba(255,255,255,.14) 16deg,transparent 36deg),radial-gradient(ellipse 85% 28% at 50% 102%,rgba(255,195,90,.2),transparent 70%)}
+#big.d-turnuva .ybigc{top:14%;width:calc(50*var(--u));height:calc(50*var(--u));--ms:38;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.16),rgba(12,15,24,.62) 64%,rgba(4,6,10,.88) 100%);border:calc(.28*var(--u)) solid color-mix(in srgb,var(--tc2,var(--tc)) 65%,#fff 35%);box-shadow:0 calc(2.4*var(--u)) calc(5.5*var(--u)) rgba(0,0,0,.92),0 0 calc(5.5*var(--u)) var(--tc),0 0 calc(9*var(--u)) color-mix(in srgb,var(--tc2,var(--tc)) 75%,transparent),inset 0 calc(.35*var(--u)) calc(2*var(--u)) rgba(255,255,255,.28)}
+#big.d-turnuva .ybigc.l{left:4.2%}#big.d-turnuva .ybigc.r{right:4.2%}
+#big.d-turnuva .ybigc:before{inset:-36%;filter:blur(calc(2.8*var(--u)))}
+#big.d-turnuva .ybigc .yaura{inset:-40%;filter:blur(calc(3*var(--u)))}
+#big.d-turnuva .ybigc:after{content:"";position:absolute;inset:calc(-1.1*var(--u));border-radius:50%;border:calc(.16*var(--u)) solid color-mix(in srgb,var(--tc2,var(--tc)) 70%,#fff 30%);box-shadow:0 0 calc(2.5*var(--u)) var(--tc2,var(--tc));pointer-events:none;animation:yaura2 3.2s ease-in-out infinite alternate}
+#big.d-turnuva .ybigc .ylg,#big.d-turnuva .ybigc .ymono{width:82%;height:82%;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.92)) drop-shadow(0 0 calc(1.4*var(--u)) rgba(255,255,255,.45))}
+#big.d-turnuva .ytmid{position:absolute;left:50%;top:39%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;gap:calc(3.2*var(--u));z-index:2;pointer-events:none}
+#big.d-turnuva .ytmid:before{content:"";position:absolute;width:calc(54*var(--u));height:calc(.24*var(--u));background:linear-gradient(90deg,transparent,rgba(255,212,128,.75) 28%,#fff 50%,rgba(255,212,128,.75) 72%,transparent);box-shadow:0 0 calc(1.8*var(--u)) rgba(255,195,90,.8);z-index:-1}
+#big.d-turnuva .ytstage{position:relative;width:calc(30*var(--u));height:calc(30*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,rgba(38,45,64,.95),rgba(12,15,24,.97) 68%,rgba(5,7,12,.99) 100%);border:calc(.32*var(--u)) solid rgba(255,212,125,.85);box-shadow:0 0 calc(5*var(--u)) rgba(255,190,75,.48),0 calc(2.2*var(--u)) calc(5*var(--u)) rgba(0,0,0,.95),inset 0 0 calc(2.8*var(--u)) rgba(255,255,255,.18)}
+#big.d-turnuva .ytstage:before{content:"";position:absolute;inset:calc(-1.3*var(--u));border-radius:50%;border:calc(.16*var(--u)) solid rgba(255,255,255,.28);box-shadow:0 0 calc(2.5*var(--u)) rgba(255,210,120,.35)}
+#big.d-turnuva .ytstage .ytlg{width:82%;height:82%;object-fit:contain;filter:drop-shadow(0 calc(.8*var(--u)) calc(1.8*var(--u)) rgba(0,0,0,.9)) drop-shadow(0 0 calc(1.2*var(--u)) rgba(255,255,255,.35))}
+#big.d-turnuva .ytcrest{width:calc(21*var(--u));height:calc(21*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.2),rgba(10,13,20,.82) 70%);border:calc(.24*var(--u)) solid rgba(255,255,255,.38);box-shadow:0 calc(1.5*var(--u)) calc(3.5*var(--u)) rgba(0,0,0,.9),0 0 calc(3.5*var(--u)) color-mix(in srgb,var(--tc) 75%,#fff 25%);--ms:16}
+#big.d-turnuva .ytcrest .ylg,#big.d-turnuva .ytcrest .ymono{width:82%;height:82%}
+#big.d-turnuva .ylea{padding:calc(.55*var(--u)) calc(2.2*var(--w));border-radius:99px;background:linear-gradient(180deg,rgba(20,24,36,.88),rgba(8,10,16,.94));border:calc(.18*var(--u)) solid rgba(255,212,125,.65);box-shadow:0 calc(.8*var(--u)) calc(2.4*var(--u)) rgba(0,0,0,.8);font-size:calc(2.7*var(--u));letter-spacing:.28em;color:#ffeab3}
+#big.d-turnuva .yvenue{margin-top:calc(.3*var(--u));padding:calc(.4*var(--u)) calc(1.8*var(--w));border-radius:calc(.9*var(--u));background:rgba(6,8,14,.72);border:1px solid rgba(255,255,255,.14);font-size:calc(3.1*var(--u))}
+#big.d-turnuva .ymatch{padding:calc(1.1*var(--u)) calc(2.6*var(--w));border-radius:calc(1.6*var(--u));background:linear-gradient(90deg,transparent 0%,rgba(10,13,20,.88) 12%,rgba(14,18,28,.94) 50%,rgba(10,13,20,.88) 88%,transparent 100%);border-top:calc(.2*var(--u)) solid rgba(255,210,115,.6);border-bottom:calc(.2*var(--u)) solid rgba(255,210,115,.6);font-size:min(calc(6.6*var(--u)),calc(3.9*var(--w)))}
+#big.d-turnuva .ymatch i{display:inline-grid;place-items:center;width:calc(5.8*var(--u));height:calc(5.8*var(--u));border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe79e,#d98a1c 68%,#784204 100%);border:calc(.22*var(--u)) solid #fff;box-shadow:0 0 calc(2*var(--u)) rgba(255,195,85,.75);color:#140d04;font-size:calc(3.4*var(--u));font-weight:900;line-height:1}
+/* 7) Şampiyonlar Arenası (d-arena): 3D döner turnuva jiroskopu, çift renkli enerji dalgalı cam monolitler ve perspektif saha */
+#big.d-arena{background:#04060c}
+#big.d-arena .abg{position:absolute;inset:0;background:radial-gradient(ellipse 58% 85% at 14% 48%,var(--c1) 0%,color-mix(in srgb,var(--c1b,var(--c1)) 65%,transparent) 48%,transparent 74%),radial-gradient(ellipse 58% 85% at 86% 48%,var(--c2) 0%,color-mix(in srgb,var(--c2b,var(--c2)) 65%,transparent) 48%,transparent 74%);opacity:.88}
+#big.d-arena .abg:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 62% 90% at 14% 48%,var(--c1b,var(--c1)) 0%,color-mix(in srgb,var(--c1) 75%,transparent) 52%,transparent 76%),radial-gradient(ellipse 62% 90% at 86% 48%,var(--c2b,var(--c2)) 0%,color-mix(in srgb,var(--c2) 75%,transparent) 52%,transparent 76%);animation:yglowmorph 3.2s ease-in-out infinite alternate}
+#big.d-arena .afloor{position:absolute;left:-15%;right:-15%;bottom:-18%;height:52%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px calc(5*var(--w))),repeating-linear-gradient(0deg,rgba(255,215,130,.06) 0 1px,transparent 1px calc(4*var(--u))),radial-gradient(ellipse 70% 55% at 50% 30%,rgba(255,205,100,.16),transparent 70%);transform:perspective(calc(55*var(--u))) rotateX(64deg);transform-origin:center bottom;-webkit-mask-image:linear-gradient(transparent 5%,#000 55%);mask-image:linear-gradient(transparent 5%,#000 55%);pointer-events:none}
+#big.d-arena .aspots{position:absolute;inset:0;background:conic-gradient(from 142deg at 16% -8%,transparent 0deg,rgba(255,255,255,.16) 14deg,transparent 30deg),conic-gradient(from 188deg at 84% -8%,transparent 0deg,rgba(255,255,255,.16) 14deg,transparent 30deg);mix-blend-mode:screen;animation:ysweep 5s ease-in-out infinite alternate;pointer-events:none}
+@keyframes ysweep{from{transform:scaleX(.96);opacity:.75}to{transform:scaleX(1.04);opacity:1}}
+#big.d-arena .yemb{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#big.d-arena .yemb i{position:absolute;bottom:-2%;width:calc(.55*var(--u));height:calc(.55*var(--u));border-radius:50%;background:#ffd478;box-shadow:0 0 calc(.8*var(--u)) calc(.25*var(--u)) rgba(255,170,50,.85);opacity:0;animation:yember linear infinite}
+#big.d-arena .astage{position:relative;flex:1;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:calc(2.2*var(--w));padding:0 calc(1.5*var(--w));z-index:2}
+#big.d-arena .acard{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(3.2*var(--u)) calc(2*var(--w)) calc(2.4*var(--u));border-radius:calc(2.6*var(--u));background:linear-gradient(165deg,rgba(255,255,255,.13) 0%,rgba(12,16,26,.78) 48%,rgba(6,8,14,.92) 100%);border:calc(.24*var(--u)) solid color-mix(in srgb,var(--tc2,var(--tc)) 65%,#fff 35%);box-shadow:0 calc(2.5*var(--u)) calc(6*var(--u)) rgba(0,0,0,.9),0 0 calc(5*var(--u)) color-mix(in srgb,var(--tc) 75%,transparent),inset 0 calc(.25*var(--u)) calc(2*var(--u)) rgba(255,255,255,.22);backdrop-filter:blur(12px);overflow:hidden}
+#big.d-arena .acard.l{transform:perspective(calc(90*var(--u))) rotateY(7deg)}
+#big.d-arena .acard.r{transform:perspective(calc(90*var(--u))) rotateY(-7deg)}
+#big.d-arena .acard:before{content:"";position:absolute;inset:-30%;background:radial-gradient(circle at 50% 38%,var(--tc) 0%,var(--tc2,var(--tc)) 45%,transparent 70%);opacity:.75;filter:blur(calc(2.5*var(--u)));animation:yaura1 3.2s ease-in-out infinite alternate;pointer-events:none}
+#big.d-arena .acard .yaura{position:absolute;inset:-35%;background:radial-gradient(circle at 50% 38%,var(--tc2,var(--tc)) 0%,var(--tc) 48%,transparent 72%);filter:blur(calc(2.8*var(--u)));animation:yaura2 3.2s ease-in-out infinite alternate;pointer-events:none}
+#big.d-arena .acard:after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:calc(.65*var(--u));border-radius:99px;background:linear-gradient(90deg,var(--tc),var(--tc2,var(--tc)),var(--tc));box-shadow:0 0 calc(2*var(--u)) var(--tc2,var(--tc))}
+#big.d-arena .acrest{position:relative;width:calc(36*var(--u));height:calc(36*var(--u));display:grid;place-items:center;z-index:1;--ms:28}
+#big.d-arena .acrest:before{content:"";position:absolute;inset:calc(-1.5*var(--u));border-radius:50%;border:calc(.18*var(--u)) dashed rgba(255,255,255,.28);animation:spin 26s linear infinite}
+#big.d-arena .acrest .ylg,#big.d-arena .acrest .ymono{width:88%;height:88%;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.92)) drop-shadow(0 0 calc(1.5*var(--u)) rgba(255,255,255,.45))}
+#big.d-arena .apl{height:calc(40*var(--u));max-width:95%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 calc(1.4*var(--u)) calc(2.8*var(--u)) rgba(0,0,0,.92));z-index:1}
+#big.d-arena .aname{position:relative;z-index:1;margin-top:calc(1.6*var(--u));font-size:min(calc(5.6*var(--u)),calc(3.4*var(--w)));font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:#fff;text-align:center;text-shadow:0 calc(.4*var(--u)) calc(1.4*var(--u)) #000}
+#big.d-arena .aname.sm{font-size:min(calc(4.2*var(--u)),calc(2.6*var(--w)))}
+#big.d-arena .acenter{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(1.6*var(--u));z-index:3}
+#big.d-arena .agyro{position:relative;width:calc(31*var(--u));height:calc(31*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,rgba(36,44,64,.96),rgba(10,13,22,.98) 70%,#04060b 100%);border:calc(.34*var(--u)) solid rgba(255,212,120,.9);box-shadow:0 0 calc(5.5*var(--u)) rgba(255,190,75,.52),0 calc(2.2*var(--u)) calc(5*var(--u)) rgba(0,0,0,.95),inset 0 0 calc(3*var(--u)) rgba(255,255,255,.2)}
+#big.d-arena .agyro:before{content:"";position:absolute;inset:calc(-1.8*var(--u));border-radius:50%;border:calc(.22*var(--u)) solid transparent;border-top-color:#ffe49e;border-bottom-color:#ffe49e;filter:drop-shadow(0 0 calc(1*var(--u)) #ffb84d);animation:spin 14s linear infinite}
+#big.d-arena .agyro:after{content:"";position:absolute;inset:calc(-3.1*var(--u));border-radius:50%;border:1px dashed rgba(255,215,130,.42);animation:spin 24s linear infinite reverse}
+#big.d-arena .agyro .ytlg{width:82%;height:82%;object-fit:contain;filter:drop-shadow(0 calc(.8*var(--u)) calc(1.8*var(--u)) rgba(0,0,0,.92)) drop-shadow(0 0 calc(1.2*var(--u)) rgba(255,255,255,.38))}
+#big.d-arena .avs{padding:calc(.45*var(--u)) calc(2*var(--w));border-radius:99px;background:linear-gradient(135deg,#ffe8a3,#d68818 65%,#7d4503);border:calc(.2*var(--u)) solid #fff;box-shadow:0 0 calc(2.4*var(--u)) rgba(255,195,85,.75);color:#140d04;font-size:calc(2.8*var(--u));font-weight:900;font-style:italic;letter-spacing:.12em}
+#big.d-arena .ameta{display:flex;flex-direction:column;align-items:center;gap:calc(.7*var(--u));padding:calc(1.1*var(--u)) calc(2.2*var(--w));border-radius:calc(1.6*var(--u));background:rgba(8,11,18,.88);border:1px solid rgba(255,212,125,.45);box-shadow:0 calc(1.2*var(--u)) calc(3.2*var(--u)) rgba(0,0,0,.85)}
+#big.d-arena .ameta .tm{font-size:calc(6.4*var(--u));font-weight:900;line-height:1;color:#fff;text-shadow:0 0 calc(2*var(--u)) rgba(255,205,100,.45)}
+#big.d-arena .ameta .vn{font-size:calc(2.3*var(--u));font-weight:800;color:#ffe49e;letter-spacing:.05em;text-align:center}
+#big.d-arena .ylea{padding:calc(.5*var(--u)) calc(2.2*var(--w));border-radius:99px;background:rgba(10,14,24,.88);border:calc(.18*var(--u)) solid rgba(255,212,125,.65);font-size:calc(2.6*var(--u));letter-spacing:.28em;color:#ffeab3}
 /* Klasik ve Klasik (ekrana uyumlu) */
 #big .bbg{filter:drop-shadow(0 0 1.2vh rgba(255,255,255,.55)) drop-shadow(0 1vh 2.4vh rgba(0,0,0,.85))}
 #big .bk1{font-size:3vh;font-weight:900;color:#fff;text-shadow:0 .3vh 1vh #000}
@@ -640,11 +700,39 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #auth #a-code{font-size:9vh;font-weight:800;letter-spacing:.18em;font-variant-numeric:tabular-nums;color:#f3cf9e;line-height:1}
 #auth .ar p{font-size:2vh;color:#aab;line-height:1.5;margin-top:2.4vh}
 #auth .ar p b{color:#fff}
+/* ===== arka plan müzik & şu an çalıyor barı ===== */
+#music-bar{position:absolute;left:1.5vw;bottom:1.8vh;z-index:28;display:flex;align-items:center;gap:.9vw;max-width:46vw;padding:.85vh 1.25vw .85vh .9vw;border-radius:99px;background:linear-gradient(135deg,rgba(12,15,22,.92),rgba(22,26,38,.88));backdrop-filter:blur(1.2vh);border:max(1px,.14vh) solid rgba(255,255,255,.18);box-shadow:0 1.2vh 3.2vh rgba(0,0,0,.72),0 0 2vh rgba(var(--a2),.22);opacity:0;transform:translateY(1.4vh) scale(.96);pointer-events:none;cursor:pointer;transition:opacity .45s ease,transform .45s cubic-bezier(.22,1,.36,1)}
+#music-bar.on{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+#music-bar.sp{border-color:rgba(29,185,84,.55);box-shadow:0 1.2vh 3.2vh rgba(0,0,0,.75),0 0 2.2vh rgba(29,185,84,.28)}
+#music-bar.yt{border-color:rgba(255,50,70,.55);box-shadow:0 1.2vh 3.2vh rgba(0,0,0,.75),0 0 2.2vh rgba(255,50,70,.28)}
+#music-bar .mcov{width:4.4vh;height:4.4vh;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:rgba(255,255,255,.1);border:.15vh solid rgba(255,255,255,.28);font-size:2.1vh}
+#music-bar .mcov img{width:100%;height:100%;object-fit:cover;display:block;animation:spin 18s linear infinite}
+#music-bar.paused .mcov img{animation-play-state:paused}
+#music-bar .mmeta{min-width:0;display:flex;flex-direction:column;gap:.15vh}
+#music-bar .mlbl{display:flex;align-items:center;gap:.45vw;font-size:1.15vh;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--al)}
+#music-bar.sp .mlbl{color:#1ed760}
+#music-bar.yt .mlbl{color:#ff5c6c}
+#music-bar .mtit{font-size:1.95vh;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw;text-shadow:0 .2vh .6vh #000}
+#music-bar .msub{font-size:1.35vh;font-weight:600;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw}
+#music-bar .meq{display:flex;align-items:flex-end;gap:.22vw;height:2.1vh;margin-left:.2vw;flex:none}
+#music-bar .meq i{width:.24vw;min-width:2.5px;background:#1ed760;border-radius:2px;animation:meqbar .85s ease-in-out infinite alternate}
+#music-bar.yt .meq i{background:#ff4e5e}
+#music-bar.rd .meq i{background:var(--al)}
+#music-bar .meq i:nth-child(1){height:45%;animation-duration:.65s}
+#music-bar .meq i:nth-child(2){height:95%;animation-duration:.9s;animation-delay:.15s}
+#music-bar .meq i:nth-child(3){height:65%;animation-duration:.75s;animation-delay:.3s}
+#music-bar .meq i:nth-child(4){height:85%;animation-duration:1.05s;animation-delay:.1s}
+#music-bar.paused .meq i{animation:none;height:25%!important;opacity:.45}
+@keyframes meqbar{0%{height:22%}100%{height:100%}}
+#music-unlock{position:fixed;left:1.5vw;bottom:9.2vh;z-index:95;display:none;align-items:center;gap:.8vw;padding:1.2vh 1.6vw;border-radius:99px;background:linear-gradient(135deg,#e6a23c,#c97518);color:#fff;font-size:1.9vh;font-weight:800;box-shadow:0 1vh 3vh rgba(0,0,0,.8),0 0 2.5vh rgba(230,162,60,.65);border:.2vh solid #ffe3a8;cursor:pointer;animation:mpulse 1.4s ease-in-out infinite alternate}
+#music-unlock.on{display:inline-flex}
+@keyframes mpulse{from{transform:scale(1)}to{transform:scale(1.04)}}
+#music-hosts{position:fixed;left:8px;bottom:8px;width:240px;height:135px;overflow:hidden;opacity:.005;pointer-events:none;z-index:1}
 </style></head><body>
 <div id="root">
 <div id="app"></div>
 <div id="parking">
-  <div class="cell" data-w="media"><div id="stage"><div id="celeb"><div id="cflagw"><canvas id="cflag" width="270" height="180"></canvas></div><div id="cmid"><span id="ctitle"></span><p id="cquote"></p></div></div><div id="frame"><div id="bgw"><canvas id="bgc"></canvas></div><video id="v" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><video id="v2" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><img id="img" alt=""><div id="trailer"></div><div id="qr-left" class="qrc"></div><div id="qr-right" class="qrc"></div></div></div></div>
+  <div class="cell" data-w="media"><div id="stage"><div id="celeb"><div id="cflagw"><canvas id="cflag" width="270" height="180"></canvas></div><div id="cmid"><span id="ctitle"></span><p id="cquote"></p></div></div><div id="frame"><div id="bgw"><canvas id="bgc"></canvas></div><video id="v" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><video id="v2" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><img id="img" alt=""><div id="trailer"></div><div id="qr-left" class="qrc"></div><div id="qr-right" class="qrc"></div><div id="music-bar"></div></div></div></div>
   <div class="cell" data-w="logo"><div id="logo"></div></div>
   <div class="cell" data-w="info"><div id="matches"><div id="goal"></div><div id="mhead"><h2 id="mtitle">Maçlar</h2><div id="dots"></div></div><div id="mbody"><div id="list"></div><div id="traffic" class="off"><img alt=""><div id="tchip">Canlı Trafik</div><div id="tidx"></div><div id="tlegend"><span>Akıcı</span><i></i><span>Yoğun</span></div></div></div></div></div>
   <div class="cell" data-w="rates"><div id="rates"></div></div>
@@ -1212,6 +1300,7 @@ function setState(s) {
   setQr([], false); // kenar (köşe) QR'ı kaldırıldı: QR'lar artık yalnız düzendeki QR kart widget'ıyla gösterilir
   setQrTile(s.qrs);
   setMenu(s.menu);
+  setMusic(s.music);
   fillEmpty();
 }
 const tcol = v => v <= 20 ? '#3ecf4a' : v <= 40 ? '#e6c229' : v <= 60 ? '#f08a24' : '#ee3b2f';
@@ -1478,14 +1567,29 @@ function bigUnits(el) { // ek tasarımlar medya alanının boyutuna göre ölçe
   el.style.setProperty('--u', Math.min(H, W * 9 / 16) / 100 + 'px'); el.style.setProperty('--w', W / 100 + 'px');
 }
 addEventListener('resize', () => { const el = document.getElementById('big'); if (el && el.className.includes('d-')) bigUnits(el); });
-const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello'];
+const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena'];
+function teamPair(name, c1, c2, raw1, raw2) {
+  const n = String(name || '').toLocaleLowerCase('tr-TR');
+  if (n.includes('galatasaray')) return ['#c9082a', '#ffb800'];
+  if (n.includes('fenerbah')) return ['#123690', '#ffdd00'];
+  if (n.includes('beşiktaş') || n.includes('besiktas')) return ['#22252c', '#e2e8f0'];
+  if (n.includes('trabzon')) return ['#800f34', '#29a8ff'];
+  const hex = v => v && /^[0-9a-f]{6}$/i.test(String(v).replace('#', '')) ? '#' + String(v).replace('#', '') : '';
+  const p = hex(c1) || hex(raw1) || '#12307f';
+  const cands = [hex(c2), hex(raw2), hex(raw1)].filter(x => x && x.toLowerCase() !== p.toLowerCase());
+  const s = cands[0] || `color-mix(in srgb, ${p} 45%, #ffd24c 55%)`;
+  return [p, s];
+}
 function bigDesign(el, m, cfg, design, o) {
   bigUnits(el); clearInterval(big.tick);
   const up = t => String(t || '').toLocaleUpperCase('tr-TR');
   // arması yoksa takım renginde baş harfli rozet
   const ini = t => { const w = String(t || '').trim().split(/\s+/).filter(Boolean); return up(w.length > 1 ? w.slice(0, 2).map(x => x[0]).join('') : (w[0] || '?').slice(0, 3)); };
   const crest = (u, team, col) => u ? `<img class="ylg" src="${esc(u)}" alt="" referrerpolicy="no-referrer">` : `<div class="ymono" style="--tc:${esc(col)}">${esc(ini(team))}</div>`;
-  const c1 = m.hc || '#12307f', c2 = m.ac || '#2c2c30';
+  const [c1, c1b] = teamPair(m.home, m.hc, m.hc2, m.hcol, m.hcol2);
+  const [c2, c2b] = teamPair(m.away, m.ac, m.ac2, m.acol, m.acol2);
+  el.style.setProperty('--c1', c1); el.style.setProperty('--c1b', c1b);
+  el.style.setProperty('--c2', c2); el.style.setProperty('--c2b', c2b);
   const H = crest(m.hl, m.home, c1), A = crest(m.al, m.away, c2);
   const nm = (t, c = 'yname', n = 13) => `<div class="${c}${String(t).length > n ? ' sm' : ''}"${lng(t)}>${esc(t)}</div>`;
   const kick = m.derby ? 'BÜYÜK DERBİ' : 'AVRUPA GECESİ', league = up(m.league);
@@ -1505,16 +1609,37 @@ function bigDesign(el, m, cfg, design, o) {
   else if (design === 'sayac') h = `<div class="ygrid"></div><div class="ywrap">${top}`
     + `<div class="yvsrow"><div class="yt">${nm(m.home)}${H}</div><i>VS</i><div class="yt a">${A}${nm(m.away)}</div></div>`
     + `<div class="ycdw"><div class="ycd" id="ycd"></div><div class="ywhen">${esc(o.dayName)} · ${esc(o.tm)}</div></div>${end}</div>`;
-  else if (design === 'duello') {
+  else if (design === 'arena') {
+    const emb = Array.from({ length: 24 }, () => `<i style="left:${(Math.random() * 100).toFixed(1)}%;--dx:calc(${(Math.random() * 16 - 8).toFixed(1)}*var(--u));animation-duration:${(5 + Math.random() * 6).toFixed(1)}s;animation-delay:${(-Math.random() * 10).toFixed(1)}s"></i>`).join('');
+    const llogo = m.ll || ({ 'Süper Lig': '/logo/l-18.png?v=2', 'Şampiyonlar Ligi': '/logo/l-2.png?v=2', 'Şampiyonlar Ligi Eleme': '/logo/l-2.png?v=2', 'Avrupa Ligi': '/logo/l-2310.png?v=2', 'Konferans Ligi': '/logo/l-20296.png?v=2' }[m.league]) || (m.derby ? '/logo/l-18.png?v=2' : '/logo/l-2.png?v=2');
+    const card = (photo, crestHtml, name, col, col2, cls) => `<div class="acard ${cls}" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="yaura"></div>${photo ? `<img class="apl" src="${esc(photo)}" alt="">` : `<div class="acrest">${crestHtml}</div>`}${nm(name, 'aname', 13)}</div>`;
+    h = `<div class="abg"></div><div class="afloor"></div><div class="aspots"></div><div class="yemb">${emb}</div><div class="yvig"></div>`
+      + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">⚽ ${esc(league || kick)}</div></div>`
+      + `<div class="astage">${card(m.hp, H, m.home, c1, c1b, 'l')}<div class="acenter"><div class="agyro"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div><div class="avs">VS</div><div class="ameta"><div class="tm">${esc(o.tm)}</div><div class="yday">${esc(o.dayTxt)}</div>${m.venue ? `<div class="vn">🏟 ${esc(m.venue)}</div>` : ''}</div></div>${card(m.ap, A, m.away, c2, c2b, 'r')}</div>`
+      + `${end}</div>`;
+  }
+  else if (design === 'duello' || design === 'turnuva') {
     // kıvılcımlar: rastgele konum, hız ve sapma
     const emb = Array.from({ length: 28 }, () => `<i style="left:${(Math.random() * 100).toFixed(1)}%;--dx:calc(${(Math.random() * 16 - 8).toFixed(1)}*var(--u));animation-duration:${(5 + Math.random() * 6).toFixed(1)}s;animation-delay:${(-Math.random() * 10).toFixed(1)}s"></i>`).join('');
-    const side = (photo, crestHtml, col, s2) => photo ? `<img class="ypl ${s2}" src="${esc(photo)}" alt="">` : `<div class="ybigc ${s2}" style="--tc:${esc(col)}">${crestHtml}</div>`;
-    const bolt = '<svg class="ybolt" viewBox="0 0 20 28"><path d="M12 0 2 16h6l-2 12L18 10h-6l2-10z" fill="#ffcf6e"/></svg>';
+    const side = (photo, crestHtml, col, col2, s2) => photo ? `<img class="ypl ${s2}" src="${esc(photo)}" alt="">` : `<div class="ybigc ${s2}" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="yaura"></div>${crestHtml}</div>`;
     const where = [m.venue, o.tm].filter(Boolean).map((x, i) => i ? `<b>${esc(x)}</b>` : esc(x)).join(' · ');
-    h = `<div class="yglow"></div><div class="ysmk"></div><div class="ysmk b"></div><div class="ysmk c"></div><div class="yflare"></div>`
-      + side(m.hp, H, c1, 'l') + side(m.ap, A, c2, 'r') + `<div class="yemb">${emb}</div><div class="yvig"></div>`
-      + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">${esc(league || kick)}</div>${m.hp || m.ap ? `<div class="ycrests">${H}${bolt}${A}</div>` : bolt}<div class="yvenue">${where}</div></div>`
-      + `<div class="ymidd"></div><div class="ybot"><div class="ymatch"${lng(m.home + m.away)}><span>${esc(m.home)}</span><i>×</i><span>${esc(m.away)}</span></div><div class="yday">${esc(o.dayTxt)}</div></div>${end}</div>`;
+    if (design === 'turnuva') {
+      const llogo = m.ll || ({ 'Süper Lig': '/logo/l-18.png?v=2', 'Şampiyonlar Ligi': '/logo/l-2.png?v=2', 'Şampiyonlar Ligi Eleme': '/logo/l-2.png?v=2', 'Avrupa Ligi': '/logo/l-2310.png?v=2', 'Konferans Ligi': '/logo/l-20296.png?v=2' }[m.league]) || (m.derby ? '/logo/l-18.png?v=2' : '/logo/l-2.png?v=2');
+      const tstage = `<div class="ytstage"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div>`;
+      const mid = (m.hp || m.ap)
+        ? `<div class="ytmid"><div class="ytcrest" style="--tc:${esc(c1)};--tc2:${esc(c1b)}">${H}</div>${tstage}<div class="ytcrest" style="--tc:${esc(c2)};--tc2:${esc(c2b)}">${A}</div></div>`
+        : `<div class="ytmid">${tstage}</div>`;
+      h = `<div class="yglow"></div><div class="ytbeams"></div><div class="ysmk"></div><div class="ysmk b"></div><div class="ysmk c"></div>`
+        + side(m.hp, H, c1, c1b, 'l') + side(m.ap, A, c2, c2b, 'r') + mid + `<div class="yemb">${emb}</div><div class="yvig"></div>`
+        + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">⚽ ${esc(league || kick)}</div>${where ? `<div class="yvenue">${where}</div>` : ''}</div>`
+        + `<div class="ymidd"></div><div class="ybot"><div class="ymatch"${lng(m.home + m.away)}><span>${esc(m.home)}</span><i>×</i><span>${esc(m.away)}</span></div><div class="yday">${esc(o.dayTxt)}</div></div>${end}</div>`;
+    } else {
+      const bolt = '<svg class="ybolt" viewBox="0 0 20 28"><path d="M12 0 2 16h6l-2 12L18 10h-6l2-10z" fill="#ffcf6e"/></svg>';
+      h = `<div class="yglow"></div><div class="ysmk"></div><div class="ysmk b"></div><div class="ysmk c"></div><div class="yflare"></div>`
+        + side(m.hp, H, c1, c1b, 'l') + side(m.ap, A, c2, c2b, 'r') + `<div class="yemb">${emb}</div><div class="yvig"></div>`
+        + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">${esc(league || kick)}</div>${m.hp || m.ap ? `<div class="ycrests">${H}${bolt}${A}</div>` : bolt}<div class="yvenue">${where}</div></div>`
+        + `<div class="ymidd"></div><div class="ybot"><div class="ymatch"${lng(m.home + m.away)}><span>${esc(m.home)}</span><i>×</i><span>${esc(m.away)}</span></div><div class="yday">${esc(o.dayTxt)}</div></div>${end}</div>`;
+    }
   }
   else h = `<div class="ybg"></div><div class="yframe"></div><div class="ywrap"><div class="ytop">${brand}<div class="ykick">${m.derby ? kick : esc(league || kick)}</div></div>`
     + `<div class="ypost"><div class="ydisc">${H}</div><div class="ystack">${nm(m.home, 'ybig', 11)}<div class="yvsl">vs</div>${nm(m.away, 'ybig', 11)}</div><div class="ydisc">${A}</div></div>`
@@ -1534,7 +1659,7 @@ function bigDesign(el, m, cfg, design, o) {
 // Panel ön izlemesi (?bigdemo=tasarım): kart ekranda sabit kalır; yaklaşan maç yoksa örnek derbi
 function bigDemo() {
   const d = new Date(Date.now() + 2 * 864e5); d.setHours(20, 0, 0, 0);
-  const m = big.list[0] || { home: 'Galatasaray', away: 'Fenerbahçe', derby: true, league: 'Süper Lig', ts: d.getTime(), hc: '#a90432', ac: '#0d2a6e' };
+  const m = big.list[0] || { home: 'Galatasaray', away: 'Fenerbahçe', derby: true, league: 'Süper Lig', ll: '/logo/l-18.png?v=2', venue: 'RAMS Park', ts: d.getTime(), hc: '#a90432', ac: '#0d2a6e' };
   const cfg = { ...big.cfg, style: BIGDEMO, durSec: 86400 }, key = JSON.stringify([m.id || m.home, m.ts, cfg]);
   if (big.demoKey === key) return; // aynı içerikle gelen durum güncellemesi kartı baştan çizmesin
   big.demoKey = key; big.showing = false; bigShow(m, cfg);
@@ -1558,7 +1683,7 @@ function bigShow(m, cfg) {
   const sub = m.derby ? '' : `<div class="bk1">${esc((m.league || '').toLocaleUpperCase('tr-TR'))}</div>`;
   const dayTxt = days <= 0 ? 'BUGÜN' : days === 1 ? 'YARIN' : dayName;
   const design = BIG_STYLES.includes(cfg.style) ? cfg.style : 'klasik';
-  el.className = (el.classList.contains('on') ? 'on ' : '') + (design === 'klasik' ? '' : 'd-' + design); // art arda maçlarda kart sönmesin
+  el.className = (el.classList.contains('on') ? 'on ' : '') + (design === 'klasik' ? '' : (design === 'turnuva' ? 'd-duello d-turnuva' : 'd-' + design)); // art arda maçlarda kart sönmesin
   const U = n => design === 'uyum' ? `calc(${n}*var(--u))` : n + 'vh'; // satır içi ölçüler
   if (design === 'uyum') bigUnits(el);
   clearInterval(big.tick);
@@ -2034,6 +2159,7 @@ function connect() {
     else if (m.type === 'campaign') campShow(m.camp);
     else if (m.type === 'bigmatch') { if (m.force) { big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
+    else if (m.type === 'music_cmd') onMusicCmd(m);
   };
   ws.onclose = () => { if (!authFail) setTimeout(connect, 3000); };
 }
@@ -2161,6 +2287,372 @@ if (!PREVIEW && 'serviceWorker' in navigator && (location.protocol === 'https:' 
 }
 // açılışta son durumu hemen göster: internet yoksa da ekran boş kalmaz
 if (!PREVIEW && tokenGet()) { try { const last = JSON.parse(localStorage.getItem('lastState') || 'null'); if (last) setState(last); } catch (e) {} }
+
+// =====================================================================
+// Arka Plan Müzik Motoru: Spotify Connect (Web Playback SDK + Embed) + YouTube Music / YouTube + Radyo
+// =====================================================================
+const IN_IFRAME = window.top !== window.self; // Yalnızca panelin içindeki küçük önizleme kutusunda sesi kapat; /tv?preview=1 sekmesinde ses ÇALSIN!
+const MUS = {
+  cfg: null, curId: '', provider: '', playing: false, vol: 75,
+  ytApiReady: false, ytLoading: false, ytPlayer: null, ytReady: false, ytPending: null,
+  spSdkReady: false, spSdkLoading: false, spPlayer: null, spDeviceId: '', spToken: '', spConnectTrack: null,
+  spEmbedApi: null, spEmbedCtrl: null, spEmbedLoading: false,
+  radioEl: null, trackTitle: '', trackSub: '', trackThumb: '',
+  unlocked: false, needUnlock: false,
+};
+// Yedek 7/24 kesintisiz ses akışları (YouTube kısıtlaması veya Spotify токеnsız kullanımda anında ses verir)
+const FALLBACK_STREAMS = {
+  'jfKfPfyJRdk': 'https://streams.ilovemusic.de/iloveradio17.mp3',
+  'lTRiuFIWV54': 'https://streams.ilovemusic.de/iloveradio17.mp3',
+  'Dx5qFachd3A': 'https://streams.ilovemusic.de/iloveradio10.mp3',
+  '4xDzrJKXOOY': 'https://streams.ilovemusic.de/iloveradio2.mp3',
+  '5qap5aO4i9A': 'https://streams.ilovemusic.de/iloveradio16.mp3',
+  '37i9dQZF1DX4WYpdgoIcn6': 'https://streams.ilovemusic.de/iloveradio10.mp3',
+  '37i9dQZF1DX4Wsb4d7NKfP': 'https://streams.ilovemusic.de/iloveradio11.mp3',
+  '37i9dQZF1DWVqfgj8NZEp1': 'https://streams.ilovemusic.de/iloveradio17.mp3',
+  '37i9dQZF1DX76Wlfdnj7AP': 'https://streams.ilovemusic.de/iloveradio23.mp3',
+};
+function fallbackStreamFor(it) {
+  if (!it) return '';
+  if (it.streamUrl) return it.streamUrl;
+  if (it.videoId && FALLBACK_STREAMS[it.videoId]) return FALLBACK_STREAMS[it.videoId];
+  if (it.spotifyId && FALLBACK_STREAMS[it.spotifyId]) return FALLBACK_STREAMS[it.spotifyId];
+  return 'https://streams.ilovemusic.de/iloveradio10.mp3';
+}
+function ensureMusicHosts() {
+  let h = $id('music-hosts');
+  if (!h) {
+    h = document.createElement('div'); h.id = 'music-hosts';
+    h.innerHTML = '<div id="yt-music-box"></div><div id="sp-embed-box"></div><audio id="radio-audio" preload="none" crossorigin="anonymous"></audio>';
+    document.body.appendChild(h);
+  }
+  let u = $id('music-unlock');
+  if (!u) {
+    u = document.createElement('button'); u.id = 'music-unlock'; u.type = 'button';
+    u.innerHTML = '🔊 Sesi Etkinleştirmek İçin Ekrana Tıklayın';
+    u.onclick = unlockAudioNow;
+    document.body.appendChild(u);
+  }
+  return h;
+}
+function showUnlockPrompt(show) {
+  if (IN_IFRAME) return;
+  ensureMusicHosts();
+  MUS.needUnlock = !!show;
+  const u = $id('music-unlock');
+  if (u) u.classList.toggle('on', !!show);
+}
+function unlockAudioNow() {
+  MUS.unlocked = true;
+  showUnlockPrompt(false);
+  if (!MUS.cfg || !MUS.cfg.enabled || !MUS.cfg.playing) return;
+  if (MUS.ytPlayer && MUS.ytReady) {
+    try { MUS.ytPlayer.unMute(); MUS.ytPlayer.setVolume(MUS.vol); MUS.ytPlayer.playVideo(); } catch (e) {}
+  }
+  if (MUS.radioEl && MUS.radioEl.src) {
+    try { MUS.radioEl.muted = false; MUS.radioEl.volume = Math.max(0, Math.min(1, MUS.vol / 100)); MUS.radioEl.play().catch(() => {}); } catch (e) {}
+  }
+  if (MUS.spPlayer) {
+    try { if (MUS.spPlayer.activateElement) MUS.spPlayer.activateElement(); MUS.spPlayer.resume(); } catch (e) {}
+  }
+}
+['click', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => {
+  if (!MUS.unlocked || MUS.needUnlock) unlockAudioNow();
+}, { passive: true }));
+function activeMusicItem(m) {
+  if (!m || !Array.isArray(m.playlists) || !m.playlists.length) return null;
+  return m.playlists.find(x => x.id === m.activeId) || m.playlists[0];
+}
+function renderMusicBar() {
+  const bar = $id('music-bar'); if (!bar) return;
+  const m = MUS.cfg;
+  const spLive = MUS.spConnectTrack;
+  if (!spLive && (!m || !m.enabled || m.showNowPlaying === false)) { bar.className = ''; return; }
+  const it = activeMusicItem(m);
+  if (!spLive && !it) { bar.className = ''; return; }
+  const isSp = spLive || (it && it.provider === 'spotify');
+  const isYt = !isSp && it && (it.provider === 'yt' || it.provider === 'ytm');
+  const paused = spLive ? spLive.paused : !m.playing;
+  const title = spLive ? spLive.title : (MUS.trackTitle || (it && it.title) || 'Müzik');
+  const sub = spLive ? spLive.artist : (MUS.trackSub || (it && it.category) || (isSp ? 'Spotify' : it && it.provider === 'ytm' ? 'YouTube Music' : isYt ? 'YouTube Müzik' : 'Canlı Radyo'));
+  const thumb = spLive ? spLive.thumb : (MUS.trackThumb || (it && it.thumb) || '');
+  const badge = spLive ? 'SPOTIFY CONNECT · TELEFONDAN' : isSp ? 'SPOTIFY · ŞU AN ÇALIYOR' : (it && it.provider === 'ytm') ? 'YOUTUBE MUSIC · ŞU AN ÇALIYOR' : isYt ? 'YOUTUBE MÜZİK · ŞU AN ÇALIYOR' : 'RADYO · ŞU AN ÇALIYOR';
+  const ic = isSp ? '🎧' : isYt ? '▶' : '📻';
+  bar.className = 'on ' + (isSp ? 'sp' : isYt ? 'yt' : 'rd') + (paused ? ' paused' : '');
+  bar.onclick = () => { if (MUS.needUnlock) unlockAudioNow(); };
+  bar.innerHTML = `<div class="mcov">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ic}</div>`
+    + `<div class="mmeta"><div class="mlbl"><span>${badge}</span></div><div class="mtit">${esc(title)}</div><div class="msub">${esc(sub)}</div></div>`
+    + `<div class="meq"><i></i><i></i><i></i><i></i></div>`;
+}
+function stopAllMusicEngines(except) {
+  clearTimeout(MUS.ytCheckTimer);
+  if (except !== 'yt' && MUS.ytPlayer && MUS.ytReady) { try { MUS.ytPlayer.stopVideo(); } catch (e) {} }
+  if (except !== 'radio' && MUS.radioEl) { try { MUS.radioEl.pause(); MUS.radioEl.removeAttribute('src'); } catch (e) {} }
+  if (except !== 'sp_embed' && MUS.spEmbedCtrl) { try { MUS.spEmbedCtrl.pause(); } catch (e) {} }
+}
+function loadYtMusicEngine(cb) {
+  if (window.YT && window.YT.Player) { MUS.ytApiReady = true; cb(); return; }
+  MUS.ytPending = cb;
+  if (MUS.ytLoading) return;
+  MUS.ytLoading = true;
+  const prev = window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady = function () {
+    MUS.ytApiReady = true;
+    if (typeof prev === 'function') prev();
+    if (MUS.ytPending) { const fn = MUS.ytPending; MUS.ytPending = null; fn(); }
+  };
+  const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
+}
+function playYtItem(it, m) {
+  stopAllMusicEngines('yt');
+  ensureMusicHosts();
+  // jfKfPfyJRdk yayını YouTube'da gömülü oynatmaya kapalıysa lTRiuFIWV54 (Lofi Girl) kullan
+  const vid = (it.videoId === 'jfKfPfyJRdk' ? 'lTRiuFIWV54' : it.videoId) || '';
+  loadYtMusicEngine(() => {
+    const vars = { autoplay: m.playing ? 1 : 0, controls: 0, rel: 0, playsinline: 1, loop: 1, enablejsapi: 1 };
+    if (it.listId) { vars.listType = 'playlist'; vars.list = it.listId; }
+    if (!MUS.ytPlayer) {
+      MUS.ytReady = false;
+      MUS.ytPlayer = new YT.Player('yt-music-box', {
+        width: '240', height: '135',
+        videoId: vid || undefined,
+        playerVars: vars,
+        events: {
+          onReady: e => {
+            MUS.ytReady = true;
+            try {
+              const ifr = e.target.getIframe && e.target.getIframe();
+              if (ifr) ifr.setAttribute('allow', 'autoplay; encrypted-media');
+              e.target.unMute();
+              e.target.setVolume(MUS.vol);
+            } catch (x) {}
+            if (it.listId && !vid) { try { e.target.loadPlaylist({ list: it.listId, listType: 'playlist' }); } catch (x) {} }
+            if (MUS.cfg && MUS.cfg.playing) {
+              try { e.target.playVideo(); } catch (x) {}
+              checkYtStarted(it, m);
+            } else { try { e.target.pauseVideo(); } catch (x) {} }
+          },
+          onStateChange: e => {
+            if (e.data === 1) { // PLAYING
+              clearTimeout(MUS.ytCheckTimer);
+              showUnlockPrompt(false);
+              try {
+                e.target.unMute(); e.target.setVolume(MUS.vol);
+                const vd = e.target.getVideoData();
+                if (vd && vd.title) { MUS.trackTitle = vd.title; MUS.trackSub = vd.author || it.title || 'YouTube Music'; renderMusicBar(); }
+              } catch (x) {}
+            } else if (e.data === 0) { // ENDED
+              try { if (it.listId) e.target.nextVideo(); else { e.target.seekTo(0); e.target.playVideo(); } } catch (x) {}
+            }
+          },
+          onError: () => {
+            try { if (it.listId && MUS.ytPlayer) { MUS.ytPlayer.nextVideo(); return; } } catch (x) {}
+            // YouTube gömülü video kısıtlıysa kesintisiz ses akışına geç
+            const fb = fallbackStreamFor(it);
+            if (fb && MUS.cfg && MUS.cfg.playing) playRadioItem({ ...it, url: fb }, MUS.cfg);
+          }
+        }
+      });
+    } else if (MUS.ytReady) {
+      try {
+        MUS.ytPlayer.unMute();
+        MUS.ytPlayer.setVolume(MUS.vol);
+        if (it.listId) MUS.ytPlayer.loadPlaylist({ list: it.listId, listType: 'playlist' });
+        else if (vid) MUS.ytPlayer.loadVideoById(vid);
+        if (m.playing) { MUS.ytPlayer.playVideo(); checkYtStarted(it, m); }
+        else setTimeout(() => { try { MUS.ytPlayer.pauseVideo(); } catch (x) {} }, 400);
+      } catch (x) {}
+    }
+  });
+}
+function checkYtStarted(it, m) {
+  clearTimeout(MUS.ytCheckTimer);
+  MUS.ytCheckTimer = setTimeout(() => {
+    if (!MUS.cfg || !MUS.cfg.enabled || !MUS.cfg.playing) return;
+    try {
+      const st = MUS.ytPlayer && MUS.ytReady ? MUS.ytPlayer.getPlayerState() : -1;
+      if (st !== 1 && st !== 3) {
+        // Tarayıcı otomatik oynatmayı bekletiyorsa kullanıcıya tek tıkla ses açma butonu göster ve radyo motorunu da hazırla
+        if (!(navigator.userActivation && navigator.userActivation.hasBeenActive)) showUnlockPrompt(true);
+      }
+    } catch (e) {}
+  }, 2200);
+}
+function playRadioItem(it, m) {
+  stopAllMusicEngines('radio');
+  ensureMusicHosts();
+  if (!MUS.radioEl) MUS.radioEl = $id('radio-audio');
+  const streamUrl = it.url && /^https?:\/\//i.test(it.url) && !/spotify\.com|youtube\.com|youtu\.be/i.test(it.url) ? it.url : fallbackStreamFor(it);
+  if (!streamUrl) return;
+  if (MUS.radioEl.src !== streamUrl) MUS.radioEl.src = streamUrl;
+  MUS.radioEl.muted = false;
+  MUS.radioEl.volume = Math.max(0, Math.min(1, MUS.vol / 100));
+  if (m.playing) {
+    const p = MUS.radioEl.play();
+    if (p && p.then) {
+      p.then(() => showUnlockPrompt(false)).catch(() => showUnlockPrompt(true));
+    }
+  } else MUS.radioEl.pause();
+}
+function initSpotifyConnect(spCfg) {
+  if (IN_IFRAME) return;
+  const tok = spCfg && spCfg.accessToken ? spCfg.accessToken.trim() : '';
+  if (!tok) {
+    if (MUS.spPlayer) { try { MUS.spPlayer.disconnect(); } catch (e) {} MUS.spPlayer = null; MUS.spDeviceId = ''; MUS.spConnectTrack = null; }
+    MUS.spToken = '';
+    return;
+  }
+  if (tok === MUS.spToken && MUS.spPlayer) return;
+  MUS.spToken = tok;
+  const setup = () => {
+    if (MUS.spPlayer) { try { MUS.spPlayer.disconnect(); } catch (e) {} }
+    const devName = (spCfg.deviceName || ((BNAME || 'ScreenPano') + ' TV')).slice(0, 60);
+    const player = new Spotify.Player({
+      name: devName,
+      getOAuthToken: cb => cb(MUS.spToken),
+      volume: Math.max(0.05, Math.min(1, MUS.vol / 100))
+    });
+    player.addListener('ready', ({ device_id }) => {
+      MUS.spDeviceId = device_id;
+      const cur = activeMusicItem(MUS.cfg);
+      if (MUS.cfg && MUS.cfg.enabled && MUS.cfg.playing && cur && cur.provider === 'spotify') {
+        playSpotifyItem(cur, MUS.cfg);
+      }
+    });
+    player.addListener('player_state_changed', st => {
+      if (!st) { MUS.spConnectTrack = null; renderMusicBar(); return; }
+      const tr = st.track_window && st.track_window.current_track;
+      if (tr) {
+        stopAllMusicEngines('sp_connect');
+        MUS.spConnectTrack = {
+          title: tr.name || 'Spotify',
+          artist: (tr.artists || []).map(a => a.name).join(', '),
+          thumb: (tr.album && tr.album.images && tr.album.images[0] && tr.album.images[0].url) || '',
+          paused: !!st.paused
+        };
+        renderMusicBar();
+      }
+    });
+    player.connect();
+    MUS.spPlayer = player;
+  };
+  if (window.Spotify && window.Spotify.Player) { setup(); return; }
+  window.onSpotifyWebPlaybackSDKReady = setup;
+  if (!MUS.spSdkLoading) {
+    MUS.spSdkLoading = true;
+    const s = document.createElement('script'); s.src = 'https://sdk.scdn.co/spotify-player.js'; document.head.appendChild(s);
+  }
+}
+function playSpotifyItem(it, m) {
+  ensureMusicHosts();
+  const uri = `spotify:${it.spotifyType || 'playlist'}:${it.spotifyId}`;
+  // 1) Spotify Connect Web Playback SDK bağlıysa doğrudan tam şarkı/liste çal
+  if (MUS.spDeviceId && MUS.spToken) {
+    stopAllMusicEngines('sp_connect');
+    const body = (it.spotifyType === 'track') ? { uris: [uri] } : { context_uri: uri };
+    fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(MUS.spDeviceId)}`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + MUS.spToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).catch(() => {});
+    return;
+  }
+  // 2) Spotify Connect token girilmemişse: Spotify Embed tarayıcıda uzaktan otomatik sesi engellediği için
+  // kesintisiz eşdeğer radyo/müzik akışını doğrudan çal ki TV'den anında ses gelsin!
+  playRadioItem(it, m);
+}
+function syncVideoMute() {
+  const m = MUS.cfg;
+  const shouldMute = !m || m.muteVideo !== false;
+  els.forEach(v => { v.muted = shouldMute || true; });
+}
+function setMusic(m) {
+  const prev = MUS.cfg;
+  MUS.cfg = m || null;
+  if (m && typeof m.volume === 'number') MUS.vol = m.volume;
+  initSpotifyConnect(m && m.spotify);
+  syncVideoMute();
+  renderMusicBar();
+  if (IN_IFRAME) return;
+  if (!m || !m.enabled) {
+    MUS.curId = '';
+    showUnlockPrompt(false);
+    stopAllMusicEngines('');
+    if (MUS.spPlayer && !MUS.spConnectTrack) { try { MUS.spPlayer.pause(); } catch (e) {} }
+    return;
+  }
+  const it = activeMusicItem(m);
+  if (!it) { stopAllMusicEngines(''); return; }
+  const itemChanged = MUS.curId !== it.id;
+  const playChanged = !prev || prev.playing !== m.playing || prev.enabled !== m.enabled;
+  const volChanged = !prev || prev.volume !== m.volume;
+  if (volChanged) {
+    if (MUS.ytPlayer && MUS.ytReady) { try { MUS.ytPlayer.setVolume(MUS.vol); } catch (e) {} }
+    if (MUS.radioEl) MUS.radioEl.volume = Math.max(0, Math.min(1, MUS.vol / 100));
+    if (MUS.spPlayer) { try { MUS.spPlayer.setVolume(Math.max(0.01, Math.min(1, MUS.vol / 100))); } catch (e) {} }
+  }
+  if (itemChanged) {
+    MUS.curId = it.id; MUS.provider = it.provider;
+    MUS.trackTitle = it.title || ''; MUS.trackSub = it.category || ''; MUS.trackThumb = it.thumb || '';
+    renderMusicBar();
+    if (it.provider === 'yt' || it.provider === 'ytm') playYtItem(it, m);
+    else if (it.provider === 'spotify') playSpotifyItem(it, m);
+    else if (it.provider === 'radio') playRadioItem(it, m);
+  } else if (playChanged) {
+    applyMusicPlayState(m.playing);
+  }
+}
+function applyMusicPlayState(playing) {
+  if (IN_IFRAME) return;
+  if (!playing) showUnlockPrompt(false);
+  if (MUS.spConnectTrack && MUS.spPlayer) {
+    try { playing ? MUS.spPlayer.resume() : MUS.spPlayer.pause(); } catch (e) {}
+    return;
+  }
+  const it = activeMusicItem(MUS.cfg);
+  if (!it) return;
+  if (it.provider === 'yt' || it.provider === 'ytm') {
+    if (MUS.ytPlayer && MUS.ytReady) {
+      try {
+        if (playing) { MUS.ytPlayer.unMute(); MUS.ytPlayer.setVolume(MUS.vol); MUS.ytPlayer.playVideo(); checkYtStarted(it, MUS.cfg); }
+        else MUS.ytPlayer.pauseVideo();
+      } catch (e) {}
+    } else if (playing) playYtItem(it, MUS.cfg);
+  } else if (it.provider === 'spotify') {
+    if (MUS.spDeviceId && MUS.spPlayer) { try { playing ? MUS.spPlayer.resume() : MUS.spPlayer.pause(); } catch (e) {} }
+    else if (MUS.radioEl && MUS.radioEl.src) {
+      if (playing) { MUS.radioEl.play().then(() => showUnlockPrompt(false)).catch(() => showUnlockPrompt(true)); }
+      else MUS.radioEl.pause();
+    } else if (playing) playSpotifyItem(it, MUS.cfg);
+  } else if (it.provider === 'radio') {
+    if (MUS.radioEl && MUS.radioEl.src) {
+      if (playing) { MUS.radioEl.play().then(() => showUnlockPrompt(false)).catch(() => showUnlockPrompt(true)); }
+      else MUS.radioEl.pause();
+    } else if (playing) playRadioItem(it, MUS.cfg);
+  }
+  renderMusicBar();
+}
+function onMusicCmd(msg) {
+  if (msg.music) { setMusic(msg.music); }
+  if (IN_IFRAME) return;
+  const cmd = msg.cmd;
+  if (cmd === 'next' || cmd === 'prev') {
+    if (MUS.spConnectTrack && MUS.spPlayer) {
+      try { cmd === 'next' ? MUS.spPlayer.nextTrack() : MUS.spPlayer.previousTrack(); } catch (e) {}
+      return;
+    }
+    const it = activeMusicItem(MUS.cfg);
+    if (it && (it.provider === 'yt' || it.provider === 'ytm') && it.listId && MUS.ytPlayer && MUS.ytReady) {
+      try { cmd === 'next' ? MUS.ytPlayer.nextVideo() : MUS.ytPlayer.previousVideo(); return; } catch (e) {}
+    }
+    const list = (MUS.cfg && MUS.cfg.playlists) || [];
+    if (list.length > 1) {
+      const idx0 = Math.max(0, list.findIndex(x => x.id === MUS.curId));
+      const nextIt = list[(idx0 + (cmd === 'next' ? 1 : list.length - 1)) % list.length];
+      if (nextIt && MUS.cfg) { MUS.cfg.activeId = nextIt.id; setMusic(MUS.cfg); }
+    }
+  }
+}
 
 connect();
 </script></body></html>

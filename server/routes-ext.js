@@ -18,7 +18,7 @@ const { LANGS } = require('./state');
 const DAY = 86400000;
 const s = (v, n) => String(v ?? '').trim().slice(0, n);
 
-module.exports = function (r, { changed, upload, quota, ownerOnly, rmUpload, backupNow }) {
+module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpload, backupNow }) {
   const err = (res, e, code = 400) => res.status(code).json({ error: e.message || String(e) });
 
   // ================= ZAMANLAMA =================
@@ -215,6 +215,119 @@ module.exports = function (r, { changed, upload, quota, ownerOnly, rmUpload, bac
     const list = Array.isArray(b.list) ? [...new Set(b.list.filter(l => LANGS.includes(l) && l !== 'tr'))].slice(0, 3) : cur.list || [];
     req.t.db.lang = { list, sec: b.sec !== undefined ? Math.max(5, Math.min(60, Math.round(Number(b.sec)) || 12)) : cur.sec || 12 };
     changed(req.t); res.json({ ok: true });
+  });
+
+  // ================= MÜZİK (SPOTIFY & YOUTUBE MUSIC & UZAKTAN KUMANDA) =================
+  function ensureMusic(db) {
+    if (!db.music || typeof db.music !== 'object') {
+      db.music = { enabled: false, playing: true, volume: 75, muteVideo: true, showNowPlaying: true, activeId: '', playlists: [], spotify: {} };
+    }
+    if (!Array.isArray(db.music.playlists)) db.music.playlists = [];
+    if (!db.music.spotify || typeof db.music.spotify !== 'object') db.music.spotify = {};
+    return db.music;
+  }
+  function parseMusicUrl(raw) {
+    const u = String(raw || '').trim();
+    if (!u) return null;
+    // Spotify URI: spotify:playlist:37i9dQZF1DX4WYpdgoIcn6
+    const spUri = /^spotify:(playlist|album|track|artist):([a-zA-Z0-9]+)$/i.exec(u);
+    if (spUri) {
+      const spotifyType = spUri[1].toLowerCase(), spotifyId = spUri[2];
+      return { provider: 'spotify', spotifyType, spotifyId, url: `https://open.spotify.com/${spotifyType}/${spotifyId}` };
+    }
+    // Spotify Web URL: https://open.spotify.com/intl-tr/playlist/37i9dQZF1DX4WYpdgoIcn6?...
+    const spUrl = /open\.spotify\.com\/(?:intl-[a-z-]+\/)?(?:embed\/)?(playlist|album|track|artist)\/([a-zA-Z0-9]+)/i.exec(u);
+    if (spUrl) {
+      const spotifyType = spUrl[1].toLowerCase(), spotifyId = spUrl[2];
+      return { provider: 'spotify', spotifyType, spotifyId, url: `https://open.spotify.com/${spotifyType}/${spotifyId}` };
+    }
+    // YouTube / YouTube Music URL
+    if (/(?:youtube\.com|youtu\.be)/i.test(u)) {
+      let videoId = '', listId = '';
+      const lm = /[?&]list=([a-zA-Z0-9_-]+)/.exec(u);
+      if (lm) listId = lm[1];
+      const vm = /(?:[?&]v=|youtu\.be\/|youtube\.com\/(?:embed|shorts|live)\/)([a-zA-Z0-9_-]{11})/.exec(u);
+      if (vm) videoId = vm[1];
+      if (videoId || listId) {
+        const isYtm = /music\.youtube\.com/i.test(u);
+        return { provider: isYtm ? 'ytm' : 'yt', videoId, listId, url: u };
+      }
+    }
+    // Doğrudan radyo / ses akışı (MP3, AAC, M3U8, Icecast/Shoutcast)
+    if (/^https?:\/\/.+/i.test(u)) {
+      return { provider: 'radio', url: u };
+    }
+    return null;
+  }
+  async function fetchMusicMeta(parsed) {
+    try {
+      if (parsed.provider === 'spotify') {
+        const r2 = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(parsed.url)}`, { signal: AbortSignal.timeout(4000) });
+        if (r2.ok) { const j = await r2.json(); return { title: s(j.title, 90), thumb: s(j.thumbnail_url, 300) }; }
+      } else if (parsed.provider === 'yt' || parsed.provider === 'ytm') {
+        const target = parsed.videoId ? `https://www.youtube.com/watch?v=${parsed.videoId}` : `https://www.youtube.com/playlist?list=${parsed.listId}`;
+        const r2 = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(target)}&format=json`, { signal: AbortSignal.timeout(4000) });
+        if (r2.ok) { const j = await r2.json(); return { title: s(j.title, 90), thumb: s(j.thumbnail_url, 300) }; }
+      }
+    } catch (e) {}
+    return {};
+  }
+  r.put('/music', (req, res) => {
+    const m = ensureMusic(req.t.db), b = req.body || {};
+    if (typeof b.enabled === 'boolean') m.enabled = b.enabled;
+    if (typeof b.playing === 'boolean') m.playing = b.playing;
+    if (b.volume !== undefined) m.volume = Math.max(0, Math.min(100, Math.round(Number(b.volume)) || 0));
+    if (typeof b.muteVideo === 'boolean') m.muteVideo = b.muteVideo;
+    if (typeof b.showNowPlaying === 'boolean') m.showNowPlaying = b.showNowPlaying;
+    if (typeof b.activeId === 'string') m.activeId = s(b.activeId, 40);
+    if (b.spotify && typeof b.spotify === 'object') {
+      if (typeof b.spotify.clientId === 'string') m.spotify.clientId = s(b.spotify.clientId, 120);
+      if (typeof b.spotify.accessToken === 'string') { m.spotify.accessToken = s(b.spotify.accessToken, 800); m.spotify.connectedAt = b.spotify.accessToken ? Date.now() : 0; }
+      if (typeof b.spotify.refreshToken === 'string') m.spotify.refreshToken = s(b.spotify.refreshToken, 800);
+      if (b.spotify.expiresAt !== undefined) m.spotify.expiresAt = Number(b.spotify.expiresAt) || 0;
+      if (typeof b.spotify.deviceName === 'string') m.spotify.deviceName = s(b.spotify.deviceName, 60);
+    }
+    changed(req.t);
+    res.json({ ok: true, music: m });
+  });
+  r.post('/music/playlist', async (req, res) => {
+    const m = ensureMusic(req.t.db), b = req.body || {};
+    const parsed = parseMusicUrl(b.url);
+    if (!parsed) return res.status(400).json({ error: 'Geçerli bir Spotify, YouTube Music, YouTube veya Radyo bağlantısı girin' });
+    let title = s(b.title, 90), thumb = s(b.thumb, 300), category = s(b.category, 40);
+    if (!title || !thumb) {
+      const meta = await fetchMusicMeta(parsed);
+      if (!title) title = meta.title || (parsed.provider === 'spotify' ? 'Spotify Listesi' : parsed.provider === 'ytm' ? 'YouTube Music Listesi' : parsed.provider === 'yt' ? 'YouTube Müzik' : 'Canlı Radyo');
+      if (!thumb && meta.thumb) thumb = meta.thumb;
+    }
+    const item = { id: auth.uid(10), title, category: category || '', thumb: thumb || '', ...parsed, addedAt: Date.now() };
+    m.playlists.unshift(item);
+    m.playlists = m.playlists.slice(0, 50);
+    if (b.playNow || !m.activeId) { m.activeId = item.id; m.enabled = true; m.playing = true; }
+    changed(req.t);
+    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: item.id, music: m });
+    res.json({ ok: true, item, music: m });
+  });
+  r.delete('/music/playlist/:id', (req, res) => {
+    const m = ensureMusic(req.t.db);
+    m.playlists = m.playlists.filter(x => x.id !== req.params.id);
+    if (m.activeId === req.params.id) m.activeId = (m.playlists[0] && m.playlists[0].id) || '';
+    changed(req.t);
+    res.json({ ok: true, music: m });
+  });
+  r.post('/music/cmd', (req, res) => {
+    const m = ensureMusic(req.t.db), b = req.body || {}, cmd = String(b.cmd || '');
+    if (!['play', 'pause', 'toggle', 'next', 'prev', 'volume', 'select', 'enabled'].includes(cmd)) return res.status(400).json({ error: 'Geçersiz komut' });
+    if (cmd === 'play') { m.enabled = true; m.playing = true; }
+    else if (cmd === 'pause') { m.playing = false; }
+    else if (cmd === 'toggle') { m.enabled = true; m.playing = !m.playing; }
+    else if (cmd === 'enabled') { m.enabled = !!b.enabled; if (m.enabled) m.playing = true; }
+    else if (cmd === 'volume' && b.volume !== undefined) { m.volume = Math.max(0, Math.min(100, Math.round(Number(b.volume)) || 0)); }
+    else if (cmd === 'select' && typeof b.id === 'string') { m.activeId = b.id; m.enabled = true; m.playing = true; }
+    tenants.save(req.t);
+    sendTo(req.t, { type: 'music_cmd', cmd, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: m });
+    hub.pushTenant(req.t.id);
+    res.json({ ok: true, music: m });
   });
 
   // ================= KVKK: verilerim, hesap silme =================

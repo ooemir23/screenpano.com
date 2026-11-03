@@ -619,8 +619,9 @@ async function refreshMovies(force) {
 // ================= BÜYÜK MAÇ DUYURUSU =================
 const isBig4 = name => ['galatasaray', 'fenerbahce', 'besiktas', 'trabzonspor'].some(k => norm(name).includes(k));
 const BIG_LEAGUES = [['tur.1', 'Süper Lig'], ['uefa.champions', 'Şampiyonlar Ligi'], ['uefa.europa', 'Avrupa Ligi'], ['uefa.europa.conf', 'Konferans Ligi'], ['uefa.champions_qual', 'Şampiyonlar Ligi Eleme']];
+const LEAGUE_LOGOS = { 'Süper Lig': '/logo/l-18.png?v=2', 'Şampiyonlar Ligi': '/logo/l-2.png?v=2', 'Şampiyonlar Ligi Eleme': '/logo/l-2.png?v=2', 'Avrupa Ligi': '/logo/l-2310.png?v=2', 'Konferans Ligi': '/logo/l-20296.png?v=2' };
 // Büyük maç tasarımları; kaldırılan eski tasarımlar (yan, sade, skor) Klasik olarak gösterilir
-const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello'];
+const BIG_STYLES = ['klasik', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena'];
 const bigCfg = t => { const c = { enabled: true, style: 'klasik', note: 'Rezervasyon yaptırmayı unutmayın!', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''], ...(t.db.bigMatch || {}) }; if (!BIG_STYLES.includes(c.style)) c.style = 'klasik'; return c; };
 let bigMatches = cacheGet('bigmatches') || [];
 let bigError = '';
@@ -634,13 +635,15 @@ async function refreshBigMatches() {
     for (const dt of dates) try {
       const j = await (await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${dt}`)).json();
       ok++;
+      const lgs = (((j.leagues || [])[0] || {}).logos || []);
+      const ll = (lgs.find(x => (x.rel || []).includes('dark')) || lgs[0] || {}).href || LEAGUE_LOGOS[label] || null;
       for (const e of j.events || []) {
         if (e.status.type.state !== 'pre') continue;
         const c = e.competitions[0].competitors, home = c.find(x => x.homeAway === 'home'), away = c.find(x => x.homeAway === 'away');
         if (!home || !away) continue;
         const hb = isBig4(home.team.displayName), ab = isBig4(away.team.displayName), derby = code === 'tur.1' && hb && ab;
         if (!derby && (code === 'tur.1' || !(hb || ab))) continue;
-        out.push({ id: e.id, league: label, venue: ((e.competitions[0].venue || {}).fullName || '').slice(0, 60), home: trTeam(home.team.shortDisplayName || home.team.displayName), away: trTeam(away.team.shortDisplayName || away.team.displayName), ts: new Date(e.date).getTime(), hl: home.team.logo || null, al: away.team.logo || null, hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '', derby });
+        out.push({ id: e.id, league: label, ll, venue: ((e.competitions[0].venue || {}).fullName || '').slice(0, 60), home: trTeam(home.team.shortDisplayName || home.team.displayName), away: trTeam(away.team.shortDisplayName || away.team.displayName), ts: new Date(e.date).getTime(), hl: home.team.logo || null, al: away.team.logo || null, hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '', derby });
       }
     } catch (err) { bigError = err.message; console.error('Büyük maç alınamadı', code, err.message); }
   }
@@ -651,17 +654,30 @@ async function refreshBigMatches() {
   cachePut('bigmatches', bigMatches);
   hub.pushAll();
 }
-const TEAM_COLORS = { galatasaray: '#a5142a', fenerbahce: '#12307f', besiktas: '#2c2c30', trabzonspor: '#7a1236' };
+const TEAM_COLORS = { galatasaray: '#c9082a', fenerbahce: '#123690', besiktas: '#22252c', trabzonspor: '#800f34' };
+const TEAM_COLORS2 = { galatasaray: '#ffb800', fenerbahce: '#ffdd00', besiktas: '#e2e8f0', trabzonspor: '#29a8ff' };
 const lum = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return -1; const n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
 const teamColor = (name, c1, c2) => {
   const k = Object.keys(TEAM_COLORS).find(x => norm(name).includes(x)); if (k) return TEAM_COLORS[k];
-  for (const c of [c1, c2]) { const l = lum(c); if (l > 0.12 && l < 0.55) return '#' + c.replace('#', ''); }
+  for (const c of [c1, c2]) { const l = lum(c); if (l > 0.08 && l < 0.75) return '#' + c.replace('#', ''); }
   return '#2b3550';
+};
+const teamColor2 = (name, c1, c2, primary) => {
+  const k = Object.keys(TEAM_COLORS2).find(x => norm(name).includes(x)); if (k) return TEAM_COLORS2[k];
+  for (const c of [c2, c1]) {
+    if (!c) continue;
+    const hex = '#' + c.replace('#', '');
+    if (hex.toLowerCase() !== String(primary || '').toLowerCase() && lum(hex) > 0.05) return hex;
+  }
+  return primary || '#f4c04f';
 };
 const teamPhoto = (t, name) => { const p = (t.db.bigPhotos || []).find(x => norm(name).includes(x.key)); return p ? t.upBase + p.file : null; };
 const activeBig = t => {
   const now = Date.now(), lim = Math.max(1, Math.min(7, Number(bigCfg(t).days) || 3)) * 24 * HOUR;
-  return bigMatches.filter(m => m.ts > now && m.ts - now <= lim).map(m => ({ ...m, hl: localLogo(m.hl), al: localLogo(m.al), hc: teamColor(m.home, m.hcol, m.hcol2), ac: teamColor(m.away, m.acol, m.acol2), hp: teamPhoto(t, m.home), ap: teamPhoto(t, m.away) }));
+  return bigMatches.filter(m => m.ts > now && m.ts - now <= lim).map(m => {
+    const hc = teamColor(m.home, m.hcol, m.hcol2), ac = teamColor(m.away, m.acol, m.acol2);
+    return { ...m, ll: localLogo(m.ll) || LEAGUE_LOGOS[m.league] || (m.derby ? '/logo/l-18.png?v=2' : '/logo/l-2.png?v=2'), hl: localLogo(m.hl), al: localLogo(m.al), hc, ac, hc2: teamColor2(m.home, m.hcol, m.hcol2, hc), ac2: teamColor2(m.away, m.acol, m.acol2, ac), hp: teamPhoto(t, m.home), ap: teamPhoto(t, m.away) };
+  });
 };
 
 // ================= RESMÎ GÜN KUTLAMALARI =================
@@ -751,18 +767,24 @@ function maybeRenderMap() { // haritayı isteyen bir ekran bağlı değilse boş
   if ([...ids].some(id => { const t = tenants.get(id); return t && wantsTraffic(t); })) renderMap();
 }
 
-// ================= TAKIM LOGOLARI (küçük sürüm, diskte önbellekli) =================
+// ================= TAKIM VE TURNUVA LOGOLARI (küçük sürüm, diskte önbellekli) =================
 const LOGO_DIR = path.join(DATA_DIR, 'logos'); fs.mkdirSync(LOGO_DIR, { recursive: true });
-const localLogo = u => { const m = typeof u === 'string' && u.match(/teamlogos\/soccer\/500\/(\d+)\.png/); return m ? `/logo/${m[1]}.png` : u; };
+const localLogo = u => {
+  if (typeof u !== 'string') return u;
+  const tm = u.match(/teamlogos\/soccer\/500\/(\d+)\.png/);
+  if (tm) return `/logo/${tm[1]}.png?v=2`;
+  const lm = u.match(/leaguelogos\/soccer\/500(?:-dark)?\/(\d+)\.png/);
+  if (lm) return `/logo/l-${lm[1]}.png?v=2`;
+  return u;
+};
 async function makeLogo(id) {
   const out = path.join(LOGO_DIR, id + '.png');
   if (fs.existsSync(out)) return out;
-  const r = await fetch(`https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png`);
+  const isLg = String(id).startsWith('l-'), num = isLg ? String(id).slice(2) : id;
+  let r = await fetch(isLg ? `https://a.espncdn.com/i/leaguelogos/soccer/500-dark/${num}.png` : `https://a.espncdn.com/i/teamlogos/soccer/500/${num}.png`);
+  if (!r.ok && isLg) r = await fetch(`https://a.espncdn.com/i/leaguelogos/soccer/500/${num}.png`);
   if (!r.ok) throw new Error('logo yok ' + r.status);
-  const raw = path.join(LOGO_DIR, id + '.raw.png');
-  fs.writeFileSync(raw, Buffer.from(await r.arrayBuffer()));
-  try { await runFfmpeg(['-y', '-i', raw, '-vf', 'scale=128:128:force_original_aspect_ratio=decrease', '-frames:v', '1', out], 60000); fs.rmSync(raw, { force: true }); }
-  catch (e) { fs.renameSync(raw, out); }
+  fs.writeFileSync(out, Buffer.from(await r.arrayBuffer()));
   return out;
 }
 
