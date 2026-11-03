@@ -255,6 +255,11 @@ html.lite #tview{-webkit-mask-image:none;mask-image:none}
 html.lite #qr-right .lbl,html.lite #qr-left .lbl,html.lite #tchip,html.lite #tidx,html.lite #tlegend{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(20,22,24,.93)}
 html.lite .tbox .lg img,html.lite .trw .tn img{filter:none}
 html.lite #traffic::after{box-shadow:none}
+/* hafif modda pahalı gol/müzik efektleri de kapanır (zayıf TV kutularında takılma azalır) */
+html.lite #music-bar{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(12,15,22,.96)}
+html.lite #goal.in{animation:gin .7s cubic-bezier(.2,1.3,.4,1) both}
+html.lite #goal::before,html.lite #goal::after{display:none}
+html.lite #goal .ball{filter:none}
 #root{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;transform-origin:50% 50%}
 #guide{position:fixed;box-sizing:border-box;z-index:98;pointer-events:none;display:none;border:.6vh solid #7CFC00;box-shadow:0 0 0 .3vh #000,inset 0 0 0 .3vh #000}
 #guide.on{display:block}
