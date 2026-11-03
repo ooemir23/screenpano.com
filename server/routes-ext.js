@@ -224,6 +224,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     }
     if (!Array.isArray(db.music.playlists)) db.music.playlists = [];
     if (!db.music.spotify || typeof db.music.spotify !== 'object') db.music.spotify = {};
+    // Hazır "Türkçe Pop" listesi yanlış Spotify listesine gidiyordu; eklenmiş olanlar doğru listeye çevrilir
+    for (const x of db.music.playlists) if (x.spotifyId === '37i9dQZF1DX4Wsb4d7NKfP') Object.assign(x, { spotifyId: '7uGniGmKxD4fmxGJWPqZAl', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', thumb: '' });
     return db.music;
   }
   function parseMusicUrl(raw) {

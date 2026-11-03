@@ -98,6 +98,8 @@ function jumpTo(c) {
   c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
   const inp = c.querySelector('input:not([type=hidden]):not([type=checkbox]),select,textarea'); if (inp) setTimeout(() => inp.focus({ preventScroll: true }), 450);
 }
+// "…'den beri çevrimdışı" için saat (bugün değilse gün ve saat); göreli "x dk önce" diğer dillere çevrilemiyordu
+const offSince = ms => new Date(ms).toLocaleString(I18N.locale, new Date(ms).toDateString() === new Date().toDateString() ? { hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 function drawBanner() {
   const t = S.me.tenant, acc = t.access, days = acc.until ? Math.ceil((acc.until - Date.now()) / 86400000) : 0;
   let h = '';
@@ -105,7 +107,7 @@ function drawBanner() {
   if (!acc.ok) h += `<div class="bn bad"><span><b>${acc.reason === 'suspended' ? 'Hesabınız askıya alındı.' : 'Abonelik süreniz doldu.'}</b> Ekranınız şu an kapalı; paketiniz yenilenince kendiliğinden açılır.</span></div>`;
   if (S.db && S.db.deletion) h += `<div class="bn bad"><span><b>Hesap silme talebi var.</b> ${fmtDate(S.db.deletion.executeAt)} tarihinde tüm veriler kalıcı olarak silinecek.</span><a class="btn s g" href="#settings/privacy">Vazgeç</a></div>`;
   const off = S.scr && S.scr.devices.filter(d => !d.online && d.last_seen && Date.now() - d.last_seen > 10 * 60000 && Date.now() - d.last_seen < 7 * 86400000);
-  if (acc.ok && off && off.length) h += `<div class="bn trial"><span><b>${esc(off[0].name || 'TV kutusu')}</b> ${ago(off[0].last_seen)} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin.</span><a class="btn s g" href="#settings/devices">Cihazlar</a></div>`;
+  if (acc.ok && off && off.length) h += `<div class="bn trial"><span><b>${esc(off[0].name || 'TV kutusu')}</b> ${offSince(off[0].last_seen)} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin.</span><a class="btn s g" href="#settings/devices">Cihazlar</a></div>`;
   if (!acc.ok) {} else if (acc.kind === 'trial') h += `<div class="bn trial"><span>Deneme süreniz <b>${days} gün</b> sonra (${fmtDate(acc.until)}) bitiyor. Deneme boyunca tüm Pro özellikler açık.</span></div>`;
   $('banner').innerHTML = h;
 }
@@ -1184,7 +1186,7 @@ const MUSIC_PRESETS = [
   { title: 'Restoran & Smooth Jazz / Bossa Nova', category: 'Restoran & Caz', provider: 'ytm', url: 'https://music.youtube.com/watch?v=Dx5qFachd3A', desc: 'Yemek ve sohbet ortamına uygun sıcak saksafon, piyano ve Bossa Nova.' },
   { title: 'Lounge & Deep Chill Synth / House', category: 'Lounge & Bar', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Akşam saatleri, pub ve lounge mekânlar için modern atmosferik müzik.' },
   { title: 'Spotify Chill Hits · Kafe & Lounge', category: 'Kafe & Lounge', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6', desc: 'Spotify’ın en sevilen güncel sakin ve popüler mekan şarkıları listesi.' },
-  { title: 'Spotify Türkçe Pop & Güncel Hitler', category: 'Türkçe Pop', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DX4Wsb4d7NKfP', desc: 'Mekânlarda en çok dinlenen güncel Türkçe pop parçalar.' },
+  { title: 'Spotify Türkçe Pop & Güncel Hitler', category: 'Türkçe Pop', provider: 'spotify', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', desc: 'Mekânlarda en çok dinlenen güncel Türkçe pop parçalar.' },
   { title: 'Spotify Coffee Table Jazz', category: 'Kafe & Caz', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DWVqfgj8NZEp1', desc: 'Kahve dükkanları ve pastaneler için yumuşak caz klasikleri.' },
   { title: 'Spor Salonu & Yüksek Enerji (Beast Mode)', category: 'Spor & Fitness', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DX76Wlfdnj7AP', desc: 'Spor salonları ve antrenman saatleri için yüksek tempolu motivasyon listesi.' },
   { title: 'Maç Öncesi & Sosyal Mekân Ritmi', category: 'Maç Günü', provider: 'ytm', url: 'https://music.youtube.com/watch?v=5qap5aO4i9A', desc: 'Maç öncesi toplanma saatlerinde arka planda akıcı ritmik yayın.' },
@@ -1248,7 +1250,7 @@ SECTIONS.music = {
           </div>
           <div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;gap:16px">
             <label class="ckl"><input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="musicOpt({enabled:this.checked,playing:true})"> <b>TV ekranında arka plan müziği aktif</b></label>
-            <label class="ckl"><input type="checkbox" ${m.showNowPlaying !== false ? 'checked' : ''} onchange="musicOpt({showNowPlaying:this.checked})"> TV ekranının sol altında <b>"🎵 Şu An Çalıyor"</b> barını göster</label>
+            <label class="ckl"><input type="checkbox" ${m.showNowPlaying !== false ? 'checked' : ''} onchange="musicOpt({showNowPlaying:this.checked})"> <span>TV ekranının sol altında <b>"🎵 Şu An Çalıyor"</b> barını göster</span></label>
           </div>
         </div>`)
       + `<div class="grid g2">`

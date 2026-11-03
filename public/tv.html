@@ -722,6 +722,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #music-bar .meq i:nth-child(2){height:95%;animation-duration:.9s;animation-delay:.15s}
 #music-bar .meq i:nth-child(3){height:65%;animation-duration:.75s;animation-delay:.3s}
 #music-bar .meq i:nth-child(4){height:85%;animation-duration:1.05s;animation-delay:.1s}
+#music-bar.err{border-color:rgba(238,91,79,.7);box-shadow:0 1.2vh 3.2vh rgba(0,0,0,.75),0 0 2.2vh rgba(238,91,79,.35)}#music-bar.err .mlbl{color:#ff7b6e}
 #music-bar.paused .meq i{animation:none;height:25%!important;opacity:.45}
 @keyframes meqbar{0%{height:22%}100%{height:100%}}
 #music-unlock{position:fixed;left:1.5vw;bottom:9.2vh;z-index:95;display:none;align-items:center;gap:.8vw;padding:1.2vh 1.6vw;border-radius:99px;background:linear-gradient(135deg,#e6a23c,#c97518);color:#fff;font-size:1.9vh;font-weight:800;box-shadow:0 1vh 3vh rgba(0,0,0,.8),0 0 2.5vh rgba(230,162,60,.65);border:.2vh solid #ffe3a8;cursor:pointer;animation:mpulse 1.4s ease-in-out infinite alternate}
@@ -2295,28 +2296,12 @@ const MUS = {
   ytApiReady: false, ytLoading: false, ytPlayer: null, ytReady: false, ytPending: null,
   spSdkReady: false, spSdkLoading: false, spPlayer: null, spDeviceId: '', spToken: '', spConnectTrack: null,
   spEmbedApi: null, spEmbedCtrl: null, spEmbedLoading: false,
-  radioEl: null, trackTitle: '', trackSub: '', trackThumb: '',
+  radioEl: null, err: '', trackTitle: '', trackSub: '', trackThumb: '',
   unlocked: false, needUnlock: false,
 };
-// Yedek 7/24 kesintisiz ses akışları (YouTube kısıtlaması veya Spotify токеnsız kullanımda anında ses verir)
-const FALLBACK_STREAMS = {
-  'jfKfPfyJRdk': 'https://streams.ilovemusic.de/iloveradio17.mp3',
-  'lTRiuFIWV54': 'https://streams.ilovemusic.de/iloveradio17.mp3',
-  'Dx5qFachd3A': 'https://streams.ilovemusic.de/iloveradio10.mp3',
-  '4xDzrJKXOOY': 'https://streams.ilovemusic.de/iloveradio2.mp3',
-  '5qap5aO4i9A': 'https://streams.ilovemusic.de/iloveradio16.mp3',
-  '37i9dQZF1DX4WYpdgoIcn6': 'https://streams.ilovemusic.de/iloveradio10.mp3',
-  '37i9dQZF1DX4Wsb4d7NKfP': 'https://streams.ilovemusic.de/iloveradio11.mp3',
-  '37i9dQZF1DWVqfgj8NZEp1': 'https://streams.ilovemusic.de/iloveradio17.mp3',
-  '37i9dQZF1DX76Wlfdnj7AP': 'https://streams.ilovemusic.de/iloveradio23.mp3',
-};
-function fallbackStreamFor(it) {
-  if (!it) return '';
-  if (it.streamUrl) return it.streamUrl;
-  if (it.videoId && FALLBACK_STREAMS[it.videoId]) return FALLBACK_STREAMS[it.videoId];
-  if (it.spotifyId && FALLBACK_STREAMS[it.spotifyId]) return FALLBACK_STREAMS[it.spotifyId];
-  return 'https://streams.ilovemusic.de/iloveradio10.mp3';
-}
+// Çalınamayan liste başka bir yayınla değiştirilmez: ekrandaki çubukta neden çalınamadığı yazar
+function musicFail(reason) { MUS.err = reason || 'Çalınamadı'; stopAllMusicEngines(''); renderMusicBar(); }
+function musicOk() { if (MUS.err) { MUS.err = ''; renderMusicBar(); } }
 function ensureMusicHosts() {
   let h = $id('music-hosts');
   if (!h) {
@@ -2368,6 +2353,12 @@ function renderMusicBar() {
   if (!spLive && (!m || !m.enabled || m.showNowPlaying === false)) { bar.className = ''; return; }
   const it = activeMusicItem(m);
   if (!spLive && !it) { bar.className = ''; return; }
+  if (MUS.err && !spLive && m && m.enabled) { // çalınamadı: ayar kapalı olsa da görünür ki personel fark etsin
+    bar.className = 'on err paused';
+    bar.onclick = null;
+    bar.innerHTML = `<div class="mcov">⚠</div><div class="mmeta"><div class="mlbl"><span>ÇALINAMADI</span></div><div class="mtit">${esc((it && it.title) || 'Müzik')}</div><div class="msub">${esc(MUS.err)}</div></div>`;
+    return;
+  }
   const isSp = spLive || (it && it.provider === 'spotify');
   const isYt = !isSp && it && (it.provider === 'yt' || it.provider === 'ytm');
   const paused = spLive ? spLive.paused : !m.playing;
@@ -2432,7 +2423,7 @@ function playYtItem(it, m) {
           },
           onStateChange: e => {
             if (e.data === 1) { // PLAYING
-              clearTimeout(MUS.ytCheckTimer);
+              clearTimeout(MUS.ytCheckTimer); musicOk();
               showUnlockPrompt(false);
               try {
                 e.target.unMute(); e.target.setVolume(MUS.vol);
@@ -2443,11 +2434,10 @@ function playYtItem(it, m) {
               try { if (it.listId) e.target.nextVideo(); else { e.target.seekTo(0); e.target.playVideo(); } } catch (x) {}
             }
           },
-          onError: () => {
+          onError: e => {
             try { if (it.listId && MUS.ytPlayer) { MUS.ytPlayer.nextVideo(); return; } } catch (x) {}
-            // YouTube gömülü video kısıtlıysa kesintisiz ses akışına geç
-            const fb = fallbackStreamFor(it);
-            if (fb && MUS.cfg && MUS.cfg.playing) playRadioItem({ ...it, url: fb }, MUS.cfg);
+            const c = e && e.data;
+            musicFail(c === 101 || c === 150 ? 'Sahibi bu videonun başka yerlerde oynatılmasına izin vermiyor' : c === 100 ? 'Video bulunamadı ya da kaldırılmış' : 'YouTube videosu oynatılamadı');
           }
         }
       });
@@ -2480,8 +2470,9 @@ function playRadioItem(it, m) {
   stopAllMusicEngines('radio');
   ensureMusicHosts();
   if (!MUS.radioEl) MUS.radioEl = $id('radio-audio');
-  const streamUrl = it.url && /^https?:\/\//i.test(it.url) && !/spotify\.com|youtube\.com|youtu\.be/i.test(it.url) ? it.url : fallbackStreamFor(it);
-  if (!streamUrl) return;
+  const streamUrl = it.url && /^https?:\/\//i.test(it.url) && !/spotify\.com|youtube\.com|youtu\.be/i.test(it.url) ? it.url : '';
+  if (!streamUrl) return musicFail('Geçerli bir radyo yayın adresi değil');
+  if (!MUS.radioEl.__err) { MUS.radioEl.__err = 1; MUS.radioEl.addEventListener('error', () => { if (MUS.radioEl.getAttribute('src')) musicFail('Radyo yayınına ulaşılamadı'); }); MUS.radioEl.addEventListener('playing', musicOk); }
   if (MUS.radioEl.src !== streamUrl) MUS.radioEl.src = streamUrl;
   MUS.radioEl.muted = false;
   MUS.radioEl.volume = Math.max(0, Math.min(1, MUS.vol / 100));
@@ -2552,12 +2543,11 @@ function playSpotifyItem(it, m) {
       method: 'PUT',
       headers: { 'Authorization': 'Bearer ' + MUS.spToken, 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
-    }).catch(() => {});
+    }).then(r => { if (r.ok) musicOk(); else musicFail(r.status === 401 ? 'Spotify anahtarının süresi doldu; panelden yenileyin' : 'Spotify çalmayı başlatamadı (' + r.status + ')'); }).catch(() => musicFail('Spotify\'a ulaşılamadı'));
     return;
   }
-  // 2) Spotify Connect token girilmemişse: Spotify Embed tarayıcıda uzaktan otomatik sesi engellediği için
-  // kesintisiz eşdeğer radyo/müzik akışını doğrudan çal ki TV'den anında ses gelsin!
-  playRadioItem(it, m);
+  // 2) Spotify Connect bağlı değilse başka bir yayın çalınmaz; ekranda nedeni yazar
+  musicFail(MUS.spToken ? 'Spotify Connect bağlanıyor…' : 'Spotify listesi için panelden Spotify Connect bağlantısı gerekli');
 }
 function syncVideoMute() {
   const m = MUS.cfg;
@@ -2590,7 +2580,7 @@ function setMusic(m) {
     if (MUS.spPlayer) { try { MUS.spPlayer.setVolume(Math.max(0.01, Math.min(1, MUS.vol / 100))); } catch (e) {} }
   }
   if (itemChanged) {
-    MUS.curId = it.id; MUS.provider = it.provider;
+    MUS.curId = it.id; MUS.provider = it.provider; MUS.err = '';
     MUS.trackTitle = it.title || ''; MUS.trackSub = it.category || ''; MUS.trackThumb = it.thumb || '';
     renderMusicBar();
     if (it.provider === 'yt' || it.provider === 'ytm') playYtItem(it, m);
@@ -2618,10 +2608,7 @@ function applyMusicPlayState(playing) {
     } else if (playing) playYtItem(it, MUS.cfg);
   } else if (it.provider === 'spotify') {
     if (MUS.spDeviceId && MUS.spPlayer) { try { playing ? MUS.spPlayer.resume() : MUS.spPlayer.pause(); } catch (e) {} }
-    else if (MUS.radioEl && MUS.radioEl.src) {
-      if (playing) { MUS.radioEl.play().then(() => showUnlockPrompt(false)).catch(() => showUnlockPrompt(true)); }
-      else MUS.radioEl.pause();
-    } else if (playing) playSpotifyItem(it, MUS.cfg);
+    else if (playing) playSpotifyItem(it, MUS.cfg);
   } else if (it.provider === 'radio') {
     if (MUS.radioEl && MUS.radioEl.src) {
       if (playing) { MUS.radioEl.play().then(() => showUnlockPrompt(false)).catch(() => showUnlockPrompt(true)); }

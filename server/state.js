@@ -74,6 +74,12 @@ function reviewList(db) {
     .map(({ id, author, rating, text, source }) => ({ id, author, rating, text, source }));
 }
 
+// Hazır "Türkçe Pop" listesi önceden yanlış Spotify listesine gidiyordu; eklenmiş olanlar doğru listeye çevrilir
+function fixMusic(m) {
+  if (!m || !Array.isArray(m.playlists)) return m || null;
+  for (const x of m.playlists) if (x.spotifyId === '37i9dQZF1DX4Wsb4d7NKfP') Object.assign(x, { spotifyId: '7uGniGmKxD4fmxGJWPqZAl', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', thumb: '' });
+  return m;
+}
 function publicState(t) {
   const screen = require('./tenants').mainScreen(t);
   const db = t.db, p = plan(t), acc = access(t), pro = p.pro;
@@ -131,7 +137,7 @@ function publicState(t) {
     qrSize: 17, // QR boyutu ayarı kaldırıldı: tüm QR'lar aynı boyutta
     qrs: (db.qrs || []).map(({ id, label, svg, kind, text, pin, hide }) => ({ id, label, svg, pin: pin !== false, hide: Array.isArray(hide) ? hide : [], marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
     menu: pro && has('menu') ? db.menu : null,
-    music: db.music || null,
+    music: fixMusic(db.music),
     rates: F.rates,
     weather: F.weatherFor(t),
   };
