@@ -2326,7 +2326,7 @@ function ensureMusicHosts() {
   let u = $id('music-unlock');
   if (!u) {
     u = document.createElement('button'); u.id = 'music-unlock'; u.type = 'button';
-    u.innerHTML = '🔊 Sesi Etkinleştirmek İçin Ekrana Tıklayın';
+    u.innerHTML = '🔊 Sesi açmak için ekrana dokunun ya da kumandada Tamam\'a basın';
     u.onclick = unlockAudioNow;
     document.body.appendChild(u);
   }
@@ -2439,7 +2439,7 @@ function playYtItem(it, m) {
           },
           onStateChange: e => {
             if (e.data === 1) { // PLAYING
-              clearTimeout(MUS.ytCheckTimer); musicOk();
+              MUS.errRun = 0; clearTimeout(MUS.ytCheckTimer); musicOk();
               showUnlockPrompt(false);
               try {
                 e.target.unMute(); e.target.setVolume(MUS.vol);
@@ -2459,7 +2459,10 @@ function playYtItem(it, m) {
             }
           },
           onError: e => {
-            try { if (it.listId && MUS.ytPlayer) { MUS.ytPlayer.nextVideo(); return; } } catch (x) {}
+            // listede çalınamayan şarkı atlanır; art arda 8 şarkı çalınamazsa (gizli liste, gömülü oynatma kapalı) ekranda neden yazar
+            MUS.errRun = (MUS.errRun || 0) + 1;
+            try { if (it.listId && MUS.ytPlayer && MUS.errRun < 8) { MUS.ytPlayer.nextVideo(); return; } } catch (x) {}
+            if (it.listId) { musicFail('Listedeki şarkılar TV\'de oynatılamıyor: liste gizli olabilir ya da sahipleri başka yerlerde oynatmaya izin vermiyor'); return; }
             const c = e && e.data;
             musicFail(c === 101 || c === 150 ? 'Sahibi bu videonun başka yerlerde oynatılmasına izin vermiyor' : c === 100 ? 'Video bulunamadı ya da kaldırılmış' : 'YouTube videosu oynatılamadı');
           }
@@ -2483,12 +2486,9 @@ function checkYtStarted(it, m) {
     if (!MUS.cfg || !MUS.cfg.enabled || !MUS.cfg.playing) return;
     try {
       const st = MUS.ytPlayer && MUS.ytReady ? MUS.ytPlayer.getPlayerState() : -1;
-      if (st !== 1 && st !== 3) {
-        // Tarayıcı otomatik oynatmayı bekletiyorsa kullanıcıya tek tıkla ses açma butonu göster ve radyo motorunu da hazırla
-        if (!(navigator.userActivation && navigator.userActivation.hasBeenActive)) showUnlockPrompt(true);
-      }
+      if (st !== 1 && st !== 3 && !MUS.err) showUnlockPrompt(true); // çalmaya başlamadıysa (tarayıcı sesi engelledi) uyarı her durumda çıkar; çalmaya başlayınca kendiliğinden kalkar
     } catch (e) {}
-  }, 2200);
+  }, 3500);
 }
 function playRadioItem(it, m) {
   stopAllMusicEngines('radio');

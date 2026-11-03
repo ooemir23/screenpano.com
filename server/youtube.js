@@ -82,10 +82,10 @@ async function playlists(t, force) {
   const tok = await access(t), items = [];
   let page = '';
   for (let i = 0; i < 4; i++) {
-    const j = await ytGet(tok, `playlists?part=snippet,contentDetails&mine=true&maxResults=50${page ? '&pageToken=' + encodeURIComponent(page) : ''}`);
+    const j = await ytGet(tok, `playlists?part=snippet,contentDetails,status&mine=true&maxResults=50${page ? '&pageToken=' + encodeURIComponent(page) : ''}`);
     for (const p of j.items || []) {
       const th = (p.snippet && p.snippet.thumbnails) || {};
-      items.push({ id: p.id, title: ((p.snippet || {}).title || 'Liste').slice(0, 90), thumb: ((th.medium || th.high || th.default || {}).url) || '', count: ((p.contentDetails || {}).itemCount) || 0 });
+      items.push({ id: p.id, title: ((p.snippet || {}).title || 'Liste').slice(0, 90), thumb: ((th.medium || th.high || th.default || {}).url) || '', count: ((p.contentDetails || {}).itemCount) || 0, priv: ((p.status || {}).privacyStatus) === 'private' }); // gizli liste TV'de çalmaz (TV oynatıcısı giriş yapmış değil)
     }
     page = j.nextPageToken; if (!page) break;
   }

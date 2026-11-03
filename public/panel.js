@@ -1266,13 +1266,14 @@ function tile(it, onclick, extra = '') {
 function libHtml() {
   const m = musicData();
   if (!m.playlists.length) return `<div class="empty">Kütüphaneniz boş. <a href="#music/yt">YouTube hesabınızdan</a>, <a href="#music/presets">hazır listelerden</a> ya da <a href="#music/add">bağlantı yapıştırarak</a> liste ekleyin.</div>`;
-  return `<div class="mgrid">${m.playlists.map(it => tile(it, `openList('lib','${it.id}')`, it.category ? ` <small>${esc(it.category)}</small>` : '')).join('')}</div>`;
+  return `<div class="mgrid">${m.playlists.map(it => tile(it, `openList('lib','${it.id}')`, (it.category ? ` <small>${esc(it.category)}</small>` : '') + (isPriv(it.listId) ? ' <small class="privb">🔒 Gizli</small>' : ''))).join('')}</div>`;
 }
 function openList(src, id) {
   if (src === 'lib') { const it = musicData().playlists.find(x => x.id === id); if (!it) return; MV = { src, id, listId: it.listId || '', title: it.title, thumb: it.thumb, provider: it.provider, url: it.url, videoId: it.videoId || '' }; }
   else { const p = (YTACC.items || []).find(x => x.id === id); if (!p) return; MV = { src, id, listId: p.id, title: p.title, thumb: p.thumb, provider: 'ytm', url: 'https://music.youtube.com/playlist?list=' + p.id, count: p.count }; }
   render(); scrollTo(0, 0);
 }
+const isPriv = listId => !!listId && !!((YTACC.items || []).find(x => x.id === listId) || {}).priv; // gizli YouTube listesi (TV çalamaz)
 const libByList = listId => musicData().playlists.find(x => x.listId && x.listId === listId);
 
 // ---- Liste ayrıntısı ve şarkılar ----
@@ -1287,10 +1288,11 @@ function detailHtml() {
   else if (v.provider === 'spotify') body = '<div class="empty">Spotify listelerinin şarkıları Spotify hesabı bağlantısı kurulunca burada görünecek.</div>';
   else if (v.provider === 'radio') body = '<div class="empty">Canlı radyo yayını; tek bir akıştır, şarkı listesi yoktur.</div>';
   else body = '<div class="empty">Tek bir video; liste değil.</div>';
+  const privW = isPriv(v.listId) ? `<div class="bn trial" style="margin-bottom:14px"><span>Bu liste gizli: TV'deki oynatıcı sizin hesabınızla giriş yapmadığı için çalamaz. YouTube'da listeyi “Liste dışı” ya da “Herkese açık” yapın.</span></div>` : '';
   return `<a href="#" class="mback" onclick="MV=null;render();return false">← ${v.src === 'yt' ? 'YouTube listelerim' : 'Kütüphanem'}</a>
     <div class="mhead"><div class="mhead-cov">${v.thumb ? `<img src="${esc(v.thumb)}" alt="">` : `<i>${provIcon(v.provider)}</i>`}</div>
       <div class="mhead-b">${musicBadge(v.provider)}<h2>${esc(v.title)}</h2><p class="muted" id="mcount">${v.count ? `${v.count} video` : ''}</p><div class="row">${btns}</div></div></div>
-    ${card('Şarkılar', 'Bir şarkıya dokununca liste TV\'de o şarkıdan başlar.', body)}`;
+    ${privW}${card('Şarkılar', 'Bir şarkıya dokununca liste TV\'de o şarkıdan başlar.', body)}`;
 }
 async function loadTracks(listId) {
   const c = TRK.get(listId);
@@ -1323,7 +1325,12 @@ async function playTrack(i) {
 // ---- YouTube hesabım ----
 let YTACC = { st: null, items: null, err: '' };
 async function ytAccLoad(force) {
-  if (SUB.music !== 'yt' && !force) { if (!YTACC.st) { try { YTACC.st = await req('GET', '/music/google'); } catch (e) {} } return; }
+  if (SUB.music !== 'yt' && !force) {
+    if (!YTACC.st) { try { YTACC.st = await req('GET', '/music/google'); } catch (e) {} }
+    // kütüphane ve ayrıntıda gizli listeleri işaretlemek için listeler bir kez arka planda çekilir
+    if (YTACC.st && YTACC.st.connected && !YTACC.items && !YTACC.bg) { YTACC.bg = true; try { YTACC.items = (await req('GET', '/music/google/playlists')).items; render(true); } catch (e) {} }
+    return;
+  }
   try {
     YTACC.st = await req('GET', '/music/google'); YTACC.err = '';
     if (YTACC.st.connected && (force || !YTACC.items)) {
@@ -1343,7 +1350,7 @@ function ytAccDraw() {
   const head2 = `<div class="row" style="justify-content:space-between;margin-bottom:14px"><span>Bağlı hesap: <b>${esc(st.name || 'YouTube')}</b></span><div class="row"><button class="btn xs g" onclick="ytAccLoad(true)">↻ Listeleri yenile</button>${owner() ? '<button class="btn xs d" onclick="ytAccOff()">Bağlantıyı kes</button>' : ''}</div></div>`;
   if (YTACC.err) { box.innerHTML = head2 + `<div class="empty">${esc(YTACC.err)}</div>`; return; }
   const items = YTACC.items || [];
-  box.innerHTML = head2 + (items.length ? `<div class="mgrid">${items.map(p => { const lib = libByList(p.id); return tile({ ...p, id: lib ? lib.id : '', provider: 'ytm' }, `openList('yt','${esc(p.id)}')`, ` <small>${p.count} video${lib ? ' · ✓' : ''}</small>`); }).join('')}</div>` : '<div class="empty">Bu hesapta çalma listesi bulunamadı.</div>');
+  box.innerHTML = head2 + (items.length ? `<div class="mgrid">${items.map(p => { const lib = libByList(p.id); return tile({ ...p, id: lib ? lib.id : '', provider: 'ytm' }, `openList('yt','${esc(p.id)}')`, ` <small>${p.count} video${lib ? ' · ✓' : ''}</small>${p.priv ? ' <small class="privb">🔒 Gizli</small>' : ''}`); }).join('')}</div>` : '<div class="empty">Bu hesapta çalma listesi bulunamadı.</div>');
 }
 async function ytAccAdd(id, playNow) {
   const p = (YTACC.items || []).find(x => x.id === id) || (MV && MV.listId === id ? MV : null); if (!p) return;
