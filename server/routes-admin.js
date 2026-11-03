@@ -250,25 +250,39 @@ r.post('/qrs/preview', async (req, res) => {
     res.json({ svg: await QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } }) });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
+// QR kartının hangi içeriklerde gizlenebileceği ("Her zaman üstte" kapalıyken seçilir)
+const QR_HIDE = ['video', 'image', 'poster', 'trailer', 'camp', 'big', 'goal'];
+const qrHide = v => Array.isArray(v) ? QR_HIDE.filter(k => v.includes(k)) : [];
+const QR_SVG = text => QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
+// QR'ın içeriği (tür, etiket, bağlantı/Wi-Fi bilgisi) gövdeden okunur ve doğrulanır
+async function qrFields(b) {
+  const kind = b.kind === 'wifi' ? 'wifi' : 'link';
+  const label = (String(b.label || '').trim() || (kind === 'wifi' ? 'Wi-Fi Şifresi' : '')).slice(0, 40); // Wi-Fi için etiket boşsa varsayılan
+  if (!label) throw new Error('Etiket gerekli (örn. "Menü için okutun")');
+  const text = qrText({ ...b, kind });
+  if (text.length > 400) throw new Error('İçerik çok uzun');
+  return { kind, label, text, svg: await QR_SVG(text) };
+}
 r.post('/qrs', async (req, res) => {
   try {
     const db = req.t.db;
-    const label = (String(req.body.label || '').trim() || (req.body.kind === 'wifi' ? 'Wi-Fi Şifresi' : '')).slice(0, 40); // Wi-Fi için etiket boşsa varsayılan
-    if (!label) throw new Error('Etiket gerekli (örn. "Menü için okutun")');
-    const text = qrText(req.body);
-    if (text.length > 400) throw new Error('İçerik çok uzun');
-    const svg = await QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
     db.qrs = db.qrs || [];
     if (db.qrs.length >= 6) throw new Error('En fazla 6 QR kod eklenebilir');
-    db.qrs.push({ id: auth.uid(), label, kind: req.body.kind === 'wifi' ? 'wifi' : 'link', text, svg, side: req.body.side === 'left' ? 'left' : 'right' });
+    const f = await qrFields(req.body);
+    db.qrs.push({ id: auth.uid(), ...f, pin: req.body.pin !== false, hide: qrHide(req.body.hide) });
     changed(req.t); res.json({ ok: true });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
-r.patch('/qrs/:id', (req, res) => {
-  const q = (req.t.db.qrs || []).find(x => x.id === req.params.id);
-  if (!q) return res.status(404).json({ error: 'bulunamadı' });
-  if (['left', 'right'].includes(req.body.side)) q.side = req.body.side;
-  changed(req.t); res.json({ ok: true });
+r.patch('/qrs/:id', async (req, res) => {
+  try {
+    const q = (req.t.db.qrs || []).find(x => x.id === req.params.id);
+    if (!q) return res.status(404).json({ error: 'bulunamadı' });
+    const b = req.body || {};
+    if (b.kind !== undefined) Object.assign(q, await qrFields(b)); // düzenleme: içerik yeniden üretilir
+    if (typeof b.pin === 'boolean') q.pin = b.pin;
+    if (b.hide !== undefined) q.hide = qrHide(b.hide);
+    changed(req.t); res.json({ ok: true });
+  } catch (e) { res.status(400).json({ error: e.message }); }
 });
 r.delete('/qrs/:id', (req, res) => { req.t.db.qrs = (req.t.db.qrs || []).filter(x => x.id !== req.params.id); changed(req.t); res.json({ ok: true }); });
 r.put('/pharmacy', (req, res) => {

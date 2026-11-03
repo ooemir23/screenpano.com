@@ -130,7 +130,7 @@ function publicState(t) {
     safe: ['L', 'R', 'T', 'B'].reduce((o, k) => { const v = db['safe' + k]; o[k] = Math.max(0, Math.min(20, Number(v !== undefined && v !== null ? v : db.safeInset) || 0)); return o; }, {}),
     safeGuide: !!db.safeGuide,
     qrSize: Math.max(10, Math.min(30, Number(db.qrSize) || 17)),
-    qrs: (db.qrs || []).map(({ id, label, svg, side, kind, text }) => ({ id, label, svg, side: side === 'left' ? 'left' : 'right', marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
+    qrs: (db.qrs || []).map(({ id, label, svg, kind, text, pin, hide }) => ({ id, label, svg, pin: pin !== false, hide: Array.isArray(hide) ? hide : [], marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
     menu: pro && has('menu') ? db.menu : null,
     rates: F.rates,
     weather: F.weatherFor(t),

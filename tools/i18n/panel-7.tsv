@@ -47,3 +47,18 @@ QR, bilgileri yazdıkça burada oluşur ¦ The QR appears here as you type ¦ De
 Ağ adını ve şifreyi yazın, QR burada oluşur ¦ Type the network name and password; the QR appears here ¦ Netzwerkname und Passwort eingeben; der QR-Code erscheint hier ¦ اكتب اسم الشبكة وكلمة المرور ليظهر رمز QR هنا
 Bağlantıyı yazın, QR burada oluşur ¦ Type the link; the QR appears here ¦ Link eingeben; der QR-Code erscheint hier ¦ اكتب الرابط ليظهر رمز QR هنا
 Önizleme · kaydetmek için “QR ekle” ¦ Preview · press “Add QR” to save ¦ Vorschau · zum Speichern „QR hinzufügen“ ¦ معاينة · اضغط «إضافة QR» للحفظ
+QR kodlarınız Tasarım → Ekran düzeni'ndeki "QR kart" widget'ı ile gösterilir; her karta ayrı QR seçebilirsiniz. ¦ Your QR codes are shown with the "QR card" widget in Design → Screen layout; you can pick a different QR for each card. ¦ Ihre QR-Codes werden mit dem Widget „QR-Karte“ unter Design → Bildschirmlayout angezeigt; für jede Karte lässt sich ein eigener QR-Code wählen. ¦ تُعرض رموز QR عبر عنصر «بطاقة QR» في التصميم ← تخطيط الشاشة، ويمكنك اختيار رمز مختلف لكل بطاقة.
+"Her zaman üstte" açıkken QR kart ekranda sürekli en üstte durur; kapalıyken seçtiğiniz içeriklerde (video, fotoğraf…) gizlenir. ¦ With "Always on top" on, the QR card stays on top of everything on screen; when off, it is hidden during the content you choose (video, photo…). ¦ Ist „Immer im Vordergrund“ aktiv, bleibt die QR-Karte dauerhaft über allem; ist es aus, wird sie bei den gewählten Inhalten (Video, Foto …) ausgeblendet. ¦ عند تفعيل «دائمًا في الأعلى» تبقى بطاقة QR فوق كل شيء على الشاشة، وعند إيقافه تُخفى أثناء المحتوى الذي تختاره (فيديو، صورة…).
+Yeni QR ekle ¦ Add new QR ¦ Neuen QR-Code hinzufügen ¦ إضافة رمز QR جديد
+QR düzenleniyor: {} ¦ Editing QR: {} ¦ QR-Code wird bearbeitet: {} ¦ تعديل رمز QR: {}
+📌 Her zaman üstte ¦ 📌 Always on top ¦ 📌 Immer im Vordergrund ¦ 📌 دائمًا في الأعلى
+Şu içeriklerde gizle: ¦ Hide during: ¦ Ausblenden bei: ¦ إخفاء أثناء:
+Videolar ¦ Videos ¦ Videos ¦ الفيديو
+Fotoğraflar ¦ Photos ¦ Fotos ¦ الصور
+Afişler / kitaplar ¦ Posters / books ¦ Plakate / Bücher ¦ الملصقات / الكتب
+Film fragmanı ¦ Movie trailer ¦ Filmtrailer ¦ إعلان الفيلم
+Kampanya kartı ¦ Promotion card ¦ Aktionskarte ¦ بطاقة العروض
+Büyük maç kartı ¦ Big-match card ¦ Großspiel-Karte ¦ بطاقة المباراة الكبرى
+Gol bildirimi ¦ Goal alert ¦ Tormeldung ¦ إشعار الهدف
+QR boyutu (QR kartları): <0>{}</0> ¦ QR size (QR cards): <0>{}</0> ¦ QR-Größe (QR-Karten): <0>{}</0> ¦ حجم رمز QR (بطاقات QR): <0>{}</0>
+QR kaydedildi ¦ QR saved ¦ QR-Code gespeichert ¦ تم حفظ رمز QR

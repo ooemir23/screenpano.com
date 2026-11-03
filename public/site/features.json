@@ -174,7 +174,8 @@
       "points": [
         "Kaç dakikada bir, kaç saniye görüneceğini siz seçin",
         "En çok 6 QR kod; Wi‑Fi QR'ı tek dokunuşla bağlanır",
-        "Instagram paylaşımlarınız medya döngüsüne girer"
+        "Instagram paylaşımlarınız medya döngüsüne girer",
+        "QR kartı her zaman en üstte kalsın ya da video, fotoğraf gibi seçtiğiniz içeriklerde gizlensin"
       ],
       "plan": "all",
       "compare": "QR kodlar ve kampanya kartı",
@@ -192,7 +193,8 @@
           "points": [
             "You choose how often and for how long it appears",
             "Up to 6 QR codes; the Wi‑Fi code connects with one tap",
-            "Your Instagram posts join the media rotation"
+            "Your Instagram posts join the media rotation",
+            "Keep a QR card always on top, or hide it during the content you choose, such as videos or photos"
           ]
         },
         "de": {
@@ -203,7 +205,8 @@
           "points": [
             "Sie legen fest, wie oft und wie lange sie erscheint",
             "Bis zu 6 QR-Codes; der WLAN-Code verbindet mit einem Tipp",
-            "Ihre Instagram-Beiträge laufen in der Medienschleife mit"
+            "Ihre Instagram-Beiträge laufen in der Medienschleife mit",
+            "QR-Karte immer im Vordergrund halten oder bei gewählten Inhalten wie Videos oder Fotos ausblenden"
           ]
         },
         "ar": {
@@ -214,10 +217,12 @@
           "points": [
             "تحدّد عدد مرات ظهورها ومدته",
             "حتى 6 رموز QR؛ ورمز Wi‑Fi يتصل بلمسة واحدة",
-            "تنضم منشوراتك على Instagram إلى دورة العرض"
+            "تنضم منشوراتك على Instagram إلى دورة العرض",
+            "أبقِ بطاقة QR فوق كل شيء دائمًا، أو أخفها أثناء المحتوى الذي تختاره مثل الفيديو والصور"
           ]
         }
-      }
+      },
+      "added": "2026-11-03"
     },
     {
       "id": "yorum",
