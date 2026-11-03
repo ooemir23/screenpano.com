@@ -260,6 +260,8 @@ html.lite #music-bar{-webkit-backdrop-filter:none;backdrop-filter:none;backgroun
 html.lite #goal.in{animation:gin .7s cubic-bezier(.2,1.3,.4,1) both}
 html.lite #goal::before,html.lite #goal::after{display:none}
 html.lite #goal .ball{filter:none}
+/* hafif modda medya geçişleri kısa sürer: iki tam ekran katman üst üste az zaman kalır, solma ucuzlar */
+html.lite video,html.lite #img{transition-duration:.35s}
 #root{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;transform-origin:50% 50%}
 #guide{position:fixed;box-sizing:border-box;z-index:98;pointer-events:none;display:none;border:.6vh solid #7CFC00;box-shadow:0 0 0 .3vh #000,inset 0 0 0 .3vh #000}
 #guide.on{display:block}
@@ -1033,6 +1035,7 @@ function advance() {
   idx++; play();
 }
 // çapraz geçiş: yeni katman eskisinin üstünde belirir, eskisi tamamen kapanınca gizlenir (arada boşluk/ani değişim olmaz)
+// hafif modda (TV kutuları) iki tam ekran katmanın üst üste composit edildiği süre kısalır: geçiş takılması azalır
 let fadeTok = 0;
 function cleanupLayers(keep) {
   const t = fadeTok;
@@ -1041,7 +1044,7 @@ function cleanupLayers(keep) {
     const hide = e => { e.style.transition = 'none'; e.style.opacity = '0'; void e.offsetWidth; e.style.transition = ''; };
     els.forEach(e => { if (e !== keep) { hide(e); e.style.zIndex = '1'; } });
     if (keep !== img && img.style.display === 'block') { hide(img); img.style.display = 'none'; }
-  }, 1800);
+  }, window.__lite ? 500 : 1800);
 }
 function showEl(el) { img.style.zIndex = '1'; els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; }); cleanupLayers(el); }
 // sıradaki videoyu boştaki öğeye önceden yükle: geçişte boşluk ve "play" simgesi çıkmaz
@@ -1076,7 +1079,7 @@ function play() {
   if (it.type === 'image') {
     els.forEach(e => e.pause());
     const showImg = () => { els.forEach(e => e.style.zIndex = '1'); img.style.zIndex = '2'; img.style.display = 'block'; img.src = it.url; const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (current === it.id) { img.style.opacity = '1'; cleanupLayers(img); } })); if (img.decode) img.decode().then(go, go); else go(); };
-    if (img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); } // fotoğraftan fotoğrafa: önce söner, sonra yenisi belirir
+    if (img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, window.__lite ? 250 : 800); } // fotoğraftan fotoğrafa: önce söner, sonra yenisi belirir (hafif modda bekleme kısa)
     else { img.style.opacity = '0'; showImg(); }
     timer = setTimeout(next, imageSeconds * 1000);
     setTimeout(prepNext, 500);
