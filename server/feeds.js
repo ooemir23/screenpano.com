@@ -175,6 +175,7 @@ async function refreshMatches() {
             id: e.id, league: label, home: trTeam(home.team.shortDisplayName || home.team.displayName), away: trTeam(away.team.shortDisplayName || away.team.displayName),
             ts: when.getTime(), day: d >= today || st !== 'pre' ? (d > today ? 'Yarın' : 'Bugün') : 'Dün', time: hm(when),
             hl: home.team.logo || null, al: away.team.logo || null, live: st === 'in', final: st === 'post',
+            hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '',
             hs: st === 'pre' ? null : home.score, as: st === 'pre' ? null : away.score, clock: st === 'in' ? e.status.displayClock : null,
             lastGoal: (() => { const g = (e.competitions[0].details || []).filter(d => d.scoringPlay).pop(); return g ? { min: g.clock && g.clock.displayValue, player: ((g.athletesInvolved || [])[0] || {}).displayName || '', own: !!g.ownGoal, pen: !!g.penaltyKick } : null; })(),
           });
@@ -196,7 +197,8 @@ async function refreshMatches() {
     const cur = { h: +m.hs || 0, a: +m.as || 0 }, prev = prevScores.get(m.id);
     if (prev && (cur.h > prev.h || cur.a > prev.a)) {
       const g = m.lastGoal || {};
-      const goal = { at: Date.now(), id: m.id, league: m.league, home: m.home, away: m.away, hs: m.hs, as: m.as, side: cur.h > prev.h ? 'home' : 'away', minute: g.min || m.clock, player: g.player || '', own: !!g.own, pen: !!g.pen };
+      const hc = teamColor(m.home, m.hcol, m.hcol2), ac = teamColor(m.away, m.acol, m.acol2);
+      const goal = { at: Date.now(), id: m.id, league: m.league, home: m.home, away: m.away, hs: m.hs, as: m.as, side: cur.h > prev.h ? 'home' : 'away', minute: g.min || m.clock, player: g.player || '', own: !!g.own, pen: !!g.pen, hc, ac, hc2: teamColor2(m.home, m.hcol, m.hcol2, hc), ac2: teamColor2(m.away, m.acol, m.acol2, ac) };
       // gol yalnızca o ligi seçmiş Pro işletmelerin ekranlarına gider
       hub.send(t => plan(t).pro && access(t).ok && enabledLeagues(t).some(([, l]) => l === m.league), { type: 'goal', goal });
     }
