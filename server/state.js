@@ -45,7 +45,7 @@ function mediaList(t) {
     ? (() => { // her slaytta 4 kitap (2x2: kapak, ad, yazar, yayınevi, açıklama)
       const cards = bk.items.map(b => ({ title: b.title, author: b.author || '', publisher: b.publisher || '', desc: b.desc || '', image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : null }));
       const out2 = [];
-      for (let i = 0; i < cards.length; i += 4) { const pair = cards.slice(i, i + 4); out2.push({ id: 'bk' + F.coverHash(pair.map(x => x.title).join('|')), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: pair[0].title, sub: pair[0].author, note: pair[0].publisher }, books: pair, image: pair[0].image, dur: 20 }); }
+      for (let i = 0; i < cards.length; i += 4) { const pair = cards.slice(i, i + 4); out2.push({ id: 'bk' + F.coverHash(pair.map(x => x.title).join('|')), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: pair[0].title, sub: pair[0].author, note: pair[0].publisher }, books: pair, image: pair[0].image, dur: 12 }); }
       return out2;
     })() : [];
   const withBooks = list => { // her 4 içerikte bir yeni çıkan kitap kapağı

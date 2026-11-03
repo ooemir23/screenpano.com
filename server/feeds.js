@@ -470,6 +470,22 @@ async function fillDescs() {
     if (got) { cachePut('books', books); hub.pushAll(); }
   }
 }
+// Temizlik: listeden düşen kitapların kapakları 7 gün sonra diskten silinir, açıklama kayıtları 30 gün sonra
+const COVER_KEEP_MS = 7 * 24 * HOUR, DESC_KEEP_MS = 30 * 24 * HOUR;
+function pruneBooks() {
+  if (!books) return;
+  try {
+    const live = new Set(books.items.filter(b => b.image).map(b => coverHash(b.image)));
+    for (const f of fs.readdirSync(COVER_DIR)) {
+      const h = f.replace(/\.img$/, ''); if (live.has(h)) continue;
+      const p = path.join(COVER_DIR, f);
+      if (Date.now() - fs.statSync(p).mtimeMs > COVER_KEEP_MS) { fs.unlinkSync(p); coverBuf.delete(h); }
+    }
+    const urls = new Set(books.items.map(b => b.url));
+    for (const [u, c] of Object.entries(bookDesc)) if (!urls.has(u) && Date.now() - (c.at || 0) > DESC_KEEP_MS) delete bookDesc[u];
+    cachePut('bookDesc', bookDesc);
+  } catch (e) { console.error('Kitap temizliği:', e.message); }
+}
 const AUDIO = /sesli|audio|dinle|\bmp3\b|podcast/i;
 let booksRaw = '', booksSample = '';
 const DESC_KEY = /a[cç][iı]klama|desc|[oö]zet|summary|detay|konu|tan[iı]t[iı]m|about/i;
@@ -521,7 +537,7 @@ async function refreshBooks(force) {
   try {
     const items = await collectNewBooks(ck);
     books = { items, source: 'collect', v: 4, updated: new Date().toISOString() }; booksError = ''; cachePut('books', books);
-    hub.pushAll(); downloadCovers().then(fillDescs);
+    hub.pushAll(); downloadCovers().then(fillDescs).then(pruneBooks);
   } catch (e) { booksError = e.message; booksFailAt = Date.now(); console.error('Kitaplar alınamadı:', e.message); }
 }
 
