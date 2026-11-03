@@ -190,6 +190,8 @@ r.post('/pair', (req, res) => {
 });
 r.put('/devices/:id', (req, res) => { if (typeof (req.body || {}).name === 'string') store.q.deviceRename.run(req.body.name.trim().slice(0, 40), req.params.id, req.t.id); res.json({ ok: true }); });
 r.delete('/devices/:id', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); res.json({ ok: true }); });
+// TV uygulamasından uzaktan çıkış: kutu oturumunu kapatıp giriş ekranına döner (token geçersiz olur)
+r.post('/devices/:id/logout', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); res.json({ ok: true }); });
 r.post('/devices/reload', (req, res) => { sendTo(req.t, { type: 'reload' }); res.json({ ok: true }); });
 
 // ================= FİYAT TARİFESİ =================

@@ -120,6 +120,7 @@ function attention(db, t, devs) {
     out.push({ lv: 'bad', t: esc(d.name || 'TV kutusu'), s: `<span>Çevrimdışı, son görülme</span>: <span>${ago(d.last_seen)}</span>`, href: '#settings/devices' });
   if (acc.ok && acc.until && acc.until - now <= (acc.kind === 'trial' ? 3 : 7) * day)
     out.push({ lv: 'warn', t: acc.kind === 'trial' ? 'Deneme süreniz bitiyor' : 'Aboneliğiniz bitiyor', s: `<span>Bitiş tarihi</span>: ${fmtDate(acc.until)}`, href: '#settings/plan' });
+  if (!(db.notify || {}).email) out.push({ lv: 'warn', t: 'E-posta adresi eklenmemiş', s: 'Ekran durumu uyarıları (çevrimdışı, yeniden bağlandı) için bir e-posta ekleyin', href: '#settings/devices' });
   const oldM = db.videos.filter(v => !v.hidden && v.sch && v.sch.end && v.sch.end < today);
   if (oldM.length) out.push({ lv: 'warn', t: 'Süresi geçmiş medya var', s: `${oldM.length} <span>içeriğin gösterim tarihi bitti, ekranda görünmüyor</span>`, href: '#media' });
   const oldC = (db.campaigns || []).filter(c => c.enabled && c.sch && c.sch.end && c.sch.end < today);
@@ -819,7 +820,7 @@ SECTIONS.settings = {
           `<ol style="padding-left:20px;line-height:1.9;color:var(--soft);font-size:14px"><li><a href="/app.apk?name=${encodeURIComponent(S.me.tenant.name)}">Android uygulamasını (APK) indirin</a> ve kutuya kurun. Kutu yerine televizyona bağlı bir <b>Windows bilgisayar</b> kullanacaksanız <a href="/app.exe">Windows uygulamasını indirin</a>; televizyon ikinci ekransa yayın oraya açılır.</li><li>Uygulamayı açın. Ekranda giriş formu ve 6 haneli bir kod çıkar.</li><li>Kutuda kullanıcı adı ve şifrenizle giriş yapın, <b>ya da</b> kodu aşağıya yazın (TV'deki QR'ı telefonla okutursanız kendiliğinden dolar).</li></ol>
            <div class="row mt"><input type="text" id="pcode" class="code-in" inputmode="numeric" maxlength="7" placeholder="123 456" value="${window.__pair ? window.__pair.replace(/(\d{3})(\d{3})/, '$1 $2') : ''}"><button class="btn" onclick="pairTv()">Bağla</button></div>`)
         + card(`Bağlı cihazlar <span class="muted">· ${devs.length}/${lim}</span>`, 'Kutu değiştirirseniz eskisini buradan kaldırın.',
-          devs.length ? `<div class="list">${devs.map(d => `<div class="it"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b"><b>${esc(d.name || 'TV kutusu')}</b><span>${d.online ? 'Şu an bağlı' : 'Son görülme: ' + ago(d.last_seen)} · eklendi ${fmtDate(d.created)}</span></div><button class="btn xs g" onclick="renDev('${d.id}','${esc(d.name || '').replace(/'/g, '')}')">Adlandır</button><button class="btn xs d" onclick="delDev('${d.id}')">Kaldır</button></div>`).join('')}</div>
+          devs.length ? `<div class="list">${devs.map(d => `<div class="it"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b"><b>${esc(d.name || 'TV kutusu')}</b><span>${d.online ? 'Şu an bağlı' : 'Son görülme: ' + ago(d.last_seen)} · eklendi ${fmtDate(d.created)}</span></div><button class="btn xs g" onclick="renDev('${d.id}','${esc(d.name || '').replace(/'/g, '')}')">Adlandır</button><button class="btn xs g" onclick="logoutDev('${d.id}')">Çıkış yap</button><button class="btn xs d" onclick="delDev('${d.id}')">Kaldır</button></div>`).join('')}</div>
             <div class="row mt"><button class="btn g s" onclick="act('POST','/devices/reload',undefined,'Yenileme komutu gönderildi',false)">↻ Ekranı yenile</button></div>` : '<div class="empty">Henüz bağlı cihaz yok</div>')
         + `</div>` + `<div id="devstat"></div>`;
       window.__pair = null;
@@ -904,7 +905,8 @@ async function pairTv() {
   if (await act('POST', '/pair', { code }, 'Cihaz bağlandı; birkaç saniye içinde ekran açılacak', false)) setTimeout(refresh, 2500);
 }
 const renDev = (id, cur) => { const n = prompt('Cihaz adı (örn. Salon kutusu):', cur); if (n !== null) act('PUT', '/devices/' + id, { name: n }, 'Kaydedildi'); };
-const delDev = id => { if (confirm('Bu cihazın oturumu kapatılsın mı? Kutu giriş ekranına döner.')) act('DELETE', '/devices/' + id, undefined, 'Cihaz kaldırıldı'); };
+const delDev = id => { if (confirm('Bu cihaz listeden kaldırılsın mı? Kutu bağlantısını kaybeder.')) act('DELETE', '/devices/' + id, undefined, 'Cihaz kaldırıldı'); };
+const logoutDev = id => { if (confirm('TV kutusundaki uygulamadan çıkış yapılsın mı? Ekran giriş ekranına döner; yeniden bağlamak için kod ya da kullanıcı adı ve şifre gerekir.')) act('POST', '/devices/' + id + '/logout', undefined, 'Çıkış yapıldı; TV giriş ekranına döndü'); };
 async function addUser() { if (await act('POST', '/users', { username: $('u-n').value.trim(), password: $('u-p').value }, 'Kullanıcı eklendi', false)) { S.me = await req('GET', '/me'); render(true); } }
 const delUser = (id, n) => { if (confirm(`"${n}" silinsin mi?`)) act('DELETE', '/users/' + id, undefined, 'Silindi'); };
 async function changePw() { if (await act('PUT', '/password', { current: $('pw-c').value, next: $('pw-n').value }, 'Şifre değiştirildi', false)) { $('pw-c').value = $('pw-n').value = ''; } }
