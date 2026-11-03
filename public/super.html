@@ -243,7 +243,7 @@ function drawRows() {
   const list = D.tenants.filter(x => inF(x) && (!q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q))).sort(cmp);
   $('list').innerHTML = list.map(x => { const h = !x.owner && x.org ? headOf(x.org) : null; return `<tr class="click" onclick="openTenant('${x.id}')"><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : h ? T('Şube') + ' · ' + esc(h.name) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}</span></td>
     <td>${esc(planName(x))}</td><td>${stTag(x)}</td><td>${x.unlimited ? '∞' : fmt(end(x))}</td>
-    <td class="num">${x.devices} / ${x.unlimited ? '∞' : (x.deviceLimit || 1)}${x.online ? ` <span style="color:var(--ok)">● ${x.online}</span>` : ''}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
+    <td class="num">${x.devices} / ${x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1))}${x.online ? ` <span style="color:var(--ok)">● ${x.online}</span>` : ''}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
     <td onclick="event.stopPropagation()"><div class="acts"><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">İşletme yok</td></tr>';
 }
 
@@ -268,7 +268,7 @@ function openTenant(id) {
   const h = !x.owner && x.org ? headOf(x.org) : null;
   openDrawer(`<h2 style="margin-bottom:4px">${esc(x.name)}</h2><p class="hint">${stTag(x)} ${esc(planName(x))}${h ? ' · ' + T('Şube') + ' · ' + esc(h.name) : ''}</p>
   <div class="acts" style="margin-bottom:14px"><button class="btn sm" onclick="imp('${id}')">Panele gir</button><button class="btn ghost sm" onclick="ST.tid='${id}';ST.days=30;closeDrawer();go('stats');render()">İstatistikleri gör</button></div>
-  <dl class="kv" style="margin-bottom:12px"><dt>Sahip</dt><dd>${esc(x.owner || '-')}</dd><dt>E-posta</dt><dd>${esc(x.email || '-')}</dd><dt>Kayıt</dt><dd>${fmt(x.created)}</dd><dt>Son giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : '-'}</dd><dt>Cihaz</dt><dd>${x.devices} / ${x.unlimited ? '∞' : (x.deviceLimit || 1)}${x.online ? ` <span style="color:var(--ok)">● ${x.online} ${T('bağlı')}</span>` : ''}</dd><dt>Depolama</dt><dd>${x.storageMB} MB</dd>${x.consent ? `<dt>Sözleşme/KVKK onayı</dt><dd>${fmt(x.consent)}</dd>` : ''}</dl>
+  <dl class="kv" style="margin-bottom:12px"><dt>Sahip</dt><dd>${esc(x.owner || '-')}</dd><dt>E-posta</dt><dd>${esc(x.email || '-')}</dd><dt>Kayıt</dt><dd>${fmt(x.created)}</dd><dt>Son giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : '-'}</dd><dt>Cihaz</dt><dd>${x.devices} / ${x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1))}${x.online ? ` <span style="color:var(--ok)">● ${x.online} ${T('bağlı')}</span>` : ''}</dd><dt>Depolama</dt><dd>${x.storageMB} MB</dd>${x.consent ? `<dt>Sözleşme/KVKK onayı</dt><dd>${fmt(x.consent)}</dd>` : ''}</dl>
   <div class="stats" id="dstats" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px"></div>
   ${x.deletion ? `<div class="att bad"><div class="b"><b>KVKK silme talebi</b><span>${fmt(x.deletion)} tarihinde silinecek.</span></div><button class="btn ghost sm" onclick="api('DELETE','/tenants/${id}/deletion').then(()=>{closeDrawer();load()})">Talebi iptal et</button></div>` : ''}
   <h3>Düzenle</h3>
