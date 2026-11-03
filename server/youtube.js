@@ -99,6 +99,37 @@ async function disconnect(t) {
   delete t.db.ytAuth; cache.delete(t.id); tenants.save(t);
 }
 
+// Bir listedeki şarkılar (en çok 200) ve süreleri. Bağlı hesap varsa onun anahtarı (gizli listeler de açılır),
+// yoksa süper yönetimdeki YouTube API anahtarı (yalnız herkese açık listeler). 10 dk önbellek.
+const trackCache = new Map();
+const isoDur = s => { const m = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s || ''); return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0; };
+async function tracks(t, listId) {
+  if (!/^[A-Za-z0-9_-]{10,64}$/.test(listId)) throw new Error('Geçersiz liste');
+  const c = trackCache.get(listId);
+  if (c && Date.now() - c.at < 600000) return c.items;
+  const a = t.db.ytAuth, key = store.setting('youtube_api_key', '').trim();
+  let get;
+  if (a && a.refresh && !a.expired) { const tok = await access(t); get = q => ytGet(tok, q); }
+  else if (key) get = async q => { const r = await fetch('https://www.googleapis.com/youtube/v3/' + q + '&key=' + encodeURIComponent(key), { signal: AbortSignal.timeout(10000) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(((j.error || {}).message) || 'YouTube ' + r.status); return j; };
+  else { const e = new Error('Şarkıları görmek için YouTube hesabınızı bağlayın'); e.code = 'reconnect'; throw e; }
+  const items = []; let page = '';
+  for (let i = 0; i < 4; i++) {
+    const j = await get(`playlistItems?part=snippet,contentDetails&playlistId=${encodeURIComponent(listId)}&maxResults=50${page ? '&pageToken=' + encodeURIComponent(page) : ''}`);
+    for (const it of j.items || []) {
+      const sn = it.snippet || {}, vid = (it.contentDetails || {}).videoId || ((sn.resourceId || {}).videoId);
+      if (!vid || /^(Deleted|Private) video$/.test(sn.title || '')) continue;
+      const th = sn.thumbnails || {};
+      items.push({ videoId: vid, idx: Number(sn.position) || items.length, title: (sn.title || '').slice(0, 120), channel: (sn.videoOwnerChannelTitle || '').replace(/ - Topic$/, '').slice(0, 80), thumb: ((th.default || th.medium || {}).url) || '', dur: 0 });
+    }
+    page = j.nextPageToken; if (!page) break;
+  }
+  for (let i = 0; i < items.length; i += 50) { // süreler (50 videoda bir istek)
+    try { const j = await get(`videos?part=contentDetails&id=${items.slice(i, i + 50).map(x => x.videoId).join(',')}`); const d = new Map((j.items || []).map(v => [v.id, isoDur((v.contentDetails || {}).duration)])); for (const x of items.slice(i, i + 50)) x.dur = d.get(x.videoId) || 0; } catch (e) { /* süre olmadan da listelenir */ }
+  }
+  trackCache.set(listId, { at: Date.now(), items });
+  return items;
+}
+
 const status = t => { const a = t.db.ytAuth; return { configured: configured(), connected: !!(a && a.refresh && !a.expired), expired: !!(a && a.expired), name: (a && a.name) || '', at: (a && a.at) || 0 }; };
 
-module.exports = { configured, authUrl, callback, playlists, disconnect, status, redirectUri };
+module.exports = { configured, authUrl, callback, playlists, tracks, disconnect, status, redirectUri };

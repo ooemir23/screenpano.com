@@ -2302,7 +2302,19 @@ const MUS = {
   unlocked: false, needUnlock: false,
 };
 // Çalınamayan liste başka bir yayınla değiştirilmez: ekrandaki çubukta neden çalınamadığı yazar
-function musicFail(reason) { MUS.err = reason || 'Çalınamadı'; stopAllMusicEngines(''); renderMusicBar(); }
+function musicFail(reason) { MUS.err = reason || 'Çalınamadı'; stopAllMusicEngines(''); renderMusicBar(); reportNow({ playing: false }); }
+// Panele "şu an çalan" bildirimi (değişince ya da dakikada bir)
+let NOW_SIG = '', NOW_AT = 0;
+function reportNow(o = {}) {
+  if (IN_IFRAME) return;
+  const it = activeMusicItem(MUS.cfg) || {};
+  const n = { type: 'music_now', provider: it.provider || '', itemId: it.id || '', listId: it.listId || '', title: MUS.trackTitle || it.title || '', artist: MUS.trackSub || '', thumb: MUS.trackThumb || it.thumb || '', videoId: '', index: -1, playing: !!(MUS.cfg && MUS.cfg.enabled && MUS.cfg.playing), err: MUS.err || '', ...o };
+  const sig = JSON.stringify(n);
+  if (sig === NOW_SIG && Date.now() - NOW_AT < 60000) return;
+  NOW_SIG = sig; NOW_AT = Date.now();
+  try { wsSend(n); } catch (e) {}
+}
+setInterval(() => { if (MUS.cfg && MUS.cfg.enabled) { NOW_AT = 0; reportNow(JSON.parse(NOW_SIG || '{}')); } }, 60000);
 function musicOk() { if (MUS.err) { MUS.err = ''; renderMusicBar(); } }
 function ensureMusicHosts() {
   let h = $id('music-hosts');
@@ -2402,6 +2414,8 @@ function playYtItem(it, m) {
   loadYtMusicEngine(() => {
     const vars = { autoplay: m.playing ? 1 : 0, controls: 0, rel: 0, playsinline: 1, loop: 1, enablejsapi: 1 };
     if (it.listId) { vars.listType = 'playlist'; vars.list = it.listId; }
+    const st0 = it.listId && MUS.startAt ? MUS.startAt : null; MUS.startAt = null; // panelde seçilen şarkıdan başla
+    if (st0) vars.index = st0.index;
     if (!MUS.ytPlayer) {
       MUS.ytReady = false;
       MUS.ytPlayer = new YT.Player('yt-music-box', {
@@ -2417,7 +2431,7 @@ function playYtItem(it, m) {
               e.target.unMute();
               e.target.setVolume(MUS.vol);
             } catch (x) {}
-            if (it.listId && !vid) { try { e.target.loadPlaylist({ list: it.listId, listType: 'playlist' }); } catch (x) {} }
+            if (it.listId && !vid) { try { e.target.loadPlaylist({ list: it.listId, listType: 'playlist', index: st0 ? st0.index : 0 }); } catch (x) {} }
             if (MUS.cfg && MUS.cfg.playing) {
               try { e.target.playVideo(); } catch (x) {}
               checkYtStarted(it, m);
@@ -2430,8 +2444,16 @@ function playYtItem(it, m) {
               try {
                 e.target.unMute(); e.target.setVolume(MUS.vol);
                 const vd = e.target.getVideoData();
-                if (vd && vd.title) { MUS.trackTitle = vd.title; MUS.trackSub = vd.author || it.title || 'YouTube Music'; renderMusicBar(); }
+                if (vd && vd.title) {
+                  MUS.trackTitle = vd.title; MUS.trackSub = vd.author || it.title || 'YouTube Music';
+                  if (vd.video_id) MUS.trackThumb = `https://i.ytimg.com/vi/${vd.video_id}/mqdefault.jpg`;
+                  renderMusicBar();
+                  let ix = -1; try { ix = e.target.getPlaylistIndex(); } catch (x) {}
+                  reportNow({ videoId: vd.video_id || '', index: typeof ix === 'number' ? ix : -1, playing: true });
+                }
               } catch (x) {}
+            } else if (e.data === 2) { // PAUSED
+              reportNow({ ...JSON.parse(NOW_SIG || '{}'), playing: false });
             } else if (e.data === 0) { // ENDED
               try { if (it.listId) e.target.nextVideo(); else { e.target.seekTo(0); e.target.playVideo(); } } catch (x) {}
             }
@@ -2447,7 +2469,7 @@ function playYtItem(it, m) {
       try {
         MUS.ytPlayer.unMute();
         MUS.ytPlayer.setVolume(MUS.vol);
-        if (it.listId) MUS.ytPlayer.loadPlaylist({ list: it.listId, listType: 'playlist' });
+        if (it.listId) MUS.ytPlayer.loadPlaylist({ list: it.listId, listType: 'playlist', index: st0 ? st0.index : 0 });
         else if (vid) MUS.ytPlayer.loadVideoById(vid);
         if (m.playing) { MUS.ytPlayer.playVideo(); checkYtStarted(it, m); }
         else setTimeout(() => { try { MUS.ytPlayer.pauseVideo(); } catch (x) {} }, 400);
@@ -2474,7 +2496,7 @@ function playRadioItem(it, m) {
   if (!MUS.radioEl) MUS.radioEl = $id('radio-audio');
   const streamUrl = it.url && /^https?:\/\//i.test(it.url) && !/spotify\.com|youtube\.com|youtu\.be/i.test(it.url) ? it.url : '';
   if (!streamUrl) return musicFail('Geçerli bir radyo yayın adresi değil');
-  if (!MUS.radioEl.__err) { MUS.radioEl.__err = 1; MUS.radioEl.addEventListener('error', () => { if (MUS.radioEl.getAttribute('src')) musicFail('Radyo yayınına ulaşılamadı'); }); MUS.radioEl.addEventListener('playing', musicOk); }
+  if (!MUS.radioEl.__err) { MUS.radioEl.__err = 1; MUS.radioEl.addEventListener('error', () => { if (MUS.radioEl.getAttribute('src')) musicFail('Radyo yayınına ulaşılamadı'); }); MUS.radioEl.addEventListener('playing', () => { musicOk(); reportNow({ playing: true }); }); }
   if (MUS.radioEl.src !== streamUrl) MUS.radioEl.src = streamUrl;
   MUS.radioEl.muted = false;
   MUS.radioEl.volume = Math.max(0, Math.min(1, MUS.vol / 100));
@@ -2522,6 +2544,7 @@ function initSpotifyConnect(spCfg) {
           paused: !!st.paused
         };
         renderMusicBar();
+        reportNow({ provider: 'spotify', title: MUS.spConnectTrack.title, artist: MUS.spConnectTrack.artist, thumb: MUS.spConnectTrack.thumb, playing: !st.paused });
       }
     });
     player.connect();
@@ -2565,6 +2588,7 @@ function setMusic(m) {
   renderMusicBar();
   if (IN_IFRAME) return;
   if (!m || !m.enabled) {
+    if (MUS.curId) reportNow({ playing: false });
     MUS.curId = '';
     showUnlockPrompt(false);
     stopAllMusicEngines('');
@@ -2588,12 +2612,14 @@ function setMusic(m) {
     if (it.provider === 'yt' || it.provider === 'ytm') playYtItem(it, m);
     else if (it.provider === 'spotify') playSpotifyItem(it, m);
     else if (it.provider === 'radio') playRadioItem(it, m);
+    reportNow(); // panel en azından seçilen listeyi görsün; şarkı adı çalınca gelir
   } else if (playChanged) {
     applyMusicPlayState(m.playing);
   }
 }
 function applyMusicPlayState(playing) {
   if (IN_IFRAME) return;
+  setTimeout(() => reportNow({ ...JSON.parse(NOW_SIG || '{}'), type: 'music_now', playing: !!playing }), 50);
   if (!playing) showUnlockPrompt(false);
   if (MUS.spConnectTrack && MUS.spPlayer) {
     try { playing ? MUS.spPlayer.resume() : MUS.spPlayer.pause(); } catch (e) {}
@@ -2620,7 +2646,14 @@ function applyMusicPlayState(playing) {
   renderMusicBar();
 }
 function onMusicCmd(msg) {
+  if (msg.start && !IN_IFRAME) MUS.startAt = msg.start; // liste değişirse playYtItem kullanır
   if (msg.music) { setMusic(msg.music); }
+  if (MUS.startAt && !IN_IFRAME) { // aynı liste zaten çalıyorsa yalnız şarkı değişir
+    const it = activeMusicItem(MUS.cfg), st = MUS.startAt, ytList = it && it.listId && (it.provider === 'yt' || it.provider === 'ytm');
+    if (!ytList) MUS.startAt = null;
+    else if (MUS.ytPlayer && MUS.ytReady && MUS.curId === it.id) { MUS.startAt = null; try { MUS.ytPlayer.loadPlaylist({ list: it.listId, listType: 'playlist', index: st.index }); } catch (e) {} }
+    // oynatıcı henüz hazır değilse playYtItem başlangıç şarkısını kullanır
+  }
   if (IN_IFRAME) return;
   const cmd = msg.cmd;
   if (msg.rotated) return; // sunucu sıradaki listeyi zaten seçti (tüm ekranlar aynı listeye geçer)

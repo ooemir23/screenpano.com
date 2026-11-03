@@ -56,6 +56,7 @@ function onMessage(ws, raw) {
   if (m.type === 'status') require('./monitor').report(ws.tid, ws.deviceId, m);
   else if (m.type === 'play') require('./stats').play(ws.tid, String(m.id || ''), m.sec);
   else if (m.type === 'shown') require('./stats').shown(ws.tid, String(m.kind || ''));
+  else if (m.type === 'music_now') require('./musicnow').report(ws.tid, ws.deviceId, m);
   else if (m.type === 'snap' && typeof m.data === 'string' && /^data:image\/(jpeg|png);base64,/.test(m.data)) require('./monitor').snaps.set(ws.deviceId, { at: Date.now(), data: m.data });
 }
 

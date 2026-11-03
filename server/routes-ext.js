@@ -326,6 +326,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     else if (cmd === 'enabled') { m.enabled = !!b.enabled; if (m.enabled) m.playing = true; }
     else if (cmd === 'volume' && b.volume !== undefined) { m.volume = Math.max(0, Math.min(100, Math.round(Number(b.volume)) || 0)); }
     else if (cmd === 'select' && typeof b.id === 'string') { m.activeId = b.id; m.enabled = true; m.playing = true; }
+    // listede belirli şarkıdan başlat (YouTube listeleri): TV'ye bir kerelik gider, kalıcı kaydedilmez
+    const start = cmd === 'select' && (Number.isInteger(b.index) || typeof b.videoId === 'string') ? { index: Math.max(0, Math.min(500, Number(b.index) || 0)), videoId: /^[A-Za-z0-9_-]{11}$/.test(b.videoId || '') ? b.videoId : '' } : null;
     // Sonraki/önceki liste: YouTube çalma listesi ve bağlı Spotify kendi içinde şarkı atlar; diğerlerinde liste sunucuda değişir,
     // böylece seçim kalıcı olur (sonraki durum güncellemesinde eski listeye dönmez) ve tüm ekranlar aynı listeyi çalar
     let rotated = false;
@@ -335,7 +337,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
       if (!inner) { m.activeId = m.playlists[(i0 + (cmd === 'next' ? 1 : m.playlists.length - 1)) % m.playlists.length].id; rotated = true; }
     }
     tenants.save(req.t);
-    sendTo(req.t, { type: 'music_cmd', cmd, rotated, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: m });
+    sendTo(req.t, { type: 'music_cmd', cmd, rotated, start, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: m });
     hub.pushTenant(req.t.id);
     res.json({ ok: true, music: m });
   });
@@ -352,6 +354,12 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     try { res.json({ items: await yt.playlists(req.t, req.query.force === '1') }); }
     catch (e) { res.status(e.code === 'reconnect' ? 409 : 502).json({ error: e.message, reconnect: e.code === 'reconnect' }); }
   });
+  r.get('/music/tracks', async (req, res) => {
+    try { res.json({ items: await yt.tracks(req.t, String(req.query.list || '')) }); }
+    catch (e) { res.status(e.code === 'reconnect' ? 409 : 502).json({ error: e.message, reconnect: e.code === 'reconnect' }); }
+  });
+  // TV'nin bildirdiği o an çalan şarkı (panelin "Şimdi çalıyor" çubuğu için)
+  r.get('/music/now', (req, res) => { const n = require('./musicnow').get(req.t.id); res.json(n || {}); });
   r.delete('/music/google', ownerOnly, async (req, res) => { await yt.disconnect(req.t); res.json({ ok: true }); });
 
   // ================= KVKK: verilerim, hesap silme =================
