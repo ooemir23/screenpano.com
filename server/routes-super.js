@@ -57,8 +57,14 @@ r.put('/tenants/:id', (req, res) => {
   if (['trial', 'active', 'suspended'].includes(b.status)) f.status = b.status;
   if (typeof b.note === 'string') f.note = b.note.slice(0, 500);
   if (typeof b.phone === 'string') f.phone = b.phone.slice(0, 30);
-  if (b.paidUntil !== undefined) f.paid_until = b.paidUntil ? Number(b.paidUntil) : null;
-  if (b.trialUntil !== undefined) f.trial_until = b.trialUntil ? Number(b.trialUntil) : null;
+  if (b.paidUntil !== undefined) { // sayıya çevrilemeyen değer NaN yazıp süreyi sessizce silmesin
+    if (b.paidUntil && !Number.isFinite(Number(b.paidUntil))) return res.status(400).json({ error: 'Geçersiz bitiş tarihi' });
+    f.paid_until = b.paidUntil ? Number(b.paidUntil) : null;
+  }
+  if (b.trialUntil !== undefined) {
+    if (b.trialUntil && !Number.isFinite(Number(b.trialUntil))) return res.status(400).json({ error: 'Geçersiz deneme tarihi' });
+    f.trial_until = b.trialUntil ? Number(b.trialUntil) : null;
+  }
   // giriş adı (işletme sahibi): oturumlar ve TV'ler kullanıcı kimliğine bağlı olduğu için kapanmaz
   if (typeof b.username === 'string' && b.username.trim()) {
     const un = b.username.trim().toLowerCase(), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
@@ -74,7 +80,7 @@ r.put('/tenants/:id', (req, res) => {
     if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi girin' });
     t.db.notify = { offline: true, online: true, ...(t.db.notify || {}), email: em };
   }
-  if (b.extendDays) { const base = Math.max(Date.now(), t.paid_until || 0); f.paid_until = base + Math.min(3650, Number(b.extendDays)) * DAY; if (t.status !== 'suspended') f.status = 'active'; }
+  if (b.extendDays) { const ed = Number(b.extendDays); if (!Number.isFinite(ed) || ed <= 0) return res.status(400).json({ error: 'Geçersiz gün sayısı' }); const base = Math.max(Date.now(), t.paid_until || 0); f.paid_until = base + Math.min(3650, ed) * DAY; if (t.status !== 'suspended') f.status = 'active'; }
   // zincirin tüm şubelerine uygula (paket, durum, süre)
   const ids = b.applyOrg && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
   // sınırsız (kendi işletmem): süre ve limit yok; zincirde istenirse tüm şubelere

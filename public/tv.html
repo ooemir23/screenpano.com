@@ -930,7 +930,7 @@ function showTrailer(m, key) {
 function playTrailer(retry) {
   const m = trailerList[trailerIdx++ % trailerList.length];
   if (!retry) trailerFails = 0;
-  trailerOn = true; clearTimeout(timer); els.forEach(v => v.pause());
+  trailerOn = true; clearTimeout(timer); els.forEach(v => v.pause()); notePlay(null); // kesilen içeriğin süresi olduğu gibi raporlanır, fragman süresi dahil edilmez
   trailerCur = m; trailerTry = 0; wsSend({ type: 'play', id: 'tr:' + String(m.id || m.title || 'x').replace(/[^\w-]/g, '').slice(0, 40) });
   showTrailer(m, (m.alts && m.alts[0]) || m.trailer);
 }
@@ -1024,7 +1024,7 @@ setInterval(() => {
 }, 250);
 els.forEach(e => {
   e.addEventListener('ended', () => { if (e === curV()) { clearTimeout(timer); timer = setTimeout(next, 2000); } }); // video bitince son karede 2 sn bekle
-  e.addEventListener('error', () => { if (e === curV()) { clearTimeout(timer); timer = setTimeout(next, 2000); } });
+  e.addEventListener('error', () => { if (e === curV()) { clearTimeout(timer); timer = setTimeout(next, 2000); } else prepared = { id: null }; }); // önceden yüklenen öğe hata verdiyse işaret düşer, sıradaki geçiş taze yükler
 });
 
 // Türkçe olmayan adlar (Liverpool) büyük harfe çevrilirken İ'ye dönmesin: lang=en verilir
@@ -1398,7 +1398,7 @@ function setState(s) {
   setRates(s.rates);
   if (s.weather) setWeather(s.weather);
   setTicker(s.matches);
-  if (window.__N && !window.__N.desktop) { /* APK içinde: İBB verisini uygulama doğrudan verir */ } else if (s.trafficApi) pollTraffic(s.trafficApi); else { trafficUrl = ''; dbg(['trafficApi: YOK (sunucu durumunda adres boş)']); }
+  if (window.__N && !window.__N.desktop) { /* APK içinde: İBB verisini uygulama doğrudan verir */ } else if (s.trafficApi) pollTraffic(s.trafficApi); else { trafficUrl = ''; clearTimeout(trafficTimer); trafficTimer = null; dbg(['trafficApi: YOK (sunucu durumunda adres boş)']); }
   serverTraffic = s.traffic ? { ...s.traffic, at: s.traffic.at || Date.parse(s.traffic.updated) } : null;
   applyServerTraffic();
   setReviews(s.reviews);
@@ -1832,14 +1832,14 @@ setInterval(() => {
   if (big.showing || big.due || camp.showing || trailerOn || !big.list.length || (window.__celeb && document.querySelector('#cphoto.on'))) return;
   const gap = (big.cfg.everyMin || 6) * 60000;
   if (Date.now() - (big.last || big.started - gap + 60000) >= gap) { // medya bitince gösterilir; tek/boş listede döngü bitmeyeceği için hemen
-    if (videos.length > 1) big.due = true; else { big.queue = big.list.slice(1); bigShow(big.list[0]); }
+    if (videos.length > 1 && MEDIA_ON) big.due = true; else { big.queue = big.list.slice(1); bigShow(big.list[0]); } // medya oynatıcısı yoksa due asla tüketilmez: hemen göster
   } // ilk gösterim açılıştan ~1 dk sonra; birden fazla maç varsa hepsi peş peşe, sırayla
 }, 5000);
 setInterval(() => {
   if (camp.showing || camp.due || !camp.list.length || (window.__celeb && document.querySelector('#cphoto.on'))) return;
   for (const c of camp.list.filter(c => schedOk(c.sch))) {
     const since = Date.now() - (camp.last[c.id] || camp.started - (c.everyMin || 3) * 60000 + 25000); // ilk gösterim açılıştan ~25 sn sonra
-    if (since >= (c.everyMin || 3) * 60000) { if (videos.length > 1) camp.due = c; else campShow(c); break; } // medya bitince gösterilir (tek/boş listede hemen)
+    if (since >= (c.everyMin || 3) * 60000) { if (videos.length > 1 && MEDIA_ON) camp.due = c; else campShow(c); break; } // medya bitince gösterilir (medya yoksa ya da tek/boş listede hemen)
   }
 }, 5000);
 // ---- kumanda Menü tuşu: sürüm bilgisi ve güncelleme kontrolü (güncelleme bildirimi de burada) ----
@@ -2448,7 +2448,7 @@ function nextLang() { LANG_I = (LANG_I + 1) % LANGS.length; LANG = LANGS[LANG_I]
 function applyLang() {
   renderText();
   if (menuW.data) { const keep = menuW.idx; renderMenuW(false); menuW.idx = keep; }
-  if (posterCur) { posterEl.innerHTML = SPPoster.html(posterCur, LANG); SPPoster.fit(posterEl.firstChild); }
+  if (posterCur && window.SPPoster) { posterEl.innerHTML = SPPoster.html(posterCur, LANG); SPPoster.fit(posterEl.firstChild); }
   let chip = $id('langchip'); const box = $id('wmenu');
   if (LANGS.length > 1 && box) { if (!chip) { chip = document.createElement('span'); chip.id = 'langchip'; box.appendChild(chip); } chip.textContent = LANG.toUpperCase(); }
   else if (chip) chip.remove();
@@ -2682,9 +2682,10 @@ function playYtItem(it, m) {
     };
     if (!MUS.ytPlayer) {
       MUS.ytReady = false;
+      // videoId anahtarı boşken HİÇ verilmez: YT API'si anahtarı var ama değeri undefined olan videoId'ye "Invalid video id" der
       MUS.ytPlayer = new YT.Player('yt-music-box', {
         width: '240', height: '135',
-        videoId: vid || undefined,
+        ...(vid ? { videoId: vid } : {}),
         playerVars: vars,
         events: {
           onReady: e => {
@@ -2876,7 +2877,7 @@ function playSpotifyItem(it, m) {
 function syncVideoMute() {
   const m = MUS.cfg;
   const shouldMute = !m || m.muteVideo !== false;
-  els.forEach(v => { v.muted = shouldMute || true; });
+  els.forEach(v => { v.muted = shouldMute; });
 }
 function setMusic(m) {
   const prev = MUS.cfg;

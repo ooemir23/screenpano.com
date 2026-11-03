@@ -6,6 +6,7 @@ const QRCode = require('qrcode');
 const config = require('./config');
 const tenants = require('./tenants');
 const stats = require('./stats');
+const { clientIp } = require('./auth');
 
 const svgOf = text => QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
 const isUrl = t => /^https?:\/\/\S+$/i.test(String(t || ''));
@@ -69,7 +70,8 @@ async function migrate() {
 const BOT = /bot|crawl|spider|preview|facebookexternalhit|whatsapp|telegram|slack|discord|curl|wget|python|headless|monitor|uptime/i;
 const recent = new Map();
 function dupe(req, code) {
-  const k = crypto.createHash('sha1').update(`${req.ip}|${req.headers['user-agent'] || ''}|${code}`).digest('hex').slice(0, 16), now = Date.now();
+  // clientIp (son XFF) kullanılır: req.ip trust proxy ile soldaki, istemcinin uydurabildiği değerdir
+  const k = crypto.createHash('sha1').update(`${clientIp(req)}|${req.headers['user-agent'] || ''}|${code}`).digest('hex').slice(0, 16), now = Date.now();
   if (recent.size > 5000) for (const [x, at] of recent) if (now - at > 60000) recent.delete(x);
   const last = recent.get(k); recent.set(k, now);
   return !!last && now - last < 30000;

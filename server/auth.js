@@ -44,7 +44,10 @@ function parseCookies(req) {
   const out = {};
   for (const part of String(req.headers.cookie || '').split(';')) {
     const i = part.indexOf('=');
-    if (i > 0) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+    if (i > 0) {
+      const v = part.slice(i + 1).trim();
+      try { out[part.slice(0, i).trim()] = decodeURIComponent(v); } catch (e) { out[part.slice(0, i).trim()] = v; } // bozuk % dizisi çerezi tüm isteği 500'e düşürmesin
+    }
   }
   return out;
 }

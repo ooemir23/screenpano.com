@@ -68,7 +68,7 @@ function tick() {
     const name = d.name || 'TV kutusu', since = new Date(d.last_seen).toLocaleString('tr-TR', { timeZone: config.TZ, dateStyle: 'short', timeStyle: 'short' });
     pushAlert(t, { kind: 'offline', device: name, text: `${name} ${since} saatinden beri çevrimdışı.` });
     const n = t.db.notify || {};
-    if (n.email && n.offline !== false) sendMail(n.email, `${config.BRAND}: ekranınız çevrimdışı`, `${t.name} – ${name} ${since} saatinden beri bağlantı vermiyor.\n\nKontrol edin: kutunun elektriği, internet bağlantısı, uygulamanın açık olması.\n\nPanel: ${process.env.PUBLIC_URL || ''}/panel#settings/devices`);
+    if (n.email && n.offline !== false) sendMail(n.email, `${config.BRAND}: ekranınız çevrimdışı`, `${t.name} – ${name} ${since} saatinden beri bağlantı vermiyor.\n\nKontrol edin: kutunun elektriği, internet bağlantısı, uygulamanın açık olması.\n\nPanel: ${config.BASE_URL}/panel#settings/devices`);
     webhook(`⚠️ ${t.name}: ${name} ${since} saatinden beri çevrimdışı`);
   }
 }

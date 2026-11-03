@@ -35,7 +35,7 @@ async function run(tag = '') {
       fs.rmSync(raw, { force: true });
       let remote = false;
       if (s3.enabled) { await s3.putFile('backups/' + name, out, 'application/gzip', 'no-store'); remote = true; }
-      last = { at: Date.now(), name, remote, error: '' }; remember();
+      last = { at: Date.now(), name, remote, error: '', autoName: tag === 'oto' ? name : (last.autoName || '') }; remember();
       prune().catch(e => console.error('Eski yedekler silinemedi', e.message));
       return name;
     } catch (e) {
@@ -61,11 +61,11 @@ async function prune() {
   if (s3.enabled) for (const b of await listRemote()) if (now - b.time > KEEP_REMOTE * 86400000) await s3.del('backups/' + b.name);
 }
 
-// Her gece 04:00'ten sonra günde bir kez
+// Her gece 04:00'ten sonra günde bir kez (gündüz alınan manuel yedek otomatiği engellemez)
 function tick() {
   const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: config.TZ, hour: '2-digit', hour12: false }).format(new Date()));
   const today = stamp(new Date()).slice(0, 8);
-  if (h >= 4 && !(last.name || '').includes(today) && (!last.errorAt || Date.now() - last.errorAt > 3600000)) run('oto').catch(() => {});
+  if (h >= 4 && !String(last.autoName || '').includes(today) && (!last.errorAt || Date.now() - last.errorAt > 3600000)) run('oto').catch(() => {});
 }
 function start() { setTimeout(tick, 20000); setInterval(tick, 15 * 60 * 1000); }
 const status = () => ({ ...last, dir: DIR, remoteEnabled: s3.enabled, keepLocal: KEEP_LOCAL, keepRemote: KEEP_REMOTE });
