@@ -599,7 +599,8 @@ r.put('/schedule', (req, res) => {
   tenants.save(req.t); res.json({ ok: true });
 });
 r.post('/goal/test', (req, res) => {
-  sendTo(req.t, { type: 'goal', goal: { id: 'test', league: 'La Liga', home: 'Barcelona', away: 'Real Madrid', hs: 1, as: 2, side: 'away', minute: "67'", player: 'Kylian Mbappé', own: false, pen: false } });
+  // gerçek gol olayıyla aynı biçim: takım renkleri de içinde (yoksa ekran eski tema renklerine düşer)
+  sendTo(req.t, { type: 'goal', goal: { id: 'test', league: 'La Liga', home: 'Barcelona', away: 'Real Madrid', hs: 1, as: 2, side: 'away', minute: "67'", player: 'Kylian Mbappé', own: false, pen: false, hc: '#a50044', hc2: '#edbb00', ac: '#00529f', ac2: '#febe10' } });
   res.json({ ok: true });
 });
 function fireBirthday(t) {
