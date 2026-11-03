@@ -504,6 +504,64 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big .bnote{align-self:stretch;margin:.4vh -3vw 0;padding:1.3vh 3vw;background:rgba(0,0,0,.6);border-top:.2vh solid rgba(244,192,79,.7);border-bottom:.2vh solid rgba(244,192,79,.7);color:#fff;font-size:3.2vh;font-weight:800;text-align:center}
 #big .bft{align-self:stretch;margin:0 -3vw;padding:1.2vh 3vw 1.4vh;display:flex;justify-content:space-around;gap:2vw;background:rgba(0,0,0,.72);font-size:1.9vh;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--al)}
 #big .bft span{display:flex;align-items:center;gap:.6vw;text-align:center}
+/* Belirginlik: tüm tasarımlarda armalar ön planda (beyaz hare + koyu gölge), yazılar daha büyük ve koyu zemine göre kontrastlı */
+#big .ylg{filter:drop-shadow(0 0 calc(.9*var(--u)) rgba(255,255,255,.55)) drop-shadow(0 calc(1*var(--u)) calc(2.4*var(--u)) rgba(0,0,0,.85))}
+#big .ymono{font-size:calc(var(--ms,20)*.34*var(--u))}
+#big .ybrand{height:calc(9*var(--u))}
+#big .ybrandt{font-size:calc(3*var(--u));font-weight:900}
+#big .ykick{font-size:calc(3*var(--u));font-weight:900;text-shadow:0 calc(.3*var(--u)) calc(1*var(--u)) #000}
+#big .ylea{font-size:calc(2.6*var(--u));font-weight:900;opacity:1;color:#fff;text-shadow:0 calc(.3*var(--u)) calc(1*var(--u)) #000}
+#big .yname{font-size:min(calc(6*var(--u)),calc(3.8*var(--w)))}
+#big .yname.sm{font-size:min(calc(4.6*var(--u)),calc(3*var(--w)))}
+#big .ynote{font-size:calc(3.4*var(--u));font-weight:900}
+#big .yft{font-size:calc(2.5*var(--u));font-weight:800;color:#fff}
+#big .yday{font-size:calc(3*var(--u))}
+/* Stadyum */
+#big.d-stadyum .yring{width:calc(30*var(--u));height:calc(30*var(--u));background:radial-gradient(circle,rgba(255,255,255,.3),rgba(255,255,255,.04) 70%)}
+#big.d-stadyum .yring .ylg{width:80%;height:80%}
+#big.d-stadyum .yclock{font-size:calc(11*var(--u))}
+#big.d-stadyum .yvs b{font-size:calc(6.4*var(--u))}
+/* Yayın bandı: armalar beyaz daire içinde */
+#big.d-bant .yrow{height:calc(15*var(--u))}
+#big.d-bant .ys .ylg,#big.d-bant .ys .ymono{height:calc(12*var(--u));width:calc(12*var(--u))}
+#big.d-bant .ys .ylg{background:#fff;border-radius:50%;padding:calc(1.2*var(--u));box-shadow:0 0 0 calc(.35*var(--u)) rgba(255,255,255,.4)}
+#big.d-bant .yn{font-size:min(calc(5.2*var(--u)),calc(3*var(--w)))}
+#big.d-bant .yc b{font-size:calc(7.2*var(--u))}
+#big.d-bant .yc small{font-size:calc(2.1*var(--u))}
+#big.d-bant .ytag{font-size:calc(2.4*var(--u))}
+#big.d-bant .ytick{font-size:calc(2.7*var(--u))}
+/* Geri sayım */
+#big.d-sayac .yt .ylg,#big.d-sayac .yt .ymono{height:calc(17*var(--u));width:calc(17*var(--u))}
+#big.d-sayac .yvsrow i{font-size:calc(4.4*var(--u))}
+#big.d-sayac .ywhen{font-size:calc(3.4*var(--u));font-weight:800;color:#fff}
+#big.d-sayac .ycd small{font-size:calc(2.4*var(--u))}
+/* Poster */
+#big.d-poster .ydisc{width:calc(25*var(--u));height:calc(25*var(--u));background:radial-gradient(circle,rgba(255,255,255,.28),rgba(255,255,255,.06) 70%);border-width:calc(.45*var(--u))}
+#big.d-poster .ydisc .ylg{width:78%;height:78%}
+#big.d-poster .yinfo .d{font-size:calc(3*var(--u));font-weight:900}
+#big.d-poster .yinfo .t{font-size:calc(7.4*var(--u))}
+#big.d-poster .ynote{font-size:calc(3.2*var(--u))}
+#big.d-poster .yft{font-size:calc(2.3*var(--u));color:#fff}
+/* Düello */
+#big.d-duello .ybigc{top:20%;width:calc(42*var(--u));height:calc(42*var(--u))}
+#big.d-duello .ybigc:before{opacity:.95;inset:-30%}
+#big.d-duello .ybigc .ylg,#big.d-duello .ybigc .ymono{width:84%;height:84%}
+#big.d-duello .ycrests .ylg,#big.d-duello .ycrests .ymono{width:calc(14*var(--u));height:calc(14*var(--u))}
+#big.d-duello .ybolt{width:calc(6.5*var(--u));height:calc(9*var(--u))}
+#big.d-duello .yvenue{font-size:calc(3.4*var(--u));font-weight:900}
+#big.d-duello .ymatch{font-size:min(calc(6.4*var(--u)),calc(3.8*var(--w)));max-width:64%}
+#big.d-duello .ylea{font-size:calc(2.8*var(--u))}
+/* Klasik ve Klasik (ekrana uyumlu) */
+#big .bbg{filter:drop-shadow(0 0 1.2vh rgba(255,255,255,.55)) drop-shadow(0 1vh 2.4vh rgba(0,0,0,.85))}
+#big .bk1{font-size:3vh;font-weight:900;color:#fff;text-shadow:0 .3vh 1vh #000}
+#big .bnote{font-size:3.6vh;font-weight:900}
+#big .bft{font-size:2.5vh;font-weight:800;color:#fff}
+#big.d-uyum .bbg{top:22%;height:calc(31*var(--u));width:calc(31*var(--u));filter:drop-shadow(0 0 calc(1.2*var(--u)) rgba(255,255,255,.55)) drop-shadow(0 calc(1*var(--u)) calc(2.4*var(--u)) rgba(0,0,0,.85))}
+#big.d-uyum .bk1{font-size:calc(3*var(--u));font-weight:900;color:#fff;text-shadow:0 calc(.3*var(--u)) calc(1*var(--u)) #000}
+#big.d-uyum .bnm b{font-size:calc(7*var(--u))}
+#big.d-uyum .bnm b.sm{font-size:calc(5*var(--u))}
+#big.d-uyum .bnote{font-size:calc(3.6*var(--u));font-weight:900}
+#big.d-uyum .bft{font-size:calc(2.5*var(--u));font-weight:800;color:#fff}
 #cphoto{position:absolute;inset:.6vh;z-index:6;border-radius:1.39vh;overflow:hidden;background:#0d0d0e;opacity:0;pointer-events:none;transition:opacity .9s}
 #cphoto.on{opacity:1}
 #cphoto img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:grayscale(1) contrast(1.05)}
