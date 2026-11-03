@@ -549,7 +549,8 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-duello .ycrests .ylg,#big.d-duello .ycrests .ymono{width:calc(14*var(--u));height:calc(14*var(--u))}
 #big.d-duello .ybolt{width:calc(6.5*var(--u));height:calc(9*var(--u))}
 #big.d-duello .yvenue{font-size:calc(3.4*var(--u));font-weight:900}
-#big.d-duello .ymatch{font-size:min(calc(6.4*var(--u)),calc(3.8*var(--w)));max-width:64%}
+#big.d-duello .ymatch{font-size:min(calc(6.4*var(--u)),calc(3.8*var(--w)));max-width:none;width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:.4em}
+#big.d-duello .ymatch span:first-child{text-align:right}#big.d-duello .ymatch span:last-child{text-align:left}#big.d-duello .ymatch i{margin:0}
 #big.d-duello .ylea{font-size:calc(2.8*var(--u))}
 /* Klasik ve Klasik (ekrana uyumlu) */
 #big .bbg{filter:drop-shadow(0 0 1.2vh rgba(255,255,255,.55)) drop-shadow(0 1vh 2.4vh rgba(0,0,0,.85))}
@@ -1513,7 +1514,7 @@ function bigDesign(el, m, cfg, design, o) {
     h = `<div class="yglow"></div><div class="ysmk"></div><div class="ysmk b"></div><div class="ysmk c"></div><div class="yflare"></div>`
       + side(m.hp, H, c1, 'l') + side(m.ap, A, c2, 'r') + `<div class="yemb">${emb}</div><div class="yvig"></div>`
       + `<div class="ywrap"><div class="ytop">${LOGO ? brand : ''}<div class="ylea">${esc(league || kick)}</div>${m.hp || m.ap ? `<div class="ycrests">${H}${bolt}${A}</div>` : bolt}<div class="yvenue">${where}</div></div>`
-      + `<div class="ymidd"></div><div class="ybot"><div class="ymatch"${lng(m.home + m.away)}>${esc(m.home)}<i>×</i>${esc(m.away)}</div><div class="yday">${esc(o.dayTxt)}</div></div>${end}</div>`;
+      + `<div class="ymidd"></div><div class="ybot"><div class="ymatch"${lng(m.home + m.away)}><span>${esc(m.home)}</span><i>×</i><span>${esc(m.away)}</span></div><div class="yday">${esc(o.dayTxt)}</div></div>${end}</div>`;
   }
   else h = `<div class="ybg"></div><div class="yframe"></div><div class="ywrap"><div class="ytop">${brand}<div class="ykick">${m.derby ? kick : esc(league || kick)}</div></div>`
     + `<div class="ypost"><div class="ydisc">${H}</div><div class="ystack">${nm(m.home, 'ybig', 11)}<div class="yvsl">vs</div>${nm(m.away, 'ybig', 11)}</div><div class="ydisc">${A}</div></div>`
