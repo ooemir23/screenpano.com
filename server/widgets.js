@@ -14,6 +14,7 @@ const WIDGETS = {
   info:    { name: 'Maçlar ve bilgi sayfaları', desc: 'Maçlar, puan durumu, nöbetçi eczane, haber, sinema, tarihte bugün, trafik', pro: true, min: [5, 8] },
   reviews: { name: 'Google yorumları', desc: 'Müşteri yorumları şeridi', pro: true, min: [8, 2] },
   menu:    { name: 'Fiyat tarifesi', desc: 'Kategori, ürün ve fiyat listesi (Fiyat Etiketi Yönetmeliği için)', pro: true, min: [5, 6], props: { title: 'Fiyat Listesi' } },
+  music:   { name: 'Müzik', desc: 'Spotify / YouTube Müzik: şarkı değişince kapak ve ad açılır, birkaç saniye sonra yalnız kapak görseline küçülür', pro: false, min: [3, 3] },
 };
 
 const W = (type, x, y, w, h, props) => ({ type, x, y, w, h, ...(props ? { props } : {}) });
