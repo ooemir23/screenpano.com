@@ -2,7 +2,7 @@
    - TV sayfası: önce ağ, olmazsa önbellek (internet yokken kutu yeniden başlasa da ekran açılır)
    - Medya (/u/...): önbellekte varsa oradan (video ileri sarma için Range desteğiyle), yoksa ağdan
    - TV, oynatma listesindeki medyayı "prefetch" mesajıyla sırayla indirtir; listeden çıkanlar silinir */
-const SHELL = 'sp-shell-v1', MEDIA = 'sp-media-v1';
+const SHELL = 'sp-shell-v2', MEDIA = 'sp-media-v1';
 const SHELL_URLS = ['/tv', '/posters.js', '/favicon.svg', '/fonts/montserrat-latin.woff2', '/fonts/montserrat-latin-ext.woff2'];
 
 self.addEventListener('install', e => { e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_URLS)).catch(() => {}).then(() => self.skipWaiting())); });

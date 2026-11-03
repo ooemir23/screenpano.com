@@ -1189,7 +1189,7 @@ const MUSIC_PRESETS = [
   { title: 'Spotify Türkçe Pop & Güncel Hitler', category: 'Türkçe Pop', provider: 'spotify', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', desc: 'Mekânlarda en çok dinlenen güncel Türkçe pop parçalar.' },
   { title: 'Spotify Coffee Table Jazz', category: 'Kafe & Caz', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DWVqfgj8NZEp1', desc: 'Kahve dükkanları ve pastaneler için yumuşak caz klasikleri.' },
   { title: 'Spor Salonu & Yüksek Enerji (Beast Mode)', category: 'Spor & Fitness', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DX76Wlfdnj7AP', desc: 'Spor salonları ve antrenman saatleri için yüksek tempolu motivasyon listesi.' },
-  { title: 'Maç Öncesi & Sosyal Mekân Ritmi', category: 'Maç Günü', provider: 'ytm', url: 'https://music.youtube.com/watch?v=5qap5aO4i9A', desc: 'Maç öncesi toplanma saatlerinde arka planda akıcı ritmik yayın.' },
+  { title: 'Maç Öncesi & Sosyal Mekân Ritmi', category: 'Maç Günü', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Maç öncesi toplanma saatlerinde arka planda akıcı ritmik yayın.' },
 ];
 function musicData() {
   if (!S.db.music || typeof S.db.music !== 'object') S.db.music = { enabled: false, playing: true, volume: 75, muteVideo: true, showNowPlaying: true, activeId: '', playlists: [], spotify: {} };

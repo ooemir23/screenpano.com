@@ -103,28 +103,67 @@ async function disconnect(t) {
 // yoksa süper yönetimdeki YouTube API anahtarı (yalnız herkese açık listeler). 10 dk önbellek.
 const trackCache = new Map();
 const isoDur = s => { const m = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s || ''); return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0; };
+const txtDur = s => { const p = String(s || '').split(':').map(Number); return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : 0; };
+async function innerTubeTracks(listId) {
+  const r = await fetch('https://www.youtube.com/youtubei/v1/next?prettyPrint=false', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+    body: JSON.stringify({ playlistId: listId, context: { client: { clientName: 'WEB', clientVersion: '2.20261101.01.00', hl: 'tr', gl: 'TR' } } }),
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!r.ok) return [];
+  const j = await r.json().catch(() => ({}));
+  const list = (((((j.contents || {}).twoColumnWatchNextResults || {}).playlist || {}).playlist || {}).contents) || [];
+  const items = [];
+  for (const c of list) {
+    const v = c && c.playlistPanelVideoRenderer;
+    if (!v || !v.videoId || v.unplayableText) continue;
+    const title = (v.title && (v.title.simpleText || ((v.title.runs || [])[0] || {}).text)) || '';
+    if (/^(Deleted|Private) video$/i.test(title)) continue;
+    const ch = (v.longBylineText && ((v.longBylineText.runs || [])[0] || {}).text) || (v.shortBylineText && ((v.shortBylineText.runs || [])[0] || {}).text) || '';
+    const ths = (v.thumbnail && v.thumbnail.thumbnails) || [];
+    const durTxt = (v.lengthText && (v.lengthText.simpleText || ((v.lengthText.runs || [])[0] || {}).text)) || '';
+    items.push({ videoId: v.videoId, idx: items.length, title: title.slice(0, 120), channel: ch.replace(/ - Topic$/, '').slice(0, 80), thumb: (ths[0] && ths[0].url) || `https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`, dur: txtDur(durTxt) });
+  }
+  return items;
+}
 async function tracks(t, listId) {
   if (!/^[A-Za-z0-9_-]{10,64}$/.test(listId)) throw new Error('Geçersiz liste');
   const c = trackCache.get(listId);
   if (c && Date.now() - c.at < 600000) return c.items;
-  const a = t.db.ytAuth, key = store.setting('youtube_api_key', '').trim();
-  let get;
-  if (a && a.refresh && !a.expired) { const tok = await access(t); get = q => ytGet(tok, q); }
-  else if (key) get = async q => { const r = await fetch('https://www.googleapis.com/youtube/v3/' + q + '&key=' + encodeURIComponent(key), { signal: AbortSignal.timeout(10000) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(((j.error || {}).message) || 'YouTube ' + r.status); return j; };
-  else { const e = new Error('Şarkıları görmek için YouTube hesabınızı bağlayın'); e.code = 'reconnect'; throw e; }
-  const items = []; let page = '';
-  for (let i = 0; i < 4; i++) {
-    const j = await get(`playlistItems?part=snippet,contentDetails&playlistId=${encodeURIComponent(listId)}&maxResults=50${page ? '&pageToken=' + encodeURIComponent(page) : ''}`);
-    for (const it of j.items || []) {
-      const sn = it.snippet || {}, vid = (it.contentDetails || {}).videoId || ((sn.resourceId || {}).videoId);
-      if (!vid || /^(Deleted|Private) video$/.test(sn.title || '')) continue;
-      const th = sn.thumbnails || {};
-      items.push({ videoId: vid, idx: Number(sn.position) || items.length, title: (sn.title || '').slice(0, 120), channel: (sn.videoOwnerChannelTitle || '').replace(/ - Topic$/, '').slice(0, 80), thumb: ((th.default || th.medium || {}).url) || '', dur: 0 });
-    }
-    page = j.nextPageToken; if (!page) break;
+  const a = t && t.db && t.db.ytAuth, key = store.setting('youtube_api_key', '').trim();
+  let get = null, lastErr = null;
+  if (a && a.refresh && !a.expired) {
+    try { const tok = await access(t); get = q => ytGet(tok, q); } catch (e) { lastErr = e; }
   }
-  for (let i = 0; i < items.length; i += 50) { // süreler (50 videoda bir istek)
-    try { const j = await get(`videos?part=contentDetails&id=${items.slice(i, i + 50).map(x => x.videoId).join(',')}`); const d = new Map((j.items || []).map(v => [v.id, isoDur((v.contentDetails || {}).duration)])); for (const x of items.slice(i, i + 50)) x.dur = d.get(x.videoId) || 0; } catch (e) { /* süre olmadan da listelenir */ }
+  if (!get && key) {
+    get = async q => { const r = await fetch('https://www.googleapis.com/youtube/v3/' + q + '&key=' + encodeURIComponent(key), { signal: AbortSignal.timeout(10000) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(((j.error || {}).message) || 'YouTube ' + r.status); return j; };
+  }
+  const items = [];
+  if (get) {
+    try {
+      let page = '';
+      for (let i = 0; i < 4; i++) {
+        const j = await get(`playlistItems?part=snippet,contentDetails&playlistId=${encodeURIComponent(listId)}&maxResults=50${page ? '&pageToken=' + encodeURIComponent(page) : ''}`);
+        for (const it of j.items || []) {
+          const sn = it.snippet || {}, vid = (it.contentDetails || {}).videoId || ((sn.resourceId || {}).videoId);
+          if (!vid || /^(Deleted|Private) video$/.test(sn.title || '')) continue;
+          const th = sn.thumbnails || {};
+          items.push({ videoId: vid, idx: Number(sn.position) || items.length, title: (sn.title || '').slice(0, 120), channel: (sn.videoOwnerChannelTitle || '').replace(/ - Topic$/, '').slice(0, 80), thumb: ((th.default || th.medium || {}).url) || '', dur: 0 });
+        }
+        page = j.nextPageToken; if (!page) break;
+      }
+      for (let i = 0; i < items.length; i += 50) { // süreler (50 videoda bir istek)
+        try { const j = await get(`videos?part=contentDetails&id=${items.slice(i, i + 50).map(x => x.videoId).join(',')}`); const d = new Map((j.items || []).map(v => [v.id, isoDur((v.contentDetails || {}).duration)])); for (const x of items.slice(i, i + 50)) x.dur = d.get(x.videoId) || 0; } catch (e) { /* süre olmadan da listelenir */ }
+      }
+    } catch (e) { lastErr = e; }
+  }
+  if (!items.length) {
+    try { const pub = await innerTubeTracks(listId); items.push(...pub); } catch (e) {}
+  }
+  if (!items.length) {
+    if (lastErr) throw lastErr;
+    const e = new Error('Şarkıları görmek için YouTube hesabınızı bağlayın'); e.code = 'reconnect'; throw e;
   }
   trackCache.set(listId, { at: Date.now(), items });
   return items;
