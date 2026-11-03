@@ -10,7 +10,8 @@
   window.__fx = 'auto';
   window.__applyFx = function () {
     window.__N = window.TVNative || window.__N || null;
-    var lite = window.__fx === 'lite' || (window.__fx === 'auto' && !!window.__N && !window.__N.desktop) || /[?&]lite=1/.test(location.search);
+    var isAndroid = /Android|SmartTV|AFT|GoogleTV|Large Screen/i.test(navigator.userAgent);
+    var lite = window.__fx === 'lite' || (window.__fx === 'auto' && (!!window.__N && !window.__N.desktop || isAndroid)) || /[?&]lite=1/.test(location.search);
     document.documentElement.classList.toggle('lite', lite); window.__lite = lite;
   };
   window.__applyFx();
@@ -232,9 +233,9 @@ background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414
 #tview{flex:1;overflow:hidden;display:flex;align-items:center;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
 #tview,#tl{transition:opacity .55s ease}
 #tview.fade,#tl.fade{opacity:0}
-#ttrack{display:flex;flex:none;white-space:nowrap;animation:tscroll 60s linear infinite;will-change:transform}
-#ttrack>div{display:flex;align-items:center;flex:none}
-@keyframes tscroll{to{transform:translateX(-50%)}}
+#ttrack{display:flex;flex:none;white-space:nowrap;animation:tscroll 60s linear infinite;will-change:transform;transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+#ttrack>div{display:flex;align-items:center;flex:none;transform:translateZ(0)}
+@keyframes tscroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
 .ti{display:flex;align-items:center;gap:.8vw;font-size:2.7vh;font-weight:500;padding:0 2.4vw;color:var(--white)}
 .ti .lg{font-size:1.6vh;letter-spacing:.2em;color:var(--accent2);font-weight:600;text-transform:uppercase}
 .ti .sc{font-weight:700;background:rgba(255,255,255,.1);padding:.3vh 1vw;border-radius:1vh;font-size:2.7vh}
@@ -247,8 +248,8 @@ background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414
 #bday.on{display:flex}
 #bday p{white-space:nowrap;font-size:5.4vh;font-weight:600;color:var(--white);padding-left:100%;animation:slide var(--d,20s) linear infinite}
 @keyframes slide{to{transform:translateX(-100%)}}
-video{transition:opacity 1.6s ease-in-out}
-#img{opacity:0;transition:opacity 1.6s ease-in-out}
+video{transition:opacity 1.2s ease-in-out;will-change:opacity;transform:translateZ(0)}
+#img{opacity:0;transition:opacity 1.2s ease-in-out;will-change:opacity;transform:translateZ(0)}
 html.lite #bgc{filter:none;transform:none}
 html.lite #tview{-webkit-mask-image:none;mask-image:none}
 html.lite #qr-right .lbl,html.lite #qr-left .lbl,html.lite #tchip,html.lite #tidx,html.lite #tlegend{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(20,22,24,.93)}
