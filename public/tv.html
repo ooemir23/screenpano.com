@@ -79,7 +79,7 @@ video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100
 #tidx span i{font-style:normal;color:var(--c);font-weight:700;margin-left:.3vw}
 #tlegend{position:absolute;left:1vw;right:1vw;bottom:1.2vh;z-index:2;background:rgba(20,22,24,.78);backdrop-filter:blur(0.56vh);border:max(1px,.1vh) solid rgba(255,255,255,.12);border-radius:3vh;padding:.8vh 1.2vw;display:flex;align-items:center;gap:.9vw;font-size:1.15vh;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);font-weight:600}
 #tlegend i{flex:1;height:.8vh;border-radius:1vh;background:linear-gradient(90deg,#3ecf4a,#f2c230,#ee3b2f,#8b1a14)}
-.m{position:relative;background:var(--card);border:max(1px,.1vh) solid var(--line);border-radius:1.11vh;padding:1.7vh .8vw 1.1vh;flex:none}
+.m{position:relative;background:var(--card);border:max(1px,.1vh) solid var(--line);border-radius:1.11vh;padding:1.7vh .8vw 1.1vh;flex:none;contain:layout style} /* sayfa çevirirken yerleşim hesabı kartla sınırlı kalır — medya akıcı oynar */
 .m .dayl{position:absolute;top:.9vh;left:.9vw;font-size:1.1vh;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);font-weight:500}
 .m.hasch{padding-bottom:2.5vh}
 .ph{padding:1.2vh .9vw}
@@ -122,7 +122,7 @@ video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100
 .th,.trw{display:grid;grid-template-columns:2.6vh 1fr repeat(4,2.9vh) 4vh 4vh;align-items:center;gap:.25vw;padding:0 .6vw}
 .th{height:3vh;flex:none;font-size:1.15vh;letter-spacing:.14em;color:var(--mute);font-weight:600;text-align:center}
 .th span:nth-child(2){text-align:left}
-.trw{flex:1 1 0;min-height:2.65vh;max-height:4.8vh;border-radius:0.74vh;background:rgba(255,255,255,.035);font-size:1.45vh;text-align:center}
+.trw{flex:1 1 0;min-height:2.65vh;max-height:4.8vh;border-radius:0.74vh;background:rgba(255,255,255,.035);font-size:1.45vh;text-align:center;contain:layout style}
 .trw:nth-child(odd){background:rgba(255,255,255,.065)}
 .trw .rk{font-weight:700;color:var(--mute)}
 .trw.top1{background:linear-gradient(90deg,rgba(var(--a2),.3),rgba(var(--a2),.08))}
@@ -1134,7 +1134,7 @@ const TRAFFIC_URL = 'https://yandex.com.tr/map-widget/v1/?ll=28.95%2C41.04&z=10&
 const PIN = new URLSearchParams(location.search).get('p');
 let matches = [], page = 0, pages = [], rot, trafficLoaded = 0;
 function team(name, logo, lose) {
-  const img = logo ? `<img src="${esc(logo)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.style.visibility='hidden'">` : '';
+  const img = logo ? `<img src="${esc(logo)}" alt="" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.style.visibility='hidden'">` : '';
   return `<div class="tbox ${lose ? 'lose' : ''}"><div class="lg">${img}</div><div class="nm">${esc(name)}</div></div>`;
 }
 function card(m) {
@@ -1150,7 +1150,7 @@ function card(m) {
 let standingsData = {}, showStandings = true, TROWS = 10;
 function tableHtml(rows) {
   return '<div class="tbl"><div class="th"><span>#</span><span>Takım</span><span>O</span><span>G</span><span>B</span><span>M</span><span>AV</span><span>P</span></div>' +
-    rows.map(r => `<div class="trw ${r.rank === 1 ? 'top1' : ''}"><span class="rk">${esc(r.rank)}</span><span class="tn">${r.logo ? `<img src="${esc(r.logo)}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<b>${esc(r.name)}</b></span><span>${esc(r.gp)}</span><span>${esc(r.w)}</span><span>${esc(r.d)}</span><span>${esc(r.l)}</span><span>${esc(r.gd)}</span><span class="pt">${esc(r.pts)}</span></div>`).join('') + '</div>';
+    rows.map(r => `<div class="trw ${r.rank === 1 ? 'top1' : ''}"><span class="rk">${esc(r.rank)}</span><span class="tn">${r.logo ? `<img src="${esc(r.logo)}" alt="" decoding="async" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<b>${esc(r.name)}</b></span><span>${esc(r.gp)}</span><span>${esc(r.w)}</span><span>${esc(r.d)}</span><span>${esc(r.l)}</span><span>${esc(r.gd)}</span><span class="pt">${esc(r.pts)}</span></div>`).join('') + '</div>';
 }
 let pagesDirty = true; // sayfa listesi yalnızca veri ya da ölçü değişince yeniden hesaplanır (her geçişte değil)
 let breakData = null, showBrk = false, brkBanner = true;
@@ -1160,9 +1160,9 @@ const fmtPhone = t => { const d = String(t || '').replace(/\D/g, ''); return /^0
 const ago = iso => { const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return !isFinite(m) || m < 0 ? '' : m < 1 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.floor(m / 60) + ' saat önce' : Math.floor(m / 1440) + ' gün önce'; };
 const brkCard = n => `<div class="m nw brkc"><div class="nt">${esc(n.title)}</div><div class="nm2"><span class="bdot">SON DAKİKA</span>${esc(n.source)}${n.date ? ' · ' + esc(ago(n.date)) : ''}</div></div>`;
 const newsCard = n => `<div class="m nw"><div class="nt">${esc(n.title)}</div><div class="nm2">${esc(n.source)}${n.date ? ' · ' + esc(ago(n.date)) : ''}</div></div>`;
-const bookCard = b => `<div class="m bk">${b.image ? `<img src="${esc(b.image)}" alt="" onerror="this.remove()">` : ''}<div style="min-width:0"><div class="bt">${esc(b.title)}</div>${b.author ? `<div class="bm">${esc(b.author)}</div>` : ''}${b.publisher ? `<div class="bm bp">${esc(b.publisher)}</div>` : ''}</div></div>`;
+const bookCard = b => `<div class="m bk">${b.image ? `<img src="${esc(b.image)}" alt="" decoding="async" onerror="this.remove()">` : ''}<div style="min-width:0"><div class="bt">${esc(b.title)}</div>${b.author ? `<div class="bm">${esc(b.author)}</div>` : ''}${b.publisher ? `<div class="bm bp">${esc(b.publisher)}</div>` : ''}</div></div>`;
 const trDate = d => { const [, m, dd] = String(d).split('-'); return m ? Number(dd) + ' ' + MONTHS[Number(m) - 1] : ''; };
-const movieCard = m => `<div class="m mv">${m.poster ? `<img src="${esc(m.poster)}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<div><div class="mt">${esc(m.title)}</div><div class="mm">${esc(trDate(m.date))}${m.rating ? ' · ★ ' + esc(String(m.rating).replace('.', ',')) : ''}</div></div></div>`;
+const movieCard = m => `<div class="m mv">${m.poster ? `<img src="${esc(m.poster)}" alt="" decoding="async" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<div><div class="mt">${esc(m.title)}</div><div class="mm">${esc(trDate(m.date))}${m.rating ? ' · ★ ' + esc(String(m.rating).replace('.', ',')) : ''}</div></div></div>`;
 const dayCard = e => `<div class="m od"><b class="oy">${esc(e.year)}</b><p>${esc(e.text)}</p></div>`;
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 function fit() {
