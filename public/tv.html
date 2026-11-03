@@ -815,9 +815,20 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #music-bar.on{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
 #music-bar.sp{border-color:rgba(29,185,84,.55);box-shadow:0 1.2vh 3.2vh rgba(0,0,0,.75),0 0 2.2vh rgba(29,185,84,.28)}
 #music-bar.yt{border-color:rgba(255,50,70,.55);box-shadow:0 1.2vh 3.2vh rgba(0,0,0,.75),0 0 2.2vh rgba(255,50,70,.28)}
-#music-bar .mcov{width:4.4vh;height:4.4vh;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:rgba(255,255,255,.1);border:.15vh solid rgba(255,255,255,.28);font-size:2.1vh}
+#music-bar .mcov{position:relative;width:4.4vh;height:4.4vh;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:rgba(255,255,255,.1);border:.15vh solid rgba(255,255,255,.28);font-size:2.1vh}
 #music-bar .mcov img{width:100%;height:100%;object-fit:cover;display:block}
-#music-bar:not(.paused) .mcov{animation:spin 18s linear infinite}
+#music-bar:not(.paused) .mcov{animation:none}
+/* kapak içi zıplayan ekolayzer rozeti — çalarken çubuklar ritimle oynar, durunca düzleşir */
+#music-bar .mcov-eq{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:flex-end;justify-content:center;gap:.18vw;width:52%;height:48%;background:rgba(0,0,0,.62);backdrop-filter:blur(.3vh);border-radius:99px;padding:.25vh .3vw;box-sizing:border-box;box-shadow:0 .2vh .8vh rgba(0,0,0,.6);z-index:2;pointer-events:none}
+#music-bar:not(.mini) .mcov-eq{display:none}
+#music-bar .mcov-eq i{width:.24vw;min-width:2.5px;background:#1ed760;border-radius:2px;animation:meqbar .85s ease-in-out infinite alternate}
+#music-bar.yt .mcov-eq i{background:#ff4e5e}
+#music-bar.rd .mcov-eq i{background:var(--al)}
+#music-bar .mcov-eq i:nth-child(1){height:45%;animation-duration:.65s}
+#music-bar .mcov-eq i:nth-child(2){height:95%;animation-duration:.9s;animation-delay:.15s}
+#music-bar .mcov-eq i:nth-child(3){height:65%;animation-duration:.75s;animation-delay:.3s}
+#music-bar .mcov-eq i:nth-child(4){height:85%;animation-duration:1.05s;animation-delay:.1s}
+#music-bar.paused .mcov-eq i{animation:none;height:25%!important;opacity:.45}
 #music-bar .mmeta{min-width:0;display:flex;flex-direction:column;gap:.15vh;transition:max-width .55s cubic-bezier(.22,1,.36,1),opacity .4s;max-width:34vw}
 #music-bar .mtit{font-size:1.95vh;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw;text-shadow:0 .2vh .6vh #000}
 #music-bar .msub{font-size:1.35vh;font-weight:600;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw}
@@ -839,7 +850,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #musicw .mw-cov{height:min(60%,16vh);width:auto;max-width:100%;aspect-ratio:1;position:relative;border-radius:50%;overflow:hidden;flex:0 1 auto;display:grid;place-items:center;background:rgba(255,255,255,.08);border:.3vh solid rgba(255,255,255,.25);box-shadow:0 1vh 3vh rgba(0,0,0,.5)}
 #musicw .mw-cov img{width:100%;height:100%;object-fit:cover;display:block}
 #musicw .mw-ic{display:grid;place-items:center;width:100%;height:100%;font-size:min(7vw,6vh);line-height:1}
-#musicw:not(.paused) .mw-cov img,#musicw:not(.paused) .mw-cov .mw-ic{animation:spin 18s linear infinite}
+#musicw:not(.paused) .mw-cov img,#musicw:not(.paused) .mw-cov .mw-ic{animation:none}
 /* ekolayzer: çalarken kapağın içinde, altta — duraklarken kaybolur; boyutlar daireye orantılı */
 #musicw .mw-eq{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);width:36%;height:24%;display:flex;align-items:flex-end;justify-content:space-evenly;border-radius:99px;background:rgba(0,0,0,.5);opacity:0;transition:opacity .4s}
 #musicw.on:not(.paused) .mw-eq{opacity:1}
@@ -2101,20 +2112,78 @@ function applyLayout(l) {
 }
 addEventListener('resize', () => { fitWidgets(); renderMenuW(false); showQrTile(); });
 
-// ---- boş widget'ın yerini komşusu kaplasın: yorum yoksa yorum şeridinin yerini üstündeki medya alır ----
+function musicHasAudio() {
+  if (typeof MUS === 'undefined' || !MUS) return false;
+  const m = MUS.cfg, spLive = MUS.spConnectTrack;
+  if (spLive && !spLive.paused) return true;
+  if (!m || !m.enabled || !m.playing) return false;
+  return typeof activeMusicItem === 'function' ? !!activeMusicItem(m) : false;
+}
+
+// ---- boş widget'ın yerini komşusu kaplasın: yorum yoksa veya müzik çalmıyorsa boşluğun yerini yanındaki/üstündeki/altındaki widget alır ----
 let fillSig = '';
+function findMergeNeighbor(emptyW, allWidgets, isEmptyFn) {
+  const candidates = [];
+  for (const w of allWidgets) {
+    if (w.type === emptyW.type || isEmptyFn(w)) continue;
+    // Üstündeki widget (üstten aşağı genişler)
+    if (w.x === emptyW.x && w.w === emptyW.w && w.y + w.h === emptyW.y) {
+      candidates.push({ w, x: w.x, y: w.y, w_: w.w, h_: w.h + emptyW.h });
+    }
+    // Altındaki widget (aşağıdan yukarı genişler)
+    else if (w.x === emptyW.x && w.w === emptyW.w && emptyW.y + emptyW.h === w.y) {
+      candidates.push({ w, x: w.x, y: emptyW.y, w_: w.w, h_: w.h + emptyW.h });
+    }
+    // Solundaki (yanındaki) widget (soldan sağa genişler)
+    else if (w.y === emptyW.y && w.h === emptyW.h && w.x + w.w === emptyW.x) {
+      candidates.push({ w, x: w.x, y: w.y, w_: w.w + emptyW.w, h_: w.h });
+    }
+    // Sağındaki (yanındaki) widget (sağdan sola genişler)
+    else if (w.y === emptyW.y && w.h === emptyW.h && emptyW.x + emptyW.w === w.x) {
+      candidates.push({ w, x: emptyW.x, y: w.y, w_: w.w + emptyW.w, h_: w.h });
+    }
+  }
+  // Öncelik medya widget'ına (ana video/fotoğraf alanı) verilir
+  candidates.sort((a, b) => (b.w.type === 'media' ? 1 : 0) - (a.w.type === 'media' ? 1 : 0));
+  return candidates[0] || null;
+}
+
 function fillEmpty() {
   let l; try { l = JSON.parse(layoutSig); } catch (e) { return; }
-  const m = l.widgets.find(w => w.type === 'media'), r = l.widgets.find(w => w.type === 'reviews');
-  const merge = !!(m && r && !reviews.length && r.x === m.x && r.w === m.w && (r.y === m.y + m.h || m.y === r.y + r.h));
-  const sig = merge + '|' + layoutSig;
+  if (!l || !Array.isArray(l.widgets)) return;
+  const musicOff = !musicHasAudio();
+  const reviewsOff = !reviews.length;
+  const isWidgetEmpty = w => (w.type === 'music' && musicOff) || (w.type === 'reviews' && reviewsOff);
+
+  const sig = `${reviewsOff}|${musicOff}|${layoutSig}`;
   if (sig === fillSig) return; fillSig = sig;
-  if (!m) return;
-  const mc = document.querySelector('.cell[data-w="media"]'), rc = document.querySelector('.cell[data-w="reviews"]');
-  const y = merge ? Math.min(m.y, r.y) : m.y, h = merge ? m.h + r.h : m.h;
-  mc.style.gridArea = `${y + 1} / ${m.x + 1} / span ${h} / span ${m.w}`;
-  if (rc && r) rc.style.display = merge ? 'none' : '';
-  requestAnimationFrame(sizeBg);
+
+  // Hücreleri özgün gridArea ve display durumlarına getir
+  for (const w of l.widgets) {
+    const c = document.querySelector(`.cell[data-w="${w.type}"]`);
+    if (c) {
+      c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+      c.style.display = '';
+    }
+  }
+
+  let resizedMedia = false;
+  // Boş olan widget'ların alanını yanındaki/üstündeki/altındaki komşuya devret
+  for (const emptyType of ['reviews', 'music']) {
+    const ew = l.widgets.find(w => w.type === emptyType);
+    if (!ew || !isWidgetEmpty(ew)) continue;
+    const merge = findMergeNeighbor(ew, l.widgets, isWidgetEmpty);
+    const ec = document.querySelector(`.cell[data-w="${emptyType}"]`);
+    if (ec) ec.style.display = 'none';
+    if (merge) {
+      const nc = document.querySelector(`.cell[data-w="${merge.w.type}"]`);
+      if (nc) nc.style.gridArea = `${merge.y + 1} / ${merge.x + 1} / span ${merge.h_} / span ${merge.w_}`;
+      if (merge.w.type === 'media') resizedMedia = true;
+    }
+  }
+
+  if (resizedMedia) requestAnimationFrame(sizeBg);
+  fitWidgets();
 }
 
 // ---- tema: renkler CSS değişkenlerine, açık/koyu tonlar vurgu renklerinden türetilir ----
@@ -2658,7 +2727,7 @@ function renderMusicWidget() {
     box.innerHTML = `<div class="mw-cov">⚠</div><div class="mw-meta"><div class="mw-tit">Çalınamadı</div><div class="mw-sub">${esc(MUS.err)}</div></div>`;
     return;
   }
-  if (!spLive && (!m || !m.enabled || !it)) { box.className = 'wbox idle'; box.innerHTML = '<div class="mw-cov">🎵</div><div class="mw-meta"><div class="mw-tit">Müzik kapalı</div></div>'; return; }
+  if (!spLive && (!m || !m.enabled || !it)) { box.className = 'wbox idle'; box.innerHTML = ''; return; }
   const isSp = spLive || it.provider === 'spotify';
   const paused = spLive ? spLive.paused : !m.playing;
   const title = spLive ? spLive.title : (MUS.trackTitle || it.title || 'Müzik');
@@ -2675,9 +2744,15 @@ function renderMusicWidget() {
 function renderMusicBar() {
   const bar = $id('music-bar'); if (!bar) return;
   renderMusicWidget();
+  fillEmpty();
   const m = MUS.cfg;
   const spLive = MUS.spConnectTrack;
-  if (musicWidgetOn() || (!spLive && (!m || !m.enabled || m.showNowPlaying === false))) { bar.className = ''; dockMusicBar(); return; }
+  const active = musicHasAudio();
+  if (musicWidgetOn() || (!spLive && (!m || !m.enabled || m.showNowPlaying === false)) || !active) {
+    bar.className = '';
+    dockMusicBar();
+    return;
+  }
   const it = activeMusicItem(m);
   if (!spLive && !it) { bar.className = ''; dockMusicBar(); return; }
   if (MUS.err && !spLive && m && m.enabled) { // çalınamadı: ayar kapalı olsa da görünür ki personel fark etsin
@@ -2708,7 +2783,7 @@ function renderMusicBar() {
       MUS.barTimer = setTimeout(() => { const b = $id('music-bar'); if (b && b.className.indexOf('on') === 0) b.classList.add('mini'); }, 8000);
     }
   };
-  bar.innerHTML = `<div class="mcov">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ic}</div>`
+  bar.innerHTML = `<div class="mcov">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ic}<div class="mcov-eq"><i></i><i></i><i></i><i></i></div></div>`
     + `<div class="mmeta"><div class="mtit">${esc(title)}</div>${sub ? `<div class="msub">${esc(sub)}</div>` : ''}</div>`
     + `<div class="meq"><i></i><i></i><i></i><i></i></div>`;
   if (changed) { clearTimeout(MUS.barTimer); MUS.barTimer = setTimeout(() => { const b = $id('music-bar'); if (b && b.className.indexOf('on') === 0) b.classList.add('mini'); }, 8000); }
