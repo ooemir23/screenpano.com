@@ -23,13 +23,21 @@ async function networkFirst(req, key) {
   }
 }
 // TV sayfası: önbellekteki kopya ANINDA gösterilir (kutu elektrik kesintisinden sonra bile saniyede açılır),
-// ağ arka planda önbelleği tazeler. Yeni sürümü sunucu WS 'version' mesajıyla bildirir, sayfa kendini yeniler.
+// ağ arka planda önbelleği tazeler. İçerik gerçekten değişmişse açık sayfalara 'tv-cached' haberidir gider;
+// sayfa bunu alınca kendini yeniler — kutu elle güncellenmek zorunda kalmaz.
 async function tvInstant(req) {
   const c = await caches.open(SHELL), key = '/tv';
   const hit = await c.match(key, { ignoreSearch: true });
-  fetch(req).then(r => { if (r.ok) c.put(key, r.clone()); }).catch(() => {});
+  fetch(key, { cache: 'no-store' }).then(async r => {
+    if (!r.ok) return;
+    const txt = await r.text();
+    const cur = await c.match(key, { ignoreSearch: true });
+    const old = cur ? await cur.text() : null;
+    await c.put(key, new Response(txt, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }));
+    if (old !== txt) self.clients.matchAll().then(cs => cs.forEach(cl => cl.postMessage({ type: 'tv-cached' }))).catch(() => {});
+  }).catch(() => {});
   if (hit) return hit;
-  const r = await timeout(fetch(req), 5000);
+  const r = await timeout(fetch(key, { cache: 'no-store' }), 5000);
   if (r.ok) c.put(key, r.clone());
   return r;
 }

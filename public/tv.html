@@ -937,6 +937,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
   <div class="row"><span>İşletme / Şube</span><span id="mbiz">-</span></div>
   <div class="row"><span>Kurulu APK sürümü</span><span id="mver">-</span></div>
   <div class="row"><span>Sunucu APK sürümü</span><span id="msrv">-</span></div>
+  <div class="row"><span>Ekran yazılımı (yayın)</span><span id="msoft">-</span></div>
   <div class="row"><span>Bağlantı durumu</span><span id="mconn">-</span></div>
   <div class="row"><span>Ekran çözünürlüğü</span><span id="mres">-</span></div>
   <div class="row"><span>Arka plan müzik</span><span id="mmus">-</span></div>
@@ -1971,6 +1972,7 @@ function menuInfo() {
   const n = window.__N;
   $m('mbiz').textContent = BNAME ? (BNAME + (CITY ? ' (' + CITY + ')' : '')) : 'Ekran Hazır';
   $m('mver').textContent = n && n.versionName ? 'v' + n.versionName() + ' (kod ' + n.versionCode() + ')' : (n && n.versionCode ? 'kod ' + n.versionCode() : 'Web Tarayıcı');
+  $m('msoft').textContent = window.__build ? window.__build.slice(0, 8) + (window.__buildFresh ? '' : ' (güncelleniyor…)') : '-';
   $m('mhost').textContent = location.host;
   $m('mres').textContent = `${screen.width}×${screen.height} (${window.innerWidth}×${window.innerHeight})`;
   const isWs = window.__ws && window.__ws.readyState === 1;
@@ -2541,7 +2543,7 @@ function connect() {
   ws.onmessage = e => {
     const m = JSON.parse(e.data);
     if (m.type === 'auth') { authFail = true; if (!PREVIEW) { tokenSet(''); showAuth(); } else { document.body.innerHTML = '<p style="color:#aaa;font:600 3vh sans-serif;padding:5vh">Önizleme için panele giriş yapın.</p>'; } return; }
-    if (m.type === 'version') { if (m.now) window.__srvOff = m.now - Date.now(); if (m.build && window.__build && window.__build !== m.build) { try { const k = '__buildReloads', now = Date.now(), arr = (JSON.parse(sessionStorage.getItem(k) || '[]')).filter(t => now - t < 15000); arr.push(now); sessionStorage.setItem(k, JSON.stringify(arr)); if (arr.length <= 2) location.reload(); } catch (e) { location.reload(); } } window.__build = m.build; }
+    if (m.type === 'version') { if (m.now) window.__srvOff = m.now - Date.now(); const mine = window.__pageBuild || window.__build; window.__buildFresh = !mine || mine === m.build; if (m.build && mine && mine !== m.build) { try { const k = '__buildReloads', now = Date.now(), arr = (JSON.parse(sessionStorage.getItem(k) || '[]')).filter(t => now - t < 30000); arr.push(now); sessionStorage.setItem(k, JSON.stringify(arr)); if (arr.length <= 4) location.reload(); } catch (e) { location.reload(); } } window.__build = m.build; }
     else if (m.type === 'state') { setState(m.state); saveState(m.state); }
     else if (m.type === 'snap') sendSnap();
     else if (m.type === 'reload') location.reload();
@@ -2677,6 +2679,12 @@ function prefetchMedia(s) {
 }
 if (!PREVIEW && 'serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.)/.test(location.hostname))) {
   navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(e => { ERR.last = 'sw: ' + e.message; });
+  // önbellek arka planda tazelendi ve içerik değişti: sayfa bayat → yenilenir (kutu elle güncellenmez)
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (!e.data || e.data.type !== 'tv-cached') return;
+    try { const k = '__swReloads', now = Date.now(), arr = (JSON.parse(sessionStorage.getItem(k) || '[]')).filter(t => now - t < 20000); arr.push(now); sessionStorage.setItem(k, JSON.stringify(arr)); if (arr.length > 1) return; } catch (x) {}
+    setTimeout(() => location.reload(), 500);
+  });
   navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'cache') CACHE = e.data; });
   navigator.serviceWorker.addEventListener('controllerchange', () => { try { prefetchMedia(JSON.parse(localStorage.getItem('lastState') || 'null')); } catch (e) {} });
 }
@@ -3254,3 +3262,4 @@ if (PREVIEW) {
 
 connect();
 </script></body></html>
+

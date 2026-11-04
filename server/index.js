@@ -28,7 +28,16 @@ app.use(require('compression')());
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); next(); });
 
-const page = file => (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(config.PUBLIC_DIR, file)); };
+// TV sayfasına sunucu sürümü pişirilir: önbellekten açılan bayat kopya, WS sürüm mesajıyla karşılaştırıp
+// kendini yenileyebilir (pişmiş sürüm yoksa taze açılan sayfa "uyumlu" sanılır ve asla güncellenmezdi)
+const page = file => (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
+  if (file !== 'tv.html') return res.sendFile(path.join(config.PUBLIC_DIR, file));
+  require('fs').readFile(path.join(config.PUBLIC_DIR, file), 'utf8', (err, html) => {
+    if (err) return res.sendStatus(404);
+    res.type('html').send(String(html).replace('<head>', '<head><script>window.__pageBuild="' + require('./realtime').build + '";</script>'));
+  });
+};
 app.get('/', (req, res) => {
   // eski APK'lar kök adresi açar: Android WebView'dan gelen istek TV sayfasına gider
   if (/; wv\)/.test(String(req.headers['user-agent'] || ''))) return res.redirect('/tv');

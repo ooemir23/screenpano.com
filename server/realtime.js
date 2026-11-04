@@ -12,8 +12,8 @@ const { publicState } = require('./state');
 
 const clients = new Set();
 let BUILD = '';
-// TV sayfasının sürümü: tv.html ve onun yüklediği posters.js değişince ekranlar kendini yeniler
-const computeBuild = () => { try { const h = crypto.createHash('md5'); for (const f of ['tv.html', 'posters.js']) { try { h.update(fs.readFileSync(path.join(config.PUBLIC_DIR, f))); } catch { /* dosya yok */ } } BUILD = h.digest('hex'); } catch { BUILD = String(Date.now()); } };
+// TV sayfasının sürümü: tv.html + posters.js ve sunucudaki tüm kod dosyaları değişince ekranlar kendini yeniler
+const computeBuild = () => { try { const h = crypto.createHash('md5'); for (const f of ['tv.html', 'posters.js']) { try { h.update(fs.readFileSync(path.join(config.PUBLIC_DIR, f))); } catch { /* dosya yok */ } } for (const f of fs.readdirSync(__dirname).filter(x => x.endsWith('.js')).sort()) h.update(fs.readFileSync(path.join(__dirname, f))); BUILD = h.digest('hex'); } catch { BUILD = String(Date.now()); } };
 computeBuild();
 
 const sendRaw = (ws, msg) => { if (ws.readyState === 1) ws.send(typeof msg === 'string' ? msg : JSON.stringify(msg)); };
@@ -109,4 +109,4 @@ function attach(server) {
   return wss;
 }
 
-module.exports = { attach, clients, sendState, computeBuild };
+module.exports = { attach, clients, sendState, computeBuild, get build() { return BUILD; } };

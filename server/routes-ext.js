@@ -76,6 +76,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     res.json({
       devices: store.q.devicesOf.all(req.t.id).map(d => monitor.deviceView(d, online.has(d.id))),
       alerts: (req.t.db.alerts || []).slice(0, 30), notify: req.t.db.notify || {}, mail: monitor.mailEnabled(), offlineMin: monitor.offlineMin(req.t),
+      build: require('./realtime').build,
     });
   });
   r.delete('/alerts', (req, res) => { req.t.db.alerts = []; changed(req.t); res.json({ ok: true }); });
