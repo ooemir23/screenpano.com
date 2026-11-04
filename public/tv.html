@@ -1784,7 +1784,7 @@ function celebQuote() {
   setTimeout(() => { q.textContent = c.quotes[celeb.qi++ % c.quotes.length]; m.classList.remove('out'); }, 600);
 }
 function setCeleb(c) {
-  const on = !!(c && c.until > Date.now());
+  const on = !!(c && c.until > Date.now() + (window.__srvOff || 0)); // sunucu saatiyle karşılaştır: kutunun saati gerideyse kutlama asla kapanmazdı
   window.__celeb = on ? c : null;
   if (on && (!celeb.on || celeb.id !== c.id)) {
     celeb.on = true; celeb.id = c.id; celeb.until = c.until; celeb.qi = 0; celeb.pi = 0;
@@ -1804,7 +1804,7 @@ function setCeleb(c) {
   }
 }
 setInterval(() => {
-  if (celeb.on && celeb.until <= Date.now()) setCeleb(null);
+  if (celeb.on && celeb.until <= Date.now() + (window.__srvOff || 0)) setCeleb(null);
   const c = window.__celeb; // 10 Kasım 09:05: bir dakika boyunca anma fotoğrafı ve saygı mesajı
   if (celeb.on && c && c.silence) {
     const hm = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
@@ -1813,6 +1813,8 @@ setInterval(() => {
     }
   }
 }, 10000); // bitiş saati gelince sunucu mesajı beklemeden kapan
+// gizli kalmış sekmede zamanlayıcı kısıtlanıp bitiş kaçabilir: görünür olunca hemen bir daha bak
+document.addEventListener('visibilitychange', () => { if (!document.hidden && celeb.on && celeb.until <= Date.now() + (window.__srvOff || 0)) setCeleb(null); });
 // ---- kampanya kartı: belirli aralıklarla tam kadraj, QR kodlu duyuru ----
 const camp = { list: [], last: {}, showing: false, due: null, after: null, started: Date.now() };
 function campShow(c) {
