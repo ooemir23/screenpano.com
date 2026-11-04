@@ -1111,8 +1111,11 @@ function syncExoBounds() {
 }
 window.addEventListener('resize', syncExoBounds);
 
+let playStartedAt = 0;
 // Sıfır karartmalı kusursuz görsel geçişi: yeni görsel arka planda tam çözülene kadar eski içerik ekranda kalır
 function showImageSeamless(it, durMs) {
+  window.__exoEnded = null;
+  playStartedAt = Date.now();
   if (window.__N && window.__N.hideImage) window.__N.hideImage();
   const nextIm = idleImg(), prevIm = curImg();
 
@@ -1138,19 +1141,25 @@ function showImageSeamless(it, durMs) {
   else { nextIm.onload = finish; nextIm.onerror = finish; }
 
   clearTimeout(timer);
-  timer = setTimeout(next, durMs);
+  const isOnline = window.__ws && window.__ws.readyState === 1;
+  timer = setTimeout(next, isOnline ? durMs + 2500 : durMs);
   setTimeout(prepNext, 500);
 }
 
 // Sıfır boşluklu video geçişi
 function showVideoSeamless(it, durMs, startMs) {
+  playStartedAt = Date.now();
   if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
     els.forEach(e => e.pause());
     if (window.__N.hideImage) window.__N.hideImage();
     syncExoBounds();
     if (window.__N.playExoWithSeek) window.__N.playExoWithSeek(it.url, it.dur || 0, startMs || 0);
     else window.__N.playExo(it.url, it.dur || 0);
-    window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
+    window.__exoEnded = () => {
+      if (Date.now() - playStartedAt < 3000) return;
+      clearTimeout(timer);
+      timer = setTimeout(next, 500);
+    };
     const safetyMs = Math.max(durMs + 15000, 45000);
     clearTimeout(timer);
     timer = setTimeout(next, safetyMs);
@@ -1197,14 +1206,17 @@ function play() {
   const it = videos[idx];
   notePlay(it);
   current = it.id;
+  playStartedAt = Date.now();
   const fullDurMs = (it.dur || imageSeconds || 10) * 1000;
 
   if (it.type === 'poster') {
+    window.__exoEnded = null;
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
     showPoster(it);
-    timer = setTimeout(next, fullDurMs);
+    const isOnline = window.__ws && window.__ws.readyState === 1;
+    timer = setTimeout(next, isOnline ? fullDurMs + 2500 : fullDurMs);
     setTimeout(prepNext, 500);
     return;
   }
@@ -1235,13 +1247,25 @@ function syncToMedia(m) {
   // Zaten bu içerik oynatılıyorsa: sayacı bozma, akış devam etsin
   if (current === it.id) return;
 
+  // KORUMA 1: Eğer ekrandaki içerik başlayalı 4 saniyeden az olduysa, anlık atlamayı önle!
+  if (Date.now() - playStartedAt < 4000) return;
+
+  // KORUMA 2: Eğer ekrandaki içerik bir video ise ve hala oynuyorsa, videoyu yarıda kesme!
+  const curIt = videos.find(x => x.id === current);
+  if (curIt && curIt.type === 'video') {
+    const minVidMs = (curIt.dur ? curIt.dur * 1000 - 1500 : 25000);
+    if (Date.now() - playStartedAt < minVidMs) return;
+  }
+
   // Yeni veya farklı içerik: hemen bu içeriğe geç
   clearTimeout(timer);
   idx = targetIdx;
   current = it.id;
   notePlay(it);
+  playStartedAt = Date.now();
 
   if (it.type === 'poster') {
+    window.__exoEnded = null;
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
@@ -2924,6 +2948,8 @@ const posterEl = (() => { const e = document.createElement('div'); e.id = 'poste
 let posterCur = null;
 function showPoster(it) {
   posterCur = it;
+  window.__exoEnded = null;
+  playStartedAt = Date.now();
   posterEl.innerHTML = window.SPPoster ? SPPoster.html(it, LANG) : '';
   if (posterEl.firstChild) SPPoster.fit(posterEl.firstChild);
   requestAnimationFrame(() => posterEl.classList.add('on'));

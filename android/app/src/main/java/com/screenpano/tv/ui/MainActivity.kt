@@ -120,8 +120,12 @@ class MainActivity : AppCompatActivity() {
                 addListener(object : Player.Listener {
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         if (playbackState == Player.STATE_ENDED) {
-                            Log.d(TAG, "ExoPlayer video bitti, sıradaki içeriğe geçiliyor")
-                            notifyVideoEnded()
+                            val currentPos = exoPlayer?.currentPosition ?: 0L
+                            val duration = exoPlayer?.duration ?: 0L
+                            Log.d(TAG, "ExoPlayer video bitti: pos=$currentPos ms, dur=$duration ms")
+                            if (duration > 1000L && currentPos >= (duration - 1500L)) {
+                                notifyVideoEnded()
+                            }
                         }
                     }
 
@@ -218,29 +222,7 @@ class MainActivity : AppCompatActivity() {
             setInterval(syncBounds, 1200);
             syncBounds();
 
-            window.__exoEnded = function() {
-                if (typeof next === 'function') {
-                    next();
-                }
-            };
-
-            var v1 = document.getElementById('v');
-            var v2 = document.getElementById('v2');
-            function hookV(v) {
-                if (!v) return;
-                var origPlay = v.play;
-                v.play = function() {
-                    var url = v.src || (v.dataset && v.dataset.url) || '';
-                    if (url && window.TVNative && window.TVNative.playExo) {
-                        syncBounds();
-                        v.style.opacity = '0';
-                        window.TVNative.playExo(url, 0);
-                    }
-                    return Promise.resolve();
-                };
-            }
-            hookV(v1);
-            hookV(v2);
+            // v1 ve v2 video kancaları kaldırıldı: TVNative.playExo doğrudan tv.html showVideoSeamless tarafından kontrol edilir.
 
             var poster = document.getElementById('poster');
             if (poster) {
@@ -315,9 +297,11 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "ExoPlayer ile oynatılıyor: $fullUrl (süre: $durationSec s, offset: $startPositionMs ms)")
                 try {
                     val mediaItem = MediaItem.fromUri(Uri.parse(fullUrl))
-                    exoPlayer?.setMediaItem(mediaItem)
+                    exoPlayer?.setMediaItem(mediaItem, true)
                     if (startPositionMs > 300) {
                         exoPlayer?.seekTo(startPositionMs)
+                    } else {
+                        exoPlayer?.seekTo(0L)
                     }
                     exoPlayer?.prepare()
                     exoPlayer?.play()
