@@ -100,8 +100,14 @@ class MainActivity : AppCompatActivity() {
         val dataSourceFactory = MediaCache.buildCacheDataSourceFactory(this)
         val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
+        // zayıf kutuda hızlı başlama: 1 sn veri yeter, en çok 20 sn önden indir
+        val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
+            .setBufferDurationsMs(20_000, 20_000, 1_000, 2_000)
+            .build()
+
         exoPlayer = ExoPlayer.Builder(this, renderersFactory)
             .setMediaSourceFactory(mediaSourceFactory)
+            .setLoadControl(loadControl)
             .build()
             .apply {
                 volume = 0f
@@ -125,6 +131,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.playerView.player = exoPlayer
         binding.playerView.useController = false
+        binding.playerView.visibility = View.VISIBLE // hep açık: yüzey bir kez oluşur, saklanmaz
     }
 
     private fun notifyVideoEnded() {
@@ -320,8 +327,8 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun stopExo() {
             handler.post {
-                exoPlayer?.stop()
-                binding.playerView.visibility = View.GONE
+                // sadece duraklat: yüzey ve son kare kalır — bir sonraki video yüzey yeniden doğmadan anında başlar
+                exoPlayer?.pause()
             }
         }
 

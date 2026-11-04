@@ -16,7 +16,8 @@
         android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        app:surface_type="texture_view"
+        app:surface_type="surface_view"
+        app:keep_content_on_player_reset="true"
         app:use_controller="false"
         app:resize_mode="fit" />
 
