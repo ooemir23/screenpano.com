@@ -5,6 +5,7 @@ const QRCode = require('qrcode');
 const config = require('./config');
 const store = require('./store');
 const F = require('./feeds');
+let mediaSig = '', mediaAt = 0; // çalma listesi imzası ve son değişim ankışı (ekranlar arası senkron için)
 const { plan, access } = require('./plans');
 const { WIDGETS, defaultLayout } = require('./widgets');
 
@@ -38,7 +39,7 @@ function mediaList(t) {
     if (v.status === 'processing' && !v.reopt) continue;
     if (v.hidden || SCH.expired(v.sch)) continue;
     if (v.type === 'poster') out.push({ id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null });
-    else out.push({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', sch: v.sch || null });
+    else out.push({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || null, sch: v.sch || null });
   }
   const bk = F.booksView();
   const covers = require('./plans').plan(t).pro && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR
@@ -95,9 +96,13 @@ function publicState(t) {
   const enabled = F.enabledLeagues(t);
   const movies = F.movies;
   const books = F.booksView();
+  // çalma listesi değişince saat ankışı yenilenir: tüm ekranlar sunucu saatine göre aynı anda aynı içeriği gösterir
+  const ml = mediaList(t), msig = ml.map(v => v.id + ':' + (v.dur || '') + ':' + (v.url || v.image || '')).join('|');
+  if (msig !== mediaSig) { mediaSig = msig; mediaAt = Date.now(); }
   return {
     ...base,
-    videos: mediaList(t),
+    videos: ml,
+    mediaAt,
     imageSeconds: db.imageSeconds,
     reviews: pro && has('reviews') ? reviewList(db) : [],
     googleRating: pro && db.google && db.google.rating ? { rating: db.google.rating, count: db.google.count } : null,

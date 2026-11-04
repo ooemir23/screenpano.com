@@ -158,6 +158,7 @@ const server = http.createServer(app);
 realtime.attach(server);
 feeds.start();
 media.resumeAll();
+media.backfillDurations(); // eski videoların süresi ölçülür: ekranlar arası senkron için
 require('./routes-admin').startJobs();
 require('./storage').start();
 require('./backup').start();

@@ -1070,17 +1070,33 @@ function prepNext() {
   el.dataset.url = n.url; el.loop = false; el.src = n.url; el.load();
   prepared = { id: n.id };
 }
+// ---- ekranlar arası senkron: çalma listesi sunucu saatine göre ortak takvimde döner ----
+// tüm süreler biliniyorsa (fotoğraflar imageSeconds, videolar ölçülen süre + 2 sn bitiş beklemeesi)
+// her ekran sunucu saatinden hesaplanan içeriği gösterir; tablet, telefon ve TV'ler aynı anda aynı şeyde olur
+const itemLen = it => it.type === 'video' ? (it.dur ? it.dur + 2 : 0) : (it.dur || imageSeconds);
+function syncPos() {
+  if (!window.__mediaAt || !videos.length) return null;
+  const durs = videos.map(itemLen);
+  const total = durs.reduce((a, b) => a + b, 0);
+  if (!total || durs.some(d => !d)) return null; // süresi bilinmeyen video varsa senkron kapalı (eski davranış)
+  let t = ((Date.now() + (window.__srvOff || 0)) - window.__mediaAt) % (total * 1000);
+  if (t < 0) t += total * 1000;
+  for (let i = 0; i < videos.length; i++) { if (t < durs[i] * 1000) return { idx: i, ms: durs[i] * 1000 - t }; t -= durs[i] * 1000; }
+  return null;
+}
 function play() {
   clearTimeout(timer); fadeTok++;
   if (!videos.length || !MEDIA_ON) return;
   idx %= videos.length;
+  const sp = syncPos();
+  if (sp && sp.idx !== idx) idx = sp.idx; // senkron: sunucu saati hangi içerikteyse ekran onu gösterir
   const it = videos[idx];
   notePlay(it);
   current = it.id;
   if (it.type === 'poster') {
     els.forEach(e => e.pause());
     showPoster(it);
-    timer = setTimeout(next, (it.dur || imageSeconds) * 1000);
+    timer = setTimeout(next, sp ? sp.ms : (it.dur || imageSeconds) * 1000);
     setTimeout(prepNext, 500);
     return;
   }
@@ -1088,9 +1104,9 @@ function play() {
   if (it.type === 'image') {
     els.forEach(e => e.pause());
     const showImg = () => { els.forEach(e => e.style.zIndex = '1'); img.style.zIndex = '2'; img.style.display = 'block'; img.src = it.url; const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (current === it.id) { img.style.opacity = '1'; cleanupLayers(img); } })); if (img.decode) img.decode().then(go, go); else go(); };
-    if (!window.__lite && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); } // fotoğraftan fotoğrafa: önce söner, sonra yenisi belirir (hafif modda bekleme yok)
+    if (!window.__lite && !sp && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); } // fotoğraftan fotoğrafa: önce söner, sonra yenisi belirir (hafif modda ve senkron aktifken bekleme yok: ekranlar hizalı kalsın)
     else { img.style.opacity = '0'; showImg(); }
-    timer = setTimeout(next, imageSeconds * 1000);
+    timer = setTimeout(next, sp ? sp.ms : imageSeconds * 1000);
     setTimeout(prepNext, 500);
   } else {
     if (window.__lite) bctx.clearRect(0, 0, bgc.width, bgc.height); // hafif modda videonun arkasına bulanık kopya çizilmez
@@ -1102,6 +1118,10 @@ function play() {
     const reveal = () => { showEl(el); if (old !== el) old.pause(); };
     if (ready) reveal(); else el.addEventListener('playing', reveal, { once: true });
     const pr = el.play(); if (pr && pr.catch) pr.catch(() => {});
+    if (sp && it.dur) { // senkron: video ortasında katılan ekran doğru saniyeye atlar
+      const into = it.dur - sp.ms / 1000;
+      if (into > 3 && into < it.dur - 2) { const sk = () => { try { el.currentTime = into; } catch (e) {} }; el.readyState >= 1 ? sk() : el.addEventListener('loadedmetadata', sk, { once: true }); }
+    }
     prepared = { id: null };
     setTimeout(prepNext, 2000);
   }
@@ -1510,7 +1530,7 @@ function setState(s) {
   if ((s.fxMode || 'auto') !== window.__fx) { window.__fx = s.fxMode || 'auto'; window.__applyFx(); }
   imageSeconds = s.imageSeconds || 10; TZ = s.tz || TZ;
   setLangs(s.langs, s.langSec);
-  ALLV = s.videos || []; applyVideos();
+  ALLV = s.videos || []; window.__mediaAt = s.mediaAt || window.__mediaAt || 0; applyVideos();
   GRATING = s.googleRating || null;
   { const bs = JSON.stringify([s.breaking, s.showBreaking, s.breakingBanner]); if (bs !== window.__brkSig) { window.__brkSig = bs; pagesDirty = true; breakData = s.breaking; showBrk = s.showBreaking === true; brkBanner = s.breakingBanner !== false; window.__forceRender = true; checkBreaking(); } }
   const infoSig = JSON.stringify([s.pharmacies, s.showPharmacy, s.onThisDay, s.showOnThisDay, s.news, s.showNews, s.books, s.showBooks, s.movies, s.showMovies]);

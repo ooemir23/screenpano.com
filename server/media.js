@@ -15,6 +15,31 @@ try { const p = spawn(config.FFMPEG, ['-version'], { stdio: 'ignore' }); p.on('e
 
 const queue = []; let busy = false;
 const SCALE = "scale='min(1920,iw)':'min(1920,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2";
+// video süresi (sn): ekranlar arası senkron için çalma listesinde kullanılır
+const probeDur = file => new Promise(res => {
+  try {
+    const p = spawn(config.FFMPEG, ['-i', file], { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    p.stderr.on('data', d => { err += d; });
+    p.on('error', () => res(null));
+    p.on('close', () => { const m = /Duration:\s*(\d+):(\d+):(\d+)\.(\d+)/.exec(err); res(m ? Math.round(+m[1] * 3600 + +m[2] * 60 + +m[3] + (+m[4] >= 50 ? 1 : 0)) : null); });
+  } catch (e) { res(null); }
+});
+// süre bilgisi eksik eski videolar: açılışta ölçülür (yeniden kodlama yapılmaz)
+async function backfillDurations() {
+  for (const t of tenants.all()) {
+    let dirty = false;
+    for (const v of t.db.videos) {
+      if (v.type === 'image' || v.type === 'poster' || v.dur || v.status === 'processing') continue;
+      let src = path.join(t.dirs.uploads, v.file);
+      if (!fs.existsSync(src)) { try { src = await require('./storage').ensureLocal(t, v.file); } catch (e) { src = null; } }
+      if (!src || !fs.existsSync(src)) continue;
+      const d = await probeDur(src);
+      if (d) { v.dur = d; dirty = true; }
+    }
+    if (dirty) tenants.save(t);
+  }
+}
 // video çözünürlük tavanı (işletme ayarı, panelde seçilir): 720p/480p zayıf TV kutularında daha akıcı oynar
 const VIDEO_MAX = { 1080: [1920, 1080], 720: [1280, 720], 480: [854, 480] };
 
@@ -44,8 +69,9 @@ async function optimizeItem(tid, id) {
     const after = fs.statSync(out).size;
     if (!t.db.videos.find(x => x.id === id)) { fs.rmSync(out, { force: true }); return; }
     if (after >= before && v.reopt) { fs.rmSync(out, { force: true }); return done({ sizeBefore: before, sizeAfter: before }); }
+    const dur = isImg ? null : await probeDur(out); // senkronlu çalma listesi için süre
     require('./storage').remove(t, v.file);
-    done({ file: outName, sizeBefore: before, sizeAfter: after, optError: '' });
+    done({ file: outName, sizeBefore: before, sizeAfter: after, optError: '', ...(dur ? { dur } : {}) });
   } catch (e) {
     fs.rmSync(out, { force: true });
     console.error('Optimizasyon başarısız:', v.name, e.message);
@@ -63,4 +89,4 @@ function resumeAll() { for (const t of tenants.all()) for (const v of t.db.video
 // İşletmenin diskte kapladığı yer (kota kontrolü için)
 const usedBytes = t => require('./storage').usedBytes(t);
 
-module.exports = { enqueue, resumeAll, usedBytes, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };
+module.exports = { enqueue, resumeAll, backfillDurations, usedBytes, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };
