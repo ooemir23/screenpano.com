@@ -293,12 +293,20 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun playExo(url: String, durationSec: Int) {
+            playExoWithSeek(url, durationSec, 0L)
+        }
+
+        @JavascriptInterface
+        fun playExoWithSeek(url: String, durationSec: Int, startPositionMs: Long) {
             handler.post {
                 val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
-                Log.d(TAG, "ExoPlayer ile oynatılıyor: $fullUrl (süre: $durationSec s)")
+                Log.d(TAG, "ExoPlayer ile oynatılıyor: $fullUrl (süre: $durationSec s, offset: $startPositionMs ms)")
                 try {
                     val mediaItem = MediaItem.fromUri(Uri.parse(fullUrl))
                     exoPlayer?.setMediaItem(mediaItem)
+                    if (startPositionMs > 300) {
+                        exoPlayer?.seekTo(startPositionMs)
+                    }
                     exoPlayer?.prepare()
                     exoPlayer?.play()
                     binding.playerView.visibility = View.VISIBLE

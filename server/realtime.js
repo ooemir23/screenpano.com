@@ -80,6 +80,11 @@ function attach(server) {
       store.q.deviceSeen.run(Date.now(), d.id);
       const t0 = tenants.get(d.tenant_id); if (t0) require('./monitor').connected(t0, d);
       try { require('./stats').deviceUp(d.tenant_id, d.id); } catch (e) {}
+
+      // Yeni bir cihaz bağlandığında: o işletmenin tüm ekranları bu son cihaza göre senkron olsun
+      const now = Date.now();
+      const newMediaAt = require('./state').resetTenantMediaAt(d.tenant_id);
+      hub.send((t, clientWs) => t.id === d.tenant_id, { type: 'sync_anchor', mediaAt: newMediaAt, serverTime: now });
     } else if (preview) { // panelin canlı önizlemesi: oturum çerezi gerekir
       const u = auth.sessionUser(req);
       const tid = u && require('./routes-admin').activeTenantId(u);

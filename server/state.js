@@ -5,7 +5,23 @@ const QRCode = require('qrcode');
 const config = require('./config');
 const store = require('./store');
 const F = require('./feeds');
-let mediaSig = '', mediaAt = 0; // çalma listesi imzası ve son değişim ankışı (ekranlar arası senkron için)
+const tenantMediaSync = new Map(); // tid -> { sig: string, at: number }
+function getTenantMediaAt(t, ml) {
+  const msig = ml.map(v => v.id + ':' + (v.dur || '') + ':' + (v.url || v.image || '')).join('|');
+  let cur = tenantMediaSync.get(t.id);
+  if (!cur || cur.sig !== msig) {
+    cur = { sig: msig, at: Date.now() };
+    tenantMediaSync.set(t.id, cur);
+  }
+  return cur.at;
+}
+function resetTenantMediaAt(tid) {
+  const now = Date.now();
+  let cur = tenantMediaSync.get(tid);
+  if (cur) cur.at = now;
+  else tenantMediaSync.set(tid, { sig: '', at: now });
+  return now;
+}
 const { plan, access } = require('./plans');
 const { WIDGETS, defaultLayout } = require('./widgets');
 
@@ -97,8 +113,8 @@ function publicState(t) {
   const movies = F.movies;
   const books = F.booksView();
   // çalma listesi değişince saat ankışı yenilenir: tüm ekranlar sunucu saatine göre aynı anda aynı içeriği gösterir
-  const ml = mediaList(t), msig = ml.map(v => v.id + ':' + (v.dur || '') + ':' + (v.url || v.image || '')).join('|');
-  if (msig !== mediaSig) { mediaSig = msig; mediaAt = Date.now(); }
+  const ml = mediaList(t);
+  const mediaAt = getTenantMediaAt(t, ml);
   return {
     ...base,
     videos: ml,
@@ -149,4 +165,4 @@ function publicState(t) {
   };
 }
 
-module.exports = { publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };
+module.exports = { publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, resetTenantMediaAt, LANGS };

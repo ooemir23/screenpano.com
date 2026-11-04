@@ -1078,17 +1078,21 @@ function prepNext() {
   prepared = { id: n.id };
 }
 // ---- ekranlar arası senkron: çalma listesi sunucu saatine göre ortak takvimde döner ----
-// tüm süreler biliniyorsa (fotoğraflar imageSeconds, videolar ölçülen süre + 2 sn bitiş beklemeesi)
-// her ekran sunucu saatinden hesaplanan içeriği gösterir; tablet, telefon ve TV'ler aynı anda aynı şeyde olur
-const itemLen = it => it.type === 'video' ? (it.dur ? it.dur + 2 : 0) : (it.dur || imageSeconds);
+// tüm süreler biliniyorsa (fotoğraflar imageSeconds, videolar ölçülen süre)
+// her ekran sunucu saatinden hesaplanan içeriği gösterir; birden çok TV aynı anda aynı içeriği ve saniyeyi gösterir
+const itemLen = it => it.type === 'video' ? (it.dur ? it.dur : 15) : (it.dur || imageSeconds || 10);
 function syncPos() {
   if (!window.__mediaAt || !videos.length) return null;
   const durs = videos.map(itemLen);
   const total = durs.reduce((a, b) => a + b, 0);
-  if (!total || durs.some(d => !d)) return null; // süresi bilinmeyen video varsa senkron kapalı (eski davranış)
+  if (!total) return null;
   let t = ((Date.now() + (window.__srvOff || 0)) - window.__mediaAt) % (total * 1000);
   if (t < 0) t += total * 1000;
-  for (let i = 0; i < videos.length; i++) { if (t < durs[i] * 1000) return { idx: i, ms: durs[i] * 1000 - t }; t -= durs[i] * 1000; }
+  for (let i = 0; i < videos.length; i++) {
+    const dMs = durs[i] * 1000;
+    if (t < dMs) return { idx: i, ms: dMs - t, offsetSec: t / 1000 };
+    t -= dMs;
+  }
   return null;
 }
 function syncExoBounds() {
@@ -1114,7 +1118,7 @@ function play() {
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
     els.forEach(e => e.pause());
     showPoster(it);
-    timer = setTimeout(next, sp ? sp.ms : (it.dur || imageSeconds) * 1000);
+    timer = setTimeout(next, sp ? sp.ms : (it.dur || imageSeconds || 10) * 1000);
     setTimeout(prepNext, 500);
     return;
   }
@@ -1123,24 +1127,28 @@ function play() {
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
     els.forEach(e => e.pause());
     const showImg = () => { els.forEach(e => e.style.zIndex = '1'); img.style.zIndex = '2'; img.style.display = 'block'; img.src = it.url; const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (current === it.id) { img.style.opacity = '1'; cleanupLayers(img); } })); if (img.decode) img.decode().then(go, go); else go(); };
-    if (!window.__lite && !sp && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); } // fotoğraftan fotoğrafa: önce söner, sonra yenisi belirir (hafif modda ve senkron aktifken bekleme yok: ekranlar hizalı kalsın)
+    if (!window.__lite && !sp && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); }
     else { img.style.opacity = '0'; showImg(); }
-    timer = setTimeout(next, sp ? sp.ms : imageSeconds * 1000);
+    timer = setTimeout(next, sp ? sp.ms : (imageSeconds || 10) * 1000);
     setTimeout(prepNext, 500);
   } else {
-    if (window.__N && window.__N.playExo) {
+    const startMs = sp && sp.offsetSec > 0.4 ? Math.round(sp.offsetSec * 1000) : 0;
+    if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
       els.forEach(e => e.pause());
       syncExoBounds();
-      window.__N.playExo(it.url, it.dur || 0);
-      window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
-      if (it.dur) {
-        timer = setTimeout(next, sp ? sp.ms : (it.dur + 0.5) * 1000);
+      if (window.__N.playExoWithSeek) {
+        window.__N.playExoWithSeek(it.url, it.dur || 0, startMs);
+      } else {
+        window.__N.playExo(it.url, it.dur || 0);
       }
+      window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
+      const waitMs = sp ? sp.ms : (it.dur ? it.dur * 1000 : 15000);
+      timer = setTimeout(next, waitMs);
       prepared = { id: null };
       setTimeout(prepNext, 2000);
       return;
     }
-    if (window.__lite) bctx.clearRect(0, 0, bgc.width, bgc.height); // hafif modda videonun arkasına bulanık kopya çizilmez
+    if (window.__lite) bctx.clearRect(0, 0, bgc.width, bgc.height);
     let el, ready = false;
     if (prepared.id === it.id && idleV().dataset.url === it.url) { ci = 1 - ci; el = curV(); ready = el.readyState >= 2; }
     else { el = curV(); el.dataset.url = it.url; el.src = it.url; }
@@ -1149,10 +1157,13 @@ function play() {
     const reveal = () => { showEl(el); if (old !== el) old.pause(); };
     if (ready) reveal(); else el.addEventListener('playing', reveal, { once: true });
     const pr = el.play(); if (pr && pr.catch) pr.catch(() => {});
-    if (sp && it.dur) { // senkron: video ortasında katılan ekran doğru saniyeye atlar
-      const into = it.dur - sp.ms / 1000;
-      if (into > 3 && into < it.dur - 2) { const sk = () => { try { el.currentTime = into; } catch (e) {} }; el.readyState >= 1 ? sk() : el.addEventListener('loadedmetadata', sk, { once: true }); }
+    if (startMs > 400) {
+      const into = startMs / 1000;
+      const sk = () => { try { el.currentTime = into; } catch (e) {} };
+      el.readyState >= 1 ? sk() : el.addEventListener('loadedmetadata', sk, { once: true });
     }
+    const waitMs = sp ? sp.ms : (it.dur ? it.dur * 1000 : 15000);
+    timer = setTimeout(next, waitMs);
     prepared = { id: null };
     setTimeout(prepNext, 2000);
   }
@@ -1319,28 +1330,53 @@ function render() {
   else if (pg.type === 'empty') list.innerHTML = '<div class="m"><div class="top"><span>Yakında maç yok</span></div></div>';
   dots.innerHTML = pages.length > 6 ? `<span class="cnt">${page + 1} / ${pages.length}</span>` : pages.length > 1 ? pages.map((_, i) => `<i class="${i === page ? 'on' : ''}"></i>`).join('') : '';
 }
+function syncWidgetPage() {
+  if (!pages.length) return { page: 0, msLeft: 12000 };
+  const durSec = 12;
+  const t = Math.floor((Date.now() + (window.__srvOff || 0)) / 1000);
+  const targetPage = Math.floor(t / durSec) % pages.length;
+  const msLeft = (durSec - (t % durSec)) * 1000;
+  return { page: targetPage, msLeft: Math.max(800, msLeft) };
+}
 function tick() {
   if (PIN && PIN !== 'goal') return;
   const el = document.getElementById(pages[page]?.type === 'traffic' ? 'traffic' : 'list');
-  el.classList.add('out');
-  setTimeout(() => { page++; render(); el.classList.remove('out'); schedule(); }, 450);
+  if (el) el.classList.add('out');
+  setTimeout(() => {
+    const sp = syncWidgetPage();
+    page = sp.page;
+    render();
+    if (el) el.classList.remove('out');
+    schedule();
+  }, 400);
 }
 function schedule() {
   clearTimeout(rot);
-  const ty = pages[page] && pages[page].type;
-  rot = setTimeout(tick, ty === 'traffic' ? TRAFFIC_MS : (ty === 'pharm' || ty === 'otd' || ty === 'news' || ty === 'breaking' || ty === 'books' || ty === 'movies') ? 13000 : PAGE_MS);
+  const sp = syncWidgetPage();
+  rot = setTimeout(tick, sp.msLeft);
 }
 addEventListener('resize', () => { fit(); pagesDirty = true; render(); });
 function setMatches(list, st, show) {
   const same = JSON.stringify([list, st, show]) === JSON.stringify([matches, standingsData, showStandings]);
   if (matches.some(m => m.channel) !== list.some(m => m.channel)) window.fitted = false;
   matches = list; standingsData = st || {}; showStandings = show !== false;
-  if (!same || !pages.length || window.__forceRender) { window.__forceRender = false; pagesDirty = true; render(); if (!rot) schedule(); }
+  if (!same || !pages.length || window.__forceRender) {
+    window.__forceRender = false;
+    pagesDirty = true;
+    const sp = syncWidgetPage();
+    page = sp.page;
+    render();
+    schedule();
+  }
 }
 let reviews = [], revIdx = 0, revTimer;
 function showReview() {
+  if (!reviews.length) return;
   const el = document.getElementById('reviews');
-  const r = reviews[revIdx % reviews.length];
+  const t = Math.floor((Date.now() + (window.__srvOff || 0)) / 1000);
+  revIdx = Math.floor(t / 10) % reviews.length;
+  const r = reviews[revIdx];
+  if (!r) return;
   el.innerHTML = `<div class="g"><b>Google</b><small>${GRATING ? String(GRATING.rating).replace('.', ',') + ' ★ · ' + GRATING.count + ' yorum' : 'Yorumlar'}</small></div><div class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div><div class="q">“${esc(r.text)}”</div><div class="who">${esc(r.author)}</div>`;
 }
 function setReviews(list) {
@@ -1354,7 +1390,7 @@ function setReviews(list) {
   revTimer = setInterval(() => {
     if (reviews.length < 2) return;
     el.classList.add('out');
-    setTimeout(() => { revIdx++; showReview(); el.classList.remove('out'); }, 450);
+    setTimeout(() => { showReview(); el.classList.remove('out'); }, 450);
   }, 9000);
 }
 function tickClock() {
@@ -2678,6 +2714,11 @@ function connect() {
     const m = JSON.parse(e.data);
     if (m.type === 'auth') { authFail = true; if (!PREVIEW) { tokenSet(''); showAuth(); } else { document.body.innerHTML = '<p style="color:#aaa;font:600 3vh sans-serif;padding:5vh">Önizleme için panele giriş yapın.</p>'; } return; }
     if (m.type === 'version') { if (m.now) window.__srvOff = m.now - Date.now(); const mine = window.__pageBuild || window.__build; window.__buildFresh = !mine || mine === m.build; if (m.build && mine && mine !== m.build) { try { const k = '__buildReloads', now = Date.now(), arr = (JSON.parse(sessionStorage.getItem(k) || '[]')).filter(t => now - t < 30000); arr.push(now); sessionStorage.setItem(k, JSON.stringify(arr)); if (arr.length <= 4) location.reload(); } catch (e) { location.reload(); } } window.__build = m.build; }
+    else if (m.type === 'sync_anchor') {
+      if (m.serverTime) window.__srvOff = m.serverTime - Date.now();
+      if (m.mediaAt) { window.__mediaAt = m.mediaAt; idx = 0; play(); }
+      const sp = syncWidgetPage(); page = sp.page; render(); schedule();
+    }
     else if (m.type === 'state') { setState(m.state); saveState(m.state); }
     else if (m.type === 'snap') sendSnap();
     else if (m.type === 'reload') location.reload();
