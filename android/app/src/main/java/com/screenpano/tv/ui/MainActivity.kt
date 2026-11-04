@@ -256,7 +256,8 @@ class MainActivity : AppCompatActivity() {
             if (trailer) {
                 var obs2 = new MutationObserver(function() {
                     if (trailer.classList.contains('on')) {
-                        if (window.TVNative && window.TVNative.stopExo) window.TVNative.stopExo();
+                        if (window.TVNative && window.TVNative.hideExo) window.TVNative.hideExo();
+                        else if (window.TVNative && window.TVNative.stopExo) window.TVNative.stopExo();
                     }
                 });
                 obs2.observe(trailer, { attributes: true, attributeFilter: ['class'] });
@@ -309,6 +310,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun playExoWithSeek(url: String, durationSec: Int, startPositionMs: Long) {
             handler.post {
+                binding.playerView.visibility = View.VISIBLE
                 val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
                 Log.d(TAG, "ExoPlayer ile oynatılıyor: $fullUrl (süre: $durationSec s, offset: $startPositionMs ms)")
                 try {
@@ -319,7 +321,6 @@ class MainActivity : AppCompatActivity() {
                     }
                     exoPlayer?.prepare()
                     exoPlayer?.play()
-                    binding.playerView.visibility = View.VISIBLE
                 } catch (e: Exception) {
                     Log.e(TAG, "ExoPlayer oynatılamadı", e)
                     notifyVideoEnded()
@@ -332,6 +333,15 @@ class MainActivity : AppCompatActivity() {
             handler.post {
                 // sadece duraklat: yüzey ve son kare kalır — bir sonraki video yüzey yeniden doğmadan anında başlar
                 exoPlayer?.pause()
+            }
+        }
+
+        @JavascriptInterface
+        fun hideExo() {
+            handler.post {
+                exoPlayer?.pause()
+                // Yüzeyi gizle: YouTube ve iframe katmanları donanım SurfaceView çakışması olmadan pürüzsüz oynar
+                binding.playerView.visibility = View.INVISIBLE
             }
         }
 
