@@ -326,6 +326,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun seekExo(positionMs: Long) {
+            handler.post {
+                try {
+                    exoPlayer?.seekTo(positionMs)
+                } catch (e: Exception) {
+                    Log.e(TAG, "ExoPlayer seekTo error", e)
+                }
+            }
+        }
+
+        @JavascriptInterface
         fun updateBounds(leftPx: Int, topPx: Int, widthPx: Int, heightPx: Int) {
             handler.post {
                 if (widthPx > 0 && heightPx > 0) {

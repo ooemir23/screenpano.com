@@ -30,6 +30,10 @@ function schedule(tid) {
     flushTimer = null;
     const ids = new Set(pending); pending.clear();
     for (const ws of clients) if (ids.has('*') || ids.has(ws.tid)) sendState(ws);
+    for (const tid of ids) {
+      if (tid !== '*') broadcastSync(tid, true);
+      else for (const t of tenants.keys()) broadcastSync(t, true);
+    }
   }, 250);
 }
 
@@ -47,6 +51,75 @@ hub.clientCount = () => clients.size;
 hub.onlineDeviceIds = () => new Set([...clients].filter(c => c.deviceId).map(c => c.deviceId));
 hub.sendDevice = (id, msg) => { let n = 0; for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, msg); n++; } return n; };
 hub.kickDevice = id => { for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, { type: 'auth', error: 'revoked' }); ws.close(); } };
+
+// Çoklu ekran senkronizasyonu: her işletme için sunucu tarafında canlı çalma listesi saati
+const tenantSync = new Map();
+const SCH = require('./sched');
+function getActiveMediaList(t) {
+  const ml = require('./state').mediaList(t);
+  return (ml || []).filter(x => SCH.active(x.sch));
+}
+function getMediaLen(it, imgSec) {
+  if (it.type === 'video') return (it.dur ? it.dur : 15);
+  return (it.dur || imgSec || 10);
+}
+function broadcastSync(tid, reset = false) {
+  const t = tenants.get(tid);
+  if (!t) return;
+  const ml = getActiveMediaList(t);
+  if (!ml || !ml.length) return;
+  const imgSec = t.db.imageSeconds || 10;
+  let sync = tenantSync.get(tid);
+  const now = Date.now();
+  if (!sync || reset || sync.idx >= ml.length) {
+    const dur = getMediaLen(ml[0], imgSec);
+    sync = { idx: 0, startedAt: now, endsAt: now + dur * 1000, lastHeartbeat: now };
+    tenantSync.set(tid, sync);
+  }
+  const curItem = ml[sync.idx % ml.length];
+  const dur = getMediaLen(curItem, imgSec);
+  const elapsed = Math.max(0, now - sync.startedAt);
+  const msg = {
+    type: 'sync_media',
+    idx: sync.idx % ml.length,
+    id: curItem.id,
+    itemType: curItem.type,
+    url: curItem.url || curItem.image,
+    dur,
+    elapsed,
+    serverTime: now,
+  };
+  hub.send((tenant) => tenant.id === tid, msg);
+}
+
+setInterval(() => {
+  const now = Date.now();
+  const activeTids = hub.connectedTenantIds();
+  for (const tid of activeTids) {
+    const t = tenants.get(tid);
+    if (!t) continue;
+    const ml = getActiveMediaList(t);
+    if (!ml || !ml.length) continue;
+    let sync = tenantSync.get(tid);
+    const imgSec = t.db.imageSeconds || 10;
+    if (!sync) {
+      broadcastSync(tid, true);
+      continue;
+    }
+    if (now >= sync.endsAt) {
+      sync.idx = (sync.idx + 1) % ml.length;
+      const nextItem = ml[sync.idx];
+      const dur = getMediaLen(nextItem, imgSec);
+      sync.startedAt = now;
+      sync.endsAt = now + dur * 1000;
+      sync.lastHeartbeat = now;
+      broadcastSync(tid, false);
+    } else if (now - (sync.lastHeartbeat || 0) >= 4000) {
+      sync.lastHeartbeat = now;
+      broadcastSync(tid, false);
+    }
+  }
+}, 500);
 
 // TV'den gelen mesajlar: durum raporu, oynatma kaydı, ekran görüntüsü ve müzik listesi sorgusu
 function onMessage(ws, raw) {
@@ -81,10 +154,6 @@ function attach(server) {
       const t0 = tenants.get(d.tenant_id); if (t0) require('./monitor').connected(t0, d);
       try { require('./stats').deviceUp(d.tenant_id, d.id); } catch (e) {}
 
-      // Yeni bir cihaz bağlandığında: o işletmenin tüm ekranları bu son cihaza göre senkron olsun
-      const now = Date.now();
-      const newMediaAt = require('./state').resetTenantMediaAt(d.tenant_id);
-      hub.send((t, clientWs) => t.id === d.tenant_id, { type: 'sync_anchor', mediaAt: newMediaAt, serverTime: now });
     } else if (preview) { // panelin canlı önizlemesi: oturum çerezi gerekir
       const u = auth.sessionUser(req);
       const tid = u && require('./routes-admin').activeTenantId(u);
@@ -98,6 +167,10 @@ function attach(server) {
     ws.on('message', raw => onMessage(ws, raw));
     sendRaw(ws, { type: 'version', build: BUILD, now: Date.now() });
     sendState(ws);
+    if (token) {
+      // Bir cihaz bağlandığında: tüm bağlı cihazlar son bağlanan cihaza göre senkron olsun (baştan sıfırlayarak aynı içeriğe kilitler)
+      broadcastSync(ws.tid, true);
+    }
     const F = require('./feeds'), t = tenants.get(ws.tid);
     if (t && !F.weatherFor(t)) F.refreshWeather(); // yeni işletme ya da yeni konum: havayı hemen çek
     setTimeout(() => F.maybeRenderMap(), 1500);
