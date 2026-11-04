@@ -15,8 +15,6 @@
     document.documentElement.classList.toggle('lite', lite); window.__lite = lite;
     if (window.__N && window.__N.hasExoPlayer && window.__N.hasExoPlayer()) {
       document.documentElement.classList.add('native-exo');
-      // fotoğraf gizleme yalnız native foto katmanı (APK 2.7+) varken: eski APK'da web fotoğrafı görünür kalmalı
-      if (window.__N.showImage) document.documentElement.classList.add('native-photo');
     }
   };
   window.__applyFx();
@@ -55,7 +53,6 @@ video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100
 html.native-exo #frame{background:transparent !important}
 html.native-exo #bgw{background:transparent !important}
 html.native-exo video{opacity:0 !important;pointer-events:none !important}
-html.native-photo #img{opacity:0 !important;pointer-events:none !important}
 #img{display:none}
 #logo{flex:1;width:100%;min-height:0;background:center/contain no-repeat;border-radius:1.11vh}
 #logo.plate{background-color:rgba(255,255,255,.96);background-origin:content-box;padding:.5vh .7vw;box-shadow:0 1vh 3vh rgba(0,0,0,.35)}
@@ -1123,6 +1120,7 @@ function play() {
   current = it.id;
   if (it.type === 'poster') {
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
+    if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
     showPoster(it);
     timer = setTimeout(next, sp ? sp.ms : (it.dur || imageSeconds || 10) * 1000);
@@ -1132,14 +1130,8 @@ function play() {
   hidePoster();
   if (it.type === 'image') {
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
+    if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
-    if (window.__N && window.__N.showImage) { // native fotoğraf katmanı: 1080p doku yüklemesi GPU ana hattından çıkar
-      syncExoBounds();
-      window.__N.showImage(it.url);
-      timer = setTimeout(next, sp ? sp.ms : (it.dur || imageSeconds || 10) * 1000);
-      setTimeout(prepNext, 500);
-      return;
-    }
     const showImg = () => { els.forEach(e => e.style.zIndex = '1'); img.style.zIndex = '2'; img.style.display = 'block'; img.src = it.url; const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (current === it.id) { img.style.opacity = '1'; cleanupLayers(img); } })); if (img.decode) img.decode().then(go, go); else go(); };
     if (!window.__lite && !sp && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); }
     else { img.style.opacity = '0'; showImg(); }
@@ -1227,6 +1219,7 @@ function syncToMedia(m) {
 
   if (it.type === 'poster') {
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
+    if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
     showPoster(it);
     timer = setTimeout(next, remainMs);
@@ -1237,6 +1230,7 @@ function syncToMedia(m) {
   hidePoster();
   if (it.type === 'image') {
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
+    if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
     const showImg = () => {
       els.forEach(e => e.style.zIndex = '1');
@@ -1257,6 +1251,7 @@ function syncToMedia(m) {
     setTimeout(prepNext, 500);
   } else {
     // Video
+    if (window.__N && window.__N.hideImage) window.__N.hideImage();
     const startMs = elapsedMs;
     if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
       els.forEach(e => e.pause());
