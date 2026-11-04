@@ -79,6 +79,7 @@ function broadcastSync(tid, reset = false) {
   const curItem = ml[sync.idx % ml.length];
   const dur = getMediaLen(curItem, imgSec);
   const elapsed = Math.max(0, now - sync.startedAt);
+  const remain = Math.max(0, (sync.endsAt || (now + dur * 1000)) - now);
   const msg = {
     type: 'sync_media',
     idx: sync.idx % ml.length,
@@ -87,6 +88,7 @@ function broadcastSync(tid, reset = false) {
     url: curItem.url || curItem.image,
     dur,
     elapsed,
+    remain,
     serverTime: now,
   };
   hub.send((tenant) => tenant.id === tid, msg);

@@ -49,11 +49,17 @@ html,body{height:100%;width:100%;background:var(--edge);color:var(--white);font-
 #bgw{position:absolute;inset:.6vh;border-radius:1.39vh;overflow:hidden;background:#0e1013}
 #bgc{width:100%;height:100%;display:block;opacity:.38;transform:scale(1.1);contain:paint}
 #bgw::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(var(--a1),.22) 0%,rgba(14,16,19,.85) 75%),linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.6) 100%)}
-video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100% - 1.2vh);object-fit:contain;background:transparent;border-radius:1.39vh;display:block}
+video,#img,#img2{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100% - 1.2vh);object-fit:contain;background:transparent;border-radius:1.39vh;display:block;transition:opacity .6s cubic-bezier(.2,.8,.2,1);will-change:opacity}
 html.native-exo #frame{background:transparent !important}
 html.native-exo #bgw{background:transparent !important}
 html.native-exo video{opacity:0 !important;pointer-events:none !important}
-#img{display:none}
+#img,#img2{display:none;opacity:0}
+#standby{position:absolute;inset:.6vh;z-index:2;display:none;align-items:center;justify-content:center;flex-direction:column;border-radius:1.39vh;background:radial-gradient(ellipse at center,rgba(var(--a1),.25) 0%,rgba(14,16,19,.92) 80%);opacity:0;transition:opacity .8s ease;contain:paint}
+#standby.on{display:flex;opacity:1}
+#standby .sb-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.8vh;padding:2vh 2vw}
+#standby .sb-logo{max-width:24vw;max-height:16vh;width:24vw;height:16vh;background:center/contain no-repeat}
+#standby .sb-title{font-size:3.6vh;font-weight:800;letter-spacing:.08em;color:var(--white);text-shadow:0 .3vh 1vh rgba(0,0,0,.7)}
+#standby .sb-sub{font-size:1.8vh;font-weight:700;letter-spacing:.25em;color:var(--accent2);text-transform:uppercase;opacity:.85}
 #logo{flex:1;width:100%;min-height:0;background:center/contain no-repeat;border-radius:1.11vh}
 #logo.plate{background-color:rgba(255,255,255,.96);background-origin:content-box;padding:.5vh .7vw;box-shadow:0 1vh 3vh rgba(0,0,0,.35)}
 #logo.txt{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;letter-spacing:.06em;color:var(--white);line-height:1.1;padding:0 .6vw}
@@ -930,7 +936,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 <div id="root">
 <div id="app"></div>
 <div id="parking">
-  <div class="cell" data-w="media"><div id="stage"><div id="celeb"><div id="cflagw"><canvas id="cflag" width="270" height="180"></canvas></div><div id="cmid"><span id="ctitle"></span><p id="cquote"></p></div></div><div id="frame"><div id="bgw"><canvas id="bgc"></canvas></div><video id="v" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><video id="v2" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><img id="img" alt=""><div id="trailer"></div><div id="qr-left" class="qrc"></div><div id="qr-right" class="qrc"></div><div id="music-bar"></div></div></div></div>
+  <div class="cell" data-w="media"><div id="stage"><div id="celeb"><div id="cflagw"><canvas id="cflag" width="270" height="180"></canvas></div><div id="cmid"><span id="ctitle"></span><p id="cquote"></p></div></div><div id="frame"><div id="bgw"><canvas id="bgc"></canvas></div><video id="v" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><video id="v2" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><img id="img" alt=""><img id="img2" alt=""><div id="standby" class="standby-plate"><div class="sb-wrap"><div class="sb-logo" id="sb-logo"></div><div class="sb-title" id="sb-title"></div><div class="sb-sub">YAYIN AKIŞI DEVAM EDİYOR</div></div></div><div id="trailer"></div><div id="qr-left" class="qrc"></div><div id="qr-right" class="qrc"></div><div id="music-bar"></div></div></div></div>
   <div class="cell" data-w="logo"><div id="logo"></div></div>
   <div class="cell" data-w="info"><div id="matches"><div id="goal"></div><div id="mhead"><h2 id="mtitle">Maçlar</h2><div id="dots"></div></div><div id="mbody"><div id="list"></div><div id="traffic" class="off"><img alt=""><div id="tchip">Canlı Trafik</div><div id="tidx"></div><div id="tlegend"><span>Akıcı</span><i></i><span>Yoğun</span></div></div></div></div></div>
   <div class="cell" data-w="rates"><div id="rates"></div></div>
@@ -987,8 +993,11 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 <div id="guide"><i></i><i></i><i></i><i></i><b id="gtxt"></b></div>
 <script src="/posters.js"></script>
 <script>
-const els = [document.getElementById('v'), document.getElementById('v2')], img = document.getElementById('img');
-let ci = 0; const curV = () => els[ci], idleV = () => els[1 - ci];
+const els = [document.getElementById('v'), document.getElementById('v2')], imgs = [document.getElementById('img'), document.getElementById('img2')];
+let ci = 0, imgi = 0;
+const curV = () => els[ci], idleV = () => els[1 - ci];
+const curImg = () => imgs[imgi], idleImg = () => imgs[1 - imgi];
+const img = imgs[0]; // geriye dönük uyumluluk
 let videos = [], idx = 0, current = null, imageSeconds = 10, timer, prepared = { id: null };
 const bgc = document.getElementById('bgc'), bctx = bgc.getContext('2d');
 // Fragmanlar: her 4 içerikte bir (en az 8 dk arayla) sinemadaki filmlerin fragmanı sessiz oynar
@@ -1051,33 +1060,37 @@ function advance() {
   if (++trailerPlays >= (window.__trailerEvery || 4) && trailerList.length && navigator.onLine !== false && Date.now() - trailerAt > (window.__trailerGapMin || 8) * 60 * 1000) { playTrailer(); return; }
   idx++; play();
 }
-// çapraz geçiş: yeni katman eskisinin üstünde belirir, eskisi tamamen kapanınca gizlenir (arada boşluk/ani değişim olmaz)
-// hafif modda (TV kutuları) iki tam ekran katmanın üst üste composit edildiği süre kısalır: geçiş takılması azalır
+// Çapraz geçiş: yeni katman eskisinin üstünde belirir, eskisi tamamen kapanınca gizlenir (sıfır siyah ekran)
 let fadeTok = 0;
 function cleanupLayers(keep) {
-  const t = fadeTok;
+  const t = ++fadeTok;
   setTimeout(() => {
     if (t !== fadeTok) return;
-    const hide = e => { e.style.transition = 'none'; e.style.opacity = '0'; void e.offsetWidth; e.style.transition = ''; };
+    const hide = e => { e.style.opacity = '0'; void e.offsetWidth; };
     els.forEach(e => { if (e !== keep) { hide(e); e.style.zIndex = '1'; } });
-    if (keep !== img && img.style.display === 'block') { hide(img); img.style.display = 'none'; }
-  }, window.__lite ? 500 : 1800);
+    imgs.forEach(im => {
+      if (im !== keep && im.style.display === 'block') {
+        hide(im);
+        setTimeout(() => { if (t === fadeTok && im !== curImg()) im.style.display = 'none'; }, 600);
+      }
+    });
+  }, window.__lite ? 400 : 700);
 }
 function showEl(el) {
-  if (window.__lite) { // hafif modda kesme geçiş: solma yok, iki katman hiç üst üste binmez (zayıf GPU'da takılmayı keser)
-    els.forEach(e => { if (e === el) { e.style.transition = 'none'; e.style.zIndex = '2'; e.style.opacity = '1'; } else { e.style.transition = 'none'; e.style.opacity = '0'; e.style.zIndex = '1'; } });
-    if (img.style.display === 'block' && el !== img) { img.style.opacity = '0'; img.style.display = 'none'; }
-    void el.offsetWidth; els.forEach(e => { e.style.transition = ''; });
+  if (window.__lite) {
+    els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else { e.style.opacity = '0'; e.style.zIndex = '1'; } });
+    imgs.forEach(im => { if (im !== el) { im.style.opacity = '0'; im.style.display = 'none'; } });
     return;
   }
-  img.style.zIndex = '1'; els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; }); cleanupLayers(el);
+  els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; });
+  cleanupLayers(el);
 }
-// sıradaki videoyu boştaki öğeye önceden yükle: geçişte boşluk ve "play" simgesi çıkmaz
+// Sıradaki medyayı boştaki öğeye önceden yükle: geçişte bekleme veya takılma olmaz
 function prepNext() {
   if (videos.length < 2) { prepared = { id: null }; return; }
   const n = videos[(idx + 1) % videos.length], el = idleV();
   if (n.type === 'poster') { if (n.image) { const im = new Image(); im.src = n.image; } prepared = { id: null }; return; }
-  if (n.type === 'image') { // sıradaki fotoğrafı önceden indir ve çöz: gösterilince anında çıkar
+  if (n.type === 'image') {
     if (window.__N && window.__N.preloadImage) { try { window.__N.preloadImage(n.url); } catch (e) {} }
     if (window.__preUrl !== n.url) { window.__preUrl = n.url; const im = new Image(); im.src = n.url; window.__preImg = im; if (im.decode) im.decode().catch(() => {}); }
     prepared = { id: null }; return;
@@ -1087,24 +1100,7 @@ function prepNext() {
   el.dataset.url = n.url; el.loop = false; el.src = n.url; el.load();
   prepared = { id: n.id };
 }
-// ---- ekranlar arası senkron: çalma listesi sunucu saatine göre ortak takvimde döner ----
-// tüm süreler biliniyorsa (fotoğraflar imageSeconds, videolar ölçülen süre)
-// her ekran sunucu saatinden hesaplanan içeriği gösterir; birden çok TV aynı anda aynı içeriği ve saniyeyi gösterir
 const itemLen = it => it.type === 'video' ? (it.dur ? it.dur : 30) : (it.dur || imageSeconds || 10);
-function syncPos() {
-  if (!window.__mediaAt || !videos.length) return null;
-  const durs = videos.map(itemLen);
-  const total = durs.reduce((a, b) => a + b, 0);
-  if (!total) return null;
-  let t = ((Date.now() + (window.__srvOff || 0)) - window.__mediaAt) % (total * 1000);
-  if (t < 0) t += total * 1000;
-  for (let i = 0; i < videos.length; i++) {
-    const dMs = durs[i] * 1000;
-    if (t < dMs) return { idx: i, ms: dMs - t, offsetSec: t / 1000 };
-    t -= dMs;
-  }
-  return null;
-}
 function syncExoBounds() {
   if (!window.__N || !window.__N.updateBounds) return;
   const f = document.getElementById('frame');
@@ -1115,84 +1111,108 @@ function syncExoBounds() {
 }
 window.addEventListener('resize', syncExoBounds);
 
+// Sıfır karartmalı kusursuz görsel geçişi: yeni görsel arka planda tam çözülene kadar eski içerik ekranda kalır
+function showImageSeamless(it, durMs) {
+  if (window.__N && window.__N.hideImage) window.__N.hideImage();
+  const nextIm = idleImg(), prevIm = curImg();
+
+  const finish = () => {
+    if (current !== it.id) return;
+    nextIm.style.display = 'block';
+    nextIm.style.zIndex = '3';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (current === it.id) {
+        nextIm.style.opacity = '1';
+        drawBg(nextIm, nextIm.naturalWidth, nextIm.naturalHeight);
+        imgi = 1 - imgi;
+        cleanupLayers(nextIm);
+        if (window.__N && window.__N.stopExo) setTimeout(() => { if (current === it.id && window.__N && window.__N.stopExo) window.__N.stopExo(); }, 250);
+      }
+    }));
+  };
+
+  nextIm.style.opacity = '0';
+  nextIm.style.zIndex = '2';
+  nextIm.src = it.url;
+  if (nextIm.decode) nextIm.decode().then(finish).catch(finish);
+  else { nextIm.onload = finish; nextIm.onerror = finish; }
+
+  clearTimeout(timer);
+  timer = setTimeout(next, durMs);
+  setTimeout(prepNext, 500);
+}
+
+// Sıfır boşluklu video geçişi
+function showVideoSeamless(it, durMs, startMs) {
+  if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
+    els.forEach(e => e.pause());
+    if (window.__N.hideImage) window.__N.hideImage();
+    syncExoBounds();
+    if (window.__N.playExoWithSeek) window.__N.playExoWithSeek(it.url, it.dur || 0, startMs || 0);
+    else window.__N.playExo(it.url, it.dur || 0);
+    window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
+    const safetyMs = Math.max(durMs + 15000, 45000);
+    clearTimeout(timer);
+    timer = setTimeout(next, safetyMs);
+    prepared = { id: null };
+    setTimeout(prepNext, 2000);
+    return;
+  }
+
+  if (window.__lite) bctx.clearRect(0, 0, bgc.width, bgc.height);
+  const targetV = idleV(), oldV = curV();
+  targetV.dataset.url = it.url; targetV.src = it.url; targetV.loop = videos.length === 1;
+
+  const onPlaying = () => {
+    if (current !== it.id) return;
+    targetV.style.zIndex = '2';
+    targetV.style.opacity = '1';
+    ci = 1 - ci;
+    cleanupLayers(targetV);
+    if (oldV !== targetV) {
+      setTimeout(() => { if (curV() === targetV) { oldV.pause(); oldV.style.opacity = '0'; } }, 350);
+    }
+  };
+
+  targetV.addEventListener('playing', onPlaying, { once: true });
+  const pr = targetV.play(); if (pr && pr.catch) pr.catch(() => {});
+
+  if (startMs > 400) {
+    const into = startMs / 1000;
+    const sk = () => { try { targetV.currentTime = into; } catch (e) {} };
+    targetV.readyState >= 1 ? sk() : targetV.addEventListener('loadedmetadata', sk, { once: true });
+  }
+
+  const safetyMs = Math.max(durMs + 15000, 45000);
+  clearTimeout(timer);
+  timer = setTimeout(next, safetyMs);
+  prepared = { id: null };
+  setTimeout(prepNext, 2000);
+}
+
 function play() {
   clearTimeout(timer); fadeTok++;
   if (!videos.length || !MEDIA_ON) return;
   idx %= videos.length;
-  const sp = syncPos();
-  if (sp && sp.idx !== idx) idx = sp.idx; // senkron: sunucu saati hangi içerikteyse ekran onu gösterir
   const it = videos[idx];
   notePlay(it);
   current = it.id;
+  const fullDurMs = (it.dur || imageSeconds || 10) * 1000;
+
   if (it.type === 'poster') {
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
     showPoster(it);
-    timer = setTimeout(next, sp ? sp.ms : (it.dur || imageSeconds || 10) * 1000);
+    timer = setTimeout(next, fullDurMs);
     setTimeout(prepNext, 500);
     return;
   }
   hidePoster();
-  if (it.type === 'image') {
-    if (window.__N && window.__N.hideImage) window.__N.hideImage();
-    els.forEach(e => e.pause());
-    const showImg = () => {
-      els.forEach(e => e.style.zIndex = '1');
-      img.style.zIndex = '2';
-      img.style.display = 'block';
-      img.src = it.url;
-      const go = () => requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (current === it.id) {
-          img.style.opacity = '1';
-          cleanupLayers(img);
-          if (window.__N && window.__N.stopExo) setTimeout(() => { if (current === it.id && window.__N && window.__N.stopExo) window.__N.stopExo(); }, 250);
-        }
-      }));
-      if (img.decode) img.decode().then(go, go); else go();
-    };
-    if (!window.__lite && !sp && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); }
-    else { img.style.opacity = '0'; showImg(); }
-    timer = setTimeout(next, sp ? sp.ms : (imageSeconds || 10) * 1000);
-    setTimeout(prepNext, 500);
-  } else {
-    const startMs = sp && sp.offsetSec > 0.4 ? Math.round(sp.offsetSec * 1000) : 0;
-    if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
-      els.forEach(e => e.pause());
-      if (window.__N.hideImage) window.__N.hideImage();
-      syncExoBounds();
-      if (window.__N.playExoWithSeek) {
-        window.__N.playExoWithSeek(it.url, it.dur || 0, startMs);
-      } else {
-        window.__N.playExo(it.url, it.dur || 0);
-      }
-      window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
-      const safetyMs = Math.max(45000, (it.dur ? it.dur * 1000 : 90000) + 15000);
-      timer = setTimeout(next, safetyMs);
-      prepared = { id: null };
-      setTimeout(prepNext, 2000);
-      return;
-    }
-    if (window.__lite) bctx.clearRect(0, 0, bgc.width, bgc.height);
-    let el, ready = false;
-    if (prepared.id === it.id && idleV().dataset.url === it.url) { ci = 1 - ci; el = curV(); ready = el.readyState >= 2; }
-    else { el = curV(); el.dataset.url = it.url; el.src = it.url; }
-    el.loop = videos.length === 1;
-    const old = idleV();
-    const reveal = () => { showEl(el); if (old !== el) old.pause(); };
-    if (ready) reveal(); else el.addEventListener('playing', reveal, { once: true });
-    const pr = el.play(); if (pr && pr.catch) pr.catch(() => {});
-    if (startMs > 400) {
-      const into = startMs / 1000;
-      const sk = () => { try { el.currentTime = into; } catch (e) {} };
-      el.readyState >= 1 ? sk() : el.addEventListener('loadedmetadata', sk, { once: true });
-    }
-    const safetyMs = Math.max(45000, (it.dur ? it.dur * 1000 : 90000) + 15000);
-    timer = setTimeout(next, safetyMs);
-    prepared = { id: null };
-    setTimeout(prepNext, 2000);
-  }
+  if (it.type === 'image') showImageSeamless(it, fullDurMs);
+  else showVideoSeamless(it, fullDurMs, 0);
 }
+
 function syncToMedia(m) {
   if (!MEDIA_ON || !m) return;
   if (trailerOn || big.showing || camp.showing) return; // Fragman veya büyük duyurular oynarken sunucu senkronuyla kesilmez!
@@ -1210,18 +1230,12 @@ function syncToMedia(m) {
 
   const totalDurMs = (m.dur || itemLen(it)) * 1000;
   const elapsedMs = Math.max(0, m.elapsed || 0);
-  const remainMs = Math.max(400, totalDurMs - elapsedMs);
+  const remainMs = typeof m.remain === 'number' ? Math.max(800, m.remain) : Math.max(800, totalDurMs - elapsedMs);
 
-  // Zaten bu içerik oynatılıyorsa:
-  if (current === it.id) {
-    if (it.type !== 'video') {
-      clearTimeout(timer);
-      timer = setTimeout(next, remainMs);
-    }
-    return;
-  }
+  // Zaten bu içerik oynatılıyorsa: sayacı bozma, akış devam etsin
+  if (current === it.id) return;
 
-  // Yeni veya farklı içerik: hemen bu içeriğe kilitlen
+  // Yeni veya farklı içerik: hemen bu içeriğe geç
   clearTimeout(timer);
   idx = targetIdx;
   current = it.id;
@@ -1238,65 +1252,8 @@ function syncToMedia(m) {
   }
 
   hidePoster();
-  if (it.type === 'image') {
-    if (window.__N && window.__N.hideImage) window.__N.hideImage();
-    els.forEach(e => e.pause());
-    const showImg = () => {
-      els.forEach(e => e.style.zIndex = '1');
-      img.style.zIndex = '2';
-      img.style.display = 'block';
-      img.src = it.url;
-      const go = () => requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (current === it.id) {
-          img.style.opacity = '1';
-          cleanupLayers(img);
-          if (window.__N && window.__N.stopExo) setTimeout(() => { if (current === it.id && window.__N && window.__N.stopExo) window.__N.stopExo(); }, 250);
-        }
-      }));
-      if (img.decode) img.decode().then(go, go); else go();
-    };
-    img.style.opacity = '0';
-    showImg();
-    timer = setTimeout(next, remainMs);
-    setTimeout(prepNext, 500);
-  } else {
-    // Video
-    if (window.__N && window.__N.hideImage) window.__N.hideImage();
-    const startMs = elapsedMs;
-    if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
-      els.forEach(e => e.pause());
-      syncExoBounds();
-      if (window.__N.playExoWithSeek) {
-        window.__N.playExoWithSeek(it.url, it.dur || 0, startMs);
-      } else {
-        window.__N.playExo(it.url, it.dur || 0);
-      }
-      window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
-      const safetyMs = Math.max(remainMs + 15000, 45000);
-      timer = setTimeout(next, safetyMs);
-      prepared = { id: null };
-      setTimeout(prepNext, 2000);
-      return;
-    }
-    if (window.__lite) bctx.clearRect(0, 0, bgc.width, bgc.height);
-    let el, ready = false;
-    if (prepared.id === it.id && idleV().dataset.url === it.url) { ci = 1 - ci; el = curV(); ready = el.readyState >= 2; }
-    else { el = curV(); el.dataset.url = it.url; el.src = it.url; }
-    el.loop = videos.length === 1;
-    const old = idleV();
-    const reveal = () => { showEl(el); if (old !== el) old.pause(); };
-    if (ready) reveal(); else el.addEventListener('playing', reveal, { once: true });
-    const pr = el.play(); if (pr && pr.catch) pr.catch(() => {});
-    if (startMs > 400) {
-      const into = startMs / 1000;
-      const sk = () => { try { el.currentTime = into; } catch (e) {} };
-      el.readyState >= 1 ? sk() : el.addEventListener('loadedmetadata', sk, { once: true });
-    }
-    const safetyMs = Math.max(remainMs + 15000, 45000);
-    timer = setTimeout(next, safetyMs);
-    prepared = { id: null };
-    setTimeout(prepNext, 2000);
-  }
+  if (it.type === 'image') showImageSeamless(it, remainMs);
+  else showVideoSeamless(it, remainMs, elapsedMs);
 }
 function sizeBg() { const f = document.getElementById('frame'); bgc.width = 64; bgc.height = Math.max(8, Math.round(64 * f.clientHeight / Math.max(1, f.clientWidth))); }
 function drawBg(src, iw, ih) {
@@ -1307,8 +1264,8 @@ function drawBg(src, iw, ih) {
 }
 let bgFor = null;
 sizeBg();
-addEventListener('resize', () => { sizeBg(); if (img.style.display === 'block') drawBg(img, img.naturalWidth, img.naturalHeight); });
-img.addEventListener('load', () => drawBg(img, img.naturalWidth, img.naturalHeight));
+addEventListener('resize', () => { sizeBg(); const im = curImg(); if (im && im.style.display === 'block') drawBg(im, im.naturalWidth, im.naturalHeight); });
+imgs.forEach(im => im.addEventListener('load', () => drawBg(im, im.naturalWidth, im.naturalHeight)));
 // videonun arkasındaki bulanık dolgu: yalnızca tam modda (hafif modda görüntü kartına geri okuma yapılmaz)
 setInterval(() => {
   if (window.__lite) return;
@@ -2593,6 +2550,7 @@ function applyBrand(b, scr) {
   $id('mbrand').textContent = BNAME ? `${BNAME} · ${b.product || ''}` : (b.product || 'TV');
   $id('b-brand').textContent = b.product || ''; $id('a-brand').innerHTML = esc(b.product || 'TV');
   document.title = (BNAME || b.product || 'TV') + ' · TV';
+  updateStandby(!videos.length);
 }
 
 // ---- abonelik bitti / askıda ----
@@ -2920,12 +2878,36 @@ function schedOk(s) {
   return true;
 }
 let vSig = '';
+function updateStandby(on) {
+  const sb = document.getElementById('standby');
+  if (!sb) return;
+  if (on && MEDIA_ON) {
+    const sbl = document.getElementById('sb-logo');
+    const sbt = document.getElementById('sb-title');
+    if (sbl) {
+      if (LOGO) { sbl.style.backgroundImage = `url("${LOGO}")`; sbl.style.display = 'block'; }
+      else sbl.style.display = 'none';
+    }
+    if (sbt) sbt.textContent = BNAME || '';
+    sb.classList.add('on');
+  } else {
+    sb.classList.remove('on');
+  }
+}
 function applyVideos() {
   const list = ALLV.filter(x => schedOk(x.sch)), sig = JSON.stringify(list);
   if (sig === vSig && (current !== null || !list.length)) return;
   const curOld = videos.find(x => x.id === current), curNew = list.find(x => x.id === current);
   vSig = sig; videos = list;
-  if (!videos.length) { clearTimeout(timer); current = null; els.forEach(v => v.pause()); hidePoster(); img.style.opacity = '0'; return; }
+  if (!videos.length) {
+    clearTimeout(timer); current = null;
+    els.forEach(v => v.pause());
+    hidePoster();
+    imgs.forEach(im => { im.style.opacity = '0'; im.style.display = 'none'; });
+    updateStandby(true);
+    return;
+  }
+  updateStandby(false);
   prepared = { id: null };
   const k = videos.findIndex(x => x.id === current); idx = k >= 0 ? k : 0;
   if (k < 0 || current === null) play();
