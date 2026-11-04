@@ -29,6 +29,7 @@ r.post('/login', (req, res) => {
   if (!u || !u.tenant_id || !auth.checkPassword(password, u.pass)) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
   auth.clearFails(ip, username);
   let t = tenants.get(u.tenant_id);
+  if (!t) return res.status(404).json({ error: 'İşletme bulunamadı' });
   // çoklu şube: işletme sahibinin birden çok şubesi varsa TV hangi şubeye bağlanacağını sorar
   const branches = u.role === 'owner' && t.org_id ? store.q.orgTenants.all(t.org_id) : [];
   if (branches.length > 1) {

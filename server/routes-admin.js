@@ -395,7 +395,10 @@ r.post('/news/test', async (req, res) => {
 });
 r.get('/storage', (req, res) => {
   const t = req.t, files = {}; let mediaB = 0;
-  for (const v of t.db.videos) { try { files[v.file] = fileSize(t, v.file); mediaB += files[v.file]; } catch {} }
+  for (const v of t.db.videos) {
+    const f = v.file || v.image;
+    if (f) { try { files[f] = fileSize(t, f); mediaB += files[f]; } catch {} }
+  }
   const used = media.usedBytes(t), lim = plan(t).storageMB * 1048576;
   const celeb = [...(t.db.celebPhotos || []), ...(t.db.bigPhotos || [])].reduce((a, p) => { try { return a + fileSize(t, p.file); } catch { return a; } }, 0);
   res.json({ files, mediaBytes: mediaB, mediaCount: t.db.videos.length, celebBytes: celeb, otherBytes: Math.max(0, used - mediaB - celeb), otherCount: 0, uploadsBytes: used, totalBytes: used, limitBytes: lim, disk: { total: lim, free: Math.max(0, lim - used) } });
@@ -453,7 +456,7 @@ r.post('/backups/:name/restore', ownerOnly, (req, res) => {
     if (!parsed || !Array.isArray(parsed.videos)) throw new Error('yedek dosyası geçerli değil');
     backupNow(t, 'geri-yukleme-oncesi');
     t.db = { ...t.db, ...parsed };
-    const missing = t.db.videos.filter(v => !require('./storage').exists(t, v.file)).length;
+    const missing = t.db.videos.filter(v => (v.file || v.image) && !require('./storage').exists(t, v.file || v.image)).length;
     changed(t); res.json({ ok: true, missingFiles: missing });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
@@ -558,7 +561,10 @@ r.post('/videos', quota, upload.array('files'), (req, res) => {
 });
 r.delete('/videos/:id', (req, res) => {
   const t = req.t, v = t.db.videos.find(x => x.id === req.params.id);
-  if (v) rmUpload(t, v.file);
+  if (v) {
+    if (v.file) rmUpload(t, v.file);
+    if (v.image) rmUpload(t, v.image);
+  }
   t.db.videos = t.db.videos.filter(x => x.id !== req.params.id);
   changed(t); res.json({ ok: true });
 });
@@ -589,19 +595,19 @@ r.post('/birthdays', (req, res) => {
   const text = String(req.body.text || '').trim().slice(0, 200);
   if (!text) return res.status(400).json({ error: 'kutlama yazısı gerekli' });
   req.t.db.birthdays.push({ id: auth.uid(), name: String(req.body.name).slice(0, 60), text, selected: true });
-  tenants.save(req.t); res.json({ ok: true });
+  changed(req.t); res.json({ ok: true });
 });
 r.patch('/birthdays/:id', (req, res) => {
   const b = req.t.db.birthdays.find(x => x.id === req.params.id);
   if (b && typeof req.body.selected === 'boolean') b.selected = req.body.selected;
   if (b && typeof req.body.text === 'string' && req.body.text.trim()) b.text = req.body.text.trim().slice(0, 200);
-  tenants.save(req.t); res.json({ ok: true });
+  changed(req.t); res.json({ ok: true });
 });
-r.delete('/birthdays/:id', (req, res) => { req.t.db.birthdays = req.t.db.birthdays.filter(x => x.id !== req.params.id); tenants.save(req.t); res.json({ ok: true }); });
+r.delete('/birthdays/:id', (req, res) => { req.t.db.birthdays = req.t.db.birthdays.filter(x => x.id !== req.params.id); changed(req.t); res.json({ ok: true }); });
 r.put('/schedule', (req, res) => {
   req.t.db.times = (req.body.times || []).filter(t => /^\d{2}:\d{2}$/.test(t)).slice(0, 12);
   req.t.db.duration = Math.max(5, Math.min(300, Number(req.body.duration) || 40));
-  tenants.save(req.t); res.json({ ok: true });
+  changed(req.t); res.json({ ok: true });
 });
 r.post('/goal/test', (req, res) => {
   // gerçek gol olayıyla aynı biçim: takım renkleri de içinde (yoksa ekran eski tema renklerine düşer)

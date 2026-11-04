@@ -68,6 +68,10 @@ function route() {
     if (!confirm('Düzende kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) { TAB = 'design'; history.replaceState(null, '', '#design/layout'); }
     else { EDIT.dirty = false; EDIT.layout = null; }
   }
+  if (PREV === 'menu' && TAB !== 'menu' && MENU && MENU.__dirty) {
+    if (!confirm('Fiyat listesinde kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) { TAB = 'menu'; history.replaceState(null, '', '#menu'); }
+    else { MENU.__dirty = 0; MENU = null; }
+  }
   PREV = TAB; menu(false); if ($('modal').classList.contains('on')) closeModal(); render(); scrollTo(0, 0);
 }
 addEventListener('hashchange', route);
@@ -315,7 +319,7 @@ function dragSetup() {
   wrap.onpointerup = wrap.onpointercancel = () => { if (!st) return; if (st.moved) { EDIT.hist.push(st.before); EDIT.dirty = true; } st = null; drawCanvas(); drawProps(); };
 }
 async function upAsset(inp) {
-  const f = inp.files[0]; if (!f) return; const fd = new FormData(); fd.append('file', f);
+  const f = inp.files[0]; inp.value = ''; if (!f) return; const fd = new FormData(); fd.append('file', f);
   try { const j = await req('POST', '/assets', fd); setP('url', j.url); S.db = await req('GET', '/db'); drawProps(); toast('Resim yüklendi; düzeni kaydetmeyi unutmayın'); } catch (e) { toast(e.message, true); }
 }
 async function resetDesign(sub) {
@@ -672,7 +676,7 @@ async function bigTest() {
 }
 const bigStyle = async k => { if (await act('PUT', '/bigmatch', { style: k }, 'Tasarım seçildi', false)) { S.db.bigMatch = Object.assign({}, S.db.bigMatch, { style: k }); render(true); } };
 const saveBig = () => act('PUT', '/bigmatch', { note: $('bg-note').value, days: $('bg-days').value, everyMin: $('bg-every').value, durSec: $('bg-dur').value, info: [0, 1, 2].map(i => $('bg-i' + i).value) }, 'Kaydedildi');
-async function upBigPhoto(inp) { const f = inp.files[0]; if (!f) return; const fd = new FormData(); fd.append('team', $('bg-team').value.trim()); fd.append('file', f); try { await req('POST', '/bigmatch/photo', fd); toast('Fotoğraf yüklendi'); refresh(); } catch (e) { toast(e.message, true); } }
+async function upBigPhoto(inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const fd = new FormData(); fd.append('team', $('bg-team').value.trim()); fd.append('file', f); try { await req('POST', '/bigmatch/photo', fd); toast('Fotoğraf yüklendi'); refresh(); } catch (e) { toast(e.message, true); } }
 
 /* ================= DUYURULAR ================= */
 SECTIONS.promo = {
@@ -681,9 +685,9 @@ SECTIONS.promo = {
     const db = S.db;
     return head('Duyurular', 'Kampanya kartı ve müşteri yorumları.')
       + (db.campaigns || []).map(c => card('🎁 Kampanya kartı', 'Belirli aralıklarla medya yerine tam sayfa, QR kodlu bir kart çıkar. Örnek: Google yorumu karşılığı ikram.',
-        `<div class="f">${fl('Bağlantı (QR kodu buraya gider)', `<input type="text" id="c-url" value="${esc(c.url)}" placeholder="https://g.page/r/.../review">`)}${fl('Başlık', `<input type="text" id="c-h" maxlength="90" value="${esc(c.headline)}">`)}</div>
-         <div class="f mt">${fl('Alt yazı', `<input type="text" id="c-s" maxlength="140" value="${esc(c.sub)}">`)}${fl('Not', `<input type="text" id="c-n" maxlength="160" value="${esc(c.note || '')}">`)}${fl('QR altındaki yazı', `<input type="text" id="c-q" maxlength="60" value="${esc(c.qrLabel || '')}">`)}</div>
-         <div class="f mt">${fl('Kaç dakikada bir', `<input type="number" id="c-e" min="1" max="60" value="${c.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="c-d" min="8" max="60" value="${c.durSec}">`)}</div>
+        `<div class="f">${fl('Bağlantı (QR kodu buraya gider)', `<input type="text" id="c-url-${c.id}" value="${esc(c.url)}" placeholder="https://g.page/r/.../review">`)}${fl('Başlık', `<input type="text" id="c-h-${c.id}" maxlength="90" value="${esc(c.headline)}">`)}</div>
+         <div class="f mt">${fl('Alt yazı', `<input type="text" id="c-s-${c.id}" maxlength="140" value="${esc(c.sub)}">`)}${fl('Not', `<input type="text" id="c-n-${c.id}" maxlength="160" value="${esc(c.note || '')}">`)}${fl('QR altındaki yazı', `<input type="text" id="c-q-${c.id}" maxlength="60" value="${esc(c.qrLabel || '')}">`)}</div>
+         <div class="f mt">${fl('Kaç dakikada bir', `<input type="number" id="c-e-${c.id}" min="1" max="60" value="${c.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="c-d-${c.id}" min="8" max="60" value="${c.durSec}">`)}</div>
          <div class="row end mt"><button class="btn g s" onclick="openSched('camp','${c.id}')">⏱ ${c.sch ? esc(schShort(c.sch)) : 'Zamanla'}</button><button class="btn g s" onclick="act('POST','/campaigns/${c.id}/test',undefined,'Kart TV\\'de gösteriliyor',false)">Şimdi göster</button><button class="btn" onclick="saveCamp('${c.id}')">Kaydet</button></div>`,
         sw(c.enabled, `campToggle('${c.id}',this)`))).join('')
       + lock('Google yorumları ve Instagram')
@@ -736,8 +740,16 @@ function qrEdit(id) {
   qrPrev(); $('q-mode').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('q-label').focus();
 }
 const qrCancel = () => { qrEditId = null; render(true); };
-const saveCamp = id => act('PUT', '/campaigns/' + id, { url: $('c-url').value, headline: $('c-h').value, sub: $('c-s').value, note: $('c-n').value, qrLabel: $('c-q').value, everyMin: $('c-e').value, durSec: $('c-d').value }, 'Kampanya kaydedildi');
-async function campToggle(id, el) { const url = $('c-url').value.trim(); const ok = await act('PUT', '/campaigns/' + id, { url, enabled: el.checked }, el.checked ? 'Kampanya açıldı' : 'Kampanya kapatıldı'); if (!ok) el.checked = !el.checked; }
+const saveCamp = id => {
+  const g = k => { const el = $('c-' + k + '-' + id) || $('c-' + k); return el ? el.value : ''; };
+  return act('PUT', '/campaigns/' + id, { url: g('url'), headline: g('h'), sub: g('s'), note: g('n'), qrLabel: g('q'), everyMin: g('e'), durSec: g('d') }, 'Kampanya kaydedildi');
+};
+async function campToggle(id, el) {
+  const urlEl = $('c-url-' + id) || $('c-url');
+  const url = (urlEl ? urlEl.value : '').trim();
+  const ok = await act('PUT', '/campaigns/' + id, { url, enabled: el.checked }, el.checked ? 'Kampanya açıldı' : 'Kampanya kapatıldı');
+  if (!ok) el.checked = !el.checked;
+}
 // yazarken canlı QR önizlemesi (kaydetmeden üretilir)
 let qrPrevT = 0;
 function qrPrev() {
@@ -792,7 +804,7 @@ SECTIONS.celeb = {
 };
 async function addBday() { if (!$('b-ok').checked) return toast('Kişinin adının ekranda gösterilmesine izin verdiğini onaylayın', true); if (await act('POST', '/birthdays', { name: $('b-n').value.trim(), text: $('b-t').value.trim() }, 'Kişi eklendi')) {} }
 async function saveTimes() { if (await act('PUT', '/schedule', { times: TIMES, duration: $('b-dur').value }, 'Saatler kaydedildi', false)) { S.db = await req('GET', '/db'); TIMES = null; render(true); } }
-async function upCeleb(day, inp) { const f = inp.files[0]; if (!f) return; const fd = new FormData(); fd.append('day', day); fd.append('file', f); try { await req('POST', '/celebrate/photos', fd); toast('Fotoğraf eklendi'); render(true); } catch (e) { toast(e.message, true); } }
+async function upCeleb(day, inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const fd = new FormData(); fd.append('day', day); fd.append('file', f); try { await req('POST', '/celebrate/photos', fd); toast('Fotoğraf eklendi'); render(true); } catch (e) { toast(e.message, true); } }
 
 /* ================= BİLGİ BANDI ================= */
 SECTIONS.info = {
@@ -1053,7 +1065,7 @@ function editPoster(id, tpl) {
 function pedSet(k, l, v) { if (l) PED.i18n[l] = { ...(PED.i18n[l] || {}), [k]: v }; else PED.fields[k] = v; pedDraw(); }
 function pedDraw() { const el = $('ped-pv'); if (!el) return; el.innerHTML = SPPoster.html(posterItem(PED)); SPPoster.fit(el.firstChild); }
 async function pedImg(inp) {
-  const f = inp.files[0]; if (!f) return; const fd = new FormData(); fd.append('file', f);
+  const f = inp.files[0]; inp.value = ''; if (!f) return; const fd = new FormData(); fd.append('file', f);
   try { const j = await req('POST', '/posters/image', fd); PED.image = j.file; pedDraw(); toast('Fotoğraf eklendi'); } catch (e) { toast(e.message, true); }
 }
 async function savePoster() {
