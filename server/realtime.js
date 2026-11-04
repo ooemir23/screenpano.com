@@ -32,7 +32,7 @@ function schedule(tid) {
     for (const ws of clients) if (ids.has('*') || ids.has(ws.tid)) sendState(ws);
     for (const tid of ids) {
       if (tid !== '*') broadcastSync(tid, true);
-      else for (const t of tenants.keys()) broadcastSync(t, true);
+      else for (const t of tenants.all()) broadcastSync(t.id, true);
     }
   }, 250);
 }
