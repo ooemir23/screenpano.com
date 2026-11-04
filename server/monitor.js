@@ -43,7 +43,8 @@ function report(tid, deviceId, s, ip) {
     uptime: Math.max(0, Math.round(Number(s.uptime) || 0)), playing: String(s.playing || '').slice(0, 120),
     errors: Math.max(0, Math.round(Number(s.errors) || 0)), lastError: String(s.lastError || '').slice(0, 200),
     cached: Math.max(0, Math.round(Number(s.cached) || 0)), cacheMB: Math.max(0, Math.round(Number(s.cacheMB) || 0)),
-    online: s.online !== false, mem: Math.round(Number(s.mem) || 0) || undefined,
+    online: s.online !== false,
+    jank: s.jank && typeof s.jank === 'object' ? { fps: Math.max(0, Math.round(Number(s.jank.fps) || 0)), drops: Math.max(0, Math.round(Number(s.jank.drops) || 0)) } : undefined, mem: Math.round(Number(s.mem) || 0) || undefined,
   };
   live.set(deviceId, clean);
   store.q.deviceStatus.run(JSON.stringify(clean), deviceId);

@@ -21,6 +21,16 @@
         app:use_controller="false"
         app:resize_mode="fit" />
 
+    <!-- 1b. FOTOĞRAF KATMANI (Coil ile yerel çözümleme: 1080p doku yüklemesi GPU ana hattından çıkar) -->
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:scaleType="fitCenter"
+        android:clickable="false"
+        android:focusable="false" />
+
     <!-- 2. WEB VIEW (Zengin 24x24 Izgara, Kartlar, Widgetlar, Kayan Bant, Saat, Şeffaf Katman) -->
     <WebView
         android:id="@+id/webView"

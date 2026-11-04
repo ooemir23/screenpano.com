@@ -1144,6 +1144,7 @@ async function drawDevStatus() {
         <span>${d.online ? 'Bağlı' : 'Çevrimdışı · son görülme ' + ago(d.last_seen)}${r.app ? ' · uygulama ' + esc(r.app) : ''}${r.build ? ' · yayın ' + esc(r.build.slice(0, 8)) + (j.build && r.build !== j.build ? ' ⚠ eski' : '') : ''}${r.screen ? ' · ' + esc(r.screen) : ''}${r.uptime ? ' · ' + upFmt(r.uptime) + 'dir açık' : ''}</span>
         ${id.length ? `<span class="muted" style="font-size:12px">${id.map(esc).join(' · ')}</span>` : ''}
         ${r.mus ? `<span>Müzik: ${musDiag(r.mus)}</span>` : ''}
+        ${r.jank ? `<span>Akıcılık: ~${r.jank.fps} fps · uzun kare ${r.jank.drops}/dk${r.jank.drops > 5 ? ' · <b style="color:#e6a23c">⚠ takılma var</b>' : ''}</span>` : ''}
         ${r.playing ? `<span>Şu an: ${esc(r.playing)}</span>` : ''}${r.cached ? `<span>Çevrimdışı önbellek: ${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}</span>` : ''}${r.lastError ? `<span style="color:var(--warn,#e6a23c)">Son hata: ${esc(r.lastError)}</span>` : ''}</div>
         ${d.online ? `<button class="btn xs g" onclick="snapDev('${d.id}')">📷 Ekran görüntüsü</button>` : ''}</div>`; }).join('')}</div><div id="snapbox"></div>` : '<div class="empty">Bağlı cihaz yok</div>')
     + card('Uyarılar', `Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,

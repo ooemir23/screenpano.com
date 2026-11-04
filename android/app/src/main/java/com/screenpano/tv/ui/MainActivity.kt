@@ -25,6 +25,9 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import android.widget.ImageView
+import coil.load
+import coil.request.ImageRequest
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -347,17 +350,51 @@ class MainActivity : AppCompatActivity() {
         fun updateBounds(leftPx: Int, topPx: Int, widthPx: Int, heightPx: Int) {
             handler.post {
                 if (widthPx > 0 && heightPx > 0) {
-                    val params = binding.playerView.layoutParams as FrameLayout.LayoutParams
-                    if (params.leftMargin != leftPx || params.topMargin != topPx ||
-                        params.width != widthPx || params.height != heightPx) {
-                        params.leftMargin = leftPx
-                        params.topMargin = topPx
-                        params.width = widthPx
-                        params.height = heightPx
-                        binding.playerView.layoutParams = params
+                    // video ve fotoğraf katmanları birlikte konumlanır
+                    for (v in listOf(binding.playerView, binding.imageView)) {
+                        val params = v.layoutParams as FrameLayout.LayoutParams
+                        if (params.leftMargin != leftPx || params.topMargin != topPx ||
+                            params.width != widthPx || params.height != heightPx) {
+                            params.leftMargin = leftPx
+                            params.topMargin = topPx
+                            params.width = widthPx
+                            params.height = heightPx
+                            v.layoutParams = params
+                        }
                     }
                 }
             }
+        }
+
+        /** Fotoğrafı yerel katmanda gösterir: 1080p doku yüklemesi WebView/GPU ana hattından çıkar. */
+        @JavascriptInterface
+        fun showImage(url: String) {
+            handler.post {
+                val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
+                Log.d(TAG, "Yerel fotoğraf: $fullUrl")
+                binding.imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+                binding.imageView.load(fullUrl) {
+                    crossfade(150)
+                    allowHardware(true)
+                    listener(
+                        onError = { _, r -> Log.w(TAG, "Fotoğraf yüklenemedi: $fullUrl - ${r.throwable.message}") }
+                    )
+                }
+                binding.imageView.visibility = View.VISIBLE
+            }
+        }
+
+        @JavascriptInterface
+        fun hideImage() {
+            handler.post { binding.imageView.visibility = View.GONE }
+        }
+
+        /** Sıradaki fotoğraf önceden çözülür: geçiş anında iş kalmaz. */
+        @JavascriptInterface
+        fun preloadImage(url: String) {
+            val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
+            val req = ImageRequest.Builder(this@MainActivity).data(fullUrl).build()
+            coil.Coil.imageLoader(this@MainActivity).enqueue(req)
         }
 
         @JavascriptInterface

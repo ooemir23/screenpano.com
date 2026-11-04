@@ -53,6 +53,7 @@ video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100
 html.native-exo #frame{background:transparent !important}
 html.native-exo #bgw{background:transparent !important}
 html.native-exo video{opacity:0 !important;pointer-events:none !important}
+html.native-exo #img{opacity:0 !important;pointer-events:none !important}
 #img{display:none}
 #logo{flex:1;width:100%;min-height:0;background:center/contain no-repeat;border-radius:1.11vh}
 #logo.plate{background-color:rgba(255,255,255,.96);background-origin:content-box;padding:.5vh .7vw;box-shadow:0 1vh 3vh rgba(0,0,0,.35)}
@@ -1072,6 +1073,7 @@ function prepNext() {
   const n = videos[(idx + 1) % videos.length], el = idleV();
   if (n.type === 'poster') { if (n.image) { const im = new Image(); im.src = n.image; } prepared = { id: null }; return; }
   if (n.type === 'image') { // sıradaki fotoğrafı önceden indir ve çöz: gösterilince anında çıkar
+    if (window.__N && window.__N.preloadImage) { try { window.__N.preloadImage(n.url); } catch (e) {} }
     if (window.__preUrl !== n.url) { window.__preUrl = n.url; const im = new Image(); im.src = n.url; window.__preImg = im; if (im.decode) im.decode().catch(() => {}); }
     prepared = { id: null }; return;
   }
@@ -1129,6 +1131,13 @@ function play() {
   if (it.type === 'image') {
     if (window.__N && window.__N.stopExo) window.__N.stopExo();
     els.forEach(e => e.pause());
+    if (window.__N && window.__N.showImage) { // native fotoğraf katmanı: 1080p doku yüklemesi GPU ana hattından çıkar
+      syncExoBounds();
+      window.__N.showImage(it.url);
+      timer = setTimeout(next, sp ? sp.ms : (it.dur || imageSeconds || 10) * 1000);
+      setTimeout(prepNext, 500);
+      return;
+    }
     const showImg = () => { els.forEach(e => e.style.zIndex = '1'); img.style.zIndex = '2'; img.style.display = 'block'; img.src = it.url; const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (current === it.id) { img.style.opacity = '1'; cleanupLayers(img); } })); if (img.decode) img.decode().then(go, go); else go(); };
     if (!window.__lite && !sp && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); }
     else { img.style.opacity = '0'; showImg(); }
@@ -1138,6 +1147,7 @@ function play() {
     const startMs = sp && sp.offsetSec > 0.4 ? Math.round(sp.offsetSec * 1000) : 0;
     if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
       els.forEach(e => e.pause());
+      if (window.__N.hideImage) window.__N.hideImage();
       syncExoBounds();
       if (window.__N.playExoWithSeek) {
         window.__N.playExoWithSeek(it.url, it.dur || 0, startMs);
@@ -2945,6 +2955,13 @@ function notePlay(it) {
 
 // ---- uzaktan durum izleme ----
 let CACHE = { cached: 0, total: 0, bytes: 0 };
+// akıcılık ölçümü: uzun kare (>50 ms) sayısı ve kaba fps — panelde görülür
+window.__jank = { f: 0, d: 0, t: performance.now(), r: 0 };
+(function jankTick(t) {
+  const j = window.__jank, now = t || performance.now(), dt = now - j.t; j.t = now;
+  if (dt > 0 && dt < 1000) { j.f++; if (dt > 50) j.d++; }
+  requestAnimationFrame(jankTick);
+})();
 function sendStatus() {
   const n = window.__N, it = videos.find(x => x.id === current);
   // müzik teşhisi: panelde kutunun müzik motorunun gerçek durumu görünür (ses yoksa sebebi buradan okunur)
@@ -2965,6 +2982,7 @@ function sendStatus() {
     screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
     playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
     cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,
+    jank: (() => { const j = window.__jank, now = performance.now(), t0 = j.r || BOOT, sec = Math.max(1, (now - t0) / 1000); const out = { fps: Math.round(j.f / sec), drops: j.d }; j.f = 0; j.d = 0; j.r = now; return out; })(),
     mem: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0,
   });
 }
