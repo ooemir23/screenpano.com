@@ -13,6 +13,9 @@
     var isAndroid = /Android|SmartTV|AFT|GoogleTV|Large Screen/i.test(navigator.userAgent);
     var lite = window.__fx === 'lite' || (window.__fx === 'auto' && (!!window.__N && !window.__N.desktop || isAndroid)) || /[?&]lite=1/.test(location.search);
     document.documentElement.classList.toggle('lite', lite); window.__lite = lite;
+    if (window.__N && window.__N.hasExoPlayer && window.__N.hasExoPlayer()) {
+      document.documentElement.classList.add('native-exo');
+    }
   };
   window.__applyFx();
 })();
@@ -47,6 +50,9 @@ html,body{height:100%;width:100%;background:var(--edge);color:var(--white);font-
 #bgc{width:100%;height:100%;display:block;filter:blur(2.4vh) saturate(1.1) brightness(.62);transform:scale(1.35)}
 #bgw::after{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(var(--a1),.30),rgba(27,29,29,.38))}
 video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100% - 1.2vh);object-fit:contain;background:transparent;border-radius:1.39vh;display:block}
+html.native-exo #frame{background:transparent !important}
+html.native-exo #bgw{background:transparent !important}
+html.native-exo video{opacity:0 !important;pointer-events:none !important}
 #img{display:none}
 #logo{flex:1;width:100%;min-height:0;background:center/contain no-repeat;border-radius:1.11vh}
 #logo.plate{background-color:rgba(255,255,255,.96);background-origin:content-box;padding:.5vh .7vw;box-shadow:0 1vh 3vh rgba(0,0,0,.35)}
@@ -286,13 +292,13 @@ html.lite video,html.lite #img{transition-duration:.35s}
 #celeb.mourn #cflagw::after{content:"";position:absolute;left:.5vh;top:40%;width:1.1vh;height:.4vh;background:#000}
 #cphoto.mourn b{background:linear-gradient(transparent,rgba(0,0,0,.92))}
 /* uygulama güncelleme bildirimi (yalnızca Android uygulamasında) */
-#updot{position:fixed;right:1vw;bottom:2.4vh;z-index:55;display:none;align-items:center;gap:.6vw;padding:.7vh 1vw;border-radius:5vh;background:rgba(20,22,24,.96);border:max(1px,.1vh) solid rgba(var(--a2),.8);color:var(--al);font-size:1.4vh;font-weight:600}
+#updot{position:fixed;right:1vw;bottom:2.4vh;z-index:55;display:none;align-items:center;gap:.6vw;padding:.7vh 1vw;border-radius:5vh;background:rgba(20,22,24,.96);border:max(1px,.1vh) solid rgba(var(--a2),.8);color:var(--al);font-size:1.4vh;font-weight:600;cursor:pointer;touch-action:manipulation}
 #updot.on{display:flex}
 #updot i{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--accent2);animation:updotp 1.6s ease-in-out infinite}
 @keyframes updotp{50%{opacity:.25}}
-#menu{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#menu{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);touch-action:manipulation;cursor:pointer}
 #menu.on{display:flex}
-#menu .box{width:52vw;max-width:820px;max-height:90vh;overflow-y:auto;padding:3vh 2.4vw;border-radius:2vh;background:rgba(18,20,24,.98);border:max(1px,.1vh) solid rgba(var(--a2),.8);box-shadow:0 2vh 6vh rgba(0,0,0,.85);color:#fff;font-size:2vh;line-height:1.45}
+#menu .box{width:52vw;max-width:820px;max-height:90vh;overflow-y:auto;padding:3vh 2.4vw;border-radius:2vh;background:rgba(18,20,24,.98);border:max(1px,.1vh) solid rgba(var(--a2),.8);box-shadow:0 2vh 6vh rgba(0,0,0,.85);color:#fff;font-size:2vh;line-height:1.45;cursor:default;position:relative}
 #menu h3{margin:0 0 1.4vh;font-size:2.8vh;color:var(--al);display:flex;align-items:center;justify-content:space-between}
 #menu .row{display:flex;justify-content:space-between;align-items:center;gap:2vw;padding:.6vh 0;border-bottom:max(1px,.1vh) solid rgba(255,255,255,.1)}
 #menu .row span:first-child{color:#aaa;font-weight:500}
@@ -300,7 +306,8 @@ html.lite video,html.lite #img{transition-duration:.35s}
 #menu #mnew{margin:1.4vh 0 0;padding:1.1vh 1vw;border-radius:1vh;background:rgba(76,175,80,.2);border:1px solid rgba(76,175,80,.4);color:#81c784;font-weight:700;display:none}
 #menu #mst{min-height:2.6vh;margin:1vh 0 .6vh;color:var(--al);font-weight:600}
 #menu .btns{display:flex;flex-direction:column;gap:.9vh;margin-top:1vh}
-#menu button{font:700 2vh Montserrat,sans-serif;background:rgba(255,255,255,.08);color:#fff;border:max(1px,.1vh) solid rgba(255,255,255,.12);border-radius:1vh;padding:1.3vh 1.4vw;text-align:left;cursor:pointer;outline:none;transition:background .15s,box-shadow .15s,transform .15s}
+#menu button{font:700 2vh Montserrat,sans-serif;background:rgba(255,255,255,.08);color:#fff;border:max(1px,.1vh) solid rgba(255,255,255,.12);border-radius:1vh;padding:1.3vh 1.4vw;text-align:left;cursor:pointer;outline:none;transition:background .15s,box-shadow .15s,transform .15s;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.2);user-select:none;-webkit-user-select:none}
+#menu button:active{background:rgba(255,255,255,.28);transform:scale(.98)}
 #menu button.pri{background:linear-gradient(135deg,#2e7d32,#4caf50);border-color:#81c784;color:#fff}
 #menu button#mout{color:#ff9999;border-color:rgba(255,100,100,.2)}
 #menu button:focus{box-shadow:0 0 0 .35vh #fff, 0 0 1.5vh rgba(255,255,255,.5);background:rgba(255,255,255,.22);transform:scale(1.015)}
@@ -933,7 +940,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 <div id="bday"><p id="btxt"></p></div>
 <div id="updot"><i></i>Güncelleme var · Menü</div>
 <div id="menu"><div class="box">
-  <h3 id="mbrand">TV</h3>
+  <h3 id="mbrand"><span>TV</span><span id="mtopcls" style="cursor:pointer;font-size:2.4vh;opacity:.7;padding:.4vh .8vw" title="Kapat">✕</span></h3>
   <div class="row"><span>İşletme / Şube</span><span id="mbiz">-</span></div>
   <div class="row"><span>Kurulu APK sürümü</span><span id="mver">-</span></div>
   <div class="row"><span>Sunucu APK sürümü</span><span id="msrv">-</span></div>
@@ -951,9 +958,8 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
     <button id="mcls" type="button">✕ Kapat</button>
     <button id="mout" type="button">🚪 Bu cihazın oturumunu kapat (Çıkış)</button>
   </div>
-  <div class="hint">Kumanda: ▲ / ▼ gezin &nbsp;•&nbsp; OK / Tamam: seç &nbsp;•&nbsp; Geri / Menü: kapat</div>
+  <div class="hint">Kumanda: ▲ / ▼ gezin &nbsp;•&nbsp; OK / Tamam: seç &nbsp;•&nbsp; Geri / Menü: kapat &nbsp;•&nbsp; Ekrana dokunarak da kullanabilirsiniz</div>
 </div></div>
-</div>
 <div id="badge"></div>
 <div id="blocked"><small id="b-brand"></small><h1 id="b-title">Ekran duraklatıldı</h1><p id="b-text"></p></div>
 <div id="pv-watermark" aria-hidden="true"><span>ÖNİZLEME MODU · YAYIN İÇİN GEÇERSİZDİR</span><span>ÖNİZLEME MODU · YAYIN İÇİN GEÇERSİZDİR</span><span>ÖNİZLEME MODU · YAYIN İÇİN GEÇERSİZDİR</span></div>
@@ -1019,6 +1025,7 @@ function showTrailer(m, key) {
   trailerTimer = setTimeout(endTrailer, 3 * 60 * 1000); // bitiş haberi gelmezse en çok 3 dk
 }
 function playTrailer(retry) {
+  if (window.__N && window.__N.stopExo) window.__N.stopExo();
   const m = trailerList[trailerIdx++ % trailerList.length];
   if (!retry) trailerFails = 0;
   trailerOn = true; clearTimeout(timer); els.forEach(v => v.pause()); notePlay(null); // kesilen içeriğin süresi olduğu gibi raporlanır, fragman süresi dahil edilmez
@@ -1084,6 +1091,16 @@ function syncPos() {
   for (let i = 0; i < videos.length; i++) { if (t < durs[i] * 1000) return { idx: i, ms: durs[i] * 1000 - t }; t -= durs[i] * 1000; }
   return null;
 }
+function syncExoBounds() {
+  if (!window.__N || !window.__N.updateBounds) return;
+  const f = document.getElementById('frame');
+  if (!f) return;
+  const r = f.getBoundingClientRect();
+  const d = window.devicePixelRatio || 1;
+  window.__N.updateBounds(Math.round(r.left * d), Math.round(r.top * d), Math.round(r.width * d), Math.round(r.height * d));
+}
+window.addEventListener('resize', syncExoBounds);
+
 function play() {
   clearTimeout(timer); fadeTok++;
   if (!videos.length || !MEDIA_ON) return;
@@ -1094,6 +1111,7 @@ function play() {
   notePlay(it);
   current = it.id;
   if (it.type === 'poster') {
+    if (window.__N && window.__N.stopExo) window.__N.stopExo();
     els.forEach(e => e.pause());
     showPoster(it);
     timer = setTimeout(next, sp ? sp.ms : (it.dur || imageSeconds) * 1000);
@@ -1102,6 +1120,7 @@ function play() {
   }
   hidePoster();
   if (it.type === 'image') {
+    if (window.__N && window.__N.stopExo) window.__N.stopExo();
     els.forEach(e => e.pause());
     const showImg = () => { els.forEach(e => e.style.zIndex = '1'); img.style.zIndex = '2'; img.style.display = 'block'; img.src = it.url; const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (current === it.id) { img.style.opacity = '1'; cleanupLayers(img); } })); if (img.decode) img.decode().then(go, go); else go(); };
     if (!window.__lite && !sp && img.style.display === 'block' && img.style.opacity !== '0') { img.style.opacity = '0'; setTimeout(() => { if (current === it.id) showImg(); }, 800); } // fotoğraftan fotoğrafa: önce söner, sonra yenisi belirir (hafif modda ve senkron aktifken bekleme yok: ekranlar hizalı kalsın)
@@ -1109,6 +1128,18 @@ function play() {
     timer = setTimeout(next, sp ? sp.ms : imageSeconds * 1000);
     setTimeout(prepNext, 500);
   } else {
+    if (window.__N && window.__N.playExo) {
+      els.forEach(e => e.pause());
+      syncExoBounds();
+      window.__N.playExo(it.url, it.dur || 0);
+      window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
+      if (it.dur) {
+        timer = setTimeout(next, sp ? sp.ms : (it.dur + 0.5) * 1000);
+      }
+      prepared = { id: null };
+      setTimeout(prepNext, 2000);
+      return;
+    }
     if (window.__lite) bctx.clearRect(0, 0, bgc.width, bgc.height); // hafif modda videonun arkasına bulanık kopya çizilmez
     let el, ready = false;
     if (prepared.id === it.id && idleV().dataset.url === it.url) { ci = 1 - ci; el = curV(); ready = el.readyState >= 2; }
@@ -2035,6 +2066,7 @@ async function checkUpdateSilently() {
     checkUpdate(a);
   } catch (e) {}
 }
+let lastMenuToggle = 0;
 function menuOpen() {
   $m('menu').classList.add('on'); menuInfo(); menuSt('');
   $m('menu').scrollTop = 0;
@@ -2044,7 +2076,12 @@ function menuOpen() {
   clearTimeout(upd.timer); upd.timer = setTimeout(menuClose, 90000);
 }
 function menuClose() { clearTimeout(upd.timer); $m('menu').classList.remove('on'); }
-window.__menu = () => { $m('menu').classList.contains('on') ? menuClose() : menuOpen(); }; // Menü tuşu
+window.__menu = () => {
+  const now = Date.now();
+  if (now - lastMenuToggle < 300) return;
+  lastMenuToggle = now;
+  $m('menu').classList.contains('on') ? menuClose() : menuOpen();
+}; // Menü tuşu
 window.__menuClose = () => { if ($m('menu').classList.contains('on')) menuClose(); }; // Geri tuşu
 window.__updateStatus = msg => { if (!$m('menu').classList.contains('on')) menuOpen(); menuSt(msg); };
 function checkUpdate(a) {
@@ -2054,7 +2091,24 @@ function checkUpdate(a) {
   $m('updot').classList.toggle('on', !!(upd.avail && n.versionName));
   if ($m('menu').classList.contains('on')) menuInfo();
 }
-$m('mchk').addEventListener('click', async () => {
+
+// Dokunmatik ve kumanda tıklama birleştirici (gecikmesiz tepki)
+function attachTap(target, fn) {
+  const el = typeof target === 'string' ? document.getElementById(target) : target;
+  if (!el) return;
+  let lastTime = 0;
+  const run = e => {
+    const now = Date.now();
+    if (now - lastTime < 350) return;
+    lastTime = now;
+    if (e && e.cancelable) e.preventDefault();
+    fn(e);
+  };
+  el.addEventListener('click', run);
+  el.addEventListener('touchend', run, { passive: false });
+}
+
+attachTap('mchk', async () => {
   menuSt('Kontrol ediliyor…');
   if (window.__N && window.__N.desktop && window.__N.checkUpdate) { window.__N.checkUpdate(); return; } // Windows: sonuç __updateStatus ile gelir
   try {
@@ -2064,7 +2118,8 @@ $m('mchk').addEventListener('click', async () => {
     if (upd.avail) $m('mupd').focus();
   } catch (e) { menuSt('Kontrol edilemedi: sunucuya ulaşılamadı'); }
 });
-$m('mupd').addEventListener('click', () => {
+
+attachTap('mupd', () => {
   if (!window.__N || !window.__N.installUpdate) {
     menuSt('Otomatik APK yükleme Android TV kutularında geçerlidir.');
     return;
@@ -2074,8 +2129,36 @@ $m('mupd').addEventListener('click', () => {
   menuSt('İndiriliyor ve hazırlanıyor…');
   window.__N.installUpdate(fullUrl);
 });
-$m('mrel').addEventListener('click', () => location.reload());
-$m('mcls').addEventListener('click', menuClose);
+
+attachTap('mrel', () => location.reload());
+attachTap('mcls', menuClose);
+attachTap('mtopcls', menuClose);
+
+// Menü dışına (karartmaya) dokunulduğunda/tıklandığında kapat
+attachTap($m('menu'), e => {
+  if (e && e.target === $m('menu')) menuClose();
+});
+
+// Ekrana dokunarak menüyü açma tetikleyicileri
+attachTap('updot', () => window.__menu());
+attachTap('logo', () => window.__menu());
+attachTap('tclock', () => window.__menu());
+attachTap('wclock', () => window.__menu());
+attachTap('qr-right', () => window.__menu());
+attachTap('qr-left', () => window.__menu());
+
+// Çift dokunma ile menüyü açma (ekranın herhangi bir yerine)
+let lastDocTap = 0;
+document.addEventListener('touchend', e => {
+  if ($m('menu') && $m('menu').contains(e.target)) return;
+  const now = Date.now();
+  if (now - lastDocTap < 380) {
+    lastDocTap = 0;
+    window.__menu();
+  } else {
+    lastDocTap = now;
+  }
+}, { passive: true });
 
 // Kumanda: Menü açıkken yukarı/aşağı butonlar arasında gezinme, OK ile seçme, Geri ile kapatma
 document.addEventListener('keydown', e => {
@@ -2098,22 +2181,24 @@ document.addEventListener('keydown', e => {
   if (isOk) {
     if (document.activeElement && document.activeElement.tagName === 'BUTTON' && $m('menu').contains(document.activeElement)) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       document.activeElement.click();
+      return;
     }
-    return;
   }
   if (isBack) {
     e.preventDefault();
+    e.stopImmediatePropagation();
     menuClose();
     return;
   }
 });
 
-// Kumanda: Menü tuşu (veya ContextMenu / Settings / Info / Escape) menüyü açar/kapatır
+// Kumanda: Menü tuşu (veya ContextMenu / Settings / Info / Escape / Kırmızı tuş) menüyü açar/kapatır
 document.addEventListener('keydown', e => {
   if (window.__auth) return;
   const isMenuKey = e.key === 'Escape' || e.key === 'ContextMenu' || e.key === 'Menu' || e.key === 'Settings' ||
-                    e.keyCode === 82 || e.keyCode === 165 || e.keyCode === 176;
+                    e.keyCode === 82 || e.keyCode === 165 || e.keyCode === 176 || e.keyCode === 183;
   if (isMenuKey) {
     e.preventDefault();
     window.__menu();
@@ -2149,6 +2234,8 @@ document.addEventListener('keydown', e => {
   const isSelect = e.key === 'Enter' || e.key === ' ' || e.key === 'Select' ||
                    e.keyCode === 13 || e.keyCode === 23 || e.keyCode === 66;
   if (isSelect) {
+    const now = Date.now();
+    if (now - lastMenuToggle < 400) return;
     e.preventDefault();
     if (MUS.needUnlock) unlockAudioNow();
     window.__menu();
@@ -2199,6 +2286,7 @@ function applyLayout(l) {
     try { if (matches.length || pages.length) render(); } catch (e) {}
     setTicker(matches); renderPanel(); renderMenuW(true); tickClock();
     renderMusicBar(); // yerleşim değişti: müzik widget'ı açıldıysa çip kapansın, bant açıldıysa çip yerine taşısın
+    if (typeof syncExoBounds === 'function') setTimeout(syncExoBounds, 80);
     if (MEDIA_ON && !wasOn && videos.length) { current = null; play(); }
   });
 }
@@ -2515,6 +2603,7 @@ async function startPair() {
   } catch (e) { $id('a-code').textContent = '------'; setTimeout(startPair, 10000); }
 }
 function showAuth() {
+  if (window.__N && window.__N.stopExo) window.__N.stopExo();
   window.__auth = true; $id('auth').classList.add('on');
   authErr('');
   els.forEach(v => v.pause());
@@ -2555,7 +2644,7 @@ document.addEventListener('keydown', e => {
   const n = f[(i + (e.key === 'ArrowDown' ? 1 : -1) + f.length) % f.length];
   if (n) { e.preventDefault(); n.focus(); }
 });
-$id('mout').addEventListener('click', async () => {
+attachTap('mout', async () => {
   menuSt('Oturum kapatılıyor…');
   const t = tokenGet();
   tokenSet('');

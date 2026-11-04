@@ -1,14 +1,11 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
 }
 
-// Tek APK, tüm işletmeler. Sunucu adresi ve uygulama adı derlerken verilir:
-//   ./gradlew assembleRelease -PBASE_URL=https://screenpano.com -PAPP_NAME="ScreenPano"
 def baseUrl = (project.findProperty('BASE_URL') ?: 'https://screenpano.com').toString()
 def appName = (project.findProperty('APP_NAME') ?: 'ScreenPano').toString()
 
-// Release imzası: android/keystore.properties (git'e eklemeyin)
-//   storeFile=../release.jks  storePassword=...  keyAlias=tv  keyPassword=...
 def ksFile = rootProject.file('keystore.properties')
 def ks = new Properties()
 if (ksFile.exists()) ksFile.withInputStream { ks.load(it) }
@@ -21,13 +18,16 @@ android {
         applicationId 'com.screenpano.tv'
         minSdk 21
         targetSdk 34
-        versionCode 11
-        versionName '2.1'
+        versionCode 14
+        versionName '2.4'
         buildConfigField 'String', 'BASE_URL', "\"${baseUrl}\""
         resValue 'string', 'app_name', appName
     }
 
-    buildFeatures { buildConfig true }
+    buildFeatures {
+        buildConfig true
+        viewBinding true
+    }
 
     signingConfigs {
         release {
@@ -48,7 +48,38 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.6'
+
+    // ExoPlayer (AndroidX Media3)
+    implementation 'androidx.media3:media3-exoplayer:1.4.1'
+    implementation 'androidx.media3:media3-ui:1.4.1'
+    implementation 'androidx.media3:media3-common:1.4.1'
+    implementation 'androidx.media3:media3-datasource-okhttp:1.4.1'
+
+    // OkHttp (HTTP & WebSocket)
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+    // Coil (Image & SVG loading)
+    implementation 'io.coil-kt:coil:2.7.0'
+    implementation 'io.coil-kt:coil-svg:2.7.0'
+
+    // QR Code generator
+    implementation 'com.google.zxing:core:3.5.3'
+
+    // Coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
 }

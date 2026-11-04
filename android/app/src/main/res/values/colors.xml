@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_bg">#151717</color>
+    <color name="bg_dark">#151717</color>
+    <color name="bg_card">#1B1D1D</color>
+    <color name="bg_card_surface">#222626</color>
+    <color name="accent_gold">#C9955C</color>
+    <color name="accent_dark_gold">#906538</color>
+    <color name="text_white">#FBFBFB</color>
+    <color name="text_soft">#E5E5E5</color>
+    <color name="text_muted">#9AA0A0</color>
+    <color name="red_live">#FF4D4D</color>
+    <color name="green_traffic">#3ECF4A</color>
+    <color name="border_line">#1AFFFFFF</color>
 </resources>

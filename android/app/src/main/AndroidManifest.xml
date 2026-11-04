@@ -11,15 +11,16 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
     <application
+        android:name=".TvApp"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:banner="@drawable/banner"
-        android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+        android:theme="@style/Theme.ScreenPano.Tv"
         android:hardwareAccelerated="true"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="true">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="sensorLandscape"
@@ -32,10 +33,16 @@
         </activity>
 
         <!-- Uygulama içi güncelleme: indirilen APK'yı yükleyiciye verir -->
-        <provider android:name=".UpdateProvider" android:authorities="${applicationId}.update" android:exported="false" android:grantUriPermissions="true" />
+        <provider
+            android:name=".receiver.UpdateProvider"
+            android:authorities="${applicationId}.update"
+            android:exported="false"
+            android:grantUriPermissions="true" />
 
         <!-- Cihaz açılınca uygulamayı başlatmayı dener -->
-        <receiver android:name=".BootReceiver" android:exported="true">
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />

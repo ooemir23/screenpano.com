@@ -1,0 +1,555 @@
+package com.screenpano.tv.ui
+
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.util.Base64
+import android.util.Log
+import android.view.KeyEvent
+import android.view.PixelCopy
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
+import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.FrameLayout
+import androidx.annotation.OptIn
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import com.screenpano.tv.BuildConfig
+import com.screenpano.tv.data.net.ApiClient
+import com.screenpano.tv.data.net.TrafficService
+import com.screenpano.tv.data.prefs.TvPreferences
+import com.screenpano.tv.databinding.ActivityMainBinding
+import com.screenpano.tv.player.MediaCache
+import com.screenpano.tv.receiver.UpdateProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+
+@OptIn(UnstableApi::class)
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var prefs: TvPreferences
+    private val apiClient = ApiClient()
+    private val trafficService = TrafficService()
+
+    private var exoPlayer: ExoPlayer? = null
+    private val handler = Handler(Looper.getMainLooper())
+    private var trafficJob: Job? = null
+    private var lastTrafficJson: String? = null
+    private var isUpdating = false
+
+    private val baseUrl = BuildConfig.BASE_URL.trimEnd('/')
+    private val tvUrl = "$baseUrl/tv"
+
+    private val reloadTask = Runnable {
+        binding.webView.loadUrl(tvUrl)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        hideSystemUi()
+
+        prefs = TvPreferences(this)
+
+        initExoPlayer()
+        setupWebView()
+        startTrafficPolling()
+
+        binding.webView.loadUrl(tvUrl)
+    }
+
+    private fun initExoPlayer() {
+        val renderersFactory = DefaultRenderersFactory(this)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
+            .setEnableDecoderFallback(true)
+
+        val dataSourceFactory = MediaCache.buildCacheDataSourceFactory(this)
+        val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
+
+        exoPlayer = ExoPlayer.Builder(this, renderersFactory)
+            .setMediaSourceFactory(mediaSourceFactory)
+            .build()
+            .apply {
+                volume = 0f
+                repeatMode = Player.REPEAT_MODE_OFF
+                playWhenReady = true
+
+                addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        if (playbackState == Player.STATE_ENDED) {
+                            Log.d(TAG, "ExoPlayer video bitti, sıradaki içeriğe geçiliyor")
+                            notifyVideoEnded()
+                        }
+                    }
+
+                    override fun onPlayerError(error: PlaybackException) {
+                        Log.e(TAG, "ExoPlayer hatası: ${error.message}", error)
+                        handler.postDelayed({ notifyVideoEnded() }, 1500)
+                    }
+                })
+            }
+
+        binding.playerView.player = exoPlayer
+        binding.playerView.useController = false
+    }
+
+    private fun notifyVideoEnded() {
+        binding.webView.post {
+            binding.webView.evaluateJavascript("window.__exoEnded && window.__exoEnded();", null)
+        }
+    }
+
+    private fun setupWebView() {
+        val web = binding.webView
+        web.setBackgroundColor(Color.TRANSPARENT)
+        web.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        web.isFocusable = true
+        web.isFocusableInTouchMode = true
+        web.isClickable = true
+        web.requestFocus()
+
+        val s = web.settings
+        s.javaScriptEnabled = true
+        s.domStorageEnabled = true
+        s.mediaPlaybackRequiresUserGesture = false
+        s.loadWithOverviewMode = true
+        s.useWideViewPort = true
+        s.setSupportZoom(false)
+        s.builtInZoomControls = false
+        s.displayZoomControls = false
+        s.cacheMode = WebSettings.LOAD_DEFAULT
+
+        web.addJavascriptInterface(NativeBridge(), "TVNative")
+
+        web.webChromeClient = object : WebChromeClient() {
+            override fun getDefaultVideoPoster(): Bitmap {
+                return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+            }
+            override fun getVideoLoadingProgressView(): View {
+                return View(this@MainActivity)
+            }
+        }
+
+        web.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                handler.removeCallbacks(reloadTask)
+                pushTraffic()
+                injectExoHook(view)
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && request?.isForMainFrame == true) {
+                    handler.removeCallbacks(reloadTask)
+                    handler.postDelayed(reloadTask, 15000)
+                }
+            }
+
+            @Suppress("DEPRECATION")
+            override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                handler.removeCallbacks(reloadTask)
+                handler.postDelayed(reloadTask, 15000)
+            }
+        }
+    }
+
+    private fun injectExoHook(web: WebView?) {
+        val js = """
+        (function() {
+            if (window.__exoHooked) return;
+            window.__exoHooked = true;
+            
+            var style = document.createElement('style');
+            style.textContent = 'html.native-exo #frame{background:transparent !important} html.native-exo #bgw{background:transparent !important} html.native-exo video{opacity:0 !important;pointer-events:none !important}';
+            document.head.appendChild(style);
+            document.documentElement.classList.add('native-exo');
+
+            var frame = document.getElementById('frame');
+            function syncBounds() {
+                if (!frame || !window.TVNative || !window.TVNative.updateBounds) return;
+                var r = frame.getBoundingClientRect();
+                var d = window.devicePixelRatio || 1;
+                window.TVNative.updateBounds(Math.round(r.left * d), Math.round(r.top * d), Math.round(r.width * d), Math.round(r.height * d));
+            }
+            window.addEventListener('resize', syncBounds);
+            setInterval(syncBounds, 1200);
+            syncBounds();
+
+            window.__exoEnded = function() {
+                if (typeof next === 'function') {
+                    next();
+                }
+            };
+
+            var v1 = document.getElementById('v');
+            var v2 = document.getElementById('v2');
+            function hookV(v) {
+                if (!v) return;
+                var origPlay = v.play;
+                v.play = function() {
+                    var url = v.src || (v.dataset && v.dataset.url) || '';
+                    if (url && window.TVNative && window.TVNative.playExo) {
+                        syncBounds();
+                        v.style.opacity = '0';
+                        window.TVNative.playExo(url, 0);
+                    }
+                    return Promise.resolve();
+                };
+            }
+            hookV(v1);
+            hookV(v2);
+
+            var poster = document.getElementById('poster');
+            if (poster) {
+                var obs = new MutationObserver(function() {
+                    if (poster.classList.contains('on')) {
+                        if (window.TVNative && window.TVNative.stopExo) window.TVNative.stopExo();
+                    }
+                });
+                obs.observe(poster, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            var trailer = document.getElementById('trailer');
+            if (trailer) {
+                var obs2 = new MutationObserver(function() {
+                    if (trailer.classList.contains('on')) {
+                        if (window.TVNative && window.TVNative.stopExo) window.TVNative.stopExo();
+                    }
+                });
+                obs2.observe(trailer, { attributes: true, attributeFilter: ['class'] });
+            }
+        })();
+        """.trimIndent()
+        web?.evaluateJavascript(js, null)
+    }
+
+    private fun startTrafficPolling() {
+        trafficJob?.cancel()
+        trafficJob = lifecycleScope.launch {
+            while (isActive) {
+                val data = trafficService.fetchIbbTraffic()
+                if (data != null) {
+                    val j = JSONObject().apply {
+                        put("all", data.all)
+                        put("asia", data.asia)
+                        put("europe", data.europe)
+                        put("ts", data.timestamp)
+                    }
+                    lastTrafficJson = j.toString()
+                    pushTraffic()
+                }
+                delay(120000)
+            }
+        }
+    }
+
+    private fun pushTraffic() {
+        val j = lastTrafficJson ?: return
+        binding.webView.post {
+            binding.webView.evaluateJavascript("window.__nativeTraffic && window.__nativeTraffic($j);", null)
+        }
+    }
+
+    private inner class NativeBridge {
+
+        @JavascriptInterface
+        fun isNative(): Boolean = true
+
+        @JavascriptInterface
+        fun hasExoPlayer(): Boolean = true
+
+        @JavascriptInterface
+        fun playExo(url: String, durationSec: Int) {
+            handler.post {
+                val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
+                Log.d(TAG, "ExoPlayer ile oynatılıyor: $fullUrl (süre: $durationSec s)")
+                try {
+                    val mediaItem = MediaItem.fromUri(Uri.parse(fullUrl))
+                    exoPlayer?.setMediaItem(mediaItem)
+                    exoPlayer?.prepare()
+                    exoPlayer?.play()
+                    binding.playerView.visibility = View.VISIBLE
+                } catch (e: Exception) {
+                    Log.e(TAG, "ExoPlayer oynatılamadı", e)
+                    notifyVideoEnded()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun stopExo() {
+            handler.post {
+                exoPlayer?.stop()
+                binding.playerView.visibility = View.GONE
+            }
+        }
+
+        @JavascriptInterface
+        fun updateBounds(leftPx: Int, topPx: Int, widthPx: Int, heightPx: Int) {
+            handler.post {
+                if (widthPx > 0 && heightPx > 0) {
+                    val params = binding.playerView.layoutParams as FrameLayout.LayoutParams
+                    if (params.leftMargin != leftPx || params.topMargin != topPx ||
+                        params.width != widthPx || params.height != heightPx) {
+                        params.leftMargin = leftPx
+                        params.topMargin = topPx
+                        params.width = widthPx
+                        params.height = heightPx
+                        binding.playerView.layoutParams = params
+                    }
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun getToken(): String = prefs.getDeviceToken()
+
+        @JavascriptInterface
+        fun saveToken(t: String?) {
+            prefs.saveDeviceToken(t)
+        }
+
+        @JavascriptInterface
+        fun versionName(): String = BuildConfig.VERSION_NAME
+
+        @JavascriptInterface
+        fun versionCode(): Int = BuildConfig.VERSION_CODE
+
+        @JavascriptInterface
+        fun hwId(): String = prefs.getHardwareId()
+
+        @JavascriptInterface
+        fun model(): String = prefs.getModel()
+
+        @JavascriptInterface
+        fun snapshot(): String {
+            val out = arrayOf("")
+            val done = CountDownLatch(1)
+
+            runOnUiThread {
+                try {
+                    val w = binding.root.width
+                    val h = binding.root.height
+                    if (w > 0 && h > 0) {
+                        val k = (960f / w).coerceAtMost(1f)
+                        val targetW = (w * k).toInt().coerceAtLeast(1)
+                        val targetH = (h * k).toInt().coerceAtLeast(1)
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            val b = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888)
+                            PixelCopy.request(window, b, { res ->
+                                if (res == PixelCopy.SUCCESS) {
+                                    val stream = ByteArrayOutputStream()
+                                    b.compress(Bitmap.CompressFormat.JPEG, 70, stream)
+                                    b.recycle()
+                                    out[0] = "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
+                                }
+                                done.countDown()
+                            }, handler)
+                            return@runOnUiThread
+                        } else {
+                            val b = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.RGB_565)
+                            val c = Canvas(b)
+                            c.scale(k, k)
+                            binding.root.draw(c)
+                            val stream = ByteArrayOutputStream()
+                            b.compress(Bitmap.CompressFormat.JPEG, 70, stream)
+                            b.recycle()
+                            out[0] = "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
+                        }
+                    }
+                } catch (_: Throwable) {
+                    out[0] = ""
+                }
+                done.countDown()
+            }
+
+            try {
+                done.await(3, TimeUnit.SECONDS)
+            } catch (_: InterruptedException) {}
+            return out[0]
+        }
+
+        @JavascriptInterface
+        fun installUpdate(url: String) {
+            runOnUiThread {
+                startUpdate(url)
+            }
+        }
+    }
+
+    private fun updateStatus(msg: String) {
+        handler.post {
+            binding.webView.evaluateJavascript(
+                "window.__updateStatus && window.__updateStatus(${JSONObject.quote(msg)});",
+                null
+            )
+        }
+    }
+
+    private fun startUpdate(url: String) {
+        if (isUpdating) return
+        val curHost = binding.webView.url?.split("/tv")?.getOrNull(0) ?: baseUrl
+        if (!url.startsWith("$baseUrl/") && !url.startsWith("$curHost/")) {
+            updateStatus("Geçersiz güncelleme adresi")
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
+            updateStatus("Açılan ekranda bu uygulama için izni açıp geri dönün, sonra tekrar OK'a basın")
+            val i = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
+            startActivity(i)
+            return
+        }
+
+        isUpdating = true
+        updateStatus("İndiriliyor…")
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val targetApk = UpdateProvider.apkFile(this@MainActivity)
+            val res = apiClient.downloadFile(url, targetApk) { percent ->
+                if (percent % 10 == 0) updateStatus("İndiriliyor %$percent…")
+            }
+
+            withContext(Dispatchers.Main) {
+                isUpdating = false
+                res.onSuccess {
+                    launchInstaller(targetApk)
+                }.onFailure { err ->
+                    updateStatus("İndirilemedi: ${err.message}")
+                }
+            }
+        }
+    }
+
+    private fun launchInstaller(f: File) {
+        try {
+            val contentUri = Uri.parse("content://$packageName.update/update.apk")
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    setDataAndType(contentUri, "application/vnd.android.package-archive")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } else {
+                    setDataAndType(Uri.fromFile(f), "application/vnd.android.package-archive")
+                }
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                val resInfoList = packageManager.queryIntentActivities(intent, 0)
+                for (resolveInfo in resInfoList) {
+                    val pkg = resolveInfo.activityInfo.packageName
+                    grantUriPermission(pkg, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+            }
+
+            startActivity(intent)
+            updateStatus("Yükleme ekranında \"Yükle\" seçeneğini onaylayın")
+        } catch (e: Exception) {
+            updateStatus("Yükleyici açılamadı: ${e.message}")
+        }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_MENU,
+            KeyEvent.KEYCODE_SETTINGS,
+            KeyEvent.KEYCODE_INFO,
+            KeyEvent.KEYCODE_HELP,
+            KeyEvent.KEYCODE_WINDOW,
+            KeyEvent.KEYCODE_PROG_RED -> {
+                binding.webView.evaluateJavascript("window.__menu && window.__menu();", null)
+                return true
+            }
+            KeyEvent.KEYCODE_F5 -> {
+                binding.webView.reload()
+                return true
+            }
+            KeyEvent.KEYCODE_BACK -> {
+                binding.webView.evaluateJavascript("(window.__menuClose ? (window.__menuClose(), 1) : 0)", null)
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    private fun hideSystemUi() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    )
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            hideSystemUi()
+            binding.webView.requestFocus()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.webView.onResume()
+        binding.webView.requestFocus()
+        exoPlayer?.play()
+    }
+
+    override fun onPause() {
+        exoPlayer?.pause()
+        binding.webView.onPause()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        trafficJob?.cancel()
+        handler.removeCallbacksAndMessages(null)
+        exoPlayer?.release()
+        exoPlayer = null
+        binding.webView.destroy()
+        super.onDestroy()
+    }
+
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+}

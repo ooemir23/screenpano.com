@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#151717"
+    android:keepScreenOn="true">
+
+    <!-- 1. EXO PLAYER (Donanım hızlandırmalı yerel video oynatıcı) -->
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/playerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        app:surface_type="texture_view"
+        app:use_controller="false"
+        app:resize_mode="fit" />
+
+    <!-- 2. WEB VIEW (Zengin 24x24 Izgara, Kartlar, Widgetlar, Kayan Bant, Saat, Şeffaf Katman) -->
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:clickable="true" />
+
+</FrameLayout>
