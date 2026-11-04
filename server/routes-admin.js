@@ -383,7 +383,8 @@ r.put('/news', (req, res) => {
 });
 r.put('/breaking', (req, res) => {
   const t = req.t, b = req.body || {}, cur = t.db.breaking || {};
-  t.db.breaking = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, banner: typeof b.banner === 'boolean' ? b.banner : cur.banner !== false };
+  const srcs = Array.isArray(b.sources) ? [...new Set(b.sources.map(String).filter(x => x === 'trt' || x === 'aa' || x === 'ntv'))] : (cur.sources || ['trt']);
+  t.db.breaking = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, banner: typeof b.banner === 'boolean' ? b.banner : cur.banner !== false, sources: srcs.length ? srcs : ['trt'] };
   changed(t); res.json({ ok: true }); F.refreshBreaking();
 });
 r.post('/news/test', async (req, res) => {

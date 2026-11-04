@@ -398,14 +398,19 @@ async function fetchNews(key, tag) {
   if (!items.length) throw new Error('haber listesi boş');
   return items;
 }
-// ---- Son dakika: TRT Haber son dakika yayını; haberler sayfasından bağımsız, ekranda bant + alt şeritte "SON DAKİKA" olarak çıkar ----
+// ---- Son dakika: seçilen kaynakların (TRT/AA/NTV) son dakika akışları; haberler sayfasından bağımsız, ekranda bant + alt şeritte "SON DAKİKA" olarak çıkar ----
 let breaking = cacheGet('breaking'); let breakingFail = 0;
 const breakingOn = t => (t.db.breaking || {}).enabled !== false;
+const breakingSources = t => { const s = (t.db.breaking || {}).sources; return Array.isArray(s) && s.length ? [...new Set(s.filter(x => x === 'trt' || x === 'aa' || x === 'ntv'))] : ['trt']; };
 async function refreshBreaking(force) {
   if (!force && !proTenants().some(breakingOn)) return;
   if (!force && Date.now() - breakingFail < 2 * MIN) return;
   try {
-    const items = (await fetchRss('trt')).filter(x => x.date).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, 6);
+    const tags = new Set(proTenants().filter(breakingOn).flatMap(breakingSources));
+    if (!tags.size) tags.add('trt');
+    const lists = await Promise.all([...tags].map(x => fetchRssTag(x)));
+    const items = lists.flat().filter(x => x.date).sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, 6);
+    if (!items.length) throw new Error('son dakika listesi boş');
     breaking = { items, updated: new Date().toISOString() }; cachePut('breaking', breaking); hub.pushAll();
   } catch (e) { breakingFail = Date.now(); console.error('Son dakika alınamadı:', e.message); }
 }

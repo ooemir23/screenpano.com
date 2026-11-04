@@ -28,6 +28,7 @@ async function act(method, path, body, ok, reload = true) {
 }
 const opt = (key, val, msg) => { S.db[key] = val; return act('PUT', '/options', { [key]: val }, msg || 'Kaydedildi', false); };
 const reoptAll = () => { if (confirm('Mevcut videolar seçtiğiniz kaliteyle yeniden küçültülsün mü? Orijinaller silindiği için kalite yalnızca düşebilir (küçük dosya, daha akıcı oynatım); işlem kuyrukta sırayla yapılır.')) act('POST', '/media/optimize-all', { force: true }, 'Yeniden küçültme başladı', false); };
+const brkSrc = (k, on) => { const cur = new Set((S.db.breaking || {}).sources || ['trt']); on ? cur.add(k) : cur.delete(k); const arr = [...cur].filter(x => x !== 'mix'); act('PUT', '/breaking', { sources: arr.length ? arr : ['trt'] }, 'Kaydedildi', false).then(refresh); };
 async function refresh() { [S.db, S.scr] = await Promise.all([req('GET', '/db'), req('GET', '/screen')]); render(true); }
 const sw = (on, js, attrs = '') => `<label class="sw"><input type="checkbox" ${on ? 'checked' : ''} onchange="${js}" ${attrs}><i></i></label>`;
 const card = (title, desc, body, right = '', cls = '') => `<div class="card ${cls}"><div class="ch"><div><h3>${title}</h3>${desc ? `<p>${desc}</p>` : ''}</div>${right}</div><div class="cb">${body}</div></div>`;
@@ -202,8 +203,7 @@ SECTIONS.design = {
       h += card('Kenar payı (TV görüntüyü kırpıyorsa)', 'Bazı TV\'ler görüntünün kenarlarını keser. Önce TV\'nin görüntü ayarından "Tam ekran / Ekrana sığdır / Just Scan" seçeneğini deneyin; olmazsa buradan küçültün. Kutu tüm TV\'lere aynı görüntüyü verdiği için ayar hepsini etkiler.',
         `<div class="swr"><div class="b"><b>Hizalama çerçevesini göster</b><span>TV\'de yeşil bir çerçeve çıkar; dört kenarı görünene kadar payları artırın, sonra kapatın.</span></div>${sw(db.safeGuide, "opt('safeGuide',this.checked)")}</div>
          <div class="f mt">${['L', 'R', 'T', 'B'].map(k => fl(`${{ L: 'Sol', R: 'Sağ', T: 'Üst', B: 'Alt' }[k]}: <b id="sv${k}">${sv(k)}</b>%`, `<input type="range" min="0" max="20" step="0.5" value="${sv(k)}" id="safe${k}" oninput="$('sv${k}').textContent=this.value" onchange="saveSafe()">`)).join('')}</div>
-         <div class="row end mt"><button class="btn g s" onclick="resetSafe()">Sıfırla</button></div>`)
-        + card('Görsel efektler', 'Ekran takılıyorsa efektleri azaltın.', `<div class="f">${fl('Efekt modu', `<select onchange="opt('fxMode',this.value)">${[['auto', 'Otomatik (TV kutusunda hafif)'], ['lite', 'Hafif (her yerde)'], ['full', 'Tam (her yerde)']].map(([v, l]) => `<option value="${v}" ${db.fxMode === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`);
+         <div class="row end mt"><button class="btn g s" onclick="resetSafe()">Sıfırla</button></div>`);
     }
     return h;
   },
@@ -803,8 +803,9 @@ SECTIONS.info = {
     return head('Bilgi Bandı', '"Maçlar ve bilgi sayfaları" widget\'ında sırayla dönen ve kayan bantta akan bilgiler. Maç yokken ekranı canlı tutar.')
       + lock('Bilgi bandı')
       + card('Sayfalar', 'Açtıklarınız sırayla gösterilir. Veriler otomatik yenilenir; anahtar ya da ayar gerekmez.',
-        row('🚨 Son dakika', 'TRT Haber son dakika başlıkları; haberler sayfasından ayrı olarak alt bantta ve yeni haber gelince ekranda bildirim bandıyla çıkar', bk.enabled !== false, "act('PUT','/breaking',{enabled:this.checked},'Kaydedildi')",
-          `<div class="swr"><div class="b"><b>Ekranda bildirim bandı</b><span>Yeni son dakika gelince birkaç saniye üstte kırmızı bantla gösterilir</span></div>${sw(bk.banner !== false, "act('PUT','/breaking',{banner:this.checked},'Kaydedildi',false)")}</div>`)
+        row('🚨 Son dakika', 'Seçtiğiniz kaynakların son dakika başlıkları; haberler sayfasından ayrı olarak alt bantta (kendi bölümünde) ve yeni haber gelince ekranda bildirim bandıyla çıkar', bk.enabled !== false, "act('PUT','/breaking',{enabled:this.checked},'Kaydedildi')",
+          `<div class="swr"><div class="b"><b>Ekranda bildirim bandı</b><span>Yeni son dakika gelince birkaç saniye üstte kırmızı bantla gösterilir</span></div>${sw(bk.banner !== false, "act('PUT','/breaking',{banner:this.checked},'Kaydedildi',false)")}</div>
+           <div class="row mt" style="flex-wrap:wrap;align-items:center;gap:10px"><span class="muted">Son dakika kaynakları:</span>${[['trt', 'TRT Haber'], ['aa', 'Anadolu Ajansı'], ['ntv', 'NTV']].map(([k, n]) => `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" ${(bk.sources || ['trt']).includes(k) ? 'checked' : ''} onchange="brkSrc('${k}',this.checked)"> ${n}</label>`).join('')}</div>`)
         + row('📰 Haberler', 'Türkiye gündeminden son dakika başlıkları (TRT, AA, NTV)', nw.enabled !== false, "act('PUT','/news',{enabled:this.checked},'Kaydedildi')",
           `<div class="f mt">${fl('Kategori', `<select onchange="act('PUT','/news',{tag:this.value},'Kaydedildi')">${[['mix', 'Son dakika · TRT + AA + NTV'], ['trt', 'Son dakika · TRT Haber'], ['aa', 'Son dakika · Anadolu Ajansı'], ['ntv', 'Gündem · NTV'], ['general', 'Genel'], ['economy', 'Ekonomi'], ['sport', 'Spor'], ['technology', 'Teknoloji']].map(([v, l]) => `<option value="${v}" ${(nw.tag || 'mix') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`)
         + row('💊 Nöbetçi eczaneler', 'Bugünkü nöbetçi eczaneler; konumunuzdan otomatik ya da seçtiğiniz ilçelerden', ph.enabled !== false, "act('PUT','/pharmacy',{enabled:this.checked},'Kaydedildi')", pharmBox(ph, db.location || {}))
@@ -860,7 +861,9 @@ SECTIONS.settings = {
         <div class="row end mt"><button class="btn" onclick="saveProfile()">Kaydet</button></div>`);
     } else if (sub === 'devices') {
       const devs = S.scr.devices, lim = S.scr.limit;
-      h += `<div class="grid g2" style="margin-bottom:18px">`
+      h += card('Performans', 'Ekran takılıyorsa efektleri azaltın; video ağırlıklı takılmada Medya sekmesindeki kaliteyi 720p\'ye düşürün. TV kutusunda "Otomatik" zaten hafif modu seçer.',
+        `<div class="f">${fl('Efekt modu', `<select onchange="opt('fxMode',this.value)">${[['auto', 'Otomatik (TV kutusunda hafif)'], ['lite', 'Hafif (her yerde)'], ['full', 'Tam (her yerde)']].map(([v, l]) => `<option value="${v}" ${(S.db.fxMode || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`)
+      + `<div class="grid g2" style="margin-bottom:18px">`
         + card('TV kutusunu bağla', 'Mekândaki Android kutu, HDMI dağıtıcıyla tüm TV\'lere aynı görüntüyü verir; tek kutu yeterli.',
           `<ol style="padding-left:20px;line-height:1.9;color:var(--soft);font-size:14px"><li><a href="/app.apk?name=${encodeURIComponent(S.me.tenant.name)}">Android uygulamasını (APK) indirin</a> ve kutuya kurun. Kutu yerine televizyona bağlı bir <b>Windows bilgisayar</b> kullanacaksanız <a href="/app.exe">Windows uygulamasını indirin</a>; televizyon ikinci ekransa yayın oraya açılır.</li><li>Uygulamayı açın. Ekranda giriş formu ve 6 haneli bir kod çıkar.</li><li>Kutuda kullanıcı adı ve şifrenizle giriş yapın, <b>ya da</b> kodu aşağıya yazın (TV'deki QR'ı telefonla okutursanız kendiliğinden dolar).</li></ol>
            <div class="row mt"><input type="text" id="pcode" class="code-in" inputmode="numeric" maxlength="7" placeholder="123 456" value="${window.__pair ? window.__pair.replace(/(\d{3})(\d{3})/, '$1 $2') : ''}"><button class="btn" onclick="pairTv()">Bağla</button></div>`)

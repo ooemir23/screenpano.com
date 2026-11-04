@@ -1396,7 +1396,9 @@ function infoWindow(all) { const n = Math.min(TICK_INFO_N, all.length), s = tick
 function setTicker(list) {
   const live = list.filter(m => m.live), fin = list.filter(m => m.final);
   liveLeagues = [...new Set(live.map(m => m.league))];
-  let shown, label, info = [], seg = false;
+  const brk = showBrk && breakData ? breakData.items : [];
+  const nw = showNews && newsData ? newsData.items : [];
+  let shown, label, info = [], seg = false, kind = null;
   segIsInfo = false; segCount = 1;
   if (live.length) {
     const infoAll = infoItems(), segs = [];
@@ -1406,15 +1408,34 @@ function setTicker(list) {
     if (sg === null) { segIsInfo = true; shown = []; info = infoWindow(infoAll); label = 'Güncel Bilgiler'; }
     else { shown = live.filter(m => m.league === sg); label = liveLeagues.length > 1 || infoAll.length ? 'Canlı · ' + sg : 'Canlı Skorlar'; }
   } else {
-    shown = fin.length ? fin : list.slice(0, 8);
-    label = fin.length ? 'Günün Sonuçları' : 'Sıradaki Maçlar';
-    info = shown.length ? [] : infoItems();
-    if (!shown.length && info.length) label = 'Güncel Bilgiler';
+    // maç olmayan zamanlarda bant bölümlerle döner: sonuçlar → sıradaki maçlar → son dakika → haberler (her bölümün etiketi kendi içeriğini yazar)
+    const segs = [];
+    if (fin.length) segs.push({ label: 'Günün Sonuçları', kind: 'fin' });
+    if (list.length) segs.push({ label: 'Sıradaki Maçlar', kind: 'next' });
+    if (brk.length) segs.push({ label: 'Son Dakika', kind: 'brk' });
+    if (nw.length) segs.push({ label: 'Haberler', kind: 'news' });
+    if (segs.length > 1) {
+      segCount = segs.length; if (tickSeg >= segCount) tickSeg = 0;
+      const s = segs[tickSeg];
+      seg = true; kind = s.kind; label = s.label;
+      shown = s.kind === 'fin' ? fin : s.kind === 'next' ? list.filter(m => !m.final).slice(0, 8) : [];
+    } else if (segs.length === 1 && (segs[0].kind === 'brk' || segs[0].kind === 'news')) {
+      kind = segs[0].kind; label = segs[0].label; shown = [];
+    } else {
+      shown = fin.length ? fin : list.slice(0, 8);
+      label = fin.length ? 'Günün Sonuçları' : 'Sıradaki Maçlar';
+      info = shown.length ? [] : infoItems();
+      if (!shown.length && info.length) label = 'Güncel Bilgiler';
+    }
   }
-  window.__tickerInfo = segIsInfo || (!live.length && !shown.length && info.length > 0);
-  const brkTi = !window.__tickerInfo && showBrk && breakData ? breakData.items.slice(0, 3).map(n => `<span class="ti"><span class="lg brk">SON DAKİKA</span><span>${esc(n.title)} <span class="ft">${esc(n.source)}</span></span></span>`).join('') : '';
-  if (brkTi) label = 'Son Dakika'; // bantta son dakika haberleri de kayarken etiket maç değil son dakikayı göstersin
-  const items = window.__tickerInfo ? info.join('') : brkTi + shown.map(m => {
+  window.__tickerInfo = segIsInfo || (!live.length && !shown.length && !kind && info.length > 0);
+  const brkHtml = n => `<span class="ti"><span class="lg brk">SON DAKİKA</span><span>${esc(n.title)} <span class="ft">${esc(n.source)}</span></span></span>`;
+  const brkTi = !window.__tickerInfo && !seg && showBrk && breakData ? breakData.items.slice(0, 3).map(brkHtml).join('') : '';
+  let items;
+  if (kind === 'brk') items = brk.slice(0, 6).map(brkHtml).join('');
+  else if (kind === 'news') items = nw.slice(0, 6).map(n => `<span class="ti"><span class="lg">HABER</span><span>${esc(n.title)} <span class="ft">${esc(n.source)}</span></span></span>`).join('');
+  else if (window.__tickerInfo) items = info.join('');
+  else items = brkTi + shown.map(m => {
     const mid = m.hs != null ? `<span class="sc">${esc(m.hs)} - ${esc(m.as)}</span>` : '<span class="ft">vs</span>';
     const tag = m.live ? `<span class="lv">● ${esc(m.clock || 'CANLI')}</span>` : m.final ? '<span class="ft">MS</span>' : `<span class="ft">${esc(m.time)}</span>`;
     return `<span class="ti"><span class="lg"${lng(m.league)}>${esc(m.league)}</span><span>${esc(m.home)}</span>${mid}<span>${esc(m.away)}</span>${tag}</span>`;
