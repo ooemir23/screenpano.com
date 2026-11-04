@@ -236,13 +236,16 @@ background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414
 #tclock small{font-size:1.25vh;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--al);margin-top:.5vh;white-space:nowrap}
 #tlabel{flex:none;display:flex;align-items:center;gap:.5vw;margin:1vh 1.1vw;padding:0 2vw;background:rgba(var(--a2),.16);border:max(1px,.1vh) solid rgba(var(--a2),.75);border-radius:1.11vh;color:var(--al);font-size:1.65vh;font-weight:800;letter-spacing:.12em;text-transform:uppercase;position:relative;z-index:2;white-space:nowrap}
 #tlabel::before{content:"";width:1vh;height:1vh;border-radius:50%;background:var(--accent2);animation:pulse 1.2s infinite}
-#tview{flex:1;overflow:hidden;display:flex;align-items:center;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
+#tview{flex:1;overflow:hidden;display:flex;align-items:center;position:relative;contain:paint}
+#tview::before,#tview::after{content:"";position:absolute;top:0;bottom:0;width:2.4vw;z-index:3;pointer-events:none}
+#tview::before{left:0;background:linear-gradient(90deg,var(--edge),transparent)}
+#tview::after{right:0;background:linear-gradient(270deg,var(--edge),transparent)}
 #tview,#tl{transition:opacity .55s ease}
 #tview.fade,#tl.fade{opacity:0}
-#ttrack{display:flex;flex:none;white-space:nowrap;animation:tscroll 60s linear infinite;will-change:transform;transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+#ttrack{display:flex;flex:none;white-space:nowrap;animation:tscroll 60s linear infinite;will-change:transform;transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden;contain:layout paint}
 #ttrack>div{display:flex;align-items:center;flex:none;transform:translateZ(0)}
 @keyframes tscroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
-.ti{display:flex;align-items:center;gap:.8vw;font-size:2.7vh;font-weight:500;padding:0 2.4vw;color:var(--white)}
+.ti{display:flex;align-items:center;gap:.8vw;font-size:2.7vh;font-weight:500;padding:0 2.4vw;color:var(--white);transform:translateZ(0)}
 .ti .lg{font-size:1.6vh;letter-spacing:.2em;color:var(--accent2);font-weight:600;text-transform:uppercase}
 .ti .sc{font-weight:700;background:rgba(255,255,255,.1);padding:.3vh 1vw;border-radius:1vh;font-size:2.7vh}
 .ti .up{color:#3ecf4a;font-weight:700}.ti .dn{color:#ff6b6b;font-weight:700}.ti .fl{color:var(--mute)}.ti b{color:var(--accent2);margin-right:.2vw}

@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupWebView() {
         val web = binding.webView
         web.setBackgroundColor(Color.TRANSPARENT)
-        web.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        web.setLayerType(View.LAYER_TYPE_NONE, null)
         web.isFocusable = true
         web.isFocusableInTouchMode = true
         web.isClickable = true
