@@ -15,6 +15,8 @@
     document.documentElement.classList.toggle('lite', lite); window.__lite = lite;
     if (window.__N && window.__N.hasExoPlayer && window.__N.hasExoPlayer()) {
       document.documentElement.classList.add('native-exo');
+      // fotoğraf gizleme yalnız native foto katmanı (APK 2.7+) varken: eski APK'da web fotoğrafı görünür kalmalı
+      if (window.__N.showImage) document.documentElement.classList.add('native-photo');
     }
   };
   window.__applyFx();
@@ -53,7 +55,7 @@ video,#img{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100
 html.native-exo #frame{background:transparent !important}
 html.native-exo #bgw{background:transparent !important}
 html.native-exo video{opacity:0 !important;pointer-events:none !important}
-html.native-exo #img{opacity:0 !important;pointer-events:none !important}
+html.native-photo #img{opacity:0 !important;pointer-events:none !important}
 #img{display:none}
 #logo{flex:1;width:100%;min-height:0;background:center/contain no-repeat;border-radius:1.11vh}
 #logo.plate{background-color:rgba(255,255,255,.96);background-origin:content-box;padding:.5vh .7vw;box-shadow:0 1vh 3vh rgba(0,0,0,.35)}
