@@ -135,6 +135,6 @@ Depodaki `public/app.apk` zaten `https://screenpano.com` adresine göre derlenmi
 - **Google Places API anahtarı:** Google Cloud'da "Places API (New)" açık bir anahtar. İşletmeler panelde Duyurular → Google yorumları bölümünden kendi işletmelerini arayıp seçer.
 - **Uyarı webhook'u:** çevrimdışı kalan kutular için size bildirim (Slack, Discord vb.).
 
-## Android 2.1
+## Android 2.4 (native video)
 
-`public/app.apk` sürüm 11 / 2.1'dir ve yeni imza anahtarıyla derlenmiştir. `apk-version.json` bilerek 10'da bırakıldı (ayrıntı: README → Android uygulaması). **İmza anahtarını (`.jks`) ve şifresini güvenli bir yerde saklayın**; kaybolursa kutulara APK'yı baştan kurmak gerekir.
+`public/app.apk` sürüm 14 / 2.4'tür: Kotlin + ExoPlayer hibrit — arayüz web sayfası ama videolar native ExoPlayer'da donanımdan oynar; `apk-version.json` 14'dür, 2.1 kurulu kutular üstüne güncellenir. **İmza anahtarını (`screenpano.keystore`) ve şifresini güvenli bir yerde saklayın**; kaybolursa kutulara APK'yı baştan kurmak gerekir.

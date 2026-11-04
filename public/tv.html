@@ -1851,6 +1851,7 @@ const camp = { list: [], last: {}, showing: false, due: null, after: null, start
 function campShow(c) {
   if (camp.showing || !c) return;
   camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp' });
+  if (window.__N && window.__N.stopExo) window.__N.stopExo();
   let el = document.getElementById('camp');
   if (!el) { el = document.createElement('div'); el.id = 'camp'; document.getElementById('frame').appendChild(el); }
   const esc = t => String(t || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -1993,6 +1994,7 @@ function setBig(list, cfg) { big.list = list || []; big.cfg = cfg || big.cfg; }
 function bigShow(m, cfg) {
   if (big.showing || !m) return;
   big.showing = true; camp.showing = true; big.last = Date.now(); wsSend({ type: 'shown', kind: 'big' });
+  if (window.__N && window.__N.stopExo) window.__N.stopExo();
   cfg = cfg || big.cfg;
   const z = { timeZone: 'Europe/Istanbul' };
   const d0 = new Date(m.ts), dk = x => new Intl.DateTimeFormat('en-CA', z).format(x);

@@ -36,7 +36,7 @@ Mekânda **tek Android kutu** yeterli: kutu HDMI dağıtıcıyla tüm TV'lere ay
 
 - **Zamanlama:** her video, fotoğraf, afiş, kampanya kartı ve fiyat listesi kategorisi için gün, saat aralığı (gece yarısını aşabilir) ve tarih aralığı. TV kuralları kendi saatinde 30 saniyede bir yeniden değerlendirir; internet yokken de çalışır.
 - **Hazır içerikler:** 9 düzenlenebilir afiş şablonu (`public/posters.js`, TV ve panel ortak). Renkler temadan gelir, fotoğraf eklenebilir, çevirisi girilebilir. Medya sırasında `type: 'poster'` kaydı olarak durur.
-- **Durum izleme:** TV dakikada bir sürüm, çözünürlük, çalışma süresi, oynayan içerik, son hata ve önbellek bilgisini bildirir. 10 dk bağlantı yoksa panelde uyarı, işletmeye e-posta (SMTP), platforma webhook. Android 2.1 uygulaması ekran görüntüsü verir.
+- **Durum izleme:** TV dakikada bir sürüm, çözünürlük, çalışma süresi, oynayan içerik, son hata ve önbellek bilgisini bildirir. 10 dk bağlantı yoksa panelde uyarı, işletmeye e-posta (SMTP), platforma webhook. Android 2.4 uygulaması ekran görüntüsü verir.
 - **Çoklu şube:** sahibin hesabına bağlı şubeler (`tenants.org_id`). Panelden şube açma, şubeler arası geçiş, düzen/renk/medya/fiyat/duyuru/dil kopyalama. TV'de kullanıcı adıyla girişte şube sorulur.
 - **Google yorumları** (Places API, platform anahtarı) ve **Instagram** (işletmenin uzun ömürlü erişim anahtarı; görseller indirilir, medya döngüsüne serpiştirilir).
 - **Çoklu dil:** fiyat listesi, duyuru metni ve afişler Türkçe + en çok 3 dilde sırayla döner (en, de, ru, ar, fr, es).
@@ -151,5 +151,5 @@ tools/   import-legacy.js · cloudflare-traffic-worker.js
 - **Ödeme:** iyzico/PayTR abonelik entegrasyonu yok; paket ve süreler şimdilik süper yönetimden elle yönetiliyor.
 - **KVKK metinleri** taslaktır; şirket bilgilerini süper yönetimden girin ve yayından önce avukata kontrol ettirin. VERBİS kaydı gerekip gerekmediğini kontrol edin.
 - **Instagram:** Meta, Instagram API kullanımı için uygulama incelemesi isteyebilir; işletmelerin anahtarı kendileri alması gerekir. Google Places API ücretlidir (aylık ücretsiz kotası var).
-- **Android 2.1** derlendi ve `public/app.apk` olarak konuldu, ama yeni bir imza anahtarıyla (eski anahtar elde yoktu). Bu yüzden `public/apk-version.json` bilerek 10 / 2.0'da bırakıldı: eski anahtarla kurulu kutular yeni APK'yı üstüne kuramaz, güncelleme denemesi başarısız olur. Eski kutulara APK'yı bir kez silip yeniden kurun; yeni kurulan kutular sorunsuz güncellenir. Tüm kutular 2.1'e geçince `apk-version.json`'u 11 / 2.1 yapın.
+- **Android 2.4 (14)** — Kotlin + ExoPlayer hibrit: arayüz web (WebView) ama videolar native ExoPlayer katmanında donanımdan oynar (zayıf kutularda akıcı). `public/app.apk` 2.4/14 olarak konuldu, `apk-version.json` 14 — 2.1 kurulu kutular üstüne güncellenir (aynı imza anahtarı).
 - `public/celebrate/*.jpg` görsellerinin telif durumu doğrulanmalı.
