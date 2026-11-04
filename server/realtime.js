@@ -60,7 +60,7 @@ function getActiveMediaList(t) {
   return (ml || []).filter(x => SCH.active(x.sch));
 }
 function getMediaLen(it, imgSec) {
-  if (it.type === 'video') return (it.dur ? it.dur : 15);
+  if (it.type === 'video') return (it.dur ? it.dur : 30);
   return (it.dur || imgSec || 10);
 }
 function broadcastSync(tid, reset = false) {

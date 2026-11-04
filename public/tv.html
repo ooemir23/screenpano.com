@@ -1012,7 +1012,14 @@ addEventListener('message', e => {
   if (!trailerOn || !/youtube\.com$/.test(new URL(e.origin).hostname)) return;
   // yalnız fragman oynatıcısının mesajları: müzik oynatıcısı da YouTube'dan mesaj gönderir (liste değişince "bitti/hazır" olayları fragmanı kesiyordu)
   const fr = trailerEl.querySelector('iframe'); if (!fr || e.source !== fr.contentWindow) return;
-  try { const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; if (d.event === 'onStateChange' && (d.info === 0 || d.info === 5 && trailerSeen)) endTrailer(); else if (d.event === 'infoDelivery' && d.info && d.info.duration > 5 && d.info.currentTime > 0) { trailerSeen = true; if (d.info.currentTime >= d.info.duration - 1.2) endTrailer(); } else if (d.event === 'onError') trailerError(); } catch (x) {}
+  try {
+    const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+    if (d.event === 'onStateChange' && d.info === 0) endTrailer();
+    else if (d.event === 'infoDelivery' && d.info && d.info.duration > 5 && d.info.currentTime > 0) {
+      trailerSeen = true;
+      if (d.info.currentTime >= d.info.duration - 1.2) endTrailer();
+    } else if (d.event === 'onError') trailerError();
+  } catch (x) {}
 });
 // YouTube altyazıları (otomatik İngilizce dahil) kapatılır: modül geç yüklenebildiği için birkaç kez denenir
 function ytHandshake(f) {
@@ -1083,7 +1090,7 @@ function prepNext() {
 // ---- ekranlar arası senkron: çalma listesi sunucu saatine göre ortak takvimde döner ----
 // tüm süreler biliniyorsa (fotoğraflar imageSeconds, videolar ölçülen süre)
 // her ekran sunucu saatinden hesaplanan içeriği gösterir; birden çok TV aynı anda aynı içeriği ve saniyeyi gösterir
-const itemLen = it => it.type === 'video' ? (it.dur ? it.dur : 15) : (it.dur || imageSeconds || 10);
+const itemLen = it => it.type === 'video' ? (it.dur ? it.dur : 30) : (it.dur || imageSeconds || 10);
 function syncPos() {
   if (!window.__mediaAt || !videos.length) return null;
   const durs = videos.map(itemLen);
@@ -1160,8 +1167,8 @@ function play() {
         window.__N.playExo(it.url, it.dur || 0);
       }
       window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
-      const waitMs = sp ? sp.ms : (it.dur ? it.dur * 1000 : 15000);
-      timer = setTimeout(next, waitMs);
+      const safetyMs = Math.max(45000, (it.dur ? it.dur * 1000 : 90000) + 15000);
+      timer = setTimeout(next, safetyMs);
       prepared = { id: null };
       setTimeout(prepNext, 2000);
       return;
@@ -1180,14 +1187,15 @@ function play() {
       const sk = () => { try { el.currentTime = into; } catch (e) {} };
       el.readyState >= 1 ? sk() : el.addEventListener('loadedmetadata', sk, { once: true });
     }
-    const waitMs = sp ? sp.ms : (it.dur ? it.dur * 1000 : 15000);
-    timer = setTimeout(next, waitMs);
+    const safetyMs = Math.max(45000, (it.dur ? it.dur * 1000 : 90000) + 15000);
+    timer = setTimeout(next, safetyMs);
     prepared = { id: null };
     setTimeout(prepNext, 2000);
   }
 }
 function syncToMedia(m) {
   if (!MEDIA_ON || !m) return;
+  if (trailerOn || big.showing || camp.showing) return; // Fragman veya büyük duyurular oynarken sunucu senkronuyla kesilmez!
   if (!videos || !videos.length) {
     if (typeof ALLV !== 'undefined' && ALLV.length) applyVideos();
     if (!videos || !videos.length) return;
@@ -1206,18 +1214,9 @@ function syncToMedia(m) {
 
   // Zaten bu içerik oynatılıyorsa:
   if (current === it.id) {
-    clearTimeout(timer);
-    timer = setTimeout(next, remainMs);
-    if (it.type === 'video') {
-      const targetSec = elapsedMs / 1000;
-      if (window.__N && window.__N.seekExo) {
-        // ExoPlayer seek gerekirse
-      } else {
-        const v = curV();
-        if (v && v.currentTime && Math.abs(v.currentTime - targetSec) > 1.8) {
-          try { v.currentTime = targetSec; } catch (e) {}
-        }
-      }
+    if (it.type !== 'video') {
+      clearTimeout(timer);
+      timer = setTimeout(next, remainMs);
     }
     return;
   }
@@ -1273,7 +1272,8 @@ function syncToMedia(m) {
         window.__N.playExo(it.url, it.dur || 0);
       }
       window.__exoEnded = () => { clearTimeout(timer); timer = setTimeout(next, 500); };
-      timer = setTimeout(next, remainMs);
+      const safetyMs = Math.max(remainMs + 15000, 45000);
+      timer = setTimeout(next, safetyMs);
       prepared = { id: null };
       setTimeout(prepNext, 2000);
       return;
@@ -1292,7 +1292,8 @@ function syncToMedia(m) {
       const sk = () => { try { el.currentTime = into; } catch (e) {} };
       el.readyState >= 1 ? sk() : el.addEventListener('loadedmetadata', sk, { once: true });
     }
-    timer = setTimeout(next, remainMs);
+    const safetyMs = Math.max(remainMs + 15000, 45000);
+    timer = setTimeout(next, safetyMs);
     prepared = { id: null };
     setTimeout(prepNext, 2000);
   }
@@ -1499,9 +1500,11 @@ function setMatches(list, st, show) {
   if (!same || !pages.length || window.__forceRender) {
     window.__forceRender = false;
     pagesDirty = true;
-    const sp = syncWidgetPage();
-    page = sp.page;
-    render();
+    if (!pages.length) {
+      const sp = syncWidgetPage();
+      page = sp.page;
+      render();
+    }
     schedule();
   }
 }
@@ -2869,7 +2872,8 @@ function connect() {
     else if (m.type === 'sync_media') {
       if (m.serverTime) window.__srvOff = m.serverTime - Date.now();
       syncToMedia(m);
-      const sp = syncWidgetPage(); if (sp.page !== page) { page = sp.page; render(); schedule(); }
+      const sp = syncWidgetPage();
+      if (sp.page !== page && !document.getElementById('list')?.classList.contains('out')) tick();
     }
     else if (m.type === 'state') { setState(m.state); saveState(m.state); }
     else if (m.type === 'snap') sendSnap();
