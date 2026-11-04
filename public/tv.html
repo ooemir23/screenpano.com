@@ -1710,6 +1710,7 @@ function setState(s) {
   setLangs(s.langs, s.langSec);
   ALLV = s.videos || []; window.__mediaAt = s.mediaAt || window.__mediaAt || 0; applyVideos();
   GRATING = s.googleRating || null;
+  if (window.__N && !window.__N.desktop) MUS.unlocked = true; // WebView APK: sesli çalım için dokunma gerekmez
   { const bs = JSON.stringify([s.breaking, s.showBreaking, s.breakingBanner]); if (bs !== window.__brkSig) { window.__brkSig = bs; pagesDirty = true; breakData = s.breaking; showBrk = s.showBreaking === true; brkBanner = s.breakingBanner !== false; window.__forceRender = true; checkBreaking(); } }
   const infoSig = JSON.stringify([s.pharmacies, s.showPharmacy, s.onThisDay, s.showOnThisDay, s.news, s.showNews, s.books, s.showBooks, s.movies, s.showMovies]);
   if (infoSig !== window.__infoSig) { window.__infoSig = infoSig; pharmData = s.pharmacies; showPharm = s.showPharmacy !== false; otdData = s.onThisDay; showOtd = s.showOnThisDay !== false; newsData = s.news; showNews = s.showNews !== false; booksData = s.books; showBooks = s.showBooks !== false; moviesData = s.movies; showMovies = s.showMovies !== false; window.__forceRender = true; }
@@ -2946,9 +2947,21 @@ function notePlay(it) {
 let CACHE = { cached: 0, total: 0, bytes: 0 };
 function sendStatus() {
   const n = window.__N, it = videos.find(x => x.id === current);
+  // müzik teşhisi: panelde kutunun müzik motorunun gerçek durumu görünür (ses yoksa sebebi buradan okunur)
+  const mit = activeMusicItem(MUS.cfg);
+  let ytDiag = null;
+  try { if (MUS.ytPlayer && MUS.ytReady) ytDiag = { state: MUS.ytPlayer.getPlayerState(), muted: MUS.ytPlayer.isMuted(), vol: MUS.ytPlayer.getVolume() }; } catch (e) {}
+  const mus = {
+    on: !!(MUS.cfg && MUS.cfg.enabled), playing: !!(MUS.cfg && MUS.cfg.playing), provider: MUS.provider || (mit && mit.provider) || '',
+    vol: MUS.vol, unlocked: MUS.unlocked, needUnlock: MUS.needUnlock, err: (MUS.err || '').slice(0, 120), cur: (MUS.curId || '').slice(0, 40),
+    yt: ytDiag,
+    radio: MUS.radioEl ? { paused: MUS.radioEl.paused, muted: MUS.radioEl.muted, vol: Math.round((MUS.radioEl.volume || 0) * 100), src: !!MUS.radioEl.src } : null,
+    spConnect: !!MUS.spConnectTrack,
+  };
   wsSend({
     type: 'status', app: n && n.versionName ? n.versionName() : 'tarayıcı', build: window.__build || '',
     hwid: n && n.hwId ? String(n.hwId()).slice(0, 32) : '', model: n && n.model ? String(n.model()).slice(0, 60) : '',
+    mus,
     screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
     playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
     cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,
@@ -3411,6 +3424,17 @@ function syncVideoMute() {
   const shouldMute = !m || m.muteVideo !== false;
   els.forEach(v => { v.muted = shouldMute; });
 }
+// ses muhafızı: müzik çalıyor görünürken motor sessiz kalmışsa (YT geçiş sonrası muted, radyo muted) kaldırır
+setInterval(() => {
+  if (!MUS.cfg || !MUS.cfg.enabled || !MUS.cfg.playing) return;
+  try {
+    if (MUS.ytPlayer && MUS.ytReady && MUS.ytPlayer.getPlayerState() === 1 && MUS.ytPlayer.isMuted()) { MUS.ytPlayer.unMute(); MUS.ytPlayer.setVolume(MUS.vol); }
+  } catch (e) {}
+  try {
+    if (MUS.radioEl && MUS.radioEl.src && !MUS.radioEl.paused && MUS.radioEl.muted) { MUS.radioEl.muted = false; MUS.radioEl.volume = Math.max(0, Math.min(1, MUS.vol / 100)); }
+  } catch (e) {}
+}, 15000);
+
 function setMusic(m) {
   const prev = MUS.cfg;
   MUS.cfg = m || null;

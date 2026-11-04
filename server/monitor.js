@@ -38,6 +38,7 @@ function report(tid, deviceId, s, ip) {
     at: Date.now(),
     app: String(s.app || '').slice(0, 20), build: String(s.build || '').slice(0, 40),
     hwid: String(s.hwid || '').slice(0, 32), model: String(s.model || '').slice(0, 60), ip: String(ip || '').slice(0, 45),
+    mus: s.mus && typeof s.mus === 'object' ? { on: !!s.mus.on, playing: !!s.mus.playing, provider: String(s.mus.provider || '').slice(0, 12), vol: Math.round(Number(s.mus.vol) || 0), unlocked: !!s.mus.unlocked, needUnlock: !!s.mus.needUnlock, err: String(s.mus.err || '').slice(0, 120), yt: s.mus.yt ? { state: s.mus.yt.state, muted: !!s.mus.yt.muted, vol: s.mus.yt.vol } : null, radio: s.mus.radio ? { paused: !!s.mus.radio.paused, muted: !!s.mus.radio.muted, vol: s.mus.radio.vol, src: !!s.mus.radio.src } : null, spConnect: !!s.mus.spConnect } : undefined,
     screen: String(s.screen || '').slice(0, 20), ua: String(s.ua || '').slice(0, 160),
     uptime: Math.max(0, Math.round(Number(s.uptime) || 0)), playing: String(s.playing || '').slice(0, 120),
     errors: Math.max(0, Math.round(Number(s.errors) || 0)), lastError: String(s.lastError || '').slice(0, 200),

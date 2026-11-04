@@ -1116,6 +1116,23 @@ async function igConnect() {
 }
 
 /* ================= DURUM İZLEME ================= */
+const musDiag = m => {
+  if (!m || !m.on) return 'Kapalı';
+  const pr = { yt: 'YouTube', ytm: 'YT Music', ytmix: 'Kendi listesi', spotify: 'Spotify', radio: 'Radyo' }[m.provider] || m.provider || '?';
+  if (m.err) return `<b style="color:#e6a23c">${pr}: ${esc(m.err)}</b>`;
+  if (!m.playing) return `${pr} · duraklatılmış`;
+  if (m.spConnect) return `Spotify Connect · telefondan çalıyor`;
+  if (m.provider === 'radio') return m.radio && !m.radio.paused ? `Radyo çalıyor · ses %${m.radio.vol}${m.radio.muted ? ' · ⚠ susturulmuş' : ''}` : 'Radyo sessiz — yayın yok';
+  const yt = m.yt;
+  if (yt) {
+    if (yt.state === 1) return `${pr} çalıyor · ses %${yt.vol}${yt.muted ? ' · <b style="color:#e6a23c">⚠ muted</b>' : ''}`;
+    if (yt.state === 5) return `${pr} · hazırlanıyor`;
+    if (yt.state === 2) return `${pr} · YT tarafında duraklatılmış`;
+    if (yt.state === 0) return `${pr} · bitişte`;
+    if (yt.state === -1) return `${pr} · YT başlamadı`;
+  }
+  return m.needUnlock ? `${pr} · ses kilidi bekliyor (kutuya bir kez dokunun)` : `${pr} · çalışıyor`;
+};
 const upFmt = s => s < 3600 ? Math.round(s / 60) + ' dk' : s < 86400 ? Math.round(s / 3600) + ' saat' : Math.round(s / 86400) + ' gün';
 const omLbl = m => m >= 1440 ? '1 gün' : m >= 60 ? (m >= 720 ? '12 saat' : (m / 60) + ' saat') : m + ' dakika';
 async function drawDevStatus() {
@@ -1126,6 +1143,7 @@ async function drawDevStatus() {
     + card('Cihaz durumu', `Kutular dakikada bir durum bildirir. Ekran görüntüsü yalnız Android uygulamasında alınır. Yayındaki yazılım: <b>${(j.build || '').slice(0, 8) || '-'}</b> — kutu satırındaki "yayın" değeri bundan farklıysa kutu eski sürümde kalır, kendini birkaç dakikada güncellemesi gerekir.`, j.devices.length ? `<div class="list">${j.devices.map(d => { const r = d.report || {}; const id = [r.model, r.hwid ? 'ID ' + r.hwid.slice(0, 24) : '', r.ip ? 'IP ' + r.ip : ''].filter(Boolean); return `<div class="it" style="flex-wrap:wrap"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b" style="min-width:200px"><b>${esc(d.name || 'TV kutusu')}</b>
         <span>${d.online ? 'Bağlı' : 'Çevrimdışı · son görülme ' + ago(d.last_seen)}${r.app ? ' · uygulama ' + esc(r.app) : ''}${r.build ? ' · yayın ' + esc(r.build.slice(0, 8)) + (j.build && r.build !== j.build ? ' ⚠ eski' : '') : ''}${r.screen ? ' · ' + esc(r.screen) : ''}${r.uptime ? ' · ' + upFmt(r.uptime) + 'dir açık' : ''}</span>
         ${id.length ? `<span class="muted" style="font-size:12px">${id.map(esc).join(' · ')}</span>` : ''}
+        ${r.mus ? `<span>Müzik: ${musDiag(r.mus)}</span>` : ''}
         ${r.playing ? `<span>Şu an: ${esc(r.playing)}</span>` : ''}${r.cached ? `<span>Çevrimdışı önbellek: ${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}</span>` : ''}${r.lastError ? `<span style="color:var(--warn,#e6a23c)">Son hata: ${esc(r.lastError)}</span>` : ''}</div>
         ${d.online ? `<button class="btn xs g" onclick="snapDev('${d.id}')">📷 Ekran görüntüsü</button>` : ''}</div>`; }).join('')}</div><div id="snapbox"></div>` : '<div class="empty">Bağlı cihaz yok</div>')
     + card('Uyarılar', `Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,
