@@ -58,8 +58,22 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         addView(content, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
 
+    // Duyarlı ölçek: widget kutusu büyüdükçe yazılar ve simgeler orantılı büyür (referans: ~17vh yükseklik x ~34vh genişlik = 1.0)
+    private var baseVh = 10f
+    private var spec: WidgetSpec? = null
+    private fun fitScale(): Float {
+        if (width <= 0 || height <= 0) return 1f
+        return min(height / (17f * baseVh), width / (34f * baseVh)).coerceIn(0.7f, 2.6f)
+    }
+    override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
+        super.onSizeChanged(w, h, ow, oh)
+        val sp = spec; val s = st ?: return
+        if (sp != null && kotlin.math.abs(baseVh * fitScale() - vh) > baseVh * 0.03f) { sig = ""; post { bind(sp, s, baseVh) } }
+    }
+
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
-        this.vh = vh; st = s; props = w.props
+        spec = w; baseVh = vh
+        this.vh = vh * fitScale(); st = s; props = w.props
         val p = Palette(s)
         background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(p.a(p.accent2, 0.16f), p.a(Color.WHITE, 0.03f))).apply {
             cornerRadius = 1.3f * vh; setStroke(max(1, (vh * 0.1f).toInt()), p.a(p.accent2, 0.35f))
