@@ -297,9 +297,13 @@ class PosterView(context: Context) : FrameLayout(context) {
 
     private fun booksGrid(books: org.json.JSONArray) {
         val p = pal!!
-        setBackgroundColor(Color.parseColor("#141312"))
+        // sayfadaki tasarımla aynı: üstten yumuşak ışıklı koyu zemin, başlığın yanında uzayan ince çizgi
+        background = GradientDrawable().apply { gradientType = GradientDrawable.RADIAL_GRADIENT; setGradientCenter(0.5f, 0f); gradientRadius = width * 0.8f; colors = intArrayOf(Color.parseColor("#2a2622"), Color.parseColor("#141312"), Color.parseColor("#0c0b0b")) }
         val root = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setPadding((width * 0.028f).roundToInt(), (height * 0.026f).roundToInt(), (width * 0.028f).roundToInt(), (height * 0.026f).roundToInt()) }
-        root.addView(tv("📚 YENİ ÇIKAN KİTAPLAR", 1f, p.accent, 800).apply { letterSpacing = 0.22f }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = (height * 0.022f).roundToInt() })
+        val hd = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        hd.addView(tv("📚 YENİ ÇIKAN KİTAPLAR", 1f, p.accent, 800).apply { letterSpacing = 0.22f })
+        hd.addView(View(context).apply { background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(BigColors.al(p.accent, 0.7f), 0)) }, LinearLayout.LayoutParams(0, max(1, px(0.07f).roundToInt()), 1f).apply { leftMargin = px(0.9f).roundToInt() })
+        root.addView(hd, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = (height * 0.022f).roundToInt() })
         val n = min(4, books.length())
         val cols = if (n == 1) 1 else 2
         val grid = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
@@ -309,9 +313,9 @@ class PosterView(context: Context) : FrameLayout(context) {
             val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             for (c in 0 until cols) {
                 if (i >= n) { row.addView(View(context), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)); continue }
-                row.addView(bookCard(books.optJSONObject(i++) ?: JSONObject(), books), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (c > 0) leftMargin = (width * 0.04f).roundToInt() })
+                row.addView(bookCard(books.optJSONObject(i++) ?: JSONObject(), books), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (c > 0) leftMargin = (width * 0.022f).roundToInt() })
             }
-            grid.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { if (r > 0) topMargin = (height * 0.055f).roundToInt() })
+            grid.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { if (r > 0) topMargin = (height * 0.032f).roundToInt() })
         }
         root.addView(grid, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         add(root)
@@ -319,23 +323,42 @@ class PosterView(context: Context) : FrameLayout(context) {
 
     private fun bookCard(b: JSONObject, books: org.json.JSONArray): View {
         val p = pal!!
-        val card = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-            setPadding((width * 0.022f).roundToInt(), (height * 0.035f).roundToInt(), (width * 0.022f).roundToInt(), (height * 0.035f).roundToInt())
-            background = GradientDrawable().apply { setColor(Color.parseColor("#201e1c")); cornerRadius = px(0.8f); setStroke(max(1, px(0.1f).roundToInt()), Color.argb(40, 255, 255, 255)) }
+        val rad = px(0.7f)
+        val shell = FrameLayout(context).apply {
+            background = GradientDrawable().apply { setColor(Color.parseColor("#1b1a19")); cornerRadius = rad; setStroke(max(1, px(0.07f).roundToInt()), Color.argb(18, 255, 255, 255)) }
+            clipToOutline = true
+            outlineProvider = object : android.view.ViewOutlineProvider() { override fun getOutline(v: View, o: android.graphics.Outline) { o.setRoundRect(0, 0, v.width, v.height, rad) } }
         }
         val img = b.optString("image").takeIf { u -> u.isNotEmpty() && u != "null" }
+        // kartın arkasında kendi kapağının bulanık hâli (küçük çözünürlükte yüklenip büyütülür = bulanıklık; ekstra GPU maliyeti yok)
+        if (img != null) shell.addView(ImageView(context).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP; alpha = 0.45f; scaleX = 1.3f; scaleY = 1.3f
+            load(NativeEnv.url(img)) { crossfade(false); size(24, 36) }
+        }, FrameLayout.LayoutParams(-1, -1))
+        shell.addView(View(context).apply { background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(Color.argb(38, 10, 10, 10), Color.argb(184, 10, 10, 10), Color.argb(217, 10, 10, 10))) }, FrameLayout.LayoutParams(-1, -1))
+        val card = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setPadding((width * 0.018f).roundToInt(), (height * 0.025f).roundToInt(), (width * 0.018f).roundToInt(), (height * 0.025f).roundToInt())
+        }
         // kapak: kart yüksekliğini dolduran 2:3 oranlı dikdörtgen (CSS: height:100%; aspect-ratio:2/3)
         val rowsN = if (books.length() <= 2) 1 else 2
-        val cardH = ((height * (1f - 0.052f - 0.022f) - px(1f) - height * 0.055f * (rowsN - 1)) / rowsN - height * 0.07f).roundToInt()
-        if (img != null) card.addView(photo(img), LinearLayout.LayoutParams((cardH * 2f / 3f).roundToInt(), cardH))
+        val cardH = ((height * (1f - 0.052f - 0.022f) - px(1f) - height * 0.032f * (rowsN - 1)) / rowsN - height * 0.05f).roundToInt()
+        if (img != null) {
+            val cr = px(0.3f)
+            card.addView(photo(img).apply {
+                background = GradientDrawable().apply { setColor(Color.parseColor("#222222")); cornerRadius = cr }
+                clipToOutline = true
+                outlineProvider = object : android.view.ViewOutlineProvider() { override fun getOutline(v: View, o: android.graphics.Outline) { o.setRoundRect(0, 0, v.width, v.height, cr) } }
+            }, LinearLayout.LayoutParams((cardH * 2f / 3f).roundToInt(), cardH))
+        }
         val tx = column(0.3f).apply { setPadding(px(1.0f).roundToInt(), 0, 0, 0) }
-        tx.addView(tv(b.optString("title"), 1.6f, p.white, 800, 3))
-        b.optString("author").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 1.1f, p.accent2, 600, 1)) }
-        b.optString("publisher").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.92f, p.white, 600, 1, 0.9f)) }
-        b.optString("desc").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.92f, Color.parseColor("#f3eee6"), 500, 3)) }
+        tx.addView(tv(b.optString("title"), 1.45f, p.white, 800, 3))
+        b.optString("author").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 1f, p.accent2, 600, 1)) }
+        b.optString("publisher").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.85f, p.white, 600, 1, 0.9f)) }
+        b.optString("desc").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.84f, Color.parseColor("#f3eee6"), 500, 4)) }
         card.addView(tx, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        return card
+        shell.addView(card, FrameLayout.LayoutParams(-1, -1))
+        return shell
     }
 
     private fun insta(image: String?) {

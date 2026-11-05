@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity() {
                         binding.rootContainer.addView(it, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
                         nativeGrid = it
                     }
-                    g.visibility = View.VISIBLE
+                    g.visibility = if (overlayOn) View.INVISIBLE else View.VISIBLE
                     g.setState(st)
                     hideWebCells(g.nativeTypes + "poster")
                 } else {
@@ -160,6 +160,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Yerel çizilen hücreleri sayfa gizler (sayfa yenilenince yeniden bildirilir)
+    private var overlayOn = false
+    private var brkView: android.widget.LinearLayout? = null
     private var webHidden: List<String> = emptyList()
     private fun hideWebCells(types: List<String>) {
         webHidden = types
@@ -471,6 +473,52 @@ class MainActivity : AppCompatActivity() {
             handler.post {
                 // sadece duraklat: yüzey ve son kare kalır — bir sonraki video yüzey yeniden doğmadan anında başlar
                 exoPlayer?.pause()
+            }
+        }
+
+        /** Sayfadaki tam ekran katman (uzaktan kumanda menüsü) açıkken yerel widget'lar arkada görünmesin. */
+        @JavascriptInterface
+        fun overlay(on: Boolean) { handler.post { overlayOn = on; nativeGrid?.visibility = if (on) View.INVISIBLE else View.VISIBLE } }
+
+        /** Son dakika bildirim bandı: yerel çizilir, yerel widget'ların üstünde, opak zeminli. */
+        @JavascriptInterface
+        fun brkShow(title: String, source: String) {
+            handler.post {
+                try {
+                    val H = resources.displayMetrics.heightPixels.toFloat(); val W = resources.displayMetrics.widthPixels.toFloat()
+                    val vh = H / 100f
+                    brkView?.let { binding.rootContainer.removeView(it) }
+                    val bar = android.widget.LinearLayout(this@MainActivity).apply {
+                        orientation = android.widget.LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL
+                        setPadding((W * 0.016f).toInt(), (vh * 1.6f).toInt(), (W * 0.016f).toInt(), (vh * 1.6f).toInt())
+                        background = android.graphics.drawable.GradientDrawable().apply { setColor(android.graphics.Color.parseColor("#140606")); cornerRadius = vh * 1.4f; setStroke(maxOf(2, (vh * 0.3f).toInt()), android.graphics.Color.parseColor("#d6262a")) }
+                        elevation = vh * 2f
+                    }
+                    fun tx(t: String, sizeVh: Float, color: Int, bold: Boolean) = android.widget.TextView(this@MainActivity).apply {
+                        text = t; setTextColor(color); setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * sizeVh); includeFontPadding = false
+                        typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, if (bold) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+                    }
+                    val chip = tx("SON DAKİKA", 2.1f, android.graphics.Color.WHITE, true).apply {
+                        letterSpacing = 0.12f; setPadding((W * 0.012f).toInt(), (vh * 0.8f).toInt(), (W * 0.012f).toInt(), (vh * 0.8f).toInt())
+                        background = android.graphics.drawable.GradientDrawable().apply { setColor(android.graphics.Color.parseColor("#d6262a")); cornerRadius = vh * 0.8f }
+                    }
+                    bar.addView(chip)
+                    val head = tx(title, 2.9f, android.graphics.Color.WHITE, true).apply { maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; setLineSpacing(0f, 1.05f) }
+                    bar.addView(head, android.widget.LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = (W * 0.014f).toInt(); rightMargin = (W * 0.014f).toInt() })
+                    if (source.isNotEmpty()) bar.addView(tx(source, 1.5f, android.graphics.Color.parseColor("#ffb0b0"), true))
+                    val lp = FrameLayout.LayoutParams(-1, -2).apply { leftMargin = (W * 0.02f).toInt(); rightMargin = (W * 0.02f).toInt(); topMargin = (vh * 2f).toInt() }
+                    binding.rootContainer.addView(bar, lp); bar.bringToFront()
+                    bar.alpha = 0f; bar.translationY = -vh * 6; bar.animate().alpha(1f).translationY(0f).setDuration(450).start()
+                    brkView = bar
+                } catch (e: Exception) { Log.w(TAG, "Son dakika bandı çizilemedi: ${e.message}") }
+            }
+        }
+
+        @JavascriptInterface
+        fun brkHide() {
+            handler.post {
+                val v = brkView ?: return@post
+                v.animate().alpha(0f).translationY(-v.height.toFloat()).setDuration(400).withEndAction { binding.rootContainer.removeView(v); if (brkView === v) brkView = null }.start()
             }
         }
 

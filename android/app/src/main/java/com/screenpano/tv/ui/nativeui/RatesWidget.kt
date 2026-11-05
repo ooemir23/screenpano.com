@@ -90,7 +90,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         if (views().size > 1) main.postDelayed(viewTick, aligned(12000L))
     }
 
-    private fun txt(t: CharSequence, px: Float, color: Int, bold: Boolean = false, ls: Float = 0f): TextView = TextView(context).apply {
+    private fun txt(t: CharSequence, px: Float, color: Int, bold: Boolean = false, ls: Float = 0f): TextView = FitText(context).apply {
         text = t; setTextSize(TypedValue.COMPLEX_UNIT_PX, px); setTextColor(color); includeFontPadding = false
         typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL); letterSpacing = ls; setSingleLine(true)
     }
@@ -134,11 +134,11 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             row.addView(txt(icon, vh * 4.6f, p.white))
             row.addView(txt("${wx.optDouble("temp").roundToInt()}°", vh * 4f, p.white, true), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { leftMargin = (vh * 1.4f).toInt() })
             val wd = LinearLayout(context).apply { orientation = VERTICAL }
-            wd.addView(txt(label, vh * 2.0f, p.white, true).apply { ellipsize = android.text.TextUtils.TruncateAt.END })
+            wd.addView(txt(label, vh * 1.85f, p.white, true).apply { ellipsize = android.text.TextUtils.TruncateAt.END })
             wd.addView(txt("His. ${wx.optDouble("feels").roundToInt()}° · ${wx.optDouble("wind").roundToInt()} km/s", vh * 1.5f, p.mute, false, 0.03f).apply { ellipsize = android.text.TextUtils.TruncateAt.END }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
             row.addView(wd, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { leftMargin = (vh * 1.4f).toInt() })
             val city = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.END }
-            city.addView(txt(s.raw.optString("city").uppercase(Locale("tr", "TR")), vh * 1.4f, p.accent2, true, 0.2f))
+            city.addView(txt(s.raw.optString("city").uppercase(Locale("tr", "TR")), vh * 1.4f, p.accent2, true, 0.1f))
             city.addView(txt("${wx.optDouble("min").roundToInt()}° / ${wx.optDouble("max").roundToInt()}°", vh * 1.45f, p.mute, false, 0.03f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
             row.addView(city)
             content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
