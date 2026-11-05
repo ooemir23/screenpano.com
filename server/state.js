@@ -55,7 +55,7 @@ function mediaList(t) {
     if (v.status === 'processing' && !v.reopt) continue;
     if (v.hidden || SCH.expired(v.sch)) continue;
     if (v.type === 'poster') out.push({ id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null });
-    else out.push({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || null, sch: v.sch || null });
+    else out.push({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null });
   }
   const bk = F.booksView();
   const covers = require('./plans').plan(t).pro && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR

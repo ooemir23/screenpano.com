@@ -98,7 +98,13 @@ class MediaEngine(private val h: MediaHost) {
         val c = cur
         val first = !aligned
         val now = System.currentTimeMillis()
-        if (c != null && c.optString("id") == id) { aligned = true; return }
+        if (c != null && c.optString("id") == id) {
+            aligned = true
+            // fotoğraf/afiş bitişi sunucu saatine bağlanır: ekranlar aynı anda sıradakine geçer (kutu eskiden +2,5 sn geç kalırdı)
+            val rem = m.optLong("remain", -1L)
+            if (rem in 0..600_000L && c.optString("type") != "video") { handler.removeCallbacks(endTask); handler.postDelayed(endTask, rem + 300L) }
+            return
+        }
         if (!first) {
             if (now - startedAt < 4000) return
             if (c != null && c.optString("type") == "video" && now - startedAt < durMs(c) - 1500) return
