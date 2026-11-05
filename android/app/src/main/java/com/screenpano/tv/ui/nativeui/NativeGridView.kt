@@ -33,6 +33,7 @@ class NativeGridView(context: Context) : ViewGroup(context) {
         "menu" -> MenuWidget(context)
         "text" -> TextWidget(context)
         "image" -> ImageWidget(context)
+        "info" -> InfoWidget(context)
         else -> null
     }
 

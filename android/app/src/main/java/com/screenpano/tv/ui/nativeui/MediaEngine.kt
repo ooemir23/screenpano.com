@@ -4,8 +4,8 @@ import android.os.Handler
 import android.os.Looper
 import com.screenpano.tv.data.model.TvState
 import org.json.JSONObject
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import java.util.Calendar
+import java.util.TimeZone
 
 /** Medya motorunun ekrana dokunan tarafı (MainActivity uygular). Hepsi ana iş parçacığında çağrılır. */
 interface MediaHost {
@@ -190,10 +190,10 @@ class MediaEngine(private val h: MediaHost) {
     // ---- zamanlama kuralı (server/sched.js) ----
     private fun schActive(s: JSONObject?): Boolean {
         if (s == null) return true
-        val n = try { ZonedDateTime.now(ZoneId.of(tz)) } catch (_: Exception) { ZonedDateTime.now() }
-        val ymd = "%04d-%02d-%02d".format(n.year, n.monthValue, n.dayOfMonth)
-        val hm = "%02d:%02d".format(n.hour, n.minute)
-        val dow = n.dayOfWeek.value // Pzt=1
+        val c = Calendar.getInstance(try { TimeZone.getTimeZone(tz) } catch (_: Exception) { TimeZone.getDefault() })
+        val ymd = "%04d-%02d-%02d".format(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
+        val hm = "%02d:%02d".format(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE))
+        val dow = (c.get(Calendar.DAY_OF_WEEK) + 5) % 7 + 1 // Pzt=1 ... Paz=7
         val start = s.optString("start"); val end = s.optString("end")
         if (start.isNotEmpty() && ymd < start) return false
         if (end.isNotEmpty() && ymd > end) return false
@@ -209,4 +209,3 @@ class MediaEngine(private val h: MediaHost) {
         return true
     }
 }
-// 3.10.2 yeniden derleme

@@ -150,7 +150,10 @@ class MainActivity : AppCompatActivity() {
                     hideWebCells(emptyList())
                 }
             },
-            onSync = { m -> mediaEngine.onSync(m) },
+            onSync = { m ->
+                val st = m.optLong("serverTime", 0L); if (st > 0) com.screenpano.tv.ui.nativeui.NativeEnv.srvOff = st - System.currentTimeMillis()
+                mediaEngine.onSync(m)
+            },
         ).also { it.start() }
     }
 
