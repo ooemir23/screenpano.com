@@ -329,34 +329,57 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        /** Fotoğrafı yerel katmanda gösterir: 1080p doku yüklemesi WebView/GPU ana hattından çıkar. */
+        /** Sayfa bunu görünce fotoğrafları da yerel katmanda gösterir ve hazır haberini (window.__imgShown) bekler. */
         @JavascriptInterface
-        fun showImage(url: String) {
+        fun hasImageEvent(): Boolean = true
+
+        /** Eski köprü (3.0–3.1 sayfaları için): geçişsiz gösterir. */
+        @JavascriptInterface
+        fun showImage(url: String) = showImage2(url, false)
+
+        /**
+         * Fotoğrafı yerel katmanda gösterir: görüntü arka planda, ekrandaki alan boyutunda donanım bitmap'ine
+         * çözülür (1080p doku yüklemesi WebView'in GPU hattından çıkar). Görüntü hazır olunca sayfaya
+         * window.__imgShown() ile haber verilir; sayfa ancak o zaman şeffaflaşır.
+         * fade: önceki içerik de yerel katmandaysa (video/fotoğraf) yumuşak geçiş yapılır.
+         */
+        @JavascriptInterface
+        fun showImage2(url: String, fade: Boolean) {
             handler.post {
                 val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
-                Log.d(TAG, "Yerel fotoğraf: $fullUrl")
-                binding.imageView.scaleType = ImageView.ScaleType.FIT_CENTER
-                binding.imageView.load(fullUrl) {
-                    crossfade(150)
+                val iv = binding.imageView
+                iv.scaleType = ImageView.ScaleType.FIT_CENTER
+                iv.visibility = View.VISIBLE
+                iv.load(fullUrl) {
+                    crossfade(if (fade) 350 else 0)
                     allowHardware(true)
                     listener(
-                        onError = { _, r -> Log.w(TAG, "Fotoğraf yüklenemedi: $fullUrl - ${r.throwable.message}") }
+                        onSuccess = { _, _ ->
+                            binding.webView.evaluateJavascript("window.__imgShown && window.__imgShown(${JSONObject.quote(url)});", null)
+                        },
+                        onError = { _, r ->
+                            Log.w(TAG, "Fotoğraf yüklenemedi: $fullUrl - ${r.throwable.message}")
+                            binding.webView.evaluateJavascript("window.__imgFailed && window.__imgFailed(${JSONObject.quote(url)});", null)
+                        }
                     )
                 }
-                binding.imageView.visibility = View.VISIBLE
             }
         }
 
+        /** Yerel fotoğraf kalkar; görüntü de bırakılır (sonraki fotoğraf eskisinin üstünden değil boştan belirir). */
         @JavascriptInterface
         fun hideImage() {
-            handler.post { binding.imageView.visibility = View.GONE }
+            handler.post {
+                binding.imageView.visibility = View.GONE
+                binding.imageView.setImageDrawable(null)
+            }
         }
 
-        /** Sıradaki fotoğraf önceden çözülür: geçiş anında iş kalmaz. */
+        /** Sıradaki fotoğraf önceden ekran boyutunda çözülür: geçiş anında bellekten anında gelir. */
         @JavascriptInterface
         fun preloadImage(url: String) {
             val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
-            val req = ImageRequest.Builder(this@MainActivity).data(fullUrl).build()
+            val req = ImageRequest.Builder(this@MainActivity).data(fullUrl).allowHardware(true).build()
             coil.Coil.imageLoader(this@MainActivity).enqueue(req)
         }
 

@@ -1106,7 +1106,7 @@ function prepNext() {
   if (n.type === 'poster') { if (n.image) { const im = new Image(); im.src = n.image; } prepared = { id: null }; return; }
   if (n.type === 'image') {
     if (window.__N && window.__N.preloadImage) { try { window.__N.preloadImage(n.url); } catch (e) {} }
-    if (window.__preUrl !== n.url) { window.__preUrl = n.url; const im = new Image(); im.src = n.url; window.__preImg = im; if (im.decode) im.decode().catch(() => {}); }
+    if (!NPHOTO() && window.__preUrl !== n.url) { window.__preUrl = n.url; const im = new Image(); im.src = n.url; window.__preImg = im; if (im.decode) im.decode().catch(() => {}); }
     prepared = { id: null }; return;
   }
   if (n.type !== 'video' || NX()) { prepared = { id: null }; return; }
@@ -1130,12 +1130,16 @@ else setInterval(syncExoBounds, 3000); // çok eski WebView
 let playStartedAt = 0;
 // ---- yerel video katmanı (APK) yardımcıları ----
 function NX() { return !!(window.__N && (window.__N.playExoWithSeek || window.__N.playExo)); }
+// APK 3.2+: fotoğraflar da sayfanın arkasındaki yerel katmanda (hazır olunca haber verir)
+function NPHOTO() { return !!(window.__N && window.__N.showImage2 && window.__N.hasImageEvent); }
+var nativeShowing = null; // 'video' | 'photo' | null — yerel katmanda o an görünen
 var exoTok = 0; // var: betik başında çağrılırsa da tanımlı olsun
 function exoShow(on) { document.documentElement.classList.toggle('exo-on', !!on); }
 // video dışı bir şey gösterilecek: yerel video durur ve sayfa yeniden opak olur
 function exoStop(hide) {
-  ++exoTok; exoShow(false); window.__exoEnded = null;
+  ++exoTok; exoShow(false); window.__exoEnded = null; nativeShowing = null;
   if (!window.__N) return;
+  if (window.__N.hideImage) window.__N.hideImage();
   if (hide && window.__N.hideExo) window.__N.hideExo(); else if (window.__N.stopExo) window.__N.stopExo();
 }
 // web video öğelerinin kaynağı bırakılır: gizli <video> kutunun sınırlı donanım çözücüsünü ve belleğini tutmasın
@@ -1146,6 +1150,32 @@ function releaseWebVideos() {
 function showImageSeamless(it, durMs) {
   window.__exoEnded = null;
   playStartedAt = Date.now();
+  if (NPHOTO()) showImageNative(it); else showImageWeb(it);
+  clearTimeout(timer);
+  const isOnline = window.__ws && window.__ws.readyState === 1;
+  timer = setTimeout(next, isOnline ? durMs + 2500 : durMs);
+  setTimeout(prepNext, 500);
+}
+// Yerel fotoğraf: görüntü arka planda ekran boyutunda çözülür; hazır olunca sayfa şeffaflaşır.
+// Yüklenemezse (6 sn) aynı fotoğraf web katmanında gösterilir.
+function showImageNative(it) {
+  const tk = ++exoTok, prev = nativeShowing, wasOn = document.documentElement.classList.contains('exo-on');
+  let done = false;
+  const fallback = () => { if (done || tk !== exoTok || current !== it.id) return; done = true; window.__N.hideImage(); showImageWeb(it); };
+  window.__imgShown = () => {
+    if (done || tk !== exoTok || current !== it.id) return; done = true;
+    nativeShowing = 'photo';
+    exoShow(true);
+    imgs.forEach(im => { if (im.style.display === 'block') { im.style.opacity = '0'; setTimeout(() => { if (tk === exoTok) im.style.display = 'none'; }, 450); } });
+    // fotoğrafın kenar boşluklarında duraklatılmış videonun son karesi görünmesin: geçiş bitince video katmanı gizlenir
+    if (prev === 'video') setTimeout(() => { if (tk === exoTok && window.__N.hideExo) window.__N.hideExo(); }, 450);
+  };
+  window.__imgFailed = fallback;
+  setTimeout(fallback, 6000);
+  syncExoBounds();
+  window.__N.showImage2(it.url, wasOn && !!prev);
+}
+function showImageWeb(it) {
   if (window.__N && window.__N.hideImage) window.__N.hideImage();
   const nextIm = idleImg(), prevIm = curImg();
 
@@ -1159,7 +1189,7 @@ function showImageSeamless(it, durMs) {
         drawBg(nextIm, nextIm.naturalWidth, nextIm.naturalHeight);
         imgi = 1 - imgi;
         cleanupLayers(nextIm);
-        if (NX()) { const tk = ++exoTok; setTimeout(() => { if (tk === exoTok && current === it.id) { exoShow(false); if (window.__N.stopExo) window.__N.stopExo(); } }, window.__lite ? 400 : 700); }
+        if (NX()) { const tk = ++exoTok; setTimeout(() => { if (tk === exoTok && current === it.id) { exoShow(false); nativeShowing = null; if (window.__N.stopExo) window.__N.stopExo(); } }, window.__lite ? 400 : 700); }
       }
     }));
   };
@@ -1169,11 +1199,6 @@ function showImageSeamless(it, durMs) {
   nextIm.src = it.url;
   if (nextIm.decode) nextIm.decode().then(finish).catch(finish);
   else { nextIm.onload = finish; nextIm.onerror = finish; }
-
-  clearTimeout(timer);
-  const isOnline = window.__ws && window.__ws.readyState === 1;
-  timer = setTimeout(next, isOnline ? durMs + 2500 : durMs);
-  setTimeout(prepNext, 500);
 }
 
 // Sıfır boşluklu video geçişi
@@ -1181,17 +1206,18 @@ function showVideoSeamless(it, durMs, startMs) {
   playStartedAt = Date.now();
   if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
     releaseWebVideos();
-    if (window.__N.hideImage) window.__N.hideImage();
     syncExoBounds();
     const tk = ++exoTok;
     let shown = false;
     const reveal = () => { // yeni videonun ilk karesi hazır: sayfa şeffaflaşır, üstteki fotoğraf kalkar
       if (shown || tk !== exoTok || current !== it.id) return; shown = true;
       exoShow(true);
+      if (nativeShowing !== 'video' && window.__N.hideImage) window.__N.hideImage(); // yerel fotoğraf videonun üstündeydi
+      nativeShowing = 'video';
       imgs.forEach(im => { if (im.style.display === 'block') { im.style.opacity = '0'; setTimeout(() => { if (tk === exoTok) im.style.display = 'none'; }, 450); } });
     };
     window.__exoStarted = reveal;
-    if (document.documentElement.classList.contains('exo-on')) reveal(); // videodan videoya: önceki videonun son karesi zaten ekranda
+    if (nativeShowing === 'video') reveal(); // videodan videoya: önceki videonun son karesi zaten ekranda
     else setTimeout(reveal, window.__N.hasFirstFrameEvent ? 2500 : 700); // eski APK ilk kareyi haber vermez
     if (window.__N.playExoWithSeek) window.__N.playExoWithSeek(it.url, it.dur || 0, startMs || 0);
     else window.__N.playExo(it.url, it.dur || 0);
