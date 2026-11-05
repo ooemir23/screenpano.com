@@ -85,7 +85,7 @@ class MediaEngine(private val h: MediaHost) {
 
     fun stop() {
         if (!running) return
-        running = false; waiting = false; cur?.let { report(it) }; cur = null; sig = ""; ++tok
+        running = false; waiting = false; pendingTarget = null; cur?.let { report(it) }; cur = null; sig = ""; ++tok
         cancelEnd(); h.release()
     }
 
@@ -103,17 +103,30 @@ class MediaEngine(private val h: MediaHost) {
             if (now - startedAt < 4000) return
             if (c != null && c.optString("type") == "video" && now - startedAt < durMs(c) - 1500) return
         }
-        aligned = true
-        idx = target
-        show(list[target], m.optLong("elapsed", 0L).coerceAtLeast(0L))
+        val el = m.optLong("elapsed", 0L).coerceAtLeast(0L)
+        if (first || c == null) {
+            aligned = true
+            idx = target
+            show(list[target], el)
+        } else {
+            // sunucu sıradakine geçti: bu da bir medya sınırıdır; önce sayfaya sorulur (kampanya, büyük maç, fragman)
+            aligned = true
+            pendingTarget = target; pendingElapsed = el
+            boundary()
+        }
     }
+
+    private var pendingTarget: Int? = null
+    private var pendingElapsed = 0L
 
     /** Sayfa araya girenleri bitirdi (ya da girmeyecek): sıradaki içerik. */
     fun resume() {
         if (!running || list.isEmpty() || !waiting) return
         waiting = false; pageHolding = false
-        idx = (idx + 1) % list.size
-        show(list[idx], 0)
+        val t = pendingTarget; val el = pendingElapsed
+        pendingTarget = null
+        if (t != null && t in list.indices) { idx = t; show(list[idx], el) }
+        else { idx = (idx + 1) % list.size; show(list[idx], 0) }
     }
 
     fun onVideoEnded() {
