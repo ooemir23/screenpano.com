@@ -330,11 +330,6 @@ class PosterView(context: Context) : FrameLayout(context) {
             outlineProvider = object : android.view.ViewOutlineProvider() { override fun getOutline(v: View, o: android.graphics.Outline) { o.setRoundRect(0, 0, v.width, v.height, rad) } }
         }
         val img = b.optString("image").takeIf { u -> u.isNotEmpty() && u != "null" }
-        // kartın arkasında kendi kapağının bulanık hâli (küçük çözünürlükte yüklenip büyütülür = bulanıklık; ekstra GPU maliyeti yok)
-        if (img != null) shell.addView(ImageView(context).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP; alpha = 0.45f; scaleX = 1.3f; scaleY = 1.3f
-            load(NativeEnv.url(img)) { crossfade(false); size(24, 36) }
-        }, FrameLayout.LayoutParams(-1, -1))
         shell.addView(View(context).apply { background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(Color.argb(38, 10, 10, 10), Color.argb(184, 10, 10, 10), Color.argb(217, 10, 10, 10))) }, FrameLayout.LayoutParams(-1, -1))
         val card = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL

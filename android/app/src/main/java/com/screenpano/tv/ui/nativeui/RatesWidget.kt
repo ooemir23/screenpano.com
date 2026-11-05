@@ -138,7 +138,12 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             wd.addView(txt("His. ${wx.optDouble("feels").roundToInt()}° · ${wx.optDouble("wind").roundToInt()} km/s", vh * 1.5f, p.mute, false, 0.03f).apply { ellipsize = android.text.TextUtils.TruncateAt.END }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
             row.addView(wd, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { leftMargin = (vh * 1.4f).toInt() })
             val city = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.END }
-            city.addView(txt(s.raw.optString("city").uppercase(Locale("tr", "TR")), vh * 1.4f, p.accent2, true, 0.1f))
+            // uzun konum adı: pencereye sığana kadar yazı küçülür (en çok kutunun %38'i)
+            val cityTv = ShrinkText(context, width * 0.38f).apply {
+                text = s.raw.optString("city").uppercase(Locale("tr", "TR")); setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.4f); setTextColor(p.accent2); includeFontPadding = false
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); letterSpacing = 0.06f; setSingleLine(true)
+            }
+            city.addView(cityTv)
             city.addView(txt("${wx.optDouble("min").roundToInt()}° / ${wx.optDouble("max").roundToInt()}°", vh * 1.45f, p.mute, false, 0.03f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
             row.addView(city)
             content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
@@ -218,4 +223,25 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     override fun release() { main.removeCallbacksAndMessages(null) }
     override fun onDetachedFromWindow() { release(); super.onDetachedFromWindow() }
+}
+
+
+/** Tek satır yazı: verilen en büyük genişliğe sığana kadar boyutu küçültür (harf aralığı dahil), asla kesmez. */
+internal class ShrinkText(context: Context, private val capPx: Float) : TextView(context) {
+    private var base = 0f
+    override fun onMeasure(w: Int, h: Int) {
+        if (base == 0f) base = textSize
+        val t = text?.toString() ?: ""
+        val avail = (if (MeasureSpec.getMode(w) == MeasureSpec.UNSPECIFIED) capPx else minOf(capPx, MeasureSpec.getSize(w).toFloat())) - paddingLeft - paddingRight - 2
+        var size = base
+        while (size > base * 0.4f) {
+            paint.textSize = size
+            if (paint.measureText(t) + letterSpacing * size * t.length <= avail) break
+            size *= 0.94f
+        }
+        setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
+        super.onMeasure(w, h)
+        val need = (paint.measureText(t) + letterSpacing * size * t.length + paddingLeft + paddingRight + 2).toInt()
+        if (measuredWidth < need) setMeasuredDimension(need, measuredHeight)
+    }
 }
