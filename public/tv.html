@@ -1266,7 +1266,7 @@ function play() {
 }
 
 function syncToMedia(m) {
-  if (!MEDIA_ON || !m) return;
+  if (!MEDIA_ON || !m || window.__perfHold) return;
   if (trailerOn || big.showing || camp.showing) return; // Fragman veya büyük duyurular oynarken sunucu senkronuyla kesilmez!
   if (!videos || !videos.length) {
     if (typeof ALLV !== 'undefined' && ALLV.length) applyVideos();
@@ -1319,16 +1319,27 @@ function syncToMedia(m) {
   else showVideoSeamless(it, remainMs, elapsedMs);
 }
 function sizeBg() { const f = document.getElementById('frame'); bgc.width = 64; bgc.height = Math.max(8, Math.round(64 * f.clientHeight / Math.max(1, f.clientWidth))); }
+// içerik arkasındaki bulanık dolgu (64 px'lik tuval). Fotoğrafta küçültme createImageBitmap ile arka planda yapılır:
+// 1920 px'lik görüntüyü ana iş parçacığında filtreyle küçültmek zayıf kutuda uzun kare yaratıyordu.
+let bgTok = 0;
 function drawBg(src, iw, ih) {
   if (!iw || !ih) return;
-  try { bctx.filter = 'blur(4px)'; } catch (e) {}
-  const s = Math.max(bgc.width / iw, bgc.height / ih), w = iw * s, hh = ih * s;
-  bctx.drawImage(src, (bgc.width - w) / 2, (bgc.height - hh) / 2, w, hh);
+  const tk = ++bgTok, W = bgc.width, H = bgc.height;
+  const s = Math.max(W / iw, H / ih), w = Math.max(1, Math.round(iw * s)), hh = Math.max(1, Math.round(ih * s));
+  const paint = (b, bw, bh) => {
+    if (tk !== bgTok) { if (b.close) b.close(); return; }
+    try { bctx.filter = 'blur(4px)'; } catch (e) {}
+    bctx.drawImage(b, (W - bw) / 2, (H - bh) / 2, bw, bh);
+    if (b.close) b.close();
+  };
+  if (window.createImageBitmap && src.tagName === 'IMG') {
+    createImageBitmap(src, { resizeWidth: w, resizeHeight: hh, resizeQuality: 'low' }).then(b => paint(b, w, hh)).catch(() => {});
+  } else paint(src, w, hh);
 }
 let bgFor = null;
 sizeBg();
 addEventListener('resize', () => { sizeBg(); const im = curImg(); if (im && im.style.display === 'block') drawBg(im, im.naturalWidth, im.naturalHeight); });
-imgs.forEach(im => im.addEventListener('load', () => drawBg(im, im.naturalWidth, im.naturalHeight)));
+// (yükleme anında çizilmez: sıradaki fotoğrafın dolgusu o fotoğraf ekrana gelmeden basılıyordu; çizim geçişte yapılır)
 // videonun arkasındaki bulanık dolgu: yalnızca tam modda (hafif modda görüntü kartına geri okuma yapılmaz)
 setInterval(() => {
   if (window.__lite) return;
@@ -3048,6 +3059,7 @@ async function perfProbe(stepSec) {
   const show = (id, on) => { const e = $(id); if (e) e.style.visibility = on ? '' : 'hidden'; };
   const steps = [
     ['tam', () => {}, () => {}],
+    ['medya geçişi yok', () => { window.__perfHold = true; clearTimeout(timer); }, () => { window.__perfHold = false; clearTimeout(timer); timer = setTimeout(next, 500); }],
     ['kayan bant durdu', () => setTrack(true), () => setTrack(false)],
     ['tüm animasyonlar durdu', () => pauseAll(true), () => pauseAll(false)],
     ['müzik oynatıcısı gizli', () => show('music-hosts', false), () => show('music-hosts', true)],
