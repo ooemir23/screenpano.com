@@ -108,7 +108,8 @@ internal class FitText(context: Context) : TextView(context) {
         if (ellipsize != null || maxLines > 1 || MeasureSpec.getMode(w) == MeasureSpec.EXACTLY) return
         val t = text?.toString() ?: return
         if (t.contains('\n')) return
-        val need = (paint.measureText(t) + paddingLeft + paddingRight + shadowRadius * 2 + 2).toInt()
+        // Harf aralığı bazı sürümlerde ölçüme girmiyor; sondaki harf kesilmesin diye ekle
+        val need = (paint.measureText(t) + letterSpacing * textSize * t.length + paddingLeft + paddingRight + shadowRadius * 2 + 2).toInt()
         if (measuredWidth < need) setMeasuredDimension(need, measuredHeight)
     }
 }
