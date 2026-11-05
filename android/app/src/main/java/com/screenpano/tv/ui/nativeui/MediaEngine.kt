@@ -44,6 +44,8 @@ class MediaEngine(private val h: MediaHost) {
     private var tok = 0
     private val endTask = Runnable { boundary() }
 
+    fun currentId(): String? = cur?.optString("id")
+
     fun setLang(l: String) {
         lang = l.ifEmpty { "tr" }
         val c = cur ?: return

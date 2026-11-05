@@ -84,6 +84,7 @@ class MainActivity : AppCompatActivity() {
     private var lastTvState: TvState? = null
     private var posterView: PosterView? = null
     private var lastBounds: IntArray? = null
+    private var mediaFlag = false
     private var mediaKind = "" // yerel medya motorunda en son gösterilen: video | photo
     private var mediaFirstFrame: (() -> Unit)? = null
     private val mediaEngine = MediaEngine(object : MediaHost {
@@ -132,6 +133,7 @@ class MainActivity : AppCompatActivity() {
             onState = { st ->
                 lastTvState = st
                 val mediaOn = NATIVE_MEDIA && st.nativeWidgets && st.blocked == null && st.widgets.any { it.type == "media" }
+                mediaFlag = mediaOn
                 binding.webView.evaluateJavascript("window.__nativeMedia=$mediaOn;", null)
                 mediaEngine.setState(st, mediaOn)
                 if (st.nativeWidgets) {
@@ -257,6 +259,11 @@ class MainActivity : AppCompatActivity() {
                 handler.removeCallbacks(reloadTask)
                 pushTraffic()
                 if (webHidden.isNotEmpty()) hideWebCells(webHidden)
+                if (mediaFlag) { // sayfa yenilendi: bayrak ve (yerel katman görünüyorsa) saydamlık yeniden bildirilir
+                    view?.evaluateJavascript("window.__nativeMedia=true;", null)
+                    if (mediaKind.isNotEmpty()) pageTransparent(true)
+                    mediaEngine.currentId()?.let { id -> view?.evaluateJavascript("window.__setCur&&window.__setCur(" + JSONObject.quote(id) + ")", null) }
+                }
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
