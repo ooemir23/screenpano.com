@@ -222,11 +222,11 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         val tbox = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
             background = GradientDrawable().apply { setColor(Color.argb(235, 6, 10, 20)); cornerRadius = 1.4f * u; setStroke((0.18f * u).toInt().coerceAtLeast(1), al(lc2, 0.65f)) }
-            setPadding((2.2f * w).toInt(), (0.9f * u).toInt(), (2.2f * w).toInt(), (0.9f * u).toInt())
+            setPadding((0.6f * w).toInt(), (0.9f * u).toInt(), (0.6f * w).toInt(), (0.9f * u).toInt())
         }
-        tbox.addView(tv(tm, 5.8f * u, Color.WHITE).apply { setSingleLine(true); setShadowLayer(u * 2f, 0f, 0f, Color.argb(140, 255, 210, 100)) })
+        tbox.addView(tv(tm, 5.4f * u, Color.WHITE).apply { setSingleLine(true); gravity = Gravity.CENTER; setShadowLayer(u * 2f, 0f, 0f, Color.argb(140, 255, 210, 100)) }, LinearLayout.LayoutParams(-1, -2))
         tbox.addView(tv(up(dayTxt), 2f * u, lc2).apply { setSingleLine(true); letterSpacing = 0.1f }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.3f * u).toInt() })
-        center.addView(tbox, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (1.4f * u).toInt() })
+        center.addView(tbox, LinearLayout.LayoutParams((coreSize * 1.15f).toInt(), -2).also { it.topMargin = (1.4f * u).toInt() })
         stage.addView(center, LinearLayout.LayoutParams(-2, -2))
         stage.addView(podium("DEPLASMAN", m.str("away"), m.str("al"), m.str("ap"), c2, c2b), LinearLayout.LayoutParams(0, -2, 1f).also { it.leftMargin = (2 * w).toInt() })
         wrap.addView(stage, LinearLayout.LayoutParams(-1, 0, 1f))
