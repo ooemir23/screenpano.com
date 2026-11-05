@@ -1274,12 +1274,16 @@ function showVideoSeamless(it, durMs, startMs) {
 // APK 3.10+: medya sırası yerel motorda (MediaEngine); sayfa yalnız araya girenleri (kampanya, büyük maç, fragman) yönetir
 const NMED = () => !!(window.__nativeMedia && window.__N && window.__N.mediaResume);
 // yerel motor içerik bitince sorar: araya girecek bir şey var mı? "hold" = var (sayfa bitince mediaResume çağırır), "go" = yok
+window.__nmN = 0;
 window.__mediaBoundary = () => {
+  window.__nmN++;
   next();
   const hold = !!(trailerOn || big.showing || camp.showing);
   if (hold) exoStop(true);
   return hold ? 'hold' : 'go';
 };
+// yerel motor o an hangi içeriği gösteriyor: durum raporu ve istatistik doğru olsun
+window.__setCur = id => { current = id; const k = videos.findIndex(v => v.id === id); if (k >= 0) idx = k; };
 function play() {
   if (NMED()) return;
   clearTimeout(timer); fadeTok++;
@@ -3035,7 +3039,7 @@ function applyVideos() {
   prepared = { id: null };
   const k = videos.findIndex(x => x.id === current); idx = k >= 0 ? k : 0;
   if (k < 0 || current === null) play();
-  else if (curNew && curNew.type === 'poster' && JSON.stringify(curOld) !== JSON.stringify(curNew)) showPoster(curNew); // afiş metni değişti
+  else if (!NMED() && curNew && curNew.type === 'poster' && JSON.stringify(curOld) !== JSON.stringify(curNew)) showPoster(curNew); // afiş metni değişti
 }
 const menuSchedSig = m => ((m && m.categories) || []).map(c => (schedOk(c.sch) ? 1 : 0)).join('');
 setInterval(() => { // dakikada iki kez: zamanı gelen/biten içerik
@@ -3154,7 +3158,7 @@ function sendStatus() {
   wsSend({
     type: 'status', app: n && n.versionName ? n.versionName() : 'tarayıcı', build: window.__build || '',
     hwid: n && n.hwId ? String(n.hwId()).slice(0, 32) : '', model: n && n.model ? String(n.model()).slice(0, 60) : '',
-    mus,
+    mus, nm: `b${window.__nmN || 0} cd${camp.due ? 1 : 0} cl${camp.list.length} cs${camp.showing ? 1 : 0} v${videos.length} m${MEDIA_ON ? 1 : 0} n${NMED() ? 1 : 0}`,
     screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
     playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
     cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,

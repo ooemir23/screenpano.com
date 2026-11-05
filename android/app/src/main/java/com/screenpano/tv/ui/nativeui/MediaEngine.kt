@@ -17,6 +17,7 @@ interface MediaHost {
     /** Sayfanın medya sınırında çalışmasını ister (kampanya / büyük maç / fragman kararı). Dönüş: "go" | "hold" | null. */
     fun pageBoundary(cb: (String?) -> Unit)
     fun report(id: String, sec: Int)
+    fun current(id: String)
     fun online(): Boolean
 }
 
@@ -138,7 +139,7 @@ class MediaEngine(private val h: MediaHost) {
     private fun show(it: JSONObject, elapsedMs: Long, keepClock: Boolean = false) {
         val prev = cur
         if (!keepClock && prev != null && prev.optString("id") != it.optString("id")) report(prev)
-        cur = it; curJson = it.toString()
+        cur = it; curJson = it.toString(); h.current(it.optString("id"))
         if (!keepClock) startedAt = System.currentTimeMillis() - elapsedMs
         waiting = false
         val my = ++tok

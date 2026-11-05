@@ -95,6 +95,7 @@ class MainActivity : AppCompatActivity() {
             binding.webView.evaluateJavascript("window.__mediaBoundary?window.__mediaBoundary():'none'") { r -> cb(r?.trim('"')) }
         }
         override fun report(id: String, sec: Int) { tvSocket?.send(JSONObject().put("type", "play").put("id", id).put("sec", sec)) }
+        override fun current(id: String) { binding.webView.evaluateJavascript("window.__setCur&&window.__setCur(" + JSONObject.quote(id) + ")", null) }
         override fun online(): Boolean = tvSocket?.connected == true
     })
 
