@@ -309,9 +309,9 @@ class PosterView(context: Context) : FrameLayout(context) {
             val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             for (c in 0 until cols) {
                 if (i >= n) { row.addView(View(context), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)); continue }
-                row.addView(bookCard(books.optJSONObject(i++) ?: JSONObject(), books), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (c > 0) leftMargin = (width * 0.022f).roundToInt() })
+                row.addView(bookCard(books.optJSONObject(i++) ?: JSONObject(), books), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (c > 0) leftMargin = (width * 0.04f).roundToInt() })
             }
-            grid.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { if (r > 0) topMargin = (height * 0.032f).roundToInt() })
+            grid.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { if (r > 0) topMargin = (height * 0.055f).roundToInt() })
         }
         root.addView(grid, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         add(root)
@@ -321,19 +321,19 @@ class PosterView(context: Context) : FrameLayout(context) {
         val p = pal!!
         val card = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-            setPadding((width * 0.018f).roundToInt(), (height * 0.025f).roundToInt(), (width * 0.018f).roundToInt(), (height * 0.025f).roundToInt())
-            background = GradientDrawable().apply { setColor(Color.parseColor("#1b1a19")); cornerRadius = px(0.7f); setStroke(1, Color.argb(18, 255, 255, 255)) }
+            setPadding((width * 0.022f).roundToInt(), (height * 0.035f).roundToInt(), (width * 0.022f).roundToInt(), (height * 0.035f).roundToInt())
+            background = GradientDrawable().apply { setColor(Color.parseColor("#201e1c")); cornerRadius = px(0.8f); setStroke(max(1, px(0.1f).roundToInt()), Color.argb(40, 255, 255, 255)) }
         }
         val img = b.optString("image").takeIf { u -> u.isNotEmpty() && u != "null" }
         // kapak: kart yüksekliğini dolduran 2:3 oranlı dikdörtgen (CSS: height:100%; aspect-ratio:2/3)
         val rowsN = if (books.length() <= 2) 1 else 2
-        val cardH = ((height * (1f - 0.052f - 0.022f) - px(1f) - height * 0.032f * (rowsN - 1)) / rowsN - height * 0.05f).roundToInt()
+        val cardH = ((height * (1f - 0.052f - 0.022f) - px(1f) - height * 0.055f * (rowsN - 1)) / rowsN - height * 0.07f).roundToInt()
         if (img != null) card.addView(photo(img), LinearLayout.LayoutParams((cardH * 2f / 3f).roundToInt(), cardH))
         val tx = column(0.3f).apply { setPadding(px(1.0f).roundToInt(), 0, 0, 0) }
-        tx.addView(tv(b.optString("title"), 1.45f, p.white, 800, 3))
-        b.optString("author").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 1f, p.accent2, 600, 1)) }
-        b.optString("publisher").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.85f, p.white, 600, 1, 0.9f)) }
-        b.optString("desc").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.84f, Color.parseColor("#f3eee6"), 500, 4)) }
+        tx.addView(tv(b.optString("title"), 1.6f, p.white, 800, 3))
+        b.optString("author").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 1.1f, p.accent2, 600, 1)) }
+        b.optString("publisher").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.92f, p.white, 600, 1, 0.9f)) }
+        b.optString("desc").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.92f, Color.parseColor("#f3eee6"), 500, 3)) }
         card.addView(tx, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         return card
     }

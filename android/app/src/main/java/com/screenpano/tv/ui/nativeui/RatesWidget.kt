@@ -41,8 +41,10 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
     private var rateIdx = 0
     private var viewIdx = 0
     private var sig = ""
-    private val rateTick = object : Runnable { override fun run() { rateIdx++; renderMain(); main.postDelayed(this, 8000) } }
-    private val viewTick = object : Runnable { override fun run() { viewIdx++; renderViews(); main.postDelayed(this, 12000) } }
+    // zamanlayıcılar sunucu saatine hizalı: tüm ekranlar aynı anda aynı sayfayı/kur grubunu gösterir
+    private fun aligned(period: Long): Long = period - NativeEnv.now() % period + 30L
+    private val rateTick = object : Runnable { override fun run() { rateIdx = (NativeEnv.now() / 8000L).toInt(); renderMain(); main.postDelayed(this, aligned(8000L)) } }
+    private val viewTick = object : Runnable { override fun run() { viewIdx = (NativeEnv.now() / 12000L).toInt(); renderViews(); main.postDelayed(this, aligned(12000L)) } }
     private var wifiRunnable: Runnable? = null
 
     private val nf = { d: Int -> NumberFormat.getNumberInstance(Locale("tr", "TR")).apply { minimumFractionDigits = d; maximumFractionDigits = d } }
@@ -67,12 +69,11 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         val nsig = listOf(s.raw.optJSONObject("rates"), s.raw.optJSONObject("weather"), w.props, s.raw.optJSONArray("qrs"), s.raw.optString("city"), s.theme).joinToString("|") { it.toString() }
         if (nsig == sig && content.childCount > 0) return
         sig = nsig
-        val first = content.childCount == 0
-        if (first) { rateIdx = 0; viewIdx = 0 }
+        rateIdx = (NativeEnv.now() / 8000L).toInt(); viewIdx = (NativeEnv.now() / 12000L).toInt()
         renderViews()
         main.removeCallbacks(rateTick); main.removeCallbacks(viewTick)
-        main.postDelayed(rateTick, 8000)
-        if (views().size > 1) main.postDelayed(viewTick, 12000)
+        main.postDelayed(rateTick, aligned(8000L))
+        if (views().size > 1) main.postDelayed(viewTick, aligned(12000L))
     }
 
     private fun txt(t: CharSequence, px: Float, color: Int, bold: Boolean = false, ls: Float = 0f): TextView = TextView(context).apply {
