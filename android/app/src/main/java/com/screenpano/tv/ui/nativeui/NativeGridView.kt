@@ -27,6 +27,8 @@ class NativeGridView(context: Context) : ViewGroup(context) {
         "clock" -> ClockWidget(context)
         "logo" -> LogoWidget(context)
         "rates" -> RatesWidget(context)
+        "reviews" -> ReviewsWidget(context)
+        "menu" -> MenuWidget(context)
         "text" -> TextWidget(context)
         "image" -> ImageWidget(context)
         else -> null
