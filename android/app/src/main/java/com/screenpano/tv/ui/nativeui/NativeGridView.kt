@@ -34,6 +34,7 @@ class NativeGridView(context: Context) : ViewGroup(context) {
         "text" -> TextWidget(context)
         "image" -> ImageWidget(context)
         "info" -> InfoWidget(context)
+        "qr" -> QrWidget(context)
         else -> null
     }
 
@@ -59,6 +60,7 @@ class NativeGridView(context: Context) : ViewGroup(context) {
             keep.add(key)
             (v as NativeWidget).bind(w, s, vh)
         }
+        for (v in cells.values) if (v is QrWidget) v.bringToFront() // QR kartları diğer widget'ların üstünde
         for (k in cells.keys.toList()) if (k !in keep) { val v = cells.remove(k); (v as? NativeWidget)?.release(); removeView(v) }
         requestLayout()
     }
@@ -85,6 +87,18 @@ class NativeGridView(context: Context) : ViewGroup(context) {
             val pw = (w.w * cw).toInt(); val ph = (w.h * ch).toInt()
             c.measure(MeasureSpec.makeMeasureSpec(pw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(ph, MeasureSpec.EXACTLY))
             c.layout(x.toInt(), y.toInt(), x.toInt() + pw, y.toInt() + ph)
+        }
+        // QR kartları: ortası düştüğü widget'ın (yoksa tüm ekranın) dışına taşmasın
+        seen.clear()
+        for (w in s.widgets) {
+            val key = w.type + "#" + (seen.merge(w.type, 1, Int::plus) ?: 1)
+            val q = cells[key] as? QrWidget ?: continue
+            val cx = (q.left + q.right) / 2f; val cy = (q.top + q.bottom) / 2f
+            var host: View? = null
+            for ((k, v) in cells) if (!k.startsWith("qr#") && cx >= v.left && cx <= v.right && cy >= v.top && cy <= v.bottom) { host = v; break }
+            val hl = host?.left?.toFloat() ?: 0f; val ht = host?.top?.toFloat() ?: 0f
+            val hr = host?.right?.toFloat() ?: W; val hb = host?.bottom?.toFloat() ?: H
+            q.nudge(hl, ht, hr, hb, H * 0.012f)
         }
     }
 }

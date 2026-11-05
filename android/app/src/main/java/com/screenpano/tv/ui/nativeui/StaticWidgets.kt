@@ -24,6 +24,10 @@ object NativeEnv {
     /** Sunucu saati - kutu saati (ms); sunucu iletilerinden güncellenir. Sayfa döngüleri tüm ekranlarda aynı anda dönsün. */
     @Volatile var srvOff = 0L
     fun now(): Long = System.currentTimeMillis() + srvOff
+    /** Ekrandaki bağlam (sayfa bildirir): goal | big | camp | trailer | video | image | poster | boş. */
+    @Volatile var ctx: String = ""
+    val ctxListeners = HashSet<() -> Unit>()
+    fun setCtx(c: String) { if (c != ctx) { ctx = c; ArrayList(ctxListeners).forEach { it() } } }
     fun url(u: String): String = if (u.startsWith("http")) u else BuildConfig.BASE_URL.trimEnd('/') + (if (u.startsWith("/")) u else "/$u")
 }
 

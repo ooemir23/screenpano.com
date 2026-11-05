@@ -604,6 +604,10 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun hasNativeMedia(): Boolean = NATIVE_MEDIA
 
+        /** Sayfa ekrandaki bağlamı bildirir (gol / büyük maç / kampanya / fragman / medya türü): QR kartı buna göre gizlenir. */
+        @JavascriptInterface
+        fun qrCtx(ctx: String) { handler.post { com.screenpano.tv.ui.nativeui.NativeEnv.setCtx(ctx) } }
+
         @JavascriptInterface
         fun getToken(): String = prefs.getDeviceToken()
 
