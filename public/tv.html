@@ -2013,6 +2013,14 @@ function nextGoal() {
     c.style.animationDuration = 2.5 + Math.random() * 2.5 + 's'; c.style.animationDelay = Math.random() * 1.5 + 's';
     el.appendChild(c);
   }
+  if (document.documentElement.classList.contains('nat-info') && window.__N && window.__N.goalShow) { // APK 3.15+: kart yerel bilgi panelinin üstünde çizilir
+    const cs = c => { const t = document.createElement('i'); t.style.color = c; document.body.appendChild(t); const m = /(\d+)\D+(\d+)\D+(\d+)/.exec(getComputedStyle(t).color); t.remove(); return m ? '#' + [1, 2, 3].map(i => (+m[i]).toString(16).padStart(2, '0')).join('') : ''; };
+    const rs = getComputedStyle(el), cv = n => cs(rs.getPropertyValue(n).trim() || 'transparent');
+    window.__N.goalShow(JSON.stringify({ league: g.league, home: g.home, away: g.away, hs: g.hs, as: g.as, side: sc, player: g.player || '', minute: g.minute || '', tag, gc: cv('--gc'), gd: cv('--gd'), gc2: cv('--gc2') }));
+    el.innerHTML = ''; el.className = '';
+    setTimeout(() => { window.__N.goalHide(); nextGoal(); }, 12500);
+    return;
+  }
   el.className = 'in';
   setTimeout(() => { el.className = 'out'; setTimeout(() => { el.className = ''; nextGoal(); }, 520); }, 12000);
 }

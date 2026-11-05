@@ -18,6 +18,17 @@ const val NATIVE_MEDIA = true
 class NativeGridView(context: Context) : ViewGroup(context) {
     private var state: TvState? = null
     private val cells = LinkedHashMap<String, View>()
+    private var goal: GoalView? = null
+
+    /** Gol kartı bilgi panelinin üstüne konur; yerel bilgi paneli yoksa false (sayfa çizer). */
+    fun goalShow(d: org.json.JSONObject): Boolean {
+        val host = cells["info#1"] ?: return false
+        val g = goal ?: GoalView(context).also { goal = it; addView(it) }
+        g.bind(d, (if (height > 0) height else resources.displayMetrics.heightPixels) / 100f)
+        g.visibility = View.VISIBLE; g.alpha = 0f; g.bringToFront(); g.animate().alpha(1f).setDuration(350).start()
+        requestLayout(); return true
+    }
+    fun goalHide() { goal?.let { it.animate().cancel(); it.visibility = View.GONE } }
 
     /** Şu an yerel çizilen widget türleri (sayfa bu hücreleri gizler). */
     val nativeTypes: List<String> get() = cells.keys.map { it.substringBefore('#') }.distinct()
@@ -67,6 +78,7 @@ class NativeGridView(context: Context) : ViewGroup(context) {
 
     /** Yerel ekran kapatılınca tüm widget'ları (animasyonlar ve zamanlayıcılarıyla) bırakır. */
     fun clear() {
+        goal?.let { removeView(it); goal = null }
         for (v in cells.values) { (v as? NativeWidget)?.release(); removeView(v) }
         cells.clear(); state = null
     }
@@ -88,6 +100,10 @@ class NativeGridView(context: Context) : ViewGroup(context) {
             c.measure(MeasureSpec.makeMeasureSpec(pw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(ph, MeasureSpec.EXACTLY))
             c.layout(x.toInt(), y.toInt(), x.toInt() + pw, y.toInt() + ph)
         }
+        goal?.let { g -> cells["info#1"]?.let { h ->
+            g.measure(MeasureSpec.makeMeasureSpec(h.width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(h.height, MeasureSpec.EXACTLY))
+            g.layout(h.left, h.top, h.right, h.bottom)
+        } }
         // QR kartları: ortası düştüğü widget'ın (yoksa tüm ekranın) dışına taşmasın
         seen.clear()
         for (w in s.widgets) {

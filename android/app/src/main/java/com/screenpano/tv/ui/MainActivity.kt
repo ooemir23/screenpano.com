@@ -625,6 +625,13 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun hasNativeCamp(): Boolean = true
 
+        /** Gol kartı bilgi panelinin üstünde yerel çizilir (APK 3.15+). Sayfa yalnız html.nat-info varken çağırır. */
+        @JavascriptInterface
+        fun goalShow(json: String) { handler.post { try { nativeGrid?.goalShow(JSONObject(json)) } catch (e: Exception) { Log.w(TAG, "Gol kartı çizilemedi: ${e.message}") } } }
+
+        @JavascriptInterface
+        fun goalHide() { handler.post { nativeGrid?.goalHide() } }
+
         /** Büyük maç duyurusu (APK 3.14+): şimdilik yalnız "arena" tasarımı yerel; sayfa diğerlerini kendisi çizer. */
         @JavascriptInterface
         fun hasNativeBig(style: String): Boolean = com.screenpano.tv.ui.nativeui.BigArenaView.supports(style)
