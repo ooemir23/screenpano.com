@@ -6,6 +6,8 @@
 <title>TV</title>
 <script>
 /* APK içinde ya da ?lite=1 ile hafif mod: ağır efektler kapanır */
+// APK 2.4–3.0 sayfa yüklenince kendi kancasını enjekte eder (çift konum gönderme, ayrı CSS); sayfa hepsini kendisi yaptığı için kapatılır
+window.__exoHooked = true;
 (function () {
   window.__fx = 'auto';
   window.__applyFx = function () {
@@ -50,8 +52,12 @@ html,body{height:100%;width:100%;background:var(--edge);color:var(--white);font-
 #bgc{width:100%;height:100%;display:block;opacity:.38;transform:scale(1.1);contain:paint}
 #bgw::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(var(--a1),.22) 0%,rgba(14,16,19,.85) 75%),linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.6) 100%)}
 video,#img,#img2{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100% - 1.2vh);object-fit:contain;background:transparent;border-radius:1.39vh;display:block;transition:opacity .6s cubic-bezier(.2,.8,.2,1);will-change:opacity}
-html.native-exo #frame{background:transparent !important}
-html.native-exo #bgw{background:transparent !important}
+/* APK'da videolar sayfanın ARKASINDAKİ yerel katmanda (ExoPlayer) oynar: görünmesi için video oynarken (exo-on)
+   sayfanın o bölgeye kadar her katmanı şeffaf olmalı. Fotoğraf/afiş gösterilirken sayfa yine opak: duraklatılmış
+   videonun son karesi arkadan görünmez. Kenar rengi uygulamanın kök katmanına verilir (setBackdrop). */
+html.native-exo.exo-on,html.native-exo.exo-on body,html.native-exo.exo-on #app,html.native-exo.exo-on #frame,html.native-exo.exo-on #bgw{background:transparent !important}
+html.native-exo.exo-on #bgw::after,html.native-exo.exo-on #bgc{display:none}
+html.native-exo.exo-on #frame{box-shadow:none}
 html.native-exo video{opacity:0 !important;pointer-events:none !important}
 #img,#img2{display:none;opacity:0}
 #standby{position:absolute;inset:.6vh;z-index:2;display:none;align-items:center;justify-content:center;flex-direction:column;border-radius:1.39vh;background:radial-gradient(ellipse at center,rgba(var(--a1),.25) 0%,rgba(14,16,19,.92) 80%);opacity:0;transition:opacity .8s ease;contain:paint}
@@ -277,6 +283,16 @@ html.lite #goal::before,html.lite #goal::after{display:none}
 html.lite #goal .ball{filter:none}
 /* hafif modda medya geçişleri kısa sürer: iki tam ekran katman üst üste az zaman kalır, solma ucuzlar */
 html.lite video,html.lite #img{transition-duration:.35s}
+/* hafif mod: ekolayzerin parlaması ve QR etiketinin arka plan bulanıklığı kapanır (her karede yeniden hesaplanıyordu) */
+html.lite #music-bar .meq-bars i,html.lite #music-bar .meq-icon{box-shadow:none!important}
+html.lite .wqr .lbl.qp{-webkit-backdrop-filter:none;backdrop-filter:none}
+/* hafif mod: büyük maç tasarımlarının sonsuz döngülü süsleri durur (giriş animasyonları kalır) */
+html.lite #big .ybeam,html.lite #big .yrow:after,html.lite #big.d-sayac:before,html.lite #big .ysc-ring:before,html.lite #big .ysc-ring:after,html.lite #big .yaura,
+html.lite #big .yglow,html.lite #big .yglow:after,html.lite #big .ysmk,html.lite #big .yflare,html.lite #big .ypl,html.lite #big .ybigc:before,html.lite #big .ybigc:after,
+html.lite #big .ybolt,html.lite #big .yduel-tlogo:before,html.lite #big .ytlg,html.lite #big .ar-bg,html.lite #big .ar-tint-l,html.lite #big .ar-tint-r,
+html.lite #big .ar-orb:before,html.lite #big .ar-orb:after,html.lite #big .ar-core:before,html.lite #big .ar-core:after,html.lite #big .md-bg,html.lite #big .md-tint-l,
+html.lite #big .md-tint-r,html.lite #big .md-crest-halo,html.lite #big .bg-cyber::before{animation:none!important}
+html.lite #big .yemb{display:none!important}
 #root{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;transform-origin:50% 50%}
 #guide{position:fixed;box-sizing:border-box;z-index:98;pointer-events:none;display:none;border:.6vh solid #7CFC00;box-shadow:0 0 0 .3vh #000,inset 0 0 0 .3vh #000}
 #guide.on{display:block}
@@ -869,7 +885,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 
 /* 5 modern ritmik ekolayzer çubuğu */
 #music-bar .meq-bars{display:flex;align-items:flex-end;justify-content:center;gap:.32vh;width:54%;height:50%}
-#music-bar .meq-bars i{flex:none;width:.38vh;min-width:3px;border-radius:99px;background:#fff;transition:height .25s ease,opacity .3s}
+#music-bar .meq-bars i{flex:none;width:.38vh;min-width:3px;height:100%;border-radius:99px;background:#fff;transform-origin:50% 100%;transform:scaleY(.3);transition:transform .25s ease,opacity .3s}
 #music-bar.sp .meq-bars i{background:linear-gradient(180deg,#2fe576 0%,#1db954 60%,#15883e 100%);box-shadow:0 0 .8vh rgba(30,215,96,.85)}
 #music-bar.yt .meq-bars i{background:linear-gradient(180deg,#ff6584 0%,#ff2e4c 60%,#c4122d 100%);box-shadow:0 0 .8vh rgba(255,46,76,.85)}
 #music-bar.rd .meq-bars i{background:linear-gradient(180deg,#ffe29a 0%,#e5a954 60%,#a46d29 100%);box-shadow:0 0 .8vh rgba(229,169,84,.85)}
@@ -879,13 +895,13 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #music-bar:not(.paused) .meq-bars i:nth-child(3){animation:eqwave3 .84s cubic-bezier(.45,0,.55,1) infinite alternate .06s}
 #music-bar:not(.paused) .meq-bars i:nth-child(4){animation:eqwave4 .96s cubic-bezier(.45,0,.55,1) infinite alternate .18s}
 #music-bar:not(.paused) .meq-bars i:nth-child(5){animation:eqwave5 .72s cubic-bezier(.45,0,.55,1) infinite alternate .24s}
-#music-bar.paused .meq-bars i{animation:none!important;height:20%!important;opacity:.4;box-shadow:none!important}
+#music-bar.paused .meq-bars i{animation:none!important;transform:scaleY(.2)!important;opacity:.4;box-shadow:none!important}
 
-@keyframes eqwave1{0%{height:25%}35%{height:75%}70%{height:38%}100%{height:85%}}
-@keyframes eqwave2{0%{height:80%}25%{height:35%}65%{height:96%}100%{height:45%}}
-@keyframes eqwave3{0%{height:40%}35%{height:95%}75%{height:50%}100%{height:92%}}
-@keyframes eqwave4{0%{height:88%}30%{height:42%}70%{height:85%}100%{height:32%}}
-@keyframes eqwave5{0%{height:30%}45%{height:65%}80%{height:28%}100%{height:75%}}
+@keyframes eqwave1{0%{transform:scaleY(0.25)}35%{transform:scaleY(0.75)}70%{transform:scaleY(0.38)}100%{transform:scaleY(0.85)}}
+@keyframes eqwave2{0%{transform:scaleY(0.8)}25%{transform:scaleY(0.35)}65%{transform:scaleY(0.96)}100%{transform:scaleY(0.45)}}
+@keyframes eqwave3{0%{transform:scaleY(0.4)}35%{transform:scaleY(0.95)}75%{transform:scaleY(0.5)}100%{transform:scaleY(0.92)}}
+@keyframes eqwave4{0%{transform:scaleY(0.88)}30%{transform:scaleY(0.42)}70%{transform:scaleY(0.85)}100%{transform:scaleY(0.32)}}
+@keyframes eqwave5{0%{transform:scaleY(0.3)}45%{transform:scaleY(0.65)}80%{transform:scaleY(0.28)}100%{transform:scaleY(0.75)}}
 
 #music-bar .mmeta{min-width:0;display:flex;flex-direction:column;gap:.15vh;transition:max-width .55s cubic-bezier(.22,1,.36,1),opacity .4s;max-width:34vw}
 #music-bar .mtit{font-size:1.95vh;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw;text-shadow:0 .2vh .6vh #000}
@@ -913,7 +929,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 /* ekolayzer: çalarken kapağın içinde, altta — duraklarken kaybolur; boyutlar daireye orantılı */
 #musicw .mw-eq{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);width:36%;height:24%;display:flex;align-items:flex-end;justify-content:space-evenly;border-radius:99px;background:rgba(0,0,0,.5);opacity:0;transition:opacity .4s}
 #musicw.on:not(.paused) .mw-eq{opacity:1}
-#musicw .mw-eq i{width:15%;border-radius:99px;background:#fff;animation:meqbar .85s ease-in-out infinite alternate}
+#musicw .mw-eq i{width:15%;height:100%;border-radius:99px;background:#fff;transform-origin:50% 100%;animation:meqbar .85s ease-in-out infinite alternate}
 #musicw .mw-eq i:nth-child(2){animation-duration:.7s;animation-delay:.12s}
 #musicw .mw-eq i:nth-child(3){animation-duration:1s;animation-delay:.24s}
 #musicw .mw-eq i:nth-child(4){animation-duration:.8s;animation-delay:.06s}
@@ -926,7 +942,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #musicw.on.sp .mw-cov{border-color:rgba(29,185,84,.8);box-shadow:0 0 2.4vh rgba(29,185,84,.35),0 1vh 3vh rgba(0,0,0,.5)}
 #musicw.on.yt .mw-cov{border-color:rgba(255,50,70,.8);box-shadow:0 0 2.4vh rgba(255,50,70,.35),0 1vh 3vh rgba(0,0,0,.5)}
 #musicw.idle{opacity:.55}
-@keyframes meqbar{0%{height:22%}100%{height:100%}}
+@keyframes meqbar{0%{transform:scaleY(.22)}100%{transform:scaleY(1)}}
 #music-unlock{position:fixed;left:1.5vw;bottom:9.2vh;z-index:95;display:none;align-items:center;gap:.8vw;padding:1.2vh 1.6vw;border-radius:99px;background:linear-gradient(135deg,#e6a23c,#c97518);color:#fff;font-size:1.9vh;font-weight:800;box-shadow:0 1vh 3vh rgba(0,0,0,.8),0 0 2.5vh rgba(230,162,60,.65);border:.2vh solid #ffe3a8;cursor:pointer;animation:mpulse 1.4s ease-in-out infinite alternate}
 #music-unlock.on{display:inline-flex}
 @keyframes mpulse{from{transform:scale(1)}to{transform:scale(1.04)}}
@@ -1041,8 +1057,7 @@ function showTrailer(m, key) {
   trailerTimer = setTimeout(endTrailer, 3 * 60 * 1000); // bitiş haberi gelmezse en çok 3 dk
 }
 function playTrailer(retry) {
-  if (window.__N && window.__N.hideExo) window.__N.hideExo();
-  else if (window.__N && window.__N.stopExo) window.__N.stopExo();
+  exoStop(true);
   const m = trailerList[trailerIdx++ % trailerList.length];
   if (!retry) trailerFails = 0;
   trailerOn = true; clearTimeout(timer); els.forEach(v => v.pause()); notePlay(null); // kesilen içeriğin süresi olduğu gibi raporlanır, fragman süresi dahil edilmez
@@ -1094,7 +1109,7 @@ function prepNext() {
     if (window.__preUrl !== n.url) { window.__preUrl = n.url; const im = new Image(); im.src = n.url; window.__preImg = im; if (im.decode) im.decode().catch(() => {}); }
     prepared = { id: null }; return;
   }
-  if (n.type !== 'video') { prepared = { id: null }; return; }
+  if (n.type !== 'video' || NX()) { prepared = { id: null }; return; }
   if (prepared.id === n.id && el.dataset.url === n.url) return;
   el.dataset.url = n.url; el.loop = false; el.src = n.url; el.load();
   prepared = { id: n.id };
@@ -1102,15 +1117,31 @@ function prepNext() {
 const itemLen = it => it.type === 'video' ? (it.dur ? it.dur : 30) : (it.dur || imageSeconds || 10);
 function syncExoBounds() {
   if (!window.__N || !window.__N.updateBounds) return;
-  const f = document.getElementById('frame');
+  const f = document.getElementById('bgw') || document.getElementById('frame'); // videonun gerçek alanı (çerçeve kenarı hariç)
   if (!f) return;
   const r = f.getBoundingClientRect();
   const d = window.devicePixelRatio || 1;
   window.__N.updateBounds(Math.round(r.left * d), Math.round(r.top * d), Math.round(r.width * d), Math.round(r.height * d));
 }
 window.addEventListener('resize', syncExoBounds);
+if (window.ResizeObserver) { try { new ResizeObserver(() => syncExoBounds()).observe(document.getElementById('bgw')); } catch (e) {} }
+else setInterval(syncExoBounds, 3000); // çok eski WebView
 
 let playStartedAt = 0;
+// ---- yerel video katmanı (APK) yardımcıları ----
+function NX() { return !!(window.__N && (window.__N.playExoWithSeek || window.__N.playExo)); }
+var exoTok = 0; // var: betik başında çağrılırsa da tanımlı olsun
+function exoShow(on) { document.documentElement.classList.toggle('exo-on', !!on); }
+// video dışı bir şey gösterilecek: yerel video durur ve sayfa yeniden opak olur
+function exoStop(hide) {
+  ++exoTok; exoShow(false); window.__exoEnded = null;
+  if (!window.__N) return;
+  if (hide && window.__N.hideExo) window.__N.hideExo(); else if (window.__N.stopExo) window.__N.stopExo();
+}
+// web video öğelerinin kaynağı bırakılır: gizli <video> kutunun sınırlı donanım çözücüsünü ve belleğini tutmasın
+function releaseWebVideos() {
+  els.forEach(e => { try { e.pause(); if (e.getAttribute('src')) { e.removeAttribute('src'); e.load(); } delete e.dataset.url; } catch (x) {} });
+}
 // Sıfır karartmalı kusursuz görsel geçişi: yeni görsel arka planda tam çözülene kadar eski içerik ekranda kalır
 function showImageSeamless(it, durMs) {
   window.__exoEnded = null;
@@ -1128,7 +1159,7 @@ function showImageSeamless(it, durMs) {
         drawBg(nextIm, nextIm.naturalWidth, nextIm.naturalHeight);
         imgi = 1 - imgi;
         cleanupLayers(nextIm);
-        if (window.__N && window.__N.stopExo) setTimeout(() => { if (current === it.id && window.__N && window.__N.stopExo) window.__N.stopExo(); }, 250);
+        if (NX()) { const tk = ++exoTok; setTimeout(() => { if (tk === exoTok && current === it.id) { exoShow(false); if (window.__N.stopExo) window.__N.stopExo(); } }, window.__lite ? 400 : 700); }
       }
     }));
   };
@@ -1149,15 +1180,26 @@ function showImageSeamless(it, durMs) {
 function showVideoSeamless(it, durMs, startMs) {
   playStartedAt = Date.now();
   if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
-    els.forEach(e => e.pause());
+    releaseWebVideos();
     if (window.__N.hideImage) window.__N.hideImage();
     syncExoBounds();
+    const tk = ++exoTok;
+    let shown = false;
+    const reveal = () => { // yeni videonun ilk karesi hazır: sayfa şeffaflaşır, üstteki fotoğraf kalkar
+      if (shown || tk !== exoTok || current !== it.id) return; shown = true;
+      exoShow(true);
+      imgs.forEach(im => { if (im.style.display === 'block') { im.style.opacity = '0'; setTimeout(() => { if (tk === exoTok) im.style.display = 'none'; }, 450); } });
+    };
+    window.__exoStarted = reveal;
+    if (document.documentElement.classList.contains('exo-on')) reveal(); // videodan videoya: önceki videonun son karesi zaten ekranda
+    else setTimeout(reveal, window.__N.hasFirstFrameEvent ? 2500 : 700); // eski APK ilk kareyi haber vermez
     if (window.__N.playExoWithSeek) window.__N.playExoWithSeek(it.url, it.dur || 0, startMs || 0);
     else window.__N.playExo(it.url, it.dur || 0);
     window.__exoEnded = () => {
-      if (Date.now() - playStartedAt < 3000) return;
+      if (tk !== exoTok) return;
+      const left = 3000 - (Date.now() - playStartedAt); // çok kısa video ya da başlarken hata: atlama, birazdan geç
       clearTimeout(timer);
-      timer = setTimeout(next, 500);
+      timer = setTimeout(next, Math.max(500, left));
     };
     const safetyMs = Math.max(durMs + 15000, 45000);
     clearTimeout(timer);
@@ -1209,8 +1251,7 @@ function play() {
   const fullDurMs = (it.dur || imageSeconds || 10) * 1000;
 
   if (it.type === 'poster') {
-    window.__exoEnded = null;
-    if (window.__N && window.__N.stopExo) window.__N.stopExo();
+    exoStop();
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
     showPoster(it);
@@ -1264,8 +1305,7 @@ function syncToMedia(m) {
   playStartedAt = Date.now();
 
   if (it.type === 'poster') {
-    window.__exoEnded = null;
-    if (window.__N && window.__N.stopExo) window.__N.stopExo();
+    exoStop();
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
     showPoster(it);
@@ -2009,7 +2049,7 @@ const camp = { list: [], last: {}, showing: false, due: null, after: null, start
 function campShow(c) {
   if (camp.showing || !c) return;
   camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp' });
-  if (window.__N && window.__N.stopExo) window.__N.stopExo();
+  exoStop();
   let el = document.getElementById('camp');
   if (!el) { el = document.createElement('div'); el.id = 'camp'; document.getElementById('frame').appendChild(el); }
   const esc = t => String(t || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -2152,7 +2192,7 @@ function setBig(list, cfg) { big.list = list || []; big.cfg = cfg || big.cfg; }
 function bigShow(m, cfg) {
   if (big.showing || !m) return;
   big.showing = true; camp.showing = true; big.last = Date.now(); wsSend({ type: 'shown', kind: 'big' });
-  if (window.__N && window.__N.stopExo) window.__N.stopExo();
+  exoStop();
   cfg = cfg || big.cfg;
   const z = { timeZone: 'Europe/Istanbul' };
   const d0 = new Date(m.ts), dk = x => new Intl.DateTimeFormat('en-CA', z).format(x);
@@ -2547,7 +2587,9 @@ function applyTheme(th) {
   const sig = JSON.stringify(th); if (sig === themeSig) return; themeSig = sig;
   const r = document.documentElement.style, W = [255, 255, 255], K = [0, 0, 0];
   const bg = hexRgb(th.bg || '#151717'), a1 = hexRgb(th.accent || '#906538'), a2 = hexRgb(th.accent2 || '#c9955c'), tx = hexRgb(th.text || '#fbfbfb');
-  r.setProperty('--edge', rgb(bg)); r.setProperty('--bg', rgb(mix(bg, W, 0.04))); r.setProperty('--glow', rgb(mix(bg, W, 0.08)));
+  r.setProperty('--edge', rgb(bg));
+  try { if (window.__N && window.__N.setBackdrop) window.__N.setBackdrop('#' + bg.map(v => v.toString(16).padStart(2, '0')).join('')); } catch (e) {}
+  r.setProperty('--bg', rgb(mix(bg, W, 0.04))); r.setProperty('--glow', rgb(mix(bg, W, 0.08)));
   r.setProperty('--accent', rgb(a1)); r.setProperty('--accent2', rgb(a2)); r.setProperty('--a1', a1.join(',')); r.setProperty('--a2', a2.join(','));
   r.setProperty('--al', rgb(mix(a2, W, 0.55))); r.setProperty('--ad', rgb(mix(a1, K, 0.5)));
   r.setProperty('--white', rgb(tx)); r.setProperty('--soft', rgb(mix(tx, bg, 0.1))); r.setProperty('--mute', rgb(mix(tx, bg, 0.42)));
@@ -2775,7 +2817,7 @@ async function startPair() {
   } catch (e) { $id('a-code').textContent = '------'; setTimeout(startPair, 10000); }
 }
 function showAuth() {
-  if (window.__N && window.__N.stopExo) window.__N.stopExo();
+  exoStop();
   window.__auth = true; $id('auth').classList.add('on');
   authErr('');
   els.forEach(v => v.pause());
@@ -2916,6 +2958,7 @@ function updateStandby(on) {
     }
     if (sbt) sbt.textContent = BNAME || '';
     sb.classList.add('on');
+    exoStop(); // boş liste: arkada duraklatılmış son video karesi kalmasın
   } else {
     sb.classList.remove('on');
   }

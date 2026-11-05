@@ -1,5 +1,5 @@
 node_modules/
-data/
+/data/
 android/.gradle/
 android/build/
 android/app/build/

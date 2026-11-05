@@ -137,4 +137,6 @@ Depodaki `public/app.apk` zaten `https://screenpano.com` adresine göre derlenmi
 
 ## Android 2.4 (native video)
 
-`public/app.apk` sürüm 14 / 2.4'tür: Kotlin + ExoPlayer hibrit — arayüz web sayfası ama videolar native ExoPlayer'da donanımdan oynar; `apk-version.json` 14'dür, 2.1 kurulu kutular üstüne güncellenir. **İmza anahtarını (`screenpano.keystore`) ve şifresini güvenli bir yerde saklayın**; kaybolursa kutulara APK'yı baştan kurmak gerekir.
+`public/app.apk` sürüm 21 / 3.0'dır (Kotlin + ExoPlayer hibrit: arayüz web sayfası, videolar sayfanın arkasındaki yerel ExoPlayer katmanında donanımdan oynar). Kaynak kod 3.1 / 22'dir (ilk kare bildirimi, tema rengi, videolu ekran görüntüsü); release anahtarıyla derlenip `public/app.apk` olarak konunca `apk-version.json` 22 / 3.1 yapılmalı.
+
+**İmza anahtarları:** 2.0 ve 2.4–3.0 aynı anahtarla imzalı (SHA-256 `14:3A:98:A4…`). 2 Kasım'da sunulan 2.1 ise farklı bir anahtarla imzalıydı (`A0:35:B2:AA…`): o tarihlerde 2.1 kurulan kutular 2.4 ve sonrasını üstüne **kuramaz** — bu kutularda uygulamayı bir kez kaldırıp güncel APK'yı kurun (eşleşme kodu yeniden girilir). İmzayı kontrol etmek için: `keytool -printcert -jarfile public/app.apk`. **İmza anahtarını (`screenpano.keystore`) ve şifresini güvenli bir yerde saklayın**; kaybolursa kutulara APK'yı baştan kurmak gerekir.

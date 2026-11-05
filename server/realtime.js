@@ -12,8 +12,9 @@ const { publicState } = require('./state');
 
 const clients = new Set();
 let BUILD = '';
-// TV sayfasının sürümü: tv.html + posters.js ve sunucudaki tüm kod dosyaları değişince ekranlar kendini yeniler
-const computeBuild = () => { try { const h = crypto.createHash('md5'); for (const f of ['tv.html', 'posters.js']) { try { h.update(fs.readFileSync(path.join(config.PUBLIC_DIR, f))); } catch { /* dosya yok */ } } for (const f of fs.readdirSync(__dirname).filter(x => x.endsWith('.js')).sort()) h.update(fs.readFileSync(path.join(__dirname, f))); BUILD = h.digest('hex'); } catch { BUILD = String(Date.now()); } };
+// TV sayfasının sürümü: yalnız tv.html ve posters.js değişince ekranlar kendini yeniler
+// (yalnız sunucu kodu değişen her deploy'da bütün müşteri ekranları yeniden yüklenmesin)
+const computeBuild = () => { try { const h = crypto.createHash('md5'); for (const f of ['tv.html', 'posters.js']) { try { h.update(fs.readFileSync(path.join(config.PUBLIC_DIR, f))); } catch { /* dosya yok */ } } BUILD = h.digest('hex'); } catch { BUILD = String(Date.now()); } };
 computeBuild();
 
 const sendRaw = (ws, msg) => { if (ws.readyState === 1) ws.send(typeof msg === 'string' ? msg : JSON.stringify(msg)); };
@@ -30,10 +31,6 @@ function schedule(tid) {
     flushTimer = null;
     const ids = new Set(pending); pending.clear();
     for (const ws of clients) if (ids.has('*') || ids.has(ws.tid)) sendState(ws);
-    for (const tid of ids) {
-      if (tid !== '*') broadcastSync(tid, true);
-      else for (const t of tenants.all()) broadcastSync(t.id, true);
-    }
   }, 250);
 }
 
@@ -52,8 +49,10 @@ hub.onlineDeviceIds = () => new Set([...clients].filter(c => c.deviceId).map(c =
 hub.sendDevice = (id, msg) => { let n = 0; for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, msg); n++; } return n; };
 hub.kickDevice = id => { for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, { type: 'auth', error: 'revoked' }); ws.close(); } };
 
-// Çoklu ekran senkronizasyonu: her işletme için sunucu tarafında canlı çalma listesi saati
-const tenantSync = new Map();
+// Çoklu ekran senkronizasyonu: her işletme için sunucuda tek bir çalma listesi saati tutulur, ekranlar ona uyar.
+// Saat yalnız çalma listesi gerçekten değişince (içerik eklendi/silindi/sırası, süresi ya da yayın saati değişti)
+// düzeltilir; haber, döviz, trafik yenilemesi ya da bir kutunun yeniden bağlanması listeyi başa sarmaz.
+const tenantSync = new Map(); // tid -> { sig, idx, id, startedAt, endsAt, lastHeartbeat }
 const SCH = require('./sched');
 function getActiveMediaList(t) {
   const ml = require('./state').mediaList(t);
@@ -63,64 +62,45 @@ function getMediaLen(it, imgSec) {
   if (it.type === 'video') return (it.dur ? it.dur : 30);
   return (it.dur || imgSec || 10);
 }
-function broadcastSync(tid, reset = false) {
-  const t = tenants.get(tid);
-  if (!t) return;
+const listSig = (ml, imgSec) => imgSec + '|' + ml.map(x => x.id + ':' + (x.dur || '')).join(',');
+// listeyi yeniden okur; liste değiştiyse o an oynayan içerik yeni listede hâlâ varsa kaldığı yerden sürer
+function syncFor(t, now) {
   const ml = getActiveMediaList(t);
-  if (!ml || !ml.length) return;
-  const imgSec = t.db.imageSeconds || 10;
-  let sync = tenantSync.get(tid);
-  const now = Date.now();
-  if (!sync || reset || sync.idx >= ml.length) {
-    const dur = getMediaLen(ml[0], imgSec);
-    sync = { idx: 0, startedAt: now, endsAt: now + dur * 1000, lastHeartbeat: now };
-    tenantSync.set(tid, sync);
+  if (!ml.length) { tenantSync.delete(t.id); return null; }
+  const imgSec = t.db.imageSeconds || 10, sig = listSig(ml, imgSec);
+  let sync = tenantSync.get(t.id);
+  if (!sync) {
+    sync = { sig, idx: 0, id: ml[0].id, startedAt: now, endsAt: now + getMediaLen(ml[0], imgSec) * 1000, lastHeartbeat: 0 };
+    tenantSync.set(t.id, sync);
+  } else if (sync.sig !== sig) {
+    sync.sig = sig;
+    const keep = ml.findIndex(x => x.id === sync.id);
+    if (keep >= 0) { sync.idx = keep; sync.endsAt = sync.startedAt + getMediaLen(ml[keep], imgSec) * 1000; }
+    else { // oynayan içerik silindi ya da yayın saati bitti: listedeki aynı sıradan devam
+      sync.idx = Math.min(sync.idx, ml.length - 1); sync.id = ml[sync.idx].id;
+      sync.startedAt = now; sync.endsAt = now + getMediaLen(ml[sync.idx], imgSec) * 1000;
+    }
+    sync.lastHeartbeat = 0; // değişiklik hemen duyurulsun
   }
-  const curItem = ml[sync.idx % ml.length];
-  const dur = getMediaLen(curItem, imgSec);
-  const elapsed = Math.max(0, now - sync.startedAt);
-  const remain = Math.max(0, (sync.endsAt || (now + dur * 1000)) - now);
-  const msg = {
-    type: 'sync_media',
-    idx: sync.idx % ml.length,
-    id: curItem.id,
-    itemType: curItem.type,
-    url: curItem.url || curItem.image,
-    dur,
-    elapsed,
-    remain,
-    serverTime: now,
+  if (now >= sync.endsAt) {
+    sync.idx = (sync.idx + 1) % ml.length; sync.id = ml[sync.idx].id;
+    sync.startedAt = now; sync.endsAt = now + getMediaLen(ml[sync.idx], imgSec) * 1000;
+    sync.lastHeartbeat = 0;
+  }
+  const it = ml[sync.idx];
+  return {
+    sync,
+    msg: { type: 'sync_media', idx: sync.idx, id: it.id, itemType: it.type, url: it.url || it.image, dur: getMediaLen(it, imgSec), elapsed: Math.max(0, now - sync.startedAt), remain: Math.max(0, sync.endsAt - now), serverTime: now },
   };
-  hub.send((tenant) => tenant.id === tid, msg);
 }
-
 setInterval(() => {
   const now = Date.now();
-  const activeTids = hub.connectedTenantIds();
-  for (const tid of activeTids) {
-    const t = tenants.get(tid);
-    if (!t) continue;
-    const ml = getActiveMediaList(t);
-    if (!ml || !ml.length) continue;
-    let sync = tenantSync.get(tid);
-    const imgSec = t.db.imageSeconds || 10;
-    if (!sync) {
-      broadcastSync(tid, true);
-      continue;
-    }
-    if (now >= sync.endsAt) {
-      sync.idx = (sync.idx + 1) % ml.length;
-      const nextItem = ml[sync.idx];
-      const dur = getMediaLen(nextItem, imgSec);
-      sync.startedAt = now;
-      sync.endsAt = now + dur * 1000;
-      sync.lastHeartbeat = now;
-      broadcastSync(tid, false);
-    } else if (now - (sync.lastHeartbeat || 0) >= 4000) {
-      sync.lastHeartbeat = now;
-      broadcastSync(tid, false);
-    }
+  for (const tid of hub.connectedTenantIds()) {
+    const t = tenants.get(tid); if (!t) continue;
+    const r = syncFor(t, now); if (!r) continue;
+    if (now - r.sync.lastHeartbeat >= 4000) { r.sync.lastHeartbeat = now; hub.send(tenant => tenant.id === tid, r.msg); }
   }
+  for (const tid of tenantSync.keys()) if (!tenants.get(tid)) tenantSync.delete(tid); // silinen işletme
 }, 500);
 
 // TV'den gelen mesajlar: durum raporu, oynatma kaydı, ekran görüntüsü ve müzik listesi sorgusu
@@ -169,9 +149,9 @@ function attach(server) {
     ws.on('message', raw => onMessage(ws, raw));
     sendRaw(ws, { type: 'version', build: BUILD, now: Date.now() });
     sendState(ws);
-    if (token) {
-      // Bir cihaz bağlandığında: tüm bağlı cihazlar son bağlanan cihaza göre senkron olsun (baştan sıfırlayarak aynı içeriğe kilitler)
-      broadcastSync(ws.tid, true);
+    { // yeni bağlanan ekran ortak saate katılır; diğer ekranlar olduğu yerden sürer
+      const t1 = tenants.get(ws.tid), r = t1 && syncFor(t1, Date.now());
+      if (r) sendRaw(ws, r.msg);
     }
     const F = require('./feeds'), t = tenants.get(ws.tid);
     if (t && !F.weatherFor(t)) F.refreshWeather(); // yeni işletme ya da yeni konum: havayı hemen çek

@@ -1,5 +1,5 @@
-// Medya optimizasyonu (ffmpeg): videolar işletmenin seçtiği çözünürlüğe kadar (varsayılan 1080p) 60fps/8 Mbps H.264, sessiz, hızlı başlatmalı; fotoğraflar en fazla 1920 piksel.
-// Kare hızı yukarı dönüştürülmez: kaynağın fps'i korunur, yalnız 60'ı aşarsa 60'a iner (30 fps kaynak 30 kalır, 60 fps kaynak 60 kalır).
+// Medya optimizasyonu (ffmpeg): videolar işletmenin seçtiği çözünürlüğe kadar (varsayılan 1080p) H.264, en çok 6 Mbps, sessiz, hızlı başlatmalı; fotoğraflar en fazla 1920 piksel.
+// Kare hızı yukarı dönüştürülmez: 1080p'de en çok 30 fps, 720p ve altında en çok 60 fps (kaynak daha düşükse olduğu gibi kalır).
 // Tüm işletmeler için tek kuyruk; sunucuyu boğmamak için aynı anda bir dosya işlenir.
 const fs = require('fs');
 const path = require('path');
@@ -57,12 +57,15 @@ async function optimizeItem(tid, id) {
   const keepAlpha = isImg && /\.(png|webp)$/i.test(v.file);
   const outName = uid(16) + (isImg ? (keepAlpha ? '.png' : '.jpg') : '.mp4'), out = path.join(t.dirs.uploads, outName);
   const [mw, mh] = VIDEO_MAX[Number(t.db.videoMaxH)] || VIDEO_MAX[1080];
+  // zayıf TV kutuları 1080p60'ı çözse de WebView'in üstünde birleştirirken kare düşürür: 1080p'de 30 fps tavanı,
+  // 720p ve altında 60 fps'e kadar (kaynak 30 ise 30 kalır, yukarı dönüştürülmez)
+  const fpsMax = mh >= 1080 ? 30 : 60;
   const vScale = `scale='min(${mw},iw)':'min(${mh},ih)':force_original_aspect_ratio=decrease:force_divisible_by=2`;
   const args = isImg
     ? (keepAlpha
         ? ['-y', '-i', src, '-vf', SCALE + ',format=rgba', '-frames:v', '1', '-compression_level', '9', out]
         : ['-y', '-i', src, '-vf', SCALE, '-frames:v', '1', '-q:v', '3', out])
-    : ['-y', '-i', src, '-vf', vScale + ",fps=fps='min(source_fps,60)',format=yuv420p", '-c:v', 'libx264', '-profile:v', 'high', '-level', '4.2', '-preset', 'veryfast', '-crf', '23', '-maxrate', '8M', '-bufsize', '16M', '-an', '-movflags', '+faststart', '-threads', '2', out];
+    : ['-y', '-i', src, '-vf', vScale + `,fps=fps='min(source_fps,${fpsMax})',format=yuv420p`, '-c:v', 'libx264', '-profile:v', 'high', '-level', fpsMax > 30 ? '4.2' : '4.1', '-preset', 'veryfast', '-crf', '23', '-maxrate', '6M', '-bufsize', '12M', '-an', '-movflags', '+faststart', '-threads', '2', out];
   const before = fs.statSync(src).size;
   try {
     await runFfmpeg(args);

@@ -131,7 +131,14 @@ class MainActivity : AppCompatActivity() {
 
                     override fun onPlayerError(error: PlaybackException) {
                         Log.e(TAG, "ExoPlayer hatası: ${error.message}", error)
-                        handler.postDelayed({ notifyVideoEnded() }, 1500)
+                        notifyVideoEnded() // sayfa ilk 3 sn'de gelen bitişi yok saymaz, kısa bir süre sonra sıradakine geçer
+                    }
+
+                    // yeni videonun ilk karesi yüzeyde: sayfa ancak şimdi şeffaflaşır (eski kare ya da siyah görünmez)
+                    override fun onRenderedFirstFrame() {
+                        binding.webView.post {
+                            binding.webView.evaluateJavascript("window.__exoStarted && window.__exoStarted();", null)
+                        }
                     }
                 })
             }
@@ -182,7 +189,6 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 handler.removeCallbacks(reloadTask)
                 pushTraffic()
-                injectExoHook(view)
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
@@ -198,55 +204,6 @@ class MainActivity : AppCompatActivity() {
                 handler.postDelayed(reloadTask, 15000)
             }
         }
-    }
-
-    private fun injectExoHook(web: WebView?) {
-        val js = """
-        (function() {
-            if (window.__exoHooked) return;
-            window.__exoHooked = true;
-            
-            var style = document.createElement('style');
-            style.textContent = 'html.native-exo #frame{background:transparent !important} html.native-exo #bgw{background:transparent !important} html.native-exo video{opacity:0 !important;pointer-events:none !important}';
-            document.head.appendChild(style);
-            document.documentElement.classList.add('native-exo');
-
-            var frame = document.getElementById('frame');
-            function syncBounds() {
-                if (!frame || !window.TVNative || !window.TVNative.updateBounds) return;
-                var r = frame.getBoundingClientRect();
-                var d = window.devicePixelRatio || 1;
-                window.TVNative.updateBounds(Math.round(r.left * d), Math.round(r.top * d), Math.round(r.width * d), Math.round(r.height * d));
-            }
-            window.addEventListener('resize', syncBounds);
-            setInterval(syncBounds, 1200);
-            syncBounds();
-
-            // v1 ve v2 video kancaları kaldırıldı: TVNative.playExo doğrudan tv.html showVideoSeamless tarafından kontrol edilir.
-
-            var poster = document.getElementById('poster');
-            if (poster) {
-                var obs = new MutationObserver(function() {
-                    if (poster.classList.contains('on')) {
-                        if (window.TVNative && window.TVNative.stopExo) window.TVNative.stopExo();
-                    }
-                });
-                obs.observe(poster, { attributes: true, attributeFilter: ['class'] });
-            }
-
-            var trailer = document.getElementById('trailer');
-            if (trailer) {
-                var obs2 = new MutationObserver(function() {
-                    if (trailer.classList.contains('on')) {
-                        if (window.TVNative && window.TVNative.hideExo) window.TVNative.hideExo();
-                        else if (window.TVNative && window.TVNative.stopExo) window.TVNative.stopExo();
-                    }
-                });
-                obs2.observe(trailer, { attributes: true, attributeFilter: ['class'] });
-            }
-        })();
-        """.trimIndent()
-        web?.evaluateJavascript(js, null)
     }
 
     private fun startTrafficPolling() {
@@ -283,6 +240,17 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun hasExoPlayer(): Boolean = true
+
+        /** Sayfa bunu görünce ilk kare haberini (window.__exoStarted) bekler. */
+        @JavascriptInterface
+        fun hasFirstFrameEvent(): Boolean = true
+
+        /** Tema kenar rengi: video oynarken sayfa şeffaflaştığında arkada bu renk görünür. */
+        @JavascriptInterface
+        fun setBackdrop(color: String) {
+            val c = try { Color.parseColor(color) } catch (_: Exception) { return }
+            handler.post { binding.root.setBackgroundColor(c) }
+        }
 
         @JavascriptInterface
         fun playExo(url: String, durationSec: Int) {
@@ -324,7 +292,8 @@ class MainActivity : AppCompatActivity() {
         fun hideExo() {
             handler.post {
                 exoPlayer?.pause()
-                // Yüzeyi gizle: YouTube ve iframe katmanları donanım SurfaceView çakışması olmadan pürüzsüz oynar
+                // Yüzeyi gizle: YouTube ve iframe katmanları donanım SurfaceView çakışması olmadan pürüzsüz oynar.
+                // Not: gizlenen SurfaceView'in yüzeyi Android'de bırakılır; sonraki video yüzeyi yeniden oluşturur.
                 binding.playerView.visibility = View.INVISIBLE
             }
         }
@@ -411,52 +380,69 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun model(): String = prefs.getModel()
 
+        /**
+         * Uzaktan durum izleme: ekranın küçük bir görüntüsü (960 px genişlik, JPEG, data: adresi).
+         * Pencere kopyası yerel video katmanını (SurfaceView) içermez; video oynuyorsa önce o kopyalanır,
+         * pencere (sayfa) üstüne bindirilir — panelde videonun yerinde boşluk görünmez.
+         */
         @JavascriptInterface
         fun snapshot(): String {
             val out = arrayOf("")
             val done = CountDownLatch(1)
-
             runOnUiThread {
                 try {
                     val w = binding.root.width
                     val h = binding.root.height
-                    if (w > 0 && h > 0) {
-                        val k = (960f / w).coerceAtMost(1f)
-                        val targetW = (w * k).toInt().coerceAtLeast(1)
-                        val targetH = (h * k).toInt().coerceAtLeast(1)
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            val b = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888)
-                            PixelCopy.request(window, b, { res ->
-                                if (res == PixelCopy.SUCCESS) {
-                                    val stream = ByteArrayOutputStream()
-                                    b.compress(Bitmap.CompressFormat.JPEG, 70, stream)
-                                    b.recycle()
-                                    out[0] = "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
-                                }
-                                done.countDown()
-                            }, handler)
-                            return@runOnUiThread
-                        } else {
-                            val b = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.RGB_565)
-                            val c = Canvas(b)
-                            c.scale(k, k)
-                            binding.root.draw(c)
-                            val stream = ByteArrayOutputStream()
-                            b.compress(Bitmap.CompressFormat.JPEG, 70, stream)
-                            b.recycle()
-                            out[0] = "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
-                        }
+                    if (w <= 0 || h <= 0) { done.countDown(); return@runOnUiThread }
+                    val k = (960f / w).coerceAtMost(1f)
+                    val tw = (w * k).toInt().coerceAtLeast(1)
+                    val th = (h * k).toInt().coerceAtLeast(1)
+                    val finish = { b: Bitmap ->
+                        val stream = ByteArrayOutputStream()
+                        b.compress(Bitmap.CompressFormat.JPEG, 70, stream)
+                        b.recycle()
+                        out[0] = "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
                     }
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        val b = Bitmap.createBitmap(tw, th, Bitmap.Config.RGB_565)
+                        val c = Canvas(b); c.scale(k, k); binding.root.draw(c)
+                        finish(b); done.countDown(); return@runOnUiThread
+                    }
+                    val result = Bitmap.createBitmap(tw, th, Bitmap.Config.ARGB_8888)
+                    val canvas = Canvas(result)
+                    canvas.drawColor((binding.root.background as? android.graphics.drawable.ColorDrawable)?.color ?: Color.BLACK)
+                    val copyWindow = {
+                        val win = Bitmap.createBitmap(tw, th, Bitmap.Config.ARGB_8888)
+                        PixelCopy.request(window, win, { res ->
+                            try {
+                                if (res == PixelCopy.SUCCESS) canvas.drawBitmap(win, 0f, 0f, null)
+                                win.recycle()
+                                finish(result)
+                            } catch (_: Throwable) {}
+                            done.countDown()
+                        }, handler)
+                    }
+                    val sv = binding.playerView.videoSurfaceView as? android.view.SurfaceView
+                    val pv = binding.playerView
+                    if (sv != null && pv.visibility == View.VISIBLE && exoPlayer?.isPlaying == true && sv.width > 0 && sv.height > 0 && sv.holder.surface.isValid) {
+                        val vb = Bitmap.createBitmap((sv.width * k).toInt().coerceAtLeast(1), (sv.height * k).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+                        PixelCopy.request(sv, vb, { res ->
+                            try {
+                                if (res == PixelCopy.SUCCESS) {
+                                    val loc = IntArray(2); sv.getLocationInWindow(loc)
+                                    canvas.drawBitmap(vb, loc[0] * k, loc[1] * k, null)
+                                }
+                                vb.recycle()
+                            } catch (_: Throwable) {}
+                            copyWindow()
+                        }, handler)
+                    } else copyWindow()
                 } catch (_: Throwable) {
                     out[0] = ""
+                    done.countDown()
                 }
-                done.countDown()
             }
-
-            try {
-                done.await(3, TimeUnit.SECONDS)
-            } catch (_: InterruptedException) {}
+            try { done.await(3, TimeUnit.SECONDS) } catch (_: InterruptedException) {}
             return out[0]
         }
 

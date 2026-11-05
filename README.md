@@ -151,5 +151,5 @@ tools/   import-legacy.js · cloudflare-traffic-worker.js
 - **Ödeme:** iyzico/PayTR abonelik entegrasyonu yok; paket ve süreler şimdilik süper yönetimden elle yönetiliyor.
 - **KVKK metinleri** taslaktır; şirket bilgilerini süper yönetimden girin ve yayından önce avukata kontrol ettirin. VERBİS kaydı gerekip gerekmediğini kontrol edin.
 - **Instagram:** Meta, Instagram API kullanımı için uygulama incelemesi isteyebilir; işletmelerin anahtarı kendileri alması gerekir. Google Places API ücretlidir (aylık ücretsiz kotası var).
-- **Android 2.4 (14)** — Kotlin + ExoPlayer hibrit: arayüz web (WebView) ama videolar native ExoPlayer katmanında donanımdan oynar (zayıf kutularda akıcı). `public/app.apk` 2.4/14 olarak konuldu, `apk-version.json` 14 — 2.1 kurulu kutular üstüne güncellenir (aynı imza anahtarı).
+- **Android 2.4–3.1** — Kotlin + ExoPlayer hibrit: arayüz web (WebView), videolar sayfanın arkasındaki yerel ExoPlayer katmanında donanımdan oynar; video oynarken sayfa o bölgede şeffaflaşır (`html.exo-on`). 2.1 farklı bir anahtarla imzalandığı için 2.1 kurulu kutular 2.4+ sürümünü üstüne kuramaz; ayrıntı DEPLOY.md'de.
 - `public/celebrate/*.jpg` görsellerinin telif durumu doğrulanmalı.
