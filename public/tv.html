@@ -2903,6 +2903,7 @@ function connect() {
     }
     else if (m.type === 'state') { setState(m.state); saveState(m.state); }
     else if (m.type === 'snap') sendSnap();
+    else if (m.type === 'perf') perfProbe(m.sec);
     else if (m.type === 'reload') location.reload();
     else if (m.type === 'rates') setRates(m.rates);
     else if (m.type === 'weather') setWeather(m.weather);
@@ -3034,8 +3035,36 @@ window.__jank = { f: 0, d: 0, t: performance.now(), r: 0 };
 (function jankTick(t) {
   const j = window.__jank, now = t || performance.now(), dt = now - j.t; j.t = now;
   if (dt > 0 && dt < 1000) { j.f++; if (dt > 50) j.d++; }
+  if (window.__perfRec) window.__perfRec.push(dt);
   requestAnimationFrame(jankTick);
 })();
+// performans testi (panelden tetiklenir): sayfanın parçaları sırayla kapatılıp her adımda kare süreleri ölçülür,
+// hangi parçanın kutuyu takılttığı görülür. Her adım sonunda her şey eski haline döner.
+async function perfProbe(stepSec) {
+  if (window.__perfBusy) return; window.__perfBusy = true;
+  const ms = Math.max(5, Math.min(30, stepSec || 12)) * 1000, $ = id => document.getElementById(id);
+  const pauseAll = on => { try { document.getAnimations().forEach(a => on ? a.pause() : a.play()); } catch (e) {} };
+  const setTrack = on => { const t = $('ttrack'); if (t) t.style.animationPlayState = on ? 'paused' : ''; };
+  const show = (id, on) => { const e = $(id); if (e) e.style.visibility = on ? '' : 'hidden'; };
+  const steps = [
+    ['tam', () => {}, () => {}],
+    ['kayan bant durdu', () => setTrack(true), () => setTrack(false)],
+    ['tüm animasyonlar durdu', () => pauseAll(true), () => pauseAll(false)],
+    ['müzik oynatıcısı gizli', () => show('music-hosts', false), () => show('music-hosts', true)],
+    ['sağ panel gizli', () => document.querySelectorAll('.cell:not([data-w=media])').forEach(c => c.style.visibility = 'hidden'), () => document.querySelectorAll('.cell').forEach(c => c.style.visibility = '')],
+    ['boş sayfa', () => { pauseAll(true); show('app', false); show('root', false); }, () => { show('root', true); show('app', true); pauseAll(false); }],
+  ];
+  const out = [];
+  for (const [name, on, off] of steps) {
+    on(); await new Promise(r => setTimeout(r, 1500)); // geçişin kendisi ölçülmesin
+    window.__perfRec = []; await new Promise(r => setTimeout(r, ms));
+    const d = window.__perfRec.filter(x => x > 0 && x < 1000).sort((a, b) => a - b); window.__perfRec = null; off();
+    const sum = d.reduce((a, b) => a + b, 0) || 1;
+    out.push({ step: name, fps: Math.round(d.length * 1000 / sum), miss: d.filter(x => x > 20).length, long: d.filter(x => x > 50).length, p95: Math.round(d[Math.floor(d.length * 0.95)] || 0), max: Math.round(d[d.length - 1] || 0) });
+  }
+  window.__perfBusy = false;
+  wsSend({ type: 'perf', steps: out, sec: ms / 1000, screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, lite: !!window.__lite, exo: document.documentElement.classList.contains('native-exo') });
+}
 function sendStatus() {
   const n = window.__N, it = videos.find(x => x.id === current);
   // müzik teşhisi: panelde kutunun müzik motorunun gerçek durumu görünür (ses yoksa sebebi buradan okunur)

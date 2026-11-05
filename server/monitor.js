@@ -93,4 +93,5 @@ function overview() { // süper yönetim: çevrimdışı cihazlar
 
 function start() { setInterval(tick, 60000); }
 
-module.exports = { report, connected, tick, start, deviceView, overview, snaps, live, sendMail, webhook, mailEnabled, pushAlert, OFFLINE_MIN, offlineMin };
+const perf = new Map(); // cihaz → son performans testi sonucu (bellekte)
+module.exports = { report, connected, tick, start, deviceView, overview, snaps, perf, live, sendMail, webhook, mailEnabled, pushAlert, OFFLINE_MIN, offlineMin };

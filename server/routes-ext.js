@@ -99,6 +99,18 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const n = hub.sendDevice(d.id, { type: 'snap' });
     n ? res.json({ ok: true }) : res.status(409).json({ error: 'Cihaz şu an çevrimdışı' });
   });
+  // performans testi: kutu sayfanın parçalarını sırayla kapatıp kare hızını ölçer (~1,5 dk), sonuç GET ile okunur
+  r.post('/devices/:id/perf', (req, res) => {
+    const d = store.q.devicesOf.all(req.t.id).find(x => x.id === req.params.id); if (!d) return res.status(404).json({ error: 'bulunamadı' });
+    const sec = Math.max(5, Math.min(30, Number((req.body || {}).sec) || 12));
+    const n = hub.sendDevice(d.id, { type: 'perf', sec });
+    n ? res.json({ ok: true, sec }) : res.status(409).json({ error: 'Cihaz şu an çevrimdışı' });
+  });
+  r.get('/devices/:id/perf', (req, res) => {
+    const d = store.q.devicesOf.all(req.t.id).find(x => x.id === req.params.id); const p = d && monitor.perf.get(d.id);
+    if (!p) return res.status(404).json({ error: 'henüz yok' });
+    res.json(p);
+  });
   r.get('/devices/:id/snapshot', (req, res) => {
     const d = store.q.devicesOf.all(req.t.id).find(x => x.id === req.params.id); const sn = d && monitor.snaps.get(d.id);
     if (!sn) return res.status(404).json({ error: 'henüz yok' });
