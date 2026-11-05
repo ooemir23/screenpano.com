@@ -216,15 +216,15 @@ private class VTrack(context: Context) : ViewGroup(context) {
     private val pool = ArrayList<TextView>()
     private var lo = -1; private var hi = -2
 
-    fun setup(it: List<CharSequence>, ws: List<Int>, reps: Int, start: Int, half: Int, height: Int, textPx: Float, color: Int, padPx: Int, vw: Int) {
+    fun setup(list: List<CharSequence>, ws: List<Int>, reps: Int, start: Int, half: Int, height: Int, textPx: Float, color: Int, padPx: Int, vw: Int) {
         for (v in live.values) pool.add(v); live.clear(); removeAllViewsInLayout()
-        items = it; h = height; this.textPx = textPx; this.color = color; this.padPx = padPx
-        val n = it.size * reps * 2
+        items = list; h = height; this.textPx = textPx; this.color = color; this.padPx = padPx
+        val n = list.size * reps * 2
         lefts = IntArray(n); wids = IntArray(n); txt = IntArray(n)
         var i = 0
         for (copy in 0..1) {
             var x = copy * half + start
-            repeat(reps) { for (k in it.indices) { lefts[i] = x; wids[i] = ws[k]; txt[i] = k; x += ws[k]; i++ } }
+            repeat(reps) { for (k in list.indices) { lefts[i] = x; wids[i] = ws[k]; txt[i] = k; x += ws[k]; i++ } }
         }
         total = 2 * half; lo = -1; hi = -2
         requestLayout()
