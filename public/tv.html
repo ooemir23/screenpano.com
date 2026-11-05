@@ -3184,7 +3184,7 @@ function sendStatus() {
   wsSend({
     type: 'status', app: n && n.versionName ? n.versionName() : 'tarayıcı', build: window.__build || '',
     hwid: n && n.hwId ? String(n.hwId()).slice(0, 32) : '', model: n && n.model ? String(n.model()).slice(0, 60) : '',
-    mus, nm: `b${window.__nmN || 0} cd${camp.due ? 1 : 0} cl${camp.list.length} cs${camp.showing ? 1 : 0} v${videos.length} m${MEDIA_ON ? 1 : 0} n${NMED() ? 1 : 0}`,
+    mus, nm: `b${window.__nmN || 0} cd${camp.due ? 1 : 0} cl${camp.list.length} cs${camp.showing ? 1 : 0} v${videos.length} m${MEDIA_ON ? 1 : 0} n${NMED() ? 1 : 0} g${big.showing ? 1 : 0}p${window.__pendingBig ? 1 : 0}`,
     screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
     playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
     cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,
