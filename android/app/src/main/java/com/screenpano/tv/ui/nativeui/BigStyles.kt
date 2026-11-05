@@ -185,7 +185,7 @@ internal fun buildSayac(k: BigCtx) {
             background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(Color.parseColor("#20222b"), Color.parseColor("#16171e"))).apply { cornerRadius = 1.5f * u; setStroke(1, Color.argb(31, 255, 255, 255)) }
         }
         val lb = k.tv("", 1.9f * u, gold(), spacing = 0.26f)
-        col.addView(nb); col.addView(lb, k.lp(WRAP, WRAP).also { it.topMargin = (0.8f * u).toInt() })
+        col.addView(nb, LinearLayout.LayoutParams((17 * u).toInt(), WRAP)); col.addView(lb, k.lp(WRAP, WRAP).also { it.topMargin = (0.8f * u).toInt() })
         nums.add(nb); labels.add(lb); cd.addView(col, k.lp(WRAP, WRAP))
     }
     mid.addView(cd, k.lp(WRAP, WRAP).also { it.topMargin = (2.6f * u).toInt() })
