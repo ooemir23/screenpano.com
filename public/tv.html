@@ -1071,6 +1071,7 @@ function playTrailer(retry) {
 }
 function next() {
   clearTimeout(timer);
+  if (window.__pendingBig && !big.showing) { const pb = window.__pendingBig; window.__pendingBig = null; els.forEach(v => v.pause()); big.queue = []; big.after = advance; bigShow(pb.match, pb.cfg); return; } // panelden gönderilen deneme: o anki içerik bitince
   if (big.due && big.list.length && !big.showing) { big.due = false; els.forEach(v => v.pause()); big.queue = big.list.slice(1); big.after = advance; bigShow(big.list[0]); return; } // büyük maç duyurusu: o anki medya bitince
   if (camp.due && !camp.showing && !big.showing) { const c = camp.due; camp.due = null; els.forEach(v => v.pause()); camp.after = advance; campShow(c); return; } // kampanya: o anki medya bitince
   advance();
@@ -2310,14 +2311,14 @@ setInterval(() => {
   if (big.showing || big.due || camp.showing || trailerOn || !big.list.length || (window.__celeb && document.querySelector('#cphoto.on'))) return;
   const gap = (big.cfg.everyMin || 6) * 60000;
   if (Date.now() - (big.last || big.started - gap + 60000) >= gap) { // medya bitince gösterilir; tek/boş listede döngü bitmeyeceği için hemen
-    if (videos.length > 1 && MEDIA_ON) big.due = true; else { big.queue = big.list.slice(1); bigShow(big.list[0]); } // medya oynatıcısı yoksa due asla tüketilmez: hemen göster
+    if ((videos.length > 1 || (NMED() && videos.length)) && MEDIA_ON) big.due = true; else { big.queue = big.list.slice(1); bigShow(big.list[0]); } // medya oynatıcısı yoksa due asla tüketilmez: hemen göster
   } // ilk gösterim açılıştan ~1 dk sonra; birden fazla maç varsa hepsi peş peşe, sırayla
 }, 5000);
 setInterval(() => {
   if (camp.showing || camp.due || !camp.list.length || (window.__celeb && document.querySelector('#cphoto.on'))) return;
   for (const c of camp.list.filter(c => schedOk(c.sch))) {
     const since = Date.now() - (camp.last[c.id] || camp.started - (c.everyMin || 3) * 60000 + 25000); // ilk gösterim açılıştan ~25 sn sonra
-    if (since >= (c.everyMin || 3) * 60000) { if (videos.length > 1 && MEDIA_ON) camp.due = c; else campShow(c); break; } // medya bitince gösterilir (medya yoksa ya da tek/boş listede hemen)
+    if (since >= (c.everyMin || 3) * 60000) { if ((videos.length > 1 || (NMED() && videos.length)) && MEDIA_ON) camp.due = c; else campShow(c); break; } // medya bitince gösterilir (medya yoksa ya da tek/boş listede hemen)
   }
 }, 5000);
 // ---- kumanda Menü tuşu: sürüm bilgisi ve güncelleme kontrolü (güncelleme bildirimi de burada) ----
@@ -2992,7 +2993,7 @@ function connect() {
     else if (m.type === 'traffic') setTraffic(m.traffic);
     else if (m.type === 'goal') { if (m.goal && m.goal.at && Date.now() + (window.__srvOff || 0) - m.goal.at > 60000) return; showGoal(m.goal); }
     else if (m.type === 'campaign') campShow(m.camp);
-    else if (m.type === 'bigmatch') { if (m.force) { big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
+    else if (m.type === 'bigmatch') { if (m.force) { if (MEDIA_ON && videos.length && !big.showing && !trailerOn && (videos.length > 1 || NMED())) { window.__pendingBig = m; return; } /* içerik bitince */ big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
     else if (m.type === 'music_cmd') onMusicCmd(m);
     else if (m.type === 'music_tracks') onMusicTracks(m);
