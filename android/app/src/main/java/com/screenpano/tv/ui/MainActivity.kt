@@ -42,6 +42,8 @@ import com.screenpano.tv.BuildConfig
 import com.screenpano.tv.data.net.ApiClient
 import com.screenpano.tv.data.net.TvWebSocket
 import com.screenpano.tv.ui.nativeui.NativeGridView
+import com.screenpano.tv.ui.nativeui.PosterView
+import com.screenpano.tv.data.model.TvState
 import com.screenpano.tv.data.net.TrafficService
 import com.screenpano.tv.data.prefs.TvPreferences
 import com.screenpano.tv.databinding.ActivityMainBinding
@@ -76,6 +78,8 @@ class MainActivity : AppCompatActivity() {
     // Yerel ekran (deneysel): panelden kutu başına açılır. Kapalıyken hiçbir şey değişmez, sayfa çizmeye devam eder.
     private var nativeGrid: NativeGridView? = null
     private var tvSocket: TvWebSocket? = null
+    private var lastTvState: TvState? = null
+    private var posterView: PosterView? = null
 
     private val baseUrl = BuildConfig.BASE_URL.trimEnd('/')
     private val tvUrl = "$baseUrl/tv"
@@ -108,6 +112,7 @@ class MainActivity : AppCompatActivity() {
             baseUrl = baseUrl,
             tokenProvider = { prefs.getDeviceToken() },
             onState = { st ->
+                lastTvState = st
                 if (st.nativeWidgets) {
                     val g = nativeGrid ?: NativeGridView(this).also {
                         it.isClickable = false; it.isFocusable = false
@@ -116,7 +121,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     g.visibility = View.VISIBLE
                     g.setState(st)
-                    hideWebCells(g.nativeTypes)
+                    hideWebCells(g.nativeTypes + "poster")
                 } else {
                     nativeGrid?.let { it.clear(); it.visibility = View.GONE }
                     hideWebCells(emptyList())
@@ -354,7 +359,7 @@ class MainActivity : AppCompatActivity() {
             handler.post {
                 if (widthPx > 0 && heightPx > 0) {
                     // video ve fotoğraf katmanları birlikte konumlanır
-                    for (v in listOf(binding.playerView, binding.imageView)) {
+                    for (v in listOfNotNull<View>(binding.playerView, binding.imageView, posterView)) {
                         val params = v.layoutParams as FrameLayout.LayoutParams
                         if (params.leftMargin != leftPx || params.topMargin != topPx ||
                             params.width != widthPx || params.height != heightPx) {
@@ -388,6 +393,7 @@ class MainActivity : AppCompatActivity() {
             handler.post {
                 val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
                 val iv = binding.imageView
+                posterView?.visibility = View.GONE // afişten fotoğrafa: afiş fotoğrafın üstünde kalmasın
                 iv.scaleType = ImageView.ScaleType.FIT_CENTER
                 iv.visibility = View.VISIBLE
                 iv.load(fullUrl) {
@@ -412,6 +418,7 @@ class MainActivity : AppCompatActivity() {
             handler.post {
                 binding.imageView.visibility = View.GONE
                 binding.imageView.setImageDrawable(null)
+                posterView?.visibility = View.GONE
             }
         }
 
@@ -421,6 +428,31 @@ class MainActivity : AppCompatActivity() {
             val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
             val req = ImageRequest.Builder(this@MainActivity).data(fullUrl).allowHardware(true).build()
             coil.Coil.imageLoader(this@MainActivity).enqueue(req)
+        }
+
+        /** Afiş yerel PosterView ile çizilir (APK 3.9+); durum henüz gelmediyse sayfa web afişine döner. */
+        @JavascriptInterface
+        fun showPoster(json: String, lang: String) {
+            handler.post {
+                val st = lastTvState
+                if (st == null) { binding.webView.evaluateJavascript("window.__imgFailed && window.__imgFailed('poster');", null); return@post }
+                try {
+                    val o = JSONObject(json)
+                    val pv = posterView ?: PosterView(this@MainActivity).also {
+                        it.visibility = View.GONE
+                        binding.rootContainer.addView(it, binding.rootContainer.indexOfChild(binding.webView), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+                        posterView = it
+                    }
+                    binding.imageView.visibility = View.GONE
+                    pv.visibility = View.VISIBLE
+                    pv.bind(o, st, lang.ifEmpty { "tr" })
+                    val wait = if (o.optString("image").isNotEmpty() || o.has("books")) 450L else 150L // görseller yüklenirken sayfa açılmasın
+                    handler.postDelayed({ binding.webView.evaluateJavascript("window.__imgShown && window.__imgShown('poster');", null) }, wait)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Afiş çizilemedi: ${e.message}")
+                    binding.webView.evaluateJavascript("window.__imgFailed && window.__imgFailed('poster');", null)
+                }
+            }
         }
 
         @JavascriptInterface

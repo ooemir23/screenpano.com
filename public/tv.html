@@ -1752,7 +1752,7 @@ function applyTicker(label, items, seg, shown, info) {
   if (key !== tickKey) { tickKey = key; track.style.animation = 'none'; void track.offsetWidth; track.style.animation = ''; }
   track.style.animationDuration = secs + 's';
 }
-window.__nativeCells = list => { const c = document.documentElement.classList; ['ticker', 'clock', 'logo', 'text', 'image', 'rates', 'reviews', 'menu'].forEach(t => c.toggle('nat-' + t, (list || []).includes(t))); };
+window.__nativeCells = list => { window.__nativePoster = (list || []).includes('poster'); const c = document.documentElement.classList; ['ticker', 'clock', 'logo', 'text', 'image', 'rates', 'reviews', 'menu'].forEach(t => c.toggle('nat-' + t, (list || []).includes(t))); };
 let safeNow = { L: 0, R: 0, T: 0, B: 0 }, guideOn = false;
 // Her kenar için ayrı pay (%): içerik oranı bozulmadan küçültülür ve görünen alanın ortasına kaydırılır
 function applySafe(safe, guide) {
@@ -3014,6 +3014,7 @@ function applyVideos() {
     clearTimeout(timer); current = null;
     els.forEach(v => v.pause());
     hidePoster();
+    if (window.__nativePoster) exoStop(true); // yerel afiş kalmasın, bekleme ekranı görünsün
     imgs.forEach(im => { im.style.opacity = '0'; im.style.display = 'none'; });
     updateStandby(true);
     return;
@@ -3033,7 +3034,23 @@ setInterval(() => { // dakikada iki kez: zamanı gelen/biten içerik
 // ---- hazır afişler ----
 const posterEl = (() => { const e = document.createElement('div'); e.id = 'poster'; $id('frame').appendChild(e); return e; })();
 let posterCur = null;
+// APK 3.9+: afiş yerel katmanda (PosterView) çizilir; hazır olunca fotoğraftaki gibi sayfa şeffaflaşır. 6 sn içinde gelmezse web afişi gösterilir.
 function showPoster(it) {
+  if (window.__nativePoster && window.__N && window.__N.showPoster && NPHOTO()) {
+    posterCur = it; window.__exoEnded = null; playStartedAt = Date.now();
+    posterEl.classList.remove('on'); posterEl.innerHTML = '';
+    const tk = ++exoTok; let done = false;
+    const fallback = () => { if (done || tk !== exoTok || posterCur !== it) return; done = true; window.__N.hideImage(); showPosterWeb(it); };
+    window.__imgShown = () => { if (done || tk !== exoTok || posterCur !== it) return; done = true; nativeShowing = 'photo'; exoShow(true); };
+    window.__imgFailed = fallback;
+    setTimeout(fallback, 6000);
+    syncExoBounds();
+    window.__N.showPoster(JSON.stringify(it), LANG);
+    return;
+  }
+  showPosterWeb(it);
+}
+function showPosterWeb(it) {
   posterCur = it;
   window.__exoEnded = null;
   playStartedAt = Date.now();
@@ -3056,7 +3073,8 @@ function nextLang() { LANG_I = (LANG_I + 1) % LANGS.length; LANG = LANGS[LANG_I]
 function applyLang() {
   renderText();
   if (menuW.data) { const keep = menuW.idx; renderMenuW(false); menuW.idx = keep; }
-  if (posterCur && window.SPPoster) { posterEl.innerHTML = SPPoster.html(posterCur, LANG); SPPoster.fit(posterEl.firstChild); }
+  if (posterCur && window.__nativePoster && nativeShowing === 'photo' && window.__N && window.__N.showPoster) window.__N.showPoster(JSON.stringify(posterCur), LANG);
+  else if (posterCur && window.SPPoster) { posterEl.innerHTML = SPPoster.html(posterCur, LANG); SPPoster.fit(posterEl.firstChild); }
   let chip = $id('langchip'); const box = $id('wmenu');
   if (LANGS.length > 1 && box) { if (!chip) { chip = document.createElement('span'); chip.id = 'langchip'; box.appendChild(chip); } chip.textContent = LANG.toUpperCase(); }
   else if (chip) chip.remove();
