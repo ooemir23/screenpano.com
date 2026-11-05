@@ -547,6 +547,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        /** Video, fotoğraf ve afiş katmanının köşeleri sayfadaki gibi yuvarlak (1.39vh). */
+        private fun roundCorners(v: View) {
+            if (v.clipToOutline) return
+            val r = resources.displayMetrics.heightPixels * 0.0139f
+            v.outlineProvider = object : android.view.ViewOutlineProvider() {
+                override fun getOutline(view: View, o: android.graphics.Outline) { o.setRoundRect(0, 0, view.width, view.height, r) }
+            }
+            v.clipToOutline = true
+        }
+
         @JavascriptInterface
         fun updateBounds(leftPx: Int, topPx: Int, widthPx: Int, heightPx: Int) {
             handler.post {
@@ -554,6 +564,7 @@ class MainActivity : AppCompatActivity() {
                     lastBounds = intArrayOf(leftPx, topPx, widthPx, heightPx)
                     // video ve fotoğraf katmanları birlikte konumlanır
                     for (v in listOfNotNull<View>(binding.playerView, binding.imageView, posterView)) {
+                        roundCorners(v)
                         val params = v.layoutParams as FrameLayout.LayoutParams
                         if (params.leftMargin != leftPx || params.topMargin != topPx ||
                             params.width != widthPx || params.height != heightPx) {

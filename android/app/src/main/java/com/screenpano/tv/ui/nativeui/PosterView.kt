@@ -313,9 +313,9 @@ class PosterView(context: Context) : FrameLayout(context) {
             val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             for (c in 0 until cols) {
                 if (i >= n) { row.addView(View(context), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)); continue }
-                row.addView(bookCard(books.optJSONObject(i++) ?: JSONObject(), books), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (c > 0) leftMargin = (width * 0.022f).roundToInt() })
+                row.addView(bookCard(books.optJSONObject(i++) ?: JSONObject(), books), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (c > 0) leftMargin = (width * 0.032f).roundToInt() })
             }
-            grid.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { if (r > 0) topMargin = (height * 0.032f).roundToInt() })
+            grid.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { if (r > 0) topMargin = (height * 0.05f).roundToInt() })
         }
         root.addView(grid, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         add(root)
@@ -342,7 +342,7 @@ class PosterView(context: Context) : FrameLayout(context) {
         }
         // kapak: kart yüksekliğini dolduran 2:3 oranlı dikdörtgen (CSS: height:100%; aspect-ratio:2/3)
         val rowsN = if (books.length() <= 2) 1 else 2
-        val cardH = ((height * (1f - 0.052f - 0.022f) - px(1f) - height * 0.032f * (rowsN - 1)) / rowsN - height * 0.05f).roundToInt()
+        val cardH = ((height * (1f - 0.052f - 0.022f) - px(1f) - height * 0.05f * (rowsN - 1)) / rowsN - height * 0.05f).roundToInt()
         if (img != null) {
             val cr = px(0.3f)
             card.addView(photo(img).apply {
@@ -355,8 +355,23 @@ class PosterView(context: Context) : FrameLayout(context) {
         tx.addView(tv(b.optString("title"), 1.45f, p.white, 800, 3))
         b.optString("author").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 1f, p.accent2, 600, 1)) }
         b.optString("publisher").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.85f, p.white, 600, 1, 0.9f)) }
-        b.optString("desc").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 0.84f, Color.parseColor("#f3eee6"), 500, 4)) }
-        card.addView(tx, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        b.optString("desc").takeIf { it.isNotEmpty() }?.let { d ->
+            // açıklama kapak yüksekliğine kadar uzar; sığan satır sayısı ölçümde bulunur
+            val dv = object : TextView(context) {
+                override fun onMeasure(w: Int, h: Int) {
+                    super.onMeasure(w, h)
+                    if (MeasureSpec.getMode(h) == MeasureSpec.EXACTLY && lineHeight > 0) {
+                        val n = max(1, (MeasureSpec.getSize(h) / lineHeight))
+                        if (n != maxLines) { maxLines = n; super.onMeasure(w, h) }
+                    }
+                }
+            }.apply {
+                text = d; setTextSize(TypedValue.COMPLEX_UNIT_PX, px(1.0f)); setTextColor(Color.parseColor("#f3eee6")); includeFontPadding = false
+                ellipsize = TextUtils.TruncateAt.END; setLineSpacing(0f, 1.05f)
+            }
+            tx.addView(dv, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { topMargin = px(0.4f).roundToInt() })
+        }
+        card.addView(tx, LinearLayout.LayoutParams(0, if (img != null) cardH else ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         shell.addView(card, FrameLayout.LayoutParams(-1, -1))
         return shell
     }
