@@ -44,14 +44,21 @@ private class Viewport(context: Context) : ViewGroup(context) {
         for (i in 0 until childCount) { val c = getChildAt(i); c.layout(0, 0, c.measuredWidth, b - t) }
     }
 
+    private var shL: LinearGradient? = null
+    private var shR: LinearGradient? = null
+    private var shKey = 0L
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
-        val fw = width * 0.024f * 1f
-        val a = Color.argb(0, Color.red(edge), Color.green(edge), Color.blue(edge))
-        paint.shader = LinearGradient(0f, 0f, fw, 0f, edge, a, Shader.TileMode.CLAMP)
-        canvas.drawRect(0f, 0f, fw, height.toFloat(), paint)
-        paint.shader = LinearGradient(width - fw, 0f, width.toFloat(), 0f, a, edge, Shader.TileMode.CLAMP)
-        canvas.drawRect(width - fw, 0f, width.toFloat(), height.toFloat(), paint)
+        val fw = width * 0.024f
+        val key = width.toLong() * 31 + edge
+        if (key != shKey || shL == null) {
+            shKey = key
+            val a = Color.argb(0, Color.red(edge), Color.green(edge), Color.blue(edge))
+            shL = LinearGradient(0f, 0f, fw, 0f, edge, a, Shader.TileMode.CLAMP)
+            shR = LinearGradient(width - fw, 0f, width.toFloat(), 0f, a, edge, Shader.TileMode.CLAMP)
+        }
+        paint.shader = shL; canvas.drawRect(0f, 0f, fw, height.toFloat(), paint)
+        paint.shader = shR; canvas.drawRect(width - fw, 0f, width.toFloat(), height.toFloat(), paint)
     }
 }
 
@@ -167,6 +174,8 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
                     val tv = TextView(context)
                     tv.includeFontPadding = false
                     tv.setSingleLine(true)
+                    // her öğe bir kez dokuya çizilir; kayarken yalnız doku kaydırılır (zayıf GPU'da her karede metin çizilmez)
+                    tv.setLayerType(View.LAYER_TYPE_HARDWARE, null)
                     tv.text = it2
                     tv.setTextColor(p.white)
                     tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 2.7f)
