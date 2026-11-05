@@ -309,7 +309,7 @@ class PosterView(context: Context) : FrameLayout(context) {
             val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             for (c in 0 until cols) {
                 if (i >= n) { row.addView(View(context), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)); continue }
-                row.addView(bookCard(books.optJSONObject(i++) ?: JSONObject()), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (c > 0) leftMargin = (width * 0.022f).roundToInt() })
+                row.addView(bookCard(books.optJSONObject(i++) ?: JSONObject(), books), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { if (c > 0) leftMargin = (width * 0.022f).roundToInt() })
             }
             grid.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { if (r > 0) topMargin = (height * 0.032f).roundToInt() })
         }
@@ -317,7 +317,7 @@ class PosterView(context: Context) : FrameLayout(context) {
         add(root)
     }
 
-    private fun bookCard(b: JSONObject): View {
+    private fun bookCard(b: JSONObject, books: org.json.JSONArray): View {
         val p = pal!!
         val card = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
@@ -325,7 +325,10 @@ class PosterView(context: Context) : FrameLayout(context) {
             background = GradientDrawable().apply { setColor(Color.parseColor("#1b1a19")); cornerRadius = px(0.7f); setStroke(1, Color.argb(18, 255, 255, 255)) }
         }
         val img = b.optString("image").takeIf { u -> u.isNotEmpty() && u != "null" }
-        if (img != null) card.addView(photo(img), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT).also { it.width = (height * 0.30f * 2f / 3f).roundToInt() })
+        // kapak: kart yüksekliğini dolduran 2:3 oranlı dikdörtgen (CSS: height:100%; aspect-ratio:2/3)
+        val rowsN = if (books.length() <= 2) 1 else 2
+        val cardH = ((height * (1f - 0.052f - 0.022f) - px(1f) - height * 0.032f * (rowsN - 1)) / rowsN - height * 0.05f).roundToInt()
+        if (img != null) card.addView(photo(img), LinearLayout.LayoutParams((cardH * 2f / 3f).roundToInt(), cardH))
         val tx = column(0.3f).apply { setPadding(px(1.0f).roundToInt(), 0, 0, 0) }
         tx.addView(tv(b.optString("title"), 1.45f, p.white, 800, 3))
         b.optString("author").takeIf { it.isNotEmpty() }?.let { tx.addView(tv(it, 1f, p.accent2, 600, 1)) }
