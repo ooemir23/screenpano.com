@@ -26,6 +26,7 @@ class NativeGridView(context: Context) : ViewGroup(context) {
         "ticker" -> if (NATIVE_TICKER) TickerWidget(context) else null
         "clock" -> ClockWidget(context)
         "logo" -> LogoWidget(context)
+        "rates" -> RatesWidget(context)
         "text" -> TextWidget(context)
         "image" -> ImageWidget(context)
         else -> null

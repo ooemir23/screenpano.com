@@ -1,0 +1,206 @@
+package com.screenpano.tv.ui.nativeui
+
+import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.os.Handler
+import android.os.Looper
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import coil.load
+import com.screenpano.tv.data.model.TvState
+import com.screenpano.tv.data.model.WidgetSpec
+import org.json.JSONObject
+import java.nio.ByteBuffer
+import java.text.NumberFormat
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
+
+/**
+ * "Hava ve piyasalar" widget'ı: hava durumu + 3'lü kur satırı (8 sn'de bir USD/EUR/ALTIN ↔ BIST/BITCOIN/STERLİN).
+ * QR seçeneği açıksa sayfalar döner: 1) hava+piyasa, sonrası seçili QR'lar (1-2 yan yana, 3+ tek tek), 12 sn'de bir.
+ * Geçişler anlık: sürekli animasyon yok, yalnız zamanlayıcı değişince bir kez çizilir.
+ */
+class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
+    private val main = Handler(Looper.getMainLooper())
+    private var vh = 10f
+    private var st: TvState? = null
+    private var props: JSONObject? = null
+    private var rateIdx = 0
+    private var viewIdx = 0
+    private var sig = ""
+    private val rateTick = object : Runnable { override fun run() { rateIdx++; renderMain(); main.postDelayed(this, 8000) } }
+    private val viewTick = object : Runnable { override fun run() { viewIdx++; renderViews(); main.postDelayed(this, 12000) } }
+    private var wifiRunnable: Runnable? = null
+
+    private val nf = { d: Int -> NumberFormat.getNumberInstance(Locale("tr", "TR")).apply { minimumFractionDigits = d; maximumFractionDigits = d } }
+    private fun f(x: Double?, d: Int = 2): String = if (x == null || x == 0.0 || x.isNaN()) "--" else nf(d).format(x)
+    private fun JSONObject.num(k: String): Double? = if (has(k) && !isNull(k)) optDouble(k).takeIf { !it.isNaN() } else null
+
+    private val content = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER_VERTICAL }
+
+    init {
+        orientation = VERTICAL
+        addView(content, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+    }
+
+    override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
+        this.vh = vh; st = s; props = w.props
+        val p = Palette(s)
+        background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(p.a(p.accent2, 0.16f), p.a(Color.WHITE, 0.03f))).apply {
+            cornerRadius = 1.3f * vh; setStroke(max(1, (vh * 0.1f).toInt()), p.a(p.accent2, 0.35f))
+        }
+        setPadding((vh * 1.9f).toInt(), (vh * 1.1f).toInt(), (vh * 1.9f).toInt(), (vh * 1.1f).toInt())
+        // veri ya da ayar değişmediyse zamanlayıcıları sıfırlama
+        val nsig = listOf(s.raw.optJSONObject("rates"), s.raw.optJSONObject("weather"), w.props, s.raw.optJSONArray("qrs"), s.raw.optString("city"), s.theme).joinToString("|") { it.toString() }
+        if (nsig == sig && content.childCount > 0) return
+        sig = nsig
+        val first = content.childCount == 0
+        if (first) { rateIdx = 0; viewIdx = 0 }
+        renderViews()
+        main.removeCallbacks(rateTick); main.removeCallbacks(viewTick)
+        main.postDelayed(rateTick, 8000)
+        if (views().size > 1) main.postDelayed(viewTick, 12000)
+    }
+
+    private fun txt(t: CharSequence, px: Float, color: Int, bold: Boolean = false, ls: Float = 0f): TextView = TextView(context).apply {
+        text = t; setTextSize(TypedValue.COMPLEX_UNIT_PX, px); setTextColor(color); includeFontPadding = false
+        typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL); letterSpacing = ls; setSingleLine(true)
+    }
+
+    private fun qrList(): List<JSONObject> {
+        val s = st ?: return emptyList()
+        val all = s.raw.optJSONArray("qrs")?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) } } ?: emptyList()
+        val ids = (props?.optString("qrs") ?: "").split(",").filter { it.isNotEmpty() }
+        return if (ids.isEmpty()) all else all.filter { it.optString("id") in ids }
+    }
+
+    private fun hasMain(): Boolean = props?.optBoolean("weather", true) != false || props?.optBoolean("rates", true) != false
+
+    /** Sayfa listesi: -1 = hava/piyasa; 0.. = QR sayfaları. */
+    private fun views(): List<Int> {
+        if (props?.optBoolean("qr", false) != true) return listOf(-1)
+        val l = qrList()
+        val pages = if (l.size <= 2) (if (l.isEmpty()) 0 else 1) else l.size
+        return (if (hasMain()) listOf(-1) else emptyList()) + (0 until pages).toList()
+    }
+
+    private fun renderViews() {
+        val vs = views(); if (vs.isEmpty()) { content.removeAllViews(); return }
+        val v = vs[viewIdx % vs.size]
+        if (v == -1) renderMain() else renderQr(v)
+    }
+
+    private fun renderMain() {
+        val s = st ?: return
+        if (views().let { it[viewIdx % it.size] } != -1) return
+        val p = Palette(s)
+        content.removeAllViews()
+        content.gravity = Gravity.CENTER_VERTICAL
+        val gap = (vh * 0.9f).toInt()
+        val wx = s.raw.optJSONObject("weather")
+        if (wx != null && props?.optBoolean("weather", true) != false) {
+            val row = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+            val code = wx.optInt("code")
+            val icon = when { code == 0 -> if (wx.optBoolean("day", true)) "☀️" else "🌙"; code <= 2 -> if (wx.optBoolean("day", true)) "⛅" else "☁️"; code == 3 -> "☁️"; code <= 48 -> "🌫️"; code <= 57 -> "🌦️"; code <= 67 -> "🌧️"; code <= 77 -> "❄️"; code <= 82 -> "🌧️"; code <= 86 -> "❄️"; else -> "⛈️" }
+            val label = when { code == 0 -> "Açık"; code <= 2 -> "Parçalı bulutlu"; code == 3 -> "Kapalı"; code <= 48 -> "Sisli"; code <= 57 -> "Çisenti"; code <= 67 -> "Yağmurlu"; code <= 77 -> "Karlı"; code <= 82 -> "Sağanak"; code <= 86 -> "Kar sağanağı"; else -> "Gök gürültülü" }
+            row.addView(txt(icon, vh * 4.6f, p.white))
+            row.addView(txt("${wx.optDouble("temp").roundToInt()}°", vh * 4f, p.white, true), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { leftMargin = (vh * 1.4f).toInt() })
+            val wd = LinearLayout(context).apply { orientation = VERTICAL }
+            wd.addView(txt(label, vh * 1.7f, p.white, true))
+            wd.addView(txt("His. ${wx.optDouble("feels").roundToInt()}° · ${wx.optDouble("wind").roundToInt()} km/s", vh * 1.3f, p.mute, false, 0.04f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
+            row.addView(wd, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { leftMargin = (vh * 1.4f).toInt() })
+            val city = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.END }
+            city.addView(txt(s.raw.optString("city").uppercase(Locale("tr", "TR")), vh * 1.2f, p.accent2, true, 0.28f))
+            city.addView(txt("${wx.optDouble("min").roundToInt()}° / ${wx.optDouble("max").roundToInt()}°", vh * 1.2f, p.mute, false, 0.04f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
+            row.addView(city)
+            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
+        }
+        if (props?.optBoolean("rates", true) != false) {
+            val r = s.raw.optJSONObject("rates") ?: JSONObject()
+            fun chg(v: Double?): CharSequence {
+                if (v == null) return ""
+                val up = v > 0.005; val dn = v < -0.005
+                val str = " " + (if (up) "▲" else if (dn) "▼" else "•") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
+                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.05f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+            }
+            data class Cell(val name: String, val extra: CharSequence, val value: String, val unit: String)
+            val sets = listOf(
+                listOf(Cell("USD", "", f(r.num("usd")), "₺"), Cell("EUR", "", f(r.num("eur")), "₺"), Cell("ALTIN", chg(r.num("goldCh")), f(r.num("gold"), 0), "₺")),
+                listOf(Cell("BIST 100", chg(r.num("bistCh")), f(r.num("bist"), 0), ""), Cell("BITCOIN", chg(r.num("btcCh")), r.num("btc")?.let { "$" + f(it, 0) } ?: "--", ""), Cell("STERLİN", "", f(r.num("gbp")), "₺")),
+            )
+            val row = LinearLayout(context).apply { orientation = HORIZONTAL }
+            val line = LinearLayout(context).apply { setBackgroundColor(Color.argb(23, 255, 255, 255)) }
+            if (wx != null && props?.optBoolean("weather", true) != false) content.addView(line, LayoutParams(LayoutParams.MATCH_PARENT, max(1, (vh * 0.1f).toInt())).apply { topMargin = gap })
+            for (c in sets[rateIdx % sets.size]) {
+                val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
+                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.05f, p.accent2, true, 0.12f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
+                col.addView(TextView(context).apply { text = head; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER })
+                val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 2.1f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 1.3f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
+                col.addView(TextView(context).apply { text = vtxt; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
+                row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
+            }
+            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = gap; })
+        }
+    }
+
+    private fun renderQr(v: Int) {
+        val s = st ?: return
+        val p = Palette(s)
+        wifiRunnable?.let { main.removeCallbacks(it) }
+        content.removeAllViews(); content.gravity = Gravity.CENTER
+        val l = qrList()
+        val pg = if (l.size <= 2) l else listOf(l[v])
+        val row = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER }
+        for (q in pg) {
+            val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER }
+            val box = FrameLayout(context)
+            val iv = ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+            val pad = (vh * 0.4f).toInt()
+            box.setPadding(pad, pad, pad, pad)
+            box.background = GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = vh; setStroke(max(1, (vh * 0.18f).toInt()), p.a(p.accent2, 0.85f)) }
+            box.addView(iv, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            val svg = q.optString("svg")
+            if (svg.isNotEmpty()) iv.load(ByteBuffer.wrap(svg.toByteArray())) { crossfade(false) }
+            val lbl = TextView(context).apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.5f); setTextColor(Color.WHITE); includeFontPadding = false; setSingleLine(true)
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); letterSpacing = 0.08f; gravity = Gravity.CENTER
+                setPadding((vh * 1.2f).toInt(), 0, (vh * 1.2f).toInt(), 0)
+                background = GradientDrawable().apply { setColor(Color.argb(235, 10, 8, 6)); cornerRadius = 2f * vh; setStroke(max(1, (vh * 0.15f).toInt()), p.al) }
+                text = q.optString("label").uppercase(Locale("tr", "TR"))
+            }
+            col.addView(box, LayoutParams(0, 0).also { it.width = 10; it.height = 10 }) // gerçek boyut onLayout'ta
+            col.addView(lbl, LayoutParams(LayoutParams.MATCH_PARENT, (vh * 3.2f).toInt()).apply { topMargin = (vh * 0.6f).toInt() })
+            row.addView(col, LayoutParams(0, LayoutParams.MATCH_PARENT, 1f).apply { if (pg.size > 1) { leftMargin = (vh * 0.7f).toInt(); rightMargin = (vh * 0.7f).toInt() } })
+            // QR karesi: sütun genişliğine ve (yükseklik - etiket) alanına sığan en büyük kare
+            col.addOnLayoutChangeListener { _, l0, t0, r0, b0, _, _, _, _ ->
+                val side = min(r0 - l0, b0 - t0 - (vh * 4f).toInt())
+                val lp = box.layoutParams
+                if (side > 0 && (lp.width != side || lp.height != side)) { lp.width = side; lp.height = side; box.layoutParams = lp }
+            }
+            // Wi-Fi: etiket ile şifre sırayla değişir (4 sn / 7 sn)
+            val mq = q.optString("marquee")
+            if (mq.isNotEmpty()) {
+                var ph = 0
+                val r = object : Runnable { override fun run() { ph = ph xor 1; lbl.text = if (ph == 1) mq else q.optString("label").uppercase(Locale("tr", "TR")); lbl.setTextColor(if (ph == 1) p.al else Color.WHITE); main.postDelayed(this, if (ph == 1) 7000L else 4000L) } }
+                wifiRunnable = r; main.postDelayed(r, 4000)
+            }
+        }
+        content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+    }
+
+    override fun release() { main.removeCallbacksAndMessages(null) }
+    override fun onDetachedFromWindow() { release(); super.onDetachedFromWindow() }
+}
