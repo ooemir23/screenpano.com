@@ -1,43 +1,30 @@
 package com.screenpano.tv.ui.nativeui
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
 import android.view.View
 import android.view.ViewGroup
 import com.screenpano.tv.data.model.TvState
-import com.screenpano.tv.data.model.WidgetSpec
 import kotlin.math.min
 
 /**
- * Sunucudaki 24x24 ızgara düzenini yerel olarak yerleştirir. Her widget bir alt görünümdür; henüz yerel
- * karşılığı olmayan widget'lar yer tutucu çizer (faz 0). Güvenli alan payları sayfadakiyle aynı mantıkla
+ * Sunucudaki 24x24 ızgara düzenini yerel olarak yerleştirir. Yalnız yerel karşılığı yazılmış widget'lar
+ * çizilir; diğer hücreleri sayfa (WebView) çizmeye devam eder. Güvenli alan payları sayfadakiyle aynı mantıkla
  * uygulanır: içerik oranı bozulmadan küçülür ve görünen alanın ortasına kaydırılır.
  */
 class NativeGridView(context: Context) : ViewGroup(context) {
     private var state: TvState? = null
-    private val cells = HashMap<String, WidgetCell>()
+    private val cells = LinkedHashMap<String, View>()
 
-    fun setState(s: TvState) {
-        state = s
-        // faz 0: yer tutucular şeffaf; asıl görüntü sayfa/ExoPlayer katmanlarından gelmeye devam eder
-        // aynı türden widget'ı yeniden kullan (ekran titremesin); kalmayanları çıkar
-        val keep = HashSet<String>()
-        val seen = HashMap<String, Int>()
-        for (w in s.widgets) { // aynı türden birden çok widget (QR kartı) olabilir: tür + sıra anahtarı
-            val key = w.type + "#" + (seen.merge(w.type, 1, Int::plus) ?: 1)
-            keep.add(key)
-            cells.getOrPut(key) { WidgetCell(context).also { addView(it) } }.bind(w, s)
-        }
-        for (k in cells.keys.toList()) if (k !in keep) removeView(cells.remove(k))
-        requestLayout()
+    /** Şu an yerel çizilen widget türleri (sayfa bu hücreleri gizler). */
+    val nativeTypes: List<String> get() = cells.keys.map { it.substringBefore('#') }.distinct()
+
+    private fun create(type: String): View? = when (type) {
+        "ticker" -> TickerWidget(context)
+        "clock" -> ClockWidget(context)
+        else -> null
     }
 
-    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        val s = state ?: return
-        val W = (r - l).toFloat(); val H = (b - t).toFloat()
-        // güvenli alan: sayfadaki applySafe ile aynı hesap
+    private fun scale(s: TvState, W: Float, H: Float): FloatArray {
         var ox = 0f; var oy = 0f; var k = 1f
         if (s.safe.any) {
             val x0 = W * s.safe.l / 100f; val y0 = H * s.safe.t / 100f
@@ -45,34 +32,46 @@ class NativeGridView(context: Context) : ViewGroup(context) {
             k = min(w / W, h / H)
             ox = x0 + (w - k * W) / 2f; oy = y0 + (h - k * H) / 2f
         }
-        val cw = W * k / s.cols; val ch = H * k / s.rows
+        return floatArrayOf(ox, oy, k)
+    }
+
+    fun setState(s: TvState) {
+        state = s
+        val keep = HashSet<String>()
+        val seen = HashMap<String, Int>()
+        val vh = (if (height > 0) height else resources.displayMetrics.heightPixels) * scale(s, 1f, 1f)[2] / 100f
+        for (w in s.widgets) { // aynı türden birden çok widget (QR kartı) olabilir: tür + sıra anahtarı
+            val key = w.type + "#" + (seen.merge(w.type, 1, Int::plus) ?: 1)
+            val v = cells[key] ?: create(w.type)?.also { cells[key] = it; addView(it) } ?: continue
+            keep.add(key)
+            (v as NativeWidget).bind(w, s, vh)
+        }
+        for (k in cells.keys.toList()) if (k !in keep) { val v = cells.remove(k); (v as? NativeWidget)?.release(); removeView(v) }
+        requestLayout()
+    }
+
+    /** Yerel ekran kapatılınca tüm widget'ları (animasyonlar ve zamanlayıcılarıyla) bırakır. */
+    fun clear() {
+        for (v in cells.values) { (v as? NativeWidget)?.release(); removeView(v) }
+        cells.clear(); state = null
+    }
+
+    override fun onMeasure(wSpec: Int, hSpec: Int) {
+        setMeasuredDimension(MeasureSpec.getSize(wSpec), MeasureSpec.getSize(hSpec))
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        val s = state ?: return
+        val W = (r - l).toFloat(); val H = (b - t).toFloat()
+        val sc = scale(s, W, H)
+        val cw = W * sc[2] / s.cols; val ch = H * sc[2] / s.rows
         val seen = HashMap<String, Int>()
         for (w in s.widgets) {
             val c = cells[w.type + "#" + (seen.merge(w.type, 1, Int::plus) ?: 1)] ?: continue
-            val x = ox + w.x * cw; val y = oy + w.y * ch
-            c.measure(MeasureSpec.makeMeasureSpec((w.w * cw).toInt(), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec((w.h * ch).toInt(), MeasureSpec.EXACTLY))
-            c.layout(x.toInt(), y.toInt(), (x + w.w * cw).toInt(), (y + w.h * ch).toInt())
-        }
-    }
-
-    /** Faz 0 yer tutucusu: kutunun çerçevesini ve türünü çizer. */
-    private class WidgetCell(context: Context) : View(context) {
-        private var spec: WidgetSpec? = null
-        private var accent = 0; private var text = 0
-        private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f }
-        private val label = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val rect = RectF()
-
-        fun bind(w: WidgetSpec, s: TvState) { spec = w; accent = s.theme.accent; text = s.theme.text; invalidate() }
-
-        override fun onDraw(c: Canvas) {
-            val w = spec ?: return
-            stroke.color = accent
-            rect.set(4f, 4f, width - 4f, height - 4f)
-            c.drawRoundRect(rect, 14f, 14f, stroke)
-            label.color = text
-            label.textSize = (height * 0.12f).coerceIn(16f, 40f)
-            c.drawText("${w.type}  ${w.w}x${w.h}", 16f, 16f + label.textSize, label)
+            val x = sc[0] + w.x * cw; val y = sc[1] + w.y * ch
+            val pw = (w.w * cw).toInt(); val ph = (w.h * ch).toInt()
+            c.measure(MeasureSpec.makeMeasureSpec(pw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(ph, MeasureSpec.EXACTLY))
+            c.layout(x.toInt(), y.toInt(), x.toInt() + pw, y.toInt() + ph)
         }
     }
 }

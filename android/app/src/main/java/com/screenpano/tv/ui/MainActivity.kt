@@ -116,12 +116,22 @@ class MainActivity : AppCompatActivity() {
                     }
                     g.visibility = View.VISIBLE
                     g.setState(st)
+                    hideWebCells(g.nativeTypes)
                 } else {
-                    nativeGrid?.visibility = View.GONE
+                    nativeGrid?.let { it.clear(); it.visibility = View.GONE }
+                    hideWebCells(emptyList())
                 }
             },
             onSync = { },
         ).also { it.start() }
+    }
+
+    // Yerel çizilen hücreleri sayfa gizler (sayfa yenilenince yeniden bildirilir)
+    private var webHidden: List<String> = emptyList()
+    private fun hideWebCells(types: List<String>) {
+        webHidden = types
+        val arr = types.joinToString(",") { "\"$it\"" }
+        binding.webView.evaluateJavascript("window.__nativeCells&&window.__nativeCells([$arr])", null)
     }
 
     private fun initExoPlayer() {
@@ -218,6 +228,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 handler.removeCallbacks(reloadTask)
                 pushTraffic()
+                if (webHidden.isNotEmpty()) hideWebCells(webHidden)
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
