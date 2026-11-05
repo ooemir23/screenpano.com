@@ -210,7 +210,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     // ---------- kartlar ----------
     private fun tv(t: CharSequence?, size: Float, color: Int, bold: Boolean = false): TextView = TextView(context).apply {
-        text = t ?: ""; includeFontPadding = false; setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * size); setTextColor(color)
+        text = t ?: ""; includeFontPadding = true; setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * size); setTextColor(color)
         typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
     }
 
@@ -328,7 +328,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         val p = pal ?: Palette(st!!)
         val c = cardView(true, 1.2f, 0.9f)
         if (brk) c.setPadding(c.paddingLeft + (vh * 0.5f).toInt(), c.paddingTop, c.paddingRight, c.paddingBottom)
-        val t = tv(n.optString("title"), 2.6f, Color.parseColor("#FBFBFB"), true); t.maxLines = 3; t.ellipsize = TextUtils.TruncateAt.END; t.setLineSpacing(0f, 1.1f)
+        val t = tv(n.optString("title"), 2.6f, Color.parseColor("#FBFBFB"), true); t.maxLines = 3; t.ellipsize = TextUtils.TruncateAt.END
         c.addView(t)
         val meta = SpannableStringBuilder()
         if (brk) { meta.append("SON DAKİKA"); meta.setSpan(android.text.style.BackgroundColorSpan(Color.parseColor("#d6262a")), 0, meta.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); meta.setSpan(android.text.style.ForegroundColorSpan(Color.WHITE), 0, meta.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); meta.append("  ") }
@@ -390,7 +390,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         val c = cardView(false, 1.2f, 0.9f); c.gravity = Gravity.TOP
         val y = tv(e.optString("year"), 4.2f, p.accent2, true); y.minWidth = (vh * 10f).toInt()
         c.addView(y, LayoutParams(-2, -2))
-        val t = tv(e.optString("text"), 2.4f, Color.parseColor("#FBFBFB")); t.maxLines = 6; t.ellipsize = TextUtils.TruncateAt.END; t.setLineSpacing(0f, 1.1f)
+        val t = tv(e.optString("text"), 2.4f, Color.parseColor("#FBFBFB")); t.maxLines = 6; t.ellipsize = TextUtils.TruncateAt.END
         c.addView(t, LayoutParams(0, -2, 1f).also { it.leftMargin = (vw * 1f).toInt() })
         return c
     }
