@@ -11,6 +11,8 @@ import kotlin.math.min
  * çizilir; diğer hücreleri sayfa (WebView) çizmeye devam eder. Güvenli alan payları sayfadakiyle aynı mantıkla
  * uygulanır: içerik oranı bozulmadan küçülür ve görünen alanın ortasına kaydırılır.
  */
+const val NATIVE_TICKER = false
+
 class NativeGridView(context: Context) : ViewGroup(context) {
     private var state: TvState? = null
     private val cells = LinkedHashMap<String, View>()
@@ -19,8 +21,13 @@ class NativeGridView(context: Context) : ViewGroup(context) {
     val nativeTypes: List<String> get() = cells.keys.map { it.substringBefore('#') }.distinct()
 
     private fun create(type: String): View? = when (type) {
-        "ticker" -> TickerWidget(context)
+        // kayan bant: yerel animasyon WebView'i her karede yeniden birleştirdiği için (Box R'da 49→32 fps) WebView kalktıktan
+        // sonra açılacak; o zamana kadar sayfa çizer
+        "ticker" -> if (NATIVE_TICKER) TickerWidget(context) else null
         "clock" -> ClockWidget(context)
+        "logo" -> LogoWidget(context)
+        "text" -> TextWidget(context)
+        "image" -> ImageWidget(context)
         else -> null
     }
 
