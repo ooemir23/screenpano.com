@@ -1280,7 +1280,7 @@ window.__mediaBoundary = () => {
   window.__nmN++;
   next();
   const hold = !!(trailerOn || big.showing || camp.showing);
-  if (hold && !window.__nativeCampOn) exoStop(true);
+  if (hold && !window.__nativeCampOn && !window.__nativeBigOn) exoStop(true);
   return hold ? 'hold' : 'go';
 };
 // yerel motor o an hangi içeriği gösteriyor: durum raporu ve istatistik doğru olsun
@@ -2273,6 +2273,17 @@ function bigShow(m, cfg) {
   const design = BIG_STYLES.includes(cfg.style) ? cfg.style : 'uyum';
   el.className = (el.classList.contains('on') ? 'on ' : '') + (design === 'turnuva' ? 'd-duello d-turnuva' : 'd-' + design); // art arda maçlarda kart sönmesin
   const U = n => `calc(${n}*var(--u))`; // satır içi ölçüler
+  if (NMED() && window.__N.bigShow && window.__N.hasNativeBig && window.__N.hasNativeBig(design)) { // APK 3.14+: bu tasarım yerel çizilir; sayfa yalnız zamanlar
+    exoStop(true); window.__nativeBigOn = true; clearInterval(big.tick);
+    window.__N.bigShow(JSON.stringify({ m, cfg, dayTxt, dayName, tm, info })); exoShow(true);
+    clearTimeout(big.hideT); big.hideT = setTimeout(() => {
+      if (big.queue.length) { big.showing = false; bigShow(big.queue.shift()); return; }
+      window.__N.bigHide(); window.__nativeBigOn = false;
+      if (big.after) { const f = big.after; big.after = null; f(); }
+      setTimeout(() => { big.showing = false; camp.showing = false; }, 1500);
+    }, (cfg.durSec || 15) * 1000);
+    return;
+  }
   if (design === 'uyum') bigUnits(el);
   clearInterval(big.tick);
   if (design !== 'uyum') bigDesign(el, m, cfg, design, { dayTxt, dayName, tm, info, icons });
@@ -2764,7 +2775,7 @@ function keepInside(el) {
 function qrCtx() {
   const on = id => { const e = document.getElementById(id); return !!e && e.classList.contains('on'); };
   if (typeof goalBusy !== 'undefined' && goalBusy) return 'goal';
-  if (on('big')) return 'big';
+  if (on('big') || window.__nativeBigOn) return 'big';
   if (on('camp') || window.__nativeCampOn) return 'camp';
   if (trailerOn) return 'trailer';
   const it = videos.find(v => v.id === current);

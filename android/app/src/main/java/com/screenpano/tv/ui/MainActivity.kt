@@ -84,6 +84,7 @@ class MainActivity : AppCompatActivity() {
     private var lastTvState: TvState? = null
     private var posterView: PosterView? = null
     private var campView: com.screenpano.tv.ui.nativeui.CampView? = null
+    private var bigView: com.screenpano.tv.ui.nativeui.BigArenaView? = null
     private var lastBounds: IntArray? = null
     private var mediaFlag = false
     private var mediaKind = "" // yerel medya motorunda en son gösterilen: video | photo
@@ -623,6 +624,35 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun hasNativeCamp(): Boolean = true
+
+        /** Büyük maç duyurusu (APK 3.14+): şimdilik yalnız "arena" tasarımı yerel; sayfa diğerlerini kendisi çizer. */
+        @JavascriptInterface
+        fun hasNativeBig(style: String): Boolean = com.screenpano.tv.ui.nativeui.BigArenaView.supports(style)
+
+        @JavascriptInterface
+        fun bigShow(json: String) {
+            handler.post {
+                val st = lastTvState ?: return@post
+                try {
+                    val bv = bigView ?: com.screenpano.tv.ui.nativeui.BigArenaView(this@MainActivity).also {
+                        it.visibility = View.GONE
+                        binding.rootContainer.addView(it, binding.rootContainer.indexOfChild(binding.webView), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+                        bigView = it
+                    }
+                    lastBounds?.let { b ->
+                        val ins = (resources.displayMetrics.heightPixels * 0.006f).toInt()
+                        val p = bv.layoutParams as FrameLayout.LayoutParams
+                        p.leftMargin = b[0] + ins; p.topMargin = b[1] + ins; p.width = b[2] - 2 * ins; p.height = b[3] - 2 * ins; bv.layoutParams = p
+                    }
+                    val first = bv.visibility != View.VISIBLE
+                    bv.bind(JSONObject(json), st)
+                    if (first) { bv.alpha = 0f; bv.visibility = View.VISIBLE; bv.animate().alpha(1f).setDuration(900).start() }
+                } catch (e: Exception) { Log.w(TAG, "Büyük maç çizilemedi: ${e.message}") }
+            }
+        }
+
+        @JavascriptInterface
+        fun bigHide() { handler.post { bigView?.let { it.animate().cancel(); it.visibility = View.GONE } } }
 
         /** Yerel medya motoru: sayfa araya girenleri bitirdi, sıradaki içerik. */
         @JavascriptInterface
