@@ -3117,7 +3117,10 @@ function saveState(s) {
 function prefetchMedia(s) {
   if (!navigator.serviceWorker || !navigator.serviceWorker.controller || !s || s.blocked) return;
   const urls = new Set();
-  for (const v of s.videos || []) { if (v.url) urls.add(v.url); if (v.image) urls.add(v.image); }
+  // APK'da videoları ExoPlayer kendi önbelleğine alır: aynı dosyayı bir de burada indirmek zayıf kutuda çift ağ/disk yükü
+  // (ve iki kat yer) demekti. Videolar listeden çıkınca bu önbellekten de silinir.
+  const nativeVid = NX();
+  for (const v of s.videos || []) { if (v.url && !(nativeVid && v.type === 'video')) urls.add(v.url); if (v.image) urls.add(v.image); }
   if (s.brand && s.brand.logo) urls.add(s.brand.logo);
   const im = (s.layout && s.layout.widgets || []).find(w => w.type === 'image'); if (im && im.props && im.props.url) urls.add(im.props.url);
   navigator.serviceWorker.controller.postMessage({ type: 'prefetch', urls: [...urls].filter(u => u.startsWith('/u/')) });
