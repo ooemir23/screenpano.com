@@ -1026,6 +1026,7 @@ function endTrailer() {
   if (!trailerOn) return;
   trailerOn = false; clearTimeout(trailerTimer); trailerEl.classList.remove('on'); trailerEl.innerHTML = '';
   trailerAt = Date.now(); trailerPlays = 0;
+  if (NMED()) { window.__N.mediaResume(); return; }
   idx++; play();
 }
 function trailerError() { // video bu ülkede/gömülü oynatılamıyor: aynı filmin yedek fragmanını dene, yoksa sıradaki filme geç, hepsi başarısızsa döngüye dön
@@ -1075,6 +1076,7 @@ function next() {
 }
 function advance() {
   if (++trailerPlays >= (window.__trailerEvery || 4) && trailerList.length && navigator.onLine !== false && Date.now() - trailerAt > (window.__trailerGapMin || 8) * 60 * 1000) { playTrailer(); return; }
+  if (NMED()) { window.__N.mediaResume(); return; }
   idx++; play();
 }
 // Çapraz geçiş: yeni katman eskisinin üstünde belirir, eskisi tamamen kapanınca gizlenir (sıfır siyah ekran)
@@ -1269,7 +1271,17 @@ function showVideoSeamless(it, durMs, startMs) {
   setTimeout(prepNext, 2000);
 }
 
+// APK 3.10+: medya sırası yerel motorda (MediaEngine); sayfa yalnız araya girenleri (kampanya, büyük maç, fragman) yönetir
+const NMED = () => !!(window.__nativeMedia && window.__N && window.__N.mediaResume);
+// yerel motor içerik bitince sorar: araya girecek bir şey var mı? "hold" = var (sayfa bitince mediaResume çağırır), "go" = yok
+window.__mediaBoundary = () => {
+  next();
+  const hold = !!(trailerOn || big.showing || camp.showing);
+  if (hold) exoStop(true);
+  return hold ? 'hold' : 'go';
+};
 function play() {
+  if (NMED()) return;
   clearTimeout(timer); fadeTok++;
   if (!videos.length || !MEDIA_ON) return;
   idx %= videos.length;
@@ -1295,7 +1307,7 @@ function play() {
 }
 
 function syncToMedia(m) {
-  if (!MEDIA_ON || !m || window.__perfHold) return;
+  if (!MEDIA_ON || !m || window.__perfHold || NMED()) return;
   if (trailerOn || big.showing || camp.showing) return; // Fragman veya büyük duyurular oynarken sunucu senkronuyla kesilmez!
   if (!videos || !videos.length) {
     if (typeof ALLV !== 'undefined' && ALLV.length) applyVideos();
@@ -3072,6 +3084,7 @@ function setLangs(list, sec) {
 function nextLang() { LANG_I = (LANG_I + 1) % LANGS.length; LANG = LANGS[LANG_I]; applyLang(); }
 function applyLang() {
   renderText();
+  if (NMED() && window.__N.mediaLang) window.__N.mediaLang(LANG);
   if (menuW.data) { const keep = menuW.idx; renderMenuW(false); menuW.idx = keep; }
   if (posterCur && window.__nativePoster && nativeShowing === 'photo' && window.__N && window.__N.showPoster) window.__N.showPoster(JSON.stringify(posterCur), LANG);
   else if (posterCur && window.SPPoster) { posterEl.innerHTML = SPPoster.html(posterCur, LANG); SPPoster.fit(posterEl.firstChild); }

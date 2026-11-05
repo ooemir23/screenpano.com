@@ -40,6 +40,9 @@ class TvWebSocket(
         ws?.cancel(); ws = null
     }
 
+    val connected get() = ws != null && isOpen
+    @Volatile private var isOpen = false
+
     fun send(o: JSONObject) { ws?.send(o.toString()) }
 
     private fun open() {
@@ -48,7 +51,7 @@ class TvWebSocket(
         if (token.isEmpty()) { schedule(); return } // henüz giriş yapılmadı: sayfa token'ı kaydedince tutar
         val url = baseUrl.replaceFirst("https://", "wss://").replaceFirst("http://", "ws://") + "/ws?device=" + java.net.URLEncoder.encode(token, "UTF-8")
         ws = http.newWebSocket(Request.Builder().url(url).build(), object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) { backoff = 2_000L }
+            override fun onOpen(webSocket: WebSocket, response: Response) { backoff = 2_000L; isOpen = true }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 val o = try { JSONObject(text) } catch (_: Exception) { return }
@@ -64,8 +67,8 @@ class TvWebSocket(
                 }
             }
 
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) { if (ws === webSocket) { ws = null; schedule() } }
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) { if (ws === webSocket) { ws = null; schedule() } }
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) { if (ws === webSocket) { isOpen = false; ws = null; schedule() } }
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) { if (ws === webSocket) { isOpen = false; ws = null; schedule() } }
         })
     }
 

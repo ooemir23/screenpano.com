@@ -12,6 +12,8 @@ import kotlin.math.min
  * uygulanır: içerik oranı bozulmadan küçülür ve görünen alanın ortasına kaydırılır.
  */
 const val NATIVE_TICKER = false
+/** Medya döngüsü (video/foto/afiş sırası) yerel: "Yerel ekran" açık + düzende medya kutusu varsa. */
+const val NATIVE_MEDIA = true
 
 class NativeGridView(context: Context) : ViewGroup(context) {
     private var state: TvState? = null

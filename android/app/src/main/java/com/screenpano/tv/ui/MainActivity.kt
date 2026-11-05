@@ -41,6 +41,9 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.screenpano.tv.BuildConfig
 import com.screenpano.tv.data.net.ApiClient
 import com.screenpano.tv.data.net.TvWebSocket
+import com.screenpano.tv.ui.nativeui.MediaEngine
+import com.screenpano.tv.ui.nativeui.MediaHost
+import com.screenpano.tv.ui.nativeui.NATIVE_MEDIA
 import com.screenpano.tv.ui.nativeui.NativeGridView
 import com.screenpano.tv.ui.nativeui.PosterView
 import com.screenpano.tv.data.model.TvState
@@ -80,6 +83,20 @@ class MainActivity : AppCompatActivity() {
     private var tvSocket: TvWebSocket? = null
     private var lastTvState: TvState? = null
     private var posterView: PosterView? = null
+    private var lastBounds: IntArray? = null
+    private var mediaKind = "" // yerel medya motorunda en son gösterilen: video | photo
+    private var mediaFirstFrame: (() -> Unit)? = null
+    private val mediaEngine = MediaEngine(object : MediaHost {
+        override fun playVideo(url: String, startMs: Long) = mediaPlayVideo(url, startMs)
+        override fun showPhoto(url: String, done: (Boolean) -> Unit) = mediaShowPhoto(url, done)
+        override fun showPoster(item: JSONObject, lang: String, done: (Boolean) -> Unit) = mediaShowPoster(item, lang, done)
+        override fun release() = mediaRelease()
+        override fun pageBoundary(cb: (String?) -> Unit) {
+            binding.webView.evaluateJavascript("window.__mediaBoundary?window.__mediaBoundary():'none'") { r -> cb(r?.trim('"')) }
+        }
+        override fun report(id: String, sec: Int) { tvSocket?.send(JSONObject().put("type", "play").put("id", id).put("sec", sec)) }
+        override fun online(): Boolean = tvSocket?.connected == true
+    })
 
     private val baseUrl = BuildConfig.BASE_URL.trimEnd('/')
     private val tvUrl = "$baseUrl/tv"
@@ -113,6 +130,9 @@ class MainActivity : AppCompatActivity() {
             tokenProvider = { prefs.getDeviceToken() },
             onState = { st ->
                 lastTvState = st
+                val mediaOn = NATIVE_MEDIA && st.nativeWidgets && st.blocked == null && st.widgets.any { it.type == "media" }
+                binding.webView.evaluateJavascript("window.__nativeMedia=$mediaOn;", null)
+                mediaEngine.setState(st, mediaOn)
                 if (st.nativeWidgets) {
                     val g = nativeGrid ?: NativeGridView(this).also {
                         it.isClickable = false; it.isFocusable = false
@@ -127,7 +147,7 @@ class MainActivity : AppCompatActivity() {
                     hideWebCells(emptyList())
                 }
             },
-            onSync = { },
+            onSync = { m -> mediaEngine.onSync(m) },
         ).also { it.start() }
     }
 
@@ -180,6 +200,7 @@ class MainActivity : AppCompatActivity() {
 
                     // yeni videonun ilk karesi yüzeyde: sayfa ancak şimdi şeffaflaşır (eski kare ya da siyah görünmez)
                     override fun onRenderedFirstFrame() {
+                        mediaFirstFrame?.invoke()
                         binding.webView.post {
                             binding.webView.evaluateJavascript("window.__exoStarted && window.__exoStarted();", null)
                         }
@@ -193,6 +214,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun notifyVideoEnded() {
+        mediaEngine.onVideoEnded()
         binding.webView.post {
             binding.webView.evaluateJavascript("window.__exoEnded && window.__exoEnded();", null)
         }
@@ -278,6 +300,111 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ---- yerel medya motoru: ekran katmanları ----
+    private fun ensurePoster(): PosterView {
+        return posterView ?: PosterView(this).also {
+            it.visibility = View.GONE
+            binding.rootContainer.addView(it, binding.rootContainer.indexOfChild(binding.webView), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            posterView = it
+            lastBounds?.let { b ->
+                val p = it.layoutParams as FrameLayout.LayoutParams
+                p.leftMargin = b[0]; p.topMargin = b[1]; p.width = b[2]; p.height = b[3]; it.layoutParams = p
+            }
+        }
+    }
+
+    private fun pageTransparent(on: Boolean) {
+        binding.webView.evaluateJavascript("document.documentElement.classList.toggle('exo-on',$on);", null)
+    }
+
+    /** Video dışı bir şey görünürken eski videonun son karesi kenar boşluğunda kalmasın. */
+    private fun dropVideoLater(token: Int) {
+        handler.postDelayed({ if (token == mediaTok && mediaKind != "video") { exoPlayer?.pause(); binding.playerView.visibility = View.INVISIBLE } }, 450)
+    }
+    private var mediaTok = 0
+
+    private fun mediaPlayVideo(url: String, startMs: Long) {
+        val tk = ++mediaTok
+        val wasVideo = mediaKind == "video"
+        mediaKind = "video"
+        binding.playerView.visibility = View.VISIBLE
+        var shown = false
+        val reveal = {
+            if (!shown && tk == mediaTok) {
+                shown = true
+                binding.imageView.visibility = View.GONE; binding.imageView.setImageDrawable(null)
+                posterView?.visibility = View.GONE
+                pageTransparent(true)
+            }
+        }
+        mediaFirstFrame = reveal
+        if (wasVideo) reveal()
+        else handler.postDelayed({ reveal() }, 2500)
+        try {
+            val full = if (url.startsWith("http")) url else "$baseUrl$url"
+            exoPlayer?.setMediaItem(MediaItem.fromUri(Uri.parse(full)), true)
+            exoPlayer?.seekTo(if (startMs > 300) startMs else 0L)
+            exoPlayer?.prepare(); exoPlayer?.play()
+        } catch (e: Exception) { Log.e(TAG, "Medya videosu açılamadı", e); notifyVideoEnded() }
+    }
+
+    private fun mediaShowPhoto(url: String, done: (Boolean) -> Unit) {
+        val tk = ++mediaTok
+        val full = if (url.startsWith("http")) url else "$baseUrl$url"
+        val iv = binding.imageView
+        val fade = mediaKind.isNotEmpty()
+        iv.scaleType = ImageView.ScaleType.FIT_CENTER
+        iv.visibility = View.VISIBLE
+        iv.load(full) {
+            crossfade(if (fade) 350 else 0)
+            allowHardware(true)
+            listener(
+                onSuccess = { _, _ ->
+                    if (tk == mediaTok) {
+                        val prevVideo = mediaKind == "video"
+                        mediaKind = "photo"
+                        posterView?.visibility = View.GONE
+                        pageTransparent(true)
+                        if (prevVideo) dropVideoLater(tk) else exoPlayer?.pause()
+                        done(true)
+                    }
+                },
+                onError = { _, r -> Log.w(TAG, "Medya fotoğrafı yüklenemedi: ${r.throwable.message}"); if (tk == mediaTok) done(false) }
+            )
+        }
+    }
+
+    private fun mediaShowPoster(item: JSONObject, lang: String, done: (Boolean) -> Unit) {
+        val st = lastTvState
+        if (st == null) { done(false); return }
+        val tk = ++mediaTok
+        try {
+            val pv = ensurePoster()
+            binding.imageView.visibility = View.GONE
+            pv.visibility = View.VISIBLE
+            pv.bind(item, st, lang.ifEmpty { "tr" })
+            val wait = if (item.optString("image").isNotEmpty() || item.has("books")) 450L else 150L
+            handler.postDelayed({
+                if (tk == mediaTok) {
+                    val prevVideo = mediaKind == "video"
+                    mediaKind = "photo"
+                    binding.imageView.setImageDrawable(null)
+                    pageTransparent(true)
+                    if (prevVideo) dropVideoLater(tk) else exoPlayer?.pause()
+                    done(true)
+                }
+            }, wait)
+        } catch (e: Exception) { Log.w(TAG, "Medya afişi çizilemedi: ${e.message}"); done(false) }
+    }
+
+    private fun mediaRelease() {
+        ++mediaTok; mediaKind = ""; mediaFirstFrame = null
+        exoPlayer?.pause()
+        binding.imageView.visibility = View.GONE; binding.imageView.setImageDrawable(null)
+        posterView?.visibility = View.GONE
+        pageTransparent(false)
+    }
+
     private inner class NativeBridge {
 
         @JavascriptInterface
@@ -358,6 +485,7 @@ class MainActivity : AppCompatActivity() {
         fun updateBounds(leftPx: Int, topPx: Int, widthPx: Int, heightPx: Int) {
             handler.post {
                 if (widthPx > 0 && heightPx > 0) {
+                    lastBounds = intArrayOf(leftPx, topPx, widthPx, heightPx)
                     // video ve fotoğraf katmanları birlikte konumlanır
                     for (v in listOfNotNull<View>(binding.playerView, binding.imageView, posterView)) {
                         val params = v.layoutParams as FrameLayout.LayoutParams
@@ -454,6 +582,16 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        /** Yerel medya motoru: sayfa araya girenleri bitirdi, sıradaki içerik. */
+        @JavascriptInterface
+        fun mediaResume() { handler.post { mediaEngine.resume() } }
+
+        @JavascriptInterface
+        fun mediaLang(lang: String) { handler.post { mediaEngine.setLang(lang) } }
+
+        @JavascriptInterface
+        fun hasNativeMedia(): Boolean = NATIVE_MEDIA
 
         @JavascriptInterface
         fun getToken(): String = prefs.getDeviceToken()
