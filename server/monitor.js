@@ -46,6 +46,8 @@ function report(tid, deviceId, s, ip) {
     online: s.online !== false,
     jank: s.jank && typeof s.jank === 'object' ? { fps: Math.max(0, Math.round(Number(s.jank.fps) || 0)), drops: Math.max(0, Math.round(Number(s.jank.drops) || 0)) } : undefined, mem: Math.round(Number(s.mem) || 0) || undefined,
   };
+  // adı hâlâ varsayılan ("TV kutusu") olan cihaz, bağlanan cihazın model adıyla adlandırılır; elle verilen ad değişmez
+  if (clean.model && !/^(unknown|generic)\b/i.test(clean.model)) { const nm = clean.model.charAt(0).toUpperCase() + clean.model.slice(1); try { store.q.deviceAutoName.run(nm.slice(0, 40), deviceId); } catch (e) { /* adlandırma başarısız olsa da rapor kaydedilir */ } }
   live.set(deviceId, clean);
   store.q.deviceStatus.run(JSON.stringify(clean), deviceId);
 }

@@ -106,6 +106,7 @@ const q = {
   deviceSeen: sql.prepare('UPDATE devices SET last_seen = ? WHERE id = ?'),
   deviceDel: sql.prepare('DELETE FROM devices WHERE id = ? AND tenant_id = ?'),
   deviceMove: sql.prepare('UPDATE devices SET screen_id = ? WHERE id = ? AND tenant_id = ?'),
+  deviceAutoName: sql.prepare("UPDATE devices SET name = ? WHERE id = ? AND (name IS NULL OR name = '' OR name = 'TV kutusu')"),
   deviceNative: sql.prepare('UPDATE devices SET native = ? WHERE id = ? AND tenant_id = ?'),
   deviceRename: sql.prepare('UPDATE devices SET name = ? WHERE id = ? AND tenant_id = ?'),
   setGet: sql.prepare('SELECT value FROM settings WHERE key = ?'),
