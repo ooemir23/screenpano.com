@@ -2,6 +2,7 @@
 // Yoksa sunucu 30 sn sayar, kutu videoyu daha erken bitirir; senkron bunu "geride kaldım" sanıp videoyu tekrar başlatırdı.
 const { execFile } = require('child_process');
 const storage = require('./storage');
+const config = require('./config');
 const known = new Map(); // "tid/dosya" -> saniye (0: ölçülemedi)
 const busy = new Set();
 
@@ -14,7 +15,11 @@ function get(t, file, onReady) {
       let sec = 0;
       try {
         await storage.ensureLocal(t, file);
-        sec = await new Promise(res => execFile('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', storage.localPath(t, file)], { timeout: 20000 }, (e, out) => res(e ? 0 : parseFloat(String(out).trim()) || 0)));
+        // ffmpeg -i dosya: çıktı olmadığı için hata verir ama stderr'de "Duration: 00:00:10.04" yazar
+        sec = await new Promise(res => execFile(config.FFMPEG, ['-hide_banner', '-i', storage.localPath(t, file)], { timeout: 20000 }, (e, out, err) => {
+          const m = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(String(err || '') + String(out || ''));
+          res(m ? (+m[1]) * 3600 + (+m[2]) * 60 + parseFloat(m[3]) : 0);
+        }));
       } catch (e) { sec = 0; }
       known.set(key, sec > 0 ? Math.max(3, Math.min(600, Math.ceil(sec))) : 0);
       busy.delete(key);
