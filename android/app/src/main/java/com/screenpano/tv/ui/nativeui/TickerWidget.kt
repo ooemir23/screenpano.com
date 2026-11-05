@@ -184,7 +184,11 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
             an.addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) { if (anim === an) { model.advance(pl.isInfo); lastKey = ""; rebuild(true) } }
             })
-        } else { an.repeatCount = ValueAnimator.INFINITE }
+        } else {
+            an.repeatCount = ValueAnimator.INFINITE
+            // başa sarınca görünen pencere hemen aynı karede yenilenir (boş kare kalmasın)
+            an.addListener(object : AnimatorListenerAdapter() { override fun onAnimationRepeat(animation: Animator) { track.window(0f, vw) } })
+        }
         anim = an; an.start()
     }
 
@@ -250,7 +254,6 @@ private class VTrack(context: Context) : ViewGroup(context) {
         for (i in nlo..nhi) if (!live.containsKey(i) && lefts[i] < to && lefts[i] + wids[i] >= from) {
             val tv = if (pool.isNotEmpty()) pool.removeAt(pool.size - 1) else TextView(context).apply {
                 includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER_VERTICAL
-                setLayerType(View.LAYER_TYPE_HARDWARE, null)
             }
             tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, textPx); tv.setTextColor(color); tv.setPadding(padPx, 0, padPx, 0)
             tv.text = items[txt[i]]
