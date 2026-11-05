@@ -42,7 +42,7 @@ class GoalView(context: Context) : FrameLayout(context) {
             colors = intArrayOf(gc, gd, Color.parseColor("#141414")); cornerRadius = 1.48f * vh; setStroke(vh.toInt().coerceAtLeast(1) / 8 + 1, al(gc2, 0.6f))
         }
         val box = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER; setPadding((W * 0.04f).toInt(), (2 * vh).toInt(), (W * 0.04f).toInt(), (2 * vh).toInt()) }
-        box.addView(tv("⚽", 7 * u, Color.WHITE, false))
+        box.addView(tv("⚽", 7 * u, Color.WHITE, false).apply { gravity = Gravity.CENTER }, LinearLayout.LayoutParams(-1, -2))
         box.addView(tv("GOL!", 8.5f * u, Color.WHITE).apply { letterSpacing = 0.12f; setShadowLayer(u * 2, 0f, u * 0.6f, Color.argb(130, 0, 0, 0)) }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.6f * u).toInt() })
         val lg = d.optString("league")
         if (lg.isNotEmpty()) box.addView(tv(lg.uppercase(java.util.Locale("tr", "TR")), 1.5f * u, gc2, false).apply { letterSpacing = 0.3f; gravity = Gravity.CENTER })
