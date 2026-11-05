@@ -163,6 +163,7 @@ class MainActivity : AppCompatActivity() {
     private var webHidden: List<String> = emptyList()
     private fun hideWebCells(types: List<String>) {
         webHidden = types
+        try { getSharedPreferences("native_cells", MODE_PRIVATE).edit().putString("list", types.joinToString(",")).apply() } catch (_: Exception) {}
         val arr = types.joinToString(",") { "\"$it\"" }
         binding.webView.evaluateJavascript("window.__nativeCells&&window.__nativeCells([$arr])", null)
     }
@@ -472,6 +473,10 @@ class MainActivity : AppCompatActivity() {
                 exoPlayer?.pause()
             }
         }
+
+        /** Sayfa açılırken son bilinen yerel hücre listesi: eski web widget'ları ilk karede bile çizilmesin. */
+        @JavascriptInterface
+        fun nativeCellsPref(): String = try { getSharedPreferences("native_cells", MODE_PRIVATE).getString("list", "") ?: "" } catch (_: Exception) { "" }
 
         @JavascriptInterface
         fun hideExo() {

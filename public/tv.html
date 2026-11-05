@@ -22,6 +22,10 @@ window.__exoHooked = true;
   window.__applyFx();
 })();
 </script>
+<script>
+// APK: son bilinen yerel hücreleri sayfa ilk çizilmeden gizle (eski web widget'ları yerel olanların altında/üstünde görünmesin)
+try { if (window.__N && window.__N.nativeCellsPref) { const l = String(window.__N.nativeCellsPref()).split(',').filter(Boolean); l.forEach(t => document.documentElement.classList.add('nat-' + t)); window.__nativePoster = l.includes('poster'); } } catch (e) {}
+</script>
 <style>
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
@@ -1129,8 +1133,15 @@ function syncExoBounds() {
   if (!f) return;
   const r = f.getBoundingClientRect();
   const d = window.devicePixelRatio || 1;
-  window.__N.updateBounds(Math.round(r.left * d), Math.round(r.top * d), Math.round(r.width * d), Math.round(r.height * d));
+  const b = [Math.round(r.left * d), Math.round(r.top * d), Math.round(r.width * d), Math.round(r.height * d)].join(',');
+  if (b === window.__lastBounds) return; // yalnız değişince bildir
+  window.__lastBounds = b;
+  window.__N.updateBounds.apply(window.__N, b.split(',').map(Number));
 }
+// Boyut aynı kalıp konum kayabilir (yazı tipi yüklenmesi, büyük ekran): düzenli yokla → medya hep hücrenin tam ortasında kalır
+setInterval(syncExoBounds, 1500);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => syncExoBounds());
+window.addEventListener('load', () => setTimeout(syncExoBounds, 300));
 window.addEventListener('resize', syncExoBounds);
 if (window.ResizeObserver) { try { new ResizeObserver(() => syncExoBounds()).observe(document.getElementById('bgw')); } catch (e) {} }
 else setInterval(syncExoBounds, 3000); // çok eski WebView

@@ -119,12 +119,12 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             row.addView(txt(icon, vh * 4.6f, p.white))
             row.addView(txt("${wx.optDouble("temp").roundToInt()}°", vh * 4f, p.white, true), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { leftMargin = (vh * 1.4f).toInt() })
             val wd = LinearLayout(context).apply { orientation = VERTICAL }
-            wd.addView(txt(label, vh * 1.7f, p.white, true))
-            wd.addView(txt("His. ${wx.optDouble("feels").roundToInt()}° · ${wx.optDouble("wind").roundToInt()} km/s", vh * 1.3f, p.mute, false, 0.04f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
+            wd.addView(txt(label, vh * 2.0f, p.white, true).apply { ellipsize = android.text.TextUtils.TruncateAt.END })
+            wd.addView(txt("His. ${wx.optDouble("feels").roundToInt()}° · ${wx.optDouble("wind").roundToInt()} km/s", vh * 1.5f, p.mute, false, 0.03f).apply { ellipsize = android.text.TextUtils.TruncateAt.END }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
             row.addView(wd, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { leftMargin = (vh * 1.4f).toInt() })
             val city = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.END }
-            city.addView(txt(s.raw.optString("city").uppercase(Locale("tr", "TR")), vh * 1.2f, p.accent2, true, 0.28f))
-            city.addView(txt("${wx.optDouble("min").roundToInt()}° / ${wx.optDouble("max").roundToInt()}°", vh * 1.2f, p.mute, false, 0.04f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
+            city.addView(txt(s.raw.optString("city").uppercase(Locale("tr", "TR")), vh * 1.4f, p.accent2, true, 0.2f))
+            city.addView(txt("${wx.optDouble("min").roundToInt()}° / ${wx.optDouble("max").roundToInt()}°", vh * 1.45f, p.mute, false, 0.03f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
             row.addView(city)
             content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
         }
@@ -134,7 +134,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 if (v == null) return ""
                 val up = v > 0.005; val dn = v < -0.005
                 val str = " " + (if (up) "▲" else if (dn) "▼" else "•") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
-                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.05f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.3f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
             }
             data class Cell(val name: String, val extra: CharSequence, val value: String, val unit: String)
             val sets = listOf(
@@ -146,9 +146,9 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             if (wx != null && props?.optBoolean("weather", true) != false) content.addView(line, LayoutParams(LayoutParams.MATCH_PARENT, max(1, (vh * 0.1f).toInt())).apply { topMargin = gap })
             for (c in sets[rateIdx % sets.size]) {
                 val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
-                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.05f, p.accent2, true, 0.12f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
+                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.35f, p.accent2, true, 0.1f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
                 col.addView(TextView(context).apply { text = head; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER })
-                val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 2.1f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 1.3f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
+                val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 2.6f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 1.6f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
                 col.addView(TextView(context).apply { text = vtxt; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
                 row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             }

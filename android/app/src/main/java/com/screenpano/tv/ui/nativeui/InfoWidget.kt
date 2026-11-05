@@ -102,7 +102,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         for (m in matches) leagues.getOrPut(m.optString("league")) { ArrayList() }.add(m)
         val showSt = r.optBoolean("showStandings", true)
         val standings = r.optJSONObject("standings")
-        val trows = max(5, ((bh - 3.3f * vh) / (2.9f * vh)).toInt())
+        val trows = max(5, ((bh - 3.8f * vh) / (4.0f * vh)).toInt())
         for ((lg, ms) in leagues) {
             for (ch in paginate(ms, bw, bh) { matchCard(it) }) out.add(Pg("league", ch, league = lg))
             val rows = if (showSt) list(standings?.optJSONArray(lg)) else emptyList()
@@ -231,7 +231,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
     private fun teamBox(name: String, logo: String, lose: Boolean, p: Palette): LinearLayout = LinearLayout(context).apply {
         orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
         addView(logoView(logo, 5.4f, 5.4f))
-        val n = tv(name, 1.6f, if (lose) p.mute else Color.parseColor("#FBFBFB"), !lose)
+        val n = tv(name, 1.8f, if (lose) p.mute else Color.parseColor("#FBFBFB"), !lose)
         n.gravity = Gravity.CENTER; n.maxLines = 2; n.ellipsize = TextUtils.TruncateAt.END
         addView(n, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.5f).toInt() })
     }
@@ -283,7 +283,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     private fun tableView(pg: Pg, p: Palette): View {
         val col = LinearLayout(context); col.orientation = VERTICAL
-        val colsW = floatArrayOf(2.6f, 0f, 2.9f, 2.9f, 2.9f, 2.9f, 4f, 4f)
+        val colsW = floatArrayOf(2.5f, 0f, 2.6f, 2.6f, 2.6f, 2.6f, 3.5f, 3.4f)
         fun row(cells: List<View>, hPx: Int, bg: Int, top: Boolean = false): LinearLayout = LinearLayout(context).apply {
             orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
             setPadding((vw * 0.6f).toInt(), 0, (vw * 0.6f).toInt(), 0)
@@ -292,24 +292,24 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
             layoutParams = LayoutParams(-1, hPx).also { it.topMargin = if (top) 0 else (vh * 0.25f).toInt() }
         }
         fun cellText(t: String, size: Float, color: Int, bold: Boolean, left: Boolean = false) = tv(t, size, color, bold).apply { gravity = if (left) Gravity.START else Gravity.CENTER; if (left) { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END } }
-        val hdr = listOf("#", "Takım", "O", "G", "B", "M", "AV", "P").mapIndexed { i, t -> cellText(t, 1.15f, p.mute, true, i == 1) as View }
-        col.addView(row(hdr, (vh * 3f).toInt(), 0, true))
-        val avail = body.height - (vh * 3f).toInt()
+        val hdr = listOf("#", "Takım", "O", "G", "B", "M", "AV", "P").mapIndexed { i, t -> cellText(t, 1.35f, p.mute, true, i == 1) as View }
+        col.addView(row(hdr, (vh * 3.4f).toInt(), 0, true))
+        val avail = body.height - (vh * 3.4f).toInt()
         val n = pg.items.size
-        val rh = ((avail - n * vh * 0.25f) / max(1, n)).coerceIn(vh * 2.65f, vh * 4.8f).toInt()
+        val rh = ((avail - n * vh * 0.25f) / max(1, n)).coerceIn(vh * 3.4f, vh * 5.2f).toInt()
         pg.items.forEachIndexed { i, r ->
             val teamCell = LinearLayout(context).apply {
                 orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                addView(logoView(r.optString("logo"), 2.1f, 2.1f))
-                addView(tv(r.optString("name"), 1.45f, Color.parseColor("#FBFBFB"), true).apply { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END }, LayoutParams(-2, -2).also { it.leftMargin = (vw * 0.6f).toInt() })
+                addView(logoView(r.optString("logo"), 2.7f, 2.7f))
+                addView(tv(r.optString("name"), 1.95f, Color.parseColor("#FBFBFB"), true).apply { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END }, LayoutParams(-2, -2).also { it.leftMargin = (vw * 0.6f).toInt() })
             }
             val top1 = r.optInt("rank") == 1
             val cells = listOf(
-                cellText(r.optString("rank"), 1.45f, if (top1) p.accent2 else p.mute, true),
+                cellText(r.optString("rank"), 1.95f, if (top1) p.accent2 else p.mute, true),
                 teamCell,
-                cellText(r.optString("gp"), 1.45f, Color.parseColor("#E5E5E5"), false), cellText(r.optString("w"), 1.45f, Color.parseColor("#E5E5E5"), false),
-                cellText(r.optString("d"), 1.45f, Color.parseColor("#E5E5E5"), false), cellText(r.optString("l"), 1.45f, Color.parseColor("#E5E5E5"), false),
-                cellText(r.optString("gd"), 1.45f, Color.parseColor("#E5E5E5"), false), cellText(r.optString("pts"), 1.45f, Color.parseColor("#FBFBFB"), true),
+                cellText(r.optString("gp"), 1.95f, Color.parseColor("#E5E5E5"), false), cellText(r.optString("w"), 1.95f, Color.parseColor("#E5E5E5"), false),
+                cellText(r.optString("d"), 1.95f, Color.parseColor("#E5E5E5"), false), cellText(r.optString("l"), 1.95f, Color.parseColor("#E5E5E5"), false),
+                cellText(r.optString("gd"), 1.95f, Color.parseColor("#E5E5E5"), false), cellText(r.optString("pts"), 1.95f, Color.parseColor("#FBFBFB"), true),
             )
             val bg = if (top1) p.a(p.accent2, 0.22f) else if (i % 2 == 0) Color.argb(9, 255, 255, 255) else Color.argb(17, 255, 255, 255)
             col.addView(row(cells, rh, bg))
