@@ -376,6 +376,18 @@ r.put('/movies', (req, res) => {
   t.db.movies = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, trailers: typeof b.trailers === 'boolean' ? b.trailers : cur.trailers !== false, every, gapMin };
   changed(t); res.json({ ok: true }); F.refreshMovies();
 });
+// Bilgi bandı: her içerik türünün ekranda kalma süresi (sn) ve en çok kaç öğe gösterileceği
+const INFO_TYPES = ['league', 'table', 'pharm', 'breaking', 'news', 'movies', 'books', 'otd', 'traffic'];
+const INFO_MAX = { news: [1, 20], breaking: [1, 12], movies: [1, 20], books: [1, 40], otd: [1, 12], pharm: [1, 12] };
+r.put('/infocfg', (req, res) => {
+  const t = req.t, b = req.body || {}, cur = t.db.infoCfg || {};
+  const n = (v, lo, hi, d) => v === '' || v === null || v === undefined || !isFinite(Number(v)) ? d : Math.max(lo, Math.min(hi, Math.round(Number(v))));
+  const dur = { ...(cur.dur || {}) }, max = { ...(cur.max || {}) };
+  if (b.dur && typeof b.dur === 'object') for (const k of INFO_TYPES) if (k in b.dur) { const v = n(b.dur[k], 5, 60, 0); if (v) dur[k] = v; else delete dur[k]; }
+  if (b.max && typeof b.max === 'object') for (const k of Object.keys(INFO_MAX)) if (k in b.max) { const v = n(b.max[k], INFO_MAX[k][0], INFO_MAX[k][1], 0); if (v) max[k] = v; else delete max[k]; }
+  t.db.infoCfg = { pageSec: n(b.pageSec, 5, 60, cur.pageSec || 12), dur, max };
+  changed(t); res.json({ ok: true });
+});
 r.post('/movies/test', async (req, res) => {
   const key = store.setting('tmdb_key');
   if (!key) return res.status(400).json({ error: 'Sinema servisi henüz platformda etkin değil' });
@@ -541,6 +553,7 @@ r.put('/options', (req, res) => {
   if (typeof b.showCelebrations === 'boolean') db.showCelebrations = b.showCelebrations;
   if (typeof b.showBooks === 'boolean') { db.showBooks = b.showBooks; if (db.showBooks) F.refreshBooks(); }
   if (typeof b.showTraffic === 'boolean') db.showTraffic = b.showTraffic;
+  if (typeof b.showBookSlides === 'boolean') db.showBookSlides = b.showBookSlides;
   if (['auto', 'lite', 'full'].includes(b.fxMode)) db.fxMode = b.fxMode;
   if (b.safeInset !== undefined && isFinite(Number(b.safeInset))) db.safeInset = Math.max(0, Math.min(12, Math.round(Number(b.safeInset) * 2) / 2));
   for (const k of ['L', 'R', 'T', 'B']) { const v = b['safe' + k]; if (v !== undefined && isFinite(Number(v))) db['safe' + k] = Math.max(0, Math.min(20, Math.round(Number(v) * 2) / 2)); }

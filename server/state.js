@@ -113,6 +113,9 @@ function publicState(t) {
   const movies = F.movies;
   const books = F.booksView();
   // çalma listesi değişince saat ankışı yenilenir: tüm ekranlar sunucu saatine göre aynı anda aynı içeriği gösterir
+  const ic = db.infoCfg || {}, imax = ic.max || {};
+  // bilgi bandı: öğe sayısı sınırı (hem sayfalarda hem kayan bantta geçerli)
+  const cap = (o, n) => o && n && Array.isArray(o.items) ? { ...o, items: o.items.slice(0, n) } : o;
   const ml = mediaList(t);
   const mediaAt = getTenantMediaAt(t, ml);
   return {
@@ -135,20 +138,21 @@ function publicState(t) {
     showQr: db.showQr !== false,
     fxMode: ['auto', 'lite', 'full'].includes(db.fxMode) ? db.fxMode : 'auto',
     showOnThisDay: pro && db.showOnThisDay !== false,
-    onThisDay: pro && F.onThisDay && F.onThisDay.date === F.ymd(new Date()) ? F.onThisDay : null,
+    onThisDay: pro && F.onThisDay && F.onThisDay.date === F.ymd(new Date()) ? cap(F.onThisDay, imax.otd) : null,
     showNews: pro && (db.news || {}).enabled !== false,
-    news: pro ? F.newsFor(t) : null,
+    news: pro ? cap(F.newsFor(t), imax.news) : null,
     showBreaking: pro && F.breakingOn(t),
     breakingBanner: (db.breaking || {}).banner !== false,
-    breaking: pro && F.breakingOn(t) ? F.breakingFor() : null,
+    breaking: pro && F.breakingOn(t) ? cap(F.breakingFor(), imax.breaking) : null,
     showBooks: pro && db.showBooks !== false,
-    books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.map(b => ({ ...b, image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
+    books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.slice(0, imax.books || 999).map(b => ({ ...b, image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
     showMovies: pro && (db.movies || {}).enabled !== false,
     showTrailers: pro && (db.movies || {}).trailers !== false,
     trailerEvery: (db.movies || {}).every || 4, trailerGapMin: (db.movies || {}).gapMin || 8, // fragman sıklığı: kaç içerikte bir / en az kaç dakika arayla
-    movies: pro && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items } : null,
+    movies: pro && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items.slice(0, imax.movies || 999) } : null,
     showPharmacy: pro && (db.pharmacy || {}).enabled !== false,
-    pharmacies: pro ? F.pharmFor(t) : null,
+    pharmacies: pro ? cap(F.pharmFor(t), imax.pharm) : null,
+    infoCfg: { pageSec: Math.max(5, Math.min(60, Number(ic.pageSec) || 12)), dur: ic.dur || {} }, // sayfa başına ekranda kalma süresi (sn)
     bigMatches: pro && F.bigCfg(t).enabled ? F.activeBig(t) : [],
     bigCfg: (({ note, info, everyMin, durSec, style }) => ({ note, info, everyMin, durSec, style }))(F.bigCfg(t)),
     celebration: F.activeCelebration(t),

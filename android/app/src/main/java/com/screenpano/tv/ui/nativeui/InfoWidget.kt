@@ -51,7 +51,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
     private val trTR = Locale("tr", "TR")
 
     private val tick = object : Runnable {
-        override fun run() { showCurrent(); main.postDelayed(this, 12_000L - NativeEnv.now() % 12_000L + 30L) }
+        override fun run() { showCurrent(); main.postDelayed(this, untilNext() + 30L) }
     }
 
     init {
@@ -74,7 +74,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         (head.layoutParams as LayoutParams).bottomMargin = (vh * 1.6f).toInt()
         head.setPadding((vw * 0.3f).toInt(), 0, (vw * 0.3f).toInt(), 0)
         val r = s.raw
-        val ns = listOf("matches", "standings", "showStandings", "pharmacies", "showPharmacy", "breaking", "showBreaking", "news", "showNews", "books", "showBooks", "movies", "showMovies", "onThisDay", "showOnThisDay", "mapAt", "theme")
+        val ns = listOf("matches", "standings", "showStandings", "pharmacies", "showPharmacy", "breaking", "showBreaking", "news", "showNews", "books", "showBooks", "movies", "showMovies", "onThisDay", "showOnThisDay", "mapAt", "theme", "infoCfg")
             .joinToString("~") { r.opt(it)?.toString() ?: "" } + "|" + width + "x" + height
         if (ns != sig) { sig = ns; shown = -1; rebuild() }
         main.removeCallbacks(tick); tick.run()
@@ -144,11 +144,29 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         return res
     }
 
+    // ---------- sayfa süreleri (panelde Bilgi Bandı › ekranda kalma süresi) ----------
+    private fun durMs(pg: Pg): Long {
+        val c = st?.raw?.optJSONObject("infoCfg")
+        val def = (c?.optInt("pageSec", 12) ?: 12).coerceIn(5, 60)
+        val sec = (c?.optJSONObject("dur")?.optInt(pg.type, 0) ?: 0).let { if (it in 5..60) it else def }
+        return sec * 1000L
+    }
+    /** Sunucu saatine göre şu an hangi sayfada olunduğu (indeks, o sayfanın bitmesine kalan ms): tüm ekranlar aynı sayfada. */
+    private fun slot(): Pair<Int, Long> {
+        if (pages.isEmpty()) return 0 to 12_000L
+        val d = pages.map { durMs(it) }
+        val pos = NativeEnv.now() % d.sum()
+        var acc = 0L
+        for (i in d.indices) { if (pos < acc + d[i]) return i to (acc + d[i] - pos); acc += d[i] }
+        return 0 to d[0]
+    }
+    private fun untilNext(): Long = slot().second
+
     // ---------- gösterim ----------
     private fun showCurrent() {
         val s = st ?: return
         if (pages.isEmpty()) { rebuild(); if (pages.isEmpty()) return }
-        val idx = ((NativeEnv.now() / 1000) / 12 % pages.size).toInt()
+        val idx = slot().first
         if (idx == shown) return
         shown = idx
         val pg = pages[idx]

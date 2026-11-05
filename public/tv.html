@@ -1553,11 +1553,13 @@ function render() {
 }
 function syncWidgetPage() {
   if (!pages.length) return { page: 0, msLeft: 12000 };
-  const durSec = 12;
-  const t = Math.floor((Date.now() + (window.__srvOff || 0)) / 1000);
-  const targetPage = Math.floor(t / durSec) % pages.length;
-  const msLeft = (durSec - (t % durSec)) * 1000;
-  return { page: targetPage, msLeft: Math.max(800, msLeft) };
+  // sayfa başına süre panelden (Bilgi Bandı › ekranda kalma süresi); sunucu saatine göre tüm ekranlar aynı sayfada
+  const ic = window.__infoCfg || {}, def = Math.max(5, Math.min(60, Number(ic.pageSec) || 12));
+  const d = pages.map(p => { const v = Number((ic.dur || {})[p.type]); return (v >= 5 && v <= 60 ? v : def) * 1000; });
+  const total = d.reduce((a, b) => a + b, 0), pos = (Date.now() + (window.__srvOff || 0)) % total;
+  let acc = 0;
+  for (let i = 0; i < d.length; i++) { if (pos < acc + d[i]) return { page: i, msLeft: Math.max(800, acc + d[i] - pos) }; acc += d[i]; }
+  return { page: 0, msLeft: d[0] };
 }
 function tick() {
   if (PIN && PIN !== 'goal') return;
@@ -1834,6 +1836,7 @@ function setState(s) {
   if (window.__N && !window.__N.desktop) MUS.unlocked = true; // WebView APK: sesli çalım için dokunma gerekmez
   { const bs = JSON.stringify([s.breaking, s.showBreaking, s.breakingBanner]); if (bs !== window.__brkSig) { window.__brkSig = bs; pagesDirty = true; breakData = s.breaking; showBrk = s.showBreaking === true; brkBanner = s.breakingBanner !== false; window.__forceRender = true; checkBreaking(); } }
   const infoSig = JSON.stringify([s.pharmacies, s.showPharmacy, s.onThisDay, s.showOnThisDay, s.news, s.showNews, s.books, s.showBooks, s.movies, s.showMovies]);
+  const icSig = JSON.stringify(s.infoCfg || {}); if (icSig !== window.__icSig) { window.__icSig = icSig; window.__infoCfg = s.infoCfg || {}; if (typeof schedule === 'function' && pages.length) schedule(); }
   if (infoSig !== window.__infoSig) { window.__infoSig = infoSig; pharmData = s.pharmacies; showPharm = s.showPharmacy !== false; otdData = s.onThisDay; showOtd = s.showOnThisDay !== false; newsData = s.news; showNews = s.showNews !== false; booksData = s.books; showBooks = s.showBooks !== false; moviesData = s.movies; showMovies = s.showMovies !== false; window.__forceRender = true; }
   if (s.mapAt !== mapAt) { const had = !!mapAt; mapAt = s.mapAt || null; if (!had !== !mapAt) { pagesDirty = true; window.__forceRender = true; } loadTraffic(); }
   setMatches(s.matches, s.standings, s.showStandings);

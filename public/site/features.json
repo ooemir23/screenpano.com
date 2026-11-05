@@ -304,14 +304,15 @@
       "icon": "📰",
       "title": "Bilgi bandı: ekran hiç boş kalmaz",
       "short": "Bilgi bandı",
-      "text": "Medya ve fiyatların arasında müşterilerinizin ilgisini çeken bilgi sayfaları döner. Hangilerinin görüneceğini anahtarla açıp kapatırsınız; veriler kendiliğinden güncellenir.",
+      "text": "Medya ve fiyatların arasında müşterilerinizin ilgisini çeken bilgi sayfaları döner. Hangilerinin görüneceğini anahtarla açıp kapatır, her sayfanın ekranda kaç saniye kalacağını ve kaç öğe göstereceğini siz belirlersiniz; veriler kendiliğinden güncellenir.",
       "tags": [
         "Son dakika haberleri",
         "Nöbetçi eczaneler (konumunuza göre otomatik)",
         "Bu hafta vizyona giren filmler ve fragmanları",
         "Yeni çıkan kitaplar",
         "Tarihte bugün",
-        "Trafik durumu (İstanbul)"
+        "Trafik durumu (İstanbul)",
+        "Her sayfa için ekranda kalma süresi"
       ],
       "plan": "pro",
       "compare": "Bilgi bandı (haber, eczane, sinema…)",
@@ -324,46 +325,49 @@
           "title": "Info ticker: your screen is never empty",
           "short": "Info ticker",
           "compare": "Info ticker (news, pharmacies, cinema…)",
-          "text": "Between your media and prices, info pages that your guests care about rotate on screen. Switch each one on or off with a toggle; the data updates by itself.",
+          "text": "Between your media and prices, info pages that your guests care about rotate on screen. Switch each one on or off, and choose how many seconds each page stays and how many items it shows; the data updates by itself.",
           "tags": [
             "Breaking news",
             "Pharmacies on duty (automatic by your location)",
             "This week's new releases in cinemas, with trailers",
             "New book releases",
             "On this day",
-            "Traffic (Istanbul)"
+            "Traffic (Istanbul)",
+            "Time on screen for each page"
           ]
         },
         "de": {
           "title": "Infoband: Ihr Bildschirm ist nie leer",
           "short": "Infoband",
           "compare": "Infoband (Nachrichten, Apotheken, Kino…)",
-          "text": "Zwischen Medien und Preisen wechseln Infoseiten, die Ihre Gäste interessieren. Jede Seite schalten Sie per Schalter ein oder aus; die Daten aktualisieren sich automatisch.",
+          "text": "Zwischen Medien und Preisen wechseln Infoseiten, die Ihre Gäste interessieren. Jede Seite schalten Sie per Schalter ein oder aus und legen fest, wie viele Sekunden sie angezeigt wird und wie viele Einträge sie zeigt; die Daten aktualisieren sich automatisch.",
           "tags": [
             "Eilmeldungen",
             "Apotheken-Notdienst (automatisch nach Standort)",
             "Kinostarts dieser Woche, mit Trailern",
             "Neue Bücher",
             "Heute vor … Jahren",
-            "Verkehrslage (Istanbul)"
+            "Verkehrslage (Istanbul)",
+            "Anzeigedauer für jede Seite einstellbar"
           ]
         },
         "ar": {
           "title": "شريط المعلومات: شاشتك لا تفرغ أبدًا",
           "short": "شريط المعلومات",
           "compare": "شريط المعلومات (أخبار، صيدليات، سينما…)",
-          "text": "بين الوسائط والأسعار تتناوب صفحات معلومات تهمّ ضيوفك. تشغّل كل صفحة أو توقفها بمفتاح بسيط، وتُحدَّث البيانات تلقائيًا.",
+          "text": "بين الوسائط والأسعار تتناوب صفحات معلومات تهمّ ضيوفك. تشغّل كل صفحة أو توقفها، وتحدّد عدد الثواني التي تبقى فيها على الشاشة وعدد العناصر التي تعرضها، وتُحدَّث البيانات تلقائيًا.",
           "tags": [
             "آخر الأخبار",
             "الصيدليات المناوبة (تلقائيًا حسب موقعك)",
             "أفلام تُعرض هذا الأسبوع لأول مرة مع إعلاناتها",
             "إصدارات الكتب الجديدة",
             "حدث في مثل هذا اليوم",
-            "حالة المرور (إسطنبول)"
+            "حالة المرور (إسطنبول)",
+            "مدة بقاء كل صفحة على الشاشة قابلة للضبط"
           ]
         }
       },
-      "added": "2026-11-03"
+      "added": "2026-11-05"
     },
     {
       "id": "piyasa",

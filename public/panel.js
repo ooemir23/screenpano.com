@@ -809,26 +809,48 @@ async function upCeleb(day, inp) { const f = inp.files[0]; inp.value = ''; if (!
 /* ================= BİLGİ BANDI ================= */
 SECTIONS.info = {
   html() {
-    const db = S.db, ph = db.pharmacy || {}, nw = db.news || {}, mv = db.movies || {}, bk = db.breaking || {};
+    const db = S.db, ph = db.pharmacy || {}, nw = db.news || {}, mv = db.movies || {}, bk = db.breaking || {}, ic = db.infoCfg || {}, idur = ic.dur || {}, imax = ic.max || {};
     const ist = /istanbul|İstanbul/i.test((db.location || {}).city || '');
-    const row = (title, desc, on, js, extra = '') => `<div class="swr" style="flex-wrap:wrap"><div class="b"><b>${title}</b><span>${desc}</span></div>${sw(on, js)}${extra ? `<div style="flex-basis:100%;${on ? '' : 'opacity:.45;pointer-events:none'}">${extra}</div>` : ''}</div>`;
+    const defSec = ic.pageSec || 12;
+    // süre / öğe sayısı kutuları (boş = genel değer)
+    const durIn = (k, d) => `<label class="ibf"><span>Ekranda kalma süresi</span><span class="ibn"><input type="number" class="ic-d" data-t="${k}" min="5" max="60" value="${idur[k] || ''}" placeholder="${d || defSec}"><em>sn</em></span></label>`;
+    const maxIn = (k, d, lo, hi) => `<label class="ibf"><span>En çok kaç öğe</span><span class="ibn"><input type="number" class="ic-m" data-t="${k}" min="${lo}" max="${hi}" value="${imax[k] || ''}" placeholder="${d}"><em>adet</em></span></label>`;
+    const tile = (icon, title, desc, on, js, body = '', extra = '') => `<div class="ibc ${on === null || on ? '' : 'off'}"><div class="ibh"><span class="ibi">${icon}</span><div class="b"><b>${title}</b><span>${desc}</span></div>${on === null ? '' : sw(on, js)}</div><div class="ibb">${body}</div>${extra ? `<details class="ibx"><summary>Diğer ayarlar</summary><div>${extra}</div></details>` : ''}</div>`;
     return head('Bilgi Bandı', '"Maçlar ve bilgi sayfaları" widget\'ında sırayla dönen ve kayan bantta akan bilgiler. Maç yokken ekranı canlı tutar.')
       + lock('Bilgi bandı')
-      + card('Sayfalar', 'Açtıklarınız sırayla gösterilir. Veriler otomatik yenilenir; anahtar ya da ayar gerekmez.',
-        row('🚨 Son dakika', 'Seçtiğiniz kaynakların son dakika başlıkları; haberler sayfasından ayrı olarak alt bantta (kendi bölümünde) ve yeni haber gelince ekranda bildirim bandıyla çıkar', bk.enabled !== false, "act('PUT','/breaking',{enabled:this.checked},'Kaydedildi')",
-          `<div class="swr"><div class="b"><b>Ekranda bildirim bandı</b><span>Yeni son dakika gelince birkaç saniye üstte kırmızı bantla gösterilir</span></div>${sw(bk.banner !== false, "act('PUT','/breaking',{banner:this.checked},'Kaydedildi',false)")}</div>
-           <div class="row mt" style="flex-wrap:wrap;align-items:center;gap:10px"><span class="muted">Son dakika kaynakları:</span>${[['trt', 'TRT Haber'], ['aa', 'Anadolu Ajansı'], ['ntv', 'NTV']].map(([k, n]) => `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" ${(bk.sources || ['trt']).includes(k) ? 'checked' : ''} onchange="brkSrc('${k}',this.checked)"> ${n}</label>`).join('')}</div>`)
-        + row('📰 Haberler', 'Türkiye gündeminden son dakika başlıkları (TRT, AA, NTV)', nw.enabled !== false, "act('PUT','/news',{enabled:this.checked},'Kaydedildi')",
-          `<div class="f mt">${fl('Kategori', `<select onchange="act('PUT','/news',{tag:this.value},'Kaydedildi')">${[['mix', 'Son dakika · TRT + AA + NTV'], ['trt', 'Son dakika · TRT Haber'], ['aa', 'Son dakika · Anadolu Ajansı'], ['ntv', 'Gündem · NTV'], ['general', 'Genel'], ['economy', 'Ekonomi'], ['sport', 'Spor'], ['technology', 'Teknoloji']].map(([v, l]) => `<option value="${v}" ${(nw.tag || 'mix') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`)
-        + row('💊 Nöbetçi eczaneler', 'Bugünkü nöbetçi eczaneler; konumunuzdan otomatik ya da seçtiğiniz ilçelerden', ph.enabled !== false, "act('PUT','/pharmacy',{enabled:this.checked},'Kaydedildi')", pharmBox(ph, db.location || {}))
-        + row('🎬 Bu hafta vizyona girenler', 'Bu hafta vizyona girecek filmler; fragmanlar arada medya yerine oynar', mv.enabled !== false, "act('PUT','/movies',{enabled:this.checked},'Kaydedildi')",
-          `<div class="swr"><div class="b"><b>Fragmanları oynat</b><span>Sessiz; kaç içerikte bir ve en az kaç dakika arayla geleceğini ayarlayın</span></div>${sw(mv.trailers !== false, "act('PUT','/movies',{trailers:this.checked},'Kaydedildi',false)")}</div>
+      + card('Genel süre', 'Her sayfa ekranda bu kadar kalır. Aşağıda bir içerik için ayrı süre girerseniz o içerik için o geçerli olur. Tüm ekranlar sunucu saatine göre aynı sayfada kalır.',
+        `<div class="ibg"><input type="range" id="ic-def" min="5" max="60" step="1" value="${defSec}" oninput="$('ic-defv').textContent=this.value+' sn'"><b id="ic-defv">${defSec} sn</b></div>
+         <div class="row end mt"><button class="btn" onclick="saveInfoCfg()">Süreleri kaydet</button></div>`)
+      + `<div class="ibgrid">`
+      + tile('⚽', 'Maç sayfaları', 'Seçili liglerin yaklaşan maçları', null, '', durIn('league') + `<p class="muted" style="font-size:12px;margin:0">Ligleri <a href="#sport">Spor</a> sayfasından seçin.</p>`)
+      + tile('🏆', 'Puan durumu', 'Ligin puan tablosu (birden çok sayfa olabilir)', db.showStandings !== false, "opt('showStandings',this.checked)", durIn('table'))
+      + tile('🚨', 'Son dakika', 'Seçtiğiniz kaynakların başlıkları; yeni haber gelince üstte kırmızı bantla da çıkar', bk.enabled !== false, "act('PUT','/breaking',{enabled:this.checked},'Kaydedildi')",
+          durIn('breaking') + maxIn('breaking', 8, 1, 12),
+          `<div class="swr"><div class="b"><b>Ekranda bildirim bandı</b><span>Yeni son dakika gelince birkaç saniye üstte gösterilir</span></div>${sw(bk.banner !== false, "act('PUT','/breaking',{banner:this.checked},'Kaydedildi',false)")}</div>
+           <div class="row mt" style="flex-wrap:wrap;align-items:center;gap:10px"><span class="muted">Kaynaklar:</span>${[['trt', 'TRT Haber'], ['aa', 'Anadolu Ajansı'], ['ntv', 'NTV']].map(([k, n]) => `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" ${(bk.sources || ['trt']).includes(k) ? 'checked' : ''} onchange="brkSrc('${k}',this.checked)"> ${n}</label>`).join('')}</div>`)
+      + tile('📰', 'Haberler', 'Türkiye gündeminden başlıklar (TRT, AA, NTV)', nw.enabled !== false, "act('PUT','/news',{enabled:this.checked},'Kaydedildi')",
+          durIn('news') + maxIn('news', 'hepsi', 1, 20),
+          `<div class="f">${fl('Kategori', `<select onchange="act('PUT','/news',{tag:this.value},'Kaydedildi')">${[['mix', 'Son dakika · TRT + AA + NTV'], ['trt', 'Son dakika · TRT Haber'], ['aa', 'Son dakika · Anadolu Ajansı'], ['ntv', 'Gündem · NTV'], ['general', 'Genel'], ['economy', 'Ekonomi'], ['sport', 'Spor'], ['technology', 'Teknoloji']].map(([v, l]) => `<option value="${v}" ${(nw.tag || 'mix') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`)
+      + tile('💊', 'Nöbetçi eczaneler', 'Bugünkü nöbetçi eczaneler (konumdan otomatik ya da ilçe seçerek)', ph.enabled !== false, "act('PUT','/pharmacy',{enabled:this.checked},'Kaydedildi')",
+          durIn('pharm') + maxIn('pharm', 'hepsi', 1, 12), pharmBox(ph, db.location || {}))
+      + tile('🎬', 'Bu hafta vizyona girenler', 'Vizyona girecek filmler; fragmanlar arada medya yerine oynar', mv.enabled !== false, "act('PUT','/movies',{enabled:this.checked},'Kaydedildi')",
+          durIn('movies') + maxIn('movies', 'hepsi', 1, 20),
+          `<div class="swr"><div class="b"><b>Fragmanları oynat</b><span>Sessiz; sıklığını aşağıdan ayarlayın</span></div>${sw(mv.trailers !== false, "act('PUT','/movies',{trailers:this.checked},'Kaydedildi',false)")}</div>
            <div class="f mt">${fl('Kaç içerikte bir fragman', `<input type="number" id="mv-every" min="2" max="20" value="${mv.every || 4}">`)}${fl('Fragmanlar arası en az (dakika)', `<input type="number" id="mv-gap" min="5" max="180" value="${mv.gapMin || 8}">`)}</div><div class="row end mt"><button class="btn s g" onclick="act('PUT','/movies',{every:+\$('mv-every').value,gapMin:+\$('mv-gap').value},'Fragman ayarı kaydedildi')">Kaydet</button></div>`)
-        + row('📚 Yeni çıkan kitaplar', 'Haftanın yeni kitapları', db.showBooks !== false, "opt('showBooks',this.checked)")
-        + row('📜 Tarihte bugün', 'Vikipedi\'den bugünün tarihinde yaşanan olaylar', db.showOnThisDay !== false, "opt('showOnThisDay',this.checked)")
-        + row('🚗 Canlı trafik', ist ? 'İstanbul trafik haritası ve yoğunluk yüzdesi' : 'Yalnızca İstanbul\'daki işletmelerde gösterilir', db.showTraffic !== false, "opt('showTraffic',this.checked)"));
+      + tile('📚', 'Yeni çıkan kitaplar', 'Haftanın yeni kitapları (bilgi sayfası ve medyada kitap slaytı)', db.showBooks !== false, "opt('showBooks',this.checked)",
+          durIn('books') + maxIn('books', 'hepsi', 1, 40),
+          `<div class="swr"><div class="b"><b>Medya döngüsünde kitap slaytı</b><span>Fotoğraf ve videoların arasında 4\'lü kitap kartı</span></div>${sw(db.showBookSlides !== false, "opt('showBookSlides',this.checked)")}</div>`)
+      + tile('📜', 'Tarihte bugün', 'Vikipedi\'den bugünün tarihinde yaşanan olaylar', db.showOnThisDay !== false, "opt('showOnThisDay',this.checked)", durIn('otd') + maxIn('otd', 'hepsi', 1, 12))
+      + tile('🚗', 'Canlı trafik', ist ? 'İstanbul trafik haritası ve yoğunluk yüzdesi' : 'Yalnızca İstanbul\'daki işletmelerde gösterilir', db.showTraffic !== false, "opt('showTraffic',this.checked)", durIn('traffic'))
+      + `</div><div class="row end mt"><button class="btn" onclick="saveInfoCfg()">Süreleri ve sınırları kaydet</button></div>`;
   },
 };
+async function saveInfoCfg() {
+  const dur = {}, max = {};
+  document.querySelectorAll('.ic-d').forEach(e => { dur[e.dataset.t] = e.value; });
+  document.querySelectorAll('.ic-m').forEach(e => { max[e.dataset.t] = e.value; });
+  if (await act('PUT', '/infocfg', { pageSec: $('ic-def').value, dur, max }, 'Bilgi bandı ayarları kaydedildi', false)) { S.db = await req('GET', '/db'); render(true); }
+}
 const IL81 = ['Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan', 'Artvin', 'Aydın', 'Balıkesir', 'Bartın', 'Batman', 'Bayburt', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Düzce', 'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkari', 'Hatay', 'Iğdır', 'Isparta', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Karabük', 'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kilis', 'Kırıkkale', 'Kırklareli', 'Kırşehir', 'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Muğla', 'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Osmaniye', 'Rize', 'Sakarya', 'Samsun', 'Şanlıurfa', 'Siirt', 'Sinop', 'Sivas', 'Şırnak', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Uşak', 'Van', 'Yalova', 'Yozgat', 'Zonguldak'];
 const pharmAuto = ph => ph.mode === 'auto' || ph.mode === 'manual' ? ph.mode === 'auto' : !(ph.districts || []).length;
 // Nöbetçi eczane ayarı: otomatik (konumdan) ya da elle (il + ilçe)
