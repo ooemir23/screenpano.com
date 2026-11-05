@@ -1280,7 +1280,7 @@ window.__mediaBoundary = () => {
   window.__nmN++;
   next();
   const hold = !!(trailerOn || big.showing || camp.showing);
-  if (hold) exoStop(true);
+  if (hold && !window.__nativeCampOn) exoStop(true);
   return hold ? 'hold' : 'go';
 };
 // yerel motor o an hangi içeriği gösteriyor: durum raporu ve istatistik doğru olsun
@@ -2107,6 +2107,11 @@ const camp = { list: [], last: {}, showing: false, due: null, after: null, start
 function campShow(c) {
   if (camp.showing || !c) return;
   camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp' });
+  if (NMED() && window.__N.campShow && c.svg) { // APK 3.13+: kart yerel çizilir; sayfa yalnız zamanlar
+    exoStop(true); window.__nativeCampOn = true; window.__N.campShow(JSON.stringify(c)); exoShow(true);
+    setTimeout(() => { window.__N.campHide(); window.__nativeCampOn = false; if (camp.after) { const f = camp.after; camp.after = null; f(); } setTimeout(() => { camp.showing = false; }, 1500); }, (c.durSec || 15) * 1000);
+    return;
+  }
   exoStop();
   let el = document.getElementById('camp');
   if (!el) { el = document.createElement('div'); el.id = 'camp'; document.getElementById('frame').appendChild(el); }
@@ -2760,7 +2765,7 @@ function qrCtx() {
   const on = id => { const e = document.getElementById(id); return !!e && e.classList.contains('on'); };
   if (typeof goalBusy !== 'undefined' && goalBusy) return 'goal';
   if (on('big')) return 'big';
-  if (on('camp')) return 'camp';
+  if (on('camp') || window.__nativeCampOn) return 'camp';
   if (trailerOn) return 'trailer';
   const it = videos.find(v => v.id === current);
   return it ? (it.type === 'image' || it.type === 'poster' ? it.type : 'video') : '';

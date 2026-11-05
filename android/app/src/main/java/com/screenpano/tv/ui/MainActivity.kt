@@ -83,6 +83,7 @@ class MainActivity : AppCompatActivity() {
     private var tvSocket: TvWebSocket? = null
     private var lastTvState: TvState? = null
     private var posterView: PosterView? = null
+    private var campView: com.screenpano.tv.ui.nativeui.CampView? = null
     private var lastBounds: IntArray? = null
     private var mediaFlag = false
     private var mediaKind = "" // yerel medya motorunda en son gösterilen: video | photo
@@ -593,6 +594,35 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        /** Kampanya kartı yerel çizilir (APK 3.13+); zamanlamayı sayfa yönetir. */
+        @JavascriptInterface
+        fun campShow(json: String) {
+            handler.post {
+                val st = lastTvState ?: return@post
+                try {
+                    val cv = campView ?: com.screenpano.tv.ui.nativeui.CampView(this@MainActivity).also {
+                        it.visibility = View.GONE
+                        binding.rootContainer.addView(it, binding.rootContainer.indexOfChild(binding.webView), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+                        campView = it
+                    }
+                    lastBounds?.let { b ->
+                        val ins = (resources.displayMetrics.heightPixels * 0.006f).toInt()
+                        val p = cv.layoutParams as FrameLayout.LayoutParams
+                        p.leftMargin = b[0] + ins; p.topMargin = b[1] + ins; p.width = b[2] - 2 * ins; p.height = b[3] - 2 * ins; cv.layoutParams = p
+                    }
+                    cv.bind(JSONObject(json), st)
+                    cv.alpha = 0f; cv.visibility = View.VISIBLE
+                    cv.animate().alpha(1f).setDuration(900).start()
+                } catch (e: Exception) { Log.w(TAG, "Kampanya çizilemedi: ${e.message}") }
+            }
+        }
+
+        @JavascriptInterface
+        fun campHide() { handler.post { campView?.let { it.animate().cancel(); it.visibility = View.GONE } } }
+
+        @JavascriptInterface
+        fun hasNativeCamp(): Boolean = true
 
         /** Yerel medya motoru: sayfa araya girenleri bitirdi, sıradaki içerik. */
         @JavascriptInterface
