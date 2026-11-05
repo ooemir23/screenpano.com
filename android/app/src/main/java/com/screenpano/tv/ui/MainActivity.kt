@@ -575,6 +575,15 @@ class MainActivity : AppCompatActivity() {
                             v.layoutParams = params
                         }
                     }
+                    // büyük maç duyurusu ve kampanya kartı da aynı alanı (kenar payıyla) izler; sayfa düzeni sonradan oturunca kaymasın
+                    val ins = (resources.displayMetrics.heightPixels * 0.006f).toInt()
+                    for (v in listOfNotNull<View>(bigView, campView)) {
+                        val p = v.layoutParams as FrameLayout.LayoutParams
+                        val nl = leftPx + ins; val nt = topPx + ins; val nw = widthPx - 2 * ins; val nh = heightPx - 2 * ins
+                        if (p.leftMargin != nl || p.topMargin != nt || p.width != nw || p.height != nh) {
+                            p.leftMargin = nl; p.topMargin = nt; p.width = nw; p.height = nh; v.layoutParams = p
+                        }
+                    }
                 }
             }
         }
