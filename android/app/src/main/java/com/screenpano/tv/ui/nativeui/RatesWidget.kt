@@ -58,12 +58,12 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         addView(content, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
 
-    // Duyarlı ölçek: widget kutusu büyüdükçe yazılar ve simgeler orantılı büyür (referans: ~17vh yükseklik x ~34vh genişlik = 1.0)
+    // Duyarlı ölçek: widget kutusu büyüdükçe yazılar ve simgeler orantılı büyür (referans: ~17vh yükseklik x ~42vh genişlik = 1.0)
     private var baseVh = 10f
     private var spec: WidgetSpec? = null
     private fun fitScale(): Float {
         if (width <= 0 || height <= 0) return 1f
-        return min(height / (17f * baseVh), width / (34f * baseVh)).coerceIn(0.7f, 2.6f)
+        return min(height / (17f * baseVh), width / (42f * baseVh)).coerceIn(0.7f, 2.6f)
     }
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
         super.onSizeChanged(w, h, ow, oh)
@@ -149,7 +149,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 if (v == null) return ""
                 val up = v > 0.005; val dn = v < -0.005
                 val str = " " + (if (up) "▲" else if (dn) "▼" else "•") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
-                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.3f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.1f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
             }
             data class Cell(val name: String, val extra: CharSequence, val value: String, val unit: String)
             val sets = listOf(
@@ -160,8 +160,8 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             val line = LinearLayout(context).apply { setBackgroundColor(Color.argb(23, 255, 255, 255)) }
             if (wx != null && props?.optBoolean("weather", true) != false) content.addView(line, LayoutParams(LayoutParams.MATCH_PARENT, max(1, (vh * 0.1f).toInt())).apply { topMargin = gap })
             for (c in sets[rateIdx % sets.size]) {
-                val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
-                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.35f, p.accent2, true, 0.1f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
+                val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL; setPadding((vh * 0.3f).toInt(), 0, (vh * 0.3f).toInt(), 0) }
+                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.2f, p.accent2, true, 0.06f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
                 col.addView(TextView(context).apply { text = head; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER })
                 val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 2.6f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 1.6f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
                 col.addView(TextView(context).apply { text = vtxt; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
