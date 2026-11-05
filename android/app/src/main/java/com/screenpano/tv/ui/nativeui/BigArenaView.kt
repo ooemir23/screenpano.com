@@ -40,6 +40,8 @@ class BigArenaView(context: Context) : FrameLayout(context) {
     private var data: JSONObject? = null
     private var st: TvState? = null
     private val trTR = Locale("tr", "TR")
+    /** org.json, JSON null'ı "null" metni olarak verir; boş say. */
+    private fun JSONObject.str(k: String): String = if (isNull(k)) "" else optString(k).let { if (it == "null") "" else it }
 
     fun bind(d: JSONObject, s: TvState) { data = d; st = s; if (width > 0 && height > 0) build() }
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) { super.onSizeChanged(w, h, ow, oh); if (data != null && w > 0 && h > 0) build() }
@@ -72,8 +74,8 @@ class BigArenaView(context: Context) : FrameLayout(context) {
     }.let { Color.parseColor(it.first) to Color.parseColor(it.second) }
 
     private fun leagueLogo(m: JSONObject): String {
-        val ll = m.optString("ll"); if (ll.isNotEmpty()) return ll
-        return when (m.optString("league")) {
+        val ll = m.str("ll"); if (ll.isNotEmpty()) return ll
+        return when (m.str("league")) {
             "Süper Lig" -> "/logo/l-18.png?v=2"; "Şampiyonlar Ligi", "Şampiyonlar Ligi Eleme" -> "/logo/l-2.png?v=2"
             "Avrupa Ligi" -> "/logo/l-2310.png?v=2"; "Konferans Ligi" -> "/logo/l-20296.png?v=2"
             else -> if (m.optBoolean("derby")) "/logo/l-18.png?v=2" else "/logo/l-2.png?v=2"
@@ -124,10 +126,10 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         val W = width.toFloat(); val H = height.toFloat()
         val u = min(H, W * 9f / 16f) / 100f; val w = W / 100f
         val up = { t: String -> t.uppercase(trTR) }
-        val (c1, c1b) = teamPair(m.optString("home"), m.optString("hc"), m.optString("hc2"), m.optString("hcol"), m.optString("hcol2"))
-        val (c2, c2b) = teamPair(m.optString("away"), m.optString("ac"), m.optString("ac2"), m.optString("acol"), m.optString("acol2"))
-        val (lc1, lc2) = leagueColors(m.optString("league"), m.optBoolean("derby"))
-        val league = up(m.optString("league")); val kick = if (m.optBoolean("derby")) "BÜYÜK DERBİ" else "AVRUPA GECESİ"
+        val (c1, c1b) = teamPair(m.str("home"), m.str("hc"), m.str("hc2"), m.str("hcol"), m.str("hcol2"))
+        val (c2, c2b) = teamPair(m.str("away"), m.str("ac"), m.str("ac2"), m.str("acol"), m.str("acol2"))
+        val (lc1, lc2) = leagueColors(m.str("league"), m.optBoolean("derby"))
+        val league = up(m.str("league")); val kick = if (m.optBoolean("derby")) "BÜYÜK DERBİ" else "AVRUPA GECESİ"
         val dayTxt = d.optString("dayTxt"); val tm = d.optString("tm")
         val llogo = leagueLogo(m)
         val gold = Color.parseColor("#ffe08a")
@@ -148,7 +150,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         }
         // üst: marka + taç
         val header = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
-        val logo = s.raw.optJSONObject("brand")?.optString("logo") ?: ""
+        val logo = s.raw.optJSONObject("brand")?.str("logo") ?: ""
         if (logo.isNotEmpty()) header.addView(ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER; load(NativeEnv.url(logo)) { crossfade(false) } }, LinearLayout.LayoutParams((40 * w).toInt(), (9 * u).toInt()))
         else header.addView(tv(up(s.brandName), 3 * u, Color.WHITE).apply { letterSpacing = 0.24f })
         val crown = LinearLayout(context).apply {
@@ -161,7 +163,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         crown.addView(lg(), LinearLayout.LayoutParams((4.4f * u).toInt(), (4.4f * u).toInt()))
         val ct = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
         ct.addView(tv(if (league.isNotEmpty()) league else kick, 2.7f * u, mix(Color.WHITE, lc2, 0.7f)).apply { letterSpacing = 0.26f })
-        val venue = m.optString("venue")
+        val venue = m.str("venue")
         ct.addView(tv(if (venue.isNotEmpty()) "$venue · $dayTxt" else dayTxt, 1.65f * u, Color.parseColor("#d6e4ff")).apply { letterSpacing = 0.22f }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.15f * u).toInt() })
         crown.addView(ct, LinearLayout.LayoutParams(-2, -2).also { it.leftMargin = (1.8f * w).toInt(); it.rightMargin = (1.8f * w).toInt() })
         crown.addView(lg(), LinearLayout.LayoutParams((4.4f * u).toInt(), (4.4f * u).toInt()))
@@ -203,7 +205,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
             ped.addView(tname, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.25f * u).toInt() })
             addView(ped, LinearLayout.LayoutParams(-1, -2).also { it.topMargin = (1.4f * u).toInt() })
         }
-        stage.addView(podium("EV SAHİBİ", m.optString("home"), m.optString("hl"), m.optString("hp"), c1, c1b), LinearLayout.LayoutParams(0, -2, 1f).also { it.rightMargin = (2 * w).toInt() })
+        stage.addView(podium("EV SAHİBİ", m.str("home"), m.str("hl"), m.str("hp"), c1, c1b), LinearLayout.LayoutParams(0, -2, 1f).also { it.rightMargin = (2 * w).toInt() })
         val center = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
         val coreSize = (26 * u).toInt()
         val core = FrameLayout(context).apply {
@@ -222,11 +224,11 @@ class BigArenaView(context: Context) : FrameLayout(context) {
             background = GradientDrawable().apply { setColor(Color.argb(235, 6, 10, 20)); cornerRadius = 1.4f * u; setStroke((0.18f * u).toInt().coerceAtLeast(1), al(lc2, 0.65f)) }
             setPadding((2.2f * w).toInt(), (0.9f * u).toInt(), (2.2f * w).toInt(), (0.9f * u).toInt())
         }
-        tbox.addView(tv(tm, 5.8f * u, Color.WHITE).apply { setShadowLayer(u * 2f, 0f, 0f, Color.argb(140, 255, 210, 100)) })
-        tbox.addView(tv(up(dayTxt), 2f * u, lc2).apply { letterSpacing = 0.1f }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.3f * u).toInt() })
+        tbox.addView(tv(tm, 5.8f * u, Color.WHITE).apply { setSingleLine(true); setShadowLayer(u * 2f, 0f, 0f, Color.argb(140, 255, 210, 100)) })
+        tbox.addView(tv(up(dayTxt), 2f * u, lc2).apply { setSingleLine(true); letterSpacing = 0.1f }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.3f * u).toInt() })
         center.addView(tbox, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (1.4f * u).toInt() })
         stage.addView(center, LinearLayout.LayoutParams(-2, -2))
-        stage.addView(podium("DEPLASMAN", m.optString("away"), m.optString("al"), m.optString("ap"), c2, c2b), LinearLayout.LayoutParams(0, -2, 1f).also { it.leftMargin = (2 * w).toInt() })
+        stage.addView(podium("DEPLASMAN", m.str("away"), m.str("al"), m.str("ap"), c2, c2b), LinearLayout.LayoutParams(0, -2, 1f).also { it.leftMargin = (2 * w).toInt() })
         wrap.addView(stage, LinearLayout.LayoutParams(-1, 0, 1f))
 
         // alt şerit
