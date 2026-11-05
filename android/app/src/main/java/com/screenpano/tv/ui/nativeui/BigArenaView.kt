@@ -35,7 +35,7 @@ import kotlin.math.min
  * Diğer tasarımlar sayfada çizilmeye devam eder (BigArenaView.supports).
  */
 class BigArenaView(context: Context) : FrameLayout(context) {
-    companion object { fun supports(style: String) = style == "arena" || style == "uyum" }
+    companion object { fun supports(style: String) = style in setOf("arena", "uyum", "stadyum", "bant", "sayac", "poster", "duello", "turnuva", "matchday", "neonarena") }
 
     private var data: JSONObject? = null
     private var st: TvState? = null
@@ -43,6 +43,14 @@ class BigArenaView(context: Context) : FrameLayout(context) {
     /** org.json, JSON null'ı "null" metni olarak verir; boş say. */
     private fun JSONObject.str(k: String): String = if (isNull(k)) "" else optString(k).let { if (it == "null") "" else it }
 
+    private var tickRun: Runnable? = null
+    /** Geri sayım gibi yavaş güncellemeler için: f() false dönerse yavaşlar (30 sn), görünmezken durur. */
+    internal fun startTick(f: () -> Boolean) {
+        tickRun?.let { removeCallbacks(it) }
+        val r = object : Runnable { override fun run() { if (!isShown) { tickRun = null; return }; val fast = f(); postDelayed(this, if (fast) 1000L else 30_000L) } }
+        tickRun = r; postDelayed(r, 1000L)
+    }
+    override fun onDetachedFromWindow() { tickRun?.let { removeCallbacks(it) }; tickRun = null; super.onDetachedFromWindow() }
     fun bind(d: JSONObject, s: TvState) { data = d; st = s; if (width > 0 && height > 0) build() }
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) { super.onSizeChanged(w, h, ow, oh); if (data != null && w > 0 && h > 0) build() }
 
@@ -122,7 +130,18 @@ class BigArenaView(context: Context) : FrameLayout(context) {
     private fun build() {
         val d = data ?: return; val s = st ?: return
         removeAllViews()
-        if (d.optJSONObject("cfg")?.optString("style") != "arena") { buildUyum(d, s); return }
+        val style = d.optJSONObject("cfg")?.optString("style") ?: ""
+        if (style != "arena") {
+            tickRun?.let { removeCallbacks(it) }; tickRun = null
+            val k = BigCtx(this, d, s)
+            when (style) {
+                "stadyum" -> buildStadyum(k); "bant" -> buildBant(k); "sayac" -> buildSayac(k); "poster" -> buildPoster(k)
+                "duello" -> buildDuello(k); "turnuva" -> buildTurnuva(k); "matchday" -> buildMatchday(k); "neonarena" -> buildNeon(k)
+                else -> buildUyum(d, s)
+            }
+            post { requestLayout() }
+            return
+        }
         val m = d.optJSONObject("m") ?: return; val cfg = d.optJSONObject("cfg") ?: JSONObject()
         val W = width.toFloat(); val H = height.toFloat()
         val u = min(H, W * 9f / 16f) / 100f; val w = W / 100f
@@ -280,7 +299,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
                 addView(ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_END; load(NativeEnv.url(photo)) { crossfade(false) } }, LayoutParams((W * 0.46f).toInt(), (H * 0.78f).toInt(), (if (left) Gravity.START else Gravity.END) or Gravity.BOTTOM))
                 if (logo.isNotEmpty()) addView(ImageView(context).apply { alpha = 0.28f; scaleType = ImageView.ScaleType.FIT_CENTER; load(NativeEnv.url(logo)) { crossfade(false) } }, LayoutParams((46 * u).toInt(), (46 * u).toInt(), (if (left) Gravity.START else Gravity.END) or Gravity.TOP).also { it.topMargin = (-4 * u).toInt() })
             } else if (logo.isNotEmpty()) {
-                addView(ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER; load(NativeEnv.url(logo)) { crossfade(false) } }, LayoutParams((24 * u).toInt(), (24 * u).toInt(), (if (left) Gravity.START else Gravity.END) or Gravity.TOP).also { it.topMargin = (H * 0.27f).toInt(); if (left) it.leftMargin = (W * 0.07f).toInt() else it.rightMargin = (W * 0.07f).toInt() })
+                addView(ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER; load(NativeEnv.url(logo)) { crossfade(false) } }, LayoutParams((31 * u).toInt(), (31 * u).toInt(), (if (left) Gravity.START else Gravity.END) or Gravity.TOP).also { it.topMargin = (H * 0.22f).toInt(); if (left) it.leftMargin = (W * 0.07f).toInt() else it.rightMargin = (W * 0.07f).toInt() })
             }
         }
         side(m.str("hl"), m.str("hp"), true); side(m.str("al"), m.str("ap"), false)
@@ -299,7 +318,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
 
         val btm = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
         val nm = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER }
-        fun nameTv(n: String) = tv(up(n), (if (n.length > 13) 4.2f else 6f) * u, gold).apply { gravity = Gravity.CENTER; maxLines = 2; ellipsize = TextUtils.TruncateAt.END; setShadowLayer(u, 0f, u * 0.4f, Color.BLACK) }
+        fun nameTv(n: String) = tv(up(n), (if (n.length > 13) 5f else 7f) * u, gold).apply { gravity = Gravity.CENTER; maxLines = 2; ellipsize = TextUtils.TruncateAt.END; setShadowLayer(u, 0f, u * 0.4f, Color.BLACK) }
         nm.addView(nameTv(m.str("home")), LinearLayout.LayoutParams(0, -2, 1f))
         nm.addView(tv("VS", 3.6f * u, Color.WHITE).apply { alpha = 0.9f }, LinearLayout.LayoutParams(-2, -2).also { it.leftMargin = (2 * w).toInt(); it.rightMargin = (2 * w).toInt() })
         nm.addView(nameTv(m.str("away")), LinearLayout.LayoutParams(0, -2, 1f))
@@ -311,12 +330,12 @@ class BigArenaView(context: Context) : FrameLayout(context) {
             setPadding((3 * w).toInt(), (0.7f * u).toInt(), (3 * w).toInt(), (0.7f * u).toInt())
         }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (1.3f * u).toInt() })
         val note = cfg.str("note")
-        if (note.isNotEmpty()) btm.addView(tv(note, 3.2f * u, Color.WHITE).apply {
+        if (note.isNotEmpty()) btm.addView(tv(note, 3.6f * u, Color.WHITE).apply {
             gravity = Gravity.CENTER; setBackgroundColor(Color.argb(153, 0, 0, 0)); setPadding((3 * w).toInt(), (1.3f * u).toInt(), (3 * w).toInt(), (1.3f * u).toInt())
         }, LinearLayout.LayoutParams(W.toInt(), -2).also { it.topMargin = (1.7f * u).toInt() })
         val infoArr = cfg.optJSONArray("info"); val icons = listOf("📍", "🎮", "💨")
         val infos = ArrayList<String>(); if (infoArr != null) for (i in 0 until infoArr.length()) { val t = infoArr.optString(i); if (t.isNotEmpty() && t != "null") infos.add(icons[infos.size % 3] + " " + up(t)) }
-        if (infos.isNotEmpty()) btm.addView(tv(infos.joinToString("        "), 1.9f * u, Color.parseColor("#ffe9a8")).apply {
+        if (infos.isNotEmpty()) btm.addView(tv(infos.joinToString("        "), 2.5f * u, Color.WHITE).apply {
             gravity = Gravity.CENTER; setBackgroundColor(Color.argb(184, 0, 0, 0)); setPadding((3 * w).toInt(), (1.2f * u).toInt(), (3 * w).toInt(), (1.4f * u).toInt()); letterSpacing = 0.06f
         }, LinearLayout.LayoutParams(W.toInt(), -2))
         else btm.addView(View(context), LinearLayout.LayoutParams(-1, (1.4f * u).toInt()))
