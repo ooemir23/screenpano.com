@@ -1,0 +1,118 @@
+# Android TV uygulamasını release olarak derler, işletmenin imza anahtarıyla imzalar ve
+# public/app.apk + public/apk-version.json olarak depoya geri yazar (yazılan commit Dokploy'u tetikler,
+# kutular yeni sürümü menüden "Güncellemeleri denetle" ile ya da bildirimle alır).
+#
+# Gerekli depo gizli değerleri (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_B64      screenpano.keystore dosyasının base64 hâli (base64 -w0 screenpano.keystore)
+#   ANDROID_KEYSTORE_PASSWORD anahtar deposu şifresi
+#   ANDROID_KEY_ALIAS         anahtar adı (alias)
+#   ANDROID_KEY_PASSWORD      anahtar şifresi
+#
+# Güvenlik: derlenen APK'nın imzası aşağıdaki parmak iziyle (2.0 ve 2.4–3.0'ı imzalayan anahtar) eşleşmezse
+# APK sunucuya konmaz — yanlış anahtarla imzalanan sürüm kurulu kutularda güncellenemez.
+name: Android uygulaması
+
+on:
+  push:
+    branches: [main]
+    paths: ['android/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-build
+  cancel-in-progress: false
+
+env:
+  CERT_SHA256: '14:3A:98:A4:2D:13:DF:9A:4A:A7:5D:AD:B1:A2:C4:0F:2E:B5:27:7B:2B:A0:65:5E:BB:1C:8E:98:E0:42:DB:5D'
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: İmza anahtarı var mı
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KS" ]; then
+            echo "::error::ANDROID_KEYSTORE_B64 gizli değeri yok — APK derlenmedi. Settings → Secrets and variables → Actions'a anahtarı ekleyin."
+            exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Anahtarı yerleştir
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KS" | base64 -d > android/app/release.keystore
+          {
+            echo "storeFile=release.keystore"
+            echo "storePassword=$KS_PASS"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASS"
+          } > android/keystore.properties
+
+      - name: Derle
+        working-directory: android
+        run: gradle --no-daemon assembleRelease
+
+      - name: İmzayı ve sürümü denetle
+        id: check
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          test -f "$APK" || { echo "::error::İmzalı APK oluşmadı (keystore.properties okunamadı mı?)"; exit 1; }
+          SHA=$(keytool -printcert -jarfile "$APK" | grep -m1 'SHA256:' | awk '{print $2}')
+          if [ "$SHA" != "$CERT_SHA256" ]; then
+            echo "::error::APK beklenen anahtarla imzalanmamış ($SHA). Kurulu kutular bu APK'yı üstüne kuramaz; sunucuya konmadı."
+            exit 1
+          fi
+          CODE=$(grep -m1 -E '^\s*versionCode ' android/app/build.gradle | awk '{print $2}')
+          NAME=$(grep -m1 -E "^\s*versionName " android/app/build.gradle | sed -E "s/.*versionName ['\"]([^'\"]+)['\"].*/\1/")
+          CUR=$(node -p "require('./public/apk-version.json').versionCode" 2>/dev/null || echo 0)
+          if [ "$CODE" -le "$CUR" ]; then
+            echo "::warning::versionCode ($CODE) sunucudakinden ($CUR) büyük değil; APK değiştirilmedi. Yeni sürüm için android/app/build.gradle'da versionCode'u artırın."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cp "$APK" public/app.apk
+          printf '{"versionCode":%s,"versionName":"%s","url":"/app.apk"}\n' "$CODE" "$NAME" > public/apk-version.json
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Sunucuya koy
+        if: steps.check.outputs.publish == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/app.apk public/apk-version.json
+          git commit -m "Android ${{ steps.check.outputs.name }} (${{ steps.check.outputs.code }}) derlendi ve imzalandı"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ScreenPano-apk
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Anahtarı sil
+        if: always()
+        run: rm -f android/app/release.keystore android/keystore.properties
