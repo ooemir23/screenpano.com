@@ -67,5 +67,6 @@ class GoalView(context: Context) : FrameLayout(context) {
         val sub = listOf(d.optString("minute"), d.optString("tag")).filter { it.isNotEmpty() }.joinToString(" · ")
         if (sub.isNotEmpty()) box.addView(tv(sub, 2.2f * u, gc2, false).apply { letterSpacing = 0.08f; gravity = Gravity.CENTER }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.6f * u).toInt() })
         addView(box, LayoutParams(-1, -1))
+        post { requestLayout() } // yerleşim geçişi sırasında eklenen çocuklar bir sonraki geçişte ölçülsün
     }
 }
