@@ -65,12 +65,12 @@ function mediaList(t) {
       for (let i = 0; i < cards.length; i += 4) { const pair = cards.slice(i, i + 4); out2.push({ id: 'bk' + F.coverHash(pair.map(x => x.title).join('|')), name: 'Yeni kitap', type: 'poster', tpl: 'kitap', fields: { title: pair[0].title, sub: pair[0].author, note: pair[0].publisher }, books: pair, image: pair[0].image, dur: 12 }); }
       return out2;
     })() : [];
-  const withBooks = list => { // her 4 içerikte bir yeni çıkan kitap kapağı
+  const withBooks = list => { // her 6 içerikte bir yeni çıkan kitap kapağı (kısa listede döngüde en çok bir kez; 1-2 içerikte hiç: kitap sürekli araya girmesin)
     if (!covers.length) return list;
     if (!list.length) return covers.slice(0, 1);
     const m = []; let k = 0;
-    list.forEach((v, i) => { m.push(v); if ((i + 1) % 4 === 0) m.push(covers[k++ % covers.length]); });
-    if (list.length < 4) m.push(covers[0]);
+    list.forEach((v, i) => { m.push(v); if ((i + 1) % 6 === 0 && i + 1 < list.length) m.push(covers[k++ % covers.length]); });
+    if (list.length >= 3) m.push(covers[k++ % covers.length]);
     return m;
   };
   const ig = db.instagram;

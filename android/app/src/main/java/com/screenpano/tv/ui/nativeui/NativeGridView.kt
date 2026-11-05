@@ -91,12 +91,15 @@ class NativeGridView(context: Context) : ViewGroup(context) {
         val s = state ?: return
         val W = (r - l).toFloat(); val H = (b - t).toFloat()
         val sc = scale(s, W, H)
-        val cw = W * sc[2] / s.cols; val ch = H * sc[2] / s.rows
+        // sayfadaki #app ızgarasıyla birebir: kenar boşluğu (1.2vw / 1.8vh) ve hücre aralığı (.9vw / 1.4vh) hesaba katılır
+        val k = sc[2]
+        val padX = W * 0.012f; val padY = H * 0.018f; val gapX = W * 0.009f; val gapY = H * 0.014f
+        val tw = (W - 2 * padX - (s.cols - 1) * gapX) / s.cols; val th = (H - 2 * padY - (s.rows - 1) * gapY) / s.rows
         val seen = HashMap<String, Int>()
         for (w in s.widgets) {
             val c = cells[w.type + "#" + (seen.merge(w.type, 1, Int::plus) ?: 1)] ?: continue
-            val x = sc[0] + w.x * cw; val y = sc[1] + w.y * ch
-            val pw = (w.w * cw).toInt(); val ph = (w.h * ch).toInt()
+            val x = sc[0] + k * (padX + w.x * (tw + gapX)); val y = sc[1] + k * (padY + w.y * (th + gapY))
+            val pw = (k * (w.w * tw + (w.w - 1) * gapX)).toInt(); val ph = (k * (w.h * th + (w.h - 1) * gapY)).toInt()
             c.measure(MeasureSpec.makeMeasureSpec(pw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(ph, MeasureSpec.EXACTLY))
             c.layout(x.toInt(), y.toInt(), x.toInt() + pw, y.toInt() + ph)
         }
