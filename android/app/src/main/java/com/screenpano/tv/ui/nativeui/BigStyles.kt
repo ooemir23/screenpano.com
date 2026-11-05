@@ -88,6 +88,13 @@ internal fun buildBant(k: BigCtx) {
         G.ell(c, W * 0.88f, H * 0.35f, W * 0.55f, H * 0.7f, intArrayOf(BigColors.al(k.c2, 0.55f), 0), floatArrayOf(0f, 1f))
         G.lin(c, 0f, H * 0.48f, 0f, H, intArrayOf(0, Color.argb(199, 0, 0, 0)), null, 0f, H * 0.48f, W, H)
     }, FrameLayout.LayoutParams(MATCH, MATCH))
+    // orta: iki büyük arma ve VS (arkada medya olmadığı için üst alan boş kalmasın)
+    val cr = (24 * u).toInt()
+    val mid = LinearLayout(k.ctx).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER }
+    mid.addView(k.orb(cr, k.c1, k.c1b, k.crest(k.hl, k.home, k.c1, cr, 0.82f), BigColors.mix(k.c1b, Color.WHITE, 0.3f), 0.3f), k.lp((cr * 1.5f).toInt(), (cr * 1.4f).toInt()))
+    mid.addView(k.tv("VS", 6f * u, Color.parseColor("#ffe28a"), italic = true, shadow = true), k.lp(WRAP, WRAP).also { it.leftMargin = (3 * w).toInt(); it.rightMargin = (3 * w).toInt() })
+    mid.addView(k.orb(cr, k.c2, k.c2b, k.crest(k.al, k.away, k.c2, cr, 0.82f), BigColors.mix(k.c2b, Color.WHITE, 0.3f), 0.3f), k.lp((cr * 1.5f).toInt(), (cr * 1.4f).toInt()))
+    v.addView(mid, FrameLayout.LayoutParams(WRAP, WRAP, Gravity.CENTER).also { it.bottomMargin = (12 * u).toInt() })
     // üst orta: marka + başlık
     val head = LinearLayout(k.ctx).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
     head.addView(k.top(leagueLine = false), k.lp(WRAP, WRAP))

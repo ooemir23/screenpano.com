@@ -101,6 +101,18 @@ internal class PolyBg(
     @Suppress("OVERRIDE_DEPRECATION") override fun getOpacity() = PixelFormat.TRANSLUCENT
 }
 
+/** Tek satırlık metinler üst kutu dar ölçülünce sağdan kesilmesin: gereken genişlikten küçük ölçülmez (kısaltma istenenlerde ellipsize açıkken uygulanmaz). */
+internal class FitText(context: Context) : TextView(context) {
+    override fun onMeasure(w: Int, h: Int) {
+        super.onMeasure(w, h)
+        if (ellipsize != null || maxLines > 1 || MeasureSpec.getMode(w) == MeasureSpec.EXACTLY) return
+        val t = text?.toString() ?: return
+        if (t.contains('\n')) return
+        val need = (paint.measureText(t) + paddingLeft + paddingRight + shadowRadius * 2 + 2).toInt()
+        if (measuredWidth < need) setMeasuredDimension(need, measuredHeight)
+    }
+}
+
 internal class BigCtx(val v: FrameLayout, d: JSONObject, val s: TvState) {
     val ctx: Context = v.context
     val m: JSONObject = d.optJSONObject("m") ?: JSONObject()
@@ -141,7 +153,7 @@ internal class BigCtx(val v: FrameLayout, d: JSONObject, val s: TvState) {
     fun lp(w: Int, h: Int) = LinearLayout.LayoutParams(w, h)
     fun flp(w: Int, h: Int, g: Int = Gravity.NO_GRAVITY) = FrameLayout.LayoutParams(w, h, g)
 
-    fun tv(t: String, size: Float, color: Int, bold: Boolean = true, italic: Boolean = false, spacing: Float = 0f, shadow: Boolean = false): TextView = TextView(ctx).apply {
+    fun tv(t: String, size: Float, color: Int, bold: Boolean = true, italic: Boolean = false, spacing: Float = 0f, shadow: Boolean = false): TextView = FitText(ctx).apply {
         text = t; includeFontPadding = false; setTextColor(color); setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
         typeface = Typeface.create(Typeface.DEFAULT, if (bold && italic) Typeface.BOLD_ITALIC else if (bold) Typeface.BOLD else if (italic) Typeface.ITALIC else Typeface.NORMAL)
         if (spacing != 0f) letterSpacing = spacing

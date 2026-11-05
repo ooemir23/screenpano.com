@@ -18,8 +18,8 @@ android {
         applicationId 'com.screenpano.tv'
         minSdk 21
         targetSdk 34
-        versionCode 49
-        versionName '3.17.2'
+        versionCode 50
+        versionName '3.17.3'
         buildConfigField 'String', 'BASE_URL', "\"${baseUrl}\""
         resValue 'string', 'app_name', appName
     }

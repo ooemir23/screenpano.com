@@ -154,7 +154,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         val llogo = leagueLogo(m)
         val gold = Color.parseColor("#ffe08a")
 
-        fun tv(t: String, size: Float, color: Int, bold: Boolean = true) = TextView(context).apply {
+        fun tv(t: String, size: Float, color: Int, bold: Boolean = true): TextView = FitText(context).apply {
             text = t; includeFontPadding = false; setTextColor(color); setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
             typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
         }
@@ -275,7 +275,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         val c1 = hex(m.str("hc")) ?: Color.parseColor("#12307f"); val c2 = hex(m.str("ac")) ?: Color.parseColor("#2c2c30")
         val gold = Color.parseColor("#f4c04f"); val dark = Color.parseColor("#0a0a0c")
         val dayTxt = d.optString("dayTxt"); val tm = d.optString("tm")
-        fun tv(t: String, size: Float, color: Int, bold: Boolean = true) = TextView(context).apply {
+        fun tv(t: String, size: Float, color: Int, bold: Boolean = true): TextView = FitText(context).apply {
             text = t; includeFontPadding = false; setTextColor(color); setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
             typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
         }

@@ -33,7 +33,7 @@ class GoalView(context: Context) : FrameLayout(context) {
         val gc = col(d.optString("gc"), Color.parseColor("#c8963c")); val gd = col(d.optString("gd"), Color.parseColor("#4a3410")); val gc2 = col(d.optString("gc2"), Color.parseColor("#f7e7c8"))
         // vh birimi, kartın dar olduğu yerde taşmasın diye genişliğe de bağlanır
         val u = min(vh, W / 30f)
-        fun tv(t: String, size: Float, color: Int, bold: Boolean = true) = TextView(context).apply {
+        fun tv(t: String, size: Float, color: Int, bold: Boolean = true): TextView = FitText(context).apply {
             text = t; includeFontPadding = false; setTextColor(color); setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
             typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
         }
