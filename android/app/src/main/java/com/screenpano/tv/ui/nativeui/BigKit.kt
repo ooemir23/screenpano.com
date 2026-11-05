@@ -186,14 +186,14 @@ internal class BigCtx(val v: FrameLayout, d: JSONObject, val s: TvState) {
         return f
     }
 
-    fun brand(hU: Float = 7.5f): View =
-        if (brandLogo.isNotEmpty()) img(brandLogo).also { it.layoutParams = lp((40 * w).toInt(), (hU * u).toInt()) }
-        else tv(up(s.brandName), 2.4f * u, Color.WHITE, spacing = 0.24f, shadow = true)
+    fun brand(): View = if (brandLogo.isNotEmpty()) img(brandLogo) else tv(up(s.brandName), 2.4f * u, Color.WHITE, spacing = 0.24f, shadow = true)
+    /** Marka görünümünün yerleşimi: logo kutusu sabit (40 genişlik × hU yükseklik), yazı içeriğe göre. */
+    fun brandLp(hU: Float = 7.5f): LinearLayout.LayoutParams = if (brandLogo.isNotEmpty()) lp((40 * w).toInt(), (hU * u).toInt()) else lp(-2, -2)
 
     /** .ytop: marka, "BÜYÜK DERBİ / AVRUPA GECESİ" çizgili başlık, lig. */
     fun top(withKick: Boolean = true, leagueLine: Boolean = true): LinearLayout = LinearLayout(ctx).apply {
         orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
-        addView(brand(), lp(-2, -2))
+        addView(brand(), brandLp())
         if (withKick) {
             val row = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
             val bar = { rev: Boolean -> View(ctx).apply { background = GradientDrawable(if (rev) GradientDrawable.Orientation.RIGHT_LEFT else GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(0, Color.parseColor("#f4c04f"))) } }

@@ -277,7 +277,7 @@ private fun buildDuelTour(k: BigCtx, tour: Boolean) {
     val (root, body) = k.column()
     // üst blok
     val top = LinearLayout(k.ctx).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
-    top.addView(k.brand(), k.lp(WRAP, WRAP))
+    top.addView(k.brand(), k.brandLp())
     val lea = (if (tour) "⚽ " else "") + k.league.ifEmpty { k.kick }
     top.addView(k.tv(lea, (if (tour) 2.7f else 2.8f) * u, Color.WHITE, spacing = if (tour) 0.28f else 0.3f, shadow = true).apply {
         if (tour) { setPadding((2.2f * w).toInt(), (0.55f * u).toInt(), (2.2f * w).toInt(), (0.55f * u).toInt()); background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(Color.argb(224, 20, 24, 36), Color.argb(240, 8, 10, 16))).apply { cornerRadius = 99f * u; setStroke(max(1, (0.18f * u).toInt()), Color.argb(166, 255, 212, 125)) } }
@@ -336,7 +336,7 @@ internal fun buildMatchday(k: BigCtx) {
     if (k.brandLogo.isNotEmpty()) root.addView(LinearLayout(k.ctx).apply {
         gravity = Gravity.CENTER; setPadding((1.4f * w).toInt(), (0.35f * u).toInt(), (1.4f * w).toInt(), (0.35f * u).toInt())
         background = GradientDrawable().apply { setColor(Color.argb(209, 10, 14, 22)); cornerRadius = 0.9f * u; setStroke(1, Color.argb(71, 255, 255, 255)) }
-        addView(k.img(k.brandLogo), k.lp(WRAP, (3.6f * u).toInt()))
+        addView(k.img(k.brandLogo), k.lp((18 * k.w).toInt(), (3.6f * u).toInt()))
     }, k.lp(WRAP, (4.4f * u).toInt()))
     val hud = LinearLayout(k.ctx).apply {
         orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding((2.2f * w).toInt(), (0.7f * u).toInt(), (2.2f * w).toInt(), (0.7f * u).toInt())
@@ -411,7 +411,7 @@ internal fun buildNeon(k: BigCtx) {
     }, FrameLayout.LayoutParams(MATCH, MATCH))
     val root = LinearLayout(k.ctx).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL; setPadding((5 * w).toInt(), (2.6f * u).toInt(), (5 * w).toInt(), 0) }
     v.addView(root, FrameLayout.LayoutParams(MATCH, MATCH))
-    if (k.brandLogo.isNotEmpty()) root.addView(k.brand(), k.lp(WRAP, WRAP))
+    if (k.brandLogo.isNotEmpty()) root.addView(k.brand(), k.brandLp(5f))
     val cut = 14f
     val panel = LinearLayout(k.ctx).apply {
         orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding((4.5f * w).toInt(), (0.65f * u).toInt(), (4.5f * w).toInt(), (0.65f * u).toInt())
