@@ -35,7 +35,7 @@ import kotlin.math.min
  * Diğer tasarımlar sayfada çizilmeye devam eder (BigArenaView.supports).
  */
 class BigArenaView(context: Context) : FrameLayout(context) {
-    companion object { fun supports(style: String) = style == "arena" }
+    companion object { fun supports(style: String) = style == "arena" || style == "uyum" }
 
     private var data: JSONObject? = null
     private var st: TvState? = null
@@ -122,6 +122,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
     private fun build() {
         val d = data ?: return; val s = st ?: return
         removeAllViews()
+        if (d.optJSONObject("cfg")?.optString("style") != "arena") { buildUyum(d, s); return }
         val m = d.optJSONObject("m") ?: return; val cfg = d.optJSONObject("cfg") ?: JSONObject()
         val W = width.toFloat(); val H = height.toFloat()
         val u = min(H, W * 9f / 16f) / 100f; val w = W / 100f
@@ -244,5 +245,83 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         if (infos.isNotEmpty()) footer.addView(tv(infos.joinToString("      "), 2f * u, lc2).apply { gravity = Gravity.CENTER }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.4f * u).toInt() })
         wrap.addView(footer, LinearLayout.LayoutParams((W * 0.88f).toInt(), -2))
         addView(wrap, LayoutParams(-1, -1))
+    }
+
+    /** Varsayılan "uyum" tasarımı: iki takım rengi çapraz bölünür, ortada büyük takım adları, saat, gün ve alt şerit. */
+    private fun buildUyum(d: JSONObject, s: TvState) {
+        val m = d.optJSONObject("m") ?: return; val cfg = d.optJSONObject("cfg") ?: JSONObject()
+        val W = width.toFloat(); val H = height.toFloat()
+        val u = min(H, W * 9f / 16f) / 100f; val w = W / 100f
+        val up = { t: String -> t.uppercase(trTR) }
+        val c1 = hex(m.str("hc")) ?: Color.parseColor("#12307f"); val c2 = hex(m.str("ac")) ?: Color.parseColor("#2c2c30")
+        val gold = Color.parseColor("#f4c04f"); val dark = Color.parseColor("#0a0a0c")
+        val dayTxt = d.optString("dayTxt"); val tm = d.optString("tm")
+        fun tv(t: String, size: Float, color: Int, bold: Boolean = true) = TextView(context).apply {
+            text = t; includeFontPadding = false; setTextColor(color); setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
+            typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
+        }
+        setBackgroundColor(dark)
+        // çapraz bölünmüş renk alanları
+        addView(View(context).apply { background = Poly({ ww, hh -> floatArrayOf(0f, 0f, ww * 0.57f, 0f, ww * 0.43f, hh.toFloat(), 0f, hh.toFloat()) }, c1, dark, 0, 0f) }, LayoutParams(-1, -1))
+        addView(View(context).apply { background = Poly({ ww, hh -> floatArrayOf(ww * 0.57f, 0f, ww.toFloat(), 0f, ww.toFloat(), hh.toFloat(), ww * 0.43f, hh.toFloat()) }, c2, dark, 0, 0f) }, LayoutParams(-1, -1))
+        addView(object : View(context) {
+            private val p = Paint(Paint.ANTI_ALIAS_FLAG)
+            override fun onDraw(c: Canvas) {
+                val ww = width.toFloat(); val hh = height.toFloat()
+                c.save(); c.translate(ww * 0.5f, 0f); c.scale(1f, (hh * 0.45f) / (ww * 0.5f))
+                p.shader = RadialGradient(0f, 0f, ww * 0.5f, intArrayOf(Color.argb(56, 255, 255, 255), 0), floatArrayOf(0f, 0.7f), Shader.TileMode.CLAMP); c.drawCircle(0f, 0f, ww * 0.5f, p); c.restore()
+                c.save(); c.translate(ww * 0.5f, hh); c.scale(1f, (hh * 0.6f) / ww)
+                p.shader = RadialGradient(0f, 0f, ww, intArrayOf(Color.argb(217, 0, 0, 0), 0), floatArrayOf(0f, 0.7f), Shader.TileMode.CLAMP); c.drawCircle(0f, 0f, ww, p); c.restore()
+            }
+        }, LayoutParams(-1, -1))
+        // takım görselleri
+        fun side(logo: String, photo: String, left: Boolean) {
+            if (photo.isNotEmpty()) {
+                addView(ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_END; load(NativeEnv.url(photo)) { crossfade(false) } }, LayoutParams((W * 0.46f).toInt(), (H * 0.78f).toInt(), (if (left) Gravity.START else Gravity.END) or Gravity.BOTTOM))
+                if (logo.isNotEmpty()) addView(ImageView(context).apply { alpha = 0.28f; scaleType = ImageView.ScaleType.FIT_CENTER; load(NativeEnv.url(logo)) { crossfade(false) } }, LayoutParams((46 * u).toInt(), (46 * u).toInt(), (if (left) Gravity.START else Gravity.END) or Gravity.TOP).also { it.topMargin = (-4 * u).toInt() })
+            } else if (logo.isNotEmpty()) {
+                addView(ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER; load(NativeEnv.url(logo)) { crossfade(false) } }, LayoutParams((24 * u).toInt(), (24 * u).toInt(), (if (left) Gravity.START else Gravity.END) or Gravity.TOP).also { it.topMargin = (H * 0.27f).toInt(); if (left) it.leftMargin = (W * 0.07f).toInt() else it.rightMargin = (W * 0.07f).toInt() })
+            }
+        }
+        side(m.str("hl"), m.str("hp"), true); side(m.str("al"), m.str("ap"), false)
+
+        val bc = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL; setPadding((3 * w).toInt(), (2.4f * u).toInt(), (3 * w).toInt(), 0) }
+        val top = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
+        val logo = s.raw.optJSONObject("brand")?.str("logo") ?: ""
+        if (logo.isNotEmpty()) top.addView(ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER; load(NativeEnv.url(logo)) { crossfade(false) } }, LinearLayout.LayoutParams((40 * w).toInt(), (9 * u).toInt()))
+        else top.addView(tv(up(s.brandName), 3 * u, Color.parseColor("#ffe9a8")).apply { letterSpacing = 0.2f })
+        top.addView(tv(if (m.optBoolean("derby")) "BÜYÜK DERBİ" else "AVRUPA GECESİ", 8.6f * u, Color.parseColor("#f2c14e")).apply {
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC); gravity = Gravity.CENTER; setShadowLayer(u * 0.8f, 0f, u * 0.5f, Color.argb(200, 0, 0, 0))
+        }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (1.4f * u).toInt() })
+        if (!m.optBoolean("derby")) top.addView(tv(up(m.str("league")), 2.3f * u, Color.parseColor("#ffe9a8")).apply { letterSpacing = 0.34f; gravity = Gravity.CENTER }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.8f * u).toInt() })
+        bc.addView(top, LinearLayout.LayoutParams(-1, -2))
+        bc.addView(View(context), LinearLayout.LayoutParams(-1, 0, 1f))
+
+        val btm = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
+        val nm = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER }
+        fun nameTv(n: String) = tv(up(n), (if (n.length > 13) 4.2f else 6f) * u, gold).apply { gravity = Gravity.CENTER; maxLines = 2; ellipsize = TextUtils.TruncateAt.END; setShadowLayer(u, 0f, u * 0.4f, Color.BLACK) }
+        nm.addView(nameTv(m.str("home")), LinearLayout.LayoutParams(0, -2, 1f))
+        nm.addView(tv("VS", 3.6f * u, Color.WHITE).apply { alpha = 0.9f }, LinearLayout.LayoutParams(-2, -2).also { it.leftMargin = (2 * w).toInt(); it.rightMargin = (2 * w).toInt() })
+        nm.addView(nameTv(m.str("away")), LinearLayout.LayoutParams(0, -2, 1f))
+        btm.addView(nm, LinearLayout.LayoutParams(-1, -2))
+        btm.addView(tv("🕘 $tm", 8.4f * u, Color.WHITE).apply { setShadowLayer(u, 0f, u * 0.4f, Color.BLACK); setSingleLine(true) }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (1.3f * u).toInt() })
+        btm.addView(tv(up(dayTxt), 3f * u, Color.parseColor("#1a110a")).apply {
+            letterSpacing = 0.06f; setSingleLine(true)
+            background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(Color.parseColor("#f4c04f"), Color.parseColor("#c98d22"))).apply { cornerRadius = 0.8f * u }
+            setPadding((3 * w).toInt(), (0.7f * u).toInt(), (3 * w).toInt(), (0.7f * u).toInt())
+        }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (1.3f * u).toInt() })
+        val note = cfg.str("note")
+        if (note.isNotEmpty()) btm.addView(tv(note, 3.2f * u, Color.WHITE).apply {
+            gravity = Gravity.CENTER; setBackgroundColor(Color.argb(153, 0, 0, 0)); setPadding((3 * w).toInt(), (1.3f * u).toInt(), (3 * w).toInt(), (1.3f * u).toInt())
+        }, LinearLayout.LayoutParams(W.toInt(), -2).also { it.topMargin = (1.7f * u).toInt() })
+        val infoArr = cfg.optJSONArray("info"); val icons = listOf("📍", "🎮", "💨")
+        val infos = ArrayList<String>(); if (infoArr != null) for (i in 0 until infoArr.length()) { val t = infoArr.optString(i); if (t.isNotEmpty() && t != "null") infos.add(icons[infos.size % 3] + " " + up(t)) }
+        if (infos.isNotEmpty()) btm.addView(tv(infos.joinToString("        "), 1.9f * u, Color.parseColor("#ffe9a8")).apply {
+            gravity = Gravity.CENTER; setBackgroundColor(Color.argb(184, 0, 0, 0)); setPadding((3 * w).toInt(), (1.2f * u).toInt(), (3 * w).toInt(), (1.4f * u).toInt()); letterSpacing = 0.06f
+        }, LinearLayout.LayoutParams(W.toInt(), -2))
+        else btm.addView(View(context), LinearLayout.LayoutParams(-1, (1.4f * u).toInt()))
+        bc.addView(btm, LinearLayout.LayoutParams(-1, -2))
+        addView(bc, LayoutParams(-1, -1))
+        post { requestLayout() }
     }
 }
