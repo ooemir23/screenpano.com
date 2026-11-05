@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
@@ -36,7 +37,7 @@ private class Viewport(context: Context) : ViewGroup(context) {
 
     override fun onMeasure(wSpec: Int, hSpec: Int) {
         val w = MeasureSpec.getSize(wSpec); val h = MeasureSpec.getSize(hSpec)
-        for (i in 0 until childCount) getChildAt(i).measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY))
+        for (i in 0 until childCount) getChildAt(i).measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY))
         setMeasuredDimension(w, h)
     }
 
@@ -76,7 +77,7 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
     private val label = TextView(context)
     private val view = Viewport(context)
     private val track = VTrack(context)
-    private var anim: ObjectAnimator? = null
+    private var anim: ValueAnimator? = null
     private var state: TvState? = null
     private var vh = 10f
     private var lastKey = ""
@@ -151,7 +152,7 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
         lastKey = np.key
         plan = np
         val apply = { show(np, p) }
-        if (immediate || track.childCount == 0) { apply(); return }
+        if (immediate || !track.hasItems()) { apply(); return }
         // içerik değişince şerit söner, yenisi belirir
         view.animate().alpha(0f).setDuration(550).withEndAction { apply(); view.animate().alpha(1f).setDuration(550).start() }.start()
     }
@@ -159,8 +160,6 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
     private fun show(pl: TickerPlan, p: Palette) {
         val old = anim; anim = null; old?.cancel()
         label.text = pl.label.uppercase(Locale("tr", "TR"))
-        track.removeAllViews()
-        track.translationX = 0f
         val vw = view.width
         val textPx = vh * 2.7f; val padPx = (vh * 2.4f).toInt()
         // sanal şerit: yalnız görünen alanın biraz önü/sonu gerçek görünüme çevrilir, kalanı yalnız sayı olarak tutulur
@@ -176,9 +175,9 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
         // hız: ekran genişliğinin %5,5'i / sn (sayfadaki hesapla aynı), bölüm modunda en az 12 sn, değilse 20 sn
         val screenW = resources.displayMetrics.widthPixels.toFloat()
         val secs = max(if (pl.seg) 12f else 20f, dist / (screenW * 0.055f))
-        val an = ObjectAnimator.ofFloat(track, View.TRANSLATION_X, 0f, -dist)
+        val an = ValueAnimator.ofFloat(0f, dist)
         an.duration = (secs * 1000).toLong(); an.interpolator = LinearInterpolator()
-        an.addUpdateListener { track.window(-track.translationX, vw) }
+        an.addUpdateListener { track.setOff(it.animatedValue as Float) }
         if (pl.seg && pl.segCount > 1) {
             // bölüm bitince sıradakine geç
             an.addListener(object : AnimatorListenerAdapter() {
@@ -186,8 +185,6 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
             })
         } else {
             an.repeatCount = ValueAnimator.INFINITE
-            // başa sarınca görünen pencere hemen aynı karede yenilenir (boş kare kalmasın)
-            an.addListener(object : AnimatorListenerAdapter() { override fun onAnimationRepeat(animation: Animator) { track.window(0f, vw) } })
         }
         anim = an; an.start()
     }
@@ -210,59 +207,67 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
     override fun onDetachedFromWindow() { release(); super.onDetachedFromWindow() }
 }
 
-/** Sonsuz şerit: yerleşim yalnız sayı olarak tutulur; yazı görünümleri görünen alanın biraz önünde oluşturulur, geçince havuza döner. */
-private class VTrack(context: Context) : ViewGroup(context) {
+/**
+ * Sonsuz şerit: öğelerin yerleşimi yalnız sayı olarak tutulur. Görünen alanın biraz önünde/arkasında kalan öğeler
+ * küçük birer bitmap'e çizilir (geçince serbest bırakılır); kayarken yalnız bu bitmap'ler ondalıklı konumda çizilir (düzgün, takılmasız).
+ * Şerit 'half' piksellik bir periyotla kendi üstüne sarılır.
+ */
+private class VTrack(context: Context) : View(context) {
     private var items: List<CharSequence> = emptyList()
     private var lefts = IntArray(0); private var wids = IntArray(0); private var txt = IntArray(0)
-    private var total = 0; private var h = 0
+    private var half = 1; private var h = 0; private var vw = 0
     private var textPx = 0f; private var color = Color.WHITE; private var padPx = 0
-    private val live = HashMap<Int, TextView>()
-    private val pool = ArrayList<TextView>()
-    private var lo = -1; private var hi = -2
+    private var bmps = arrayOfNulls<Bitmap>(0)
+    private var off = 0f
+    private val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+    private val maker: TextView by lazy { TextView(context).apply { includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER_VERTICAL } }
+
+    fun hasItems() = lefts.isNotEmpty()
 
     fun setup(list: List<CharSequence>, ws: List<Int>, reps: Int, start: Int, half: Int, height: Int, textPx: Float, color: Int, padPx: Int, vw: Int) {
-        for (v in live.values) pool.add(v); live.clear(); removeAllViewsInLayout()
-        items = list; h = height; this.textPx = textPx; this.color = color; this.padPx = padPx
-        val n = list.size * reps * 2
-        lefts = IntArray(n); wids = IntArray(n); txt = IntArray(n)
-        var i = 0
-        for (copy in 0..1) {
-            var x = copy * half + start
-            repeat(reps) { for (k in list.indices) { lefts[i] = x; wids[i] = ws[k]; txt[i] = k; x += ws[k]; i++ } }
-        }
-        total = 2 * half; lo = -1; hi = -2
-        requestLayout()
-        window(0f, vw)
+        for (b in bmps) b?.recycle()
+        items = list; h = max(1, height); this.textPx = textPx; this.color = color; this.padPx = padPx; this.half = max(1, half); this.vw = vw
+        val n = list.size * reps
+        lefts = IntArray(n); wids = IntArray(n); txt = IntArray(n); bmps = arrayOfNulls(n)
+        var x = start; var i = 0
+        repeat(reps) { for (k in list.indices) { lefts[i] = x; wids[i] = ws[k]; txt[i] = k; x += ws[k]; i++ } }
+        setOff(0f)
     }
 
-    override fun onMeasure(w: Int, hs: Int) { setMeasuredDimension(total, MeasureSpec.getSize(hs)) }
-    override fun onLayout(c: Boolean, l: Int, t: Int, r: Int, b: Int) {}
+    private fun xOf(i: Int): Float {
+        var x = lefts[i] - off
+        if (x < -wids[i] - vw * 0.1f) x += half
+        return x
+    }
 
-    /** offset: şeridin solunda kalan piksel; vw: görünen genişlik. Önde %35, arkada %10 pay bırakılır. */
-    fun window(offset: Float, vw: Int) {
-        if (lefts.isEmpty()) return
-        val from = offset - vw * 0.10f; val to = offset + vw * 1.35f
-        var a = 0; var b = lefts.size - 1
-        // ilk bitiş noktası 'from'dan büyük öğe
-        while (a < b) { val m = (a + b) / 2; if (lefts[m] + wids[m] < from) a = m + 1 else b = m }
-        val nlo = a
-        var nhi = nlo
-        while (nhi + 1 < lefts.size && lefts[nhi + 1] < to) nhi++
-        if (nlo == lo && nhi == hi) return
-        val it = live.entries.iterator()
-        while (it.hasNext()) { val e = it.next(); if (e.key < nlo || e.key > nhi) { removeViewInLayout(e.value); pool.add(e.value); it.remove() } }
-        for (i in nlo..nhi) if (!live.containsKey(i) && lefts[i] < to && lefts[i] + wids[i] >= from) {
-            val tv = if (pool.isNotEmpty()) pool.removeAt(pool.size - 1) else TextView(context).apply {
-                includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER_VERTICAL
-            }
-            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, textPx); tv.setTextColor(color); tv.setPadding(padPx, 0, padPx, 0)
-            tv.text = items[txt[i]]
-            addViewInLayout(tv, -1, LayoutParams(wids[i], h), true)
-            tv.measure(MeasureSpec.makeMeasureSpec(wids[i], MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY))
-            tv.layout(lefts[i], 0, lefts[i] + wids[i], h)
-            live[i] = tv
+    fun setOff(o: Float) {
+        off = o
+        val from = -vw * 0.10f; val to = vw * 1.35f // görünen alanın %10 gerisi, %35 ilerisi
+        for (i in lefts.indices) {
+            val x = xOf(i)
+            val inWin = x < to && x + wids[i] > from
+            if (inWin) { if (bmps[i] == null) bmps[i] = render(i) }
+            else if (bmps[i] != null) { bmps[i]?.recycle(); bmps[i] = null }
         }
-        lo = nlo; hi = nhi
         invalidate()
     }
+
+    private fun render(i: Int): Bitmap {
+        val w = max(1, wids[i])
+        val bm = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        maker.text = items[txt[i]]
+        maker.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, textPx); maker.setTextColor(color); maker.setPadding(padPx, 0, padPx, 0)
+        maker.measure(MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY))
+        maker.layout(0, 0, w, h)
+        maker.draw(Canvas(bm))
+        return bm
+    }
+
+    override fun onMeasure(w: Int, hs: Int) { setMeasuredDimension(MeasureSpec.getSize(w), MeasureSpec.getSize(hs)) }
+
+    override fun onDraw(canvas: Canvas) {
+        for (i in lefts.indices) { val b = bmps[i] ?: continue; canvas.drawBitmap(b, xOf(i), 0f, paint) }
+    }
+
+    override fun onDetachedFromWindow() { for (j in bmps.indices) { bmps[j]?.recycle(); bmps[j] = null }; super.onDetachedFromWindow() }
 }
