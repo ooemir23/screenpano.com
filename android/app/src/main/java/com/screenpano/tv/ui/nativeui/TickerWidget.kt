@@ -75,7 +75,7 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
     private val clockDate = TextView(context)
     private val label = TextView(context)
     private val view = Viewport(context)
-    private val track = LinearLayout(context)
+    private val track = VTrack(context)
     private var anim: ObjectAnimator? = null
     private var state: TvState? = null
     private var vh = 10f
@@ -105,8 +105,6 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
         label.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         label.gravity = Gravity.CENTER_VERTICAL
         label.includeFontPadding = false
-        track.orientation = HORIZONTAL
-        track.gravity = Gravity.CENTER_VERTICAL
         view.addView(track)
         addView(clockBox); addView(label); addView(view, LayoutParams(0, LayoutParams.MATCH_PARENT, 1f))
     }
@@ -164,45 +162,23 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
         track.removeAllViews()
         track.translationX = 0f
         val vw = view.width
-        fun half(): LinearLayout {
-            val h = LinearLayout(context); h.orientation = HORIZONTAL; h.gravity = Gravity.CENTER_VERTICAL
-            return h
-        }
-        fun fill(h: LinearLayout, reps: Int) {
-            repeat(reps) {
-                for (it2 in pl.items) {
-                    val tv = TextView(context)
-                    tv.includeFontPadding = false
-                    tv.setSingleLine(true)
-                    // her öğe bir kez dokuya çizilir; kayarken yalnız doku kaydırılır (zayıf GPU'da her karede metin çizilmez)
-                    tv.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                    tv.text = it2
-                    tv.setTextColor(p.white)
-                    tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 2.7f)
-                    tv.setPadding((vh * 2.4f).toInt(), 0, (vh * 2.4f).toInt(), 0)
-                    h.addView(tv, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
-                }
-            }
-        }
-        val a = half(); val b = half()
-        if (pl.seg) {
-            a.minimumWidth = vw; a.setPadding((vh * 2f).toInt(), 0, 0, 0); b.minimumWidth = vw; b.setPadding((vh * 2f).toInt(), 0, 0, 0)
-            fill(a, 1); fill(b, 1)
-        } else {
-            fill(a, 1)
-            a.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
-            val reps = max(1, Math.ceil(vw.toDouble() / max(1, a.measuredWidth)).toInt()) // tek kopya kısaysa çoğalt
-            a.removeAllViews(); fill(a, reps); fill(b, reps)
-        }
-        track.addView(a); track.addView(b)
-        track.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(max(1, view.height), MeasureSpec.EXACTLY))
-        val dist = track.measuredWidth / 2f
+        val textPx = vh * 2.7f; val padPx = (vh * 2.4f).toInt()
+        // sanal şerit: yalnız görünen alanın biraz önü/sonu gerçek görünüme çevrilir, kalanı yalnız sayı olarak tutulur
+        val meas = TextView(context).apply { includeFontPadding = false; setSingleLine(true); setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, textPx); setPadding(padPx, 0, padPx, 0) }
+        val ws = pl.items.map { t -> meas.text = t; meas.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)); meas.measuredWidth }
+        val sum = ws.sum()
+        val start = if (pl.seg) (vh * 2f).toInt() else 0
+        val reps = if (pl.seg) 1 else max(1, Math.ceil(vw.toDouble() / max(1, sum)).toInt()) // tek kopya kısaysa çoğalt
+        val half = if (pl.seg) max(vw, start + sum) else sum * reps
+        track.setup(pl.items, ws, reps, start, half, view.height, textPx, p.white, padPx, vw)
+        val dist = half.toFloat()
         if (dist <= 0f) return
         // hız: ekran genişliğinin %5,5'i / sn (sayfadaki hesapla aynı), bölüm modunda en az 12 sn, değilse 20 sn
         val screenW = resources.displayMetrics.widthPixels.toFloat()
         val secs = max(if (pl.seg) 12f else 20f, dist / (screenW * 0.055f))
         val an = ObjectAnimator.ofFloat(track, View.TRANSLATION_X, 0f, -dist)
         an.duration = (secs * 1000).toLong(); an.interpolator = LinearInterpolator()
+        an.addUpdateListener { track.window(-track.translationX, vw) }
         if (pl.seg && pl.segCount > 1) {
             // bölüm bitince sıradakine geç
             an.addListener(object : AnimatorListenerAdapter() {
@@ -228,4 +204,62 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     override fun release() { val old = anim; anim = null; old?.cancel(); main.removeCallbacks(clockTick) }
     override fun onDetachedFromWindow() { release(); super.onDetachedFromWindow() }
+}
+
+/** Sonsuz şerit: yerleşim yalnız sayı olarak tutulur; yazı görünümleri görünen alanın biraz önünde oluşturulur, geçince havuza döner. */
+private class VTrack(context: Context) : ViewGroup(context) {
+    private var items: List<CharSequence> = emptyList()
+    private var lefts = IntArray(0); private var wids = IntArray(0); private var txt = IntArray(0)
+    private var total = 0; private var h = 0
+    private var textPx = 0f; private var color = Color.WHITE; private var padPx = 0
+    private val live = HashMap<Int, TextView>()
+    private val pool = ArrayList<TextView>()
+    private var lo = -1; private var hi = -2
+
+    fun setup(it: List<CharSequence>, ws: List<Int>, reps: Int, start: Int, half: Int, height: Int, textPx: Float, color: Int, padPx: Int, vw: Int) {
+        for (v in live.values) pool.add(v); live.clear(); removeAllViewsInLayout()
+        items = it; h = height; this.textPx = textPx; this.color = color; this.padPx = padPx
+        val n = it.size * reps * 2
+        lefts = IntArray(n); wids = IntArray(n); txt = IntArray(n)
+        var i = 0
+        for (copy in 0..1) {
+            var x = copy * half + start
+            repeat(reps) { for (k in it.indices) { lefts[i] = x; wids[i] = ws[k]; txt[i] = k; x += ws[k]; i++ } }
+        }
+        total = 2 * half; lo = -1; hi = -2
+        requestLayout()
+        window(0f, vw)
+    }
+
+    override fun onMeasure(w: Int, hs: Int) { setMeasuredDimension(total, MeasureSpec.getSize(hs)) }
+    override fun onLayout(c: Boolean, l: Int, t: Int, r: Int, b: Int) {}
+
+    /** offset: şeridin solunda kalan piksel; vw: görünen genişlik. Önde %35, arkada %10 pay bırakılır. */
+    fun window(offset: Float, vw: Int) {
+        if (lefts.isEmpty()) return
+        val from = offset - vw * 0.10f; val to = offset + vw * 1.35f
+        var a = 0; var b = lefts.size - 1
+        // ilk bitiş noktası 'from'dan büyük öğe
+        while (a < b) { val m = (a + b) / 2; if (lefts[m] + wids[m] < from) a = m + 1 else b = m }
+        val nlo = a
+        var nhi = nlo
+        while (nhi + 1 < lefts.size && lefts[nhi + 1] < to) nhi++
+        if (nlo == lo && nhi == hi) return
+        val it = live.entries.iterator()
+        while (it.hasNext()) { val e = it.next(); if (e.key < nlo || e.key > nhi) { removeViewInLayout(e.value); pool.add(e.value); it.remove() } }
+        for (i in nlo..nhi) if (!live.containsKey(i) && lefts[i] < to && lefts[i] + wids[i] >= from) {
+            val tv = if (pool.isNotEmpty()) pool.removeAt(pool.size - 1) else TextView(context).apply {
+                includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER_VERTICAL
+                setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            }
+            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, textPx); tv.setTextColor(color); tv.setPadding(padPx, 0, padPx, 0)
+            tv.text = items[txt[i]]
+            addViewInLayout(tv, -1, LayoutParams(wids[i], h), true)
+            tv.measure(MeasureSpec.makeMeasureSpec(wids[i], MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY))
+            tv.layout(lefts[i], 0, lefts[i] + wids[i], h)
+            live[i] = tv
+        }
+        lo = nlo; hi = nhi
+        invalidate()
+    }
 }
