@@ -1077,6 +1077,7 @@ function next() {
   advance();
 }
 function advance() {
+  if (window.__pendingBig && !big.showing && !trailerOn) { const pb = window.__pendingBig; window.__pendingBig = null; big.queue = []; big.after = advance; bigShow(pb.match, pb.cfg); return; } // panelden gönderilen deneme: fragman/duyuru bitince
   if (++trailerPlays >= (window.__trailerEvery || 4) && trailerList.length && navigator.onLine !== false && Date.now() - trailerAt > (window.__trailerGapMin || 8) * 60 * 1000) { playTrailer(); return; }
   if (NMED()) { window.__N.mediaResume(); return; }
   idx++; play();
@@ -2993,7 +2994,7 @@ function connect() {
     else if (m.type === 'traffic') setTraffic(m.traffic);
     else if (m.type === 'goal') { if (m.goal && m.goal.at && Date.now() + (window.__srvOff || 0) - m.goal.at > 60000) return; showGoal(m.goal); }
     else if (m.type === 'campaign') campShow(m.camp);
-    else if (m.type === 'bigmatch') { if (m.force) { if (MEDIA_ON && videos.length && !big.showing && !trailerOn && (videos.length > 1 || NMED())) { window.__pendingBig = m; return; } /* içerik bitince */ big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
+    else if (m.type === 'bigmatch') { if (m.force) { if (MEDIA_ON && videos.length && !big.showing && (trailerOn || videos.length > 1 || NMED())) { window.__pendingBig = m; return; } /* içerik bitince */ big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
     else if (m.type === 'music_cmd') onMusicCmd(m);
     else if (m.type === 'music_tracks') onMusicTracks(m);
