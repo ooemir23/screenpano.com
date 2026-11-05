@@ -20,7 +20,8 @@ computeBuild();
 const sendRaw = (ws, msg) => { if (ws.readyState === 1) ws.send(typeof msg === 'string' ? msg : JSON.stringify(msg)); };
 function sendState(ws) {
   const t = tenants.get(ws.tid); if (!t) return;
-  sendRaw(ws, { type: 'state', state: publicState(t) });
+  // nativeWidgets: bu kutu ekranı yerel widget'larla çizsin mi (panelden kutu başına açılır; yoksa sayfa çizer)
+  sendRaw(ws, { type: 'state', state: { ...publicState(t), nativeWidgets: !!ws.native } });
 }
 
 // Aynı anda gelen çok sayıda değişiklikte işletme başına tek yayın
@@ -47,6 +48,7 @@ hub.connectedTenantIds = () => new Set([...clients].map(c => c.tid));
 hub.clientCount = () => clients.size;
 hub.onlineDeviceIds = () => new Set([...clients].filter(c => c.deviceId).map(c => c.deviceId));
 hub.sendDevice = (id, msg) => { let n = 0; for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, msg); n++; } return n; };
+hub.setNative = (id, on) => { for (const ws of clients) if (ws.deviceId === id) { ws.native = !!on; sendState(ws); } };
 hub.kickDevice = id => { for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, { type: 'auth', error: 'revoked' }); ws.close(); } };
 
 // Çoklu ekran senkronizasyonu: her işletme için sunucuda tek bir çalma listesi saati tutulur, ekranlar ona uyar.
@@ -132,7 +134,7 @@ function attach(server) {
     if (token) { // TV cihazı
       const d = store.q.deviceByHash.get(auth.hashToken(token));
       if (!d) { sendRaw(ws, { type: 'auth', error: 'invalid' }); return ws.close(); }
-      Object.assign(ws, { tid: d.tenant_id, deviceId: d.id, ip: auth.clientIp(req) });
+      Object.assign(ws, { tid: d.tenant_id, deviceId: d.id, native: !!d.native, ip: auth.clientIp(req) });
       store.q.deviceSeen.run(Date.now(), d.id);
       const t0 = tenants.get(d.tenant_id); if (t0) require('./monitor').connected(t0, d);
       try { require('./stats').deviceUp(d.tenant_id, d.id); } catch (e) {}

@@ -78,6 +78,7 @@ const addCol = (tbl, col, def) => { if (!cols(tbl).has(col)) sql.exec(`ALTER TAB
 addCol('tenants', 'org_id', 'TEXT');          // çoklu şube: aynı org_id'ye sahip işletmeler bir zincirin şubeleri
 addCol('devices', 'status', 'TEXT');          // TV'nin son durum raporu (JSON)
 addCol('devices', 'alerted', 'INTEGER DEFAULT 0');
+addCol('devices', 'native', 'INTEGER DEFAULT 0');   // 1: kutu ekranı yerel (native) widget'larla çizer (Android 3.3+)
 
 const J = s => { try { return JSON.parse(s); } catch { return null; } };
 
@@ -99,12 +100,13 @@ const q = {
   screenGet: sql.prepare('SELECT * FROM screens WHERE id = ?'),
   screenIns: sql.prepare('INSERT INTO screens (id, tenant_id, name, layout, sort, created) VALUES (@id, @tenant_id, @name, @layout, @sort, @created)'),
   screenDel: sql.prepare('DELETE FROM screens WHERE id = ? AND tenant_id = ?'),
-  devicesOf: sql.prepare('SELECT id, screen_id, name, agent, created, last_seen, status FROM devices WHERE tenant_id = ? ORDER BY created'),
+  devicesOf: sql.prepare('SELECT id, screen_id, name, agent, created, last_seen, status, native FROM devices WHERE tenant_id = ? ORDER BY created'),
   deviceByHash: sql.prepare('SELECT * FROM devices WHERE token_hash = ?'),
   deviceIns: sql.prepare('INSERT INTO devices (id, tenant_id, screen_id, token_hash, name, agent, created, last_seen) VALUES (@id, @tenant_id, @screen_id, @token_hash, @name, @agent, @created, @created)'),
   deviceSeen: sql.prepare('UPDATE devices SET last_seen = ? WHERE id = ?'),
   deviceDel: sql.prepare('DELETE FROM devices WHERE id = ? AND tenant_id = ?'),
   deviceMove: sql.prepare('UPDATE devices SET screen_id = ? WHERE id = ? AND tenant_id = ?'),
+  deviceNative: sql.prepare('UPDATE devices SET native = ? WHERE id = ? AND tenant_id = ?'),
   deviceRename: sql.prepare('UPDATE devices SET name = ? WHERE id = ? AND tenant_id = ?'),
   setGet: sql.prepare('SELECT value FROM settings WHERE key = ?'),
   statAdd: sql.prepare('INSERT INTO stats (tenant_id, day, kind, key, value) VALUES (?, ?, ?, ?, ?) ON CONFLICT(tenant_id, day, kind, key) DO UPDATE SET value = value + excluded.value'),

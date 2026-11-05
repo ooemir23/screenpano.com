@@ -199,7 +199,12 @@ r.post('/pair', (req, res) => {
   if (err) return res.status(400).json({ error: err });
   res.json({ ok: true });
 });
-r.put('/devices/:id', (req, res) => { if (typeof (req.body || {}).name === 'string') store.q.deviceRename.run(req.body.name.trim().slice(0, 40), req.params.id, req.t.id); res.json({ ok: true }); });
+r.put('/devices/:id', (req, res) => {
+  const b = req.body || {};
+  if (typeof b.name === 'string') store.q.deviceRename.run(b.name.trim().slice(0, 40), req.params.id, req.t.id);
+  if (typeof b.native === 'boolean' && store.q.devicesOf.all(req.t.id).some(d => d.id === req.params.id)) { store.q.deviceNative.run(b.native ? 1 : 0, req.params.id, req.t.id); hub.setNative(req.params.id, b.native); }
+  res.json({ ok: true });
+});
 r.delete('/devices/:id', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); res.json({ ok: true }); });
 // TV uygulamasından uzaktan çıkış: kutu oturumunu kapatıp giriş ekranına döner (token geçersiz olur)
 r.post('/devices/:id/logout', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); res.json({ ok: true }); });

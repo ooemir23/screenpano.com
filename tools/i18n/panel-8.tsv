@@ -382,3 +382,8 @@ Arama sonuçlarından ＋ düğmesiyle şarkı topladıkça listeniz burada kuru
 Çok sık arama yapıyorsunuz; biraz bekleyin ¦ You are searching too often; please wait a moment ¦ Sie suchen zu häufig; bitte kurz warten ¦ تبحث كثيرًا؛ انتظر قليلاً
 Arama yapılamadı; tekrar deneyin ¦ Search failed; try again ¦ Suche fehlgeschlagen; bitte erneut versuchen ¦ فشل البحث؛ حاول مرة أخرى
 Liste bulunamadı ¦ List not found ¦ Liste nicht gefunden ¦ القائمة غير موجودة
+Yerel ekran: açık ¦ Native screen: on ¦ Nativer Bildschirm: an ¦ الشاشة الأصلية: مفعّلة
+Yerel ekran: kapalı ¦ Native screen: off ¦ Nativer Bildschirm: aus ¦ الشاشة الأصلية: متوقفة
+Yerel ekran kapatıldı ¦ Native screen turned off ¦ Nativer Bildschirm ausgeschaltet ¦ تم إيقاف الشاشة الأصلية
+Yerel ekran açıldı (deneysel) ¦ Native screen turned on (experimental) ¦ Nativer Bildschirm eingeschaltet (experimentell) ¦ تم تفعيل الشاشة الأصلية (تجريبي)
+Deneysel: ekranı sayfa yerine uygulamanın yerel bileşenleriyle çizer (Android 3.3+) ¦ Experimental: draws the screen with the app's native components instead of the web page (Android 3.3+) ¦ Experimentell: zeichnet den Bildschirm mit den nativen Komponenten der App statt der Webseite (Android 3.3+) ¦ تجريبي: يرسم الشاشة بمكوّنات التطبيق الأصلية بدلاً من صفحة الويب (Android 3.3+)

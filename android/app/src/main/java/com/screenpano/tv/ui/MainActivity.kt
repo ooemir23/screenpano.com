@@ -40,6 +40,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.screenpano.tv.BuildConfig
 import com.screenpano.tv.data.net.ApiClient
+import com.screenpano.tv.data.net.TvWebSocket
+import com.screenpano.tv.ui.nativeui.NativeGridView
 import com.screenpano.tv.data.net.TrafficService
 import com.screenpano.tv.data.prefs.TvPreferences
 import com.screenpano.tv.databinding.ActivityMainBinding
@@ -71,6 +73,10 @@ class MainActivity : AppCompatActivity() {
     private var lastTrafficJson: String? = null
     private var isUpdating = false
 
+    // Yerel ekran (deneysel): panelden kutu başına açılır. Kapalıyken hiçbir şey değişmez, sayfa çizmeye devam eder.
+    private var nativeGrid: NativeGridView? = null
+    private var tvSocket: TvWebSocket? = null
+
     private val baseUrl = BuildConfig.BASE_URL.trimEnd('/')
     private val tvUrl = "$baseUrl/tv"
 
@@ -91,8 +97,31 @@ class MainActivity : AppCompatActivity() {
         initExoPlayer()
         setupWebView()
         startTrafficPolling()
+        startNativeChannel()
 
         binding.webView.loadUrl(tvUrl)
+    }
+
+    /** Sunucuyla yerel bağlantı: durum iletisini alır, panelde "Yerel ekran" açıksa ızgarayı gösterir. */
+    private fun startNativeChannel() {
+        tvSocket = TvWebSocket(
+            baseUrl = baseUrl,
+            tokenProvider = { prefs.getDeviceToken() },
+            onState = { st ->
+                if (st.nativeWidgets) {
+                    val g = nativeGrid ?: NativeGridView(this).also {
+                        it.isClickable = false; it.isFocusable = false
+                        binding.rootContainer.addView(it, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+                        nativeGrid = it
+                    }
+                    g.visibility = View.VISIBLE
+                    g.setState(st)
+                } else {
+                    nativeGrid?.visibility = View.GONE
+                }
+            },
+            onSync = { },
+        ).also { it.start() }
     }
 
     private fun initExoPlayer() {
@@ -608,6 +637,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         trafficJob?.cancel()
+        tvSocket?.stop()
         handler.removeCallbacksAndMessages(null)
         exoPlayer?.release()
         exoPlayer = null
