@@ -28,4 +28,4 @@ function get(t, file, onReady) {
   }
   return null;
 }
-module.exports = { get };
+module.exports = { get, dump: () => Object.fromEntries(known) };

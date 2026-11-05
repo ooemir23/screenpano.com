@@ -236,6 +236,7 @@ r.put('/menu', (req, res) => {
 
 // ================= DURUM (önizleme ve genel bakış için) =================
 r.get('/state', (req, res) => res.json(publicState(req.t)));
+r.get('/vidlen', (req, res) => res.json(require('./vidlen').dump())); // video süresi ölçümleri (tanılama)
 
 // ======================================================================
 // Aşağısı eski tek-kafe sürümünün yönetim uçları; davranış aynı, veri işletmeye ait.
