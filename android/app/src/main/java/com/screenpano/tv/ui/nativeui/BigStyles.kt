@@ -53,8 +53,8 @@ internal fun buildStadyum(k: BigCtx) {
         G.poly(c, floatArrayOf(W * 0.5f, 0f, W * 0.46f, H * 0.95f, W * 0.54f, H * 0.95f), null, Color.argb(20, 255, 255, 255))
         G.poly(c, floatArrayOf(W * 0.5f, 0f, W * 0.60f, H * 0.95f, W * 0.70f, H * 0.95f), null, beam)
     }, FrameLayout.LayoutParams(MATCH, MATCH))
-    if (k.hp.isNotEmpty()) v.addView(k.img(k.hp).also { it.alpha = 0.9f }, k.flp((k.W * 0.38f).toInt(), (k.H * 0.84f).toInt(), Gravity.START or Gravity.BOTTOM))
-    if (k.ap.isNotEmpty()) v.addView(k.img(k.ap).also { it.alpha = 0.9f }, k.flp((k.W * 0.38f).toInt(), (k.H * 0.84f).toInt(), Gravity.END or Gravity.BOTTOM))
+    if (k.hp.isNotEmpty()) v.addView(k.img(k.hp).also { it.alpha = 0.9f }, k.flp((k.pw * 0.38f).toInt(), (k.ph * 0.84f).toInt(), Gravity.START or Gravity.BOTTOM))
+    if (k.ap.isNotEmpty()) v.addView(k.img(k.ap).also { it.alpha = 0.9f }, k.flp((k.pw * 0.38f).toInt(), (k.ph * 0.84f).toInt(), Gravity.END or Gravity.BOTTOM))
     v.addView(k.vignette(0f, 0.8f), FrameLayout.LayoutParams(MATCH, MATCH))
     val (root, body) = k.column()
     body.addView(k.top(), k.lp(MATCH, WRAP))
@@ -251,13 +251,13 @@ private fun buildDuelTour(k: BigCtx, tour: Boolean) {
     // oyuncu fotoğrafı ya da dev arma
     fun side(photo: String, col: Int, col2: Int, url: String, team: String, left: Boolean) {
         val g = (if (left) Gravity.START else Gravity.END)
-        if (photo.isNotEmpty()) v.addView(k.img(photo), k.flp((k.W * 0.47f).toInt(), (k.H * 0.92f).toInt(), g or Gravity.BOTTOM).also { if (left) it.leftMargin = (k.W * 0.02f).toInt() else it.rightMargin = (k.W * 0.02f).toInt() })
+        if (photo.isNotEmpty()) v.addView(k.img(photo), k.flp((k.pw * 0.47f).toInt(), (k.ph * 0.92f).toInt(), g or Gravity.BOTTOM).also { if (left) it.leftMargin = (k.pw * 0.02f).toInt() else it.rightMargin = (k.pw * 0.02f).toInt() })
         else {
             val size = ((if (tour) 50 else 34) * u).toInt()
             val o = k.orb(size, col, col2, k.crest(url, team, col, size, if (tour) 0.82f else 0.78f), BigColors.mix(col2, Color.WHITE, 0.3f), if (tour) 0.28f else 0.3f, 1.55f)
             v.addView(o, k.flp((size * 1.55f).toInt(), (size * 1.55f).toInt(), g or Gravity.TOP).also {
-                it.topMargin = (k.H * (if (tour) 0.14f else 0.24f) - size * 0.275f).toInt()
-                val off = (k.W * (if (tour) 0.042f else 0.07f) - size * 0.275f).toInt(); if (left) it.leftMargin = off else it.rightMargin = off })
+                it.topMargin = (k.ph * (if (tour) 0.14f else 0.24f) - size * 0.275f).toInt()
+                val off = (k.pw * (if (tour) 0.042f else 0.07f) - size * 0.275f).toInt(); if (left) it.leftMargin = off else it.rightMargin = off })
         }
     }
     side(k.hp, k.c1, k.c1b, k.hl, k.home, true); side(k.ap, k.c2, k.c2b, k.al, k.away, false)
@@ -271,7 +271,7 @@ private fun buildDuelTour(k: BigCtx, tour: Boolean) {
         mid.addView(stage, k.lp(ss, ss).also { it.leftMargin = (3.2f * u).toInt(); it.rightMargin = (3.2f * u).toInt() })
         if (k.hp.isNotEmpty() || k.ap.isNotEmpty()) mid.addView(cr(k.c2, k.al, k.away), k.lp(cs, cs))
         v.addView(DrawView(k.ctx) { c, W, H -> G.lin(c, W * 0.23f, 0f, W * 0.77f, 0f, intArrayOf(0, Color.argb(190, 255, 212, 128), Color.WHITE, Color.argb(190, 255, 212, 128), 0), floatArrayOf(0f, 0.28f, 0.5f, 0.72f, 1f), W * 0.23f, H * 0.39f - 1f, W * 0.77f, H * 0.39f + 1f) }, FrameLayout.LayoutParams(MATCH, MATCH))
-        v.addView(mid, FrameLayout.LayoutParams(WRAP, WRAP, Gravity.TOP or Gravity.CENTER_HORIZONTAL).also { it.topMargin = (k.H * 0.39f - ss / 2f).toInt() })
+        v.addView(mid, FrameLayout.LayoutParams(WRAP, WRAP, Gravity.TOP or Gravity.CENTER_HORIZONTAL).also { it.topMargin = (k.ph * 0.39f - ss / 2f).toInt() })
     }
     v.addView(k.vignette(0.75f, 0.88f), FrameLayout.LayoutParams(MATCH, MATCH))
     val (root, body) = k.column()
@@ -393,7 +393,7 @@ internal fun buildMatchday(k: BigCtx) {
     fh.addView(k.tv(if (k.derby) "BÜYÜK DERBİ" else "BÜYÜK MAÇ", 2.2f * u, g2, spacing = 0.22f))
     fh.addView(View(k.ctx).apply { setBackgroundColor(Color.argb(115, 255, 220, 140)) }, k.lp(1, (3 * u).toInt()).also { it.leftMargin = (2 * w).toInt(); it.rightMargin = (2 * w).toInt() })
     fh.addView(k.tv(k.up(foot), 2.5f * u, Color.WHITE, spacing = 0.08f, shadow = true).apply { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END })
-    root.addView(fh, k.lp((k.W * 0.82f).toInt(), WRAP))
+    root.addView(fh, k.lp((k.pw * 0.82f).toInt(), WRAP))
 }
 
 // ---------------------------------------------------------------- 8) Neon arena

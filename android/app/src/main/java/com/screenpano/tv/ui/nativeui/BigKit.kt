@@ -105,8 +105,8 @@ internal class BigCtx(val v: FrameLayout, d: JSONObject, val s: TvState) {
     val ctx: Context = v.context
     val m: JSONObject = d.optJSONObject("m") ?: JSONObject()
     val cfg: JSONObject = d.optJSONObject("cfg") ?: JSONObject()
-    val W = v.width.toFloat(); val H = v.height.toFloat()
-    val u = min(H, W * 9f / 16f) / 100f; val w = W / 100f
+    val pw = v.width.toFloat(); val ph = v.height.toFloat()
+    val u = min(ph, pw * 9f / 16f) / 100f; val w = pw / 100f
     private val tr = Locale("tr", "TR")
     fun up(t: String) = t.uppercase(tr)
     val home = m.str("home"); val away = m.str("away")
