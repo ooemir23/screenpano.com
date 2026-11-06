@@ -66,7 +66,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         // içeriğe göre referans ölçü: yalnız hava ya da yalnız piyasa kutusu daha alçak/dar olabilir
         val wx = props?.optBoolean("weather", true) != false; val rt = props?.optBoolean("rates", true) != false; val qr = props?.optBoolean("qr", false) == true
         val refH = if (qr || (wx && rt)) 18f else 10f
-        val refW = if (qr || wx) 42f else 34f
+        val refW = if (qr || wx) 44f else 38f
         return min(height / (refH * baseVh), width / (refW * baseVh)).coerceIn(0.3f, 2.6f)
     }
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
@@ -159,7 +159,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 if (v == null) return ""
                 val up = v > 0.005; val dn = v < -0.005
                 val str = " " + (if (up) "▲" else if (dn) "▼" else "•") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
-                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.6f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.9f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
             }
             data class Cell(val name: String, val extra: CharSequence, val value: String, val unit: String)
             val sets = listOf(
@@ -167,13 +167,11 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 listOf(Cell("BIST 100", chg(r.num("bistCh")), f(r.num("bist"), 0), ""), Cell("BITCOIN", chg(r.num("btcCh")), r.num("btc")?.let { "$" + f(it, 0) } ?: "--", ""), Cell("STERLİN", "", f(r.num("gbp")), "₺")),
             )
             val row = LinearLayout(context).apply { orientation = HORIZONTAL }
-            val line = LinearLayout(context).apply { setBackgroundColor(Color.argb(23, 255, 255, 255)) }
-            if (wx != null && props?.optBoolean("weather", true) != false) content.addView(line, LayoutParams(LayoutParams.MATCH_PARENT, max(1, (vh * 0.1f).toInt())).apply { topMargin = gap })
             for (c in sets[rateIdx % sets.size]) {
                 val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL; setPadding((vh * 0.3f).toInt(), 0, (vh * 0.3f).toInt(), 0) }
-                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.6f, p.accent2, true, 0.06f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
+                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.9f, p.accent2, true, 0.06f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
                 col.addView(TextView(context).apply { text = head; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER })
-                val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 3.0f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 2f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
+                val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 3.5f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 2.3f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
                 col.addView(TextView(context).apply { text = vtxt; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
                 row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             }
