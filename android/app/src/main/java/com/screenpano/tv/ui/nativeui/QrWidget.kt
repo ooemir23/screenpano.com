@@ -74,7 +74,7 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
         content.removeAllViews(); phase = 0
         main.removeCallbacks(wifi)
         if (q == null) {
-            val t = TextView(context).apply { text = "Panelden QR kod ekleyin"; setTextColor(p.mute); setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.6f) }
+            val t = TextView(context).apply { text = "Panelden QR kod ekleyin"; setTextColor(p.mute); setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2f) }
             content.addView(t); setSize((vh * 17f).toInt(), (vh * 4f).toInt()); applyVisibility(); return
         }
         val qs = (s.raw.optDouble("qrSize", 17.0).toFloat() * vh).toInt()
@@ -110,7 +110,7 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
         var px = vh * 2.3f
         label.setTextSize(TypedValue.COMPLEX_UNIT_PX, px)
         val avail = maxW - (vh * 2.4f)
-        while (px > vh * 1.2f && label.paint.measureText(label.text.toString()) > avail) { px -= vh * 0.1f; label.setTextSize(TypedValue.COMPLEX_UNIT_PX, px) }
+        while (px > vh * 1.6f && label.paint.measureText(label.text.toString()) > avail) { px -= vh * 0.1f; label.setTextSize(TypedValue.COMPLEX_UNIT_PX, px) }
     }
 
     private val wifi: Runnable = object : Runnable {

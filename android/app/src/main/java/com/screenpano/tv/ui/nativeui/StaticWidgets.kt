@@ -157,7 +157,7 @@ class ImageWidget(context: Context) : FrameLayout(context), NativeWidget {
         outlineProvider = object : android.view.ViewOutlineProvider() {
             override fun getOutline(v: View, o: android.graphics.Outline) { o.setRoundRect(0, 0, v.width, v.height, r) }
         }
-        ph.setTextColor(p.mute); ph.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.8f)
+        ph.setTextColor(p.mute); ph.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2f)
         if (url.isEmpty()) { img.visibility = View.GONE; ph.visibility = View.VISIBLE; ph.text = "Görsel seçilmedi"; lastUrl = "" }
         else {
             ph.visibility = View.GONE; img.visibility = View.VISIBLE

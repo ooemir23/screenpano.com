@@ -60,7 +60,7 @@ class ReviewsWidget(context: Context) : LinearLayout(context), NativeWidget {
         setPadding((vh * 2.9f).toInt(), 0, (vh * 2.9f).toInt(), 0)
         quote.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2.3f); quote.setTextColor(p.white)
         stars.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 3.2f); stars.setTextColor(Color.parseColor("#f5b73b")); stars.letterSpacing = 0.1f
-        who.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.8f); who.setTextColor(p.accent2); who.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        who.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2f); who.setTextColor(p.accent2); who.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         who.maxWidth = (resources.displayMetrics.widthPixels * 0.16f).toInt()
         for (t in listOf(stars, quote, who)) (t.layoutParams as LayoutParams).leftMargin = (vh * 2.5f).toInt()
         main.removeCallbacks(tick); tick.run()
@@ -79,7 +79,7 @@ class ReviewsWidget(context: Context) : LinearLayout(context), NativeWidget {
             setSpan(RunSpan(vh * 2.8f, Color.parseColor("#4285f4"), true, 0.02f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             append("\n")
             val sub = if (gr != null) String.format(Locale("tr", "TR"), "%s ★ · %d yorum", gr.optString("rating").replace('.', ','), gr.optInt("count")) else "Yorumlar"
-            val a = length; append(sub.uppercase(Locale("tr", "TR"))); setSpan(RunSpan(vh * 1.1f, p.mute, false, 0.2f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            val a = length; append(sub.uppercase(Locale("tr", "TR"))); setSpan(RunSpan(vh * 1.6f, p.mute, false, 0.2f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         g.text = head; g.gravity = Gravity.CENTER; g.setTextColor(p.white)
         val rt = r.optInt("rating").coerceIn(0, 5)
@@ -143,7 +143,7 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
         background = cardBg(pal, vh)
         setPadding((vh * 2.5f).toInt(), (vh * 1.8f).toInt(), (vh * 2.5f).toInt(), (vh * 1.2f).toInt())
         title.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 3f); title.setTextColor(pal.white); title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); title.letterSpacing = 0.12f
-        pg.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.5f); pg.setTextColor(pal.mute); pg.letterSpacing = 0.14f; pg.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        pg.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.8f); pg.setTextColor(pal.mute); pg.letterSpacing = 0.14f; pg.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         head.setPadding(0, 0, 0, (vh * 1.2f).toInt())
         line.setBackgroundColor(pal.a(pal.accent2, 0.5f))
         (line.layoutParams as LayoutParams).height = max(1, (vh * 0.15f).toInt())
@@ -210,20 +210,20 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
     private fun rowView(r: Row): View {
         val pal = p!!
         if (r.cat != null) return TextView(context).apply {
-            text = r.cat.uppercase(Locale("tr", "TR")); setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.75f); setTextColor(pal.accent2)
+            text = r.cat.uppercase(Locale("tr", "TR")); setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2f); setTextColor(pal.accent2)
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); letterSpacing = 0.24f; includeFontPadding = false
             setPadding(0, (vh * 1.4f).toInt(), 0, (vh * 0.5f).toInt())
         }
         val row = LinearLayout(context).apply { orientation = HORIZONTAL; setPadding(0, (vh * 0.75f).toInt(), 0, (vh * 0.75f).toInt()) }
         val nm = SpannableStringBuilder(r.name).apply {
             setSpan(RunSpan(vh * 2.5f, pal.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            if (r.desc.isNotEmpty()) { append("\n"); val a = length; append(r.desc); setSpan(RunSpan(vh * 1.5f, pal.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+            if (r.desc.isNotEmpty()) { append("\n"); val a = length; append(r.desc); setSpan(RunSpan(vh * 1.8f, pal.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
         }
         row.addView(TextView(context).apply { text = nm; includeFontPadding = false }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { })
         row.addView(DotsView(context, Color.argb(71, 255, 255, 255), max(1f, vh * 0.2f)), LayoutParams(0, (vh * 2.2f).toInt(), 1f).apply { leftMargin = (vh * 0.6f).toInt(); rightMargin = (vh * 0.6f).toInt() })
         val pr = SpannableStringBuilder().apply {
             if (r.was.isNotEmpty()) {
-                append(r.was); setSpan(RunSpan(vh * 1.8f, pal.mute, false, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                append(r.was); setSpan(RunSpan(vh * 2f, pal.mute, false, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 setSpan(StrikethroughSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append("  ")
             }
             val a = length; append(r.price); setSpan(RunSpan(vh * 2.6f, pal.accent2, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -269,6 +269,17 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
             page[col].add(r); used += hs[i]
         }
         outPages.add(page)
+        // T8: tek sayfaya sığıyorsa sütunlar dengelenir (web tv.html renderMenuW ile aynı kural)
+        if (outPages.size == 1 && ncol > 1 && hs.isNotEmpty()) {
+            val total = hs.sum(); val step = body.height * 0.02f
+            var lim = max(total.toFloat() / ncol, (hs.maxOrNull() ?: 0) * 2f)
+            while (lim <= body.height) {
+                val cols = ArrayList<ArrayList<Row>>().apply { add(ArrayList()) }; var u = 0
+                all.forEachIndexed { i, r -> val need = if (r.cat != null) hs[i] + (hs.getOrNull(i + 1) ?: 0) else hs[i]; if (u + need > lim && cols.last().isNotEmpty()) { cols.add(ArrayList()); u = 0 }; cols.last().add(r); u += hs[i] }
+                if (cols.size <= ncol) { while (cols.size < ncol) cols.add(ArrayList()); outPages[0] = cols; break }
+                lim += step
+            }
+        }
         pages = outPages
         if (idx >= pages.size) idx = 0
         showPage()

@@ -3,7 +3,7 @@
 const COLS = 24, ROWS = 24;
 
 const WIDGETS = {
-  media:   { name: 'Medya oynatıcı', desc: 'Video ve fotoğraf döngüsü; kampanya, büyük maç ve fragmanlar da burada çıkar', pro: false, required: true, min: [8, 8] },
+  media:   { name: 'Medya oynatıcı', desc: 'Video ve fotoğraf döngüsü; kampanya, büyük maç ve fragmanlar da burada çıkar', pro: false, required: true, min: [8, 8], props: { fit: 'auto' } },
   logo:    { name: 'Logo', desc: 'İşletme logosu', pro: false, min: [3, 2] },
   clock:   { name: 'Saat ve tarih', desc: 'Büyük saat ve tarih', pro: false, min: [4, 3], props: { seconds: false } },
   rates:   { name: 'Hava ve piyasalar', desc: 'Hava durumu, döviz, altın, BIST, Bitcoin ve istenirse QR kodlar (2 QR yan yana)', pro: false, min: [5, 4], props: { weather: true, rates: true, qr: false, qrs: '' } },

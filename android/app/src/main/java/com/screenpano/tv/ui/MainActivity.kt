@@ -27,6 +27,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import coil.load
 import coil.request.ImageRequest
 import androidx.annotation.OptIn
@@ -40,6 +41,7 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.screenpano.tv.BuildConfig
+import com.screenpano.tv.R
 import com.screenpano.tv.data.net.ApiClient
 import com.screenpano.tv.data.net.TvWebSocket
 import com.screenpano.tv.ui.nativeui.MediaEngine
@@ -134,6 +136,19 @@ class MainActivity : AppCompatActivity() {
         askAutostartOnce()
     }
 
+    /** T3: medya kutusu doldurma: "auto" (oran yakınsa kırparak doldurur, çok farklıysa tamamı görünür), "cover", "contain". */
+    @Volatile private var mediaFit = "auto"
+    private fun wantCover(w: Int, h: Int, bw: Int, bh: Int): Boolean {
+        if (mediaFit == "cover") return true
+        if (mediaFit == "contain" || w <= 0 || h <= 0 || bw <= 0 || bh <= 0) return false
+        val r = (w.toFloat() / h) / (bw.toFloat() / bh)
+        return r in 0.77f..1.3f
+    }
+    private fun fitImage(iv: ImageView, d: android.graphics.drawable.Drawable?) {
+        if (d == null) return
+        iv.scaleType = if (wantCover(d.intrinsicWidth, d.intrinsicHeight, iv.width, iv.height)) ImageView.ScaleType.CENTER_CROP else ImageView.ScaleType.FIT_CENTER
+    }
+
     private var testFails = 0
     private var lastLoadFailed = false
     @Volatile private var pageIsReady = false
@@ -145,9 +160,29 @@ class MainActivity : AppCompatActivity() {
     }
     /** Test sunucusuna ulaşılamıyorsa (kurulmamış/kapalı) ekran takılı kalmasın: 3 başarısız yüklemeden sonra canlıya döner. */
     private fun noteMainFail() {
-        if (!prefs.isTest()) return
         lastLoadFailed = true
+        showStatus(true)
+        if (!prefs.isTest()) return
         if (++testFails >= 2) fallbackToLive()
+    }
+
+    /** T11: sayfa açılamazsa WebView'in hata sayfası yerine marka uyumlu durum ekranı (yeniden deneme sürer). */
+    private var statusView: View? = null
+    private fun showStatus(on: Boolean) = handler.post {
+        if (!on) { statusView?.let { binding.rootContainer.removeView(it) }; statusView = null; return@post }
+        if (statusView != null) return@post
+        val vh = resources.displayMetrics.heightPixels / 100f
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER; setBackgroundColor(Color.parseColor("#121414")); isClickable = true
+            addView(ImageView(this@MainActivity).apply { setImageResource(R.mipmap.ic_launcher) }, LinearLayout.LayoutParams((vh * 12).toInt(), (vh * 12).toInt()).apply { bottomMargin = (vh * 3).toInt() })
+            addView(android.widget.TextView(this@MainActivity).apply { text = "Sunucuya ulaşılamıyor"; setTextColor(Color.WHITE); setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 4.2f); typeface = android.graphics.Typeface.DEFAULT_BOLD; gravity = Gravity.CENTER })
+            addView(android.widget.TextView(this@MainActivity).apply {
+                text = "İnternet bağlantısını kontrol edin. Ekran 15 saniyede bir kendiliğinden yeniden dener." + if (prefs.isTest()) "\nTest ortamındasınız: canlı ortama dönmek için kumandada Menü tuşuna basın." else ""
+                setTextColor(Color.parseColor("#AAB2B2")); setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 2.4f); gravity = Gravity.CENTER; setLineSpacing(0f, 1.3f)
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 2).toInt() })
+        }
+        binding.rootContainer.addView(box, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        statusView = box
     }
 
     /** Test ortamındayken her ekranın (yerel katmanlar dahil) üstünde küçük kırmızı etiket: müşteri ekranı unutulmasın. */
@@ -263,6 +298,11 @@ class MainActivity : AppCompatActivity() {
                         notifyVideoEnded() // sayfa ilk 3 sn'de gelen bitişi yok saymaz, kısa bir süre sonra sıradakine geçer
                     }
 
+                    override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
+                        val pv = binding.playerView
+                        pv.resizeMode = if (wantCover(videoSize.width, videoSize.height, pv.width, pv.height)) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    }
+
                     // yeni videonun ilk karesi yüzeyde: sayfa ancak şimdi şeffaflaşır (eski kare ya da siyah görünmez)
                     override fun onRenderedFirstFrame() {
                         mediaFirstFrame?.invoke()
@@ -332,7 +372,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 // Hata sayfası da "bitti" sayılır: sayacı yalnız hatasız yüklemede sıfırla
-                if (!lastLoadFailed && url != null && url.startsWith("http")) testFails = 0
+                if (!lastLoadFailed && url != null && url.startsWith("http")) { testFails = 0; showStatus(false) }
                 handler.removeCallbacks(reloadTask)
                 pushTraffic()
                 if (webHidden.isNotEmpty()) hideWebCells(webHidden)
@@ -448,7 +488,8 @@ class MainActivity : AppCompatActivity() {
             crossfade(if (fade) 350 else 0)
             allowHardware(true)
             listener(
-                onSuccess = { _, _ ->
+                onSuccess = { _, r ->
+                    fitImage(iv, r.drawable)
                     if (tk == mediaTok) {
                         val prevVideo = mediaKind == "video"
                         mediaKind = "photo"
@@ -687,7 +728,8 @@ class MainActivity : AppCompatActivity() {
                     crossfade(if (fade) 350 else 0)
                     allowHardware(true)
                     listener(
-                        onSuccess = { _, _ ->
+                        onSuccess = { _, r ->
+                            fitImage(iv, r.drawable)
                             binding.webView.evaluateJavascript("window.__imgShown && window.__imgShown(${JSONObject.quote(url)});", null)
                         },
                         onError = { _, r ->
@@ -933,6 +975,10 @@ class MainActivity : AppCompatActivity() {
         fun env(): String = if (prefs.isTest()) "test" else "live"
 
         /** Canlı ↔ test sunucusu: ortam kaydedilir, uygulama yeniden kurulur (her ortamın kendi giriş anahtarı saklanır). */
+        /** T3: medya kutusunun doldurma biçimi (sayfa durum gelince bildirir). */
+        @JavascriptInterface
+        fun mediaFit(m: String) { mediaFit = if (m == "cover" || m == "contain") m else "auto" }
+
         /** Sayfa gerçekten açıldı (tv.html başlangıçta çağırır): test ortamı geri dönüş sayacı iptal. */
         @JavascriptInterface
         fun pageReady() { pageIsReady = true; handler.removeCallbacks(readyWatch) }

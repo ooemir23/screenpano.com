@@ -173,11 +173,11 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         val p = pal ?: Palette(s)
         setTitle(pg, p)
         dots.text = ""
-        if (pages.size > 6) { dots.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.3f); dots.setTextColor(p.mute); dots.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); dots.letterSpacing = 0.12f; dots.text = "${idx + 1} / ${pages.size}" }
+        if (pages.size > 6) { dots.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.8f); dots.setTextColor(p.mute); dots.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); dots.letterSpacing = 0.12f; dots.text = "${idx + 1} / ${pages.size}" }
         else if (pages.size > 1) { // sayfa noktaları
-            dots.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.6f)
+            dots.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2f)
             val sb = SpannableStringBuilder()
-            for (i in pages.indices) { val a = sb.length; sb.append(if (i == idx) "●" else "○"); sb.setSpan(RunSpan(vh * 1.6f, if (i == idx) p.accent2 else p.a(Color.WHITE, 0.3f), false, 0.1f), a, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+            for (i in pages.indices) { val a = sb.length; sb.append(if (i == idx) "●" else "○"); sb.setSpan(RunSpan(vh * 2f, if (i == idx) p.accent2 else p.a(Color.WHITE, 0.3f), false, 0.1f), a, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
             dots.text = sb
         }
         body.removeAllViews()
@@ -221,8 +221,8 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
             else -> "" to ""
         }
         val sb = SpannableStringBuilder(main.uppercase(trTR))
-        sb.setSpan(RunSpan(vh * 1.7f, p.a(Color.parseColor("#E5E5E5"), 1f), false, 0.32f), 0, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        if (em.isNotEmpty()) { val a = sb.length; sb.append("  ").append(em); sb.setSpan(RunSpan(vh * 1.25f, p.accent2, true, 0.2f), a, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+        sb.setSpan(RunSpan(vh * 2f, p.a(Color.parseColor("#E5E5E5"), 1f), false, 0.32f), 0, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if (em.isNotEmpty()) { val a = sb.length; sb.append("  ").append(em); sb.setSpan(RunSpan(vh * 1.8f, p.accent2, true, 0.2f), a, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
         title.text = sb
     }
 
@@ -248,8 +248,9 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     private fun teamBox(name: String, logo: String, lose: Boolean, p: Palette): LinearLayout = LinearLayout(context).apply {
         orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
-        addView(logoView(logo, 5.4f, 5.4f))
-        val n = tv(name, 1.8f, if (lose) p.mute else Color.parseColor("#FBFBFB"), !lose)
+        // T5: koyu armalar koyu kartta kaybolmasın: arkada hafif açık daire (web: .tbox .lg ile aynı)
+        addView(logoView(logo, 5.4f, 5.4f).apply { background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.argb(30, 255, 255, 255)) }; val pd = (vh * 0.5f).toInt(); setPadding(pd, pd, pd, pd) })
+        val n = tv(name, 2f, if (lose) p.mute else Color.parseColor("#FBFBFB"), !lose)
         n.gravity = Gravity.CENTER; n.maxLines = 2; n.ellipsize = TextUtils.TruncateAt.END
         addView(n, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.5f).toInt() })
     }
@@ -281,13 +282,13 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         c.addView(row, LayoutParams(-1, -2))
         val ch = m.optString("channel")
         if (ch.isNotEmpty()) {
-            val t = tv("📺 $ch", 1.15f, p.accent2, true); t.gravity = Gravity.END; t.setSingleLine(true); t.ellipsize = TextUtils.TruncateAt.END
+            val t = tv("📺 $ch", 1.6f, p.accent2, true); t.gravity = Gravity.END; t.setSingleLine(true); t.ellipsize = TextUtils.TruncateAt.END
             c.addView(t, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.4f).toInt() })
         }
         return c
     }
 
-    private fun pill(t: String, color: Int, bg: Int): TextView = tv(t, 1.15f, color, true).apply {
+    private fun pill(t: String, color: Int, bg: Int): TextView = tv(t, 1.6f, color, true).apply {
         background = GradientDrawable().apply { setColor(bg); cornerRadius = vh * 2f }
         setPadding((vw * 0.6f).toInt(), (vh * 0.25f).toInt(), (vw * 0.6f).toInt(), (vh * 0.25f).toInt())
         layoutParams = LinearLayout.LayoutParams(-2, -2).also { it.bottomMargin = (vh * 0.5f).toInt() }
@@ -310,7 +311,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
             layoutParams = LayoutParams(-1, hPx).also { it.topMargin = if (top) 0 else (vh * 0.25f).toInt() }
         }
         fun cellText(t: String, size: Float, color: Int, bold: Boolean, left: Boolean = false) = tv(t, size, color, bold).apply { gravity = if (left) Gravity.START else Gravity.CENTER; if (left) { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END } }
-        val hdr = listOf("#", "Takım", "O", "G", "B", "M", "AV", "P").mapIndexed { i, t -> cellText(t, 1.35f, p.mute, true, i == 1) as View }
+        val hdr = listOf("#", "Takım", "O", "G", "B", "M", "AV", "P").mapIndexed { i, t -> cellText(t, 1.8f, p.mute, true, i == 1) as View }
         col.addView(row(hdr, (vh * 3.4f).toInt(), 0, true))
         val avail = body.height - (vh * 3.4f).toInt()
         val n = pg.items.size
@@ -353,7 +354,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         meta.append(n.optString("source").uppercase(trTR))
         val ag = if (n.optString("date").isNotEmpty()) ago(n.optString("date")) else ""
         if (ag.isNotEmpty()) meta.append(" · " + ag.uppercase(trTR))
-        val m = tv(meta, 1.7f, p.accent2, true); m.letterSpacing = 0.08f
+        val m = tv(meta, 2f, p.accent2, true); m.letterSpacing = 0.08f
         c.addView(m, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.6f).toInt() })
         if (brk) (c.background as GradientDrawable).setStroke(max(1, (vh * 0.1f).toInt()), Color.parseColor("#d6262a"))
         return c
@@ -363,13 +364,13 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         val p = pal ?: Palette(st!!)
         val c = cardView(true, 1.2f, 0.9f)
         c.addView(tv(ph.optString("name"), 1.9f, Color.parseColor("#FBFBFB"), true))
-        val a = tv(ph.optString("address"), 1.5f, Color.parseColor("#E5E5E5")); a.maxLines = 2; a.ellipsize = TextUtils.TruncateAt.END
+        val a = tv(ph.optString("address"), 1.8f, Color.parseColor("#E5E5E5")); a.maxLines = 2; a.ellipsize = TextUtils.TruncateAt.END
         c.addView(a, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.4f).toInt() })
         val sb = SpannableStringBuilder()
         val d = ph.optString("phone").replace(Regex("\\D"), "")
         if (d.isNotEmpty()) sb.append("☎ " + (if (Regex("^0\\d{10}$").matches(d)) "${d.substring(0, 4)} ${d.substring(4, 7)} ${d.substring(7, 9)} ${d.substring(9)}" else ph.optString("phone")))
-        if (showDistrict && ph.optString("district").isNotEmpty()) { val s0 = sb.length; sb.append("   " + ph.optString("district").uppercase(trTR)); sb.setSpan(RunSpan(vh * 1.3f, p.mute, false, 0.12f), s0, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
-        val t = tv(sb, 1.75f, p.accent2, true); t.letterSpacing = 0.05f
+        if (showDistrict && ph.optString("district").isNotEmpty()) { val s0 = sb.length; sb.append("   " + ph.optString("district").uppercase(trTR)); sb.setSpan(RunSpan(vh * 1.8f, p.mute, false, 0.12f), s0, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+        val t = tv(sb, 2f, p.accent2, true); t.letterSpacing = 0.05f
         c.addView(t, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.5f).toInt() })
         return c
     }
@@ -382,7 +383,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         val t = tv(b.optString("title"), 2.8f, Color.parseColor("#FBFBFB"), true); t.maxLines = 3; t.ellipsize = TextUtils.TruncateAt.END
         col.addView(t)
         if (b.optString("author").isNotEmpty()) col.addView(tv(b.optString("author"), 2.1f, p.accent2, true).apply { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END }, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.5f).toInt() })
-        if (b.optString("publisher").isNotEmpty()) col.addView(tv(b.optString("publisher"), 1.8f, p.a(Color.WHITE, 0.7f)).apply { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END }, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.2f).toInt() })
+        if (b.optString("publisher").isNotEmpty()) col.addView(tv(b.optString("publisher"), 2f, p.a(Color.WHITE, 0.7f)).apply { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END }, LayoutParams(-1, -2).also { it.topMargin = (vh * 0.2f).toInt() })
         c.addView(col, LayoutParams(0, -2, 1f))
         return c
     }

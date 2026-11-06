@@ -13,7 +13,7 @@ const I18N = l => path.join(config.PUBLIC_DIR, 'site', 'i18n', l + '.json');
 const LANGS = ['tr', 'en', 'de', 'ar'];
 const RTL = new Set(['ar']);
 const BASE = 'https://screenpano.com';
-const NEW_DAYS = 60;
+const NEW_DAYS = 30; // D8: "Yeni" rozeti yalnız son 30 günde eklenenlerde
 const PATH = l => (l === 'tr' ? '/' : `/${l}`);
 
 const e = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -65,14 +65,17 @@ function visual(f, t) {
   return `<div class="fx-v${phone ? ' has-phone' : ''}">${tv(false)}${phone}${win}</div>`;
 }
 
+// D1: features.json'daki emoji simgeleri tek tip çizgi ikona çevrilir (/icons.svg); eşlemesi olmayan emoji olduğu gibi kalır
+const EMO = { '🚨': 'siren', '🎞': 'film', '🧾': 'receipt-text', '⚽': 'trophy', '📣': 'megaphone', '🎉': 'party-popper', '📰': 'newspaper', '⏱': 'timer', '📡': 'radio-tower', '📊': 'chart-column', '🏬': 'store', '💼': 'briefcase', '📷': 'camera', '🎨': 'palette', '💻': 'monitor', '🔒': 'lock', '💾': 'hard-drive', '📺': 'tv', '⚡': 'zap', '🔑': 'key-round', '🧩': 'puzzle', '🌐': 'globe', '📚': 'book-open', '🔥': 'flame', '📥': 'download', '🏟': 'trophy', '🔳': 'scan-line', '🧭': 'compass', '🔎': 'search', '🎯': 'target', '🍹': 'clock' };
+const ico = em => { const k = String(em || '').replace(/\uFE0F/g, ''); return EMO[k] ? `<svg class="si" aria-hidden="true"><use href="/icons.svg#i-${EMO[k]}"></use></svg>` : e(em || ''); };
 const isNew = f => f.added && (Date.now() - Date.parse(f.added)) / 864e5 < NEW_DAYS;
 const badges = (f, t) => (isNew(f) ? `<span class="nb">${e(t('s.new'))}</span>` : '') + (f.plan === 'pro' ? '<span class="pb">PRO</span>' : '');
 
 function features(data, lang, t) {
   const list = data.features.filter(f => !f.hidden && f.title).map(f => loc(f, lang));
-  const nav = list.map((f, i) => `<button role="tab" id="fxt-${e(f.id)}" aria-controls="fx-${e(f.id)}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><span class="i" aria-hidden="true">${f.icon || '•'}</span><span class="n">${e(f.short || f.title)}</span>${badges(f, t)}</button>`).join('');
+  const nav = list.map((f, i) => `<button role="tab" id="fxt-${e(f.id)}" aria-controls="fx-${e(f.id)}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><span class="i" aria-hidden="true">${f.icon ? ico(f.icon) : '•'}</span><span class="n">${e(f.short || f.title)}</span>${badges(f, t)}</button>`).join('');
   const panels = list.map((f, i) => `<article class="fx-p${i === 0 ? ' on' : ''}" role="tabpanel" id="fx-${e(f.id)}" aria-labelledby="fxt-${e(f.id)}">
-  <div class="fx-t"><h3><span class="ic" aria-hidden="true">${f.icon || ''}</span>${e(f.title)} ${badges(f, t)}</h3><p>${e(f.text)}</p>${
+  <div class="fx-t"><h3><span class="ic" aria-hidden="true">${ico(f.icon)}</span>${e(f.title)} ${badges(f, t)}</h3><p>${e(f.text)}</p>${
     f.points ? `<ul class="pts">${f.points.map(p => `<li>${e(p)}</li>`).join('')}</ul>` : ''}${
     f.tags ? `<ul class="tags">${f.tags.map(p => `<li>${e(p)}</li>`).join('')}</ul>` : ''}</div>
   ${visual(f, t)}</article>`).join('\n');
@@ -80,7 +83,7 @@ function features(data, lang, t) {
   <div class="fx-step"><button class="fx-prev" aria-label="${e(t('s.prev'))}"><span>‹</span></button><span class="fx-c" aria-live="polite">1 / ${list.length}</span><button class="fx-next" aria-label="${e(t('s.next'))}"><span>›</span></button></div></div>`;
 }
 
-const extras = (data, lang, t) => (data.extras || []).map(x0 => { const x = loc(x0, lang); return `<li><b>${x.icon || ''} ${e(x.title)}${isNew(x) ? ` <span class="nb">${e(t('s.new'))}</span>` : ''}</b>${e(x.text)}</li>`; }).join('');
+const extras = (data, lang, t) => (data.extras || []).map(x0 => { const x = loc(x0, lang); return `<li><b>${ico(x.icon)} ${e(x.title)}${isNew(x) ? ` <span class="nb">${e(t('s.new'))}</span>` : ''}</b>${e(x.text)}</li>`; }).join('');
 
 function compare(data, lang, t) {
   const b = PLANS.baslangic, p = PLANS.pro, gb = mb => (mb >= 1024 ? Math.round(mb / 1024) + ' GB' : mb + ' MB');

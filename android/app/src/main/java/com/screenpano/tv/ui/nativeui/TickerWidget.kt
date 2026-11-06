@@ -134,10 +134,10 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
         clockBox.setPadding((vh * 2.4f).toInt(), 0, (vh * 2.4f).toInt(), 0)
         clockBox.layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT).apply { setMargins((vh * 1.2f).toInt(), (vh).toInt(), 0, (vh).toInt()) }
         clockTime.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 3f); clockTime.setTextColor(Color.WHITE); clockTime.letterSpacing = 0.04f
-        clockDate.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 1.25f); clockDate.setTextColor(p.al); clockDate.letterSpacing = 0.09f
+        clockDate.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 1.8f); clockDate.setTextColor(p.al); clockDate.letterSpacing = 0.09f
         main.removeCallbacks(clockTick); if (showClock) clockTick.run()
         // etiket
-        label.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 1.65f); label.setTextColor(p.al); label.letterSpacing = 0.12f
+        label.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 2f); label.setTextColor(p.al); label.letterSpacing = 0.12f
         label.background = GradientDrawable().apply { setColor(p.a(p.accent2, 0.16f)); cornerRadius = 1.11f * vh; setStroke(max(1, (vh * 0.1f).toInt()), p.a(p.accent2, 0.75f)) }
         label.setPadding((vh * 2f).toInt(), 0, (vh * 2f).toInt(), 0)
         label.layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT).apply { setMargins((vh * 1.1f).toInt(), vh.toInt(), (vh * 1.1f).toInt(), vh.toInt()) }

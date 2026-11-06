@@ -1102,6 +1102,26 @@
           "text": "تظهر فئات الفطور والغداء والمساء في أوقاتها. وفي ساعة الخصم تعرض الفئات المختارة السعر القديم مشطوبًا بجانب السعر المخفّض، وتعود الأسعار تلقائيًا عند انتهائها."
         }
       }
+    },
+    {
+      "icon": "🎞",
+      "title": "Medyada toplu işlem ve geri al",
+      "text": "Birden çok dosyayı seçip tek seferde gizleyin, gösterin ya da silin; yanlışlıkla sildiğinizi 6 saniye içinde geri alın. Fotoğraflar kutuya oranı yakınsa siyah bant bırakmadan yerleşir.",
+      "added": "2026-11-06",
+      "i18n": {
+        "en": {
+          "title": "Bulk media actions and undo",
+          "text": "Select several files and hide, show or delete them at once; undo an accidental delete within 6 seconds. Photos with proportions close to the box fill it without black bars."
+        },
+        "de": {
+          "title": "Mehrfachaktionen für Medien und Rückgängig",
+          "text": "Mehrere Dateien auswählen und auf einmal ausblenden, zeigen oder löschen; versehentliches Löschen innerhalb von 6 Sekunden rückgängig machen. Fotos mit ähnlichem Seitenverhältnis füllen das Feld ohne schwarze Balken."
+        },
+        "ar": {
+          "title": "إجراءات جماعية على الوسائط والتراجع",
+          "text": "حدّد عدة ملفات وأخفها أو أظهرها أو احذفها دفعة واحدة، وتراجع عن الحذف الخاطئ خلال 6 ثوانٍ. الصور ذات النسبة القريبة من المربع تملؤه دون أشرطة سوداء."
+        }
+      }
     }
   ],
   "shots": {

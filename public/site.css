@@ -440,3 +440,7 @@ body.legal{background:var(--card)}
   .cmp th,.cmp td{padding:11px 14px}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+/* D1: özellik ikonları tek tip çizgi ikon (/icons.svg) */
+.si{width:1.1em;height:1.1em;display:inline-block;vertical-align:-.18em;stroke:currentColor;color:var(--copper);flex:none}
+.fx-nav .i .si{width:20px;height:20px}
+.more li b .si{margin-inline-end:4px}

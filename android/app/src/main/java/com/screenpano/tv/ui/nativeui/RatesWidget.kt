@@ -135,16 +135,16 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             row.addView(txt("${wx.optDouble("temp").roundToInt()}°", vh * 4f, p.white, true), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { leftMargin = (vh * 1.4f).toInt() })
             val wd = LinearLayout(context).apply { orientation = VERTICAL }
             wd.addView(txt(label, vh * 1.85f, p.white, true).apply { ellipsize = android.text.TextUtils.TruncateAt.END })
-            wd.addView(txt("His. ${wx.optDouble("feels").roundToInt()}° · ${wx.optDouble("wind").roundToInt()} km/s", vh * 1.5f, p.mute, false, 0.03f).apply { ellipsize = android.text.TextUtils.TruncateAt.END }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
+            wd.addView(txt("His. ${wx.optDouble("feels").roundToInt()}° · ${wx.optDouble("wind").roundToInt()} km/s", vh * 1.8f, p.mute, false, 0.03f).apply { ellipsize = android.text.TextUtils.TruncateAt.END }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
             row.addView(wd, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { leftMargin = (vh * 1.4f).toInt() })
             val city = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.END }
             // uzun konum adı: pencereye sığana kadar yazı küçülür (en çok kutunun %38'i)
             val cityTv = ShrinkText(context, width * 0.38f).apply {
-                text = s.raw.optString("city").uppercase(Locale("tr", "TR")); setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.4f); setTextColor(p.accent2); includeFontPadding = false
+                text = s.raw.optString("city").uppercase(Locale("tr", "TR")); setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.8f); setTextColor(p.accent2); includeFontPadding = false
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); letterSpacing = 0.06f; setSingleLine(true)
             }
             city.addView(cityTv)
-            city.addView(txt("${wx.optDouble("min").roundToInt()}° / ${wx.optDouble("max").roundToInt()}°", vh * 1.45f, p.mute, false, 0.03f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
+            city.addView(txt("${wx.optDouble("min").roundToInt()}° / ${wx.optDouble("max").roundToInt()}°", vh * 1.8f, p.mute, false, 0.03f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
             row.addView(city)
             content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
         }
@@ -154,7 +154,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 if (v == null) return ""
                 val up = v > 0.005; val dn = v < -0.005
                 val str = " " + (if (up) "▲" else if (dn) "▼" else "•") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
-                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.1f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
+                return SpannableStringBuilder(str).apply { setSpan(RunSpan(vh * 1.6f, if (up) Color.parseColor("#3ecf4a") else if (dn) Color.parseColor("#ff6b6b") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
             }
             data class Cell(val name: String, val extra: CharSequence, val value: String, val unit: String)
             val sets = listOf(
@@ -166,9 +166,9 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             if (wx != null && props?.optBoolean("weather", true) != false) content.addView(line, LayoutParams(LayoutParams.MATCH_PARENT, max(1, (vh * 0.1f).toInt())).apply { topMargin = gap })
             for (c in sets[rateIdx % sets.size]) {
                 val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL; setPadding((vh * 0.3f).toInt(), 0, (vh * 0.3f).toInt(), 0) }
-                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.2f, p.accent2, true, 0.06f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
+                val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.6f, p.accent2, true, 0.06f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
                 col.addView(TextView(context).apply { text = head; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER })
-                val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 2.6f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 1.6f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
+                val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 2.6f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 2f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
                 col.addView(TextView(context).apply { text = vtxt; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
                 row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             }
@@ -195,7 +195,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             val svg = q.optString("svg")
             if (svg.isNotEmpty()) iv.load(ByteBuffer.wrap(svg.toByteArray())) { crossfade(false) }
             val lbl = TextView(context).apply {
-                setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.5f); setTextColor(Color.WHITE); includeFontPadding = false; setSingleLine(true)
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.8f); setTextColor(Color.WHITE); includeFontPadding = false; setSingleLine(true)
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); letterSpacing = 0.08f; gravity = Gravity.CENTER
                 setPadding((vh * 1.2f).toInt(), 0, (vh * 1.2f).toInt(), 0)
                 background = GradientDrawable().apply { setColor(Color.argb(235, 10, 8, 6)); cornerRadius = 2f * vh; setStroke(max(1, (vh * 0.15f).toInt()), p.al) }
