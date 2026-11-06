@@ -18,7 +18,7 @@ r.post('/login', async (req, res) => {
   auth.clearFails(ip, username);
   store.q.userLogin.run(Date.now(), u.id);
   auth.setSession(req, res, u);
-  res.json({ ok: true, role: u.role, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : u.role === 'super' || (auth.subOf(req) === 'sadmin' && auth.superOk(u)) ? '/super' : '/panel' });
+  res.json({ ok: true, role: u.role, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : auth.subOf(req) === 'sadmin' && auth.superOk(u) ? '/super' : auth.homeFor(req, u) });
 });
 r.post('/logout', (req, res) => { auth.clearSession(res, req); res.json({ ok: true }); });
 r.get('/config', (req, res) => res.json({ env: config.APP_ENV, brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, starters: require('./starters').list().map(({ key, name }) => ({ key, name })) }));
@@ -37,7 +37,7 @@ r.post('/signup', (req, res) => {
     auth.noteFail(ip); // kayıtlar da sayılır: tek IP'den seri hesap açılmasın
     const u = store.q.userByName.get(String(b.username).trim().toLowerCase());
     auth.setSession(req, res, u);
-    res.json({ ok: true, tenant: t.id, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : '/panel' });
+    res.json({ ok: true, tenant: t.id, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : auth.homeFor(req, { ...u, role: 'owner' }) });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 

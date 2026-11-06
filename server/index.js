@@ -21,12 +21,16 @@ app.set('trust proxy', 1); // önde tek vekil (Traefik); istemci IP'si için aut
 // www.screenpano.com -> screenpano.com (tek adres; arama motorları için kalıcı yönlendirme)
 app.use((req, res, next) => {
   const host = String(req.headers.host || '');
-  if (/^www\./i.test(host)) return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
+  // www.* her zaman tanıtım sitesini açar (oturum olsa bile panele atmaz); diğer yollar tek adrese yönlenir
+  if (/^www\./i.test(host)) {
+    if (req.path === '/' || /^\/(en|de|ar)\/?$/.test(req.path)) { req.isWww = true; return next(); }
+    return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
+  }
   next();
 });
 // Alt alan adları: admin.* panel, tv.* TV ekranı, music.* yalnız müzik sayfası, sadmin.* süper yönetim. Ana adres (ve eski yollar) olduğu gibi çalışır;
 // yalnız kök adres ("/") ve girişten sonra gidilecek sayfa alt alana göre seçilir. Test ortamında taban adres test.screenpano.com olur (admin.test.screenpano.com ...).
-const SUBS = { admin: 1, tv: 1, music: 1, sadmin: 1 };
+const SUBS = { admin: 1, panel: 1, tv: 1, music: 1, sadmin: 1 };
 const baseHost = (() => { try { return new URL(config.BASE_URL).hostname.toLowerCase(); } catch (e) { return 'screenpano.com'; } })();
 function subOf(req) {
   const h = String(req.headers.host || '').split(':')[0].toLowerCase();
@@ -35,6 +39,12 @@ function subOf(req) {
   return SUBS[l] ? l : '';
 }
 auth.subOf = subOf;
+// Canlıda giriş sonrası işletme paneli panel.<taban> adresinde açılır, süper yönetim sadmin.<taban> adresinde (test ortamında alt alan yok: aynı adres)
+auth.homeFor = (req, u) => {
+  const sup = u.role === 'super' || auth.superOk(u), path = sup ? '/super' : '/panel';
+  if (config.APP_ENV !== 'live' || subOf(req) || !baseHost.includes('.')) return path;
+  return `https://${sup ? 'sadmin' : 'panel'}.${baseHost}${path}`;
+};
 // sadmin.* yalnız süper yöneticiye açıktır: işletme kullanıcısı (ortak çerezle bile) panel/API'ye giremez, buradan giriş de yapamaz.
 app.use((req, res, next) => {
   if (subOf(req) !== 'sadmin') return next();
@@ -78,7 +88,7 @@ app.get('/', (req, res) => {
   // eski APK'lar kök adresi açar: Android WebView'dan gelen istek TV sayfasına gider
   if (/; wv\)/.test(String(req.headers['user-agent'] || ''))) return res.redirect('/tv');
   const u = auth.sessionUser(req);
-  if (u && req.query.site === undefined) return res.redirect(u.role === 'super' && !u.imp ? '/super' : '/panel');
+  if (u && !req.isWww && req.query.site === undefined) return res.redirect(u.role === 'super' && !u.imp ? auth.homeFor(req, u) : auth.homeFor(req, { ...u, role: 'owner' }));
   res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(sitePage('tr'));
 });
 // diğer diller: /en, /de, /ar (giriş yapmış kullanıcı da siteyi görür)

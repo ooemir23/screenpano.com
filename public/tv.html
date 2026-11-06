@@ -833,12 +833,12 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 body.glass #app{background:radial-gradient(circle at 80% 20%,#151b26 0%,var(--edge) 60%,#040507 100%)}
 body.glass .wbox{border-radius:2.2vh;background:linear-gradient(160deg,rgba(26,34,48,.82),rgba(14,19,28,.88));border:max(1px,.1vh) solid rgba(255,255,255,.09);box-shadow:0 2vh 5vh rgba(0,0,0,.5),inset 0 max(1px,.1vh) 0 rgba(255,255,255,.1)}
 body.glass .cell:not(.edge-b)>#ticker{border:max(1px,.1vh) solid rgba(255,255,255,.09);border-radius:2vh;background:linear-gradient(160deg,rgba(26,34,48,.82),rgba(14,19,28,.88));box-shadow:0 2vh 5vh rgba(0,0,0,.5),inset 0 max(1px,.1vh) 0 rgba(255,255,255,.1)}
-body.glass #wclock b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%,var(--accent) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+body.glass #wclock b,body.glass .wclk b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%,var(--accent) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .cell.edge-b{margin:0 -1.2vw -1.8vh}
 .cell:not(.edge-b)>#ticker{border:max(1px,.1vh) solid rgba(var(--a2),.45);border-radius:1.3vh}
-#wclock{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.6vh}
-#wclock b{font-weight:800;letter-spacing:.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--white)}
-#wclock small{font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2)}
+#wclock,.wclk{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.6vh}
+#wclock b,.wclk b{font-weight:800;letter-spacing:.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--white)}
+#wclock small,.wclk small{font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2)}
 #wtext{display:flex;flex-direction:column;justify-content:center;gap:1vh;padding:1.6vh 1.2vw}
 #wtext h3{font-weight:800;line-height:1.15;color:var(--white)}
 #wtext p{color:var(--soft);line-height:1.35;white-space:pre-line}
@@ -2751,7 +2751,7 @@ function applyLayout(l) {
   app.style.gridTemplateColumns = `repeat(${cols},minmax(0,1fr))`;
   app.style.gridTemplateRows = `repeat(${rows},minmax(0,1fr))`;
   const used = new Set(); WPROPS = {};
-  app.querySelectorAll('.cell.qrcell').forEach(c => c.remove()); qrTile.cells = [];
+  app.querySelectorAll('.cell.qrcell,.cell.clkcell').forEach(c => c.remove()); qrTile.cells = [];
   for (const w of l.widgets) {
     if (w.type === 'qr') { // birden çok QR kutusu olabilir; her biri seçilen QR'ı (ya da hepsini sırayla) gösterir
       const c = document.createElement('div'); c.className = 'cell qrcell'; c.dataset.w = 'qr';
@@ -2760,17 +2760,23 @@ function applyLayout(l) {
       app.appendChild(c); qrTile.cells.push({ el: c.firstChild, qr: (w.props && w.props.qr) || '', idx: 0 });
       used.add('qr'); WPROPS.qr = w.props || {}; continue;
     }
+    if (w.type === 'clock') { // birden çok saat kutusu olabilir; her biri kendi gösterimine (saat / tarih / ikisi) sahiptir
+      const c = document.createElement('div'); c.className = 'cell clkcell'; c.dataset.w = 'clock';
+      c.innerHTML = '<div class="wbox wclk"><b></b><small></small></div>'; c.firstChild.dataset.show = (w.props && w.props.show) || 'both'; c.firstChild.dataset.sec = w.props && w.props.seconds ? '1' : '';
+      c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+      app.appendChild(c); used.add('clock'); WPROPS.clock = w.props || {}; attachTap(c.firstChild, () => window.__menu()); continue;
+    }
     const c = document.querySelector(`.cell[data-w="${w.type}"]`);
     if (!c || used.has(w.type)) continue;
     c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
     c.classList.toggle('edge-b', w.type === 'ticker' && w.y + w.h >= rows && w.x === 0 && w.w >= cols);
     app.appendChild(c); used.add(w.type); WPROPS[w.type] = w.props || {};
   }
-  for (const c of [...app.querySelectorAll('.cell:not(.qrcell)')]) if (!used.has(c.dataset.w)) { c.style.gridArea = ''; park.appendChild(c); }
+  for (const c of [...app.querySelectorAll('.cell:not(.qrcell):not(.clkcell)')]) if (!used.has(c.dataset.w)) { c.style.gridArea = ''; park.appendChild(c); }
   const wasOn = MEDIA_ON; MEDIA_ON = used.has('media');
   if (!MEDIA_ON) els.forEach(v => v.pause());
   $id('tclock').style.display = WPROPS.ticker && WPROPS.ticker.clock === false ? 'none' : '';
-  renderText(); renderImage();
+  renderText(); renderImage(); applyLogoProps();
   window.fitted = false; pagesDirty = true; window.__panelSig = ''; window.__lastTick = ''; tickKey = '';
   requestAnimationFrame(() => {
     sizeBg(); fitWidgets(); showQrTile();
@@ -2832,6 +2838,7 @@ function fillEmpty() {
 
   // Hücreleri özgün gridArea ve display durumlarına getir
   for (const w of l.widgets) {
+    if (w.type === 'clock' || w.type === 'qr') continue; // çoklu kutular kendi alanını applyLayout'ta aldı
     const c = document.querySelector(`.cell[data-w="${w.type}"]`);
     if (c) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
@@ -2914,12 +2921,13 @@ function setBlocked(reason) {
 
 // ---- yazıyı kutuya sığdır (saat, logo yazısı, duyuru başlığı) ----
 function fitWidgets() {
-  const ck = $id('wclock');
-  if (ck && ck.offsetParent !== null && ck.closest('#app')) {
-    const w = ck.clientWidth, h = ck.clientHeight, sec = WPROPS.clock && WPROPS.clock.seconds;
-    ck.querySelector('b').style.fontSize = Math.max(14, Math.min(h * 0.46, w / (sec ? 4.6 : 3.1))) + 'px';
-    ck.querySelector('small').style.fontSize = Math.max(10, Math.min(h * 0.11, w / 18)) + 'px';
-  }
+  document.querySelectorAll('.wclk').forEach(ck => {
+    const w = ck.clientWidth, h = ck.clientHeight, sec = !!ck.dataset.sec, show = ck.dataset.show, b = ck.querySelector('b'), s = ck.querySelector('small');
+    b.style.display = show === 'date' ? 'none' : ''; s.style.display = show === 'time' ? 'none' : '';
+    const n = Math.max(10, s.textContent.length);
+    b.style.fontSize = Math.max(14, Math.min(h * (show === 'time' ? 0.62 : 0.46), w / (sec ? (show === 'time' ? 4.2 : 4.6) : (show === 'time' ? 2.8 : 3.1)))) + 'px';
+    s.style.fontSize = Math.max(10, show === 'date' ? Math.min(h * 0.34, w / (n * 0.8)) : Math.min(h * 0.11, w / 18)) + 'px';
+  });
   const lg = $id('logo');
   if (lg.classList.contains('txt') && lg.closest('#app')) lg.style.fontSize = Math.max(12, Math.min(lg.clientHeight * 0.42, lg.clientWidth / Math.max(4, BNAME.length * 0.62))) + 'px';
   const tx = $id('wtext');
@@ -2928,6 +2936,14 @@ function fitWidgets() {
     tx.querySelector('h3').style.fontSize = Math.max(12, Math.min(h * (p.body ? 0.24 : 0.4), w / 9) * k) + 'px';
     tx.querySelector('p').style.fontSize = Math.max(11, Math.min(h * 0.12, w / 22) * k) + 'px';
   }
+}
+// logo widget'ı: sığdırma (contain/cover/fill), yatay hizalama ve iç boşluk
+function applyLogoProps() {
+  const lg = $id('logo'), p = WPROPS.logo || {};
+  lg.style.backgroundSize = { cover: 'cover', fill: '100% 100%' }[p.fit] || 'contain';
+  lg.style.backgroundPosition = { left: 'left center', right: 'right center' }[p.align] || 'center';
+  const pad = { sm: '1.2vh', lg: '3vh' }[p.pad];
+  lg.style.padding = pad || ''; lg.style.backgroundOrigin = pad ? 'content-box' : ''; lg.style.boxSizing = pad ? 'border-box' : '';
 }
 function renderText() {
   const p = WPROPS.text || {}, el = $id('wtext');
@@ -2945,10 +2961,14 @@ function renderImage() {
 const _tickClock = tickClock;
 tickClock = function () {
   _tickClock();
-  const ck = $id('wclock'); if (!ck || !ck.closest('#app')) return;
-  const d = new Date(), z = { timeZone: 'Europe/Istanbul' }, sec = WPROPS.clock && WPROPS.clock.seconds;
-  ck.querySelector('b').textContent = d.toLocaleTimeString('tr-TR', { ...z, hour: '2-digit', minute: '2-digit', ...(sec ? { second: '2-digit' } : {}) });
-  ck.querySelector('small').textContent = d.toLocaleDateString('tr-TR', { ...z, day: 'numeric', month: 'long', weekday: 'long' });
+  const z = { timeZone: 'Europe/Istanbul' }, d = new Date(); let fit = false;
+  document.querySelectorAll('.wclk').forEach(ck => {
+    const sec = !!ck.dataset.sec, b = ck.querySelector('b'), s = ck.querySelector('small');
+    const tt = d.toLocaleTimeString('tr-TR', { ...z, hour: '2-digit', minute: '2-digit', ...(sec ? { second: '2-digit' } : {}) });
+    const dt = d.toLocaleDateString('tr-TR', { ...z, day: 'numeric', month: 'long', weekday: 'long' });
+    if (b.textContent !== tt || s.textContent !== dt) { b.textContent = tt; s.textContent = dt; fit = true; }
+  });
+  if (fit) fitWidgets();
 };
 setInterval(tickClock, 1000);
 

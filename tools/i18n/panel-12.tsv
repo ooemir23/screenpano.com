@@ -224,3 +224,17 @@ kullanıcı ¦ users ¦ Benutzer ¦ مستخدم
 
 Süper yönetim yetkisi ¦ Super admin access ¦ Super-Admin-Zugriff ¦ صلاحية الإدارة العليا
 Bu işletmenin sahibi sadmin adresinden süper yönetime de girebilir (tüm işletmeler, yedekler, platform ayarları). Yalnızca kendi işletmeniz için açın. ¦ The owner of this business can also enter super admin from the sadmin address (all businesses, backups, platform settings). Enable only for your own business. ¦ Der Inhaber dieses Betriebs kann sich auch über die sadmin-Adresse im Super-Admin anmelden (alle Betriebe, Backups, Plattformeinstellungen). Nur für den eigenen Betrieb aktivieren. ¦ يمكن لمالك هذه المنشأة الدخول إلى الإدارة العليا من عنوان sadmin (كل المنشآت والنسخ الاحتياطية وإعدادات المنصة). فعّلها لمنشأتك أنت فقط.
+
+Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır. ¦ Drag boxes to move them, grab any edge or corner to resize; click a box to open its settings on the right. ¦ Kästen per Ziehen verschieben, an jeder Kante oder Ecke skalieren; ein Klick öffnet rechts die Einstellungen. ¦ اسحب المربعات لنقلها وأمسك أي حافة أو زاوية لتغيير الحجم؛ وعند النقر تظهر إعداداتها على الجانب.
+Saat, tarih ya da ikisi birden; her kutuda ayrı gösterim seçilir (birden çok eklenebilir) ¦ Time, date or both; each box has its own display (several can be added) ¦ Uhrzeit, Datum oder beides; jede Box hat ihre eigene Anzeige (mehrere möglich) ¦ الوقت أو التاريخ أو كلاهما؛ لكل مربع عرضه الخاص (يمكن إضافة عدة مربعات)
+İşletme logosu; kutuya sığdırma, hizalama ve iç boşluk ayarlanır ¦ Business logo; fit, alignment and padding can be set ¦ Betriebslogo; Anpassung, Ausrichtung und Innenabstand einstellbar ¦ شعار المنشأة؛ يمكن ضبط الملاءمة والمحاذاة والهامش الداخلي
+Gösterilecek ¦ What to show ¦ Anzeige ¦ ما يُعرض
+Yalnız saat ¦ Time only ¦ Nur Uhrzeit ¦ الوقت فقط
+Yalnız tarih ¦ Date only ¦ Nur Datum ¦ التاريخ فقط
+Sığdırma ¦ Fit ¦ Anpassung ¦ الملاءمة
+Kutuya sığdır (oran korunur) ¦ Fit in box (keeps ratio) ¦ In Box einpassen (Seitenverhältnis bleibt) ¦ ملاءمة المربع (مع حفظ النسبة)
+Kutuya ger (oran bozulabilir) ¦ Stretch to box (ratio may change) ¦ Auf Box strecken (Verhältnis kann sich ändern) ¦ تمديد إلى المربع (قد تتغير النسبة)
+İç boşluk ¦ Padding ¦ Innenabstand ¦ الهامش الداخلي
+Yok ¦ None ¦ Keiner ¦ لا شيء
+Az ¦ Small ¦ Klein ¦ قليل
+Çok ¦ Large ¦ Groß ¦ كبير

@@ -61,11 +61,19 @@ class LogoWidget(context: Context) : FrameLayout(context), NativeWidget {
         val r = 1.11f * vh
         if (logo != null) {
             name.visibility = View.GONE; img.visibility = View.VISIBLE
+            // sığdırma / hizalama / iç boşluk (panelden): sayfadaki applyLogoProps ile aynı
+            val pr = w.props
+            val extra = when (pr?.optString("pad")) { "sm" -> vh * 1.2f; "lg" -> vh * 3f; else -> 0f }.toInt()
+            img.scaleType = when (pr?.optString("fit")) {
+                "cover" -> ImageView.ScaleType.CENTER_CROP
+                "fill" -> ImageView.ScaleType.FIT_XY
+                else -> when (pr?.optString("align")) { "left" -> ImageView.ScaleType.FIT_START; "right" -> ImageView.ScaleType.FIT_END; else -> ImageView.ScaleType.FIT_CENTER }
+            }
             if (s.theme.plate) {
                 background = GradientDrawable().apply { setColor(Color.argb(245, 255, 255, 255)); cornerRadius = r }
-                val padV = (vh * 0.5f).toInt(); val padH = (vh * 1.2f).toInt()
+                val padV = (vh * 0.5f).toInt() + extra; val padH = (vh * 1.2f).toInt() + extra
                 setPadding(padH, padV, padH, padV)
-            } else { background = null; setPadding(0, 0, 0, 0) }
+            } else { background = null; setPadding(extra, extra, extra, extra) }
             if (logo != lastLogo) { lastLogo = logo; img.load(NativeEnv.url(logo)) { crossfade(false) } }
         } else {
             lastLogo = null

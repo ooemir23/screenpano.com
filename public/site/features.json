@@ -976,6 +976,60 @@
           ]
         }
       }
+    },
+    {
+      "id": "duzen-serbest-boyut",
+      "icon": "↔️",
+      "title": "Düzeni her kenardan boyutlandırın; saat, tarih ve logo kutuya uyar",
+      "short": "Düzen editörü",
+      "text": "Ekran düzeninde kutuları artık yalnız sağ alt köşeden değil; üst, alt, sol, sağ kenarlardan ve dört köşeden tutup boyutlandırabilirsiniz. Saat ve tarih ayrı bir kutu olarak eklenir; her kutuda yalnız saat, yalnız tarih ya da ikisi seçilir, istediğiniz kadar eklenir. Logo kutuya sığdırılır, doldurulur ya da gerilir; sola, ortaya ya da sağa hizalanır. Kutu büyüyüp küçüldükçe yazılar kutunun içine sığar.",
+      "points": [
+        "Kenar ve köşe tutamaçları kutuya gelince görünür",
+        "Saat ve tarih kutusu: Yalnız saat, yalnız tarih ya da ikisi birden",
+        "Logo: Kutuya sığdır, kutuyu doldur ya da ger; hizalama ve iç boşluk ayarı"
+      ],
+      "plan": "all",
+      "compare": "Serbest düzen boyutlandırma",
+      "added": "2026-11-06",
+      "visual": {
+        "type": "win",
+        "img": "p-cihaz"
+      },
+      "i18n": {
+        "en": {
+          "title": "Resize the layout from any edge; clock, date and logo fit their box",
+          "short": "Layout editor",
+          "compare": "Free layout resizing",
+          "text": "In the screen layout you can now resize boxes from any edge or corner, not just the bottom right. Time and date is its own box: each box shows only the time, only the date or both, and you can add as many as you like. The logo can fit, fill or stretch in its box and be aligned left, centre or right. As boxes grow or shrink, the text fits inside.",
+          "points": [
+            "Edge and corner handles appear when you hover a box",
+            "Clock box: time only, date only or both",
+            "Logo: fit, fill or stretch to the box; alignment and padding options"
+          ]
+        },
+        "de": {
+          "title": "Layout von jeder Kante skalieren; Uhr, Datum und Logo passen in ihre Box",
+          "short": "Layout-Editor",
+          "compare": "Freie Layout-Größenänderung",
+          "text": "Im Bildschirmlayout lassen sich Boxen jetzt an jeder Kante und Ecke skalieren, nicht nur unten rechts. Uhrzeit und Datum sind eine eigene Box: Jede zeigt nur die Uhrzeit, nur das Datum oder beides, beliebig oft hinzufügbar. Das Logo wird in der Box eingepasst, gefüllt oder gestreckt und links, mittig oder rechts ausgerichtet. Wächst oder schrumpft eine Box, passt sich die Schrift an.",
+          "points": [
+            "Kanten- und Eckgriffe erscheinen beim Überfahren einer Box",
+            "Uhr-Box: nur Uhrzeit, nur Datum oder beides",
+            "Logo: einpassen, füllen oder strecken; Ausrichtung und Innenabstand"
+          ]
+        },
+        "ar": {
+          "title": "غيّر حجم التخطيط من أي حافة؛ الساعة والتاريخ والشعار تتلاءم مع مربعها",
+          "short": "محرر التخطيط",
+          "compare": "تغيير حجم التخطيط بحرية",
+          "text": "في تخطيط الشاشة يمكنك الآن تغيير حجم المربعات من أي حافة أو زاوية وليس من الزاوية السفلية اليمنى فقط. الوقت والتاريخ مربع مستقل: يعرض كل مربع الوقت فقط أو التاريخ فقط أو كليهما، ويمكنك إضافة ما تشاء. يمكن ملاءمة الشعار أو ملء المربع أو تمديده ومحاذاته إلى اليسار أو الوسط أو اليمين. وكلما كبر المربع أو صغر تتلاءم الكتابة داخله.",
+          "points": [
+            "تظهر مقابض الحواف والزوايا عند مرور المؤشر فوق المربع",
+            "مربع الساعة: الوقت فقط أو التاريخ فقط أو كلاهما",
+            "الشعار: ملاءمة أو ملء أو تمديد؛ مع خيارات المحاذاة والهامش"
+          ]
+        }
+      }
     }
   ],
   "extras": [

@@ -233,7 +233,7 @@ SECTIONS.design = {
       const fresh = !S.me.tenant.logo && !S.db.videos.length;
       h += `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
         + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin.', `<div class="tpls">${Object.entries(T).map(([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`)
-        + card('Düzen', 'Kutuları sürükleyerek taşıyın, sağ alt köşesinden boyutlandırın, tıklayınca ayarları sağda açılır.',
+        + card('Düzen', 'Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır.',
           `<div class="editor"><div id="cw"><div id="cv"></div></div><div id="props"></div></div>
            <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`)
         + card('Kaydedilmiş hâli', 'TV\'de şu an görünen. Kaydetmediğiniz değişiklikler burada görünmez.', pvFrame());
@@ -276,7 +276,7 @@ const badSet = () => { const ws = EDIT.layout.widgets, bad = new Set(); ws.forEa
 function drawCanvas() {
   const c = $('cv'); if (!c) return;
   const bad = badSet();
-  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%">${ICON[w.type] || ''}${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small><i class="rz"></i></div>`; }).join('');
+  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%">${ICON[w.type] || ''}${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small>${['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].map(h => `<i class="rz rz-${h}" data-h="${h}"></i>`).join('')}</div>`; }).join('');
 }
 function drawPal() {
   const used = new Set(EDIT.layout.widgets.map(w => w.type));
@@ -290,7 +290,7 @@ function drawProps() {
   const d = S.cat.widgets[w.type] || {}, p = w.props || {};
   const tg = (k, label, def = true) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(p[k] === undefined ? def : p[k], `setP('${k}',this.checked)${k === 'qr' ? ';drawProps()' : ''}`)}</div>`;
   let f = '';
-  if (w.type === 'clock') f = tg('seconds', 'Saniyeyi göster', false);
+  if (w.type === 'clock') f = fl('Gösterilecek', `<select onchange="setP('show',this.value);drawCanvas()">${[['both', 'Saat ve tarih'], ['time', 'Yalnız saat'], ['date', 'Yalnız tarih']].map(([v, l]) => `<option value="${v}" ${(p.show || 'both') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) + (p.show === 'date' ? '' : tg('seconds', 'Saniyeyi göster', false));
   if (w.type === 'rates') {
     f = tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa') + tg('qr', 'QR kodlar', false);
     if (p.qr) {
@@ -300,6 +300,12 @@ function drawProps() {
   }
   if (w.type === 'media') f = fl('Görüntü yerleşimi', `<select onchange="setP('fit',this.value)">${[['auto', 'Tamamı görünsün, boşluk bulanık dolsun (önerilen)'], ['cover', 'Kutuyu doldur (kenarlar kırpılabilir)'], ['contain', 'Tamamı görünsün (boşluk kalabilir)']].map(([v, l]) => `<option value="${v}" ${(p.fit || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) + '<p class="muted mt">Otomatik: görselin oranı kutuya yakınsa kenarlar hafifçe kırpılarak doldurulur, çok farklıysa tamamı gösterilir.</p>';
   if (w.type === 'ticker') f = tg('clock', 'Solda saat kutusu');
+  if (w.type === 'logo') {
+    const so = (k, def, list) => `<select onchange="setP('${k}',this.value)">${list.map(([v, l]) => `<option value="${v}" ${(p[k] || def) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+    f = fl('Sığdırma', so('fit', 'contain', [['contain', 'Kutuya sığdır (oran korunur)'], ['cover', 'Kutuyu doldur (kenarlar kırpılabilir)'], ['fill', 'Kutuya ger (oran bozulabilir)']]))
+      + fl('Hizalama', so('align', 'center', [['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']]))
+      + fl('İç boşluk', so('pad', 'none', [['none', 'Yok'], ['sm', 'Az'], ['lg', 'Çok']]));
+  }
   if (w.type === 'text') f = fl('Başlık', `<input type="text" maxlength="200" value="${esc(p.title || '')}" onchange="setP('title',this.value)">`) + fl('Metin', `<textarea maxlength="400" onchange="setP('body',this.value)">${esc(p.body || '')}</textarea>`)
     + `<div class="f">${fl('Hizalama', `<select onchange="setP('align',this.value)">${[['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']].map(([v, l]) => `<option value="${v}" ${(p.align || 'center') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}${fl('Boyut', `<select onchange="setP('size',this.value)">${[['s', 'Küçük'], ['m', 'Orta'], ['l', 'Büyük']].map(([v, l]) => `<option value="${v}" ${(p.size || 'm') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`;
   if (w.type === 'image') f = `${p.url ? `<img src="${esc(p.url)}" style="width:100%;max-height:150px;object-fit:contain;background:#000;border-radius:8px;margin-top:8px">` : ''}<input type="file" id="assetf" accept="image/*" hidden onchange="upAsset(this)"><div class="row mt"><button class="btn s" onclick="$('assetf').click()">Resim yükle</button></div>`
@@ -356,7 +362,7 @@ function dragSetup() {
   wrap.onpointerdown = e => {
     const el = e.target.closest('.wb'); if (!el) { EDIT.sel = -1; drawCanvas(); drawProps(); return; }
     const i = +el.dataset.i; EDIT.sel = i;
-    st = { i, x0: e.clientX, y0: e.clientY, w0: clone(EDIT.layout.widgets[i]), rz: e.target.classList.contains('rz'), moved: false, before: clone(EDIT.layout) };
+    st = { i, x0: e.clientX, y0: e.clientY, w0: clone(EDIT.layout.widgets[i]), rz: e.target.classList.contains('rz') ? e.target.dataset.h : '', moved: false, before: clone(EDIT.layout) };
     wrap.setPointerCapture(e.pointerId); drawCanvas(); drawProps(); e.preventDefault();
   };
   wrap.onpointermove = e => {
@@ -364,7 +370,13 @@ function dragSetup() {
     const r = wrap.getBoundingClientRect(), dx = Math.round((e.clientX - st.x0) / r.width * 24), dy = Math.round((e.clientY - st.y0) / r.height * 24);
     const w = EDIT.layout.widgets[st.i], o = st.w0, min = (S.cat.widgets[w.type] || {}).min || [2, 2];
     if (!st.rz) { w.x = Math.max(0, Math.min(24 - o.w, o.x + dx)); w.y = Math.max(0, Math.min(24 - o.h, o.y + dy)); }
-    else { w.w = Math.max(min[0], Math.min(24 - o.x, o.w + dx)); w.h = Math.max(min[1], Math.min(24 - o.y, o.h + dy)); }
+    else { // her kenar ve köşeden boyutlandırma: karşı kenar sabit kalır
+      const d = st.rz, R = o.x + o.w, B = o.y + o.h;
+      if (d.includes('e')) w.w = Math.max(min[0], Math.min(24 - o.x, o.w + dx));
+      if (d.includes('s')) w.h = Math.max(min[1], Math.min(24 - o.y, o.h + dy));
+      if (d.includes('w')) { w.x = Math.max(0, Math.min(R - min[0], o.x + dx)); w.w = R - w.x; }
+      if (d.includes('n')) { w.y = Math.max(0, Math.min(B - min[1], o.y + dy)); w.h = B - w.y; }
+    }
     st.moved = w.x !== o.x || w.y !== o.y || w.w !== o.w || w.h !== o.h;
     const el = $('cv').querySelector(`.wb[data-i="${st.i}"]`);
     if (el) { el.style.left = w.x / 24 * 100 + '%'; el.style.top = w.y / 24 * 100 + '%'; el.style.width = w.w / 24 * 100 + '%'; el.style.height = w.h / 24 * 100 + '%'; el.querySelector('small').textContent = w.w + '×' + w.h; }

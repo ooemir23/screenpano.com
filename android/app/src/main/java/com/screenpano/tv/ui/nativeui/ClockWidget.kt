@@ -24,6 +24,7 @@ class ClockWidget(context: Context) : LinearLayout(context), NativeWidget {
     private val date = TextView(context)
     private val main = Handler(Looper.getMainLooper())
     private var seconds = false
+    private var show = "both" // both | time | date
     private var fmtTime = SimpleDateFormat("HH:mm", Locale("tr", "TR"))
     private val fmtDate = SimpleDateFormat("d MMMM EEEE", Locale("tr", "TR"))
     private val tick = object : Runnable {
@@ -31,6 +32,7 @@ class ClockWidget(context: Context) : LinearLayout(context), NativeWidget {
             val d = Date()
             time.text = fmtTime.format(d)
             date.text = fmtDate.format(d).uppercase(Locale("tr", "TR"))
+            if (show == "date" && width > 0 && height > 0) sizeFor(width.toFloat(), height.toFloat())
             // saniyeli saat her saniye, değilse dakika başında güncellenir
             main.postDelayed(this, if (seconds) 1000L else 60_000L - (System.currentTimeMillis() % 60_000L) + 50L)
         }
@@ -51,7 +53,10 @@ class ClockWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
         val p = Palette(s)
-        seconds = w.props?.optBoolean("seconds", false) ?: false
+        show = w.props?.optString("show").orEmpty().let { if (it == "time" || it == "date") it else "both" }
+        seconds = (w.props?.optBoolean("seconds", false) ?: false) && show != "date"
+        time.visibility = if (show == "date") GONE else VISIBLE
+        date.visibility = if (show == "time") GONE else VISIBLE
         val tz = TimeZone.getTimeZone(s.raw.optString("tz").ifEmpty { "Europe/Istanbul" })
         fmtTime = SimpleDateFormat(if (seconds) "HH:mm:ss" else "HH:mm", Locale("tr", "TR")).also { it.timeZone = tz }
         fmtDate.timeZone = tz
@@ -70,8 +75,12 @@ class ClockWidget(context: Context) : LinearLayout(context), NativeWidget {
     }
 
     private fun sizeFor(wPx: Float, hPx: Float) {
-        time.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, max(14f, min(hPx * 0.46f, wPx / (if (seconds) 4.6f else 3.1f))))
-        date.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, max(10f, min(hPx * 0.11f, wPx / 18f)))
+        val tOnly = show == "time"
+        time.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, max(14f, min(hPx * (if (tOnly) 0.62f else 0.46f), wPx / (if (seconds) (if (tOnly) 4.2f else 4.6f) else (if (tOnly) 2.8f else 3.1f)))))
+        if (show == "date") {
+            val n = max(10, date.text.length).toFloat()
+            date.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, max(10f, min(hPx * 0.34f, wPx / (n * 0.8f))))
+        } else date.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, max(10f, min(hPx * 0.11f, wPx / 18f)))
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
