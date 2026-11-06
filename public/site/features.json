@@ -1047,7 +1047,8 @@
         "Wi-Fi butonu: ağ adı, şifre kopyalama, iPhone için Wi-Fi profili",
         "Okutmalar istatistikte sayılır",
         "QR kartı: etiket altta, sağda/solda dikey ya da yalnız QR",
-        "QR ve yazı boyutu: çok küçükten çok büyüğe ya da kutuya sığdır"
+        "QR ve yazı boyutu: çok küçükten çok büyüğe ya da kutuya sığdır",
+        "QR kartı tasarımı: Klasik, zarif Kart ya da çerçevesiz Sade"
       ],
       "plan": "all",
       "compare": "Tek QR ile menü, Wi-Fi ve bağlantı sayfası",
@@ -1064,7 +1065,8 @@
             "Wi-Fi button: network name, copy password, Wi-Fi profile for iPhone",
             "Scans are counted in the statistics",
             "QR card: label below, vertical on the right/left, or QR only",
-            "QR and text size: from extra small to extra large, or fit to box"
+            "QR and text size: from extra small to extra large, or fit to box",
+            "QR card design: Classic, elegant Card or frameless Minimal"
           ]
         },
         "de": {
@@ -1078,7 +1080,8 @@
             "WLAN-Schaltfläche: Netzwerkname, Passwort kopieren, WLAN-Profil für iPhone",
             "Scans werden in der Statistik gezählt",
             "QR-Karte: Beschriftung unten, senkrecht rechts/links oder nur QR",
-            "QR- und Schriftgröße: von sehr klein bis sehr groß oder an die Box angepasst"
+            "QR- und Schriftgröße: von sehr klein bis sehr groß oder an die Box angepasst",
+            "QR-Karten-Design: Klassisch, elegante Karte oder rahmenlos Schlicht"
           ]
         },
         "ar": {
@@ -1092,7 +1095,8 @@
             "زر الواي فاي: اسم الشبكة ونسخ كلمة المرور وملف تعريف لـ iPhone",
             "تُحتسب عمليات المسح في الإحصاءات",
             "بطاقة QR: التسمية أسفل الرمز أو عمودية يميناً/يساراً أو الرمز فقط",
-            "حجم الرمز والنص: من صغير جداً إلى كبير جداً أو ملاءمة الصندوق"
+            "حجم الرمز والنص: من صغير جداً إلى كبير جداً أو ملاءمة الصندوق",
+            "تصميم بطاقة QR: كلاسيكي أو بطاقة أنيقة أو بسيط بلا إطار"
           ]
         }
       }

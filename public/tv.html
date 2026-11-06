@@ -861,6 +861,15 @@ body.glass #wclock b,body.glass .wclk b{background:linear-gradient(135deg,#fff3b
 .wqr.st-left{flex-direction:row-reverse}
 .wqr.st-right .lbl.qp,.wqr.st-left .lbl.qp,.wqr.st-right .lbl.qp.wf,.wqr.st-left .lbl.qp.wf{writing-mode:vertical-rl;width:calc(5.4vh*var(--qt,1));height:var(--qrs,17vh);max-width:none;padding:1.2vh 0;letter-spacing:.14em}
 .wqr.st-left .lbl.qp{transform:rotate(180deg)}
+/* QR kart tasarımları: "kart" (tema kutu stilinde çerçeveli kart) ve "sade" (çerçevesiz, ince hat); etiket hap yerine düz yazı; her şey QR boyutuyla orantılı */
+.cell.qrcell .wqr.lk-card,.cell.qrcell .wqr.lk-soft{flex:0 0 auto;align-self:center;justify-content:center;gap:calc(var(--qrs)*.05)}
+.cell.qrcell .wqr.lk-card{background:var(--bx-bg);border:max(1px,.1vh) solid var(--bx-bd);border-radius:calc(var(--qrs)*.12);box-shadow:var(--bx-sh);padding:calc(var(--qrs)*.07)}
+.wqr.lk-card .code,.wqr.lk-soft .code{border:0;border-radius:calc(var(--qrs)*.06);padding:calc(var(--qrs)*.035);box-sizing:border-box;box-shadow:0 calc(var(--qrs)*.03) calc(var(--qrs)*.1) rgba(0,0,0,.3)}
+.wqr.lk-soft .code{border:max(1px,.1vh) solid rgba(255,255,255,.4)}
+.wqr.lk-card .lbl.qp,.wqr.lk-soft .lbl.qp,.wqr.lk-card .lbl.qp.wf,.wqr.lk-soft .lbl.qp.wf{background:none;border:0;backdrop-filter:none;padding:0;height:auto;width:var(--qrs);max-width:none;border-radius:0;font-size:calc(var(--qrs)*.105*var(--tf,1));letter-spacing:.1em;font-weight:700;line-height:1.25;text-shadow:none}
+.wqr.lk-soft .lbl.qp{text-shadow:0 .2vh .7vh rgba(0,0,0,.85)}
+.wqr.lk-card .lbl.qp.pw,.wqr.lk-soft .lbl.qp.pw{font-size:calc(var(--qrs)*.11*var(--tf,1));letter-spacing:.03em}
+.wqr.lk-card.st-right .lbl.qp,.wqr.lk-card.st-left .lbl.qp,.wqr.lk-soft.st-right .lbl.qp,.wqr.lk-soft.st-left .lbl.qp{writing-mode:vertical-rl;width:auto;height:var(--qrs);padding:0}
 .wqr.st-plain .lbl.qp{display:none}
 .wqr .lbl.qp{flex:none;background:rgba(10,8,6,.92);backdrop-filter:blur(0.56vh);border:max(2px,.25vh) solid var(--al);color:#fff;font-size:calc(2.3vh*var(--qt,1));font-weight:800;letter-spacing:.1em;text-transform:uppercase;text-shadow:0 .2vh .5vh #000;padding:0 1.2vw;border-radius:2vh;max-width:calc(var(--qrs,17vh) + 8vh);text-align:center;line-height:1.3;height:calc(5.4vh*var(--qt,1));box-sizing:border-box;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden}
 .wqr .lbl.qp.wf{width:var(--qrs,17vh);max-width:none;padding:0 .8vh} /* Wi-Fi etiketi QR genişliğini aşmaz; uzun şifre yazısı küçülerek sığar */
@@ -2794,7 +2803,7 @@ function applyLayout(l) {
       const c = document.createElement('div'); c.className = 'cell qrcell'; c.dataset.w = 'qr';
       c.innerHTML = '<div class="wbox wqr"></div>';
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
-      boxProps(c, w.props); app.appendChild(c); qrTile.cells.push({ el: c.firstChild, qr: (w.props && w.props.qr) || '', style: (w.props && w.props.style) || 'below', size: (w.props && w.props.size) || 'auto', text: (w.props && w.props.text) || 'm', idx: 0 });
+      boxProps(c, w.props); app.appendChild(c); qrTile.cells.push({ el: c.firstChild, qr: (w.props && w.props.qr) || '', style: (w.props && w.props.style) || 'below', size: (w.props && w.props.size) || 'auto', look: (w.props && w.props.look) || 'classic', text: (w.props && w.props.text) || 'm', idx: 0 });
       used.add('qr'); WPROPS.qr = w.props || {}; continue;
     }
     if (w.type === 'clock') { // birden çok saat kutusu olabilir; her biri kendi gösterimine (saat / tarih / ikisi) sahiptir
@@ -3036,12 +3045,21 @@ function drawQrCell(c) {
   // boyut kenar QR'ı ile birebir aynı (paneldeki QR boyutu ayarı); kutu yalnız konumu belirler
   // QR ve yazı boyutu (kutu başına): sabit çarpan ya da "kutuya sığdır"
   const qt = { s: .8, m: 1, l: 1.35 }[c.text] || 1, SZ = { xs: 10, s: 13.5, auto: 17, l: 21, xl: 26 }, st = c.style || 'below';
-  let qv = SZ[c.size] || 17;
+  const look = ['card', 'soft'].includes(c.look) ? c.look : 'classic', side = st === 'right' || st === 'left';
+  let qv = SZ[c.size] || 17, sc = 1;
   if (c.size === 'box' && el.parentNode) {
-    const r = el.parentNode.getBoundingClientRect(), v1 = innerHeight / 100, lh = st === 'plain' ? 0 : (5.4 * qt + .8) * v1;
-    qv = Math.max(6, (st === 'right' || st === 'left' ? Math.min(r.height, r.width - lh) : Math.min(r.width, r.height - lh)) / v1);
+    const r = el.parentNode.getBoundingClientRect(), v1 = innerHeight / 100;
+    if (look === 'classic') { // etiket ve yazı QR ile orantılı küçülür/büyür
+      const k = 1 + .318 * qt, g = .8 * v1;
+      sc = st === 'plain' ? Math.min(r.width, r.height) / (17 * v1) : side ? Math.min((r.width - g) / (17 * v1 * k), r.height / (17 * v1)) : Math.min(r.width / (17 * v1), (r.height - g) / (17 * v1 * k));
+      sc = Math.max(.3, Math.min(3, sc)); qv = 17 * sc;
+    } else {
+      const pf = look === 'card' ? .14 : 0, lf = st === 'plain' ? 0 : .13 * qt + .05;
+      qv = Math.max(5, (side ? Math.min(r.width / (1 + pf + lf), r.height / (1 + pf)) : Math.min(r.width / (1 + pf), r.height / (1 + pf + lf))) / v1);
+    }
   }
-  el.style.setProperty('--qrs', qv + 'vh'); el.style.setProperty('--qt', qt);
+  el.style.setProperty('--qrs', qv + 'vh'); el.style.setProperty('--qt', qt * sc); el.style.setProperty('--tf', qt);
+  el.classList.toggle('lk-card', look === 'card'); el.classList.toggle('lk-soft', look === 'soft');
   el.style.setProperty('--qs', 'var(--qrs,17vh)');
   for (const k of ['below', 'right', 'left', 'plain']) el.classList.toggle('st-' + k, k === (c.style || 'below')); // yerleşim: etiket altta / yanda dikey / yok
   el.innerHTML = `<div class="code" style="width:var(--qrs,17vh);height:var(--qrs,17vh)">${q.svg}</div><div class="lbl qp${q.marquee ? ' wf' : ''}"><span class="wt">${esc(q.label)}</span></div>`;
