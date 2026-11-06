@@ -1412,8 +1412,17 @@ function syncToMedia(m) {
   const elapsedMs = Math.max(0, m.elapsed || 0);
   const remainMs = typeof m.remain === 'number' ? Math.max(800, m.remain) : Math.max(800, totalDurMs - elapsedMs);
 
-  // Zaten bu içerik oynatılıyorsa: sayacı bozma, akış devam etsin
-  if (current === it.id) return;
+  // Zaten bu içerik oynatılıyorsa: fotoğraf/afişte bitiş sayacını sunucunun kalan süresine hizala (kesme yok, yalnız sayaç düzelir).
+  // Video kendi 'ended' olayıyla biter; ona dokunulmaz. Süre en az ~3 sn'de kalır: sunucu çoktan sona yaklaşmışsa foto göz kırpması gibi geçmesin.
+  if (current === it.id) {
+    if (it.type !== 'video' && typeof m.remain === 'number') {
+      const want = Math.max(m.remain + 250, 3000 - (Date.now() - playStartedAt)); // bitiş anı sabit kalır: her mesajda aynı mutlak zamana kurulur
+      clearTimeout(timer); timer = setTimeout(next, want);
+    }
+    return;
+  }
+  // Sunucudaki içeriğin süresi neredeyse bitmişse ona atlama (0,8 sn'lik flaş olur); ekrandaki sürsün, sayaç zaten sıradakine geçer
+  if (typeof m.remain === 'number' && m.remain < 1500 && it.type !== 'video') return;
 
   // KORUMA 1: Eğer ekrandaki içerik başlayalı 4 saniyeden az olduysa, anlık atlamayı önle!
   if (Date.now() - playStartedAt < 4000) return;
