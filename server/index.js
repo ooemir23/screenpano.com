@@ -35,6 +35,16 @@ function subOf(req) {
   return SUBS[l] ? l : '';
 }
 auth.subOf = subOf;
+// sadmin.* yalnız süper yöneticiye açıktır: işletme kullanıcısı (ortak çerezle bile) panel/API'ye giremez, buradan giriş de yapamaz.
+app.use((req, res, next) => {
+  if (subOf(req) !== 'sadmin') return next();
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  const u = auth.sessionUser(req);
+  if (u && u.role === 'super') return next();
+  if (/^\/(panel|music|tv|super)(\/|$)/.test(req.path)) return res.redirect('/login');
+  if (req.path.startsWith('/api/') && !/^\/api\/auth\/(login|logout|config)$/.test(req.path)) return res.status(401).json({ error: 'Süper yönetici girişi gerekli' });
+  next();
+});
 app.use(require('compression')());
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); next(); });
@@ -60,7 +70,7 @@ app.get('/', (req, res, next) => {
     const u = auth.sessionUser(req);
     if (!u) return res.redirect('/login');
     if (sub === 'music') return res.redirect('/music');
-    if (sub === 'sadmin') return res.redirect(u.role === 'super' ? '/super' : '/panel');
+    if (sub === 'sadmin') return res.redirect(u.role === 'super' ? '/super' : '/login');
     return res.redirect(u.role === 'super' && !u.imp ? '/super' : '/panel'); // admin
   }
   next();

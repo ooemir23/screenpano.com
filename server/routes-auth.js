@@ -14,6 +14,7 @@ r.post('/login', async (req, res) => {
   if (auth.tooMany(ip, username)) return res.status(429).json({ error: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin.' });
   const u = store.q.userByName.get(String(username || '').trim());
   if (!u || !(await auth.checkPasswordAsync(password, u.pass))) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
+  if (auth.subOf && auth.subOf(req) === 'sadmin' && u.role !== 'super') { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); } // işletme hesapları süper yönetim adresinden girmez
   auth.clearFails(ip, username);
   store.q.userLogin.run(Date.now(), u.id);
   auth.setSession(req, res, u);
