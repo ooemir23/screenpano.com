@@ -14,6 +14,8 @@ module.exports = {
   TZ: process.env.TZ_NAME || 'Europe/Istanbul',
   // Ürün adı: TV menüsünde, panelde ve Başlangıç paketindeki köşe ibaresinde görünür
   BRAND: process.env.BRAND_NAME || 'ScreenPano',
+  // 'live' (müşterilerin kullandığı) ya da 'test' (deneme sunucusu: panelde/ekranda TEST etiketi çıkar)
+  APP_ENV: process.env.APP_ENV === 'test' ? 'test' : 'live',
   // Süper yönetici: ilk açılışta yoksa oluşturulur (şifreyi mutlaka değiştirin)
   SUPER_USER: process.env.SUPER_USER || 'admin',
   SUPER_PASS: process.env.SUPER_PASS || '',

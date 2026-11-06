@@ -992,6 +992,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
     <button id="mupd" class="pri" type="button" style="display:none">⚡ Yeni sürümü indir ve kur</button>
     <button id="mchk" type="button">🔄 Güncellemeyi kontrol et</button>
     <button id="mrel" type="button" onclick="location.reload()">🔁 Sayfayı yenile</button>
+    <button id="mtest" type="button" style="display:none">🧪 Test ortamına geç</button>
     <button id="mcls" type="button" onclick="menuClose()">✕ Kapat</button>
     <button id="mout" type="button">🚪 Bu cihazın oturumunu kapat (Çıkış)</button>
   </div>
@@ -1825,6 +1826,7 @@ function preloadLogos(s) { // tüm sayfalardaki logoları arka planda indir: say
   if (fresh.length) setTimeout(step, 1500);
 }
 function setState(s) {
+  window.__envInfo = { env: s.env || 'live', canTest: !!s.canTest };
   applyState0(s);
   if (s.blocked) return;
   preloadLogos(s);
@@ -2365,6 +2367,11 @@ function menuInfo() {
   $m('mnew').style.display = a ? 'block' : 'none';
   if (a) $m('mnew').textContent = '⚡ Yeni sürüm hazır: v' + a.versionName + ' (kod ' + a.versionCode + ')';
   $m('mupd').style.display = (a && n && n.installUpdate) ? '' : 'none';
+  // Test/canlı geçişi: test ortamındaysa her zaman (geri dönüş), canlıdaysa yalnız işletme için açıldıysa (süper yönetim)
+  const env = n && n.env ? n.env() : '';
+  const showT = !!(n && n.switchEnv && (env === 'test' || (window.__envInfo && window.__envInfo.canTest)));
+  $m('mtest').style.display = showT ? '' : 'none';
+  $m('mtest').textContent = env === 'test' ? '🔙 Canlı ortama dön' : '🧪 Test ortamına geç';
 }
 async function checkUpdateSilently() {
   try {
@@ -2440,6 +2447,15 @@ attachTap('mupd', () => {
 });
 
 attachTap('mrel', () => location.reload());
+// Ortam değiştirme: yanlışlıkla basılmasın diye iki basış (5 sn içinde onay)
+attachTap('mtest', () => {
+  const b = $m('mtest'), n = window.__N;
+  if (!n || !n.switchEnv) return;
+  if (b.dataset.arm) { clearTimeout(+b.dataset.arm); b.dataset.arm = ''; menuSt('Geçiliyor…'); n.switchEnv(); return; }
+  const test = n.env && n.env() === 'test';
+  menuSt(test ? 'Canlı ortama dönülecek. Onaylamak için tekrar basın.' : 'Bu ekran TEST sunucusuna geçecek. Onaylamak için tekrar basın.');
+  b.dataset.arm = String(setTimeout(() => { b.dataset.arm = ''; menuSt(''); }, 5000));
+});
 attachTap('mcls', menuClose);
 attachTap('mtopcls', menuClose);
 

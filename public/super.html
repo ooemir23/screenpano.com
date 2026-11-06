@@ -277,6 +277,7 @@ function openTenant(id) {
   <div class="row">${field('Deneme bitişi', 'e-trial', d(x.trialUntil), 'type="date"')}${field('Ödeme bitişi', 'e-paid', d(x.paidUntil), 'type="date"')}</div>
   <div class="row">${field('Kullanıcı adı (giriş)', 'e-user', x.owner || '', 'autocomplete="off" autocapitalize="none"')}${field('E-posta (durum uyarıları)', 'e-mail', x.email || '', 'type="email"')}</div>
   <div class="row">${field('Not', 'e-note', x.note || '')}</div>
+  <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:11px 13px;border-radius:10px;background:var(--panel2)"><input type="checkbox" id="e-test" ${x.canTest ? 'checked' : ''} style="margin-top:3px"><span><b>Test ortamı düğmesi</b><br><span class="muted" style="font-size:12px">Bu işletmenin ekranlarında menüde "Test ortamına geç" düğmesi görünür (yalnız kendi işletmeniz için açın).</span></span></label>
   <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:11px 13px;border-radius:10px;background:var(--panel2)"><input type="checkbox" id="e-unl" ${x.unlimited ? 'checked' : ''} style="margin-top:3px"><span><b>Sınırsız (kendi işletmem)</b><br><span class="hint" style="margin:0">Süre dolmaz; tüm Pro özellikler açık; TV kutusu, kullanıcı, şube ve depolama sınırı yok. Kapatınca seçili paket ve tarihler geçerli olur.</span></span></label>
   ${x.org ? `<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="e-org"> Paket, durum, süre ve sınırsız ayarını zincirin tüm şubelerine uygula</label>` : ''}
   <div class="acts"><button class="btn" onclick="saveT('${id}')">Kaydet</button><button class="btn ghost" onclick="extend('${id}',30)">+30 gün</button><button class="btn ghost" onclick="extend('${id}',365)">+1 yıl</button></div>
@@ -286,7 +287,7 @@ function openTenant(id) {
 }
 const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
 async function saveT(id) {
-  try { await api('PUT', '/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, devices: Number($('e-devs').value) || 1, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, username: $('e-user').value, email: $('e-mail').value, unlimited: $('e-unl').checked, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast('Kaydedildi'); await load(); }
+  try { await api('PUT', '/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, devices: Number($('e-devs').value) || 1, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, username: $('e-user').value, email: $('e-mail').value, unlimited: $('e-unl').checked, canTest: $('e-test').checked, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast('Kaydedildi'); await load(); }
   catch (e) { toast(e.message, true); }
 }
 async function extend(id, days) { try { await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast(`${days} gün eklendi`); await load(); } catch (e) { toast(e.message, true); } }
@@ -460,4 +461,5 @@ async function load() {
 }
 load(); setInterval(load, 30000);
 </script>
+<script>fetch('/api/auth/config').then(r=>r.json()).then(c=>{if(c.env!=='test')return;document.title='[TEST] '+document.title;var d=document.createElement('div');d.textContent='TEST';d.style.cssText='position:fixed;top:0;left:0;z-index:99999;background:#d6262a;color:#fff;font:700 11px/1 sans-serif;letter-spacing:.12em;padding:5px 12px;border-radius:0 0 8px 0;pointer-events:none';document.body.appendChild(d)}).catch(function(){})</script>
 </body></html>

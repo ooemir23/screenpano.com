@@ -1,0 +1,48 @@
+# "Canlıya al": test (staging) dalında denenmiş her şeyi canlıya (main) taşır.
+# Taşınan APK, test sunucusunda denenenin AYNISIDIR (yeniden derlenmez); main'e girince Dokploy canlı sunucuyu
+# günceller, kutular yeni APK'yı menüden/bildirimle alır.
+# Çalıştırma: GitHub → Actions → "Canlıya al" → Run workflow → onay kutusuna  canliya-al  yazın.
+name: Canlıya al
+
+on:
+  workflow_dispatch:
+    inputs:
+      onay:
+        description: 'Onaylamak için canliya-al yazın'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promote
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Onay
+        env:
+          ONAY: ${{ github.event.inputs.onay }}
+        run: '[ "$ONAY" = "canliya-al" ] || { echo "::error::Onay metni yanlış (canliya-al yazın)"; exit 1; }'
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: staging'i main'e birleştir
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin staging
+          if git merge-base --is-ancestor origin/staging HEAD; then echo "Canlı zaten güncel."; exit 0; fi
+          # APK ve sürüm dosyası iki dalda da CI tarafından yazıldığı için çakışır: test edilen (staging) sürüm alınır
+          git merge origin/staging -X theirs --no-edit -m "Canlıya alındı (staging → main)" || {
+            for f in $(git diff --name-only --diff-filter=U); do git checkout --theirs -- "$f" && git add "$f"; done
+            git commit --no-edit -m "Canlıya alındı (staging → main)"
+          }
+          # birleşme sonrası kalan çakışma işareti kalmadığından emin ol
+          if git grep -nE '^(<<<<<<<|>>>>>>>) ' -- server public android .github >/dev/null 2>&1; then echo "::error::Çakışma işareti kaldı"; exit 1; fi
+          for i in 1 2 3; do git push origin HEAD:main && break; git pull --rebase -q origin main; sleep 5; done

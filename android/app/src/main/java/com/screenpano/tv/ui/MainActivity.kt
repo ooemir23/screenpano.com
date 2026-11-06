@@ -12,6 +12,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Base64
 import android.util.Log
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.PixelCopy
 import android.view.View
@@ -102,8 +103,9 @@ class MainActivity : AppCompatActivity() {
         override fun online(): Boolean = tvSocket?.connected == true
     })
 
-    private val baseUrl = BuildConfig.BASE_URL.trimEnd('/')
-    private val tvUrl = "$baseUrl/tv"
+    // ortama göre (canlı / test): onCreate'te NativeEnv.base ayarlanır
+    private val baseUrl: String get() = com.screenpano.tv.ui.nativeui.NativeEnv.base
+    private val tvUrl: String get() = "$baseUrl/tv"
 
     private val reloadTask = Runnable {
         binding.webView.loadUrl(tvUrl)
@@ -118,6 +120,8 @@ class MainActivity : AppCompatActivity() {
         hideSystemUi()
 
         prefs = TvPreferences(this)
+        com.screenpano.tv.ui.nativeui.NativeEnv.base = (if (prefs.isTest()) BuildConfig.TEST_URL else BuildConfig.BASE_URL).trimEnd('/')
+        if (prefs.isTest()) showTestTag()
 
         initExoPlayer()
         setupWebView()
@@ -126,6 +130,24 @@ class MainActivity : AppCompatActivity() {
 
         binding.webView.loadUrl(tvUrl)
         askAutostartOnce()
+    }
+
+    private var testFails = 0
+    /** Test sunucusuna ulaşılamıyorsa (kurulmamış/kapalı) ekran takılı kalmasın: 3 başarısız yüklemeden sonra canlıya döner. */
+    private fun noteMainFail() {
+        if (!prefs.isTest()) return
+        if (++testFails >= 3) { testFails = 0; prefs.setTest(false); handler.post { recreate() } }
+    }
+
+    /** Test ortamındayken her ekranın (yerel katmanlar dahil) üstünde küçük kırmızı etiket: müşteri ekranı unutulmasın. */
+    private fun showTestTag() {
+        val tag = android.widget.TextView(this).apply {
+            text = "TEST ORTAMI"; setTextColor(Color.WHITE); setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11f)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD; letterSpacing = 0.1f
+            setPadding(18, 6, 18, 6); setBackgroundColor(Color.argb(230, 214, 38, 42)); isClickable = false; isFocusable = false
+        }
+        binding.rootContainer.addView(tag, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.START))
+        tag.bringToFront(); tag.elevation = 1000f
     }
 
     /** Android 10+ açılışta kendiliğinden başlama: izin yoksa yalnız eşleştirme ekranındayken (içerik yokken) bir kez sorulur. */
@@ -285,6 +307,7 @@ class MainActivity : AppCompatActivity() {
 
         web.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
+                if (url != null && url.startsWith("http")) testFails = 0
                 handler.removeCallbacks(reloadTask)
                 pushTraffic()
                 if (webHidden.isNotEmpty()) hideWebCells(webHidden)
@@ -297,6 +320,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && request?.isForMainFrame == true) {
+                    noteMainFail()
                     handler.removeCallbacks(reloadTask)
                     handler.postDelayed(reloadTask, 15000)
                 }
@@ -306,6 +330,7 @@ class MainActivity : AppCompatActivity() {
             override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
                 // Eski (API 21-22) sürüm alt kaynak (görsel vb.) hatalarını da bildirir: yalnız ana sayfa hatasında yeniden yükle
                 if (failingUrl != null && view?.url != null && failingUrl != view.url) return
+                noteMainFail()
                 handler.removeCallbacks(reloadTask)
                 handler.postDelayed(reloadTask, 15000)
             }
@@ -876,6 +901,19 @@ class MainActivity : AppCompatActivity() {
                 b.compress(Bitmap.CompressFormat.JPEG, 70, stream)
                 "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
             } catch (_: Throwable) { "" } finally { b.recycle() }
+        }
+
+        /** "live" ya da "test": ekran şu an hangi sunucuya bağlı. */
+        @JavascriptInterface
+        fun env(): String = if (prefs.isTest()) "test" else "live"
+
+        /** Canlı ↔ test sunucusu: ortam kaydedilir, uygulama yeniden kurulur (her ortamın kendi giriş anahtarı saklanır). */
+        @JavascriptInterface
+        fun switchEnv() {
+            runOnUiThread {
+                prefs.setTest(!prefs.isTest())
+                recreate()
+            }
         }
 
         /** Açılışta kendiliğinden başlayabilir mi: "ok", "izin-yok" (Android 10+ izin verilmemiş). */

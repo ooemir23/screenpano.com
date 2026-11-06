@@ -20,7 +20,7 @@ r.post('/login', async (req, res) => {
   res.json({ ok: true, role: u.role, next: u.role === 'super' ? '/super' : '/panel' });
 });
 r.post('/logout', (req, res) => { auth.clearSession(res); res.json({ ok: true }); });
-r.get('/config', (req, res) => res.json({ brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, starters: require('./starters').list().map(({ key, name }) => ({ key, name })) }));
+r.get('/config', (req, res) => res.json({ env: config.APP_ENV, brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, starters: require('./starters').list().map(({ key, name }) => ({ key, name })) }));
 r.post('/signup', (req, res) => {
   if (!config.ALLOW_SIGNUP) return res.status(403).json({ error: 'Yeni kayıt şu an kapalı' });
   const ip = auth.clientIp(req);

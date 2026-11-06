@@ -13,10 +13,16 @@ class TvPreferences(context: Context) {
     private val app = context.applicationContext
     private val prefs = app.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
-    fun getDeviceToken(): String = prefs.getString(KEY_DEVICE_TOKEN, "") ?: ""
+    /** Ortam: "live" (varsayılan) ya da "test" (test sunucusu). Her ortamın kendi cihaz anahtarı vardır (iki sunucuda ayrı kayıt). */
+    fun isTest(): Boolean = prefs.getString(KEY_ENV, "live") == "test"
+    fun setTest(on: Boolean) { prefs.edit().putString(KEY_ENV, if (on) "test" else "live").commit() }
+
+    // canlı anahtar eski adıyla durur (güncellenen kutular eşleşmesini kaybetmesin)
+    private fun tokenKey() = if (isTest()) KEY_DEVICE_TOKEN_TEST else KEY_DEVICE_TOKEN
+    fun getDeviceToken(): String = prefs.getString(tokenKey(), "") ?: ""
 
     fun saveDeviceToken(t: String?) {
-        prefs.edit().putString(KEY_DEVICE_TOKEN, t ?: "").apply()
+        prefs.edit().putString(tokenKey(), t ?: "").apply()
     }
 
     /** Kutunun kimliği (ANDROID_ID): panelde cihazı ayırt etmek için. */
@@ -33,5 +39,7 @@ class TvPreferences(context: Context) {
     companion object {
         const val PREF_NAME = "tv"
         const val KEY_DEVICE_TOKEN = "deviceToken"
+        const val KEY_DEVICE_TOKEN_TEST = "deviceToken_test"
+        const val KEY_ENV = "env"
     }
 }

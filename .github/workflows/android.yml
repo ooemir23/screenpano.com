@@ -14,7 +14,7 @@ name: Android uygulaması
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]   # staging: test sunucusunun APK'sı; main: canlı
     paths: ['android/**', '.github/workflows/android.yml']
   workflow_dispatch:
 
@@ -103,7 +103,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/app.apk public/apk-version.json
           git commit -m "Android ${{ steps.check.outputs.name }} (${{ steps.check.outputs.code }}) derlendi ve imzalandı"
-          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
+          for i in 1 2 3; do git pull --rebase -q origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME" && break; sleep 5; done
 
       - uses: actions/upload-artifact@v4
         if: always()

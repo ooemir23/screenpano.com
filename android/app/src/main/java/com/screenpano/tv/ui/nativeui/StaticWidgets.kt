@@ -29,7 +29,9 @@ object NativeEnv {
         private set
     val ctxListeners = HashSet<() -> Unit>()
     fun updateCtx(c: String) { if (c != ctx) { ctx = c; ArrayList(ctxListeners).forEach { it() } } }
-    fun url(u: String): String = if (u.startsWith("http")) u else BuildConfig.BASE_URL.trimEnd('/') + (if (u.startsWith("/")) u else "/$u")
+    /** Bağlı sunucu (canlı ya da test); MainActivity ortama göre ayarlar. */
+    @Volatile var base: String = BuildConfig.BASE_URL.trimEnd('/')
+    fun url(u: String): String = if (u.startsWith("http")) u else base + (if (u.startsWith("/")) u else "/$u")
 }
 
 /** "Logo" widget'ı: görsel varsa logo (koyu logolar için açık zeminli plaka), yoksa işletme adı. */
