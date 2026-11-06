@@ -31,7 +31,14 @@ r.get('/overview', (req, res) => {
   settings.traffic_secret = require('./feeds').trafficSecret();
   const gUse = require('./social').googleUsage();
   const backup = require('./backup'), storage = require('./storage'), monitor = require('./monitor');
-  res.json({ books: require('./feeds').booksInfo(), google: gUse, backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
+  // S1: sistem şeridi — sunucu, yayındaki APK, cihaz sürümleri
+  let apkv = {}; try { apkv = JSON.parse(require('fs').readFileSync(require('path').join(config.PUBLIC_DIR, 'apk-version.json'), 'utf8')); } catch (e) { /* dosya yok */ }
+  const fl = monitor.fleet(apkv.versionName);
+  const system = { uptime: Math.round(process.uptime()), env: config.APP_ENV, node: process.version, mem: Math.round(process.memoryUsage().rss / 1048576), apk: apkv.versionName || '', apkCode: apkv.versionCode || 0,
+    fleet: { total: fl.length, online: fl.filter(d => d.online).length, apk: fl.filter(d => d.apk).length, old: fl.filter(d => d.old), noBoot: fl.filter(d => d.boot === 'izin-yok') } };
+  const byT = {}; for (const d of fl) (byT[d.tenantId] || (byT[d.tenantId] = [])).push({ name: d.name, online: d.online, app: d.app, old: d.old });
+  for (const x of list) x.fleet = byT[x.id] || [];
+  res.json({ system, books: require('./feeds').booksInfo(), google: gUse, backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
 });
 // ---- istatistik: tüm platform ve işletme bazında ----
 const STD = v => [7, 30, 90].includes(Number(v)) ? Number(v) : 30;
@@ -142,6 +149,19 @@ r.get('/backups', async (req, res) => {
   let remote = [], remoteError = '';
   try { remote = await b.listRemote(); } catch (e) { remoteError = e.message; }
   res.json({ status: b.status(), local: b.listLocal(), remote, remoteError });
+});
+// S5: veri kaynağı bağlantı testi (kaydedilmiş anahtarla tek, hafif bir istek)
+r.post('/sources/test', async (req, res) => {
+  const k = String((req.body || {}).k || ''), set = n => store.setting(n) || '';
+  const to = (u, o = {}) => fetch(u, { ...o, signal: AbortSignal.timeout(10000) });
+  try {
+    let r;
+    if (k === 'tmdb') { if (!set('tmdb_key')) throw new Error('Anahtar girilmemiş'); r = await to(`https://api.themoviedb.org/3/configuration?api_key=${encodeURIComponent(set('tmdb_key'))}`); }
+    else if (k === 'collect') { if (!set('collect_key')) throw new Error('Anahtar girilmemiş'); r = await to(`${config.PHARM_BASE}/news/getNews?country=tr&tag=general`, { headers: { authorization: 'apikey ' + set('collect_key'), 'content-type': 'application/json' } }); }
+    else if (k === 'traffic') { if (!/^https:\/\//.test(set('traffic_api'))) throw new Error('Adres girilmemiş'); r = await to(set('traffic_api')); }
+    else return res.status(400).json({ error: 'Bilinmeyen kaynak' });
+    res.json({ ok: r.ok, status: r.status });
+  } catch (e) { res.json({ ok: false, error: e.name === 'TimeoutError' ? 'Zaman aşımı' : e.message }); }
 });
 r.post('/books/refresh', async (req, res) => { try { await require('./feeds').refreshBooksNow(); res.json({ ok: true, info: require('./feeds').booksInfo() }); } catch (e) { res.status(500).json({ error: e.message }); } });
 r.post('/backups', async (req, res) => { try { res.json({ ok: true, name: await require('./backup').run('manuel') }); } catch (e) { res.status(500).json({ error: e.message }); } });

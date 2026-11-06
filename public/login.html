@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><script src="/i18n.js"></script><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/tokens.css">
 <title>Giriş</title>
 <style>
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F}
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC}
-:root{--bg:#121414;--panel:#1c1f1f;--line:rgba(255,255,255,.1);--text:#f4f1ea;--mute:#9aa0a0;--accent:#906538;--accent2:#c9955c;--bad:#ee5b4f}
 *{box-sizing:border-box;margin:0}
 body{min-height:100vh;font-family:Montserrat,system-ui,sans-serif;background:radial-gradient(ellipse 80% 60% at 20% 10%,#262a2a,var(--bg));color:var(--text);display:flex;align-items:center;justify-content:center;padding:24px 16px}
 .wrap{width:100%;max-width:980px;display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
@@ -15,33 +15,32 @@ body{min-height:100vh;font-family:Montserrat,system-ui,sans-serif;background:rad
 .pitch p{color:var(--mute);font-size:16px;line-height:1.6;margin-bottom:18px}
 .pitch ul{list-style:none;padding:0;display:grid;gap:10px}
 .pitch li{font-size:15px;display:flex;gap:10px;align-items:flex-start}
-.pitch li b{color:var(--accent2)}
-.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:28px}
+.pitch li .ic{color:var(--accent2);width:20px;height:20px;margin-top:1px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:28px}
 .brand{font-size:22px;font-weight:800;margin-bottom:4px}
-.tabs{display:flex;gap:6px;margin:18px 0 20px;background:rgba(0,0,0,.25);padding:4px;border-radius:12px}
-.tabs button{flex:1;padding:10px;border:0;border-radius:9px;background:none;color:var(--mute);font:600 14px Montserrat,sans-serif;cursor:pointer}
+.tabs{display:flex;gap:6px;margin:18px 0 20px;background:rgba(0,0,0,.25);padding:4px;border-radius:var(--r-m)}
+.tabs button{flex:1;padding:10px;border:0;border-radius:var(--r-s);background:none;color:var(--mute);font:600 14px Montserrat,sans-serif;cursor:pointer}
 .tabs button.on{background:var(--accent);color:#fff}
 label{display:block;font-size:12px;color:var(--mute);margin:14px 0 6px;letter-spacing:.04em}
-input,select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#141616;color:var(--text);font:500 15px Montserrat,sans-serif;outline:none}
+input,select{width:100%;padding:12px 14px;border-radius:var(--r-m);border:1px solid var(--line);background:#141616;color:var(--text);font:500 15px Montserrat,sans-serif;outline:none}
 input:focus,select:focus{border-color:var(--accent2)}
-.btn{width:100%;margin-top:20px;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;font:700 15px Montserrat,sans-serif;cursor:pointer}
+.btn{width:100%;margin-top:20px;padding:13px;border:0;border-radius:var(--r-m);background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;font:700 15px Montserrat,sans-serif;cursor:pointer}
 .btn:disabled{opacity:.6}
 .err{min-height:20px;margin-top:12px;color:var(--bad);font-size:14px}
 .note{color:var(--mute);font-size:12px;margin-top:14px;line-height:1.5}
 .ck{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:var(--mute);margin:12px 0 0;cursor:pointer}.ck input{width:18px;height:18px;flex:0 0 18px;margin:1px 0 0;accent-color:var(--accent2)}.ck a{color:inherit}
 .legal{margin-top:18px;font-size:12px;color:var(--mute);display:flex;gap:14px;flex-wrap:wrap}.legal a{color:inherit}
-.langsel{background:var(--panel2,#242828);color:inherit;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;cursor:pointer;max-width:100%}
 </style></head><body>
-<div data-langpick style="position:fixed;top:14px;inset-inline-end:14px;z-index:5"></div>
+<div data-langpick data-down style="position:fixed;top:14px;inset-inline-end:14px;z-index:5"></div>
 <div class="wrap">
   <div class="pitch">
     <h1>İşletmenizin ekranları, <span>tek panelden</span>.</h1>
     <p>Video döngüsü, duyuru panoları, anlık bilgi kartları, dijital fiyat ve ürün tarifesi, kampanyalar ve QR kodlar. Logonuz ve kurumsal renklerinizle, dakikalar içinde.</p>
     <ul>
-      <li><b>📺</b> Tek Android kutu, HDMI ile mekândaki tüm ekranlara; kullanıcı adı ve şifreyle giriş</li>
-      <li><b>🎨</b> Widget'larla kendi düzeninizi kurun, kurumsal renk ve logonuzu ekleyin</li>
-      <li><b>🧾</b> Mevzuata uygun dijital fiyat ve ürün tarifesi</li>
-      <li><b>⚡</b> Canlı bilgi bandı, haberler, hava durumu ve anlık bildirimler</li>
+      <li><svg class="ic"><use href="/icons.svg#i-tv"></use></svg><span>Tek Android kutu, HDMI ile mekândaki tüm ekranlara; kullanıcı adı ve şifreyle giriş</span></li>
+      <li><svg class="ic"><use href="/icons.svg#i-palette"></use></svg><span>Widget'larla kendi düzeninizi kurun, kurumsal renk ve logonuzu ekleyin</span></li>
+      <li><svg class="ic"><use href="/icons.svg#i-receipt-text"></use></svg><span>Mevzuata uygun dijital fiyat ve ürün tarifesi</span></li>
+      <li><svg class="ic"><use href="/icons.svg#i-zap"></use></svg><span>Canlı bilgi bandı, haberler, hava durumu ve anlık bildirimler</span></li>
     </ul>
   </div>
   <div class="box">

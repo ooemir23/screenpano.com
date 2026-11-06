@@ -1,0 +1,42 @@
+/* ScreenPano ortak tasarım tokenları: panel, süper yönetim ve giriş sayfası bu dosyayı yükler.
+   Renk, köşe yuvarlaklığı, yazı ölçeği ve düğme türleri tek yerden. Site (site.css) aynı değerleri kendi açık/koyu temasıyla kullanır;
+   TV renkleri işletmenin temasından gelir. Native (Kotlin) taraf: android/.../nativeui/BigKit.kt içindeki Tok nesnesi aynı değerleri taşır. */
+:root{
+  /* zemin ve yüzeyler (koyu) */
+  --bg:#121414;--side:#0d0f0f;--panel:#1b1e1e;--panel2:#232727;--panel3:#2a2f2f;
+  --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+  /* yazı */
+  --text:#f2efe9;--soft:#c9c6c0;--mute:#9aa0a0;
+  /* marka (ScreenPano bakırı; işletmenin rengi yalnız TV'yi ve önizlemeyi boyar) */
+  --accent:#906538;--accent2:#c9955c;--a2:201,149,92;
+  /* durum renkleri */
+  --ok:#3ecf74;--warn:#e8b13c;--bad:#ef5b4f;--info:#c9955c;
+  /* köşe yuvarlaklığı: küçük (girdi, etiket) · orta (kart, düğme) · büyük (pencere, büyük kart) · hap */
+  --r-s:8px;--r-m:12px;--r-l:20px;--r-pill:999px;--r:var(--r-m);
+  /* yazı ölçeği (12 px altı kullanılmaz) */
+  --fs-xs:12px;--fs-s:13.5px;--fs-m:15px;--fs-l:20px;--fs-xl:28px;
+  /* geçiş süreleri */
+  --t-fast:.15s;--t-med:.4s;
+}
+/* tek tip çizgi ikon (Lucide): <svg class="ic"><use href="/icons.svg#i-ad"></use></svg> */
+.ic{width:1.15em;height:1.15em;flex:none;display:inline-block;vertical-align:-.2em;stroke:currentColor}
+/* ince, temaya uygun kaydırma çubuğu */
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+/* ortak dil seçici (i18n.js çizer) */
+.lsel{position:relative;display:inline-block}
+.lsel>button{display:inline-flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line2);color:var(--text);border-radius:var(--r-pill);padding:7px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.lsel>button:hover{border-color:var(--accent2)}
+.lsel ul{position:absolute;bottom:calc(100% + 6px);left:0;min-width:160px;list-style:none;margin:0;padding:6px;background:var(--panel2);border:1px solid var(--line2);border-radius:var(--r-m);box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:90;display:none}
+.lsel.down ul{bottom:auto;top:calc(100% + 6px);left:auto;right:0}
+.lsel.on ul{display:block}
+.lsel li button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:none;border:0;color:var(--soft);font:inherit;font-size:14px;padding:8px 10px;border-radius:var(--r-s);cursor:pointer;text-align:start}
+.lsel li button:hover,.lsel li button.on{background:rgba(255,255,255,.06);color:#fff}
+/* özel onay penceresi ve "Geri al" bildirimi (ui.js) */
+#uidlg{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px}
+#uidlg.on{display:flex}
+#uidlg .box{width:min(440px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-l);padding:22px 22px 18px;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+#uidlg h4{font-size:17px;font-weight:700;margin:0 0 6px}
+#uidlg p{color:var(--soft);font-size:14px;line-height:1.5;margin:0;white-space:pre-line}
+#uidlg input{margin-top:14px}
+#uidlg .acts{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}

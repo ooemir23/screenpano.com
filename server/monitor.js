@@ -94,7 +94,18 @@ function overview() { // süper yönetim: çevrimdışı cihazlar
     .sort((a, b) => b.lastSeen - a.lastSeen);
 }
 
+// süper yönetim (S1, S4): son 30 günde görülen tüm cihazların sürüm ve bağlantı durumu
+const verNum = v => { const m = /^(\d+)\.(\d+)\.(\d+)/.exec(String(v || '')); return m ? +m[1] * 1e6 + +m[2] * 1e3 + +m[3] : 0; };
+function fleet(latest) {
+  const online = hub.onlineDeviceIds(), tenants = require('./tenants'), now = Date.now(), top = verNum(latest);
+  return store.q.devicesAll.all().filter(d => d.last_seen && now - d.last_seen < 30 * 86400000).map(d => {
+    let st = live.get(d.id); if (!st) { try { st = JSON.parse(d.status || '{}'); } catch { st = {}; } }
+    const app = st.app || '', apk = verNum(app) > 0;
+    return { id: d.id, name: d.name, tenant: (tenants.get(d.tenant_id) || {}).name || '?', tenantId: d.tenant_id, online: online.has(d.id), lastSeen: d.last_seen, app, apk, old: apk && top > 0 && verNum(app) < top, boot: st.boot || '' };
+  });
+}
+
 function start() { setInterval(tick, 60000); }
 
 const perf = new Map(); // cihaz → son performans testi sonucu (bellekte)
-module.exports = { report, connected, tick, start, deviceView, overview, snaps, perf, live, sendMail, webhook, mailEnabled, pushAlert, OFFLINE_MIN, offlineMin };
+module.exports = { fleet, report, connected, tick, start, deviceView, overview, snaps, perf, live, sendMail, webhook, mailEnabled, pushAlert, OFFLINE_MIN, offlineMin };

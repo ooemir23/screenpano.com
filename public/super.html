@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><script src="/i18n.js"></script><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
+<link rel="stylesheet" href="/tokens.css">
 <title>ScreenPano — Süper Yönetim</title>
 <style>
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F}
 @font-face{font-family:'Montserrat';font-style:normal;font-weight:300 800;font-display:swap;src:url(/fonts/montserrat-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC}
-:root{--bg:#121414;--panel:#1c1f1f;--panel2:#242828;--line:rgba(255,255,255,.09);--text:#f4f1ea;--mute:#9aa0a0;--accent:#906538;--accent2:#c9955c;--a2:201,149,92;--ok:#3ecf4a;--bad:#ee5b4f;--warn:#e9b44c}
 *{box-sizing:border-box;margin:0}
 body{font-family:Montserrat,system-ui,sans-serif;background:var(--bg);color:var(--text)}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -15,11 +15,11 @@ a{color:var(--accent2)}
 #side .brand{display:flex;flex-direction:column;gap:6px;padding:4px 10px 16px;border-bottom:1px solid var(--line);margin-bottom:8px}
 #side .brand small{color:var(--mute);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
 .nav{display:flex;flex-direction:column;gap:2px;flex:1;overflow:auto}
-.nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--text);text-decoration:none;font-size:14px;font-weight:500;opacity:.8}
+.nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-m);color:var(--text);text-decoration:none;font-size:14px;font-weight:500;opacity:.8}
 .nav a i{font-style:normal;width:20px;text-align:center}
 .nav a:hover{background:rgba(255,255,255,.05);opacity:1}
 .nav a.on{background:linear-gradient(135deg,rgba(var(--a2),.22),rgba(var(--a2),.08));opacity:1;box-shadow:inset 0 0 0 1px rgba(var(--a2),.35)}
-.nav a .n{margin-left:auto;background:var(--bad);color:#fff;border-radius:10px;font-size:11px;font-weight:700;padding:1px 7px}
+.nav a .n{margin-left:auto;background:var(--bad);color:#fff;border-radius:var(--r-m);font-size:12px;font-weight:700;padding:1px 7px}
 .sidefoot{display:flex;flex-direction:column;gap:8px;padding:10px 6px 0;border-top:1px solid var(--line);font-size:13px}
 .sidefoot a{color:var(--mute);text-decoration:none}.sidefoot a:hover{color:var(--text)}
 main{padding:28px 32px 80px;max-width:1380px;width:100%}
@@ -29,29 +29,29 @@ h3{font-size:14px;margin:16px 0 8px}
 .sub{color:var(--mute);font-size:13.5px;line-height:1.5;margin-bottom:20px;max-width:760px}
 .top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:6px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:16px}
 .stat b{display:block;font-size:26px;color:var(--text);font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;color:var(--mute);line-height:1.5;display:block;margin-top:2px}
 .stat .dl{font-size:12px;font-weight:700;display:inline}.dl.up{color:var(--ok)}.dl.dn{color:var(--bad)}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:20px;margin-bottom:20px}
 .card>h2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .hint{color:var(--mute);font-size:13px;line-height:1.55;margin-bottom:12px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;color:var(--mute);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{text-align:left;color:var(--mute);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
 tbody tr.click{cursor:pointer}tbody tr:hover td{background:rgba(255,255,255,.025)}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
-.tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.tag{display:inline-block;padding:2px 9px;border-radius:var(--r-m);font-size:12px;font-weight:700;white-space:nowrap}
 .tag.ok{background:rgba(62,207,74,.15);color:var(--ok)}.tag.trial{background:rgba(201,149,92,.18);color:var(--accent2)}.tag.bad{background:rgba(238,91,79,.15);color:var(--bad)}.tag.warn{background:rgba(233,180,76,.16);color:var(--warn)}.tag.mute{background:rgba(255,255,255,.07);color:var(--mute)}
-input,select,textarea{background:#141616;border:1px solid var(--line);border-radius:9px;padding:9px 11px;outline:none;width:100%}
+input,select,textarea{background:#141616;border:1px solid var(--line);border-radius:var(--r-s);padding:9px 11px;outline:none;width:100%}
 input:focus,select:focus,textarea:focus{border-color:var(--accent2)}
 input[type=checkbox]{width:auto}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
 .row>div{flex:1;min-width:160px}
 .row:last-child{margin-bottom:0}
 label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
-.btn{background:linear-gradient(135deg,var(--accent2),var(--accent));border:0;border-radius:9px;padding:9px 16px;font-weight:600;cursor:pointer;color:#fff;white-space:nowrap;text-decoration:none;display:inline-block;font-size:14px}
+.btn{background:linear-gradient(135deg,var(--accent2),var(--accent));border:0;border-radius:var(--r-s);padding:9px 16px;font-weight:600;cursor:pointer;color:#fff;white-space:nowrap;text-decoration:none;display:inline-block;font-size:14px}
 .btn:disabled{opacity:.5;cursor:default}
 .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}.btn.ghost:hover{border-color:var(--accent2)}
 .btn.sm{padding:5px 11px;font-size:12px}
@@ -59,30 +59,30 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .cardfoot{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:30px;background:var(--panel2);border:1px solid var(--line);cursor:pointer;font-size:13px;user-select:none}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-pill);background:var(--panel2);border:1px solid var(--line);cursor:pointer;font-size:13px;user-select:none}
 .chip:hover{border-color:var(--accent2)}.chip.on{background:rgba(var(--a2),.22);border-color:var(--accent2)}
 .chip b{font-weight:700;color:var(--mute);font-size:12px}
-.tabs{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:2px}
-.tabs button{background:none;border:0;border-radius:9px;padding:7px 16px;cursor:pointer;color:var(--mute);font-weight:600;font-size:13px}.tabs button.on{background:var(--panel2);color:var(--text)}
+.tabs{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:4px;gap:2px}
+.tabs button{background:none;border:0;border-radius:var(--r-s);padding:7px 16px;cursor:pointer;color:var(--mute);font-weight:600;font-size:13px}.tabs button.on{background:var(--panel2);color:var(--text)}
 .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 .toolbar input[type=search],.toolbar .grow{flex:1;min-width:200px}
 .toolbar select{width:auto}
 .scroll{overflow-x:auto}
-.att{display:flex;gap:12px;align-items:center;padding:11px 14px;background:var(--panel2);border-radius:11px;margin-bottom:8px;border-left:3px solid var(--warn)}
+.att{display:flex;gap:12px;align-items:center;padding:11px 14px;background:var(--panel2);border-radius:var(--r-m);margin-bottom:8px;border-left:3px solid var(--warn)}
 .att.bad{border-left-color:var(--bad)}.att.ok{border-left-color:var(--ok)}
 .att .b{flex:1;min-width:0;font-size:13.5px;line-height:1.5}.att .b span{color:var(--mute);display:block;font-size:12.5px}
-.bar{height:8px;border-radius:5px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent2)}
+.bar{height:8px;border-radius:var(--r-s);background:rgba(255,255,255,.07);overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent2)}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}.kv dt{color:var(--mute)}.kv dd{margin:0}
-.bkbox{margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.bkbox{margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:var(--r-m);font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
 .bars{display:flex;align-items:flex-end;gap:3px;height:170px;padding:6px 0;border-bottom:1px solid var(--line);margin-bottom:6px}
 .bars div{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
 .bars i{display:block;width:100%;background:var(--accent2);border-radius:3px 3px 0 0;min-height:2px}.bars div:hover i{background:var(--text)}
 .axis{display:flex;justify-content:space-between;font-size:12px;color:var(--mute)}
-.it{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel2);border-radius:11px;margin-bottom:8px}
+.it{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel2);border-radius:var(--r-m);margin-bottom:8px}
 .it .b{flex:1;min-width:0}.it .b span{display:block;color:var(--mute);font-size:12.5px;margin-top:2px}
 .mini{display:flex;align-items:flex-end;gap:2px;height:38px;width:34%;min-width:90px;flex:none}.mini div{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}.mini i{display:block;width:100%;background:var(--accent2);border-radius:2px 2px 0 0;min-height:2px}
 .big{font-size:24px;font-weight:700;min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
-.heat{display:grid;grid-template-columns:38px repeat(24,1fr);gap:3px;align-items:center}.heat i{display:block;height:22px;border-radius:4px}.heat .hl{font-size:10.5px;color:var(--mute);text-align:center}.heat .dn{font-size:12px;color:var(--mute)}
+.heat{display:grid;grid-template-columns:38px repeat(24,1fr);gap:3px;align-items:center}.heat i{display:block;height:22px;border-radius:4px}.heat .hl{font-size:12px;color:var(--mute);text-align:center}.heat .dn{font-size:12px;color:var(--mute)}
 .empty{color:var(--mute);text-align:center;padding:26px 10px;font-size:13.5px}
 #drawer{position:fixed;inset:0;z-index:30;display:none}
 #drawer.on{display:block}
@@ -90,8 +90,30 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 #drawer .pane{position:absolute;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:22px}
 #drawer .x{float:right;background:none;border:0;font-size:24px;cursor:pointer;color:var(--mute);line-height:1}
 #toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50}
-.toast{background:#2b2f2f;border-left:4px solid var(--ok);padding:12px 16px;border-radius:10px;font-size:14px}.toast.err{border-left-color:var(--bad)}
-.langsel{background:var(--panel2);color:inherit;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;cursor:pointer;max-width:100%;width:100%}
+.toast{background:#2b2f2f;border-left:4px solid var(--ok);padding:12px 16px;border-radius:var(--r-m);font-size:14px}.toast.err{border-left-color:var(--bad)}
+.nav .grp{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:12px 12px 4px}
+.nav a .ic{width:18px;height:18px;opacity:.85}.nav a.on .ic{color:var(--accent2);opacity:1}
+.btn.dz{background:var(--bad);color:#fff}.btn.g{background:transparent;border:1px solid var(--line2);color:var(--text)}
+.ssrch{position:relative;margin:0 2px 8px}.ssrch input{padding-inline-start:34px;font-size:13.5px}.ssrch>.ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mute)}
+[dir=rtl] .ssrch>.ic{left:auto;right:11px}
+.ssrch ul{position:absolute;left:0;right:0;top:calc(100% + 4px);list-style:none;margin:0;padding:6px;background:var(--panel2);border:1px solid var(--line2);border-radius:var(--r-m);box-shadow:0 12px 30px rgba(0,0,0,.5);z-index:40;display:none;max-height:320px;overflow:auto}
+.ssrch.on ul{display:block}.ssrch li button{display:block;width:100%;text-align:start;background:none;border:0;padding:8px 10px;border-radius:var(--r-s);cursor:pointer;font-size:13.5px}.ssrch li button:hover,.ssrch li button.on{background:rgba(255,255,255,.06)}.ssrch li small{display:block;color:var(--mute);font-size:12px}
+/* S1 sistem şeridi */
+.sys{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;padding:12px 16px;margin-bottom:20px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);font-size:13.5px;color:var(--soft)}
+.sys>span{display:inline-flex;align-items:center;gap:7px}.sys b{color:var(--text)}.sys .ic{width:16px;height:16px}.sys .okc{color:var(--ok)}.sys .wc{color:var(--warn)}.sys .bc{color:var(--bad)}
+.sys button{background:none;border:0;color:var(--warn);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;padding:0}
+/* S2 gruplu sayılar */
+.kgrp{margin-bottom:20px}.kgrp>h4{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:0 0 10px}.kgrp .stats{margin-bottom:0;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.kgrp .stat{padding:14px}.kgrp .stat b{font-size:24px}@media(max-width:700px){.kgrp .stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat span.l{font-size:13px;color:var(--soft)}
+/* S7 iki sütun */
+.hcols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:1250px){.hcols{grid-template-columns:minmax(0,1fr)}}
+/* S4 cihaz sağlığı */
+.devh{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.devh i{width:8px;height:8px;border-radius:50%;background:#666;display:inline-block}.devh i.on{background:var(--ok)}
+#popm{position:fixed;z-index:80;display:none;min-width:190px;padding:6px;background:var(--panel2);border:1px solid var(--line2);border-radius:var(--r-m);box-shadow:0 14px 34px rgba(0,0,0,.5)}#popm.on{display:block}
+#popm button{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;color:var(--soft);font:inherit;font-size:13.5px;padding:8px 10px;border-radius:var(--r-s);cursor:pointer;text-align:start}#popm button:hover{background:rgba(255,255,255,.06);color:#fff}
+/* S5 kaynak listesi */
+.srcl td .tag{margin-inline-end:6px}
 @media(max-width:900px){
   .app{grid-template-columns:minmax(0,1fr)}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -105,13 +127,15 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 <div class="app">
   <aside id="side">
     <div class="brand"><a href="/super" style="text-decoration:none"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:32px;display:block"></a><small>Süper Yönetim</small></div>
+    <div class="ssrch" id="ssrch"><svg class="ic"><use href="/icons.svg#i-search"></use></svg><input type="search" id="gq" placeholder="İşletme ara" autocomplete="off" oninput="gSearch(this.value)" onfocus="gSearch(this.value)" onkeydown="gKey(event)"><ul id="gres"></ul></div>
     <nav class="nav" id="nav"></nav>
-    <div class="sidefoot"><span data-langpick></span><a href="/tv" target="_blank">TV sayfası ↗</a></div>
+    <div class="sidefoot"><span data-langpick></span><a href="/tv" target="_blank"><svg class="ic"><use href="/icons.svg#i-external-link"></use></svg> TV sayfası</a></div>
   </aside>
   <main id="main"><div class="empty">Yükleniyor…</div></main>
 </div>
 <div id="drawer"><div class="bg" onclick="closeDrawer()"></div><div class="pane" id="pane"></div></div>
 <div id="toasts"></div>
+<script src="/ui.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -134,7 +158,10 @@ async function call(method, url, body) {
 const api = (m, u, b) => call(m, '/api/super' + u, b);
 
 /* ---------- sayfa yapısı ---------- */
-const NAV = [['home', '▦', 'Genel bakış'], ['tenants', '🏢', 'İşletmeler'], ['stats', '📊', 'İstatistik'], ['sources', '🔌', 'Veri kaynakları'], ['notify', '🔔', 'Bildirimler'], ['legal', '📄', 'Yasal ve site'], ['backup', '💾', 'Yedek ve depolama'], ['account', '👤', 'Hesabım']];
+// S8: menü üç başlıkta (izleme, müşteriler, sistem); metin olan öğe grup başlığıdır
+const NAV_G = ['İzleme', ['home', 'layout-dashboard', 'Genel bakış'], ['stats', 'chart-column', 'İstatistik'], ['notify', 'bell', 'Bildirimler'], 'Müşteriler', ['tenants', 'building-2', 'İşletmeler'], 'Sistem', ['sources', 'plug', 'Veri kaynakları'], ['legal', 'file-text', 'Yasal ve site'], ['backup', 'hard-drive', 'Yedek ve depolama'], ['account', 'user', 'Hesabım']];
+const NAV = NAV_G.filter(Array.isArray);
+const ic = n => `<svg class="ic" aria-hidden="true"><use href="/icons.svg#i-${n}"></use></svg>`;
 let D = null, page = 'home', P = null, PAT = 0;
 const ST = { days: 30, tid: 'all' }, TF = { q: '', f: 'all', sort: 'new' };
 const pageOf = () => { const h = (location.hash || '#home').slice(1).split('/')[0]; return NAV.some(n => n[0] === h) ? h : 'home'; };
@@ -150,6 +177,10 @@ function attention() {
     else if (a.ok && a.kind === 'paid' && a.until - now <= 7 * day) out.push({ lv: 'warn', t: x.name, s: `${T('Abonelik bitiyor')}: ${fmt(a.until)}`, act: [T('Aç'), `openTenant('${x.id}')`] });
     else if (!a.ok && a.reason === 'expired' && now - Math.max(x.paidUntil || 0, x.trialUntil || 0) <= 14 * day) out.push({ lv: 'bad', t: x.name, s: `${T('Süresi doldu')}: ${fmt(Math.max(x.paidUntil || 0, x.trialUntil || 0))}`, act: [T('Aç'), `openTenant('${x.id}')`] });
   }
+  const fl = (D.system || {}).fleet || {};
+  for (const d of (fl.old || []).slice(0, 10)) out.push({ lv: 'warn', t: `${d.tenant} · ${d.name || T('TV kutusu')}`, s: `${T('Eski uygulama sürümü')}: ${d.app} → ${D.system.apk}`, act: [T('Panele gir'), `imp('${d.tenantId}')`] });
+  for (const d of (fl.noBoot || []).slice(0, 10)) out.push({ lv: 'warn', t: `${d.tenant} · ${d.name || T('TV kutusu')}`, s: T('Açılışta otomatik başlama izni verilmemiş'), act: [T('Panele gir'), `imp('${d.tenantId}')`] });
+  out.sort((a, b) => (a.lv === 'bad' ? 0 : 1) - (b.lv === 'bad' ? 0 : 1));
   const s = D.settings;
   if (!s.collect_key) out.push({ lv: 'warn', t: T('CollectAPI anahtarı yok'), s: T('Eczane, haber ve kitap verileri çekilemez'), act: [T('Aç'), "go('sources')"] });
   if (!s.tmdb_key) out.push({ lv: 'warn', t: T('TMDB anahtarı yok'), s: T('Sinema verileri çekilemez'), act: [T('Aç'), "go('sources')"] });
@@ -164,9 +195,33 @@ const attCount = () => D ? attention().filter(a => a.lv === 'bad').length : 0;
 /* ---------- gezinme ---------- */
 function drawNav() {
   const n = D ? attCount() : 0;
-  $('nav').innerHTML = NAV.map(([k, ic, l]) => `<a href="#${k}" class="${page === k ? 'on' : ''}"><i>${ic}</i>${l}${k === 'home' && n ? `<span class="n">${n}</span>` : ''}</a>`).join('');
+  $('nav').innerHTML = NAV_G.map(x => typeof x === 'string' ? `<div class="grp">${x}</div>` : `<a href="#${x[0]}" class="${page === x[0] ? 'on' : ''}">${ic(x[1])}${x[2]}${x[0] === 'home' && n ? `<span class="n">${n}</span>` : ''}</a>`).join('');
 }
 function go(p) { location.hash = p; }
+// S8: her sayfadan işletme arama
+let GI = 0;
+function gSearch(q) {
+  const box = $('ssrch'), ul = $('gres'); q = String(q || '').trim().toLocaleLowerCase('tr-TR');
+  if (!D || !q) { box.classList.remove('on'); return; }
+  const hit = D.tenants.filter(x => [x.name, x.owner, x.phone, x.email].join(' ').toLocaleLowerCase('tr-TR').includes(q)).slice(0, 8); GI = 0;
+  ul.innerHTML = hit.length ? hit.map((x, i) => `<li><button type="button" class="${i ? '' : 'on'}" onmousedown="event.preventDefault();gOpen('${x.id}')"><b>${esc(x.name)}</b><small>${esc(x.owner || '')}${x.phone ? ' · ' + esc(x.phone) : ''}</small></button></li>`).join('') : `<li><small style="padding:8px 10px;display:block;color:var(--mute)">${T('Sonuç yok')}</small></li>`;
+  box.classList.add('on');
+}
+function gKey(e) {
+  const b = [...$('gres').querySelectorAll('button')]; if (!b.length) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); GI = (GI + (e.key === 'ArrowDown' ? 1 : b.length - 1)) % b.length; b.forEach((x, i) => x.classList.toggle('on', i === GI)); }
+  else if (e.key === 'Enter') { e.preventDefault(); b[GI].dispatchEvent(new MouseEvent('mousedown')); }
+  else if (e.key === 'Escape') $('ssrch').classList.remove('on');
+}
+function gOpen(id) { $('ssrch').classList.remove('on'); $('gq').value = ''; if (page !== 'tenants') go('tenants'); setTimeout(() => openTenant(id), 60); }
+document.addEventListener('click', e => { if (!e.target.closest('#ssrch')) $('ssrch').classList.remove('on'); });
+function popMenu(anchor, items) {
+  let m = $('popm'); if (!m) { m = document.createElement('div'); m.id = 'popm'; document.body.appendChild(m); addEventListener('click', () => m.classList.remove('on')); addEventListener('scroll', () => m.classList.remove('on'), true); }
+  m.innerHTML = items.map((it, i) => `<button type="button" data-i="${i}">${ic(it[1])}<span>${esc(T(it[0]))}</span></button>`).join('');
+  m.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); m.classList.remove('on'); items[+b.dataset.i][2](); });
+  m.classList.add('on'); const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px'; m.style.top = (r.bottom + h + 8 > innerHeight ? r.top - h - 6 : r.bottom + 6) + 'px';
+}
 function render() {
   page = pageOf(); drawNav();
   if (!D) return;
@@ -195,32 +250,46 @@ const PAGES = {};
 /* ================= GENEL BAKIŞ ================= */
 PAGES.home = {
   html() {
-    const t = D.totals, now = Date.now(), day = 86400000;
+    const t = D.totals, now = Date.now(), day = 86400000, sy = D.system || { fleet: {} }, fl = sy.fleet || {};
     const att = attention(), recent = D.tenants.filter(x => x.owner || !x.org).sort((a, b) => b.created - a.created).slice(0, 6);
     const live = D.tenants.filter(x => x.access.ok), by = {};
     for (const x of live) by[x.plan] = (by[x.plan] || 0) + 1;
     const mx = Math.max(1, ...Object.values(by));
-    const n7 = D.tenants.filter(x => (x.owner || !x.org) && now - x.created <= 7 * day).length, n30 = D.tenants.filter(x => (x.owner || !x.org) && now - x.created <= 30 * day).length;
+    const n7 = D.tenants.filter(x => (x.owner || !x.org) && now - x.created <= 7 * day).length;
     const trials = live.filter(x => x.access.kind === 'trial').length;
-    return head('Genel bakış', 'Platformun durumu ve ilgilenmeniz gerekenler.')
-      + `<div class="stats">${stat(t.tenants, 'İşletme', ` · ${trials} ${T('deneme')}`)}${stat(t.live, 'Ekranı açık işletme')}${stat(t.devices, 'Kayıtlı TV')}${stat(`${t.online}`, 'Şu an bağlı TV', t.devices ? ` · %${Math.round(t.online / t.devices * 100)}` : '')}${stat(n7, 'Son 7 günde yeni kayıt', ` · ${n30} ${T('son 30 günde')}`)}</div>`
-      + `<div id="pstats"></div>`
-      + card('Dikkat gerektirenler', att.length ? 'Kırmızılar acil, sarılar yakında ilgilenilecek işler.' : '', att.length ? att.slice(0, 20).map(a => `<div class="att ${a.lv === 'bad' ? 'bad' : ''}"><div class="b"><b>${esc(a.t)}</b><span>${esc(a.s)}</span></div><button class="btn ghost sm" onclick="${a.act[1]}">${esc(a.act[0])}</button></div>`).join('') : '<div class="att ok"><div class="b"><b>Her şey yolunda</b><span>İlgilenmeniz gereken bir şey yok.</span></div></div>')
-      + `<div class="grid2">`
+    const bk = D.backup || {}, bkOk = bk.at && !bk.error && now - bk.at < 36 * 3600000;
+    const up = sy.uptime >= 86400 ? Math.floor(sy.uptime / 86400) + ' ' + T('gün') : sy.uptime >= 3600 ? Math.floor(sy.uptime / 3600) + ' ' + T('sa') : Math.max(1, Math.round((sy.uptime || 0) / 60)) + ' ' + T('dk');
+    const old = (fl.old || []).length;
+    // S1: sistem şeridi
+    const sys = `<div class="sys"><span class="okc">${ic('server')}<b>${T('Sunucu çalışıyor')}</b></span><span>${T('Açık kalma')}: <b>${up}</b></span>`
+      + `<span class="${bkOk ? 'okc' : 'wc'}">${ic(bkOk ? 'circle-check' : 'triangle-alert')}${T('Yedek')}: <b>${bk.at ? new Date(bk.at).toLocaleString(I18N.locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : T('yok')}</b></span>`
+      + `<span>${ic('package')}APK <b>${esc(sy.apk || '-')}</b></span>`
+      + `<span class="${old ? 'wc' : 'okc'}">${ic('tv')}${T('Cihazlar')}: <b>${(fl.apk || 0) - old} ${T('güncel')}</b>${old ? ` · <button onclick="go('tenants');TF.f='old';setTimeout(drawRows,30)">${old} ${T('eski sürümde')}</button>` : ''}</span></div>`;
+    // S2: üç grup
+    const grp = (h, body) => `<div class="kgrp"><h4>${h}</h4><div class="stats">${body}</div></div>`;
+    return head('Genel bakış', 'Platformun durumu ve ilgilenmeniz gerekenler.') + sys
+      + `<div class="hcols"><div>`
+      + grp(T('İşletmeler'), stat(t.tenants, 'Toplam işletme') + stat(t.live, 'Ekranı açık') + stat(trials, 'Denemede') + stat(n7, 'Son 7 günde yeni'))
+      + grp(T('Cihazlar'), stat(t.devices, 'Kayıtlı TV') + stat(`${t.online}`, 'Şu an bağlı') + stat(old, 'Eski sürümde') + stat((fl.noBoot || []).length, 'Otomatik başlama izni yok'))
+      + `<div class="kgrp"><h4>${T('Kullanım · son 30 gün')}</h4><div id="pstats"><div class="stats"><div class="stat"><b>…</b></div></div></div></div>`
+      + card('Dikkat gerektirenler', att.length ? 'Kırmızılar acil, sarılar yakında ilgilenilecek işler.' : '', att.length ? att.slice(0, 20).map(a => `<div class="att ${a.lv === 'bad' ? 'bad' : ''}"><div class="b"><b>${esc(a.t)}</b><span>${esc(a.s)}</span></div><button class="btn ghost sm" onclick="${a.act[1]}">${esc(a.act[0])}</button></div>`).join('') : '<div class="att ok"><div class="b"><b>Her şey yolunda</b><span>Şu an ilgilenmeniz gereken bir şey yok.</span></div></div>')
+      + `</div><div>`
+      + `<div id="pchart"></div>`
       + card('Son kayıt olanlar', '', recent.length ? `<div class="scroll"><table><tbody>${recent.map(x => `<tr class="click" onclick="openTenant('${x.id}')"><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${esc(x.owner || '')}</span></td><td>${stTag(x)}</td><td class="num">${ago(x.created)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">İşletme yok</div>')
       + card('Paket dağılımı', 'Ekranı açık işletmeler.', Object.keys(D.plans).length ? Object.values(D.plans).map(p => `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${esc(p.name)}</span><b>${by[p.id] || 0}</b></div><div class="bar"><i style="width:${Math.round((by[p.id] || 0) / mx * 100)}%"></i></div></div>`).join('') : '')
-      + `</div>`;
+      + `</div></div>`;
   },
   async after() {
     try { if (!P || Date.now() - PAT > 60000) { P = await api('GET', '/stats?days=30'); PAT = Date.now(); } } catch (e) { return; }
     const el = $('pstats'); if (!el) return;
-    el.innerHTML = `<div class="stats">${stat(hrs(P.totals.online) + ' ' + T('saat'), 'Toplam ekran süresi (30 gün)', dl(P.totals.online, P.prev.online))}${stat(nf(P.totals.plays), 'İçerik oynatıldı (30 gün)', dl(P.totals.plays, P.prev.plays))}${stat(nf(P.totals.scans), 'QR okutuldu (30 gün)', dl(P.totals.scans, P.prev.scans))}${stat(nf(P.totals.drops), 'Ekran kesintisi (30 gün)', dl(P.totals.drops, P.prev.drops, false))}</div>`;
+    el.innerHTML = `<div class="stats">${stat(hrs(P.totals.online) + ' ' + T('saat'), 'Ekran süresi', dl(P.totals.online, P.prev.online))}${stat(nf(P.totals.plays), 'İçerik oynatıldı', dl(P.totals.plays, P.prev.plays))}${stat(nf(P.totals.scans), 'QR okutuldu', dl(P.totals.scans, P.prev.scans))}${stat(nf(P.totals.drops), 'Ekran kesintisi', dl(P.totals.drops, P.prev.drops, false))}</div>`;
+    const c = $('pchart'); if (c && P.daily && P.daily.length) c.innerHTML = barsCard('Günlük ekran süresi', 'Son 30 gün, tüm işletmelerin toplamı (saat).', P.daily, 'online', v => hrs(v) + ' ' + T('saat'));
   },
 };
 
 /* ================= İŞLETMELER ================= */
-const FILTERS = [['all', 'Tümü'], ['trial', 'Deneme'], ['active', 'Aktif'], ['unlimited', 'Sınırsız'], ['suspended', 'Askıda'], ['expired', 'Süresi dolan'], ['offline', 'Çevrimdışı cihazı olan']];
-const inK = (x, k) => { const a = x.access; return { all: true, trial: a.ok && a.kind === 'trial', active: a.ok && a.kind === 'paid', unlimited: a.ok && a.kind === 'unlimited', suspended: !a.ok && a.reason === 'suspended', expired: !a.ok && a.reason === 'expired', offline: D.offline.some(o => o.tenantId === x.id) }[k]; };
+const FILTERS = [['all', 'Tümü'], ['trial', 'Deneme'], ['active', 'Aktif'], ['unlimited', 'Sınırsız'], ['suspended', 'Askıda'], ['expired', 'Süresi dolan'], ['offline', 'Çevrimdışı cihazı olan'], ['old', 'Eski sürümde cihazı olan']];
+const inK = (x, k) => { const a = x.access; return { all: true, trial: a.ok && a.kind === 'trial', active: a.ok && a.kind === 'paid', unlimited: a.ok && a.kind === 'unlimited', suspended: !a.ok && a.reason === 'suspended', expired: !a.ok && a.reason === 'expired', offline: D.offline.some(o => o.tenantId === x.id), old: (x.fleet || []).some(d => d.old) }[k]; };
 const inF = x => {
   return inK(x, TF.f);
 };
@@ -234,6 +303,13 @@ PAGES.tenants = {
   },
   after() { drawRows(); },
 };
+// S4: cihaz sağlığı (çevrimiçi sayısı, eski sürüm)
+function devCell(x) {
+  const f = x.fleet || [], on = f.filter(d => d.online).length, lim = x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1)), old = f.filter(d => d.old).length;
+  if (!x.devices) return `<span style="color:var(--mute)">0 / ${lim}</span>`;
+  return `<span class="devh" title="${f.map(d => esc((d.name || 'TV') + (d.app ? ' · ' + d.app : ''))).join('\n')}">${f.map(d => `<i class="${d.online ? 'on' : ''}"></i>`).join('')} ${on}/${x.devices} ${T('çevrimiçi')}</span>${old ? `<br><span class="tag warn">${old} ${T('eski sürüm')}</span>` : ''}<br><span style="color:var(--mute);font-size:12px">${T('sınır')} ${lim}</span>`;
+}
+function rowMenu(ev, id) { ev.stopPropagation(); popMenu(ev.currentTarget, [['Ayrıntılar ve düzenleme', 'pencil', () => openTenant(id)], ['30 gün uzat', 'calendar-clock', () => extend(id, 30)], ['1 yıl uzat', 'calendar-clock', () => extend(id, 365)], ['İstatistikleri gör', 'chart-column', () => { ST.tid = id; ST.days = 30; go('stats'); render(); }]]); }
 function drawRows() {
   if (!$('list')) return;
   const q = TF.q.trim().toLocaleLowerCase('tr-TR');
@@ -243,8 +319,8 @@ function drawRows() {
   const list = D.tenants.filter(x => inF(x) && (!q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q))).sort(cmp);
   $('list').innerHTML = list.map(x => { const h = !x.owner && x.org ? headOf(x.org) : null; return `<tr class="click" onclick="openTenant('${x.id}')"><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : h ? T('Şube') + ' · ' + esc(h.name) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}</span></td>
     <td>${esc(planName(x))}</td><td>${stTag(x)}</td><td>${x.unlimited ? '∞' : fmt(end(x))}</td>
-    <td class="num">${x.devices} / ${x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1))}${x.online ? ` <span style="color:var(--ok)">● ${x.online}</span>` : ''}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
-    <td onclick="event.stopPropagation()"><div class="acts"><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">İşletme yok</td></tr>';
+    <td class="num">${devCell(x)}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
+    <td onclick="event.stopPropagation()"><div class="acts"><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button><button class="btn ghost sm" title="Diğer işlemler" aria-label="Diğer işlemler" onclick="rowMenu(event,'${x.id}')">${ic('ellipsis')}</button></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">İşletme yok</td></tr>';
 }
 
 /* ---- yeni işletme / ayrıntı paneli ---- */
@@ -270,6 +346,7 @@ function openTenant(id) {
   <div class="acts" style="margin-bottom:14px"><button class="btn sm" onclick="imp('${id}')">Panele gir</button><button class="btn ghost sm" onclick="ST.tid='${id}';ST.days=30;closeDrawer();go('stats');render()">İstatistikleri gör</button></div>
   <dl class="kv" style="margin-bottom:12px"><dt>Sahip</dt><dd>${esc(x.owner || '-')}</dd><dt>E-posta</dt><dd>${esc(x.email || '-')}</dd><dt>Kayıt</dt><dd>${fmt(x.created)}</dd><dt>Son giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : '-'}</dd><dt>Cihaz</dt><dd>${x.devices} / ${x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1))}${x.online ? ` <span style="color:var(--ok)">● ${x.online} ${T('bağlı')}</span>` : ''}</dd><dt>Depolama</dt><dd>${x.storageMB} MB</dd>${x.consent ? `<dt>Sözleşme/KVKK onayı</dt><dd>${fmt(x.consent)}</dd>` : ''}</dl>
   <div class="stats" id="dstats" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px"></div>
+  ${(x.fleet || []).length ? `<h3>${T('Cihazlar')}</h3>${x.fleet.map(d => `<div class="it" style="padding:9px 12px"><span class="devh"><i class="${d.online ? 'on' : ''}"></i></span><div class="b"><b>${esc(d.name || T('TV kutusu'))}</b><span>${d.online ? T('Çevrimiçi') : T('Çevrimdışı')}${d.app ? ' · ' + esc(d.app) : ''}</span></div>${d.old ? `<span class="tag warn">${T('eski sürüm')}</span>` : ''}</div>`).join('')}` : ''}
   ${x.deletion ? `<div class="att bad"><div class="b"><b>KVKK silme talebi</b><span>${fmt(x.deletion)} tarihinde silinecek.</span></div><button class="btn ghost sm" onclick="api('DELETE','/tenants/${id}/deletion').then(()=>{closeDrawer();load()})">Talebi iptal et</button></div>` : ''}
   <h3>Düzenle</h3>
   <div class="row">${field('İşletme adı', 'e-name', x.name)}${field('Telefon', 'e-phone', x.phone || '')}</div>
@@ -292,12 +369,12 @@ async function saveT(id) {
 }
 async function extend(id, days) { try { await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast(`${days} gün eklendi`); await load(); } catch (e) { toast(e.message, true); } }
 async function resetPw(id) {
-  const pw = prompt('Yeni şifre (boş bırakırsanız rastgele üretilir):', ''); if (pw === null) return;
-  try { const j = await api('POST', `/tenants/${id}/password`, { password: pw }); alert(`${T('Kullanıcı')}: ${j.username}\n${T('Yeni şifre')}: ${j.password}`); } catch (e) { toast(e.message, true); }
+  const pw = await UI.ask('Yeni şifre (boş bırakırsanız rastgele üretilir):', { input: '', ok: 'Şifreyi sıfırla' }); if (pw === null) return;
+  try { const j = await api('POST', `/tenants/${id}/password`, { password: pw }); UI.ask(`${T('Kullanıcı')}: ${j.username}\n${T('Yeni şifre')}: ${j.password}`, { title: 'Yeni şifre', cancel: 'Kapat', ok: 'Kopyala' }).then(ok => { if (ok) navigator.clipboard.writeText(j.password).then(() => toast('Kopyalandı')).catch(() => {}); }); } catch (e) { toast(e.message, true); }
 }
 async function delT(id) {
   const x = D.tenants.find(t => t.id === id);
-  const c = prompt(`${T('Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler.')}\n${T('Onaylamak için işletme adını aynen yazın')}: ${x.name}`); if (c === null) return;
+  const c = await UI.ask(`${T('Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler.')}\n${T('Onaylamak için işletme adını aynen yazın')}: ${x.name}`, { input: '', ok: 'Sil', danger: true }); if (c === null) return;
   try { await api('DELETE', '/tenants/' + id, { confirm: c }); closeDrawer(); toast('Silindi'); await load(); } catch (e) { toast(e.message, true); }
 }
 async function imp(id) { try { const j = await api('POST', `/tenants/${id}/impersonate`); location.href = j.next; } catch (e) { toast(e.message, true); } }
@@ -368,15 +445,18 @@ const saveBtn = keys => `<button class="btn" onclick="saveKeys(${esc(JSON.string
 PAGES.sources = {
   html() {
     const s = D.settings;
+    const b = D.books || {}, g = D.google || {};
+    const src = [['CollectAPI', 'Eczane, haber, kitap', !!s.collect_key, b.hata || '', 'collect', 'k-collect'], ['YouTube (Google girişi)', 'İşletmelerin çalma listeleri', !!(s.google_client_id && s.google_client_secret), '', '', 'k-yt'], ['Google Places', g.calls != null ? `${T('Bu ay')} ${g.calls} / ${g.cap} ${T('çağrı')}` : 'Google yorumları', !!s.google_places_key, '', '', 'k-places'], ['TMDB', 'Vizyondaki filmler', !!s.tmdb_key, '', 'tmdb', 'k-tmdb'], ['İBB trafik', 'Canlı trafik (isteğe bağlı)', !!s.traffic_api, '', 'traffic', 'k-traffic']];
     return head('Veri kaynakları', 'Bu anahtarlar tüm işletmeler için ortaktır; işletmeler hiçbir anahtar görmez. Veri her kaynaktan bir kez çekilip herkese dağıtılır. Ticari kullanım şartlarını her sağlayıcıdan kontrol edin.')
+      + card('Kaynak durumu', 'Düzenlemek için satıra tıklayın; "Test et" kayıtlı anahtarla tek bir deneme isteği gönderir.', `<div class="scroll"><table class="srcl"><thead><tr><th>Kaynak</th><th>Ne için</th><th>Durum</th><th></th></tr></thead><tbody>${src.map(([n, w, ok, err, tk, id]) => `<tr class="click" onclick="$('${id}').scrollIntoView({behavior:'smooth',block:'center'})"><td><b>${n}</b></td><td style="color:var(--mute)">${w}</td><td>${ok ? (err ? '<span class="tag warn">Uyarı</span>' : '<span class="tag ok">Bağlı</span>') : '<span class="tag bad">Anahtar yok</span>'}<span id="tr-${tk || id}"></span></td><td onclick="event.stopPropagation()">${tk && ok ? `<button class="btn ghost sm" onclick="testSrc('${tk}',this)">Test et</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`)
       + card('CollectAPI', 'Nöbetçi eczane, haber ve yeni çıkan kitap verileri.', `<div class="row">${setting('CollectAPI anahtarı', 'collect_key', 'type="password" autocomplete="off"')}<div style="max-width:260px"><label>CollectAPI planı</label><select id="s-collect_paid"><option value="">Ücretsiz (kota korumalı)</option><option value="1"${s.collect_paid ? ' selected' : ''}>Ücretli (kota sınırı yok)</option></select></div></div>`, saveBtn(['collect_key', 'collect_paid']), badge(s.collect_key))
       + card('Yeni çıkan kitaplar', 'Liste D&R yeni çıkanlarından (CollectAPI) günde bir alınır. Sesli kitaplar alınmaz; ekranlarda havuzdan rastgele 8 kitap gösterilir ve seçim 3 saatte bir değişir.', '<div id="bk-info" class="bkbox">…</div>', `<button class="btn ghost" type="button" onclick="refreshBooks(this)">Kitapları şimdi yenile</button>`)
-      + card('YouTube (Google girişi)', 'İşletmelerin kendi YouTube / YouTube Music çalma listelerini panele çekmesi için. Google Cloud\'da oluşturduğunuz OAuth istemcisinin bilgileri. Yetkili yönlendirme URI\'si olarak şunu ekleyin:', `<div class="bkbox" style="margin:0 0 12px">${esc(location.origin)}/api/oauth/google/callback</div><div class="row">${setting('Client ID', 'google_client_id', 'autocomplete="off" placeholder="…apps.googleusercontent.com"')}${setting('Client Secret', 'google_client_secret', 'type="password" autocomplete="off"')}</div><p class="hint" style="margin:10px 0 0">Uygulama Google'da test modundaysa yalnız test kullanıcısı olarak eklenen hesaplar bağlanabilir ve bağlantı 7 günde bir yenilenmelidir.</p>`, saveBtn(['google_client_id', 'google_client_secret']), badge(s.google_client_id && s.google_client_secret))
+      + card('YouTube (Google girişi)', 'İşletmelerin kendi YouTube / YouTube Music çalma listelerini panele çekmesi için. Google Cloud\'da oluşturduğunuz OAuth istemcisinin bilgileri. Yetkili yönlendirme URI\'si olarak şunu ekleyin:', `<div class="bkbox" style="margin:0 0 12px">${esc(location.origin)}/api/oauth/google/callback</div><div class="row">${setting('Client ID', 'google_client_id', 'type="password" autocomplete="off" placeholder="…apps.googleusercontent.com"')}${setting('Client Secret', 'google_client_secret', 'type="password" autocomplete="off"')}</div><p class="hint" style="margin:10px 0 0">Uygulama Google'da test modundaysa yalnız test kullanıcısı olarak eklenen hesaplar bağlanabilir ve bağlantı 7 günde bir yenilenmelidir.</p>`, saveBtn(['google_client_id', 'google_client_secret']), badge(s.google_client_id && s.google_client_secret))
       + card('Google Places', 'Google yorumları için.', `<div class="row">${setting('Google Places API anahtarı', 'google_places_key', 'type="password" autocomplete="off"')}${setting('Google aylık çağrı sınırı', 'google_monthly_cap', 'type="number" min="0" placeholder="900 (boş = 900)"')}</div><div id="g-use"></div>`, saveBtn(['google_places_key', 'google_monthly_cap']), badge(s.google_places_key))
       + card('TMDB', 'Sinema (vizyona girecek filmler) için.', `<div class="row">${setting('TMDB API anahtarı', 'tmdb_key', 'type="password" autocomplete="off"')}</div>`, saveBtn(['tmdb_key']), badge(s.tmdb_key))
       + card('İBB trafik', 'İsteğe bağlı: canlı trafik değeri bir Cloudflare Worker üzerinden gelir.', `<div class="row">${setting('İBB trafik Worker adresi', 'traffic_api', 'placeholder="https://trafik.kullanici.workers.dev"')}${setting('Worker imza anahtarı (TRAFFIC_SECRET olarak girin)', 'traffic_secret', 'readonly')}</div>`, saveBtn(['traffic_api']), badge(s.traffic_api));
   },
-  after() { liveSources(); },
+  after() { const c = document.querySelectorAll('#main .card'); [['k-collect', 1], ['k-yt', 3], ['k-places', 4], ['k-tmdb', 5], ['k-traffic', 6]].forEach(([id, i]) => { if (c[i]) c[i].id = id; }); liveSources(); },
 };
 function liveSources() {
   if (D.books && $('bk-info')) {
@@ -390,6 +470,12 @@ function liveSources() {
     $('bk-info').textContent = L.join('\n');
   }
   if (D.google && $('g-use')) { const g = D.google, pc = Math.min(100, Math.round(g.calls / Math.max(1, g.cap) * 100)); $('g-use').innerHTML = `<p class="hint" style="margin:12px 0 0">Bu ay ${g.calls} / ${g.cap} çağrı</p><div class="bar"><i style="width:${pc}%;${pc > 85 ? 'background:var(--bad)' : ''}"></i></div>`; }
+}
+async function testSrc(k, btn) {
+  const out = $('tr-' + k); btn.disabled = true; if (out) out.innerHTML = ' <span class="tag mute">…</span>';
+  try { const j = await api('POST', '/sources/test', { k }); if (out) out.innerHTML = j.ok ? ` <span class="tag ok">${T('Test başarılı')}</span>` : ` <span class="tag bad">${esc(j.error || 'HTTP ' + j.status)}</span>`; }
+  catch (e) { if (out) out.innerHTML = ` <span class="tag bad">${esc(e.message)}</span>`; }
+  btn.disabled = false;
 }
 async function refreshBooks(btn) { btn.disabled = true; const t = btn.textContent; btn.textContent = T('Yenileniyor…'); try { await api('POST', '/books/refresh'); toast('Kitaplar yenilendi'); await load(); } catch (e) { toast(e.message, true); } btn.disabled = false; btn.textContent = t; }
 

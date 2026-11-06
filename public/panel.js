@@ -1,18 +1,39 @@
-/* İşletme paneli. Bölümler: Özet, Tasarım, Medya, Fiyat Listesi, Spor, Duyurular, Kutlamalar, Bilgi Bandı, Ayarlar. */
+/* İşletme paneli. Bölümler: Özet, Tasarım, Medya, Fiyat Listesi, Spor, Kampanya ve yorumlar, Kutlamalar, Bilgi Bandı, Ayarlar. */
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const S = { me: null, db: null, cat: null, scr: null, lg: null };
 let TAB = 'home', PREV = null, SUB = {};
-const ICON = { media: '🎞', logo: '🏷', clock: '🕒', rates: '💱', ticker: '📰', text: '📝', image: '🖼', qr: '▣', info: '⚽', reviews: '★', menu: '🧾', music: '🎵' };
+const ICN = { media: 'film', logo: 'store', clock: 'clock', rates: 'cloud-sun', ticker: 'newspaper', text: 'type', image: 'image', qr: 'qr-code', info: 'trophy', reviews: 'star', menu: 'receipt-text', music: 'music' };
+const ICON = new Proxy({}, { get: (_, k) => ICN[k] ? `<svg class="ic" aria-hidden="true"><use href="/icons.svg#i-${ICN[k]}"></use></svg>` : '' });
 const fmtDate = ms => ms ? new Date(ms).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
 const ago = ms => { if (!ms) return 'hiç'; const m = Math.round((Date.now() - ms) / 60000); return m < 2 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.round(m / 60) + ' saat önce' : Math.round(m / 1440) + ' gün önce'; };
-const fmtSize = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : b >= 1048576 ? Math.round(b / 1048576) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+// boyut: dile göre ondalık ayırıcı, gereksiz ",0" yok (1 TB, 20 GB, 1,5 GB)
+const fmtSize = b => { const nf = (v, d) => v.toLocaleString(I18N.locale, { maximumFractionDigits: d }); return b >= 1099511627776 ? nf(b / 1099511627776, 1) + ' TB' : b >= 1073741824 ? nf(b / 1073741824, 1) + ' GB' : b >= 1048576 ? nf(Math.round(b / 1048576), 0) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; };
 const pro = () => S.me && S.me.tenant.plan.pro;
 const owner = () => S.me && S.me.user.role !== 'staff';
 const clone = o => JSON.parse(JSON.stringify(o));
+// tek tip çizgi ikon (Lucide sprite, /icons.svg)
+const ic = n => `<svg class="ic" aria-hidden="true"><use href="/icons.svg#i-${n}"></use></svg>`;
+// küçük açılır menü: items = [[etiket, ikon, işlev, tehlike?], null (ayraç), ...]
+function popMenu(anchor, items) {
+  let m = $('popm'); if (!m) { m = document.createElement('div'); m.id = 'popm'; document.body.appendChild(m); addEventListener('click', () => m.classList.remove('on')); addEventListener('scroll', () => m.classList.remove('on'), true); }
+  m.innerHTML = items.map((it, i) => it ? `<button type="button" class="${it[3] ? 'dz' : ''}" data-i="${i}">${ic(it[1])}<span>${esc(it[0])}</span></button>` : '<hr>').join('');
+  m.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); m.classList.remove('on'); items[+b.dataset.i][2](); });
+  m.classList.add('on'); const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px'; m.style.top = (r.bottom + h + 8 > innerHeight ? r.top - h - 6 : r.bottom + 6) + 'px';
+}
 
 /* ================= altyapı ================= */
-function toast(m, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = m; $('toasts').appendChild(t); setTimeout(() => t.remove(), 3800); }
+function toast(m, err, sub) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = m; if (sub) { const s = document.createElement('small'); s.textContent = sub; t.appendChild(s); } $('toasts').appendChild(t); setTimeout(() => t.remove(), sub ? 5200 : 3800); }
+// A11: kayıttan sonra değişikliğin kaç ekrana gönderildiği (bağlı kutular anında alır; kapalı olan açılınca alır)
+async function tvNote() {
+  try { S.scr = await req('GET', '/screen'); } catch (e) { return ''; }
+  const d = S.scr.devices || [], on = d.filter(x => x.online);
+  if (!d.length) return '';
+  if (!on.length) return 'Şu an bağlı ekran yok; ekran açılınca güncellenir';
+  const off = d.filter(x => !x.online).map(x => x.name || 'TV kutusu');
+  return off.length ? `${on.length}/${d.length} ekrana gönderildi · çevrimdışı: ${off.slice(0, 2).join(', ')}` : `${on.length}/${d.length} ekrana gönderildi`;
+}
 async function req(method, path, body) {
   const isForm = body instanceof FormData;
   const r = await fetch('/api/admin' + path, { method, headers: body && !isForm ? { 'Content-Type': 'application/json' } : undefined, body: body === undefined ? undefined : isForm ? body : JSON.stringify(body) });
@@ -23,15 +44,19 @@ async function req(method, path, body) {
 }
 // işlem + bildirim; reload: veriyi yenileyip bölümü yeniden çiz
 async function act(method, path, body, ok, reload = true) {
-  try { const j = await req(method, path, body); if (ok) toast(ok); if (reload) await refresh(); return j || true; }
+  try { const j = await req(method, path, body); if (reload) await refresh(); if (ok) toast(ok, false, method !== 'GET' && !NOTV.test(path) ? await tvNote() : ''); return j || true; }
   catch (e) { toast(e.message, true); return false; }
 }
+// ekrana gitmeyen işlemler (kayıt sonrası "ekrana gönderildi" notu yazılmaz)
+const NOTV = /^\/(users|profile|password|notify|privacy|backups|branches|google\/(search|connect)|instagram\/connect|ads\/[^/]+\/token|devices|pair)/;
 const opt = (key, val, msg) => { S.db[key] = val; return act('PUT', '/options', { [key]: val }, msg || 'Kaydedildi', false); };
-const reoptAll = () => { if (confirm('Mevcut videolar seçtiğiniz kaliteyle yeniden küçültülsün mü? Orijinaller silindiği için kalite yalnızca düşebilir (küçük dosya, daha akıcı oynatım); işlem kuyrukta sırayla yapılır.')) act('POST', '/media/optimize-all', { force: true }, 'Yeniden küçültme başladı', false); };
+const reoptAll = async () => { if (await UI.ask('Mevcut videolar seçtiğiniz kaliteyle yeniden küçültülsün mü? Orijinaller silindiği için kalite yalnızca düşebilir (küçük dosya, daha akıcı oynatım); işlem kuyrukta sırayla yapılır.')) act('POST', '/media/optimize-all', { force: true }, 'Yeniden küçültme başladı', false); };
 const brkSrc = (k, on) => { const cur = new Set((S.db.breaking || {}).sources || ['trt']); on ? cur.add(k) : cur.delete(k); const arr = [...cur].filter(x => x !== 'mix'); act('PUT', '/breaking', { sources: arr.length ? arr : ['trt'] }, 'Kaydedildi', false).then(refresh); };
 async function refresh() { [S.db, S.scr] = await Promise.all([req('GET', '/db'), req('GET', '/screen')]); render(true); }
 const sw = (on, js, attrs = '') => `<label class="sw"><input type="checkbox" ${on ? 'checked' : ''} onchange="${js}" ${attrs}><i></i></label>`;
-const card = (title, desc, body, right = '', cls = '') => `<div class="card ${cls}"><div class="ch"><div><h3>${title}</h3>${desc ? `<p>${desc}</p>` : ''}</div>${right}</div><div class="cb">${body}</div></div>`;
+// A7: başlığında aç/kapat anahtarı olan kart "Yayında / Kapalı" etiketi taşır; kapalıyken içerik soluk görünür (düzenlenebilir)
+const stPill = on => `<span class="stp ${on ? 'on' : ''}">${on ? 'Yayında' : 'Kapalı'}</span>`;
+const card = (title, desc, body, right = '', cls = '') => { const sw1 = /class="sw"/.test(right), on = sw1 && /type="checkbox" checked/.test(right); return `<div class="card ${cls}${sw1 ? (on ? ' swon' : ' swoff') : ''}"><div class="ch"><div><h3>${title}${sw1 ? stPill(on) : ''}</h3>${desc ? `<p>${desc}</p>` : ''}</div>${right}</div><div class="cb">${body}</div></div>`; };
 const fl = (label, input) => `<label class="fl"><span>${label}</span>${input}</label>`;
 const head = (t, d, right = '') => `<div class="head"><div><h1>${t}</h1>${d ? `<p>${d}</p>` : ''}</div><div class="row">${right}</div></div>`;
 const tabs = (key, items) => `<div class="tabs">${items.map(([k, l]) => `<button class="${(SUB[key] || items[0][0]) === k ? 'on' : ''}" onclick="SUB['${key}']='${k}';go('${TAB}/${k}')">${l}</button>`).join('')}</div>`;
@@ -48,14 +73,14 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 /* ================= gezinme ================= */
 // Metin olan satır grup başlığıdır; null ayraçtır
 const NAV = [
-  'Ekran', ['home', '▦', 'Özet'], ['design', '🎨', 'Tasarım'],
-  'İçerikler', ['media', '🎞', 'Medya'], ['music', '🎵', 'Müzik'], ['menu', '🧾', 'Fiyat Listesi', 1], ['promo', '📣', 'Duyurular'], ['qr', '▣', 'QR Kodlar'], ['celeb', '🎉', 'Kutlamalar'], ['ads', '💼', 'Reklamlar', 1],
-  'Canlı veri', ['sport', '⚽', 'Spor', 1], ['info', '📰', 'Bilgi Bandı', 1],
-  'Takip', ['stats', '📊', 'İstatistik'],
-  null, ['settings', '⚙', 'Ayarlar'],
+  'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'],
+  'İçerikler', ['media', 'film', 'Medya'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'], ['ads', 'briefcase', 'Reklamlar', 1],
+  'Canlı veri', ['sport', 'trophy', 'Spor', 1], ['info', 'newspaper', 'Bilgi Bandı', 1],
+  'Takip', ['stats', 'chart-column', 'İstatistik'],
+  null, ['settings', 'settings', 'Ayarlar'],
 ];
 function drawNav() {
-  $('nav').innerHTML = NAV.map(n => typeof n === 'string' ? `<div class="grp">${n}</div>` : n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}"><span class="i">${n[1]}</span>${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
+  $('nav').innerHTML = NAV.map(n => typeof n === 'string' ? `<div class="grp">${n}</div>` : n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}">${ic(n[1])}${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
   const cur = NAV.find(n => Array.isArray(n) && n[0] === TAB); $('toptitle').textContent = cur ? cur[2] : '';
 }
 function go(h) { if (location.hash !== '#' + h) location.hash = h; else route(); }
@@ -64,17 +89,24 @@ function route() {
   const pm = /^pair=(\d{6})$/.exec(h);
   if (pm) { SUB.settings = 'devices'; TAB = 'settings'; window.__pair = pm[1]; history.replaceState(null, '', '#settings/devices'); }
   else { const [t, s] = h.split('/'); TAB = SECTIONS[t] ? t : 'home'; if (s) SUB[TAB] = s; }
-  if (PREV === 'design' && TAB !== 'design' && EDIT.dirty) {
-    if (!confirm('Düzende kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) { TAB = 'design'; history.replaceState(null, '', '#design/layout'); }
-    else { EDIT.dirty = false; EDIT.layout = null; }
-  }
-  if (PREV === 'menu' && TAB !== 'menu' && MENU && MENU.__dirty) {
-    if (!confirm('Fiyat listesinde kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?')) { TAB = 'menu'; history.replaceState(null, '', '#menu'); }
-    else { MENU.__dirty = 0; MENU = null; }
-  }
+  // kaydedilmemiş değişiklik varsa önce bölümde kalınır; kullanıcı "Kaydetmeden çık" derse hedefe gidilir
+  const leave = (sec, back, msg, clear) => { const to = location.hash.slice(1); TAB = sec; history.replaceState(null, '', '#' + back);
+    UI.ask(msg, { ok: 'Kaydetmeden çık', danger: true }).then(ok => { if (ok) { clear(); location.hash = to; } }); };
+  if (PREV === 'design' && TAB !== 'design' && EDIT.dirty) { leave('design', 'design/layout', 'Düzende kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { EDIT.dirty = false; EDIT.layout = null; }); if (TAB === PREV) return; }
+  if (PREV === 'menu' && TAB !== 'menu' && MENU && MENU.__dirty) { leave('menu', 'menu', 'Fiyat listesinde kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { MENU.__dirty = 0; MENU = null; }); if (TAB === PREV) return; }
   PREV = TAB; menu(false); if ($('modal').classList.contains('on')) closeModal(); render(); scrollTo(0, 0);
 }
 addEventListener('hashchange', route);
+// D1: bölüm metinlerinin başındaki emoji simgeleri tek tip çizgi ikona çevrilir (çeviri katmanı işini bitirdikten sonra)
+const EMO = { '📺': 'tv', '📷': 'camera', '📸': 'camera', '⏱': 'clock', '⚽': 'trophy', '🏟': 'trophy', '🎂': 'cake', '🎁': 'gift', '★': 'star', '📌': 'map-pin', '📍': 'map-pin', '🔒': 'lock', '✨': 'sparkles', '🔥': 'flame', '↶': 'undo-2', '⟲': 'rotate-ccw', '🌍': 'languages', '📱': 'smartphone', '💻': 'monitor', '🎵': 'music', '🎉': 'party-popper', '📰': 'newspaper', '📣': 'megaphone', '🧾': 'receipt-text', '💼': 'briefcase', '⚠': 'triangle-alert', '🔗': 'external-link', '🎬': 'film', '⚙': 'settings', '📊': 'chart-column' };
+const EMO_RE = new RegExp('^\\s*(' + Object.keys(EMO).join('|') + ')\\uFE0F?\\s*');
+function iconize(root) {
+  (root || $('view')).querySelectorAll('button, a.btn, h3, h4, .chip, summary b, .jump button').forEach(el => {
+    const t = [...el.childNodes].find(n => n.nodeType === 3 && n.nodeValue.trim()); if (!t || t !== [...el.childNodes].find(n => n.nodeType !== 8 && (n.nodeType !== 3 || n.nodeValue.trim()))) return;
+    const m = EMO_RE.exec(t.nodeValue); if (!m) return;
+    t.nodeValue = t.nodeValue.slice(m[0].length); el.insertAdjacentHTML('afterbegin', ic(EMO[m[1]]) + ' ');
+  });
+}
 function render(keepScroll) {
   const y = scrollY;
   drawNav();
@@ -82,18 +114,19 @@ function render(keepScroll) {
   $('view').innerHTML = sec.html();
   if (sec.after) sec.after();
   drawJump();
+  requestAnimationFrame(() => setTimeout(() => { iconize(); iconize($('banner')); }, 0));
   setTimeout(scalePv, 30);
   if (keepScroll) scrollTo(0, y);
 }
 // Sayfa içi hızlı erişim: kart başlıkları üstte sabit bir şeritte; tıklayınca ekran o karta kayar ve kart kısa süre vurgulanır
 function drawJump() {
-  const v = $('view'), cards = [...v.querySelectorAll('.card')].filter(c => c.querySelector('.ch h3'));
+  const v = $('view'), cards = [...v.querySelectorAll('.card')].filter(c => { const h = c.querySelector(':scope > .ch h3'); return h && h.textContent.trim(); });
   if (cards.length < 3) return;
   const bar = document.createElement('div'); bar.className = 'jump';
   cards.forEach((c, i) => {
     c.id = 'kart-' + i;
     const a = document.createElement('button'); a.type = 'button';
-    a.textContent = c.querySelector('.ch h3').textContent.trim();
+    a.textContent = [...c.querySelector('.ch h3').childNodes].filter(n => !(n.classList && n.classList.contains('stp'))).map(n => n.textContent).join('').trim();
     a.onclick = () => jumpTo(c); bar.appendChild(a);
   });
   const h = v.querySelector('.head'); h ? h.after(bar) : v.prepend(bar);
@@ -109,7 +142,9 @@ const offSince = ms => new Date(ms).toLocaleString(I18N.locale, new Date(ms).toD
 function drawBanner() {
   const t = S.me.tenant, acc = t.access, days = acc.until ? Math.ceil((acc.until - Date.now()) / 86400000) : 0;
   let h = '';
-  if (S.me.user.impersonating) h += `<div class="bn imp"><span>Süper yönetici olarak <b>${esc(t.name)}</b> işletmesini görüntülüyorsunuz.</span><button class="btn s g" onclick="unimp()">Süper yönetime dön</button></div>`;
+  // S6: süper yönetici görünümü: en üstte ince, sabit şerit (her sayfada yer kaplamaz)
+  let ib = $('impbar'); if (S.me.user.impersonating && !ib) { ib = document.createElement('div'); ib.id = 'impbar'; document.body.prepend(ib); document.body.classList.add('imp'); }
+  if (ib) ib.innerHTML = `<span>Süper yönetici olarak <b>${esc(t.name)}</b> işletmesini görüntülüyorsunuz.</span><button type="button" onclick="unimp()">Süper yönetime dön</button>`;
   if (!acc.ok) h += `<div class="bn bad"><span><b>${acc.reason === 'suspended' ? 'Hesabınız askıya alındı.' : 'Abonelik süreniz doldu.'}</b> Ekranınız şu an kapalı; paketiniz yenilenince kendiliğinden açılır.</span></div>`;
   if (S.db && S.db.deletion) h += `<div class="bn bad"><span><b>Hesap silme talebi var.</b> ${fmtDate(S.db.deletion.executeAt)} tarihinde tüm veriler kalıcı olarak silinecek.</span><a class="btn s g" href="#settings/privacy">Vazgeç</a></div>`;
   const off = S.scr && S.scr.devices.filter(d => !d.online && d.last_seen && Date.now() - d.last_seen > (S.scr.offlineMin || 10) * 60000 && Date.now() - d.last_seen < 7 * 86400000);
@@ -152,8 +187,10 @@ SECTIONS.home = {
       + (att.length ? card('İlgilenmeniz gerekenler', 'Kırmızılar acil, sarılar yakında ilgilenilecek işler.', att.map(a => `<a class="att ${a.lv}" href="${a.href}"><span class="b"><b>${a.t}</b><span>${a.s}</span></span><span>›</span></a>`).join(''), '', 'mb') : '')
       + `<div class="grid g2" style="margin-bottom:18px">`
       + card('Canlı önizleme', 'TV\'lerinizde şu an görünen ekran.', pvFrame() + `<div class="row mt">${devs.length ? `<span class="pill ${online ? 'ok' : 'warn'}"><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Cihaz bağlı' : 'Cihaz şu an çevrimdışı'}</span>` : '<span class="pill bad">Henüz cihaz bağlanmadı</span>'}<span style="flex:1"></span><button class="btn s g" onclick="act('POST','/devices/reload',undefined,'TV\\'lere yenileme komutu gönderildi',false)">↻ TV\'yi yenile</button></div>`)
-      + card(`Kurulum adımları <span class="muted">· ${done}/${steps.length}</span>`, done === steps.length ? 'Her şey hazır 🎉' : 'Sırayla tamamlayın; her adım ilgili sayfayı açar.',
-        `<div class="steps">${steps.map((s, i) => `<a class="step ${s[0] ? 'done' : ''}" href="${s[3]}"><span class="n">${s[0] ? '✓' : i + 1}</span><span class="b"><b>${s[1]}</b><span>${s[2]}</span></span><span>›</span></a>`).join('')}</div>`)
+      + (done === steps.length
+        ? card('Ekranlarınız', `<span class="okline">${ic('circle-check')} Kurulum tamam · ${done}/${steps.length} adım</span>`, devs.length ? `<div class="list">${devs.map(d => `<a class="it devl" href="#settings/devices"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b"><b>${esc(d.name || 'TV kutusu')}</b><span>${d.online ? 'Bağlı · içerik güncel' : 'Çevrimdışı · son görülme ' + ago(d.last_seen || d.lastSeen)}</span></div>${ic('chevron-right')}</a>`).join('')}</div>` : '<div class="empty">Henüz cihaz bağlanmadı</div>')
+        : card(`Kurulum adımları <span class="muted">· ${done}/${steps.length}</span>`, 'Sırayla tamamlayın; her adım ilgili sayfayı açar.',
+        `<div class="steps">${steps.map((s, i) => `<a class="step ${s[0] ? 'done' : ''}" href="${s[3]}"><span class="n">${s[0] ? '✓' : i + 1}</span><span class="b"><b>${s[1]}</b><span>${s[2]}</span></span><span>›</span></a>`).join('')}</div>`))
       + `</div>`
       + card('Hızlı işlemler', 'Ekranda anında bir gösterim başlatır; ayarlarınızı değiştirmez.', `<div class="row">
           <button class="btn g" onclick="act('POST','/goal/test',undefined,'Gol animasyonu gönderildi',false)" ${pro() ? '' : 'disabled'}>⚽ Gol animasyonunu dene</button>
@@ -180,7 +217,8 @@ SECTIONS.design = {
       + tabs('design', [['layout', 'Düzen'], ['colors', 'Renk ve logo'], ['tv', 'TV ayarları']]);
     if (sub === 'layout') {
       const T = S.cat.templates;
-      h += card('Başlangıç paketleri', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`)
+      const fresh = !S.me.tenant.logo && !S.db.videos.length;
+      h += `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
         + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin.', `<div class="tpls">${Object.entries(T).map(([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`)
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, sağ alt köşesinden boyutlandırın, tıklayınca ayarları sağda açılır.',
           `<div class="editor"><div id="cw"><div id="cv"></div></div><div id="props"></div></div>
@@ -224,14 +262,14 @@ const badSet = () => { const ws = EDIT.layout.widgets, bad = new Set(); ws.forEa
 function drawCanvas() {
   const c = $('cv'); if (!c) return;
   const bad = badSet();
-  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"><span class="ic">${ICON[w.type] || '▢'}</span>${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small><i class="rz"></i></div>`; }).join('');
+  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%">${ICON[w.type] || ''}${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small><i class="rz"></i></div>`; }).join('');
 }
 function drawPal() {
   const used = new Set(EDIT.layout.widgets.map(w => w.type));
   const n = k => EDIT.layout.widgets.filter(w => w.type === k).length;
   $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} ${esc(d.name)}${d.pro && !pro() ? ' 🔒' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
 }
-const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Yorumlar <a href="#promo">Duyurular</a> sayfasından eklenir.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
+const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Yorumlar <a href="#promo">Kampanya ve yorumlar</a> sayfasından eklenir.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
 function drawProps() {
   const box = $('props'), w = EDIT.layout.widgets[EDIT.sel];
   if (!w) { box.innerHTML = `<h4>Widget ayarları</h4><p class="muted">Ayarlarını görmek için bir kutuya tıklayın.</p>${badSet().size ? '<p class="muted mt" style="color:var(--bad)">Kırmızı kutular üst üste biniyor; kaydetmeden önce düzeltin.</p>' : ''}${EDIT.dirty ? '<p class="muted mt" style="color:var(--warn)">Kaydedilmemiş değişiklikler var.</p>' : ''}`; return; }
@@ -282,13 +320,13 @@ function addW(type) {
 }
 async function applyStarter(k) {
   const v = (S.cat.starters || []).find(x => x.key === k); if (!v) return;
-  if (!confirm(`"${v.name}" paketi uygulansın mı? Ekran düzeniniz ve renkleriniz değişir (medya, logo ve diğer ayarlar korunur).`)) return;
+  if (!await UI.ask(`"${v.name}" paketi uygulansın mı? Ekran düzeniniz ve renkleriniz değişir (medya, logo ve diğer ayarlar korunur).`)) return;
   const body = { key: k };
-  if (v.menu && S.me && S.me.tenant && (S.me.tenant.menuCount || 0) > 0) body.replaceMenu = confirm('Mevcut fiyat listenizin yerine örnek liste konsun mu?\n\nTamam: örnek liste gelir (eski liste silinir)\nİptal: fiyat listeniz korunur');
+  if (v.menu && S.me && S.me.tenant && (S.me.tenant.menuCount || 0) > 0) body.replaceMenu = await UI.ask('Mevcut fiyat listenizin yerine örnek liste konsun mu?\n\nTamam: örnek liste gelir (eski liste silinir)\nİptal: fiyat listeniz korunur', { cancel: 'İptal' });
   if (await act('POST', '/starter', body, 'Paket uygulandı', false)) { S.me = await req('GET', '/me'); drawBrand(); refresh(); }
 }
-function applyTpl(k) {
-  if (EDIT.dirty && !confirm('Mevcut düzenin yerine bu şablon konsun mu?')) return;
+async function applyTpl(k) {
+  if (EDIT.dirty && !await UI.ask('Mevcut düzenin yerine bu şablon konsun mu?')) return;
   snap(); EDIT.layout = { cols: 24, rows: 24, widgets: clone(S.cat.templates[k].widgets) }; EDIT.sel = -1;
   drawCanvas(); drawProps(); drawPal(); toast('Şablon uygulandı; beğendiyseniz "Düzeni kaydet"e basın');
   $('cw').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -324,7 +362,7 @@ async function upAsset(inp) {
 }
 async function resetDesign(sub) {
   const what = { layout: 'Düzen (widget yerleşimi ve ayarları)', colors: 'Renkler ve yazı tipi (logonuz kalır)', tv: 'TV ayarları (kenar payı, efekt)' }[sub];
-  if (!confirm(what + ' varsayılana döndürülsün mü? Bu işlem geri alınamaz.')) return;
+  if (!await UI.ask(what + ' varsayılana döndürülsün mü? Bu işlem geri alınamaz.')) return;
   if (await act('POST', '/design/reset', { scope: sub }, 'Varsayılana döndürüldü, TV güncellendi', false)) {
     [S.me, S.db, S.scr] = await Promise.all([req('GET', '/me'), req('GET', '/db'), req('GET', '/screen')]);
     EDIT.dirty = false; EDIT.layout = null; drawBrand(); render(true);
@@ -441,19 +479,19 @@ SECTIONS.media = {
   html() {
     const v = S.db.videos.filter(x => !x.ad); // reklam görselleri Reklamlar sayfasında
     if (SUB.media === 'posters') return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']]) + postersHtml();
-    return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; ⏱ ile gün ve saat verin.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']])
+    return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; saat simgesiyle gün ve saat verin.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']])
       + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV için otomatik küçültülür; hazır olunca ekrana girer.',
         `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div><div class="row mt" style="align-items:center"><span class="muted" style="flex:1;font-size:13px">Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın.</span><button class="btn g s" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
-      + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile" draggable="true" data-id="${x.id}">
-          <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}<span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">⏱ ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? '<span class="hid">Gizli</span>' : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
-          <div class="m"><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g" onclick="mvMedia('${x.id}','up')" title="Öne al">←</button><button class="btn xs g" onclick="mvMedia('${x.id}','down')" title="Sona al">→</button><button class="btn xs g" onclick="openSched('video','${x.id}')" title="Zamanla">⏱</button><button class="btn xs g" onclick="togHide('${x.id}')" title="${x.hidden ? 'Göster' : 'Gizle'}">${x.hidden ? '◌' : '●'}</button><button class="btn xs d" onclick="delMedia('${x.id}')" title="Sil">✕</button></div></div>`).join('')}</div>`
+      + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div id="mbulk" class="mbulk" hidden></div><div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile${MSEL.has(x.id) ? ' picked' : ''}${MDEL.has(x.id) ? ' gone' : ''}" draggable="true" data-id="${x.id}">
+          <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? ' · ' + durTxt(x) : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
+          <div class="m"><span class="grip" title="Sürükleyerek sıralayın">${ic('grip-vertical')}</span><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g ib" onclick="openSched('video','${x.id}')" title="Zamanla">${ic('clock')}</button><button class="btn xs g ib" onclick="tileMenu(event,'${x.id}')" title="Diğer işlemler">${ic('ellipsis')}</button></div></div>`).join('')}</div>`
         : '<div class="empty">Henüz dosya yok. Yukarıdan ekleyin.</div>')
-      + `<div class="grid g2">` + card('Fotoğraf süresi', 'Her fotoğraf ekranda kaç saniye kalsın.', `<div class="row"><input type="number" id="imgsec" min="3" max="120" value="${S.db.imageSeconds}" style="max-width:120px"><span class="muted">saniye</span><span style="flex:1"></span><button class="btn" onclick="act('PUT','/settings',{imageSeconds:+$('imgsec').value},'Kaydedildi')">Kaydet</button></div>`)
+      + `<div class="grid g2">` + card('Fotoğraf süresi', 'Her fotoğraf ekranda kaç saniye kalsın.', `<div class="row"><input type="number" id="imgsec" min="3" max="120" value="${S.db.imageSeconds}" style="max-width:120px"><span class="muted">saniye</span><span style="flex:1"></span><button class="btn" data-save onclick="act('PUT','/settings',{imageSeconds:+$('imgsec').value},'Kaydedildi')">Kaydet</button></div>`)
       + card('Depolama', '', `<div id="stor" class="muted">Hesaplanıyor…</div>`) + `</div>`;
   },
   async after() {
     if (SUB.media === 'posters') return drawPosterGallery();
-    drawThumbs();
+    drawThumbs(); drawMBulk();
     const g = $('mgrid');
     if (g) { let drag = null;
       g.addEventListener('dragstart', e => { drag = e.target.closest('.tile'); e.dataTransfer.effectAllowed = 'move'; });
@@ -472,7 +510,7 @@ SECTIONS.media = {
       const pct = Math.min(100, st.uploadsBytes / st.limitBytes * 100), unopt = S.db.videos.filter(v => !v.optimized && v.status !== 'processing').length;
       $('stor').innerHTML = `<div class="row"><b style="color:var(--text)">${fmtSize(st.uploadsBytes)}</b><span>/ ${fmtSize(st.limitBytes)} kullanılıyor</span></div><div class="meter"><i style="width:${Math.max(2, pct)}%"></i></div>`
         + (!sys.ffmpeg ? '<p class="mt">Sunucuda video küçültme aracı (ffmpeg) yok; dosyalar olduğu gibi kullanılır.</p>' :
-          `<div class="row mt" style="align-items:center"><span style="flex:1">Video kalitesi — zayıf TV kutusunda takılma olursa 720p deneyin:</span><select style="width:190px" onchange="opt('videoMaxH',+this.value).then(()=>toast('Yeni yüklemeler bu kalitede işlenecek; eskiler için yeniden küçültmeye basın'))">${[[1080, '1080p (önerilen)'], [720, '720p (daha akıcı)'], [480, '480p (çok akıcı, bulanık)']].map(([v, l]) => `<option value="${v}"${(S.db.videoMaxH || 1080) === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`
+          `<div class="row mt" style="align-items:center"><span style="flex:1">Video kalitesi — zayıf TV kutusunda takılma olursa 720p deneyin:</span><select style="width:auto;min-width:190px" onchange="opt('videoMaxH',+this.value).then(()=>toast('Yeni yüklemeler bu kalitede işlenecek; eskiler için yeniden küçültmeye basın'))">${[[1080, '1080p — önerilen'], [720, '720p — daha akıcı'], [480, '480p — en akıcı']].map(([v, l]) => `<option value="${v}"${(S.db.videoMaxH || 1080) === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`
           + (unopt ? `<div class="row mt"><span>${unopt} dosya küçültülmemiş.</span><button class="btn s g" onclick="act('POST','/media/optimize-all',undefined,'Küçültme başladı')">Şimdi küçült</button></div>`
             : (S.db.videos || []).some(v => v.type === 'video') ? `<div class="row mt"><span class="muted" style="flex:1">Mevcut videoları seçilen kaliteyle yeniden işlemek için:</span><button class="btn s" onclick="reoptAll()">Videoları yeniden küçült</button></div>` : ''));
     } catch (e) {}
@@ -491,7 +529,45 @@ function upFiles(files) {
   x.send(fd);
 }
 const mvMedia = (id, dir) => act('POST', `/videos/${id}/move`, { dir });
-const delMedia = id => { const v = S.db.videos.find(x => x.id === id); if (confirm(`"${v.name}" silinsin mi?`)) act('DELETE', '/videos/' + id, undefined, 'Silindi'); };
+// Medya kartı: süre etiketi (video uzunluğu ya da fotoğraf süresi)
+const durTxt = x => x.type === 'video' ? (x.dur ? Math.floor(x.dur / 60) + ':' + String(Math.round(x.dur % 60)).padStart(2, '0') : '') : (S.db.imageSeconds || 10) + ' sn';
+// Başa / sona al: sıra istemciden hesaplanıp tek seferde gönderilir
+function mvEdge(id, first) { const ids = S.db.videos.filter(x => !x.ad).map(x => x.id).filter(x => x !== id); first ? ids.unshift(id) : ids.push(id); act('POST', '/videos/reorder', { ids }, 'Sıra kaydedildi'); }
+// "⋯" menüsü: kartın ikincil işlemleri (sıralama, aç/kapat, sil)
+function tileMenu(ev, id) {
+  ev.stopPropagation(); const v = S.db.videos.find(x => x.id === id); if (!v) return;
+  popMenu(ev.currentTarget, [
+    ['Başa al', 'arrow-up-to-line', () => mvEdge(id, true)], ['Bir öne al', 'chevron-left', () => mvMedia(id, 'up')],
+    ['Bir arkaya al', 'chevron-right', () => mvMedia(id, 'down')], ['Sona al', 'arrow-down-to-line', () => mvEdge(id, false)], null,
+    [v.hidden ? 'Ekranda göster' : 'Ekrandan kaldır (gizle)', v.hidden ? 'eye' : 'eye-off', () => togHide(id)], null,
+    ['Sil', 'trash-2', () => delMedia(id), 1]]);
+}
+// Çoklu seçim (A5): seçilenler için üstte işlem çubuğu
+const MSEL = new Set(), MDEL = new Set();
+function mPick(id, on) { on ? MSEL.add(id) : MSEL.delete(id); const t = document.querySelector(`.tile[data-id="${id}"]`); if (t) t.classList.toggle('picked', on); drawMBulk(); }
+function drawMBulk() {
+  const b = $('mbulk'); if (!b) return; [...MSEL].forEach(id => { if (!S.db.videos.some(x => x.id === id)) MSEL.delete(id); });
+  b.hidden = !MSEL.size; if (!MSEL.size) return;
+  b.innerHTML = `<b>${MSEL.size} dosya seçili</b><span style="flex:1"></span><button class="btn s g" onclick="mBulk('show')">${ic('eye')} Göster</button><button class="btn s g" onclick="mBulk('hide')">${ic('eye-off')} Gizle</button><button class="btn s d" onclick="mBulk('del')">${ic('trash-2')} Sil</button><button class="btn s g" onclick="MSEL.clear();render(true)">Seçimi kaldır</button>`;
+}
+async function mBulk(k) {
+  const ids = [...MSEL];
+  if (k === 'del') { MSEL.clear(); return delMedia(ids); }
+  try { await Promise.all(ids.map(id => req('PUT', '/videos/' + id, { hidden: k === 'hide' }))); toast(k === 'hide' ? 'Gizlendi; ekranda oynamaz' : 'Ekranda gösteriliyor'); } catch (e) { toast(e.message, true); }
+  MSEL.clear(); refresh();
+}
+// Silme geri alınabilir (A3): kart hemen kaybolur, 6 sn içinde "Geri al"a basılmazsa sunucudan silinir
+let delTimer = null;
+function flushDel(keep) { clearTimeout(delTimer); delTimer = null; const ids = [...MDEL]; MDEL.clear(); if (!ids.length) return;
+  if (keep) ids.forEach(id => fetch('/api/admin/videos/' + id, { method: 'DELETE', keepalive: true }));
+  else Promise.all(ids.map(id => req('DELETE', '/videos/' + id).catch(e => toast(e.message, true)))).then(refresh); }
+function delMedia(ids) {
+  ids = [].concat(ids); const names = ids.map(id => (S.db.videos.find(x => x.id === id) || {}).name).filter(Boolean);
+  ids.forEach(id => { MDEL.add(id); const t = document.querySelector(`.tile[data-id="${id}"]`); if (t) t.classList.add('gone'); });
+  UI.undo(ids.length > 1 ? `${ids.length} dosya silindi` : `"${names[0] || ''}" silindi`, () => { ids.forEach(id => MDEL.delete(id)); document.querySelectorAll('.tile.gone').forEach(t => { if (!MDEL.has(t.dataset.id)) t.classList.remove('gone'); }); });
+  clearTimeout(delTimer); delTimer = setTimeout(() => flushDel(false), 6200);
+}
+addEventListener('pagehide', () => flushDel(true));
 const togHide = id => { const v = S.db.videos.find(x => x.id === id); act('PUT', '/videos/' + id, { hidden: !v.hidden }, v.hidden ? 'Ekranda gösteriliyor' : 'Gizlendi; ekranda oynamaz'); };
 function pvMedia(i) { const v = S.db.videos[i], u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
 
@@ -500,14 +576,14 @@ let MENU = null;
 SECTIONS.menu = {
   html() {
     if (!MENU || !MENU.__dirty) MENU = clone(S.db.menu || { title: 'Fiyat Listesi', currency: '₺', categories: [] });
-    return head('Fiyat Listesi', 'Ürünler ve fiyatlar. Düzene "Fiyat tarifesi" widget\'ı eklenince ekranda sayfa sayfa döner.', `<button class="btn" onclick="saveMenu()">Kaydet</button>`)
+    return head('Fiyat Listesi', 'Ürünler ve fiyatlar. Düzene "Fiyat tarifesi" widget\'ı eklenince ekranda sayfa sayfa döner.', `<button class="btn" data-save onclick="saveMenu()">Kaydet</button>`)
       + lock('Fiyat listesi')
       + card('Liste bilgisi', 'Kafe ve restoranlar giriş kapısındaki fiyat tarifesini dijital panoda da gösterebilir (Fiyat Etiketi Yönetmeliği). Giriş ekranı için Tasarım\'da "Vitrin" düzenini kullanabilirsiniz.',
         `<div class="f">${fl('Başlık', `<input type="text" id="mtitle" maxlength="40" value="${esc(MENU.title)}" oninput="MENU.title=this.value;MENU.__dirty=1">`)}${fl('Para birimi', `<input type="text" id="mcur" maxlength="4" value="${esc(MENU.currency || '₺')}" oninput="MENU.currency=this.value;MENU.__dirty=1">`)}</div>`)
       + langCard()
       + happyCard()
       + card('Gün akışı', 'Bugün hangi kategori hangi saatlerde ekranda. Kategorinin ⏱ düğmesinden kahvaltı, öğle, akşam gibi saat verin; saati geçen kategori kendiliğinden kalkar.', '<div id="mflow"></div>')
-      + `<div id="mcats"></div><div class="row" style="margin-bottom:18px"><button class="btn g" onclick="addCat()">＋ Kategori ekle</button><span style="flex:1"></span><button class="btn" onclick="saveMenu()">Kaydet</button></div>`
+      + `<div id="mcats"></div><div class="row" style="margin-bottom:18px"><button class="btn g" onclick="addCat()">＋ Kategori ekle</button><span style="flex:1"></span><button class="btn" data-save onclick="saveMenu()">Kaydet</button></div>`
       + card('Toplu ekle', 'Her satıra bir ürün: <code>Ürün ; fiyat ; açıklama</code>. Kategori satırı <code>#</code> ile başlar. Örnek: <code># Sıcak İçecekler</code> · <code>Türk Kahvesi ; 90</code>',
         `<div class="row" style="margin-bottom:10px"><button class="btn g" onclick="menuTemplate()">⬇ Excel şablonunu indir</button><button class="btn g" onclick="$('mfile').click()">⬆ Doldurduğum dosyayı yükle</button><input id="mfile" type="file" accept=".csv,.txt,.tsv,text/csv,text/plain" style="display:none" onchange="menuFile(this)"></div><div class="muted" style="font-size:13px;margin-bottom:10px">Şablonu indirin, Excel'de ürünlerinizle doldurun, <b>CSV (virgülle/noktalı virgülle ayrılmış)</b> olarak kaydedip buraya yükleyin. Dosyadaki liste aşağıya yazılır; kontrol edip "Listeye ekle" ya da "Listeyi bununla değiştir"e basın.</div><textarea id="mbulk" rows="6" placeholder="# Sıcak İçecekler&#10;Türk Kahvesi ; 90&#10;Latte ; 120 ; Yulaf sütüyle +15"></textarea><div class="row mt"><button class="btn g" onclick="bulk(false)">Listeye ekle</button><button class="btn d" onclick="bulk(true)">Listeyi bununla değiştir</button></div>`);
   },
@@ -516,7 +592,7 @@ SECTIONS.menu = {
 function drawMenu() {
   const c = MENU.categories;
   $('mcats').innerHTML = c.length ? c.map((cat, ci) => `<div class="mcat"><div class="chd"><input type="text" value="${esc(cat.name)}" placeholder="Kategori adı" maxlength="40" oninput="MENU.categories[${ci}].name=this.value;MENU.__dirty=1" style="font-weight:700">
-      <button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},1))">↓</button><button class="btn xs g" onclick="openSched('cat',${ci})" title="Bu kategori hangi gün ve saatlerde görünsün">⏱ ${cat.sch ? esc(schShort(cat.sch)) : 'Her zaman'}</button>${MENU.happy ? `<button class="btn xs ${cat.happy ? '' : 'g'}" title="Bu kategori indirim saatinde indirimli fiyatla görünsün" onclick="mE(()=>{const x=MENU.categories[${ci}];x.happy=!x.happy})">% ${cat.happy ? esc(MENU.happy.label || 'Happy Hour') : 'İndirimsiz'}</button>` : ''}<button class="btn xs d" onclick="if(confirm('Kategori silinsin mi?'))mE(()=>MENU.categories.splice(${ci},1))">Sil</button></div>
+      <button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},1))">↓</button><button class="btn xs g" onclick="openSched('cat',${ci})" title="Bu kategori hangi gün ve saatlerde görünsün">⏱ ${cat.sch ? esc(schShort(cat.sch)) : 'Her zaman'}</button>${MENU.happy ? `<button class="btn xs ${cat.happy ? '' : 'g'}" title="Bu kategori indirim saatinde indirimli fiyatla görünsün" onclick="mE(()=>{const x=MENU.categories[${ci}];x.happy=!x.happy})">% ${cat.happy ? esc(MENU.happy.label || 'Happy Hour') : 'İndirimsiz'}</button>` : ''}<button class="btn xs d" onclick="UI.ask('Kategori silinsin mi?', { ok: 'Sil', danger: true }).then(ok=>{if(ok)mE(()=>MENU.categories.splice(${ci},1))})">Sil</button></div>
       ${langList().length ? `<div class="mtr">${langList().map(l => `<input type="text" placeholder="${LANG_NAMES[l]} kategori adı" maxlength="40" value="${esc((cat.t || {})[l] || '')}" oninput="mT(${ci},-1,'${l}','name',this.value)">`).join('')}</div>` : ''}
       ${cat.items.map((it, ii) => `<div class="mrow${MENU.happy && cat.happy ? ' hp' : ''}"><input type="text" value="${esc(it.name)}" placeholder="Ürün" maxlength="60" oninput="MENU.categories[${ci}].items[${ii}].name=this.value;MENU.__dirty=1"><input class="md" type="text" value="${esc(it.desc || '')}" placeholder="Açıklama (isteğe bağlı)" maxlength="90" oninput="MENU.categories[${ci}].items[${ii}].desc=this.value;MENU.__dirty=1"><input type="text" value="${esc(it.price)}" placeholder="Fiyat" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].price=this.value;MENU.__dirty=1">${MENU.happy && cat.happy ? `<input type="text" class="mhp" value="${esc(it.hp || '')}" placeholder="${esc(happyPrice(it.price) || 'İnd. fiyat')}" title="İndirim saatindeki fiyat (boşsa %${MENU.happy.pct || 0} indirimle hesaplanır)" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].hp=this.value;MENU.__dirty=1">` : ''}<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn xs g" title="${it.kcal ? 'Kaloriyi kaldır' : 'Ürün adından kalori bilgisini getir'}" onclick="kcalBtn(${ci},${ii})">${it.kcal ? '🔥 ' + esc(it.kcal) + ' ✕' : '🔥'}</button><button class="btn xs ${it.off ? 'd' : 'g'}" title="Tükendi olarak işaretle" onclick="mE(()=>{const x=MENU.categories[${ci}].items[${ii}];x.off=!x.off})">${it.off ? 'Tükendi' : 'Var'}</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories[${ci}].items,${ii},-1))">↑</button><button class="btn xs d" onclick="mE(()=>MENU.categories[${ci}].items.splice(${ii},1))">✕</button></span></div>
       ${langList().length ? `<div class="mtr">${langList().map(l => `<input type="text" placeholder="${LANG_NAMES[l]}: ${esc(it.name || 'ürün adı')}" maxlength="60" value="${esc(((it.t || {})[l] || {}).name || '')}" oninput="mT(${ci},${ii},'${l}','name',this.value)"><input class="md" type="text" placeholder="${LANG_NAMES[l]} açıklama" maxlength="90" value="${esc(((it.t || {})[l] || {}).desc || '')}" oninput="mT(${ci},${ii},'${l}','desc',this.value)">`).join('')}</div>` : ''}`).join('')}
@@ -530,7 +606,7 @@ function happyPrice(p) { const h = MENU && MENU.happy, n = pnum(p); if (!h || !h
 function happyCard() {
   const h = MENU.happy;
   const body = h ? `<div class="f">${fl('Ekranda görünecek ad', `<input type="text" maxlength="24" value="${esc(h.label || '')}" placeholder="Happy Hour" oninput="MENU.happy.label=this.value;MENU.__dirty=1">`)}${fl('İndirim (%)', `<input type="number" min="0" max="90" value="${h.pct || 0}" oninput="MENU.happy.pct=+this.value||0;MENU.__dirty=1;drawMenu()">`)}</div>
-      <div class="row mt" style="align-items:center"><button class="btn g" onclick="openSched('happy')">⏱ ${h.sch ? esc(schText(h.sch)) : 'Saat seçin'}</button><span class="muted" style="flex:1;font-size:13px">${h.sch ? (happyNowP() ? '<b style="color:var(--ok,#3fb27f)">● Şu an indirim saatinde</b>' : 'Şu an indirim saatinde değil') : 'Saat aralığı vermeden indirim ekranda görünmez.'}</span><button class="btn xs d" onclick="if(confirm('İndirim saati kaldırılsın mı?')){mE(()=>{delete MENU.happy;MENU.categories.forEach(c=>{delete c.happy;c.items.forEach(i=>delete i.hp)})});render(true)}">Kaldır</button></div>
+      <div class="row mt" style="align-items:center"><button class="btn g" onclick="openSched('happy')">⏱ ${h.sch ? esc(schText(h.sch)) : 'Saat seçin'}</button><span class="muted" style="flex:1;font-size:13px">${h.sch ? (happyNowP() ? '<b style="color:var(--ok,#3fb27f)">● Şu an indirim saatinde</b>' : 'Şu an indirim saatinde değil') : 'Saat aralığı vermeden indirim ekranda görünmez.'}</span><button class="btn xs d" onclick="UI.ask('İndirim saati kaldırılsın mı?', { ok: 'Sil', danger: true }).then(ok=>{if(ok){mE(()=>{delete MENU.happy;MENU.categories.forEach(c=>{delete c.happy;c.items.forEach(i=>delete i.hp)})});render(true)}})">Kaldır</button></div>
       <p class="muted" style="font-size:12.5px;margin:10px 0 0">Kategorilerde <b>%</b> düğmesiyle indirime dahil edin. Ürünün yanındaki küçük kutuya ayrı bir indirimli fiyat yazabilirsiniz; boşsa yüzdeyle hesaplanır. Ekranda eski fiyat üstü çizili, yanında yeni fiyat görünür ve liste başlığına "${esc(h.label || 'Happy Hour')}" eklenir.</p>`
     : `<div class="row"><span class="muted" style="flex:1">Örneğin hafta içi 17:00–19:00 arası kokteyllerde %30 indirim. Saat gelince fiyatlar kendiliğinden düşer, bitince eski hâline döner.</span><button class="btn" onclick="mE(()=>{MENU.happy={label:'Happy Hour',pct:20,sch:{from:'17:00',to:'19:00'}}});render(true)">İndirim saati ekle</button></div>`;
   return card('İndirim saati (happy hour)', 'Belirli saatlerde seçili kategorilerde indirimli fiyat.', body);
@@ -624,10 +700,10 @@ async function menuFile(inp) {
   $('mbulk').value = out.join('\n');
   toast(`Dosya okundu: ${n} ürün. Kontrol edip "Listeye ekle" ya da "Listeyi bununla değiştir"e basın`);
 }
-function bulk(replace) {
+async function bulk(replace) {
   const lines = $('mbulk').value.split('\n').map(l => l.trim()).filter(Boolean);
   if (!lines.length) return toast('Önce listeyi yapıştırın', true);
-  if (replace && !confirm('Mevcut liste silinip bununla değiştirilsin mi?')) return;
+  if (replace && !await UI.ask('Mevcut liste silinip bununla değiştirilsin mi?')) return;
   const cats = replace ? [] : MENU.categories; let cur = null;
   for (const l of lines) {
     if (l.startsWith('#')) { cur = { name: l.replace(/^#+\s*/, ''), items: [] }; cats.push(cur); continue; }
@@ -660,7 +736,7 @@ SECTIONS.sport = {
          <div class="f mt">${fl('Alt not', `<input type="text" id="bg-note" maxlength="140" value="${esc(bc.note)}">`)}${fl('Kaç gün önceden', `<input type="number" id="bg-days" min="1" max="7" value="${bc.days}">`)}${fl('Kaç dakikada bir', `<input type="number" id="bg-every" min="2" max="60" value="${bc.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="bg-dur" min="5" max="60" value="${bc.durSec}">`)}</div>
          <div class="f mt">${[0, 1, 2].map(i => fl(`Alt bilgi ${i + 1}`, `<input type="text" id="bg-i${i}" maxlength="60" value="${esc((bc.info || [])[i] || '')}" placeholder="${['örn. adresiniz', 'örn. dev ekran', 'örn. rezervasyon tel.'][i]}">`)).join('')}</div></details>
          <div class="fl mt"><span>Takım / oyuncu fotoğrafları (isteğe bağlı, arkası şeffaf PNG en iyisi)</span><div class="row"><input type="text" id="bg-team" list="bgteams" placeholder="Takım adı" style="max-width:220px"><datalist id="bgteams"><option>Galatasaray</option><option>Fenerbahçe</option><option>Beşiktaş</option><option>Trabzonspor</option></datalist><input type="file" id="bg-file" accept="image/*" hidden onchange="upBigPhoto(this)"><button class="btn g s" onclick="$('bg-team').value.trim()?$('bg-file').click():toast('Önce takım adını yazın',true)">Fotoğraf yükle</button></div><div class="thumbs" id="bgphotos"></div></div>
-         <div class="row mt"><span id="bglist" class="muted" style="flex:1"></span><button class="btn g s" onclick="bigTest()">Şimdi dene</button><button class="btn" onclick="saveBig()">Kaydet</button></div>`,
+         <div class="row mt"><span id="bglist" class="muted" style="flex:1"></span><button class="btn g s" onclick="bigTest()">Şimdi dene</button><button class="btn" data-save onclick="saveBig()">Kaydet</button></div>`,
         sw(bc.enabled, "act('PUT','/bigmatch',{enabled:this.checked},this.checked?'Açıldı':'Kapatıldı')"), bc.enabled ? '' : 'off')
 ) }[sec]();
     return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.', `<button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button>`)
@@ -725,12 +801,12 @@ SECTIONS.promo = {
   after() { if ($('ig-st')) drawInsta(); },
   html() {
     const db = S.db;
-    return head('Duyurular', 'Kampanya kartı ve müşteri yorumları.')
+    return head('Kampanya ve yorumlar', 'Kampanya kartı, Google ve Instagram yorumları, elle eklenen yorumlar.')
       + (db.campaigns || []).map(c => card('🎁 Kampanya kartı', 'Belirli aralıklarla medya yerine tam sayfa, QR kodlu bir kart çıkar. Örnek: Google yorumu karşılığı ikram.',
         `<div class="f">${fl('Bağlantı (QR kodu buraya gider)', `<input type="text" id="c-url-${c.id}" value="${esc(c.url)}" placeholder="https://g.page/r/.../review">`)}${fl('Başlık', `<input type="text" id="c-h-${c.id}" maxlength="90" value="${esc(c.headline)}">`)}</div>
          <div class="f mt">${fl('Alt yazı', `<input type="text" id="c-s-${c.id}" maxlength="140" value="${esc(c.sub)}">`)}${fl('Not', `<input type="text" id="c-n-${c.id}" maxlength="160" value="${esc(c.note || '')}">`)}${fl('QR altındaki yazı', `<input type="text" id="c-q-${c.id}" maxlength="60" value="${esc(c.qrLabel || '')}">`)}</div>
          <div class="f mt">${fl('Kaç dakikada bir', `<input type="number" id="c-e-${c.id}" min="1" max="60" value="${c.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="c-d-${c.id}" min="8" max="60" value="${c.durSec}">`)}</div>
-         <div class="row end mt"><button class="btn g s" onclick="openSched('camp','${c.id}')">⏱ ${c.sch ? esc(schShort(c.sch)) : 'Zamanla'}</button><button class="btn g s" onclick="act('POST','/campaigns/${c.id}/test',undefined,'Kart TV\\'de gösteriliyor',false)">Şimdi göster</button><button class="btn" onclick="saveCamp('${c.id}')">Kaydet</button></div>`,
+         <div class="row end mt"><button class="btn g s" onclick="openSched('camp','${c.id}')">⏱ ${c.sch ? esc(schShort(c.sch)) : 'Zamanla'}</button><button class="btn g s" onclick="act('POST','/campaigns/${c.id}/test',undefined,'Kart TV\\'de gösteriliyor',false)">Şimdi göster</button><button class="btn" data-save onclick="saveCamp('${c.id}')">Kaydet</button></div>`,
         sw(c.enabled, `campToggle('${c.id}',this)`))).join('')
       + lock('Google yorumları ve Instagram')
       + googleCard() + instaCard()
@@ -828,7 +904,7 @@ SECTIONS.celeb = {
         `<div class="row" id="times">${TIMES.map((t, i) => `<span class="time">${t}<button onclick="TIMES.splice(${i},1);render(true)">×</button></span>`).join('') || '<span class="muted">Saat yok</span>'}</div>
          <div class="row mt"><input type="time" id="b-time" style="max-width:150px"><button class="btn g s" onclick="const v=$('b-time').value;if(v&&!TIMES.includes(v)){TIMES.push(v);TIMES.sort();render(true)}">＋ Saat ekle</button></div>
          <div class="f mt">${fl('Ekranda kalma süresi (saniye)', `<input type="number" id="b-dur" min="5" max="300" value="${db.duration}">`)}</div>
-         <div class="row mt"><button class="btn g s" onclick="act('POST','/birthday/fire',undefined,'Kutlama gösteriliyor',false)">Şimdi göster</button><span style="flex:1"></span><button class="btn" onclick="saveTimes()">Kaydet</button></div>`)
+         <div class="row mt"><button class="btn g s" onclick="act('POST','/birthday/fire',undefined,'Kutlama gösteriliyor',false)">Şimdi göster</button><span style="flex:1"></span><button class="btn" data-save onclick="saveTimes()">Kaydet</button></div>`)
       + `</div>`
       + card('🇹🇷 Resmî günler', '23 Nisan, 19 Mayıs, 30 Ağustos, 29 Ekim ve 10 Kasım\'da medyanın üstünde dalgalanan bayrak ve Atatürk sözleri çıkar, arada fotoğraflar gösterilir. Gün başında açılır, ertesi gün 03:00\'te kalkar.',
         '<div id="cdays" class="list"><div class="muted">Yükleniyor…</div></div>', sw(db.showCelebrations !== false, "opt('showCelebrations',this.checked).then(()=>render(true))"), db.showCelebrations === false ? 'off' : '');
@@ -906,7 +982,7 @@ function pharmBox(ph, loc) {
       <div class="row end mt"><span id="ph-res" class="muted" style="flex:1"></span><button class="btn g s" onclick="testPharm()">Dene</button></div>`;
   } else {
     body = `<div class="f mt">${fl('İl', `<select id="ph-il">${IL81.map(x => `<option ${x === (ph.il || 'İstanbul') ? 'selected' : ''}>${x}</option>`).join('')}</select>`)}${fl('İlçe(ler), virgülle (en fazla 2)', `<input type="text" id="ph-d" value="${esc((ph.districts || []).join(', '))}" placeholder="örn. Kadıköy, Üsküdar">`)}</div>
-      <div class="row end mt"><span id="ph-res" class="muted" style="flex:1"></span><button class="btn g s" onclick="testPharm()">Dene</button><button class="btn s" onclick="savePharm()">Kaydet</button></div>`;
+      <div class="row end mt"><span id="ph-res" class="muted" style="flex:1"></span><button class="btn g s" onclick="testPharm()">Dene</button><button class="btn s" data-save onclick="savePharm()">Kaydet</button></div>`;
   }
   return chips + body;
 }
@@ -934,7 +1010,7 @@ SECTIONS.settings = {
       const loc = S.db.location || {};
       h += card('İşletme bilgileri', '', `<div class="f">${fl('İşletme adı', `<input type="text" id="s-name" maxlength="80" value="${esc(t.name)}">`)}${fl('Şehir / ilçe (hava durumu için)', `<input type="text" id="s-city" placeholder="örn. Kadıköy" autocomplete="off" oninput="geoSearch()"><button type="button" class="btn ghost sm" id="geo-me" style="margin-top:6px" onclick="geoLocate()">📍 Konumumu otomatik bul</button>`)}</div>
         <div class="geo" id="geo"></div><p class="muted mt">Şu anki konum: <b style="color:var(--text)">${esc(loc.city || '-')}</b>${loc.custom ? '' : ' (varsayılan)'}</p>
-        <div class="row end mt"><button class="btn" onclick="saveProfile()">Kaydet</button></div>`);
+        <div class="row end mt"><button class="btn" data-save onclick="saveProfile()">Kaydet</button></div>`);
     } else if (sub === 'devices') {
       const devs = S.scr.devices, lim = S.scr.limit;
       h += card('Performans', 'Ekran takılıyorsa efektleri azaltın; video ağırlıklı takılmada Medya sekmesindeki kaliteyi 720p\'ye düşürün. TV kutusunda "Otomatik" zaten hafif modu seçer.',
@@ -1029,12 +1105,12 @@ async function pairTv() {
   if (await act('POST', '/pair', { code }, 'Cihaz bağlandı; birkaç saniye içinde ekran açılacak', false)) setTimeout(refresh, 2500);
 }
 const renDev = (id, cur) => { const n = prompt('Cihaz adı (örn. Salon kutusu):', cur); if (n !== null) act('PUT', '/devices/' + id, { name: n }, 'Kaydedildi'); };
-const delDev = id => { if (confirm('Bu cihaz listeden kaldırılsın mı? Kutu bağlantısını kaybeder.')) act('DELETE', '/devices/' + id, undefined, 'Cihaz kaldırıldı'); };
-const logoutDev = id => { if (confirm('TV kutusundaki uygulamadan çıkış yapılsın mı? Ekran giriş ekranına döner; yeniden bağlamak için kod ya da kullanıcı adı ve şifre gerekir.')) act('POST', '/devices/' + id + '/logout', undefined, 'Çıkış yapıldı; TV giriş ekranına döndü'); };
+const delDev = async id => { if (await UI.ask('Bu cihaz listeden kaldırılsın mı? Kutu bağlantısını kaybeder.', { ok: 'Sil', danger: true })) act('DELETE', '/devices/' + id, undefined, 'Cihaz kaldırıldı'); };
+const logoutDev = async id => { if (await UI.ask('TV kutusundaki uygulamadan çıkış yapılsın mı? Ekran giriş ekranına döner; yeniden bağlamak için kod ya da kullanıcı adı ve şifre gerekir.')) act('POST', '/devices/' + id + '/logout', undefined, 'Çıkış yapıldı; TV giriş ekranına döndü'); };
 async function addUser() { if (await act('POST', '/users', { username: $('u-n').value.trim(), password: $('u-p').value }, 'Kullanıcı eklendi', false)) { S.me = await req('GET', '/me'); render(true); } }
-const delUser = (id, n) => { if (confirm(`"${n}" silinsin mi?`)) act('DELETE', '/users/' + id, undefined, 'Silindi'); };
+const delUser = async (id, n) => { if (await UI.ask(`"${n}" silinsin mi?`, { ok: 'Sil', danger: true })) act('DELETE', '/users/' + id, undefined, 'Silindi'); };
 async function changePw() { if (await act('PUT', '/password', { current: $('pw-c').value, next: $('pw-n').value }, 'Şifre değiştirildi', false)) { $('pw-c').value = $('pw-n').value = ''; } }
-const restore = n => { if (confirm('Bu yedek geri yüklensin mi? Mevcut ayarlar önce yedeklenir.')) act('POST', `/backups/${encodeURIComponent(n)}/restore`, undefined, 'Yedek geri yüklendi'); };
+const restore = async n => { if (await UI.ask('Bu yedek geri yüklensin mi? Mevcut ayarlar önce yedeklenir.')) act('POST', `/backups/${encodeURIComponent(n)}/restore`, undefined, 'Yedek geri yüklendi'); };
 
 /* ================= ZAMANLAMA ================= */
 const DAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
@@ -1071,7 +1147,7 @@ function openSched(kind, id) {
     <div class="f mt">${fl('Başlangıç saati', `<input type="time" id="sc-from" value="${sc.from || ''}">`)}${fl('Bitiş saati', `<input type="time" id="sc-to" value="${sc.to || ''}">`)}</div>
     <p class="muted" style="font-size:12.5px;margin:6px 0 0">Bitiş başlangıçtan önceyse gece yarısını geçer (22:00 – 02:00 gibi).</p>
     <div class="f mt">${fl('İlk gün', `<input type="date" id="sc-start" value="${sc.start || ''}">`)}${fl('Son gün', `<input type="date" id="sc-end" value="${sc.end || ''}">`)}</div>
-    <div class="row mt" style="justify-content:space-between"><button class="btn g" onclick="saveSched('${kind}','${id}',true)">Her zaman göster</button><span class="row"><button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" onclick="saveSched('${kind}','${id}')">Kaydet</button></span></div>`);
+    <div class="row mt" style="justify-content:space-between"><button class="btn g" onclick="saveSched('${kind}','${id}',true)">Her zaman göster</button><span class="row"><button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" data-save onclick="saveSched('${kind}','${id}')">Kaydet</button></span></div>`);
 }
 const schPick = d => document.querySelectorAll('#sc-days [data-d]').forEach(x => x.classList.toggle('on', d.includes(+x.dataset.d)));
 async function saveSched(kind, id, clear) {
@@ -1130,7 +1206,7 @@ function editPoster(id, tpl) {
       ${fl('Ekranda kalma süresi (saniye, boşsa fotoğraf süresi)', `<input type="number" min="3" max="120" value="${PED.dur || ''}" oninput="PED.dur=+this.value||null">`)}
       ${LL.length ? `<details class="mt"><summary style="cursor:pointer;font-weight:600">Çeviriler (${LL.map(l => LANG_NAMES[l]).join(', ')})</summary>${LL.map(l => keys.filter(k => k !== 'price').map(k => inp(k, l)).join('')).join('')}</details>` : ''}
     </div></div>
-    <div class="row mt" style="justify-content:space-between">${id ? `<button class="btn d" onclick="if(confirm('Afiş silinsin mi?')){closeModal();act('DELETE','/videos/${id}',undefined,'Silindi')}">Sil</button>` : '<span></span>'}
+    <div class="row mt" style="justify-content:space-between">${id ? `<button class="btn d" onclick="UI.ask('Afiş silinsin mi?', { ok: 'Sil', danger: true }).then(ok=>{if(ok){closeModal();act('DELETE','/videos/${id}',undefined,'Silindi')}})">Sil</button>` : '<span></span>'}
       <span class="row"><button class="btn g" onclick="closeModal()">Vazgeç</button>${id ? `<button class="btn g" onclick="closeModal();openSched('video','${id}')">⏱ Zamanla</button>` : ''}<button class="btn" onclick="savePoster()">${id ? 'Kaydet' : 'Medyaya ekle'}</button></span></div>`);
   pedDraw();
 }
@@ -1166,7 +1242,7 @@ function googleCard() {
   const g = S.db.google;
   const body = g && g.placeId
     ? `<div class="it" style="display:flex;gap:12px;align-items:center"><div class="b" style="flex:1"><b>${esc(g.name || 'İşletmeniz')}</b><span>${g.rating ? `${String(g.rating).replace('.', ',')} ★ · ${g.count} değerlendirme · ` : ''}${(g.reviews || []).filter(r => r.rating >= 4).length} yorum ekranda · ${g.updated ? 'güncellendi ' + ago(g.updated) : 'henüz alınmadı'}</span>${g.error ? `<span style="color:var(--bad)">${esc(g.error)}</span>` : ''}</div>
-        <button class="btn g s" onclick="act('POST','/google/refresh',undefined,'Yorumlar yenilendi')">Yenile</button><button class="btn d s" onclick="if(confirm('Google bağlantısı kaldırılsın mı?'))act('DELETE','/google',undefined,'Kaldırıldı')">Kaldır</button></div>
+        <button class="btn g s" onclick="act('POST','/google/refresh',undefined,'Yorumlar yenilendi')">Yenile</button><button class="btn d s" onclick="UI.ask('Google bağlantısı kaldırılsın mı?', { ok: 'Kaldır', danger: true }).then(ok=>{if(ok)act('DELETE','/google',undefined,'Kaldırıldı')})">Kaldır</button></div>
        ${(g.reviews || []).length ? `<div class="list mt">${g.reviews.slice(0, 5).map(r => `<div class="it"><div class="b"><b>${esc(r.author)} <span class="stars">${'★'.repeat(r.rating)}</span> <span class="muted" style="font-weight:400">${esc(r.when || '')}</span></b><span>${esc(r.text)}</span></div></div>`).join('')}</div><p class="muted" style="font-size:12.5px">Google en fazla 5 yorum verir; 12 saatte bir yenilenir. Yalnız 4 ve 5 yıldızlılar ekranda görünür.</p>` : ''}`
     : `<div class="row"><input type="text" id="g-q" placeholder="İşletme adı ve semt, ya da Google Haritalar bağlantısı" style="flex:1" onkeydown="if(event.key==='Enter')gSearch()"><button class="btn" onclick="gSearch()">Ara</button></div><div id="g-res" class="list mt"></div>`;
   return card('★ Google yorumları', 'Google Haritalar\'daki yorumlarınız otomatik gelir ve medyanın altındaki şeritte döner (düzende "Google yorumları" widget\'ı olmalı).', body,
@@ -1186,7 +1262,7 @@ function instaCard() {
   return card('📷 Instagram paylaşımları', 'Son paylaşımlarınızın fotoğrafları medya döngüsüne kendiliğinden girer; yeni paylaşım yaptığınızda bir saat içinde ekrana gelir.',
     ig.connected
       ? `<div class="it" style="display:flex;gap:12px;align-items:center"><div class="b" style="flex:1"><b>@${esc(ig.user || '…')}</b><span id="ig-st">${(ig.posts || []).length} paylaşım · ${ig.updated ? 'güncellendi ' + ago(ig.updated) : 'henüz alınmadı'}</span>${ig.error ? `<span style="color:var(--bad)">${esc(ig.error)}</span>` : ''}</div>
-          <button class="btn g s" onclick="act('POST','/instagram/refresh',undefined,'Paylaşımlar yenilendi')">Yenile</button><button class="btn d s" onclick="if(confirm('Instagram bağlantısı kaldırılsın mı?'))act('DELETE','/instagram',undefined,'Kaldırıldı')">Kaldır</button></div>
+          <button class="btn g s" onclick="act('POST','/instagram/refresh',undefined,'Paylaşımlar yenilendi')">Yenile</button><button class="btn d s" onclick="UI.ask('Instagram bağlantısı kaldırılsın mı?', { ok: 'Kaldır', danger: true }).then(ok=>{if(ok)act('DELETE','/instagram',undefined,'Kaldırıldı')})">Kaldır</button></div>
          <div class="f mt">${fl('Kaç içerikte bir', `<input type="number" min="1" max="20" value="${ig.every || 3}" onchange="act('PUT','/instagram',{every:+this.value},'Kaydedildi')">`)}${fl('Kaç paylaşım', `<input type="number" min="1" max="20" value="${ig.count || 8}" onchange="act('PUT','/instagram',{count:+this.value},'Kaydedildi')">`)}${fl('Ekranda kalma (sn)', `<input type="number" min="5" max="60" value="${ig.dur || 10}" onchange="act('PUT','/instagram',{dur:+this.value},'Kaydedildi')">`)}</div>
          <div class="thumbs mt" id="ig-th">${(ig.posts || []).map(p => `<div class="t"><img src="${S.me.upBase}${p.file}" loading="lazy"></div>`).join('')}</div>`
       : `<p class="muted" style="margin-top:0">Instagram hesabınızın <b>işletme</b> ya da <b>içerik üreticisi</b> hesabı olması gerekir. Meta for Developers'ta "Instagram API with Instagram Login" ile uzun ömürlü erişim anahtarı (access token) alıp buraya yapıştırın; anahtar her hafta kendiliğinden yenilenir.</p>
@@ -1233,7 +1309,7 @@ async function drawDevStatus() {
         ${r.playing ? `<span>Şu an: ${esc(r.playing)}</span>` : ''}${r.cached ? `<span>Çevrimdışı önbellek: ${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}</span>` : ''}${r.lastError ? `<span style="color:var(--warn,#e6a23c)">Son hata: ${esc(r.lastError)}</span>` : ''}</div>
         ${d.online ? `<button class="btn xs g" onclick="snapDev('${d.id}')">📷 Ekran görüntüsü</button>` : ''}</div>`; }).join('')}</div><div id="snapbox"></div>` : '<div class="empty">Bağlı cihaz yok</div>')
     + card('Uyarılar', `Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,
-      `${owner() ? `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" onclick="saveNotify()">Kaydet</button>${n.email && j.mail ? '<button class="btn g" onclick="act(\'POST\',\'/notify/test\',undefined,\'Deneme e-postası gönderildi\',false)">Dene</button>' : ''}</div>
+      `${owner() ? `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" data-save onclick="saveNotify()">Kaydet</button>${n.email && j.mail ? '<button class="btn g" onclick="act(\'POST\',\'/notify/test\',undefined,\'Deneme e-postası gönderildi\',false)">Dene</button>' : ''}</div>
        <div class="row mt" style="align-items:center"><span style="flex:1">Kutunun uyarılmadan bağlantısız kalabileceği süre:</span><select id="nt-offmin" style="width:130px">${[5, 10, 15, 30, 60, 120, 360, 720, 1440].map(m => `<option value="${m}"${m === om ? ' selected' : ''}>${omLbl(m)}</option>`).join('')}</select></div>
        <div class="swr mt"><div class="b"><b>Ekran kapanınca</b></div>${sw(n.offline !== false, '', 'id="nt-off"')}</div><div class="swr"><div class="b"><b>Ekran geri açılınca</b></div>${sw(n.online !== false, '', 'id="nt-on"')}</div>
        <div class="swr"><div class="b"><b>Haftalık özet</b><span>Her pazartesi sabah: ekran süresi, kampanya okutmaları, reklam gösterimleri</span></div>${sw(!!n.weekly, '', 'id="nt-wk"')}</div>${n.email && j.mail ? `<div class="row end"><button class="btn xs g" onclick="act('POST','/notify/weekly-test',undefined,'Haftalık özet örneği gönderildi',false)">Özet örneğini şimdi gönder</button></div>` : ''}
@@ -1321,7 +1397,7 @@ function impactCard(j, nf) {
   };
   const body = L.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>İçerik</th><th>Tür</th><th>Gösterim</th><th>QR okutma</th><th>100 gösterimde</th><th>Önceki döneme göre</th><th>Yorum</th></tr></thead><tbody>${L.map(x => `<tr><td><b>${esc(x.name)}</b>${x.enabled === false ? ' <span class="muted">· kapalı</span>' : ''}</td><td>${KIND[x.kind] || ''}</td><td>${nf(x.shown)}</td><td>${x.kind === 'camp' || x.tracked ? nf(x.scans) : '—'}</td><td>${x.rate != null && (x.kind === 'camp' || x.tracked) ? String(x.rate).replace('.', ',') : '—'}</td><td>${x.kind === 'camp' || x.tracked ? trend(x) : ''}</td><td style="min-width:220px">${verdict(x)}</td></tr>`).join('')}</tbody></table></div>`
     + (avg != null ? `<p class="muted" style="font-size:12.5px;margin:10px 0 0">Ortalama: 100 gösterimde ${avg.toFixed(1).replace('.', ',')} okutma. Kampanya kartlarının gösterim sayımı bu sürümle başladı; eski günler için gösterim sıfır görünebilir.</p>` : '')
-    : `<div class="empty">Henüz ölçülecek kampanya yok. <a href="#promo">Duyurular</a> sayfasından kampanya kartını açın ya da <a href="#media/posters">Fotoğraftan afiş</a> ile QR'lı bir afiş hazırlayın; ekranda kaç kez göründüğü ve QR'ının kaç kez okutulduğu burada karşılaştırılır.</div>`;
+    : `<div class="empty">Henüz ölçülecek kampanya yok. <a href="#promo">Kampanya ve yorumlar</a> sayfasından kampanya kartını açın ya da <a href="#media/posters">Fotoğraftan afiş</a> ile QR'lı bir afiş hazırlayın; ekranda kaç kez göründüğü ve QR'ının kaç kez okutulduğu burada karşılaştırılır.</div>`;
   return card('Kampanya etkisi', 'Her kampanya ekranda kaç kez göründü ve müşteriler QR\'ını kaç kez okuttu. "100 gösterimde" sütunu kampanyaları birbiriyle karşılaştırmanın en adil yolu.', body);
 }
 
@@ -1378,8 +1454,8 @@ async function adSave(id) {
   try { await req(id ? 'PUT' : 'POST', id ? '/ads/' + id : '/ads', body); toast(id ? 'Reklam kaydedildi' : 'Reklam eklendi; şimdi görselini yükleyin'); closeModal(); refresh(); } catch (e) { toast(e.message, true); }
 }
 const adPause = (id, v) => act('PUT', '/ads/' + id, { paused: v }, v ? 'Reklam durduruldu' : 'Reklam yeniden yayında');
-const adDel = id => { const a = ADS.find(x => x.id === id); if (confirm(`"${a.name}" reklamı ve görselleri silinsin mi?`)) act('DELETE', '/ads/' + id, undefined, 'Reklam silindi'); };
-const adToken = id => { if (confirm('Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz.')) act('POST', `/ads/${id}/token`, undefined, 'Yeni bağlantı oluşturuldu'); };
+const adDel = async id => { const a = ADS.find(x => x.id === id); if (await UI.ask(`"${a.name}" reklamı ve görselleri silinsin mi?`, { ok: 'Sil', danger: true })) act('DELETE', '/ads/' + id, undefined, 'Reklam silindi'); };
+const adToken = async id => { if (await UI.ask('Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz.')) act('POST', `/ads/${id}/token`, undefined, 'Yeni bağlantı oluşturuldu'); };
 async function adCopy(id) { const a = ADS.find(x => x.id === id); try { await navigator.clipboard.writeText(a.url); toast('Bağlantı kopyalandı'); } catch (e) { prompt('Bağlantıyı kopyalayın:', a.url); } }
 async function adUp(id, files) {
   if (!files || !files.length) return; const fd = new FormData(); for (const f of files) fd.append('files', f);
@@ -1553,7 +1629,7 @@ function searchHtml() {
     out += card(d.id ? 'Listemi düzenle' : 'Yeni listem', '', `
       <div class="f"><input type="text" id="md-title" placeholder="Liste başlığı (örn. Akşam Listem)" value="${esc(d.title)}" maxlength="90"></div>
       <div style="margin:10px 0">${d.tracks.length ? `<div class="trks">${d.tracks.map((t, i) => `<div class="trk"><span class="n">${i + 1}</span>${t.th ? `<img src="${esc(t.th)}" alt="" loading="lazy">` : '<i></i>'}<span class="b"><b>${esc(t.t)}</b><span>${esc(t.c)}</span></span><span class="d">${fmtDur(t.d)}</span><span class="row" style="gap:4px;align-self:center"><button class="btn xs" title="Yukarı taşı" onclick="draftMove(${i},-1)">↑</button><button class="btn xs" title="Aşağı taşı" onclick="draftMove(${i},1)">↓</button><button class="btn xs d" title="Listeden çıkar" onclick="draftDel(${i})">✕</button></span></div>`).join('')}</div>` : '<div class="empty">Henüz şarkı eklemediniz. Yukarıdaki arama sonuçlarından ＋ ile şarkı ekleyin.</div>'}</div>
-      <div class="row end"><button class="btn ghost d" onclick="draftClear()">Temizle</button><button class="btn" onclick="draftSave(false)">Kaydet</button><button class="btn g" onclick="draftSave(true)">Kaydet ve TV'de Çal ▶</button></div>`);
+      <div class="row end"><button class="btn ghost d" onclick="draftClear()">Temizle</button><button class="btn" data-save onclick="draftSave(false)">Kaydet</button><button class="btn g" onclick="draftSave(true)">Kaydet ve TV'de Çal ▶</button></div>`);
   } else {
     out += `<div class="empty" style="margin-top:14px">Arama sonuçlarından ＋ düğmesiyle şarkı topladıkça listeniz burada kurulur.</div>`;
   }
@@ -1647,7 +1723,7 @@ async function ytAccAdd(id, playNow) {
   if (j && j.music) { S.db.music = j.music; render(true); }
 }
 async function ytAccOff() {
-  if (!confirm('YouTube hesabının bağlantısı kesilsin mi? Eklediğiniz listeler kalır.')) return;
+  if (!await UI.ask('YouTube hesabının bağlantısı kesilsin mi? Eklediğiniz listeler kalır.')) return;
   if (await act('DELETE', '/music/google', undefined, 'YouTube bağlantısı kesildi', false)) { YTACC = { st: null, items: null, err: '' }; TRK.clear(); ytAccLoad(true); }
 }
 // Google'dan dönüşte sonucu bildir ve adres çubuğunu temizle
@@ -1715,7 +1791,7 @@ async function addMusicPreset(idx, playNow) {
   if (j && j.music) { S.db.music = j.music; render(true); }
 }
 async function delMusicPlaylist(id) {
-  if (!confirm('Bu liste kütüphaneden silinsin mi?')) return;
+  if (!await UI.ask('Bu liste kütüphaneden silinsin mi?', { ok: 'Sil', danger: true })) return;
   const j = await act('DELETE', '/music/playlist/' + id, undefined, 'Liste silindi', false);
   if (j && j.music) { S.db.music = j.music; MV = null; render(true); }
 }
@@ -1746,12 +1822,12 @@ async function drawBranches() {
         <div class="row end mt"><button class="btn" onclick="copyBranches()">Kopyala</button></div>` : '') + `</div>` : '');
 }
 async function switchBranch(id) { try { await req('POST', '/branches/switch', { id }); location.hash = '#home'; location.reload(); } catch (e) { toast(e.message, true); } }
-async function addBranch() { const name = $('br-n').value.trim(); if (name.length < 2) return toast('Şube adını yazın', true); try { const j = await req('POST', '/branches', { name }); toast('Şube açıldı'); if (confirm('Yeni şubeye şimdi geçilsin mi?')) return switchBranch(j.id); drawBranches(); drawBranchSwitch(); } catch (e) { toast(e.message, true); } }
+async function addBranch() { const name = $('br-n').value.trim(); if (name.length < 2) return toast('Şube adını yazın', true); try { const j = await req('POST', '/branches', { name }); toast('Şube açıldı'); if (await UI.ask('Yeni şubeye şimdi geçilsin mi?')) return switchBranch(j.id); drawBranches(); drawBranchSwitch(); } catch (e) { toast(e.message, true); } }
 const renBranch = (id, cur) => { const n = prompt('Şube adı:', cur); if (n && n.trim()) act('PUT', '/branches/' + id, { name: n.trim() }, 'Kaydedildi', false).then(() => { drawBranches(); drawBranchSwitch(); }); };
 async function copyBranches() {
   const targets = [...document.querySelectorAll('#cp-t .chip.on')].map(x => x.dataset.id), parts = [...document.querySelectorAll('#cp-p .chip.on')].map(x => x.dataset.k);
   if (!targets.length || !parts.length) return toast('Şube ve kopyalanacak içerik seçin', true);
-  if (!confirm(`${targets.length} şubeye kopyalansın mı? Seçilen bölümler hedefte bununla değişir.`)) return;
+  if (!await UI.ask(`${targets.length} şubeye kopyalansın mı? Seçilen bölümler hedefte bununla değişir.`)) return;
   toast('Kopyalanıyor… medya çoksa biraz sürebilir');
   try { const j = await req('POST', '/branches/copy', { targets, parts, media: $('cp-rep').checked ? 'replace' : 'append' }); toast(`${j.targets} şubeye kopyalandı${j.files ? ` (${j.files} dosya)` : ''}`); drawBranches(); } catch (e) { toast(e.message, true); }
 }
@@ -1776,20 +1852,40 @@ function privacyHtml() {
 }
 async function reqDelete() {
   const pw = $('del-pw').value; if (!pw) return toast('Onay için şifrenizi girin', true);
-  if (!confirm('30 gün sonra tüm veriler kalıcı olarak silinecek. Devam edilsin mi?')) return;
+  if (!await UI.ask('30 gün sonra tüm veriler kalıcı olarak silinecek. Devam edilsin mi?', { danger: true })) return;
   if (await act('POST', '/privacy/delete', { password: pw }, 'Silme talebi alındı', false)) { S.db = await req('GET', '/db'); render(true); drawBanner(); }
 }
 
 /* ================= açılış ================= */
 function drawBrand() {
-  const t = S.me.tenant, th = t.theme || {}, r = document.documentElement.style;
-  const rgbOf = h => { const n = parseInt(String(h || '').slice(1), 16); return isNaN(n) ? null : [n >> 16, (n >> 8) & 255, n & 255]; };
-  const a1 = rgbOf(th.accent), a2 = rgbOf(th.accent2);
-  if (a1 && a2) { r.setProperty('--accent', th.accent); r.setProperty('--accent2', th.accent2); r.setProperty('--a2', a2.join(',')); } $('brand').innerHTML = t.logo ? `<img src="${esc(t.logo)}" alt="${esc(t.name)}"${th.plate ? ' style="background:#fff;padding:6px 10px;border-radius:8px"' : ''}>` : `<b>${esc(t.name)}</b>`; document.title = t.name + ' · ' + S.me.brand; }
+  // D2: işletmenin tema rengi panel arayüzünü boyamaz (yalnız TV, önizleme ve afiş küçük resimleri themeVars() ile alır)
+  const t = S.me.tenant, th = t.theme || {};
+  $('brand').innerHTML = t.logo ? `<img src="${esc(t.logo)}" alt="${esc(t.name)}"${th.plate ? ' style="background:#fff;padding:6px 10px;border-radius:8px"' : ''}>` : `<b>${esc(t.name)}</b>`; document.title = t.name + ' · ' + S.me.brand;
+  const an = $('acctn'); if (an) an.textContent = (S.me.user && (S.me.user.name || S.me.user.username)) || 'Hesap';
+}
 (async function boot() {
   try { [S.me, S.db, S.cat, S.scr, S.lg] = await Promise.all([req('GET', '/me'), req('GET', '/db'), req('GET', '/catalog'), req('GET', '/screen'), req('GET', '/leagues')]); }
   catch (e) { $('view').innerHTML = `<div class="empty">Panel yüklenemedi: ${esc(e.message)}</div>`; return; }
   drawBrand(); drawBanner(); route(); drawBranchSwitch();
   setInterval(async () => { if (document.hidden) return; try { S.scr = await req('GET', '/screen'); } catch (e) {} }, 30000);
 })();
-addEventListener('beforeunload', e => { if (EDIT.dirty || (MENU && MENU.__dirty)) { e.preventDefault(); e.returnValue = ''; } });
+addEventListener('beforeunload', e => { if (EDIT.dirty || (MENU && MENU.__dirty) || document.querySelector('#view .card.dirty')) { e.preventDefault(); e.returnValue = ''; } });
+/* A2: ortak kayıt çubuğu. Kaydedilmemiş değişiklik olunca altta çıkar; "Kaydet" ilgili bölümü kaydeder, "Vazgeç" son kaydı geri getirir. */
+function savebar() {
+  const b = $('savebar'); if (!b) return;
+  let n = 0, save = null, cancel = () => render(true);
+  if (TAB === 'design' && EDIT.dirty) { n = 1; save = saveL; cancel = () => { EDIT.dirty = false; EDIT.layout = null; render(true); }; }
+  else if (TAB === 'menu' && MENU && MENU.__dirty) { n = 1; save = saveMenu; cancel = () => { MENU.__dirty = 0; MENU = null; render(true); }; }
+  else { const d = [...document.querySelectorAll('#view .card.dirty')]; n = d.length; save = () => { d.forEach(c => { const x = c.querySelector('[data-save]'); c.classList.remove('dirty'); if (x) x.click(); }); }; }
+  const was = b.classList.contains('on'); b.classList.toggle('on', n > 0); document.body.classList.toggle('sbon', n > 0);
+  if (!n) return;
+  const msg = n > 1 ? `${n} bölümde kaydedilmemiş değişiklik var` : 'Kaydedilmemiş değişiklikler var';
+  if (!was || b.dataset.n != n) { b.querySelector('span').textContent = msg; b.dataset.n = n; }
+  b._save = save; b._cancel = cancel;
+}
+setInterval(savebar, 600);
+document.addEventListener('input', e => { const c = e.target.closest && e.target.closest('#view .card'); if (c && c.querySelector('[data-save]') && !e.target.closest('.ch')) { c.classList.add('dirty'); savebar(); } }, true);
+document.addEventListener('change', e => { const c = e.target.closest && e.target.closest('#view .card'); if (c && c.querySelector('[data-save]') && !e.target.closest('.ch') && /^(SELECT|INPUT|TEXTAREA)$/.test(e.target.tagName) && e.target.type !== 'file') { c.classList.add('dirty'); savebar(); } }, true);
+document.addEventListener('click', e => { const x = e.target.closest && e.target.closest('[data-save]'); if (x) { const c = x.closest('.card'); if (c) c.classList.remove('dirty'); setTimeout(savebar, 50); } }, true);
+// A7: anahtar değişince kart etiketi anında güncellenir
+document.addEventListener('change', e => { const sw = e.target.closest && e.target.closest('.card > .ch label.sw'); if (!sw) return; const c = sw.closest('.card'), on = e.target.checked, p = c.querySelector('.stp'); c.classList.toggle('swon', on); c.classList.toggle('swoff', !on); if (p) { p.classList.toggle('on', on); p.textContent = on ? 'Yayında' : 'Kapalı'; } });

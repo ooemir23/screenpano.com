@@ -125,10 +125,13 @@
   window.confirm = m => _c(t(m));
   window.prompt = (m, d) => _p(t(m), d);
 
-  function picker() {
-    return `<select class="langsel" aria-label="Language" translate="no" onchange="I18N.set(this.value)">${Object.entries(NAMES).map(([k, v]) => `<option value="${k}"${k === lang ? ' selected' : ''}>${v}</option>`).join('')}</select>`;
+  // ortak dil seçici (D7): tarayıcının açılır kutusu yerine temaya uygun düğme + liste (tokens.css: .lsel)
+  const ICO = n => `<svg class="ic" aria-hidden="true"><use href="/icons.svg#i-${n}"></use></svg>`;
+  function picker(down) {
+    return `<div class="lsel${down ? ' down' : ''}" translate="no"><button type="button" aria-label="Language" aria-haspopup="listbox" onclick="event.stopPropagation();this.parentNode.classList.toggle('on')">${ICO('globe')}<span>${NAMES[lang]}</span>${ICO('chevron-down')}</button><ul role="listbox">${Object.entries(NAMES).map(([k, v]) => `<li><button type="button" role="option" class="${k === lang ? 'on' : ''}" onclick="I18N.set('${k}')"><span>${v}</span>${k === lang ? ICO('check') : ''}</button></li>`).join('')}</ul></div>`;
   }
-  function fill() { for (const el of document.querySelectorAll('[data-langpick]')) el.innerHTML = picker(); }
+  function fill() { for (const el of document.querySelectorAll('[data-langpick]')) el.innerHTML = picker(el.hasAttribute('data-down')); }
+  document.addEventListener('click', () => document.querySelectorAll('.lsel.on').forEach(x => x.classList.remove('on')));
 
   window.I18N = {
     lang, t, locale: LOCALE[lang], rtl: lang === 'ar', names: NAMES, picker, misses: window.__I18N_MISSES || new Set(), collect: !!window.__I18N_COLLECT,
