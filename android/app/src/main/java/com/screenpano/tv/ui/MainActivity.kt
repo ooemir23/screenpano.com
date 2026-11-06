@@ -129,14 +129,25 @@ class MainActivity : AppCompatActivity() {
         startNativeChannel()
 
         binding.webView.loadUrl(tvUrl)
+        // Test ortamında sayfa 45 sn içinde hazır olmazsa (sunucu yok / hata sayfası) canlıya dön
+        if (prefs.isTest()) handler.postDelayed(readyWatch, 45000)
         askAutostartOnce()
     }
 
     private var testFails = 0
+    private var lastLoadFailed = false
+    @Volatile private var pageIsReady = false
+    private val readyWatch = Runnable { if (prefs.isTest() && !pageIsReady) fallbackToLive() }
+
+    /** Test sunucusu açılmıyorsa canlıya dön (ortam kaydı silinir, uygulama yeniden kurulur). */
+    private fun fallbackToLive() {
+        testFails = 0; prefs.setTest(false); handler.post { recreate() }
+    }
     /** Test sunucusuna ulaşılamıyorsa (kurulmamış/kapalı) ekran takılı kalmasın: 3 başarısız yüklemeden sonra canlıya döner. */
     private fun noteMainFail() {
         if (!prefs.isTest()) return
-        if (++testFails >= 3) { testFails = 0; prefs.setTest(false); handler.post { recreate() } }
+        lastLoadFailed = true
+        if (++testFails >= 2) fallbackToLive()
     }
 
     /** Test ortamındayken her ekranın (yerel katmanlar dahil) üstünde küçük kırmızı etiket: müşteri ekranı unutulmasın. */
@@ -306,8 +317,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         web.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                lastLoadFailed = false
+            }
+
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: android.webkit.WebResourceResponse?) {
+                if (request?.isForMainFrame == true && (errorResponse?.statusCode ?: 0) >= 400) noteMainFail()
+            }
+
+            override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
+                handler?.cancel()
+                noteMainFail()
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
-                if (url != null && url.startsWith("http")) testFails = 0
+                // Hata sayfası da "bitti" sayılır: sayacı yalnız hatasız yüklemede sıfırla
+                if (!lastLoadFailed && url != null && url.startsWith("http")) testFails = 0
                 handler.removeCallbacks(reloadTask)
                 pushTraffic()
                 if (webHidden.isNotEmpty()) hideWebCells(webHidden)
@@ -908,6 +933,10 @@ class MainActivity : AppCompatActivity() {
         fun env(): String = if (prefs.isTest()) "test" else "live"
 
         /** Canlı ↔ test sunucusu: ortam kaydedilir, uygulama yeniden kurulur (her ortamın kendi giriş anahtarı saklanır). */
+        /** Sayfa gerçekten açıldı (tv.html başlangıçta çağırır): test ortamı geri dönüş sayacı iptal. */
+        @JavascriptInterface
+        fun pageReady() { pageIsReady = true; handler.removeCallbacks(readyWatch) }
+
         @JavascriptInterface
         fun switchEnv() {
             runOnUiThread {
@@ -1008,6 +1037,8 @@ class MainActivity : AppCompatActivity() {
             KeyEvent.KEYCODE_HELP,
             KeyEvent.KEYCODE_WINDOW,
             KeyEvent.KEYCODE_PROG_RED -> {
+                // Test ortamında sayfa açılmadıysa menü tuşu canlıya döndürür (kurtarma)
+                if (prefs.isTest() && !pageIsReady) { fallbackToLive(); return true }
                 binding.webView.evaluateJavascript("window.__menu && window.__menu();", null)
                 return true
             }

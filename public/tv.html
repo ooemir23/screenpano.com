@@ -24,6 +24,7 @@ window.__exoHooked = true;
 </script>
 <script>
 // APK: son bilinen yerel hücreleri sayfa ilk çizilmeden gizle (eski web widget'ları yerel olanların altında/üstünde görünmesin)
+try { if (window.__N && window.__N.pageReady) window.__N.pageReady(); } catch (e) {}
 try { if (window.__N && window.__N.nativeCellsPref) { const l = String(window.__N.nativeCellsPref()).split(',').filter(Boolean); l.forEach(t => document.documentElement.classList.add('nat-' + t)); window.__nativePoster = l.includes('poster'); } } catch (e) {}
 </script>
 <style>
