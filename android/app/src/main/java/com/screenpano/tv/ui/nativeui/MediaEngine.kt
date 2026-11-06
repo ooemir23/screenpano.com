@@ -112,7 +112,7 @@ class MediaEngine(private val h: MediaHost) {
         }
         if (!first) {
             if (now - startedAt < 4000) return
-            if (c != null && c.optString("type") == "video" && now - startedAt < durMs(c) - 1500) return
+            if (c != null && c.optString("type") == "video" && now - startedAt < durMs(c) + videoGapMs + 1500) return // sunucu saati bekleme süresini de sayar; bekleme bitmeden atlama
         }
         val el = m.optLong("elapsed", 0L).coerceAtLeast(0L)
         if (first || c == null) {

@@ -1415,7 +1415,7 @@ function syncToMedia(m) {
   // KORUMA 2: Eğer ekrandaki içerik bir video ise ve hala oynuyorsa, videoyu yarıda kesme!
   const curIt = videos.find(x => x.id === current);
   if (curIt && curIt.type === 'video') {
-    const minVidMs = (curIt.dur ? curIt.dur * 1000 - 1500 : 25000);
+    const minVidMs = (curIt.dur ? curIt.dur * 1000 + (typeof window.__vgap === 'number' ? window.__vgap : 3000) + 1500 : 25000); // bekleme süresi dahil
     if (Date.now() - playStartedAt < minVidMs) return;
   }
 

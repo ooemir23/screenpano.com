@@ -69,39 +69,40 @@ function getActiveMediaList(t) {
   const ml = require('./state').mediaList(t);
   return (ml || []).filter(x => SCH.active(x.sch));
 }
-function getMediaLen(it, imgSec) {
-  if (it.type === 'video') return (it.dur ? it.dur : 30);
+function getMediaLen(it, imgSec, gap) {
+  if (it.type === 'video') return (it.dur ? it.dur : 30) + (gap || 0); // video bitince son karede beklenen süre (panel ayarı) sunucu saatine de eklenir; yoksa ekranlar bekleme bitmeden sıradakine atlar
   return (it.dur || imgSec || 10);
 }
-const listSig = (ml, imgSec) => imgSec + '|' + ml.map(x => x.id + ':' + (x.dur || '')).join(',');
+const vgapOf = t => { const g = Number(t.db.videoGapSec); return Math.max(0, Math.min(30, t.db.videoGapSec === undefined || !isFinite(g) ? 3 : Math.round(g))); };
+const listSig = (ml, imgSec, gap) => imgSec + '|' + (gap || 0) + '|' + ml.map(x => x.id + ':' + (x.dur || '')).join(',');
 // listeyi yeniden okur; liste değiştiyse o an oynayan içerik yeni listede hâlâ varsa kaldığı yerden sürer
 function syncFor(t, now) {
   const ml = getActiveMediaList(t);
   if (!ml.length) { tenantSync.delete(t.id); return null; }
-  const imgSec = t.db.imageSeconds || 10, sig = listSig(ml, imgSec);
+  const imgSec = t.db.imageSeconds || 10, gap = vgapOf(t), sig = listSig(ml, imgSec, gap);
   let sync = tenantSync.get(t.id);
   if (!sync) {
-    sync = { sig, idx: 0, id: ml[0].id, startedAt: now, endsAt: now + getMediaLen(ml[0], imgSec) * 1000, lastHeartbeat: 0 };
+    sync = { sig, idx: 0, id: ml[0].id, startedAt: now, endsAt: now + getMediaLen(ml[0], imgSec, gap) * 1000, lastHeartbeat: 0 };
     tenantSync.set(t.id, sync);
   } else if (sync.sig !== sig) {
     sync.sig = sig;
     const keep = ml.findIndex(x => x.id === sync.id);
-    if (keep >= 0) { sync.idx = keep; sync.endsAt = sync.startedAt + getMediaLen(ml[keep], imgSec) * 1000; }
+    if (keep >= 0) { sync.idx = keep; sync.endsAt = sync.startedAt + getMediaLen(ml[keep], imgSec, gap) * 1000; }
     else { // oynayan içerik silindi ya da yayın saati bitti: listedeki aynı sıradan devam
       sync.idx = Math.min(sync.idx, ml.length - 1); sync.id = ml[sync.idx].id;
-      sync.startedAt = now; sync.endsAt = now + getMediaLen(ml[sync.idx], imgSec) * 1000;
+      sync.startedAt = now; sync.endsAt = now + getMediaLen(ml[sync.idx], imgSec, gap) * 1000;
     }
     sync.lastHeartbeat = 0; // değişiklik hemen duyurulsun
   }
   if (now >= sync.endsAt) {
     sync.idx = (sync.idx + 1) % ml.length; sync.id = ml[sync.idx].id;
-    sync.startedAt = now; sync.endsAt = now + getMediaLen(ml[sync.idx], imgSec) * 1000;
+    sync.startedAt = now; sync.endsAt = now + getMediaLen(ml[sync.idx], imgSec, gap) * 1000;
     sync.lastHeartbeat = 0;
   }
   const it = ml[sync.idx];
   return {
     sync,
-    msg: { type: 'sync_media', idx: sync.idx, id: it.id, itemType: it.type, url: it.url || it.image, dur: getMediaLen(it, imgSec), elapsed: Math.max(0, now - sync.startedAt), remain: Math.max(0, sync.endsAt - now), serverTime: now },
+    msg: { type: 'sync_media', idx: sync.idx, id: it.id, itemType: it.type, url: it.url || it.image, dur: getMediaLen(it, imgSec, 0), elapsed: Math.max(0, now - sync.startedAt), remain: Math.max(0, sync.endsAt - now), serverTime: now },
   };
 }
 setInterval(() => {
