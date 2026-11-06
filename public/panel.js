@@ -112,6 +112,7 @@ function render(keepScroll) {
   drawNav();
   const sec = SECTIONS[TAB];
   document.body.classList.toggle('ytm-on', TAB === 'music'); // müzik bölümü YouTube Music'in koyu zemininde
+  document.body.classList.toggle('sp-on', TAB === 'music' && typeof SPMODE === 'function' && SPMODE()); // Spotify kaynağı seçiliyse Spotify görünümü
   $('view').innerHTML = sec.html();
   if (sec.after) sec.after();
   drawJump();
@@ -1495,6 +1496,7 @@ const SPTRK = new Map();     // 'tür:kimlik' -> { items, err, hidden }
 let LF = 'all';              // kitaplık süzgeci
 let MSRC = 'yt';             // arama kaynağı: yt | sp
 const musicActive = () => { const m = musicData(); return m.playlists.find(x => x.id === m.activeId) || m.playlists[0] || null; };
+const SPMODE = () => { const a = musicActive(); return !!a && a.provider === 'spotify'; }; // çalan kaynak Spotify ise sayfa Spotify düzenine geçer
 const MSUB = { yt: 'accounts', add: 'accounts', presets: 'explore' }; // eski bağlantılar
 
 SECTIONS.music = {
@@ -1508,17 +1510,19 @@ SECTIONS.music = {
   html() {
     let sub = MSUB[SUB.music] || SUB.music;
     if (!['home', 'explore', 'lib', 'search', 'accounts', 'setup'].includes(sub)) sub = 'home';
+    if (SPMODE() && sub === 'explore') sub = 'home'; // Keşfet YouTube hazır listeleridir; Spotify görünümünde yok
     const body = MV ? detailHtml() : { home: homeHtml, explore: exploreHtml, lib: libHtml, search: searchHtml, accounts: accountsHtml, setup: setupHtml }[sub]();
-    return `<div class="ytm">${ytmTop(sub)}<div class="ytm-body">${body}</div></div><div id="mnowbox">${nowBar()}</div>`;
+    return `<div class="ytm${SPMODE() ? ' sp' : ''}">${ytmTop(sub)}<div class="ytm-body">${body}</div></div><div id="mnowbox">${nowBar()}</div>`;
   },
 };
 const goM = k => { MV = null; go('music/' + k); };
 
 // ---- Üst şerit: arama + bölüm çipleri ----
 function ytmTop(sub) {
-  const chips = [['home', 'house', 'Ana sayfa'], ['explore', 'compass', 'Keşfet'], ['lib', 'library', 'Kitaplık'], ['accounts', 'link', 'Hesaplar'], ['setup', 'book-open', 'Kurulum']];
+  const chips = SPMODE() ? [['home', 'house', 'Ana sayfa'], ['lib', 'library', 'Kitaplığın'], ['accounts', 'link', 'Hesaplar'], ['setup', 'book-open', 'Kurulum']]
+    : [['home', 'house', 'Ana sayfa'], ['explore', 'compass', 'Keşfet'], ['lib', 'library', 'Kitaplık'], ['accounts', 'link', 'Hesaplar'], ['setup', 'book-open', 'Kurulum']];
   return `<div class="ytm-top">
-      <form class="ytm-search" onsubmit="musicSearch();return false">${ic('search')}<input type="search" id="ms-q" placeholder="Şarkı, sanatçı ya da liste arayın" value="${esc(MSEARCH.q)}" autocomplete="off"></form>
+      <form class="ytm-search" onsubmit="musicSearch();return false">${ic('search')}<input type="search" id="ms-q" placeholder="${SPMODE() ? 'Ne çalmak istersin?' : 'Şarkı, sanatçı ya da liste arayın'}" value="${esc(MSEARCH.q)}" autocomplete="off"></form>
       <button class="ytm-ib" type="button" title="Bağlantı ekle" onclick="goM('accounts');setTimeout(()=>{const e=$('m-url');if(e){e.scrollIntoView({block:'center'});e.focus();}},120)">${ic('plus')}</button>
     </div>
     <div class="ytm-chips">${chips.map(([k, i, l]) => `<button type="button" class="${!MV && sub === k ? 'on' : ''}" onclick="goM('${k}')">${ic(i)}${l}</button>`).join('')}</div>`;
@@ -1587,7 +1591,20 @@ async function musicNowLoad() {
 }
 
 // ---- Ana sayfa ----
+function spHomeHtml() {
+  const m = musicData(), act = musicActive(), h = new Date().getHours();
+  const hi = h < 6 ? 'İyi geceler' : h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar';
+  const libSp = m.playlists.filter(x => x.provider === 'spotify');
+  const tile = it => { const on = !!(act && act.id === it.id), pl = on && m.enabled && m.playing;
+    return `<div class="sp-tile ${on ? 'on' : ''}"><button type="button" class="o" onclick="openList('lib','${it.id}')">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<i>${ic('headphones')}</i>`}<b>${esc(it.title)}</b></button><button type="button" class="p" title="TV'de çal" onclick="${pl ? "musicCmd('pause')" : `musicSelect('${it.id}')`}">${ic(pl ? 'pause-f' : 'play-f')}</button></div>`; };
+  const acct = SPACC.st && SPACC.st.connected ? (SPACC.items || []).slice(0, 12).map(p => mcard({ thumb: p.thumb, ic: 'headphones', title: p.title, sub: `Çalma listesi • ${p.count} şarkı`, open: `openList('sp','${esc(p.id)}')`, play: `spAdd('${esc(p.id)}',true)` })) : [];
+  const empty = !libSp.length && !acct.length ? `<div class="ytm-empty">${ic('headphones')}<b>Spotify listen boş</b><span>Hesabını bağla; listelerin burada görünür.</span><div class="row"><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesap bağla</button></div></div>` : '';
+  return `<div class="sp-hi"><h1>${hi}</h1></div>` + (libSp.length ? `<div class="sp-tiles">${libSp.slice(0, 8).map(tile).join('')}</div>` : '') + empty
+    + shelf('Kitaplığın', libSp.map(libCard), '', '')
+    + shelf('Spotify listelerin', acct, moreBtn('accounts', 'Hesap'), SPACC.st && SPACC.st.name ? esc(SPACC.st.name) : '');
+}
 function homeHtml() {
+  if (SPMODE()) return spHomeHtml();
   const m = musicData(), act = musicActive();
   const lib = m.playlists.map(libCard);
   const yt = YTACC.st && YTACC.st.connected ? (YTACC.items || []).slice(0, 12).map(p => mcard({ thumb: p.thumb, title: p.title, sub: `Çalma listesi • ${p.count} şarkı`, open: `openList('yt','${esc(p.id)}')`, play: `ytAccAdd('${esc(p.id)}',true)` })) : [];
@@ -1614,6 +1631,7 @@ function exploreHtml() {
 function libHtml() {
   const m = musicData();
   const F = { all: () => true, mine: x => x.provider === 'ytmix', yt: x => x.provider === 'yt' || x.provider === 'ytm', sp: x => x.provider === 'spotify', radio: x => x.provider === 'radio' };
+  if (SPMODE()) { const l = m.playlists.filter(F.sp); return `<div class="ytm-sh"><div><h2>Kitaplığın</h2></div></div>` + (l.length ? `<div class="ytm-grid">${l.map(libCard).join('')}</div>` : `<div class="ytm-empty">${ic('headphones')}<b>Spotify listen boş</b><span>Hesabını bağla ya da arama yapıp liste ekle.</span><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesap bağla</button></div>`); }
   const list = m.playlists.filter(F[LF] || F.all);
   const chips = [['all', 'Tümü'], ['mine', 'Kendi listelerim'], ['yt', 'YouTube'], ['sp', 'Spotify'], ['radio', 'Radyo']];
   return `<div class="ytm-sh"><div><h2>Kitaplık</h2></div></div><div class="ytm-filt">${chips.map(([k, l]) => `<button type="button" class="${LF === k ? 'on' : ''}" onclick="LF='${k}';render(true)">${l}</button>`).join('')}</div>`
@@ -1731,7 +1749,8 @@ let SPS = { q: '', r: null, busy: false, err: '' };          // Spotify araması
 let MDRAFT = null; // kurulmakta olan liste: { id: düzenleme ise liste kimliği, title, tracks: [{v,t,c,th,d}] }
 function searchHtml() {
   const spOn = SPACC.st && SPACC.st.connected;
-  const src = `<div class="ytm-filt">${[['yt', 'YouTube'], ['sp', 'Spotify']].map(([k, l]) => `<button type="button" class="${MSRC === k ? 'on' : ''}" onclick="MSRC='${k}';musicSearch()">${l}</button>`).join('')}</div>`;
+  if (SPMODE()) MSRC = 'sp';
+  const src = SPMODE() ? '' : `<div class="ytm-filt">${[['yt', 'YouTube'], ['sp', 'Spotify']].map(([k, l]) => `<button type="button" class="${MSRC === k ? 'on' : ''}" onclick="MSRC='${k}';musicSearch()">${l}</button>`).join('')}</div>`;
   let out = `<div class="ytm-sh"><div><small>Arama sonuçları</small><h2>“${esc(MSEARCH.q || SPS.q)}”</h2></div></div>` + src;
   if (MSRC === 'sp') {
     if (!spOn) return out + `<div class="ytm-empty">${ic('headphones')}<b>Spotify hesabı bağlı değil</b><span>Spotify'da arama yapmak için önce hesabınızı bağlayın.</span><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesaplar</button></div>`;
@@ -1763,6 +1782,7 @@ async function musicSearch() {
   const inp = $('ms-q'), q = ((inp && inp.value) || MSEARCH.q || SPS.q || '').trim();
   if (q.length < 2) { toast('En az 2 harf yazın', true); return; }
   MV = null;
+  if (SPMODE()) MSRC = 'sp';
   if (MSRC === 'sp' && SPACC.st && SPACC.st.connected) {
     SPS = { q, r: null, busy: true, err: '' }; MSEARCH.q = q;
     if ((SUB.music || '') !== 'search') go('music/search'); else render(true);
@@ -2020,7 +2040,7 @@ function setupHtml() {
 async function musicCmd(cmd, extra = {}) {
   const j = await act('POST', '/music/cmd', { cmd, ...extra }, '', false);
   if (j && j.warn) toast(j.warn, true);
-  if (j && j.music) { S.db.music = j.music; if (TAB === 'music') { const box = $('mnowbox'); if (box) box.innerHTML = nowBar(); if (!MV && ['home', 'lib', 'explore'].includes(MSUB[SUB.music] || SUB.music || 'home')) render(true); else if (MV) render(true); } setTimeout(musicNowLoad, 1500); }
+  if (j && j.music) { S.db.music = j.music; if (TAB === 'music') { const box = $('mnowbox'); if (box) box.innerHTML = nowBar(); if (cmd === 'source' || cmd === 'select' || (!MV && ['home', 'lib', 'explore'].includes(MSUB[SUB.music] || SUB.music || 'home'))) render(true); else if (MV) render(true); } setTimeout(musicNowLoad, 1500); }
 }
 async function musicOpt(patch) {
   const j = await act('PUT', '/music', patch, 'Müzik ayarları güncellendi', false);

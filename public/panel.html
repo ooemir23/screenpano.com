@@ -582,6 +582,36 @@ body.ytm-on,body.ytm-on main{background:#030303}
 .ytm-vol{display:flex;align-items:center;gap:8px;color:#aaa}.ytm-vol .ic{width:22px;height:22px}
 .ytm-vol input{width:110px;accent-color:#fff}
 body.imp .ytm-top{top:32px}body.imp .ytm-chips{top:96px}
+/* ---- Spotify görünümü: çalan kaynak Spotify iken ---- */
+.ytm.sp{--y-bg:#121212;--y-s1:#181818;--y-s2:#282828;--y-hv:rgba(255,255,255,.08);--sp:#1ed760}
+body.sp-on,body.sp-on main{background:#121212}
+.ytm.sp .ytm-search{height:46px;border-radius:999px;background:#242424}.ytm.sp .ytm-search:focus-within{background:#2a2a2a;border-color:#fff}
+.ytm.sp .ytm-chips button,.ytm.sp .ytm-filt button{border-radius:999px;height:34px;padding:0 16px;background:#2a2a2a}
+.ytm.sp .ytm-chips button:hover,.ytm.sp .ytm-filt button:hover{background:#333}
+.ytm.sp .ytm-chips button.on,.ytm.sp .ytm-filt button.on{background:var(--sp);color:#000}
+.ytm.sp .ytm-sh h2{font-size:24px;font-weight:700}
+.ytm.sp .ytm-card{padding:12px;border-radius:8px;background:#181818;transition:background .2s}.ytm.sp .ytm-card:hover{background:#282828}
+.ytm.sp .ytm-cov{border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.ytm.sp .ytm-cplay{width:48px;height:48px;background:var(--sp);color:#000;transform:translateY(8px);box-shadow:0 8px 8px rgba(0,0,0,.3)}
+.ytm.sp .ytm-cplay:hover{background:#3be477;transform:scale(1.06)}
+.ytm.sp .ytm-card:hover .ytm-cplay,.ytm.sp .ytm-card.on .ytm-cplay,.ytm.sp .ytm-card:focus-within .ytm-cplay{transform:none}
+.ytm.sp .ytm-ct b{font-weight:700}
+.ytm.sp .ytm-btn.w{background:var(--sp);color:#000;border-radius:999px;font-weight:700}
+.ytm.sp .ytm-btn.w:hover{background:#3be477}
+.ytm.sp .ytm-head{padding:28px;margin:0 0 20px;border-radius:12px;background:linear-gradient(180deg,#404040,#181818)}
+.ytm.sp .ytm-head h1{font-size:48px;font-weight:900;line-height:1.05}
+.ytm.sp .ytm-head .ytm-btn.w{height:52px;padding:0 30px;font-size:16px}
+.ytm.sp .ytm-tr{border-bottom:0;border-radius:6px}.ytm.sp .ytm-tr.on{background:rgba(255,255,255,.1)}.ytm.sp .ytm-tr.on .ytm-tb b{color:var(--sp)}
+.sp-hi h1{margin:6px 0 18px;font-size:32px;font-weight:800;letter-spacing:-.01em}
+.sp-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:0 0 34px}
+.sp-tile{position:relative;display:flex;height:64px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.1);transition:background .2s}.sp-tile:hover{background:rgba(255,255,255,.2)}
+.sp-tile .o{display:flex;align-items:center;gap:14px;flex:1;min-width:0;padding:0;border:0;background:none;color:#fff;font:inherit;font-weight:700;font-size:15px;text-align:left;cursor:pointer}
+.sp-tile .o b{min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;padding-right:58px}
+.sp-tile .o img,.sp-tile .o i{width:64px;height:64px;flex:none;object-fit:cover;background:#282828;display:grid;place-items:center;box-shadow:0 0 12px rgba(0,0,0,.4)}.sp-tile .o i .ic{width:26px;height:26px;color:#777}
+.sp-tile .p{position:absolute;right:12px;top:12px;width:40px;height:40px;border-radius:50%;border:0;background:var(--sp);color:#000;display:grid;place-items:center;cursor:pointer;opacity:0;box-shadow:0 8px 8px rgba(0,0,0,.3)}
+.sp-tile:hover .p,.sp-tile.on .p,.sp-tile:focus-within .p{opacity:1}.sp-tile.on .o b{color:var(--sp)}
+body.sp-on .ytm-bar{background:#000}body.sp-on .ytm-prog{background:var(--sp)}
+@media(max-width:900px){.ytm.sp .ytm-head{padding:18px}.ytm.sp .ytm-head h1{font-size:30px}.sp-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sp-tile{height:56px}.sp-tile .o img,.sp-tile .o i{width:56px;height:56px}.sp-tile .o{gap:10px;font-size:13px}.sp-tile .o b{padding-right:8px}.sp-tile .p{display:none}.sp-hi h1{font-size:26px}}
 @media(max-width:900px){
   .ytm{padding:0 0 150px}
   .ytm-top{margin:-8px -14px 0;padding:10px 14px 8px;top:56px}.ytm-chips{top:114px;margin:0 -14px 6px;padding:4px 14px 12px}
