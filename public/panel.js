@@ -64,7 +64,7 @@ const tabs = (key, items) => `<div class="tabs">${items.map(([k, l]) => `<button
 const lock = what => pro() ? '' : `<div class="bn lock">🔒 <span><b>${what}</b> Pro pakette. Ayarlarınızı şimdiden yapabilirsiniz; ekranda görünmesi için paketinizi yükseltin.</span><a class="btn s g" href="#settings/plan">Paketler</a></div>`;
 function scalePv() { document.querySelectorAll('.pv').forEach(b => { const f = b.querySelector('iframe'); if (f && b.clientWidth) f.style.transform = `scale(${b.clientWidth / 1920})`; }); }
 addEventListener('resize', scalePv);
-const pvFrame = () => `<div class="pv"><iframe src="/tv?preview=1" title="TV önizleme" loading="lazy"></iframe></div>`;
+const pvFrame = (draft) => `<div class="pv"><iframe src="/tv?preview=1" title="TV önizleme" loading="lazy"${draft ? ' onload="pushDraft()"' : ''}></iframe></div>`;
 function openModal(html) { $('modalb').innerHTML = html; $('modal').classList.add('on'); }
 function closeModal() { $('modal').classList.remove('on'); $('modalb').innerHTML = ''; }
 function menu(open) { $('app').classList.toggle('menu', open); }
@@ -222,12 +222,18 @@ SECTIONS.home = {
 /* ================= TASARIM ================= */
 const EDIT = { layout: null, sel: -1, hist: [], dirty: false };
 // Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al + Kaydet görünür
-const layoutBar = () => `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button></div>`;
-const lbarSync = () => document.querySelectorAll('.lbar').forEach(b => b.classList.toggle('clean', !EDIT.dirty));
+const layoutBar = () => `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
+const lbarSync = () => { document.querySelectorAll('.lbar').forEach(b => b.classList.toggle('clean', !EDIT.dirty)); pushDraft(); };
+// Kaydedilmemiş düzeni önizleme çerçevesine ve (ayrı sekme için) localStorage'a ilet; değişiklik yoksa kaydedilmiş hâle döner
+function pushDraft() {
+  const L = EDIT.dirty && EDIT.layout ? EDIT.layout : null;
+  try { localStorage.setItem('sp.draft', JSON.stringify(L)); } catch (e) {}
+  document.querySelectorAll('.pvcard iframe').forEach(f => { try { f.contentWindow.postMessage({ screenpanoDraft: L }, location.origin); } catch (e) {} });
+}
+function openDraft() { pushDraft(); window.open('/tv?preview=1&draft=1', '_blank'); }
 function gotoPv() {
   const c = document.querySelector('.pvcard'); if (!c) return;
-  if (EDIT.dirty) toast('Önizleme kaydedilmiş hâli gösterir; değişikliklerinizi görmek için önce "Düzeni kaydet"e basın');
-  c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+    c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
 }
 SECTIONS.design = {
   html() {
@@ -244,7 +250,7 @@ SECTIONS.design = {
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır.',
           `<div class="editor"><div id="cw"><div id="cv"></div></div><div id="props"></div></div>
            <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`, layoutBar())
-        + card('Kaydedilmiş hâli', 'TV\'de şu an görünen. Kaydetmediğiniz değişiklikler burada görünmez.', pvFrame(), '', 'pvcard');
+        + card('Önizleme', 'Yaptığınız değişiklikler (kaydetmeden önce) burada görünür; beğenince "Düzeni kaydet"e basın.', pvFrame(true), '<button class="btn g s" onclick="openDraft()">↗ Yeni sekmede aç</button>', 'pvcard');
     } else if (sub === 'colors') {
       const th = S.me.tenant.theme, logo = S.me.tenant.logo;
       h += (logo ? card('✨ Logonuzdan önerilen renkler', 'Logonuzdaki renklerden TV\'de okunaklı kalacak şekilde üretildi. Tıklayınca hemen uygulanır.', '<div class="swatches" id="lsug"><span class="muted">Logo inceleniyor…</span></div>') : '')
@@ -298,7 +304,10 @@ function drawProps() {
   const d = S.cat.widgets[w.type] || {}, p = w.props || {};
   const tg = (k, label, def = true) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(p[k] === undefined ? def : p[k], `setP('${k}',this.checked)${k === 'qr' ? ';drawProps()' : ''}`)}</div>`;
   let f = '';
-  if (w.type === 'clock') f = fl('Gösterilecek', `<select onchange="setP('show',this.value);drawCanvas()">${[['both', 'Saat ve tarih'], ['time', 'Yalnız saat'], ['date', 'Yalnız tarih']].map(([v, l]) => `<option value="${v}" ${(p.show || 'both') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) + (p.show === 'date' ? '' : tg('seconds', 'Saniyeyi göster', false));
+  if (w.type === 'clock') {
+    const sh = p.show || 'both', swc = (k, label, on) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(on, `setClk('${k}',this.checked)`)}</div>`;
+    f = `<p class="muted" style="margin:6px 0 0">Saati bir kutuya, tarihi başka bir kutuya koymak için iki ayrı Saat ve tarih kutusu ekleyip birinde tarihi, diğerinde saati gizleyin.</p>` + swc('time', 'Saati göster', sh !== 'date') + swc('date', 'Tarihi göster', sh !== 'time') + (sh === 'date' ? '' : tg('seconds', 'Saniyeyi göster', false));
+  }
   if (w.type === 'rates') {
     f = tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa') + tg('qr', 'QR kodlar', false);
     if (p.qr) {
@@ -330,6 +339,13 @@ function snap() { EDIT.hist.push(clone(EDIT.layout)); if (EDIT.hist.length > 40)
 function undoL() { if (!EDIT.hist.length) return toast('Geri alınacak değişiklik yok'); EDIT.layout = EDIT.hist.pop(); if (!EDIT.hist.length) EDIT.dirty = false; EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
 function setPI(l, k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); const i = clone((w.props || {}).i18n || {}); i[l] = { ...(i[l] || {}), [k]: v }; w.props = { ...(w.props || {}), i18n: i }; }
 function rQrPick(id) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; const sel = new Set(String((w.props || {}).qrs || '').split(',').filter(Boolean)); sel.has(id) ? sel.delete(id) : sel.add(id); setP('qrs', [...sel].join(',')); drawProps(); }
+function setClk(k, on) {
+  const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return;
+  const sh = (w.props || {}).show || 'both'; let t = sh !== 'date', d = sh !== 'time';
+  if (k === 'time') t = on; else d = on;
+  if (!t && !d) { toast('Saat ve tarihten en az biri açık olmalı', true); return drawProps(); }
+  setP('show', t && d ? 'both' : t ? 'time' : 'date'); drawProps();
+}
 function setP(k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); w.props = { ...(w.props || {}), [k]: v }; }
 function rmW(i) { snap(); EDIT.layout.widgets.splice(i, 1); EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
 function addW(type) {

@@ -3095,7 +3095,21 @@ function showMenuPage(anim) {
 // ---- durumun ilk adımı: tema, marka, düzen, abonelik ----
 function applyState0(s) {
   CITY = s.city || '';
-  applyTheme(s.theme); applyBrand(s.brand); applyLayout(s.layout); setBlocked(s.blocked);
+  window.__savedLayout = s.layout;
+  applyTheme(s.theme); applyBrand(s.brand); applyLayout(window.__draft || s.layout); setBlocked(s.blocked);
+}
+// Önizleme: panelde henüz kaydedilmemiş düzen (taslak) gelirse kaydedilmiş düzenin yerine gösterilir
+function setDraft(l) {
+  window.__draft = l && Array.isArray(l.widgets) ? l : null;
+  const use = window.__draft || window.__savedLayout; if (use) applyLayout(use);
+}
+if (PREVIEW) {
+  addEventListener('message', e => { if (e.origin === location.origin && e.data && 'screenpanoDraft' in e.data) setDraft(e.data.screenpanoDraft); });
+  if (Q.get('draft')) { // ayrı sekmede taslak önizleme: panel taslağı localStorage'a yazar, değiştikçe burası da güncellenir
+    const rd = () => { try { setDraft(JSON.parse(localStorage.getItem('sp.draft') || 'null')); } catch (e) {} };
+    window.__draft = (() => { try { const d = JSON.parse(localStorage.getItem('sp.draft') || 'null'); return d && Array.isArray(d.widgets) ? d : null; } catch (e) { return null; } })();
+    addEventListener('storage', ev => { if (ev.key === 'sp.draft') rd(); });
+  }
 }
 
 // ---- cihaz token'ı: APK'da kalıcı depoda, tarayıcıda localStorage'da ----

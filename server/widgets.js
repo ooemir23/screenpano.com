@@ -5,7 +5,7 @@ const COLS = 24, ROWS = 24;
 const WIDGETS = {
   media:   { name: 'Medya oynatıcı', desc: 'Video ve fotoğraf döngüsü; kampanya, büyük maç ve fragmanlar da burada çıkar', pro: false, required: true, min: [8, 8], props: { fit: 'auto' } },
   logo:    { name: 'Logo', desc: 'İşletme logosu; kutuya sığdırma, hizalama ve iç boşluk ayarlanır', pro: false, min: [3, 2], props: { fit: 'contain', align: 'center', pad: 'none' }, enums: { fit: ['contain', 'cover', 'fill'], align: ['left', 'center', 'right'], pad: ['none', 'sm', 'lg'] } },
-  clock:   { name: 'Saat ve tarih', desc: 'Saat, tarih ya da ikisi birden; her kutuda ayrı gösterim seçilir (birden çok eklenebilir)', pro: false, min: [4, 3], multi: 4, props: { seconds: false, show: 'both' }, enums: { show: ['both', 'time', 'date'] } },
+  clock:   { name: 'Saat ve tarih', desc: 'Saat, tarih ya da ikisi birden; her kutuda ayrı gösterim seçilir (birden çok eklenebilir)', pro: false, min: [2, 1], multi: 4, props: { seconds: false, show: 'both' }, enums: { show: ['both', 'time', 'date'] } },
   rates:   { name: 'Hava ve piyasalar', desc: 'Hava durumu, döviz, altın, BIST, Bitcoin ve istenirse QR kodlar (2 QR yan yana)', pro: false, min: [5, 4], props: { weather: true, rates: true, qr: false, qrs: '' } },
   ticker:  { name: 'Kayan bant', desc: 'Skorlar, haberler, kurlar ve bilgiler kayar', pro: false, min: [10, 2], props: { clock: true } },
   text:    { name: 'Duyuru metni', desc: 'Başlık ve kısa metin', pro: false, min: [4, 2], props: { title: 'Hoş geldiniz', body: '', align: 'center', size: 'm' } },
