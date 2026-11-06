@@ -408,14 +408,25 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     res.json({ ok: true, music: m });
   });
   r.post('/music/cmd', async (req, res) => {
-    const m = ensureMusic(req.t.db), b = req.body || {}, cmd = String(b.cmd || '');
-    if (!['play', 'pause', 'toggle', 'next', 'prev', 'volume', 'select', 'enabled'].includes(cmd)) return res.status(400).json({ error: 'Geçersiz komut' });
+    const m = ensureMusic(req.t.db), b = req.body || {}; let cmd = String(b.cmd || '');
+    if (!['play', 'pause', 'toggle', 'next', 'prev', 'volume', 'select', 'enabled', 'source'].includes(cmd)) return res.status(400).json({ error: 'Geçersiz komut' });
+    // Kaynak değiştir (YouTube ↔ Spotify): o kaynağın son çalan ya da ilk listesi seçilir; diğer kaynak aşağıda susturulur
+    if (cmd === 'source') {
+      const want = b.source === 'spotify', grp = x => (x.provider === 'spotify') === want, key = want ? 'spotify' : 'yt';
+      let it = m.playlists.find(x => x.id === (m.lastBy || {})[key]);
+      if (!it || !grp(it)) it = m.playlists.find(grp);
+      if (!it) return res.status(400).json({ error: want ? 'Önce kitaplığa bir Spotify listesi ekleyin' : 'Önce kitaplığa bir YouTube listesi ekleyin' });
+      b.id = it.id; cmd = 'select';
+    }
     if (cmd === 'play') { m.enabled = true; m.playing = true; }
     else if (cmd === 'pause') { m.playing = false; }
     else if (cmd === 'toggle') { m.enabled = true; m.playing = !m.playing; }
     else if (cmd === 'enabled') { m.enabled = !!b.enabled; if (m.enabled) m.playing = true; }
     else if (cmd === 'volume' && b.volume !== undefined) { m.volume = Math.max(0, Math.min(100, Math.round(Number(b.volume)) || 0)); }
-    else if (cmd === 'select' && typeof b.id === 'string') { m.activeId = b.id; m.enabled = true; m.playing = true; }
+    else if (cmd === 'select' && typeof b.id === 'string') {
+      m.activeId = b.id; m.enabled = true; m.playing = true;
+      const it0 = m.playlists.find(x => x.id === b.id); if (it0) m.lastBy = { ...(m.lastBy || {}), [it0.provider === 'spotify' ? 'spotify' : 'yt']: it0.id };
+    }
     // listede belirli şarkıdan başlat (YouTube listeleri): TV'ye bir kerelik gider, kalıcı kaydedilmez
     const start = cmd === 'select' && (Number.isInteger(b.index) || typeof b.videoId === 'string') ? { index: Math.max(0, Math.min(500, Number(b.index) || 0)), videoId: /^[A-Za-z0-9_-]{11}$/.test(b.videoId || '') ? b.videoId : '' } : null;
     // Sonraki/önceki liste: YouTube çalma listesi ve bağlı Spotify kendi içinde şarkı atlar; diğerlerinde liste sunucuda değişir,
@@ -430,7 +441,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     let warn = '';
     const curIt = m.playlists.find(x => x.id === m.activeId);
     // başka bir listeye geçilince Spotify uygulaması susturulur (iki müzik üst üste çalmasın)
-    if (SP.external(req.t) && cmd === 'select' && curIt && curIt.provider !== 'spotify') { try { await SP.control(req.t, 'pause'); } catch (e) {} }
+    if (SP.external(req.t) && ['select', 'play', 'toggle', 'enabled', 'next', 'prev'].includes(cmd) && m.playing && curIt && curIt.provider !== 'spotify') { try { await SP.control(req.t, 'pause'); } catch (e) {} }
     if (SP.external(req.t) && curIt && curIt.provider === 'spotify') {
       const spStart = cmd === 'select' && typeof b.uri === 'string' && /^spotify:track:[A-Za-z0-9]{10,40}$/.test(b.uri) ? { uri: b.uri } : null;
       try {

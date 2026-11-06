@@ -1545,6 +1545,14 @@ function trow(o) { // YouTube Music şarkı satırı: kapak (üstünde oynat), a
 }
 
 // ---- Alt çalar çubuğu ----
+// Çalan kaynak seçici: aynı anda yalnız biri çalar; seçilmeyen kaynak otomatik durdurulur
+function srcSwitch(act, on) {
+  const m = musicData(), spOn = (SPACC.st && SPACC.st.connected) || m.playlists.some(x => x.provider === 'spotify');
+  if (!spOn || !m.playlists.length) return '';
+  const cur = act && act.provider === 'spotify' ? 'spotify' : 'yt';
+  const b = (k, name, icn) => `<button type="button" class="${cur === k && on ? 'on' : ''}" title="${cur === k && on ? 'Şu an bu kaynak çalıyor' : 'Bu kaynağa geç; diğeri durdurulur'}" onclick="musicCmd('source',{source:'${k}'})">${ic(icn)}<span>${name}</span></button>`;
+  return `<div class="ytm-src" role="group" aria-label="Çalan kaynak">${b('yt', 'YouTube', 'music')}${b('spotify', 'Spotify', 'headphones')}</div>`;
+}
 function nowBar() {
   const m = musicData(), act = musicActive();
   const n = MNOW && act && (!MNOW.itemId || MNOW.itemId === act.id) ? MNOW : null;
@@ -1563,6 +1571,7 @@ function nowBar() {
       <span class="c">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer">` : ic('music')}</span>
       <span class="t"><b>${esc(title)}</b><span>${esc(sub)}</span></span></button>
     <div class="ytm-bar-r">
+      ${srcSwitch(act, on)}
       <label class="ytm-vol" title="Ses">${ic('volume-2')}<input type="range" min="0" max="100" value="${m.volume ?? 75}" onchange="musicCmd('volume',{volume:+this.value})"></label>
       <span class="ytm-onoff" title="Müzik açık / kapalı">${sw(on, "musicOpt({enabled:this.checked,playing:true})")}</span>
     </div></div>`;
