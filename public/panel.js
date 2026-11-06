@@ -365,7 +365,7 @@ function addW(type) {
   if (!spot && type === 'qr') { const m = EDIT.layout.widgets.find(w => w.type === 'media') || { x: 0, y: 0, w: 24, h: 24 }; const off = cnt * mw; spot = { x: Math.max(0, m.x + m.w - mw - 1 - off), y: Math.max(0, m.y + m.h - mh - 1), w: mw, h: mh }; if (EDIT.layout.widgets.some(w => w.type === 'qr' && overlap(w, spot))) spot = null; else spot.float = true; }
   snap();
   const pos = spot ? { x: spot.x, y: spot.y, w: spot.w, h: spot.h } : { x: 0, y: 0, w: mw, h: mh };
-  EDIT.layout.widgets.push({ type, ...pos, ...(d.props ? { props: clone(d.props) } : {}) });
+  EDIT.layout.widgets.push({ type, ...pos, ...(d.props ? { props: { ...clone(d.props), ...(type === 'qr' ? { size: 'box' } : {}) } } : {}) }); // yeni QR kartı kutuyu izler: sürükleyerek boyutlanır
   EDIT.sel = EDIT.layout.widgets.length - 1; drawCanvas(); drawProps(); drawPal();
   if (!spot) toast('Boş yer yok: kutu sol üste kondu, diğerlerini küçültüp yerleştirin', true);
   else if (spot.float) toast('QR kartı medyanın üstüne kondu; sürükleyip istediğiniz yere taşıyın');
@@ -412,7 +412,15 @@ function dragSetup() {
     const el = $('cv').querySelector(`.wb[data-i="${st.i}"]`);
     if (el) { el.style.left = w.x / 24 * 100 + '%'; el.style.top = w.y / 24 * 100 + '%'; el.style.width = w.w / 24 * 100 + '%'; el.style.height = w.h / 24 * 100 + '%'; el.querySelector('small').textContent = w.w + '×' + w.h; }
   };
-  wrap.onpointerup = wrap.onpointercancel = () => { if (!st) return; if (st.moved) { EDIT.hist.push(st.before); EDIT.dirty = true; } st = null; drawCanvas(); drawProps(); };
+  wrap.onpointerup = wrap.onpointercancel = () => {
+    if (!st) return;
+    if (st.moved) {
+      EDIT.hist.push(st.before); EDIT.dirty = true;
+      const w = EDIT.layout.widgets[st.i]; // QR kartı kenardan sürüklenerek boyutlandırılırsa QR kutuyla birlikte büyür/küçülür
+      if (st.rz && w && w.type === 'qr' && (w.props || {}).size !== 'box') { w.props = { ...(w.props || {}), size: 'box' }; toast('QR boyutu kutuya göre ayarlanır; kutuyu sürükleyerek büyütüp küçültün'); }
+    }
+    st = null; drawCanvas(); drawProps();
+  };
 }
 async function upAsset(inp) {
   const f = inp.files[0]; inp.value = ''; if (!f) return; const fd = new FormData(); fd.append('file', f);
