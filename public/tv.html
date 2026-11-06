@@ -829,6 +829,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #wmenu .mi .n small{display:block;font-size:1.5vh;font-weight:500;color:var(--mute);margin-top:.3vh}
 #wmenu .mi .dots{flex:1;min-width:2vw;border-bottom:max(1px,.2vh) dotted rgba(255,255,255,.28);transform:translateY(-.6vh)}
 #wmenu .mi .p{font-size:2.6vh;font-weight:800;color:var(--accent2);white-space:nowrap;font-variant-numeric:tabular-nums}
+#wmenu .mi .p .was{font-size:1.8vh;font-weight:600;color:var(--mute);margin-right:.6vw;text-decoration-thickness:max(1px,.18vh)}
 #wmenu .mempty{color:var(--mute);font-size:2vh;padding-top:2vh}
 /* ===== köşe ibaresi (Başlangıç paketi) ===== */
 #badge{position:fixed;right:1vw;bottom:1vh;z-index:40;display:none;padding:.4vh .8vw;border-radius:2vh;background:rgba(0,0,0,.55);color:rgba(255,255,255,.75);font-size:1.2vh;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
@@ -2137,7 +2138,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ce
 const camp = { list: [], last: {}, showing: false, due: null, after: null, started: Date.now() };
 function campShow(c) {
   if (camp.showing || !c) return;
-  camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp' });
+  camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp', id: c.id });
   if (NMED() && window.__N.campShow && c.svg) { // APK 3.13+: kart yerel çizilir; sayfa yalnız zamanlar
     exoStop(true); window.__nativeCampOn = true; window.__N.campShow(JSON.stringify(c)); exoShow(true);
     setTimeout(() => { window.__N.campHide(); window.__nativeCampOn = false; if (camp.after) { const f = camp.after; camp.after = null; f(); } setTimeout(() => { camp.showing = false; }, 1500); }, (c.durSec || 15) * 1000);
@@ -2841,7 +2842,7 @@ function setQrTile(list) {
 // ---- fiyat tarifesi widget'ı: sayfalara bölünür, 12 sn'de bir döner ----
 const menuW = { data: null, pages: [], idx: 0, ncol: 1, timer: null, sig: '' };
 const fmtPrice = (p, cur) => /^\d+([.,]\d+)?$/.test(String(p || '').trim()) ? `${p} ${cur || '₺'}` : String(p || '');
-const menuRow = (r, cur) => r.c !== undefined ? `<div class="mc">${esc(r.c)}</div>` : `<div class="mi"><div class="n">${esc(r.name)}${r.desc || r.kcal ? `<small>${esc(r.desc || '')}${r.desc && r.kcal ? ' · ' : ''}${r.kcal ? '🔥 ' + esc(r.kcal) : ''}</small>` : ''}</div><i class="dots"></i><div class="p">${esc(fmtPrice(r.price, cur))}</div></div>`;
+const menuRow = (r, cur) => r.c !== undefined ? `<div class="mc">${esc(r.c)}</div>` : `<div class="mi"><div class="n">${esc(r.name)}${r.desc || r.kcal ? `<small>${esc(r.desc || '')}${r.desc && r.kcal ? ' · ' : ''}${r.kcal ? '🔥 ' + esc(r.kcal) : ''}</small>` : ''}</div><i class="dots"></i><div class="p">${r.was ? `<s class="was">${esc(fmtPrice(r.was, cur))}</s>` : ''}${esc(fmtPrice(r.price, cur))}</div></div>`;
 function setMenu(m) { const sig = JSON.stringify(m || null) + menuSchedSig(m); if (sig === menuW.sig) return; menuW.sig = sig; menuW.data = m; renderMenuW(true); }
 function renderMenuW(reset) {
   const box = $id('wmenu'), body = box.querySelector('.mb'), m = menuW.data;
@@ -2856,7 +2857,7 @@ function renderMenuW(reset) {
     if (!schedOk(c.sch)) continue;
     const cn = (c.t && c.t[LANG]) || c.name;
     if (cn) rows.push({ c: cn });
-    for (const i of c.items || []) { const t = (i.t && i.t[LANG]) || {}; rows.push({ name: t.name || i.name, desc: t.desc || (t.name ? '' : i.desc), price: i.off ? (LANG === 'tr' ? 'Tükendi' : 'Sold out') : i.price, off: i.off, kcal: i.kcal }); }
+    for (const i of c.items || []) { const t = (i.t && i.t[LANG]) || {}; rows.push({ name: t.name || i.name, desc: t.desc || (t.name ? '' : i.desc), price: i.off ? (LANG === 'tr' ? 'Tükendi' : 'Sold out') : i.price, was: i.off ? '' : i.was, off: i.off, kcal: i.kcal }); }
   }
   if (!rows.length) { body.innerHTML = '<div class="mempty">Panelde Fiyat Listesi bölümünden ürün ekleyin.</div>'; box.querySelector('.pg').textContent = ''; return; }
   const W = body.clientWidth, H = body.clientHeight, gap = innerWidth * 0.02;

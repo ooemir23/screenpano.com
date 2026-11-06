@@ -224,13 +224,15 @@ r.put('/menu', (req, res) => {
   // çeviriler: { en: 'Hot drinks' } ya da { en: { name, desc } }
   const tr = (o, fn) => { const out = {}; if (o && typeof o === 'object') for (const l of LANGS) if (l !== 'tr' && o[l] != null) { const v = fn(o[l]); if (v) out[l] = v; } return Object.keys(out).length ? out : undefined; };
   const cats = (Array.isArray(b.categories) ? b.categories : []).slice(0, 20).map(c => ({
-    name: s(c.name, 40), sch: SCH.clean(c.sch) || undefined, t: tr(c.t, v => s(v, 40)),
+    name: s(c.name, 40), sch: SCH.clean(c.sch) || undefined, t: tr(c.t, v => s(v, 40)), happy: c.happy === true || undefined,
     items: (Array.isArray(c.items) ? c.items : []).slice(0, 60).map(i => ({
-      name: s(i.name, 60), price: s(i.price, 16), desc: s(i.desc, 90), off: i.off === true || undefined, kcal: s(i.kcal, 14) || undefined,
+      name: s(i.name, 60), price: s(i.price, 16), hp: s(i.hp, 16) || undefined, desc: s(i.desc, 90), off: i.off === true || undefined, kcal: s(i.kcal, 14) || undefined,
       t: tr(i.t, v => { const n = s(v && v.name, 60), d = s(v && v.desc, 90); return n || d ? { name: n, desc: d } : null; }),
     })).filter(i => i.name),
   })).filter(c => c.name || c.items.length);
-  req.t.db.menu = { title: s(b.title, 40) || 'Fiyat Listesi', currency: s(b.currency, 4) || '₺', categories: cats, t: tr(b.t, v => s(v, 40)) };
+  const hs = b.happy && SCH.clean(b.happy.sch); // indirim saati: saat aralığı olmadan kaydedilmez
+  const happy = b.happy && hs ? { label: s(b.happy.label, 24) || 'Happy Hour', pct: Math.max(0, Math.min(90, Math.round(Number(b.happy.pct) || 0))), sch: hs } : undefined;
+  req.t.db.menu = { title: s(b.title, 40) || 'Fiyat Listesi', currency: s(b.currency, 4) || '₺', categories: cats, t: tr(b.t, v => s(v, 40)), happy };
   changed(req.t); res.json({ ok: true });
 });
 
@@ -583,6 +585,7 @@ r.delete('/videos/:id', (req, res) => {
   if (v) {
     if (v.file) rmUpload(t, v.file);
     if (v.image) rmUpload(t, v.image);
+    if (v.design && v.design.photo) rmUpload(t, v.design.photo); // afiş stüdyosunun kaynak fotoğrafı
   }
   t.db.videos = t.db.videos.filter(x => x.id !== req.params.id);
   changed(t); res.json({ ok: true });

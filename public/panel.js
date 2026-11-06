@@ -49,7 +49,7 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 // Metin olan satır grup başlığıdır; null ayraçtır
 const NAV = [
   'Ekran', ['home', '▦', 'Özet'], ['design', '🎨', 'Tasarım'],
-  'İçerikler', ['media', '🎞', 'Medya'], ['music', '🎵', 'Müzik'], ['menu', '🧾', 'Fiyat Listesi', 1], ['promo', '📣', 'Duyurular'], ['qr', '▣', 'QR Kodlar'], ['celeb', '🎉', 'Kutlamalar'],
+  'İçerikler', ['media', '🎞', 'Medya'], ['music', '🎵', 'Müzik'], ['menu', '🧾', 'Fiyat Listesi', 1], ['promo', '📣', 'Duyurular'], ['qr', '▣', 'QR Kodlar'], ['celeb', '🎉', 'Kutlamalar'], ['ads', '💼', 'Reklamlar', 1],
   'Canlı veri', ['sport', '⚽', 'Spor', 1], ['info', '📰', 'Bilgi Bandı', 1],
   'Takip', ['stats', '📊', 'İstatistik'],
   null, ['settings', '⚙', 'Ayarlar'],
@@ -439,13 +439,13 @@ const resetSafe = () => act('PUT', '/options', { safeL: 0, safeR: 0, safeT: 0, s
 let mediaPoll = null;
 SECTIONS.media = {
   html() {
-    const v = S.db.videos;
+    const v = S.db.videos.filter(x => !x.ad); // reklam görselleri Reklamlar sayfasında
     if (SUB.media === 'posters') return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']]) + postersHtml();
     return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; ⏱ ile gün ve saat verin.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']])
       + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV için otomatik küçültülür; hazır olunca ekrana girer.',
-        `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div>`)
+        `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div><div class="row mt" style="align-items:center"><span class="muted" style="flex:1;font-size:13px">Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın.</span><button class="btn g s" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
       + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile" draggable="true" data-id="${x.id}">
-          <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : `pvMedia(${i})`}">${thumb(x)}<span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">⏱ ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? '<span class="hid">Gizli</span>' : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
+          <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}<span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">⏱ ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? '<span class="hid">Gizli</span>' : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
           <div class="m"><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g" onclick="mvMedia('${x.id}','up')" title="Öne al">←</button><button class="btn xs g" onclick="mvMedia('${x.id}','down')" title="Sona al">→</button><button class="btn xs g" onclick="openSched('video','${x.id}')" title="Zamanla">⏱</button><button class="btn xs g" onclick="togHide('${x.id}')" title="${x.hidden ? 'Göster' : 'Gizle'}">${x.hidden ? '◌' : '●'}</button><button class="btn xs d" onclick="delMedia('${x.id}')" title="Sil">✕</button></div></div>`).join('')}</div>`
         : '<div class="empty">Henüz dosya yok. Yukarıdan ekleyin.</div>')
       + `<div class="grid g2">` + card('Fotoğraf süresi', 'Her fotoğraf ekranda kaç saniye kalsın.', `<div class="row"><input type="number" id="imgsec" min="3" max="120" value="${S.db.imageSeconds}" style="max-width:120px"><span class="muted">saniye</span><span style="flex:1"></span><button class="btn" onclick="act('PUT','/settings',{imageSeconds:+$('imgsec').value},'Kaydedildi')">Kaydet</button></div>`)
@@ -505,6 +505,8 @@ SECTIONS.menu = {
       + card('Liste bilgisi', 'Kafe ve restoranlar giriş kapısındaki fiyat tarifesini dijital panoda da gösterebilir (Fiyat Etiketi Yönetmeliği). Giriş ekranı için Tasarım\'da "Vitrin" düzenini kullanabilirsiniz.',
         `<div class="f">${fl('Başlık', `<input type="text" id="mtitle" maxlength="40" value="${esc(MENU.title)}" oninput="MENU.title=this.value;MENU.__dirty=1">`)}${fl('Para birimi', `<input type="text" id="mcur" maxlength="4" value="${esc(MENU.currency || '₺')}" oninput="MENU.currency=this.value;MENU.__dirty=1">`)}</div>`)
       + langCard()
+      + happyCard()
+      + card('Gün akışı', 'Bugün hangi kategori hangi saatlerde ekranda. Kategorinin ⏱ düğmesinden kahvaltı, öğle, akşam gibi saat verin; saati geçen kategori kendiliğinden kalkar.', '<div id="mflow"></div>')
       + `<div id="mcats"></div><div class="row" style="margin-bottom:18px"><button class="btn g" onclick="addCat()">＋ Kategori ekle</button><span style="flex:1"></span><button class="btn" onclick="saveMenu()">Kaydet</button></div>`
       + card('Toplu ekle', 'Her satıra bir ürün: <code>Ürün ; fiyat ; açıklama</code>. Kategori satırı <code>#</code> ile başlar. Örnek: <code># Sıcak İçecekler</code> · <code>Türk Kahvesi ; 90</code>',
         `<div class="row" style="margin-bottom:10px"><button class="btn g" onclick="menuTemplate()">⬇ Excel şablonunu indir</button><button class="btn g" onclick="$('mfile').click()">⬆ Doldurduğum dosyayı yükle</button><input id="mfile" type="file" accept=".csv,.txt,.tsv,text/csv,text/plain" style="display:none" onchange="menuFile(this)"></div><div class="muted" style="font-size:13px;margin-bottom:10px">Şablonu indirin, Excel'de ürünlerinizle doldurun, <b>CSV (virgülle/noktalı virgülle ayrılmış)</b> olarak kaydedip buraya yükleyin. Dosyadaki liste aşağıya yazılır; kontrol edip "Listeye ekle" ya da "Listeyi bununla değiştir"e basın.</div><textarea id="mbulk" rows="6" placeholder="# Sıcak İçecekler&#10;Türk Kahvesi ; 90&#10;Latte ; 120 ; Yulaf sütüyle +15"></textarea><div class="row mt"><button class="btn g" onclick="bulk(false)">Listeye ekle</button><button class="btn d" onclick="bulk(true)">Listeyi bununla değiştir</button></div>`);
@@ -514,13 +516,53 @@ SECTIONS.menu = {
 function drawMenu() {
   const c = MENU.categories;
   $('mcats').innerHTML = c.length ? c.map((cat, ci) => `<div class="mcat"><div class="chd"><input type="text" value="${esc(cat.name)}" placeholder="Kategori adı" maxlength="40" oninput="MENU.categories[${ci}].name=this.value;MENU.__dirty=1" style="font-weight:700">
-      <button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},1))">↓</button><button class="btn xs g" onclick="openSched('cat',${ci})" title="Bu kategori hangi gün ve saatlerde görünsün">⏱ ${cat.sch ? esc(schShort(cat.sch)) : 'Her zaman'}</button><button class="btn xs d" onclick="if(confirm('Kategori silinsin mi?'))mE(()=>MENU.categories.splice(${ci},1))">Sil</button></div>
+      <button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},1))">↓</button><button class="btn xs g" onclick="openSched('cat',${ci})" title="Bu kategori hangi gün ve saatlerde görünsün">⏱ ${cat.sch ? esc(schShort(cat.sch)) : 'Her zaman'}</button>${MENU.happy ? `<button class="btn xs ${cat.happy ? '' : 'g'}" title="Bu kategori indirim saatinde indirimli fiyatla görünsün" onclick="mE(()=>{const x=MENU.categories[${ci}];x.happy=!x.happy})">% ${cat.happy ? esc(MENU.happy.label || 'Happy Hour') : 'İndirimsiz'}</button>` : ''}<button class="btn xs d" onclick="if(confirm('Kategori silinsin mi?'))mE(()=>MENU.categories.splice(${ci},1))">Sil</button></div>
       ${langList().length ? `<div class="mtr">${langList().map(l => `<input type="text" placeholder="${LANG_NAMES[l]} kategori adı" maxlength="40" value="${esc((cat.t || {})[l] || '')}" oninput="mT(${ci},-1,'${l}','name',this.value)">`).join('')}</div>` : ''}
-      ${cat.items.map((it, ii) => `<div class="mrow"><input type="text" value="${esc(it.name)}" placeholder="Ürün" maxlength="60" oninput="MENU.categories[${ci}].items[${ii}].name=this.value;MENU.__dirty=1"><input class="md" type="text" value="${esc(it.desc || '')}" placeholder="Açıklama (isteğe bağlı)" maxlength="90" oninput="MENU.categories[${ci}].items[${ii}].desc=this.value;MENU.__dirty=1"><input type="text" value="${esc(it.price)}" placeholder="Fiyat" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].price=this.value;MENU.__dirty=1"><span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn xs g" title="${it.kcal ? 'Kaloriyi kaldır' : 'Ürün adından kalori bilgisini getir'}" onclick="kcalBtn(${ci},${ii})">${it.kcal ? '🔥 ' + esc(it.kcal) + ' ✕' : '🔥'}</button><button class="btn xs ${it.off ? 'd' : 'g'}" title="Tükendi olarak işaretle" onclick="mE(()=>{const x=MENU.categories[${ci}].items[${ii}];x.off=!x.off})">${it.off ? 'Tükendi' : 'Var'}</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories[${ci}].items,${ii},-1))">↑</button><button class="btn xs d" onclick="mE(()=>MENU.categories[${ci}].items.splice(${ii},1))">✕</button></span></div>
+      ${cat.items.map((it, ii) => `<div class="mrow${MENU.happy && cat.happy ? ' hp' : ''}"><input type="text" value="${esc(it.name)}" placeholder="Ürün" maxlength="60" oninput="MENU.categories[${ci}].items[${ii}].name=this.value;MENU.__dirty=1"><input class="md" type="text" value="${esc(it.desc || '')}" placeholder="Açıklama (isteğe bağlı)" maxlength="90" oninput="MENU.categories[${ci}].items[${ii}].desc=this.value;MENU.__dirty=1"><input type="text" value="${esc(it.price)}" placeholder="Fiyat" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].price=this.value;MENU.__dirty=1">${MENU.happy && cat.happy ? `<input type="text" class="mhp" value="${esc(it.hp || '')}" placeholder="${esc(happyPrice(it.price) || 'İnd. fiyat')}" title="İndirim saatindeki fiyat (boşsa %${MENU.happy.pct || 0} indirimle hesaplanır)" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].hp=this.value;MENU.__dirty=1">` : ''}<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn xs g" title="${it.kcal ? 'Kaloriyi kaldır' : 'Ürün adından kalori bilgisini getir'}" onclick="kcalBtn(${ci},${ii})">${it.kcal ? '🔥 ' + esc(it.kcal) + ' ✕' : '🔥'}</button><button class="btn xs ${it.off ? 'd' : 'g'}" title="Tükendi olarak işaretle" onclick="mE(()=>{const x=MENU.categories[${ci}].items[${ii}];x.off=!x.off})">${it.off ? 'Tükendi' : 'Var'}</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories[${ci}].items,${ii},-1))">↑</button><button class="btn xs d" onclick="mE(()=>MENU.categories[${ci}].items.splice(${ii},1))">✕</button></span></div>
       ${langList().length ? `<div class="mtr">${langList().map(l => `<input type="text" placeholder="${LANG_NAMES[l]}: ${esc(it.name || 'ürün adı')}" maxlength="60" value="${esc(((it.t || {})[l] || {}).name || '')}" oninput="mT(${ci},${ii},'${l}','name',this.value)"><input class="md" type="text" placeholder="${LANG_NAMES[l]} açıklama" maxlength="90" value="${esc(((it.t || {})[l] || {}).desc || '')}" oninput="mT(${ci},${ii},'${l}','desc',this.value)">`).join('')}</div>` : ''}`).join('')}
       <button class="btn xs g" onclick="mE(()=>MENU.categories[${ci}].items.push({name:'',price:'',desc:''}))">＋ Ürün</button></div>`).join('')
     : '<div class="empty" style="margin-bottom:14px">Henüz kategori yok. "Kategori ekle" ile başlayın ya da aşağıdan toplu yapıştırın.</div>';
+  drawFlow();
 }
+// ---- indirim saati (happy hour) ----
+const pnum = v => { const x = String(v || '').replace(/\s|₺|TL/gi, ''); if (!/^\d[\d.,]*$/.test(x)) return null; const n = Number(/,\d{1,2}$/.test(x) ? x.replace(/\./g, '').replace(',', '.') : x.replace(/[.,](?=\d{3}(\D|$))/g, '')); return isFinite(n) ? n : null; };
+function happyPrice(p) { const h = MENU && MENU.happy, n = pnum(p); if (!h || !h.pct || n == null) return ''; const v = n * (1 - h.pct / 100); return /,\d{1,2}$/.test(String(p)) && n % 1 ? v.toFixed(2).replace('.', ',') : String(Math.round(v)); }
+function happyCard() {
+  const h = MENU.happy;
+  const body = h ? `<div class="f">${fl('Ekranda görünecek ad', `<input type="text" maxlength="24" value="${esc(h.label || '')}" placeholder="Happy Hour" oninput="MENU.happy.label=this.value;MENU.__dirty=1">`)}${fl('İndirim (%)', `<input type="number" min="0" max="90" value="${h.pct || 0}" oninput="MENU.happy.pct=+this.value||0;MENU.__dirty=1;drawMenu()">`)}</div>
+      <div class="row mt" style="align-items:center"><button class="btn g" onclick="openSched('happy')">⏱ ${h.sch ? esc(schText(h.sch)) : 'Saat seçin'}</button><span class="muted" style="flex:1;font-size:13px">${h.sch ? (happyNowP() ? '<b style="color:var(--ok,#3fb27f)">● Şu an indirim saatinde</b>' : 'Şu an indirim saatinde değil') : 'Saat aralığı vermeden indirim ekranda görünmez.'}</span><button class="btn xs d" onclick="if(confirm('İndirim saati kaldırılsın mı?')){mE(()=>{delete MENU.happy;MENU.categories.forEach(c=>{delete c.happy;c.items.forEach(i=>delete i.hp)})});render(true)}">Kaldır</button></div>
+      <p class="muted" style="font-size:12.5px;margin:10px 0 0">Kategorilerde <b>%</b> düğmesiyle indirime dahil edin. Ürünün yanındaki küçük kutuya ayrı bir indirimli fiyat yazabilirsiniz; boşsa yüzdeyle hesaplanır. Ekranda eski fiyat üstü çizili, yanında yeni fiyat görünür ve liste başlığına "${esc(h.label || 'Happy Hour')}" eklenir.</p>`
+    : `<div class="row"><span class="muted" style="flex:1">Örneğin hafta içi 17:00–19:00 arası kokteyllerde %30 indirim. Saat gelince fiyatlar kendiliğinden düşer, bitince eski hâline döner.</span><button class="btn" onclick="mE(()=>{MENU.happy={label:'Happy Hour',pct:20,sch:{from:'17:00',to:'19:00'}}});render(true)">İndirim saati ekle</button></div>`;
+  return card('İndirim saati (happy hour)', 'Belirli saatlerde seçili kategorilerde indirimli fiyat.', body);
+}
+const happyNowP = () => MENU.happy && MENU.happy.sch && schAt(MENU.happy.sch, new Date());
+// Zamanlama kuralı verilen anda geçerli mi (sunucudaki sched.active ile aynı mantık; panelin saat dilimi kullanılır)
+function schAt(s, d) {
+  if (!s) return true;
+  const ymd = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'), dow = (d.getDay() + 6) % 7 + 1;
+  if (s.start && ymd < s.start) return false;
+  if (s.end && ymd > s.end) return false;
+  if (s.from && s.to) {
+    const inside = s.from < s.to ? hm >= s.from && hm < s.to : hm >= s.from || hm < s.to;
+    if (!inside) return false;
+    const dd = s.from > s.to && hm < s.to ? (dow + 5) % 7 + 1 : dow;
+    if (s.days && !s.days.includes(dd)) return false;
+  } else if (s.days && !s.days.includes(dow)) return false;
+  return true;
+}
+// Gün akışı: bugünün 24 saati, yarım saatlik dilimler; her kategori için görünür olduğu dilimler dolu çizilir
+function drawFlow() {
+  const box = $('mflow'); if (!box) return;
+  const rows = MENU.categories.filter(c => c.name || c.items.length).map(c => ({ name: c.name || 'Adsız kategori', sch: c.sch }));
+  if (MENU.happy && MENU.happy.sch) rows.push({ name: '% ' + (MENU.happy.label || 'Happy Hour'), sch: MENU.happy.sch, happy: true });
+  if (!rows.length) { box.innerHTML = '<div class="empty">Kategori ekleyince burada görünür.</div>'; return; }
+  const now = new Date(), base = new Date(now.getFullYear(), now.getMonth(), now.getDate()), nowPos = (now.getHours() * 60 + now.getMinutes()) / 1440 * 100;
+  const slot = (r, i) => schAt(r.sch, new Date(base.getTime() + (i * 30 + 15) * 60000));
+  box.innerHTML = `<div class="flow">${rows.map(r => `<div class="fr"><span class="fn" title="${esc(r.name)}">${esc(r.name)}</span><div class="ft">${Array.from({ length: 48 }, (_, i) => `<i class="${slot(r, i) ? (r.happy ? 'hp' : 'on') : ''}"></i>`).join('')}<b style="left:${nowPos}%"></b></div></div>`).join('')}
+    <div class="fr"><span class="fn"></span><div class="fh">${[0, 3, 6, 9, 12, 15, 18, 21, 24].map(h => `<span style="left:${h / 24 * 100}%">${String(h).padStart(2, '0')}</span>`).join('')}</div></div></div>`;
+}
+
 // çeviri alanı: ii = -1 kategori adı
 function mT(ci, ii, l, k, v) {
   const c = MENU.categories[ci]; MENU.__dirty = 1;
@@ -1013,13 +1055,19 @@ function schOf(kind, id) {
   if (kind === 'video') return (S.db.videos.find(x => x.id === id) || {}).sch;
   if (kind === 'camp') return ((S.db.campaigns || []).find(x => x.id === id) || {}).sch;
   if (kind === 'cat') return (MENU.categories[id] || {}).sch;
+  if (kind === 'happy') return (MENU.happy || {}).sch;
 }
+// Kategori ve indirim saati için hazır saat dilimleri
+const SCH_PRESETS = { cat: [['Kahvaltı', '07:00', '12:00'], ['Öğle', '11:30', '16:00'], ['Akşam', '17:00', '00:00'], ['Gece', '22:00', '03:00']], happy: [['17:00–19:00', '17:00', '19:00'], ['16:00–20:00', '16:00', '20:00'], ['Öğle 14:00–17:00', '14:00', '17:00']] };
+const schPreset = (f, t) => { $('sc-from').value = f; $('sc-to').value = t; };
 function openSched(kind, id) {
   const sc = schOf(kind, id) || {}, d = new Set(sc.days || []);
-  const title = kind === 'cat' ? 'Kategori ne zaman görünsün?' : kind === 'camp' ? 'Kampanya ne zaman çıksın?' : 'Bu içerik ne zaman oynasın?';
+  const pre = SCH_PRESETS[kind];
+  const title = kind === 'happy' ? 'İndirim ne zaman geçerli?' : kind === 'cat' ? 'Kategori ne zaman görünsün?' : kind === 'camp' ? 'Kampanya ne zaman çıksın?' : 'Bu içerik ne zaman oynasın?';
   openModal(`<h3 style="margin:0 0 6px">${title}</h3><p class="muted" style="margin:0 0 16px">Boş bırakılan alanlar sınır koymaz. Hiçbiri seçilmezse her zaman görünür.</p>
     <div class="fl"><span>Günler</span><div class="chips" id="sc-days">${DAYS.map((n, i) => `<span class="chip ${d.has(i + 1) ? 'on' : ''}" data-d="${i + 1}" onclick="this.classList.toggle('on')">${n}</span>`).join('')}
       <span class="chip" onclick="schPick([1,2,3,4,5])">Hafta içi</span><span class="chip" onclick="schPick([6,7])">Hafta sonu</span></div></div>
+    ${pre ? `<div class="fl mt"><span>Hazır saatler</span><div class="chips">${pre.map(([n, f, t]) => `<span class="chip" onclick="schPreset('${f}','${t}')">${n}${n.includes(':') ? '' : ` <span class="muted">${f}–${t}</span>`}</span>`).join('')}</div></div>` : ''}
     <div class="f mt">${fl('Başlangıç saati', `<input type="time" id="sc-from" value="${sc.from || ''}">`)}${fl('Bitiş saati', `<input type="time" id="sc-to" value="${sc.to || ''}">`)}</div>
     <p class="muted" style="font-size:12.5px;margin:6px 0 0">Bitiş başlangıçtan önceyse gece yarısını geçer (22:00 – 02:00 gibi).</p>
     <div class="f mt">${fl('İlk gün', `<input type="date" id="sc-start" value="${sc.start || ''}">`)}${fl('Son gün', `<input type="date" id="sc-end" value="${sc.end || ''}">`)}</div>
@@ -1037,6 +1085,7 @@ async function saveSched(kind, id, clear) {
     if (!Object.keys(sc).length) sc = null;
   }
   if (kind === 'cat') { MENU.categories[id].sch = sc || undefined; MENU.__dirty = 1; closeModal(); drawMenu(); return saveMenu(); }
+  if (kind === 'happy') { if (!sc || !sc.from) return toast('İndirim saati için başlangıç ve bitiş saati girin', true); MENU.happy.sch = sc; MENU.__dirty = 1; closeModal(); render(true); return saveMenu(); }
   const ok = await act('PUT', kind === 'camp' ? `/campaigns/${id}/sch` : `/videos/${id}`, { sch: sc }, sc ? 'Zamanlama kaydedildi: ' + schText(sc) : 'Her zaman gösterilecek');
   if (ok) closeModal();
 }
@@ -1056,11 +1105,12 @@ function drawThumbs() {
   });
 }
 function postersHtml() {
-  const mine = S.db.videos.filter(v => v.type === 'poster');
-  return card('Şablonlar', 'Birini seçin, yazıları değiştirin. Renkler ekranınızın temasından gelir; Tasarım → Renk ve logo bölümünde renkleri değiştirince afişler de değişir.',
+  const mine = S.db.videos.filter(v => v.type === 'poster' || (v.design && !v.ad));
+  return card('Fotoğraftan afiş', '', `<div class="stu-hero"><p class="muted">Ürününüzün fotoğrafını seçin, adını ve fiyatını yazın: dört hazır tasarımdan birini seçip medyaya ekleyin. Renkler fotoğraftan alınır; isterseniz okutmaları sayılan bir QR kod da eklenir.</p><button class="btn" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
+    + card('Şablonlar', 'Birini seçin, yazıları değiştirin. Renkler ekranınızın temasından gelir; Tasarım → Renk ve logo bölümünde renkleri değiştirince afişler de değişir.',
       `<div class="pgal">${Object.entries(SPPoster.TEMPLATES).filter(([, t]) => !t.hidden).map(([k, t]) => `<button class="pcard" onclick="editPoster(null,'${k}')"><div class="pmini" data-tpl="${k}" style="${themeVars()}"></div><b>${esc(t.name)}</b></button>`).join('')}</div>`)
     + card(`Afişleriniz <span class="muted">· ${mine.length}</span>`, 'Medya sırasında yer alırlar; sırayı "Medya ve sıra" sekmesinden değiştirebilirsiniz.',
-      mine.length ? `<div class="pgal">${mine.map(x => `<button class="pcard" onclick="editPoster('${x.id}')"><div class="pmini" data-pid="${x.id}" style="${themeVars()}"></div><b>${esc(x.name)}</b><span class="muted" style="font-size:12px">${x.sch ? '⏱ ' + esc(schShort(x.sch)) : 'Her zaman'}${x.hidden ? ' · gizli' : ''}</span></button>`).join('')}</div>` : '<div class="empty">Henüz afiş yok. Yukarıdan bir şablon seçin.</div>');
+      mine.length ? `<div class="pgal">${mine.map(x => `<button class="pcard" onclick="${x.design ? `openStudio('${x.id}')` : `editPoster('${x.id}')`}">${x.design ? `<div class="pmini"><img src="${S.me.upBase}${x.file}" loading="lazy" alt=""></div>` : `<div class="pmini" data-pid="${x.id}" style="${themeVars()}"></div>`}<b>${esc(x.name)}</b><span class="muted" style="font-size:12px">${x.sch ? '⏱ ' + esc(schShort(x.sch)) : 'Her zaman'}${x.hidden ? ' · gizli' : ''}</span></button>`).join('')}</div>` : '<div class="empty">Henüz afiş yok. Yukarıdan bir şablon seçin.</div>');
 }
 function drawPosterGallery() {
   drawThumbs();
@@ -1185,11 +1235,12 @@ async function drawDevStatus() {
       `${owner() ? `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" onclick="saveNotify()">Kaydet</button>${n.email && j.mail ? '<button class="btn g" onclick="act(\'POST\',\'/notify/test\',undefined,\'Deneme e-postası gönderildi\',false)">Dene</button>' : ''}</div>
        <div class="row mt" style="align-items:center"><span style="flex:1">Kutunun uyarılmadan bağlantısız kalabileceği süre:</span><select id="nt-offmin" style="width:130px">${[5, 10, 15, 30, 60, 120, 360, 720, 1440].map(m => `<option value="${m}"${m === om ? ' selected' : ''}>${omLbl(m)}</option>`).join('')}</select></div>
        <div class="swr mt"><div class="b"><b>Ekran kapanınca</b></div>${sw(n.offline !== false, '', 'id="nt-off"')}</div><div class="swr"><div class="b"><b>Ekran geri açılınca</b></div>${sw(n.online !== false, '', 'id="nt-on"')}</div>
+       <div class="swr"><div class="b"><b>Haftalık özet</b><span>Her pazartesi sabah: ekran süresi, kampanya okutmaları, reklam gösterimleri</span></div>${sw(!!n.weekly, '', 'id="nt-wk"')}</div>${n.email && j.mail ? `<div class="row end"><button class="btn xs g" onclick="act('POST','/notify/weekly-test',undefined,'Haftalık özet örneği gönderildi',false)">Özet örneğini şimdi gönder</button></div>` : ''}
        ${j.mail ? '' : '<p class="muted" style="font-size:12.5px">Sunucuda e-posta gönderimi henüz ayarlı değil; uyarılar şimdilik yalnız burada görünür.</p>'}` : ''}
        <div class="list mt">${(j.alerts || []).length ? j.alerts.slice(0, 12).map(a => `<div class="it"><span class="dot ${a.kind === 'online' ? 'on' : ''}"></span><div class="b"><b>${esc(a.text)}</b><span>${new Date(a.at).toLocaleString(I18N.locale, { dateStyle: 'short', timeStyle: 'short' })}</span></div></div>`).join('') + `<div class="row end"><button class="btn xs g" onclick="act('DELETE','/alerts',undefined,'Temizlendi',false).then(drawDevStatus)">Temizle</button></div>` : '<div class="muted">Uyarı yok.</div>'}</div>`)
     + `</div>`;
 }
-const saveNotify = () => act('PUT', '/notify', { email: $('nt-mail').value.trim(), offline: $('nt-off').checked, online: $('nt-on').checked, offlineMin: $('nt-offmin') ? +$('nt-offmin').value : undefined }, 'Uyarı ayarları kaydedildi', false);
+const saveNotify = () => act('PUT', '/notify', { email: $('nt-mail').value.trim(), offline: $('nt-off').checked, online: $('nt-on').checked, offlineMin: $('nt-offmin') ? +$('nt-offmin').value : undefined, weekly: $('nt-wk') ? $('nt-wk').checked : undefined }, 'Uyarı ayarları kaydedildi', false);
 async function snapDev(id) {
   const box = $('snapbox'); box.innerHTML = '<p class="muted">Ekran görüntüsü isteniyor…</p>';
   try { await req('POST', `/devices/${id}/snapshot`); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
@@ -1241,6 +1292,7 @@ SECTIONS.stats = {
       + stat((active ? hrs(j.totals.online / active) : '0') + ' ' + T('saat'), 'Açık olduğu günlerde ortalama')
       + stat(pk.v ? `${wd(pk.d)} ${hh(pk.h)}` : '—', 'İçeriklerin en çok gösterildiği zaman')
       + `</div>`
+      + impactCard(j, nf)
       + card('Günlük ekran süresi', 'Saat cinsinden; bağlı tüm kutuların toplamı.', `<div class="bars" role="img" aria-label="Günlük ekran süresi grafiği">${j.daily.map(d => `<div title="${new Date(d.day + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' })}: ${hrs(d.online)} saat, ${d.plays} oynatma"><i style="height:${Math.round(d.online / max * 100)}%"></i></div>`).join('')}</div>
         <div class="row" style="justify-content:space-between;font-size:12px" class="muted"><span class="muted">${fmtD(j.daily[0].day)}</span><span class="muted">${fmtD(j.daily[j.daily.length - 1].day)}</span></div>`)
       + card('QR okutmaları', 'Bağlantı QR\'ları ve kampanya QR\'ı kaç kez okutuldu. Aynı telefonun kısa sürede tekrar açması ve bot ziyaretleri sayılmaz; kişisel bilgi saklanmaz.', j.qr.length ? `<div class="list">${j.qr.map(qrRow).join('')}</div>` : '<div class="empty">Henüz QR kod yok. QR Kodlar sayfasından ekleyin.</div>')
@@ -1250,6 +1302,88 @@ SECTIONS.stats = {
       + card('İçerikler', 'En çok oynayandan aza.', j.items.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>İçerik</th><th>Tür</th><th>Oynatma</th><th>Toplam süre</th><th>Son</th></tr></thead><tbody>${j.items.slice(0, 50).map(it => `<tr><td>${esc(it.name)}</td><td>${{ video: 'Video', image: 'Fotoğraf', poster: 'Afiş', instagram: 'Instagram', trailer: 'Fragman', gone: '—' }[it.type] || it.type}</td><td>${it.plays.toLocaleString(I18N.locale)}</td><td>${it.sec ? (it.sec >= 3600 ? hrs(it.sec / 60) + ' sa' : Math.round(it.sec / 60) + ' dk') : '—'}</td><td>${fmtD(it.last)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>');
   },
 };
+
+// Kampanya etkisi: gösterim → QR okutma. Oran düşükse kartın metni/teklifi, yüksekse saati ve sıklığı yorumlanır.
+function impactCard(j, nf) {
+  const L = j.impact || [];
+  const KIND = { camp: 'Kampanya kartı', poster: 'QR\'lı afiş', ad: 'Reklam' };
+  const T = I18N.t, hh = h => String(h).padStart(2, '0') + ':00';
+  const trend = x => { if (!x.prevScans) return x.scans ? '<span class="muted">yeni</span>' : ''; const p = Math.round((x.scans - x.prevScans) / x.prevScans * 100); return p ? `<b class="dl ${p > 0 ? 'up' : 'dn'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p)}%</b>` : '<span class="muted">aynı</span>'; };
+  const rates = L.filter(x => x.shown >= 20 && x.rate != null), avg = rates.length ? rates.reduce((a, x) => a + x.rate, 0) / rates.length : null;
+  const verdict = x => {
+    if (x.kind !== 'camp' && !x.tracked) return '<span class="muted">QR yok; yalnız gösterim sayılır</span>';
+    if (x.shown < 20) return '<span class="muted">Yorum için daha fazla gösterim gerekiyor</span>';
+    if (!x.scans) return '<span style="color:#e6a23c">Hiç okutulmadı: teklifi güçlendirin (ör. "ilk siparişe ikram") ya da QR\'ı büyütün</span>';
+    if (avg && x.rate >= avg * 1.5) return `<span style="color:var(--ok,#3fb27f)">Çok iyi çalışıyor${x.peakHour >= 0 ? ` · en çok ${hh(x.peakHour)} civarı` : ''}</span>`;
+    if (avg && x.rate <= avg * 0.5) return '<span style="color:#e6a23c">Ortalamanın altında: başlığı kısaltın, teklifi öne çıkarın</span>';
+    return `<span class="muted">Ortalama${x.peakHour >= 0 ? ` · en çok ${hh(x.peakHour)} civarı` : ''}</span>`;
+  };
+  const body = L.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>İçerik</th><th>Tür</th><th>Gösterim</th><th>QR okutma</th><th>100 gösterimde</th><th>Önceki döneme göre</th><th>Yorum</th></tr></thead><tbody>${L.map(x => `<tr><td><b>${esc(x.name)}</b>${x.enabled === false ? ' <span class="muted">· kapalı</span>' : ''}</td><td>${KIND[x.kind] || ''}</td><td>${nf(x.shown)}</td><td>${x.kind === 'camp' || x.tracked ? nf(x.scans) : '—'}</td><td>${x.rate != null && (x.kind === 'camp' || x.tracked) ? String(x.rate).replace('.', ',') : '—'}</td><td>${x.kind === 'camp' || x.tracked ? trend(x) : ''}</td><td style="min-width:220px">${verdict(x)}</td></tr>`).join('')}</tbody></table></div>`
+    + (avg != null ? `<p class="muted" style="font-size:12.5px;margin:10px 0 0">Ortalama: 100 gösterimde ${avg.toFixed(1).replace('.', ',')} okutma. Kampanya kartlarının gösterim sayımı bu sürümle başladı; eski günler için gösterim sıfır görünebilir.</p>` : '')
+    : `<div class="empty">Henüz ölçülecek kampanya yok. <a href="#promo">Duyurular</a> sayfasından kampanya kartını açın ya da <a href="#media/posters">Fotoğraftan afiş</a> ile QR'lı bir afiş hazırlayın; ekranda kaç kez göründüğü ve QR'ının kaç kez okutulduğu burada karşılaştırılır.</div>`;
+  return card('Kampanya etkisi', 'Her kampanya ekranda kaç kez göründü ve müşteriler QR\'ını kaç kez okuttu. "100 gösterimde" sütunu kampanyaları birbiriyle karşılaştırmanın en adil yolu.', body);
+}
+
+/* ================= REKLAMLAR (ekran alanı satışı) ================= */
+let ADS = null;
+const AD_ST = { live: ['Yayında', 'on'], waiting: ['Başlamadı', ''], ended: ['Sona erdi', ''], paused: ['Durduruldu', ''], empty: ['Görsel bekleniyor', ''] };
+SECTIONS.ads = {
+  html() {
+    return head('Reklamlar', 'Ekranınızın bir kısmını başka işletmelere satın: reklamları belirlediğiniz gün, saat ve sıklıkta yayınlanır; reklam verene gösterim raporu bağlantısı gönderirsiniz.', owner() ? '<button class="btn" onclick="adEdit()">＋ Reklam ekle</button>' : '')
+      + lock('Reklam alanı')
+      + '<div id="adv"><div class="loading">Yükleniyor…</div></div>';
+  },
+  async after() {
+    try { ADS = (await req('GET', '/ads')).ads; } catch (e) { $('adv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+    const nf = n => Number(n || 0).toLocaleString(I18N.locale);
+    const items = a => S.db.videos.filter(v => v.ad === a.id);
+    const tile = v => `<div class="adc"><div class="th" onclick="${v.design ? `openStudio('${v.id}')` : `pvMedia(${S.db.videos.indexOf(v)})`}">${v.type === 'video' ? `<video src="${S.me.upBase}${v.file}#t=0.5" preload="metadata" muted></video>` : `<img src="${S.me.upBase}${v.file}" loading="lazy" alt="">`}${v.status === 'processing' && !v.reopt ? '<span class="ty">Hazırlanıyor</span>' : ''}${v.qrCode ? '<span class="ty">QR</span>' : ''}</div><div class="m"><span title="${esc(v.name)}">${esc(v.name)}</span><button class="btn xs ${v.hidden ? 'd' : 'g'}" onclick="togHide('${v.id}')" title="Geçici olarak durdur">${v.hidden ? 'Kapalı' : 'Açık'}</button><button class="btn xs d" onclick="delMedia('${v.id}')">✕</button></div></div>`;
+    const adCard = a => {
+      const st = AD_ST[a.status] || ['', ''], its = items(a);
+      return `<div class="card"><div class="ch"><div><h3>${esc(a.name)} <span class="adst ${st[1]}">${st[0]}</span></h3><p>${esc(schText(a.sch))} · her ${a.every || 4} içerikte bir${a.fee ? ' · ' + esc(a.fee) : ''}${a.contact ? ' · ' + esc(a.contact) : ''}</p></div>
+        ${owner() ? `<div class="row"><button class="btn xs g" onclick="adEdit('${a.id}')">Düzenle</button><button class="btn xs g" onclick="adPause('${a.id}',${!a.paused})">${a.paused ? 'Devam ettir' : 'Durdur'}</button><button class="btn xs d" onclick="adDel('${a.id}')">Sil</button></div>` : ''}</div>
+        <div class="cb"><div class="grid g3" style="margin-bottom:14px"><div class="stat"><b>${nf(a.last30.shown)}</b><span>Son 30 günde gösterim</span></div><div class="stat"><b>${nf(a.last30.scans)}</b><span>QR okutma</span></div><div class="stat"><b>${its.length}</b><span>Görsel / video</span></div></div>
+        <div class="adg">${its.map(tile).join('')}
+          <label class="adc add"><input type="file" multiple accept="video/*,image/*" hidden onchange="adUp('${a.id}',this.files)"><b>＋ Dosya yükle</b><span class="muted">Görsel ya da video</span></label>
+          <button class="adc add" onclick="openStudio(null,{ad:'${a.id}',fields:{title:${esc(JSON.stringify(a.name))}}})"><b>📷 Fotoğraftan hazırla</b><span class="muted">QR'lı reklam görseli</span></button></div>
+        ${a.note ? `<p class="muted" style="font-size:13px;margin:12px 0 0">${esc(a.note)}</p>` : ''}
+        <div class="row mt" style="align-items:center;flex-wrap:wrap"><span class="muted" style="flex:1;min-width:220px;font-size:13px">Reklam verene bu bağlantıyı gönderin: gösterim sayısını ve QR okutmalarını giriş yapmadan görür.</span>
+          <button class="btn xs g" onclick="adCopy('${a.id}')">🔗 Rapor bağlantısını kopyala</button><a class="btn xs g" href="${esc(a.url)}" target="_blank" rel="noopener">Raporu aç</a>${owner() ? `<button class="btn xs g" title="Eski bağlantı çalışmaz olur" onclick="adToken('${a.id}')">Yeni bağlantı</button>` : ''}</div></div></div>`;
+    };
+    $('adv').innerHTML = (ADS.length ? ADS.map(adCard).join('') : card('Nasıl çalışır?', '', `<ol class="adhow"><li><b>Reklam ekleyin:</b> reklam verenin adı, anlaştığınız ücret, başlangıç ve bitiş günü, hangi saatlerde ve ne sıklıkla çıkacağı.</li><li><b>Görselini yükleyin</b> ya da fotoğrafından birkaç saniyede reklam görseli hazırlayın; isterseniz okutmaları sayılan bir QR ekleyin.</li><li><b>Rapor bağlantısını gönderin:</b> reklam veren kaç kez gösterildiğini ve QR okutmalarını kendisi takip eder. Bitiş günü gelince reklam kendiliğinden kalkar.</li></ol>
+        <p class="muted" style="font-size:13px">Kimlere satabilirsiniz? Yakındaki emlakçı, oto yıkama, kuaför, spor salonu, dershane, yerel etkinlikler… Spor barda maç saatleri en değerli zamandır; bu saatler için ayrı fiyat verebilirsiniz.</p>
+        ${owner() ? '<div class="row end"><button class="btn" onclick="adEdit()">＋ İlk reklamı ekle</button></div>' : ''}`));
+  },
+};
+function adEdit(id) {
+  const a = id ? ADS.find(x => x.id === id) : { every: 4 }, sc = a.sch || {}, d = new Set(sc.days || []);
+  openModal(`<h3 style="margin:0 0 12px">${id ? 'Reklamı düzenle' : 'Yeni reklam'}</h3>
+    <div class="f">${fl('Reklam veren', `<input type="text" id="ad-n" maxlength="60" value="${esc(a.name || '')}" placeholder="Örn. Güneş Emlak">`)}${fl('İletişim (isteğe bağlı)', `<input type="text" id="ad-c" maxlength="80" value="${esc(a.contact || '')}" placeholder="Telefon ya da e-posta">`)}</div>
+    <div class="f">${fl('Ücret (kendi notunuz)', `<input type="text" id="ad-fee" maxlength="40" value="${esc(a.fee || '')}" placeholder="Örn. Aylık 1.500 ₺">`)}${fl('Sıklık', `<select id="ad-ev">${[2, 3, 4, 5, 6, 8, 10, 15, 20].map(n => `<option value="${n}"${n === (a.every || 4) ? ' selected' : ''}>Her ${n} içerikte bir</option>`).join('')}</select>`)}</div>
+    <div class="f">${fl('İlk gün', `<input type="date" id="ad-s" value="${sc.start || ''}">`)}${fl('Son gün', `<input type="date" id="ad-e" value="${sc.end || ''}">`)}</div>
+    <div class="fl"><span>Günler</span><div class="chips" id="sc-days">${DAYS.map((n, i) => `<span class="chip ${d.has(i + 1) ? 'on' : ''}" data-d="${i + 1}" onclick="this.classList.toggle('on')">${n}</span>`).join('')}<span class="chip" onclick="schPick([1,2,3,4,5])">Hafta içi</span><span class="chip" onclick="schPick([6,7])">Hafta sonu</span></div></div>
+    <div class="f">${fl('Başlangıç saati', `<input type="time" id="ad-f" value="${sc.from || ''}">`)}${fl('Bitiş saati', `<input type="time" id="ad-t" value="${sc.to || ''}">`)}</div>
+    <p class="muted" style="font-size:12.5px;margin:0 0 10px">Boş bırakılan alanlar sınır koymaz. Son gün geçince reklam kendiliğinden kalkar.</p>
+    ${fl('Not (isteğe bağlı)', `<input type="text" id="ad-no" maxlength="200" value="${esc(a.note || '')}" placeholder="Örn. Ödeme ayın 1'inde">`)}
+    <div class="row mt end"><button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" onclick="adSave(${id ? `'${id}'` : ''})">${id ? 'Kaydet' : 'Reklamı ekle'}</button></div>`);
+}
+async function adSave(id) {
+  const name = $('ad-n').value.trim(); if (!name) return toast('Reklam verenin adını yazın', true);
+  const days = [...document.querySelectorAll('#sc-days [data-d].on')].map(x => +x.dataset.d), from = $('ad-f').value, to = $('ad-t').value, start = $('ad-s').value, end = $('ad-e').value;
+  if ((from && !to) || (!from && to)) return toast('Saat aralığı için başlangıç ve bitiş saatinin ikisini de girin', true);
+  if (start && end && end < start) return toast('Son gün ilk günden önce olamaz', true);
+  const sch = {}; if (days.length && days.length < 7) sch.days = days; if (from) { sch.from = from; sch.to = to; } if (start) sch.start = start; if (end) sch.end = end;
+  const body = { name, contact: $('ad-c').value, fee: $('ad-fee').value, every: +$('ad-ev').value, note: $('ad-no').value, sch: Object.keys(sch).length ? sch : null };
+  try { await req(id ? 'PUT' : 'POST', id ? '/ads/' + id : '/ads', body); toast(id ? 'Reklam kaydedildi' : 'Reklam eklendi; şimdi görselini yükleyin'); closeModal(); refresh(); } catch (e) { toast(e.message, true); }
+}
+const adPause = (id, v) => act('PUT', '/ads/' + id, { paused: v }, v ? 'Reklam durduruldu' : 'Reklam yeniden yayında');
+const adDel = id => { const a = ADS.find(x => x.id === id); if (confirm(`"${a.name}" reklamı ve görselleri silinsin mi?`)) act('DELETE', '/ads/' + id, undefined, 'Reklam silindi'); };
+const adToken = id => { if (confirm('Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz.')) act('POST', `/ads/${id}/token`, undefined, 'Yeni bağlantı oluşturuldu'); };
+async function adCopy(id) { const a = ADS.find(x => x.id === id); try { await navigator.clipboard.writeText(a.url); toast('Bağlantı kopyalandı'); } catch (e) { prompt('Bağlantıyı kopyalayın:', a.url); } }
+async function adUp(id, files) {
+  if (!files || !files.length) return; const fd = new FormData(); for (const f of files) fd.append('files', f);
+  toast('Yükleniyor…'); try { await req('POST', `/ads/${id}/media`, fd); toast('Yüklendi; hazır olunca yayına girer'); refresh(); } catch (e) { toast(e.message, true); }
+}
 
 /* ================= MÜZİK (Spotify, YouTube Music, radyo; telefondan uzaktan kumanda) ================= */
 const MUSIC_PRESETS = [

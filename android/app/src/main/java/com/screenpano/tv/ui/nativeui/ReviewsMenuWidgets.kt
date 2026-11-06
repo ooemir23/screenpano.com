@@ -12,6 +12,7 @@ import android.os.Looper
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextUtils
+import android.text.style.StrikethroughSpan
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -119,7 +120,7 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
     private var currency = "₺"
     private var lastW = 0; private var lastH = 0
 
-    private class Row(val cat: String?, val name: String = "", val desc: String = "", val price: String = "")
+    private class Row(val cat: String?, val name: String = "", val desc: String = "", val price: String = "", val was: String = "")
 
     private val rotate = object : Runnable { override fun run() { idx++; showPage(); main.postDelayed(this, 12_000) } }
     private val recheck = object : Runnable { override fun run() { markDirty(); main.postDelayed(this, 30_000) } }
@@ -198,7 +199,9 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
                 val kcal = it.optString("kcal").takeIf { k -> k.isNotEmpty() && k != "null" }
                 val desc = it.optString("desc").let { d -> if (d == "null") "" else d }
                 val sub = listOfNotNull(desc.takeIf { d -> d.isNotEmpty() }, kcal?.let { k -> "🔥 $k" }).joinToString(" · ")
-                out.add(Row(null, it.optString("name"), sub, if (it.optBoolean("off")) "Tükendi" else fmtPrice(it.optString("price"))))
+                val off = it.optBoolean("off")
+                val was = it.optString("was").let { w -> if (off || w == "null") "" else w } // indirim saati: eski fiyat üstü çizili
+                out.add(Row(null, it.optString("name"), sub, if (off) "Tükendi" else fmtPrice(it.optString("price")), if (was.isNotEmpty()) fmtPrice(was) else ""))
             }
         }
         return out
@@ -218,7 +221,15 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
         }
         row.addView(TextView(context).apply { text = nm; includeFontPadding = false }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { })
         row.addView(DotsView(context, Color.argb(71, 255, 255, 255), max(1f, vh * 0.2f)), LayoutParams(0, (vh * 2.2f).toInt(), 1f).apply { leftMargin = (vh * 0.6f).toInt(); rightMargin = (vh * 0.6f).toInt() })
-        row.addView(TextView(context).apply { text = r.price; setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2.6f); setTextColor(pal.accent2); typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); includeFontPadding = false; setSingleLine(true) })
+        val pr = SpannableStringBuilder().apply {
+            if (r.was.isNotEmpty()) {
+                append(r.was); setSpan(RunSpan(vh * 1.8f, pal.mute, false, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(StrikethroughSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append("  ")
+            }
+            val a = length; append(r.price); setSpan(RunSpan(vh * 2.6f, pal.accent2, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        // fiyat eskisi gibi gerçek kalın yazı tipiyle (RunSpan'ın sahte kalını değil)
+        row.addView(TextView(context).apply { text = pr; setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2.6f); setTextColor(pal.accent2); typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); includeFontPadding = false; setSingleLine(true) })
         return row
     }
 
@@ -227,7 +238,7 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
         if (body.width <= 0 || body.height <= 0 || p == null) return
         dirty = false; lastW = body.width; lastH = body.height
         val all = rows()
-        val k = all.joinToString("¦") { (it.cat ?: "") + "|" + it.name + "|" + it.desc + "|" + it.price } + "#" + lastW + "x" + lastH + "#" + title.text + currency
+        val k = all.joinToString("¦") { (it.cat ?: "") + "|" + it.name + "|" + it.desc + "|" + it.price + "|" + it.was } + "#" + lastW + "x" + lastH + "#" + title.text + currency
         if (k == key) return
         key = k
         main.removeCallbacks(rotate)

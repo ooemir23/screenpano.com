@@ -70,6 +70,49 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     res.json({ ok: true, file: f.filename, url: req.t.upBase + f.filename });
   });
 
+  // ================= REKLAM ALANI =================
+  require('./ads').routes(r, { changed, upload, quota, ownerOnly, rmUpload });
+
+  // ================= FOTOĞRAFTAN AFİŞ (stüdyo) =================
+  // Afiş panelde (tarayıcıda) 1920x1080 JPG olarak çizilir ve fotoğraf gibi medyaya girer: eski ve yeni TV
+  // uygulamalarında aynı görünür. Tasarım (yazılar, düzen, renkler, kaynak fotoğraf) yeniden düzenlemek için saklanır.
+  // QR eklenirse içine kısa adres yazılır (okutma sayılır, Kampanya etkisi raporunda görünür).
+  const QRT = require('./qrtrack');
+  const LAYOUTS = ['tam', 'bolunmus', 'cerceve', 'vitrin'];
+  const codeFree = (code, id) => { for (const t of tenants.all()) { if ((t.db.qrs || []).some(q => q.code === code) || (t.db.campaigns || []).some(c => c.code === code) || (t.db.videos || []).some(v => v.qrCode === code && v.id !== id)) return false; } return true; };
+  r.post('/studio/qr', async (req, res) => {
+    const url = s((req.body || {}).url, 300), old = s((req.body || {}).code, 12);
+    if (!QRT.isUrl(url)) return res.status(400).json({ error: 'Geçerli bir web adresi (https://...) girin' });
+    const code = /^[a-z0-9]{5,12}$/.test(old) ? old : QRT.newCode();
+    const png = await require('qrcode').toDataURL(QRT.trackUrl(code), { margin: 1, errorCorrectionLevel: 'M', width: 480, color: { dark: '#14100c', light: '#ffffff' } });
+    res.json({ ok: true, code, png });
+  });
+  r.post('/studio', quota, upload.single('file'), (req, res) => {
+    const t = req.t, f = req.file;
+    let m; try { m = JSON.parse((req.body || {}).meta || '{}'); } catch { m = {}; }
+    if (!f || !/^image\/(jpeg|png)$/.test(f.mimetype)) { if (f) rmUpload(t, f.filename); return res.status(400).json({ error: 'Afiş görseli alınamadı' }); }
+    const d = m.design || {}, fields = {};
+    for (const [k, n] of Object.entries({ badge: 24, title: 90, sub: 120, price: 20, note: 140, qrLabel: 40 })) if (typeof (d.fields || {})[k] === 'string') fields[k] = d.fields[k].slice(0, n);
+    const hexc = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : undefined;
+    const design = { layout: LAYOUTS.includes(d.layout) ? d.layout : 'tam', fields, colors: d.colors && { bg: hexc(d.colors.bg), accent: hexc(d.colors.accent), text: hexc(d.colors.text) }, palette: d.palette === 'theme' ? 'theme' : 'photo', photo: /^[\w.-]+$/.test(d.photo || '') ? d.photo : undefined, qrUrl: QRT.isUrl(d.qrUrl) ? s(d.qrUrl, 300) : undefined };
+    let v = m.id && t.db.videos.find(x => x.id === m.id && x.design);
+    if (v) {
+      if (v.file) rmUpload(t, v.file);
+      if (v.design.photo && v.design.photo !== design.photo) rmUpload(t, v.design.photo);
+      Object.assign(v, { file: f.filename, status: 'processing', optimized: false, reopt: true }); // reopt: küçültülürken de ekranda kalır
+    } else {
+      v = { id: auth.uid(), file: f.filename, type: 'image', status: 'processing', reopt: true };
+      if (m.ad && (t.db.ads || []).some(a => a.id === m.ad)) v.ad = m.ad; // reklam görseli olarak hazırlandıysa
+      t.db.videos.push(v);
+    }
+    v.name = s(m.name, 80) || fields.title || 'Afiş'; v.design = design;
+    const code = s(m.qrCode, 12);
+    if (design.qrUrl && /^[a-z0-9]{5,12}$/.test(code) && codeFree(code, v.id)) { v.qrCode = code; v.qrUrl = design.qrUrl; QRT.register(code, t.id, v.id, 'media'); }
+    else { delete v.qrCode; delete v.qrUrl; }
+    require('./media').enqueue(t.id, v.id);
+    changed(t); res.json({ ok: true, id: v.id });
+  });
+
   // ================= DURUM İZLEME VE UYARILAR =================
   r.get('/devices/status', (req, res) => {
     const online = hub.onlineDeviceIds();
@@ -84,7 +127,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const b = req.body || {}, email = s(b.email, 120);
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi girin' });
     const om = Math.round(Number(b.offlineMin));
-    req.t.db.notify = { email, offline: b.offline !== false, online: b.online !== false, offlineMin: om >= 1 && om <= 1440 ? om : undefined };
+    const old = req.t.db.notify || {};
+    req.t.db.notify = { email, offline: b.offline !== false, online: b.online !== false, offlineMin: om >= 1 && om <= 1440 ? om : undefined, weekly: typeof b.weekly === 'boolean' ? b.weekly : !!old.weekly, weeklyAt: old.weeklyAt };
     changed(req.t); res.json({ ok: true });
   });
   r.post('/notify/test', ownerOnly, async (req, res) => {
@@ -94,6 +138,15 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const ok = await monitor.sendMail(n.email, `${config.BRAND}: deneme bildirimi`, `${req.t.name} için uyarılar bu adrese gelecek.`);
     ok ? res.json({ ok: true }) : res.status(502).json({ error: 'E-posta gönderilemedi' });
   });
+  // haftalık özetin şimdi bir örneğini gönder
+  r.post('/notify/weekly-test', ownerOnly, async (req, res) => {
+    const n = req.t.db.notify || {};
+    if (!monitor.mailEnabled()) return res.status(400).json({ error: 'E-posta gönderimi sunucuda ayarlı değil (SMTP)' });
+    if (!n.email) return res.status(400).json({ error: 'Önce e-posta adresinizi kaydedin' });
+    const ok = await monitor.sendMail(n.email, `${config.BRAND}: haftalık özet · ${req.t.name}`, require('./weekly').text(req.t));
+    ok ? res.json({ ok: true }) : res.status(502).json({ error: 'E-posta gönderilemedi' });
+  });
+  r.get('/notify/weekly-preview', (req, res) => res.type('text/plain; charset=utf-8').send(require('./weekly').text(req.t)));
   r.post('/devices/:id/snapshot', (req, res) => {
     const d = store.q.devicesOf.all(req.t.id).find(x => x.id === req.params.id); if (!d) return res.status(404).json({ error: 'bulunamadı' });
     const n = hub.sendDevice(d.id, { type: 'snap' });

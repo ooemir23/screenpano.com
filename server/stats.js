@@ -23,7 +23,13 @@ function scan(tid, key, dev) {
   store.q.statAdd.run(tid, day, 'qrd', key + ':' + d, 1);
 }
 // Özel kartların ekranda gösterilme sayısı: kampanya kartı, büyük maç kartı, gol bildirimi
-function shown(tid, kind) { if (tid && ['camp', 'big', 'goal'].includes(kind)) store.q.statAdd.run(tid, dayOf(), 'shown', kind, 1); }
+// id verilirse (kampanya kartı) kart bazında da sayılır: kampanya etkisi raporu gösterim/okutma oranını buradan hesaplar
+function shown(tid, kind, id) {
+  if (!tid || !['camp', 'big', 'goal'].includes(kind)) return;
+  const day = dayOf();
+  store.q.statAdd.run(tid, day, 'shown', kind, 1);
+  if (id && /^[\w-]{1,40}$/.test(id)) store.q.statAdd.run(tid, day, 'shownid', kind + ':' + id, 1);
+}
 // Kesinti: cihazın bağlantısı koptu, 2 dakikadan uzun sürede geri geldi
 const downAt = new Map();
 function deviceDown(tid, deviceId) { downAt.set(deviceId, Date.now()); }
@@ -41,9 +47,11 @@ function summary(t, days = 30) {
   const daily = {}; for (let i = days - 1; i >= 0; i--) daily[shiftDay(i)] = { online: 0, plays: 0, sec: 0, scans: 0, drops: 0, dropsec: 0 };
   const items = {}, prev = { online: 0, plays: 0, scans: 0, drops: 0, dropsec: 0 }, shown = { camp: 0, big: 0, goal: 0 };
   const heat = Array.from({ length: 7 }, () => new Array(24).fill(0));
+  const shownId = {}, prevQr = {};
   const qr = {}; const Q = id => qr[id] || (qr[id] = { scans: 0, daily: {}, hours: new Array(24).fill(0), dev: { ios: 0, android: 0, other: 0 } });
   for (const r of rows) {
     if (r.day < from) { // önceki dönem: yalnız toplamlar
+      if (r.kind === 'qr') prevQr[r.key] = (prevQr[r.key] || 0) + r.value;
       if (r.kind === 'online') prev.online += r.value; else if (r.kind === 'play') prev.plays += r.value; else if (r.kind === 'qr') prev.scans += r.value; else if (r.kind === 'drop') prev.drops += r.value; else if (r.kind === 'dropsec') prev.dropsec += r.value;
       continue;
     }
@@ -54,6 +62,7 @@ function summary(t, days = 30) {
     else if (r.kind === 'qrh') { const [id, h] = r.key.split(/:(?=\d\d$)/); Q(id).hours[Number(h)] += r.value; }
     else if (r.kind === 'qrd') { const m = /^(.*):(ios|android|other)$/.exec(r.key); if (m) Q(m[1]).dev[m[2]] += r.value; }
     else if (r.kind === 'shown') { if (r.key in shown) shown[r.key] += r.value; }
+    else if (r.kind === 'shownid') shownId[r.key] = (shownId[r.key] || 0) + r.value;
     else if (r.kind === 'drop') d.drops += r.value;
     else if (r.kind === 'dropsec') d.dropsec += r.value;
     else {
@@ -77,7 +86,22 @@ function summary(t, days = 30) {
   }
   for (const c of t.db.campaigns || []) if (c.code) { const s = qr['camp:' + c.id] || Q('camp:' + c.id); qrList.push({ id: c.id, label: c.headline || 'Kampanya', kind: 'camp', tracked: true, enabled: !!c.enabled, scans: s.scans, daily: dayList.map(d => s.daily[d] || 0), hours: s.hours, dev: s.dev }); }
   const tot = Object.values(daily).reduce((a, d) => ({ online: a.online + d.online, plays: a.plays + d.plays, sec: a.sec + d.sec, scans: a.scans + d.scans, drops: a.drops + d.drops, dropsec: a.dropsec + d.dropsec }), { online: 0, plays: 0, sec: 0, scans: 0, drops: 0, dropsec: 0 });
-  return { days, from, daily: Object.entries(daily).map(([day, v]) => ({ day, ...v })), items: list, totals: tot, prev, heat, qr: qrList, shown };
+  return { days, from, daily: Object.entries(daily).map(([day, v]) => ({ day, ...v })), items: list, totals: tot, prev, heat, qr: qrList, shown, impact: impact(t, items, qr, shownId, prevQr, dayList) };
+}
+// Kampanya etkisi: ekranda kaç kez göründü, QR'ı kaç kez okutuldu, 100 gösterimde kaç okutma.
+// Kampanya kartları, QR'lı afişler (afiş stüdyosu) ve reklamlar; önceki döneme göre okutma değişimi.
+function impact(t, items, qr, shownId, prevQr, dayList) {
+  const out = [];
+  const row = (o, key) => { const s = qr[key] || { scans: 0, daily: {}, hours: new Array(24).fill(0) }, ph = s.scans ? s.hours.indexOf(Math.max(...s.hours)) : -1;
+    out.push({ ...o, scans: s.scans, prevScans: prevQr[key] || 0, rate: o.shown ? Math.round(s.scans / o.shown * 1000) / 10 : null, peakHour: ph, daily: dayList.map(d => s.daily[d] || 0) }); };
+  for (const c of t.db.campaigns || []) if (c.code) row({ id: c.id, kind: 'camp', name: c.headline || 'Kampanya kartı', enabled: !!c.enabled, shown: shownId['camp:' + c.id] || 0 }, 'camp:' + c.id);
+  const ads = new Map((t.db.ads || []).map(a => [a.id, a]));
+  for (const v of t.db.videos || []) {
+    if (!v.qrCode && !v.ad) continue;
+    const it = items[v.id] || { plays: 0, sec: 0 }, a = v.ad && ads.get(v.ad);
+    row({ id: v.id, kind: a ? 'ad' : 'poster', name: a ? `${a.name} · ${v.name}` : v.name, enabled: !v.hidden, shown: it.plays, sec: it.sec, tracked: !!v.qrCode }, 'm:' + v.id);
+  }
+  return out.sort((a, b) => b.scans - a.scans || b.shown - a.shown);
 }
 // Süper yönetim: tüm platformun günlük toplamı ve işletme bazında özet
 function platform(days = 30) {
@@ -109,4 +133,4 @@ function csv(t, days = 30) {
 function purge() { store.q.statPurge.run(shiftDay(400)); }
 function start() { setInterval(purge, 24 * 3600 * 1000); setTimeout(purge, 60000); }
 
-module.exports = { play, online, scan, shown, deviceDown, deviceUp, summary, platform, csv, start, dayOf };
+module.exports = { impact, shiftDay, play, online, scan, shown, deviceDown, deviceUp, summary, platform, csv, start, dayOf };
