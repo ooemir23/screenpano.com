@@ -18,8 +18,8 @@ android {
         applicationId 'com.screenpano.tv'
         minSdk 21
         targetSdk 34
-        versionCode 70
-        versionName '3.19.1'
+        versionCode 71
+        versionName '3.19.2'
         buildConfigField 'String', 'BASE_URL', "\"${baseUrl}\""
         resValue 'string', 'app_name', appName
     }
@@ -42,7 +42,9 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            // R8: kullanılmayan kütüphane kodu atılır (daha küçük DEX: zayıf kutuda daha hızlı açılış, daha az bellek)
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (ksFile.exists()) signingConfig signingConfigs.release
         }
     }
