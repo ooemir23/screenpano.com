@@ -12,8 +12,8 @@ const { createTenant, DAY } = require('./accounts');
 
 const r = express.Router();
 r.use((req, res, next) => {
-  const u = auth.sessionUser(req);
-  if (!u || u.role !== 'super') return res.status(401).json({ error: 'Süper yönetici girişi gerekli' });
+  const u = auth.superUser(req);
+  if (!u) return res.status(401).json({ error: 'Süper yönetici girişi gerekli' });
   req.user = u; next();
 });
 
@@ -25,7 +25,7 @@ r.get('/overview', (req, res) => {
   const online = hub.onlineDeviceIds();
   const list = tenants.all().map(t => {
     const devs = store.q.devicesOf.all(t.id), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
-    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, canTest: !!t.db.canTest, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0 };
+    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0 };
   });
   const settings = Object.fromEntries(SETTINGS.map(k => [k, store.setting(k)]));
   settings.traffic_secret = require('./feeds').trafficSecret();
@@ -100,6 +100,7 @@ r.put('/tenants/:id', (req, res) => {
   const ids = b.applyOrg && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
   // sınırsız (kendi işletmem): süre ve limit yok; zincirde istenirse tüm şubelere
   if (typeof b.canTest === 'boolean') { if (b.canTest) t.db.canTest = true; else delete t.db.canTest; tenants.save(t); hub.pushTenant(t.id); }
+  if (typeof b.superAccess === 'boolean') for (const id of [t.id]) { const x = tenants.get(id); if (x) { if (b.superAccess) x.db.superAccess = true; else delete x.db.superAccess; tenants.save(x); } }
   if (typeof b.unlimited === 'boolean') for (const id of ids) { const x = tenants.get(id); if (x) { if (b.unlimited) x.db.unlimited = true; else delete x.db.unlimited; tenants.save(x); } }
   if (b.devices !== undefined && b.devices !== '') {
     const nd = Math.max(1, Math.min(999, Number(b.devices) || 1));

@@ -491,7 +491,9 @@ r.post('/backups/:name/restore', ownerOnly, (req, res) => {
     const parsed = JSON.parse(fs.readFileSync(path.join(t.dirs.backups, req.params.name), 'utf8'));
     if (!parsed || !Array.isArray(parsed.videos)) throw new Error('yedek dosyası geçerli değil');
     backupNow(t, 'geri-yukleme-oncesi');
-    t.db = { ...t.db, ...parsed };
+    const keep = {}; for (const k of ['superAccess', 'unlimited', 'canTest', 'deletion', 'consent']) { if (t.db[k] !== undefined) keep[k] = t.db[k]; }
+    for (const k of ['superAccess', 'unlimited', 'canTest']) delete parsed[k]; // yetki alanları yedekten geri gelmez
+    t.db = { ...t.db, ...parsed, ...keep };
     const missing = t.db.videos.filter(v => (v.file || v.image) && !require('./storage').exists(t, v.file || v.image)).length;
     changed(t); res.json({ ok: true, missingFiles: missing });
   } catch (e) { res.status(400).json({ error: e.message }); }

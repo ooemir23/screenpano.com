@@ -39,8 +39,7 @@ auth.subOf = subOf;
 app.use((req, res, next) => {
   if (subOf(req) !== 'sadmin') return next();
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
-  const u = auth.sessionUser(req);
-  if (u && u.role === 'super') return next();
+  if (auth.superOk(auth.sessionUser(req))) return next();
   if (/^\/(panel|music|tv|super)(\/|$)/.test(req.path)) return res.redirect('/login');
   if (req.path.startsWith('/api/') && !/^\/api\/auth\/(login|logout|config)$/.test(req.path)) return res.status(401).json({ error: 'Süper yönetici girişi gerekli' });
   next();
@@ -70,7 +69,7 @@ app.get('/', (req, res, next) => {
     const u = auth.sessionUser(req);
     if (!u) return res.redirect('/login');
     if (sub === 'music') return res.redirect('/music');
-    if (sub === 'sadmin') return res.redirect(u.role === 'super' ? '/super' : '/login');
+    if (sub === 'sadmin') return res.redirect(auth.superOk(u) ? '/super' : '/login');
     return res.redirect(u.role === 'super' && !u.imp ? '/super' : '/panel'); // admin
   }
   next();
@@ -115,7 +114,7 @@ app.get('/login', page('login.html'));
 app.get('/tv', page('tv.html'));
 app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html')(req, res, next) : res.redirect('/login')));
 app.get('/music', (req, res, next) => (auth.sessionUser(req) ? page('panel.html', 'music')(req, res, next) : res.redirect('/login')));
-app.get('/super', (req, res, next) => { const u = auth.sessionUser(req); return u && u.role === 'super' ? page('super.html')(req, res, next) : res.redirect('/login'); });
+app.get('/super', (req, res, next) => { const u = auth.superUser(req); return u ? page('super.html')(req, res, next) : res.redirect('/login'); });
 
 app.use('/api/auth', require('./routes-auth'));
 app.get('/api/oauth/google/callback', require('./youtube').callback); // YouTube hesabı bağlantısı dönüşü

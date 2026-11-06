@@ -221,3 +221,6 @@ dakika geçerli ¦ minutes valid ¦ Minuten gültig ¦ دقيقة صالح
 İşletme çekiliyor… ¦ Pulling business… ¦ Betrieb wird geholt… ¦ جارٍ جلب المنشأة…
 dosya ¦ files ¦ Dateien ¦ ملف
 kullanıcı ¦ users ¦ Benutzer ¦ مستخدم
+
+Süper yönetim yetkisi ¦ Super admin access ¦ Super-Admin-Zugriff ¦ صلاحية الإدارة العليا
+Bu işletmenin sahibi sadmin adresinden süper yönetime de girebilir (tüm işletmeler, yedekler, platform ayarları). Yalnızca kendi işletmeniz için açın. ¦ The owner of this business can also enter super admin from the sadmin address (all businesses, backups, platform settings). Enable only for your own business. ¦ Der Inhaber dieses Betriebs kann sich auch über die sadmin-Adresse im Super-Admin anmelden (alle Betriebe, Backups, Plattformeinstellungen). Nur für den eigenen Betrieb aktivieren. ¦ يمكن لمالك هذه المنشأة الدخول إلى الإدارة العليا من عنوان sadmin (كل المنشآت والنسخ الاحتياطية وإعدادات المنصة). فعّلها لمنشأتك أنت فقط.

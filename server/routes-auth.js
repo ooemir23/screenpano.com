@@ -14,11 +14,11 @@ r.post('/login', async (req, res) => {
   if (auth.tooMany(ip, username)) return res.status(429).json({ error: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin.' });
   const u = store.q.userByName.get(String(username || '').trim());
   if (!u || !(await auth.checkPasswordAsync(password, u.pass))) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
-  if (auth.subOf && auth.subOf(req) === 'sadmin' && u.role !== 'super') { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); } // işletme hesapları süper yönetim adresinden girmez
+  if (auth.subOf && auth.subOf(req) === 'sadmin' && !auth.superOk(u)) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); } // işletme hesapları süper yönetim adresinden girmez
   auth.clearFails(ip, username);
   store.q.userLogin.run(Date.now(), u.id);
   auth.setSession(req, res, u);
-  res.json({ ok: true, role: u.role, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : u.role === 'super' ? '/super' : '/panel' });
+  res.json({ ok: true, role: u.role, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : u.role === 'super' || (auth.subOf(req) === 'sadmin' && auth.superOk(u)) ? '/super' : '/panel' });
 });
 r.post('/logout', (req, res) => { auth.clearSession(res, req); res.json({ ok: true }); });
 r.get('/config', (req, res) => res.json({ env: config.APP_ENV, brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, starters: require('./starters').list().map(({ key, name }) => ({ key, name })) }));
