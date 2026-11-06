@@ -46,6 +46,7 @@ function report(tid, deviceId, s, ip) {
     cached: Math.max(0, Math.round(Number(s.cached) || 0)), cacheMB: Math.max(0, Math.round(Number(s.cacheMB) || 0)),
     online: s.online !== false,
     jank: s.jank && typeof s.jank === 'object' ? { fps: Math.max(0, Math.round(Number(s.jank.fps) || 0)), drops: Math.max(0, Math.round(Number(s.jank.drops) || 0)) } : undefined, mem: Math.round(Number(s.mem) || 0) || undefined,
+    fx: [0, 1, 2].includes(Number(s.fx)) ? Number(s.fx) : undefined, fxAuto: s.fxAuto === true || undefined, weak: s.weak === true || undefined,
     res: (() => { // cihazın kaynak kullanımı: yalnız bilinen sayısal alanlar, sınırlı aralıkta
       const r = s.res; if (!r || typeof r !== 'object') return undefined;
       const n = (v, max) => { v = Number(v); return Number.isFinite(v) && v >= 0 ? Math.min(max, Math.round(v * 10) / 10) : undefined; };

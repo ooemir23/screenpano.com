@@ -1328,9 +1328,11 @@ function devCard(d, r) {
   if (r.boot === 'izin-yok') flags.push('Kutu açılınca ekran gelmez: kutuda Ayarlar › Uygulamalar › ScreenPano › “Diğer uygulamaların üzerinde göster” iznini açın');
   // birkaç kısa aksama (video/fotoğraf geçişi gibi) normaldir; ancak hız düşükse ya da dakikada çok aksama varsa uyar (takılma testinin ölçütüyle uyumlu)
   if (r.jank && (r.jank.fps < 50 || r.jank.drops > 25)) flags.push(`Ekranda takılma var (~${r.jank.fps} fps, dakikada ${r.jank.drops} aksama): ayrıntı için “Takılma testi”ni çalıştırın`);
+  if (r.weak && r.fx >= 2) flags.push('Düşük bellekli cihaz: “çok hafif” mod otomatik açıldı. Videoları Medya sekmesinde 720p ya da 480p yapmanız önerilir');
+  else if (r.fxAuto && r.fx >= 2) flags.push('Cihaz takıldığı için “çok hafif” moda otomatik geçti. Efekt modunu Ayarlar › Cihazlar altında değiştirebilirsiniz');
   if (r.res && r.res.low) flags.push('Cihazın belleği doldu: uygulama yavaşlayabilir, kutuyu yeniden başlatın');
   if (r.lastError) flags.push('Son hata: ' + r.lastError);
-  const rows = [['Model', r.model], ['Adres', r.ip], ['Uygulama', r.app], ['Yayın sürümü', r.build ? r.build.slice(0, 8) + (old ? ' ⚠' : '') : ''], ['Ekran', r.screen], ['Açık kalma', r.uptime ? upFmt(r.uptime) : ''], ['Müzik', r.mus ? musDiag(r.mus) : ''], ['Akıcılık', r.jank ? `~${r.jank.fps} fps` : ''], ['Çevrimdışı önbellek', r.cached ? `${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}` : ''], ['Eklendi', fmtDate(d.created)]].filter(x => x[1]);
+  const rows = [['Model', r.model], ['Adres', r.ip], ['Uygulama', r.app], ['Yayın sürümü', r.build ? r.build.slice(0, 8) + (old ? ' ⚠' : '') : ''], ['Ekran', r.screen], ['Açık kalma', r.uptime ? upFmt(r.uptime) : ''], ['Müzik', r.mus ? musDiag(r.mus) : ''], ['Akıcılık', r.jank ? `~${r.jank.fps} fps` : ''], ['Görüntü modu', r.fx === 2 ? 'Çok hafif' : r.fx === 1 ? 'Hafif' : r.fx === 0 && r.app ? 'Tam' : ''], ['Çevrimdışı önbellek', r.cached ? `${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}` : ''], ['Eklendi', fmtDate(d.created)]].filter(x => x[1]);
   return `<article class="dv ${on ? 'on' : 'off'}">
     <header><span class="dot ${on ? 'on' : ''}"></span><div class="t"><h3>${esc(d.name || 'TV kutusu')}</h3><p>${on ? 'Çevrimiçi' : 'Çevrimdışı · son görülme ' + ago(d.last_seen)}</p></div>
       <details class="dv-menu"><summary title="Diğer işlemler" aria-label="Diğer işlemler">${ic('ellipsis')}</summary><div class="pop">
@@ -1362,7 +1364,7 @@ function devAddHtml(open, full) {
 }
 function devMoreHtml() {
   const perf = card('Performans', 'Ekran takılıyorsa efektleri azaltın; video ağırlıklı takılmada Medya sekmesindeki kaliteyi 720p\'ye düşürün. TV kutusunda "Otomatik" zaten hafif modu seçer.',
-    `<div class="f">${fl('Efekt modu', `<select onchange="opt('fxMode',this.value)">${[['auto', 'Otomatik (TV kutusunda hafif)'], ['lite', 'Hafif (her yerde)'], ['full', 'Tam (her yerde)']].map(([v, l]) => `<option value="${v}" ${(S.db.fxMode || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`);
+    `<div class="f">${fl('Efekt modu', `<select onchange="opt('fxMode',this.value)">${[['auto', 'Otomatik (cihaza göre ayarlanır)'], ['lite', 'Hafif (her yerde)'], ['ultra', 'Çok hafif (zayıf cihazlar için)'], ['full', 'Tam (her yerde)']].map(([v, l]) => `<option value="${v}" ${(S.db.fxMode || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`);
   const j = DEVST;
   return `<div class="grid g2" style="margin-top:18px">${j ? notifyCard(j) : card('Uyarılar', '', '<div class="muted">Yükleniyor…</div>')}${perf}</div>`;
 }

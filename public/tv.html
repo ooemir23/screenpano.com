@@ -15,6 +15,13 @@ window.__exoHooked = true;
     var isAndroid = /Android|SmartTV|AFT|GoogleTV|Large Screen/i.test(navigator.userAgent);
     var lite = window.__fx === 'lite' || (window.__fx === 'auto' && (!!window.__N && !window.__N.desktop || isAndroid)) || /[?&]lite=1/.test(location.search);
     document.documentElement.classList.toggle('lite', lite); window.__lite = lite;
+    // Üç kademe: tam / hafif / çok hafif. Çok hafif: az belleği (≤1 GB) ya da az çekirdeği olan kutular, seçilirse ya da kutu kendi ölçümüne göre takılırsa (kalıcı, yalnız bir yöne)
+    var weak = (navigator.deviceMemory && navigator.deviceMemory <= 1) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2);
+    var adapt = 0; try { adapt = Number(localStorage.getItem('fxAdapt')) || 0; } catch (e) { /* kayıt kapalıysa uyum yalnız bu oturumda */ }
+    var auto = window.__fx === 'auto' && (!!window.__N && !window.__N.desktop || isAndroid);
+    var ultra = window.__fx === 'ultra' || /[?&]lite=2/.test(location.search) || (auto && (weak || adapt >= 2));
+    if (ultra) { lite = true; document.documentElement.classList.add('lite'); window.__lite = true; }
+    document.documentElement.classList.toggle('lite2', !!ultra); window.__tier = ultra ? 2 : lite ? 1 : 0; window.__weak = !!weak;
     if (window.__N && window.__N.hasExoPlayer && window.__N.hasExoPlayer()) {
       document.documentElement.classList.add('native-exo');
     }
@@ -281,6 +288,9 @@ html.nat-ticker #ttrack{animation:none !important}
 @keyframes slide{to{transform:translateX(-100%)}}
 video{transition:opacity .8s ease-in-out;will-change:opacity;transform:translateZ(0)}
 #img{opacity:0;transition:opacity .8s ease-in-out;will-change:opacity;transform:translateZ(0)}
+/* çok hafif kademe: yalnız GPU'yu yoran süsler kapanır (gölge, bulanıklık, filtre); içerik ve geçişler aynen çalışır */
+html.lite2 *,html.lite2 *::before,html.lite2 *::after{box-shadow:none!important;text-shadow:none!important;filter:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;will-change:auto!important}
+html.lite2 #big .yaura,html.lite2 #big .yglow,html.lite2 #big .ysmk,html.lite2 #big .yflare,html.lite2 #big .ypl{display:none!important}
 html.lite #bgc{filter:none;transform:none}
 html.lite #tview{-webkit-mask-image:none;mask-image:none}
 html.lite #qr-right .lbl,html.lite #qr-left .lbl,html.lite #tchip,html.lite #tidx,html.lite #tlegend{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(20,22,24,.93)}
@@ -1853,7 +1863,7 @@ function setState(s) {
   window.__trailerEvery = s.trailerEvery || 4; window.__trailerGapMin = s.trailerGapMin || 8;
   setCeleb(s.celebration);
   applySafe(s.safe || { L: s.safeInset, R: s.safeInset, T: s.safeInset, B: s.safeInset }, s.safeGuide);
-  if ((s.fxMode || 'auto') !== window.__fx) { window.__fx = s.fxMode || 'auto'; window.__applyFx(); }
+  if ((s.fxMode || 'auto') !== window.__fx) { window.__fx = s.fxMode || 'auto'; try { localStorage.removeItem('fxAdapt'); } catch (e) { /* kayıt yok */ } window.__fxAuto = false; window.__applyFx(); }
   imageSeconds = s.imageSeconds || 10; TZ = s.tz || TZ;
   setLangs(s.langs, s.langSec);
   ALLV = s.videos || []; window.__mediaAt = s.mediaAt || window.__mediaAt || 0; applyVideos();
@@ -3266,6 +3276,13 @@ async function perfProbe(stepSec) {
   window.__perfBusy = false;
   wsSend({ type: 'perf', steps: out, sec: ms / 1000, screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, lite: !!window.__lite, exo: document.documentElement.classList.contains('native-exo') });
 }
+// Uyumlu hafifletme: kutu kendi ölçümüne göre iki dakika üst üste 42 fps altında kalırsa "çok hafif" kademeye geçer (kalıcı; ekran yeniden yüklenmez, içerik kesilmez)
+let FXLOW = 0;
+function adaptFx(fps) {
+  if (window.__fx !== 'auto' || (window.__tier || 0) >= 2 || document.visibilityState === 'hidden' || (Date.now() - BOOT) < 180000) { FXLOW = 0; return; }
+  FXLOW = fps > 0 && fps < 42 ? FXLOW + 1 : 0;
+  if (FXLOW >= 2) { try { localStorage.setItem('fxAdapt', '2'); } catch (e) { /* kayıt kapalıysa yalnız bu oturum */ } window.__fxAuto = true; window.__applyFx(); FXLOW = 0; }
+}
 function sendStatus() {
   const n = window.__N, it = videos.find(x => x.id === current);
   // müzik teşhisi: panelde kutunun müzik motorunun gerçek durumu görünür (ses yoksa sebebi buradan okunur)
@@ -3286,8 +3303,9 @@ function sendStatus() {
     screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
     playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
     cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,
-    jank: (() => { const j = window.__jank, now = performance.now(), t0 = j.r || BOOT, sec = Math.max(1, (now - t0) / 1000); const out = { fps: Math.round(j.f / sec), drops: j.d }; j.f = 0; j.d = 0; j.r = now; return out; })(),
+    jank: (() => { const j = window.__jank, now = performance.now(), t0 = j.r || BOOT, sec = Math.max(1, (now - t0) / 1000); const out = { fps: Math.round(j.f / sec), drops: j.d }; adaptFx(out.fps); j.f = 0; j.d = 0; j.r = now; return out; })(),
     mem: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0,
+    fx: window.__tier || 0, fxAuto: !!window.__fxAuto, weak: !!window.__weak,
     res: (() => { try { const r = n && n.sysInfo ? JSON.parse(n.sysInfo() || '{}') : {}; if (!r.cores && navigator.hardwareConcurrency) r.cores = navigator.hardwareConcurrency; if (!r.ramTotal && navigator.deviceMemory) r.ramTotal = Math.round(navigator.deviceMemory * 1024); return r; } catch (e) { return {}; } })(),
   });
 }

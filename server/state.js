@@ -177,7 +177,7 @@ function publicState(t) {
     traffic: pro && F.wantsTraffic(t) ? F.traffic : null,
     showQr: db.showQr !== false,
     env: config.APP_ENV, canTest: !!db.canTest, // menüdeki "Test ortamına geç" düğmesi yalnız canTest açık işletmelerde görünür
-    fxMode: ['auto', 'lite', 'full'].includes(db.fxMode) ? db.fxMode : 'auto',
+    fxMode: ['auto', 'lite', 'ultra', 'full'].includes(db.fxMode) ? db.fxMode : 'auto',
     showOnThisDay: pro && db.showOnThisDay !== false,
     onThisDay: pro && F.onThisDay && F.onThisDay.date === F.ymd(new Date()) ? cap(F.onThisDay, imax.otd) : null,
     showNews: pro && (db.news || {}).enabled !== false,

@@ -572,7 +572,7 @@ r.put('/options', (req, res) => {
   if (typeof b.showBooks === 'boolean') { db.showBooks = b.showBooks; if (db.showBooks) F.refreshBooks(); }
   if (typeof b.showTraffic === 'boolean') db.showTraffic = b.showTraffic;
   if (typeof b.showBookSlides === 'boolean') db.showBookSlides = b.showBookSlides;
-  if (['auto', 'lite', 'full'].includes(b.fxMode)) db.fxMode = b.fxMode;
+  if (['auto', 'lite', 'ultra', 'full'].includes(b.fxMode)) db.fxMode = b.fxMode;
   if (b.safeInset !== undefined && isFinite(Number(b.safeInset))) db.safeInset = Math.max(0, Math.min(12, Math.round(Number(b.safeInset) * 2) / 2));
   for (const k of ['L', 'R', 'T', 'B']) { const v = b['safe' + k]; if (v !== undefined && isFinite(Number(v))) db['safe' + k] = Math.max(0, Math.min(20, Math.round(Number(v) * 2) / 2)); }
   if (typeof b.safeGuide === 'boolean') db.safeGuide = b.safeGuide;
