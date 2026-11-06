@@ -2986,12 +2986,22 @@ function connect() {
   const tok = tokenGet();
   if (!PREVIEW && !tok) return showAuth();
   const qs = PREVIEW ? 'preview=' + encodeURIComponent(PREVIEW) : 'device=' + encodeURIComponent(tok);
-  const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?' + qs);
+  // APK 3.19.1+: tek bağlantı. Kutunun yerel bağlantısı iletileri sayfaya aktarır; sayfa ayrıca bağlanmaz
+  // (aynı durum iki kez inip iki kez işlenmesin). Yeniden bağlanma ve canlılık yoklamasını yerel taraf yapar.
+  const N = window.__N, bridged = !PREVIEW && !!(N && N.wsAttach && N.wsSend);
+  let ws;
+  if (bridged) {
+    try { if (N.getToken && !N.getToken() && tok) N.saveToken(tok); } catch (e) {}
+    ws = { readyState: 0, send: t => N.wsSend(String(t)), close: () => N.wsReconnect() };
+    window.__wsIn = txt => { if (window.__ws === ws && ws.onmessage) ws.onmessage({ data: txt }); };
+    window.__wsEvt = ev => { if (window.__ws !== ws) return; if (ev === 'open') { ws.readyState = 1; if (ws.onopen) ws.onopen(); } else if (ev === 'close') ws.readyState = 3; };
+    setTimeout(() => { try { N.wsAttach(); } catch (e) {} }, 0); // işleyiciler aşağıda atandıktan sonra
+  } else ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?' + qs);
   window.__ws = ws;
   let authFail = false, dead = false;
   wsLast = Date.now();
   clearInterval(wsDog);
-  wsDog = setInterval(() => {
+  if (!bridged) wsDog = setInterval(() => {
     if (ws.readyState !== 1) return;
     const q = Date.now() - wsLast;
     if (q > 90000) { dead = true; clearInterval(wsDog); try { ws.onclose = null; ws.close(); } catch (e) {} wsRetry(); return; }

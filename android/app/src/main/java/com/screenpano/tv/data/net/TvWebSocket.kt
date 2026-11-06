@@ -22,6 +22,23 @@ class TvWebSocket(
     private val onSync: (JSONObject) -> Unit,
     private val onMessage: (String, JSONObject) -> Unit = { _, _ -> },
 ) {
+    /**
+     * Sayfa köprüsü (APK 3.19.1+): sayfa kendi WebSocket'ini açmaz, bu bağlantıyı paylaşır. Her ham ileti ana iş parçacığında
+     * buraya verilir; sayfa yeni yüklendiğinde son version/state/sync_media iletileri yeniden oynatılır (replay()).
+     */
+    var onRaw: ((String) -> Unit)? = null
+    var onOpenEvt: (() -> Unit)? = null
+    var onCloseEvt: (() -> Unit)? = null
+    @Volatile private var lastVersion: String? = null
+    @Volatile private var lastState: String? = null
+    @Volatile private var lastSync: String? = null
+    fun replay(f: (String) -> Unit) { lastVersion?.let(f); lastState?.let(f); lastSync?.let(f) }
+    fun sendRaw(text: String) { ws?.send(text) }
+    /** Token yeni kaydedildi: beklemeden bağlan. */
+    fun kick() { if (stopped || ws != null) return; main.removeCallbacks(retry); backoff = 2_000L; open() }
+    /** Bağlantıyı bırakıp hemen yeniden kur (token değişti / sayfa istedi). */
+    fun reconnect() { if (stopped) return; val w = ws; ws = null; isOpen = false; w?.cancel(); main.post { onCloseEvt?.invoke() }; main.removeCallbacks(retry); backoff = 2_000L; open() }
+
     private val http = OkHttpClient.Builder()
         .pingInterval(25, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.MILLISECONDS)
@@ -51,11 +68,13 @@ class TvWebSocket(
         if (token.isEmpty()) { schedule(); return } // henüz giriş yapılmadı: sayfa token'ı kaydedince tutar
         val url = baseUrl.replaceFirst("https://", "wss://").replaceFirst("http://", "ws://") + "/ws?device=" + java.net.URLEncoder.encode(token, "UTF-8")
         ws = http.newWebSocket(Request.Builder().url(url).build(), object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) { backoff = 2_000L; isOpen = true }
+            override fun onOpen(webSocket: WebSocket, response: Response) { backoff = 2_000L; isOpen = true; main.post { onOpenEvt?.invoke() } }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 val o = try { JSONObject(text) } catch (_: Exception) { return }
                 val type = o.optString("type")
+                when (type) { "version" -> lastVersion = text; "state" -> lastState = text; "sync_media" -> lastSync = text; "auth" -> { lastState = null; lastVersion = null } }
+                onRaw?.let { cb -> main.post { if (ws === webSocket) cb(text) } }
                 // ayrıştırmayı bağlantı iş parçacığında yap, sonucu ana iş parçacığına ilet
                 when (type) {
                     "state" -> {
@@ -67,8 +86,8 @@ class TvWebSocket(
                 }
             }
 
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) { if (ws === webSocket) { isOpen = false; ws = null; schedule() } }
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) { if (ws === webSocket) { isOpen = false; ws = null; schedule() } }
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) { if (ws === webSocket) { isOpen = false; ws = null; main.post { onCloseEvt?.invoke() }; schedule() } }
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) { if (ws === webSocket) { isOpen = false; ws = null; main.post { onCloseEvt?.invoke() }; schedule() } }
         })
     }
 

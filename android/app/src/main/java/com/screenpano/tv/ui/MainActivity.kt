@@ -170,7 +170,15 @@ class MainActivity : AppCompatActivity() {
                 mediaEngine.onSync(m)
             },
         ).also { it.start() }
+        // sayfa köprüsü: iletiler sayfaya aynen aktarılır (sayfa wsAttach() ile bağlanınca)
+        tvSocket?.onRaw = { text -> if (pageWs) toPage("window.__wsIn&&window.__wsIn(" + jsStr(text) + ")") }
+        tvSocket?.onOpenEvt = { if (pageWs) toPage("window.__wsEvt&&window.__wsEvt('open')") }
+        tvSocket?.onCloseEvt = { if (pageWs) toPage("window.__wsEvt&&window.__wsEvt('close')") }
     }
+    @Volatile private var pageWs = false
+    private fun toPage(js: String) { try { binding.webView.evaluateJavascript(js, null) } catch (_: Exception) {} }
+    /** JS dizgi değişmezi (U+2028/2029 satır sonu sayılır, kaçırılır). */
+    private fun jsStr(s: String) = JSONObject.quote(s).replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
 
     // Yerel çizilen hücreleri sayfa gizler (sayfa yenilenince yeniden bildirilir)
     private var overlayOn = false
@@ -768,8 +776,27 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun saveToken(t: String?) {
+            val old = prefs.getDeviceToken()
             prefs.saveDeviceToken(t)
+            if ((t ?: "") != old) handler.post { tvSocket?.reconnect() } // yeni/silinen token: yerel bağlantı hemen buna göre kurulur
         }
+
+        /** Tek bağlantı: sayfa kendi WebSocket'ini açmaz, yerel bağlantıya bağlanır (ağ, sunucu ve bellek yükü yarıya iner). */
+        @JavascriptInterface
+        fun wsAttach() {
+            handler.post {
+                pageWs = true
+                val s = tvSocket ?: return@post
+                if (s.connected) toPage("window.__wsEvt&&window.__wsEvt('open')")
+                s.replay { text -> toPage("window.__wsIn&&window.__wsIn(" + jsStr(text) + ")") }
+            }
+        }
+
+        @JavascriptInterface
+        fun wsSend(text: String) { tvSocket?.sendRaw(text) }
+
+        @JavascriptInterface
+        fun wsReconnect() { handler.post { tvSocket?.reconnect() } }
 
         @JavascriptInterface
         fun versionName(): String = BuildConfig.VERSION_NAME
