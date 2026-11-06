@@ -1532,6 +1532,26 @@
           "text": "حدّد عدة ملفات وأخفها أو أظهرها أو احذفها دفعة واحدة، وتراجع عن الحذف الخاطئ خلال 6 ثوانٍ. الصور ذات النسبة القريبة من المربع تملؤه دون أشرطة سوداء."
         }
       }
+    },
+    {
+      "icon": "💱",
+      "title": "Döviz ve hava kutusu daha okunaklı",
+      "text": "Hava ve piyasalar kutusu küçük de olsa yazılar kutuya göre ölçülür, taşmaz; büyük kutuda büyür. Saat kutusu da 1 satırlık alanda sığar.",
+      "added": "2026-11-07",
+      "i18n": {
+        "en": {
+          "title": "More readable currency and weather box",
+          "text": "Even in a small Weather and markets box the text is measured to the box and never overflows; in a large box it grows. The clock box also fits a one-row area."
+        },
+        "de": {
+          "title": "Besser lesbare Devisen- und Wetter-Box",
+          "text": "Auch in einer kleinen Wetter-und-Märkte-Box wird der Text an die Box angepasst und läuft nicht über; in einer großen Box wird er größer. Die Uhr-Box passt auch in eine einzeilige Fläche."
+        },
+        "ar": {
+          "title": "مربع العملات والطقس أوضح للقراءة",
+          "text": "حتى في مربع الطقس والأسواق الصغير يُقاس النص بحسب المربع ولا يتجاوزه، ويكبر في المربع الكبير. ومربع الساعة يناسب أيضاً مساحة بصف واحد."
+        }
+      }
     }
   ],
   "shots": {

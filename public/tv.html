@@ -181,7 +181,7 @@ position:absolute;top:.8vh;right:.8vw}
 .mid .sc{font-size:3.6vh;font-weight:800;letter-spacing:.04em;white-space:nowrap}
 .mid .sc i{font-style:normal;color:var(--mute);margin:0 .25vw;font-weight:400}
 .mid .sc.fin{color:var(--accent2)}
-#rates{--rv:1vh;flex:1;justify-content:center;background:linear-gradient(160deg,rgba(var(--a2),.16),rgba(255,255,255,.03));border:max(1px,calc(.1*var(--rv))) solid rgba(var(--a2),.35);border-radius:calc(1.30*var(--rv));padding:calc(1.6*var(--rv)) 1.2vw;display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
+#rates{--rv:1vh;flex:1;min-height:0;min-width:0;overflow:hidden;box-sizing:border-box;justify-content:center;background:linear-gradient(160deg,rgba(var(--a2),.16),rgba(255,255,255,.03));border:max(1px,calc(.1*var(--rv))) solid rgba(var(--a2),.35);border-radius:calc(1.30*var(--rv));padding:calc(1.4*var(--rv)) calc(1.5*var(--rv));display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
 #wx{display:flex;align-items:center;gap:.9vw}
 #wx .wi{font-size:calc(4.6*var(--rv));line-height:1}
 #wx .wt{font-size:calc(4*var(--rv));font-weight:600;line-height:1}
@@ -203,16 +203,16 @@ position:absolute;top:.8vh;right:.8vw}
 #rqr .rq .code svg{width:100%;height:100%;display:block}
 #rqr .rq .lbl{flex:none;width:100%;box-sizing:border-box;height:calc(3.2*var(--rv));display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;background:rgba(10,8,6,.92);border:max(1px,calc(.15*var(--rv))) solid var(--al);border-radius:calc(2*var(--rv));color:#fff;font-size:calc(1.8*var(--rv));font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:0 .6vw;text-shadow:0 calc(.2*var(--rv)) calc(.4*var(--rv)) #000}
 #rqr .rq .lbl.pw{text-transform:none;letter-spacing:.03em;color:var(--al);font-size:calc(2*var(--rv))}
-#rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:calc(5.6*var(--rv));border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.9*var(--rv))}
+#rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.9*var(--rv))}
 #rrow div{min-width:0;overflow:hidden;text-align:center;border-right:max(1px,calc(.1*var(--rv))) solid var(--line)}
 #rrow div:last-child{border:0}
 #rrow.swap{transition:opacity .4s}
 #rrow.swap.out{opacity:0}
-.chg{font-style:normal;font-weight:700;letter-spacing:0;margin-left:.35vw;font-size:calc(1.6*var(--rv))}
+.chg{font-style:normal;font-weight:700;letter-spacing:0;margin-left:calc(.5*var(--rv));font-size:calc(1.7*var(--rv))}
 .chg.up{color:#3ecf4a}.chg.dn{color:#ff6b6b}.chg.fl{color:var(--mute)}
-#rrow small{display:block;white-space:nowrap;overflow:hidden;font-size:calc(1.6*var(--rv));letter-spacing:.12em;color:var(--accent2);font-weight:600}
-#rrow strong{display:block;font-size:calc(2.6*var(--rv));font-weight:600;white-space:nowrap;overflow:hidden}
-#rrow strong i{font-style:normal;font-size:calc(2*var(--rv));color:var(--mute);margin-left:.15vw;font-weight:400}
+#rrow small{display:block;white-space:nowrap;overflow:hidden;font-size:calc(1.7*var(--rv));letter-spacing:.1em;color:var(--accent2);font-weight:700;margin-bottom:calc(.3*var(--rv))}
+#rrow strong{display:block;font-size:calc(3*var(--rv));font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+#rrow strong i{font-style:normal;font-size:calc(2.1*var(--rv));color:var(--soft);margin-left:calc(.3*var(--rv));font-weight:500}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -2089,15 +2089,26 @@ function ratesQr() {
   if (views.length > 1) rQr.timer = setInterval(() => { host.classList.add('out'); setTimeout(() => { rQr.i = (rQr.i + 1) % views.length; show(views[rQr.i]); host.classList.remove('out'); }, 450); }, 12000);
 }
 // T6: hava/piyasa kutusu yazıları kutu boyutuna göre küçülür (native RatesWidget.fitScale ile aynı taban: 17×42 vh)
+// Hava ve piyasa kutusu: yazı ölçeği (--rv) kutuya göre ölçülerek bulunur; içerik kutudan taşmaz, küçük kutuda sıkışmaz, büyük kutuda büyür
 function fitRates() {
-  document.querySelectorAll('#rates').forEach((el, i) => {
-    const rp = (i ? (window.__rtProps || [])[i - 1] : WPROPS.rates) || {}, wx = rp.weather !== false, rt = rp.rates !== false, qr = !!rp.qr;
-    const refH = qr || (wx && rt) ? 17 : 9, refW = qr || wx ? 42 : 30;
-    const vh = innerHeight / 100, w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
-    const k = Math.max(.3, Math.min(1, Math.min(h / (refH * vh), w / (refW * vh)))); // web: yalnız küçültür (büyük kutuda yerleşim 1080p ölçüsünde kalır)
-    el.style.setProperty('--rv', (k * vh).toFixed(2) + 'px');
+  document.querySelectorAll('#rates').forEach(el => {
+    if (!el.clientWidth || !el.clientHeight) return;
+    const vh = innerHeight / 100, cs = getComputedStyle(el);
+    const set = k => el.style.setProperty('--rv', (k * vh).toFixed(3) + 'px');
+    const fits = () => {
+      const padV = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      let top = Infinity, bot = -Infinity;
+      for (const c of el.children) { if (!c.offsetHeight) continue; const r = c.getBoundingClientRect(); top = Math.min(top, r.top); bot = Math.max(bot, r.bottom); }
+      if (isFinite(top) && bot - top > el.clientHeight - padV + 1) return false;
+      if (el.scrollWidth > el.clientWidth + 1) return false;
+      return ![...el.querySelectorAll('#rrow div,#rrow small,#rrow strong,#wx')].some(d => d.scrollWidth > d.clientWidth + 1);
+    };
+    let lo = .2, hi = 2.4;
+    for (let n = 0; n < 9; n++) { const mid = (lo + hi) / 2; set(mid); if (fits()) lo = mid; else hi = mid; }
+    set(lo);
   });
 }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitRates());
 addEventListener('resize', fitRates);
 function setRates(r) { lastRates = r; renderPanel(); if (window.__tickerInfo) setTicker(matches); }
 function setWeather(w) { lastWeather = w; renderPanel(); if (window.__tickerInfo) setTicker(matches); }
@@ -2945,8 +2956,17 @@ function fitWidgets() {
     const w = ck.clientWidth, h = ck.clientHeight, sec = !!ck.dataset.sec, show = ck.dataset.show, b = ck.querySelector('b'), s = ck.querySelector('small');
     b.style.display = show === 'date' ? 'none' : ''; s.style.display = show === 'time' ? 'none' : '';
     const n = Math.max(10, s.textContent.length);
-    b.style.fontSize = Math.max(14, Math.min(h * (show === 'time' ? 0.62 : 0.46), w / (sec ? (show === 'time' ? 4.2 : 4.6) : (show === 'time' ? 2.8 : 3.1)))) + 'px';
-    s.style.fontSize = Math.max(10, show === 'date' ? Math.min(h * 0.34, w / (n * 0.8)) : Math.min(h * 0.11, w / 18)) + 'px';
+    const b0 = Math.max(6, Math.min(h * (show === 'time' ? 0.62 : 0.46), w / (sec ? (show === 'time' ? 4.2 : 4.6) : (show === 'time' ? 2.8 : 3.1))));
+    const s0 = Math.max(6, show === 'date' ? Math.min(h * 0.34, w / (n * 0.8)) : Math.min(h * 0.11, w / 18));
+    // küçük kutuda yazılar kutuya sığana kadar ölçülür ve küçültülür (taşmaz, kırpılmaz)
+    let k = 1;
+    for (let i = 0; i < 16; i++) {
+      b.style.fontSize = Math.max(6, b0 * k) + 'px'; s.style.fontSize = Math.max(6, s0 * k) + 'px';
+      const vis = [b, s].filter(e => e.style.display !== 'none'), rs = vis.map(e => e.getBoundingClientRect());
+      const hh = Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)), ww = Math.max(...rs.map(r => r.width));
+      if ((hh <= h + 1 && ww <= w + 1) || k < .25) break;
+      k *= .9;
+    }
   });
   const lg = $id('logo');
   if (lg.classList.contains('txt') && lg.closest('#app')) lg.style.fontSize = Math.max(12, Math.min(lg.clientHeight * 0.42, lg.clientWidth / Math.max(4, BNAME.length * 0.62))) + 'px';
