@@ -814,6 +814,60 @@
           ]
         }
       }
+    },
+    {
+      "id": "medya-sigdir",
+      "icon": "🖼️",
+      "title": "Her görsel eksiksiz, boşluklar bulanık dolu",
+      "short": "Standart görüntü",
+      "text": "Video ve fotoğraflar hiç kırpılmadan tamamen görünür. Görselin kutuya oranı uymazsa kenarlardaki boşluk, görselin kendi renklerinden bulanık bir dolguyla kapanır; böylece her içerik aynı düzenli görünümde olur.",
+      "points": [
+        "Dikey, yatay, geniş ya da dar: hiçbiri kırpılmaz",
+        "Boşluk siyah kalmaz, görselin renkleriyle dolar",
+        "İsterseniz panelden kutuyu dolduran kırpmalı yerleşimi seçersiniz"
+      ],
+      "plan": "all",
+      "compare": "Standart medya yerleşimi",
+      "added": "2026-11-06",
+      "visual": {
+        "type": "win",
+        "img": "p-cihaz"
+      },
+      "i18n": {
+        "en": {
+          "title": "Every image shown whole, gaps filled with blur",
+          "short": "Consistent display",
+          "compare": "Consistent media fit",
+          "text": "Videos and photos are always shown in full, never cropped. When the shape doesn't match the box, the empty edges are filled with a soft blur of the image's own colours, so all content looks tidy and consistent.",
+          "points": [
+            "Portrait, landscape, wide or narrow: nothing is cropped",
+            "Gaps are not left black but filled with the image's colours",
+            "If you prefer, choose the cropped fill-the-box layout in the panel"
+          ]
+        },
+        "de": {
+          "title": "Jedes Bild vollständig, Lücken unscharf gefüllt",
+          "short": "Einheitliche Darstellung",
+          "compare": "Einheitliche Bildanpassung",
+          "text": "Videos und Fotos werden immer vollständig gezeigt, nie beschnitten. Passt das Format nicht zum Feld, füllt eine weiche Unschärfe in den Farben des Bildes die leeren Ränder, damit alle Inhalte einheitlich aussehen.",
+          "points": [
+            "Hoch, quer, breit oder schmal: nichts wird abgeschnitten",
+            "Lücken bleiben nicht schwarz, sondern nehmen die Bildfarben an",
+            "Wahlweise stellen Sie im Panel die füllende, beschnittene Darstellung ein"
+          ]
+        },
+        "ar": {
+          "title": "كل صورة تظهر كاملة والفراغات بتعبئة ضبابية",
+          "short": "عرض موحّد",
+          "compare": "ملاءمة موحّدة للوسائط",
+          "text": "تظهر الفيديوهات والصور كاملة دائمًا دون قص. وإذا لم تطابق النسبة الإطار، تُملأ الحواف الفارغة بضبابية ناعمة من ألوان الصورة نفسها فيبدو كل المحتوى منظمًا وموحّدًا.",
+          "points": [
+            "عمودية أو أفقية أو عريضة أو ضيقة: لا شيء يُقصّ",
+            "لا تبقى الفراغات سوداء بل تمتلئ بألوان الصورة",
+            "يمكنك اختيار التعبئة مع القص من اللوحة إن أردت"
+          ]
+        }
+      }
     }
   ],
   "extras": [

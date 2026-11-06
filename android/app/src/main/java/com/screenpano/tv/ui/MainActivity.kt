@@ -141,9 +141,29 @@ class MainActivity : AppCompatActivity() {
     @Volatile private var mediaFit = "auto"
     private fun wantCover(w: Int, h: Int, bw: Int, bh: Int): Boolean {
         if (mediaFit == "cover") return true
-        if (mediaFit == "contain" || w <= 0 || h <= 0 || bw <= 0 || bh <= 0) return false
-        val r = (w.toFloat() / h) / (bw.toFloat() / bh)
-        return r in 0.77f..1.3f
+        return false // "auto" ve "contain": tamamı görünür, boşluğu bulanık dolgu doldurur
+    }
+    /** Tamamı görünen fotoğrafın boşluklarına, kendi renklerinden küçük (64 px) ve bulanık bir arka plan koyar; hazır olunca cb çağrılır. */
+    private fun applyBackdrop(iv: ImageView, url: String, cb: () -> Unit) {
+        if (iv.scaleType != ImageView.ScaleType.FIT_CENTER) { iv.background = null; cb(); return }
+        val b = lastBounds
+        val bw = if (iv.width > 0) iv.width else (b?.get(2) ?: binding.rootContainer.width)
+        val bh = if (iv.height > 0) iv.height else (b?.get(3) ?: binding.rootContainer.height)
+        if (bw <= 0 || bh <= 0) { iv.background = null; cb(); return }
+        val w = 64; val h = maxOf(8, 64 * bh / bw)
+        var called = false
+        val once = { if (!called) { called = true; cb() } }
+        val req = ImageRequest.Builder(this).data(url).size(w, h)
+            .precision(coil.size.Precision.EXACT).scale(coil.size.Scale.FILL).allowHardware(false)
+            .target(
+                onSuccess = { d ->
+                    d.mutate().colorFilter = android.graphics.PorterDuffColorFilter(0x99000000.toInt(), android.graphics.PorterDuff.Mode.SRC_OVER)
+                    iv.background = d; once()
+                },
+                onError = { iv.background = null; once() }
+            ).build()
+        coil.Coil.imageLoader(this).enqueue(req)
+        handler.postDelayed({ once() }, 600) // dolgu gecikirse fotoğrafı bekletme
     }
     private fun fitImage(iv: ImageView, d: android.graphics.drawable.Drawable?) {
         if (d == null) return
@@ -473,7 +493,7 @@ class MainActivity : AppCompatActivity() {
             clipToOutline = true
         }
     }
-    private fun resetPhoto(v: ImageView) { v.animate().cancel(); v.visibility = View.GONE; v.setImageDrawable(null); v.alpha = 1f }
+    private fun resetPhoto(v: ImageView) { v.animate().cancel(); v.visibility = View.GONE; v.setImageDrawable(null); v.background = null; v.alpha = 1f }
     /** Her iki fotoğraf katmanını anında temizler. */
     private fun clearPhotos() { resetPhoto(binding.imageView); if (photoBInit) resetPhoto(photoB); photoTop = false }
     private var photoBInit = false
@@ -504,6 +524,8 @@ class MainActivity : AppCompatActivity() {
                 onSuccess = { _, r ->
                     if (!valid()) { return@listener }
                     fitImage(target, r.drawable)
+                    applyBackdrop(target, full) {
+                    if (!valid()) { return@applyBackdrop }
                     val oldVisible = old.visibility == View.VISIBLE && old.drawable != null
                     old.animate().cancel()
                     if (fadeMs <= 0L) {
@@ -525,6 +547,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     photoTop = toTop
                     ok()
+                    }
                 },
                 onError = { _, r -> target.visibility = View.GONE; err(r.throwable) }
             )
