@@ -1326,7 +1326,8 @@ function devCard(d, r) {
   const flags = [];
   if (old) flags.push('Eski sürüm: birkaç dakika içinde kendini güncellemeli');
   if (r.boot === 'izin-yok') flags.push('Kutu açılınca ekran gelmez: kutuda Ayarlar › Uygulamalar › ScreenPano › “Diğer uygulamaların üzerinde göster” iznini açın');
-  if (r.jank && r.jank.drops > 5) flags.push(`Ekranda takılma var (~${r.jank.fps} fps)`);
+  // birkaç kısa aksama (video/fotoğraf geçişi gibi) normaldir; ancak hız düşükse ya da dakikada çok aksama varsa uyar (takılma testinin ölçütüyle uyumlu)
+  if (r.jank && (r.jank.fps < 50 || r.jank.drops > 25)) flags.push(`Ekranda takılma var (~${r.jank.fps} fps, dakikada ${r.jank.drops} aksama): ayrıntı için “Takılma testi”ni çalıştırın`);
   if (r.res && r.res.low) flags.push('Cihazın belleği doldu: uygulama yavaşlayabilir, kutuyu yeniden başlatın');
   if (r.lastError) flags.push('Son hata: ' + r.lastError);
   const rows = [['Model', r.model], ['Adres', r.ip], ['Uygulama', r.app], ['Yayın sürümü', r.build ? r.build.slice(0, 8) + (old ? ' ⚠' : '') : ''], ['Ekran', r.screen], ['Açık kalma', r.uptime ? upFmt(r.uptime) : ''], ['Müzik', r.mus ? musDiag(r.mus) : ''], ['Akıcılık', r.jank ? `~${r.jank.fps} fps` : ''], ['Çevrimdışı önbellek', r.cached ? `${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}` : ''], ['Eklendi', fmtDate(d.created)]].filter(x => x[1]);

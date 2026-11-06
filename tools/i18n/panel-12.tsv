@@ -90,7 +90,7 @@ Henüz bağlı cihaz yok ¦ No connected devices yet ¦ Noch keine Geräte verbu
 Aşağıdaki üç adımla ilk TV kutunuzu bağlayın. ¦ Connect your first TV box with the three steps below. ¦ Verbinden Sie Ihre erste TV-Box mit den drei Schritten unten. ¦ اربط أول جهاز تلفزيون لديك بالخطوات الثلاث أدناه.
 Eski sürüm: birkaç dakika içinde kendini güncellemeli ¦ Old version: it should update itself within a few minutes ¦ Alte Version: sie sollte sich in wenigen Minuten selbst aktualisieren ¦ إصدار قديم: يجب أن يحدّث نفسه خلال دقائق
 Kutu açılınca ekran gelmez: kutuda Ayarlar › Uygulamalar › ScreenPano › “Diğer uygulamaların üzerinde göster” iznini açın ¦ The screen will not appear when the box starts: on the box, open Settings › Apps › ScreenPano › enable “Display over other apps” ¦ Der Bildschirm erscheint beim Start der Box nicht: Öffnen Sie auf der Box Einstellungen › Apps › ScreenPano › „Über anderen Apps anzeigen“ ¦ لن تظهر الشاشة عند تشغيل الجهاز: على الجهاز افتح الإعدادات › التطبيقات › ScreenPano › فعّل “العرض فوق التطبيقات الأخرى”
-Ekranda takılma var (~{} fps) ¦ The screen is stuttering (~{} fps) ¦ Der Bildschirm ruckelt (~{} fps) ¦ هناك تقطّع في الشاشة (~{} إطارًا/ث)
+Ekranda takılma var (~{} fps, dakikada {} aksama): ayrıntı için “Takılma testi”ni çalıştırın ¦ The screen is stuttering (~{} fps, {} hitches per minute): run the “Stutter test” for details ¦ Der Bildschirm ruckelt (~{} fps, {} Aussetzer pro Minute): Details über den „Ruckel-Test“ ¦ هناك تقطّع في الشاشة (~{} إطارًا/ث، {} تعثرًا في الدقيقة): شغّل «اختبار التقطيع» للتفاصيل
 Son hata: {} ¦ Last error: {} ¦ Letzter Fehler: {} ¦ آخر خطأ: {}
 Model ¦ Model ¦ Modell ¦ الطراز
 Adres ¦ Address ¦ Adresse ¦ العنوان
