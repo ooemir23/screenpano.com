@@ -287,7 +287,6 @@ footer.sf a:hover{color:var(--ink)}
 .sf-c{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-between}
 .sf-l{display:flex;flex-wrap:wrap;gap:4px 14px}
 .sf-l a[aria-current]{color:var(--ink);font-weight:700}
-.lnote{display:block;font-size:12.5px;line-height:1.45;margin-top:4px;color:var(--mute)}
 .ui-note{margin:36px 0 0;font-size:14px;color:var(--nsoft);max-width:52em}
 .ui-note:empty{display:none}
 

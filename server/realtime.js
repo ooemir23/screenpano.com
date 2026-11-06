@@ -55,7 +55,6 @@ hub.send = (filter, msg) => {
   }
 };
 hub.connectedTenantIds = () => new Set([...clients].map(c => c.tid));
-hub.clientCount = () => clients.size;
 hub.onlineDeviceIds = () => new Set([...clients].filter(c => c.deviceId).map(c => c.deviceId));
 hub.sendDevice = (id, msg) => { let n = 0; for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, msg); n++; } return n; };
 hub.setNative = (id, on) => { for (const ws of clients) if (ws.deviceId === id) { ws.native = !!on; sendState(ws); } };

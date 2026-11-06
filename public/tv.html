@@ -1164,21 +1164,6 @@ function cleanupLayers(keep) {
     });
   }, window.__lite ? 400 : 700);
 }
-function showEl(el) {
-  if (window.__lite) {
-    // hafif mod (yalnız opaklık, GPU'yu yormaz): yeni öğe eskinin ÜSTÜNDE açılır, eski tam opak kalır → geçişte ekran kararmaz, keskin kesme olmaz; eski, geçiş bitince kaldırılır
-    const tok = window.__liteTok = (window.__liteTok || 0) + 1;
-    els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; });
-    setTimeout(() => {
-      if (tok !== window.__liteTok) return;
-      els.forEach(e => { if (e !== el) e.style.opacity = '0'; });
-      imgs.forEach(im => { if (im !== el) { im.style.opacity = '0'; im.style.display = 'none'; } });
-    }, 700);
-    return;
-  }
-  els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; });
-  cleanupLayers(el);
-}
 // Sıradaki medyayı boştaki öğeye önceden yükle: geçişte bekleme veya takılma olmaz
 function prepNext() {
   if (videos.length < 2) { prepared = { id: null }; return; }
@@ -1499,10 +1484,9 @@ els.forEach(e => {
 const lng = t => /[çğışöüÇĞİŞÖÜ]|spor|galatasaray|fenerbah|samsun|gaziantep|kayseri|alanya|antalya|hatay|konya|bodrum|kocaeli|trabzon|sivas|adana|\blig\b|ligi|kupa|süper|türk/i.test(String(t || '')) ? ' lang="tr"' : ' lang="en"';
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const brandHtml = n => n === 'ScreenPano' ? '<img src="/logo.svg?v=4" alt="ScreenPano" style="height:7.5vh;display:block">' : esc(n);
-let PER_PAGE = 5; const PAGE_MS = 9000, TRAFFIC_MS = 14000;
-const TRAFFIC_URL = 'https://yandex.com.tr/map-widget/v1/?ll=28.95%2C41.04&z=10&l=map%2Ctrf&lang=tr_TR';
+let PER_PAGE = 5;
 const PIN = new URLSearchParams(location.search).get('p');
-let matches = [], page = 0, pages = [], rot, trafficLoaded = 0;
+let matches = [], page = 0, pages = [], rot;
 function team(name, logo, lose) {
   const img = logo ? `<img src="${esc(logo)}" alt="" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.style.visibility='hidden'">` : '';
   return `<div class="tbox ${lose ? 'lose' : ''}"><div class="lg">${img}</div><div class="nm">${esc(name)}</div></div>`;
@@ -1962,7 +1946,6 @@ function setState(s) {
   fillEmpty();
 }
 const tcol = v => v <= 20 ? '#3ecf4a' : v <= 40 ? '#e6c229' : v <= 60 ? '#f08a24' : '#ee3b2f';
-const tlab = v => v <= 20 ? 'Akıcı' : v <= 40 ? 'Normal' : v <= 60 ? 'Yoğun' : 'Çok yoğun';
 function setTraffic(t) {
   const el = document.getElementById('tidx');
   if (!t) { el.classList.remove('on'); return; }

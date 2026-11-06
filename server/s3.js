@@ -85,7 +85,6 @@ function request({ method, key, query, headers, body, stream, payloadHash }) {
 
 const putFile = (key, file, type = 'application/octet-stream', cache = 'public, max-age=31536000, immutable') =>
   request({ method: 'PUT', key, body: fs.createReadStream(file), headers: { 'content-type': type, 'content-length': fs.statSync(file).size, 'cache-control': cache } });
-const putBuffer = (key, buf, type = 'application/octet-stream') => request({ method: 'PUT', key, body: buf, headers: { 'content-type': type } });
 const del = key => request({ method: 'DELETE', key }).catch(e => { if (e.status !== 404) throw e; });
 const head = key => request({ method: 'HEAD', key }).then(r => ({ size: Number(r.headers['content-length']) || 0 })).catch(e => { if (e.status === 404) return null; throw e; });
 // Okuma akışı (Range desteğiyle: video ileri sarma için)
@@ -104,4 +103,4 @@ async function list(prefix) {
 }
 const publicUrl = key => (cfg.publicUrl ? `${cfg.publicUrl}/${encKey(key)}` : '');
 
-module.exports = { enabled, configError, cfg: { endpoint: cfg.endpoint, bucket: cfg.bucket, publicUrl: cfg.publicUrl }, sign, request, putFile, putBuffer, del, head, getStream, list, publicUrl, _secret: () => cfg.secret };
+module.exports = { enabled, configError, cfg: { endpoint: cfg.endpoint, bucket: cfg.bucket, publicUrl: cfg.publicUrl }, sign, request, putFile, del, head, getStream, list, publicUrl };

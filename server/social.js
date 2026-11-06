@@ -112,4 +112,4 @@ function tick() {
 }
 function start() { setTimeout(tick, 30000); setInterval(tick, 10 * 60000); }
 
-module.exports = { googleUsage, googleSearch, googleRefresh, igRefresh, start, hasGoogleKey: () => !!gkey() };
+module.exports = { googleUsage, googleSearch, googleRefresh, igRefresh, start };

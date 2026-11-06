@@ -15,13 +15,6 @@ function getTenantMediaAt(t, ml) {
   }
   return cur.at;
 }
-function resetTenantMediaAt(tid) {
-  const now = Date.now();
-  let cur = tenantMediaSync.get(tid);
-  if (cur) cur.at = now;
-  else tenantMediaSync.set(tid, { sig: '', at: now });
-  return now;
-}
 const { plan, access } = require('./plans');
 const { WIDGETS, defaultLayout } = require('./widgets');
 
@@ -214,4 +207,4 @@ function publicState(t) {
   };
 }
 
-module.exports = { happyOn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, resetTenantMediaAt, LANGS };
+module.exports = { happyOn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };

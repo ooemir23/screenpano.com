@@ -35,8 +35,6 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
     private var cur: JSONObject? = null
     private var phase = 0
     private val ctxListener: () -> Unit = { applyVisibility() }
-    val contentW: Int get() = content.layoutParams?.width ?: 0
-    val contentH: Int get() = content.layoutParams?.height ?: 0
 
     private val rotate = object : Runnable {
         override fun run() { if (list().size > 1) { idx++; draw() }; main.postDelayed(this, 12_000L) }

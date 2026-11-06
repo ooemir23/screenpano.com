@@ -4,5 +4,4 @@ module.exports = {
   pushTenant: (_tid) => {},     // bir işletmenin ekranlarına güncel durum
   send: (_filter, _msg) => {},  // filtreye uyan ekranlara mesaj: filter(tenant, client) => bool
   connectedTenantIds: () => new Set(),
-  clientCount: () => 0,
 };
