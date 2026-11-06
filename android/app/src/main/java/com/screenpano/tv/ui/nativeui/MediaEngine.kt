@@ -40,6 +40,9 @@ class MediaEngine(private val h: MediaHost) {
     private var aligned = false
     private var tz = "Europe/Istanbul"
     private var imageSec = 10
+    private var videoGapMs = 3000L // video bitince sonraki içeriğe geçmeden son karede bekleme (panel ayarı)
+    /** İçerikler arası yumuşak geçiş süresi (panel ayarı); MainActivity fotoğraf geçişinde kullanır. */
+    var xfadeMs = 1200L; private set
     private var lang = "tr"
     private var tok = 0
     private val endTask = Runnable { boundary() }
@@ -57,6 +60,8 @@ class MediaEngine(private val h: MediaHost) {
         if (!on) { stop(); return }
         tz = st.raw.optString("tz").ifEmpty { tz }
         imageSec = st.raw.optInt("imageSeconds", 10).coerceAtLeast(1)
+        videoGapMs = st.raw.optInt("videoGapSec", 3).coerceIn(0, 30) * 1000L
+        xfadeMs = (st.raw.optDouble("xfadeSec", 1.2).takeIf { !it.isNaN() } ?: 1.2).coerceIn(0.4, 4.0).let { (it * 1000).toLong() }
         val arr = st.raw.optJSONArray("videos")
         val l = ArrayList<JSONObject>()
         if (arr != null) for (i in 0 until arr.length()) arr.optJSONObject(i)?.let { if (schActive(it.optJSONObject("sch"))) l.add(it) }
@@ -140,7 +145,7 @@ class MediaEngine(private val h: MediaHost) {
         if (!running || waiting || c.optString("type") != "video") return
         val left = 3000L - (System.currentTimeMillis() - startedAt) // çok kısa video / başlarken hata: birazdan geç
         handler.removeCallbacks(endTask)
-        handler.postDelayed(endTask, left.coerceAtLeast(500L))
+        handler.postDelayed(endTask, maxOf(videoGapMs, left).coerceAtLeast(500L)) // panelde ayarlı bekleme: son kare ekranda kalır
     }
 
     // ---- iç ----

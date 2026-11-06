@@ -472,7 +472,7 @@ class MainActivity : AppCompatActivity() {
         handler.postDelayed({ if (token == mediaTok && mediaKind != "video") { exoPlayer?.pause(); binding.playerView.visibility = View.INVISIBLE } }, 450)
     }
     private var mediaTok = 0
-    private val PHOTO_FADE_MS = 800L // web geçişiyle aynı süre: kısa geçiş keskin görünür
+    private val PHOTO_FADE_MS get() = mediaEngine.xfadeMs // panelden ayarlanır (varsayılan 1,2 sn)
 
     // ---- Fotoğraf geçişi: iki katman (A altta, B üstte), yalnız alpha animasyonu (GPU'yu yormaz) ----
     // Yeni fotoğraf B'ye gelirse B eskinin üstünde açılır; A'ya gelirse eski (B) sönerek altındaki yeniyi gösterir.
