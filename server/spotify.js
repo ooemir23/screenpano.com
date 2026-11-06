@@ -13,9 +13,9 @@ const tenants = require('./tenants');
 const SCOPE = 'user-read-private user-read-email playlist-read-private playlist-read-collaborative user-library-read user-read-playback-state user-modify-playback-state user-read-currently-playing streaming';
 const API = 'https://api.spotify.com/v1/';
 const redirectUri = () => `${config.BASE_URL}/api/oauth/spotify/callback`;
-// Uygulama anahtarı: işletme kendi Spotify uygulamasını girdiyse o (yönetimden bağımsız çalışır), yoksa platformun ortak anahtarı
+// Uygulama anahtarı yalnız işletmenin kendi Spotify uygulamasından gelir; ortak/platform anahtarı yoktur
 const own = t => { const a = (t && t.db && t.db.oauthApps && t.db.oauthApps.spotify) || {}; return a.id && a.secret ? { id: String(a.id), secret: String(a.secret) } : null; };
-const creds = t => own(t) || { id: store.setting('spotify_client_id', '').trim(), secret: store.setting('spotify_client_secret', '').trim() };
+const creds = t => own(t) || { id: '', secret: '' };
 const configured = t => { const c = creds(t); return !!(c.id && c.secret); };
 const sp = t => { if (!t.db.music || typeof t.db.music !== 'object') t.db.music = { playlists: [] }; if (!t.db.music.spotify || typeof t.db.music.spotify !== 'object') t.db.music.spotify = {}; return t.db.music.spotify; };
 let onChange = () => {}; // routes-ext bağlar: anahtar yenilenince TV'lere yeni durum gider
@@ -219,7 +219,7 @@ async function disconnect(t) {
   cache.delete(t.id); nowCache.delete(t.id); tenants.save(t); onChange(t);
 }
 
-const status = t => { const a = sp(t); return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', shared: configured(), connected: !!(a.refreshToken && !a.expired), expired: !!a.expired, name: a.name || '', premium: a.product === 'premium', product: a.product || '', target: a.target || '', targetName: a.targetName || '', at: a.connectedAt || 0 }; };
+const status = t => { const a = sp(t); return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', connected: !!(a.refreshToken && !a.expired), expired: !!a.expired, name: a.name || '', premium: a.product === 'premium', product: a.product || '', target: a.target || '', targetName: a.targetName || '', at: a.connectedAt || 0 }; };
 const connected = t => { const a = (t.db.music || {}).spotify || {}; return !!(a.refreshToken && !a.expired); };
 // Cihaz seçimi "app" (Spotify uygulaması/başka Connect cihazı) ise müziği Spotify çalar, ScreenPano çalmaz
 const external = t => { const a = (t.db.music || {}).spotify || {}; return connected(t) && !!a.target && a.target !== 'screenpano'; };

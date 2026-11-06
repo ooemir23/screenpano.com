@@ -7,9 +7,9 @@ const tenants = require('./tenants');
 
 const SCOPE = 'https://www.googleapis.com/auth/youtube.readonly';
 const redirectUri = () => `${config.BASE_URL}/api/oauth/google/callback`;
-// Uygulama anahtarı: işletme kendi Google OAuth istemcisini girdiyse o (yönetimden bağımsız çalışır), yoksa platformun ortak anahtarı
+// Uygulama anahtarı yalnız işletmenin kendi Google OAuth istemcisinden gelir; ortak/platform anahtarı yoktur
 const own = t => { const a = (t && t.db && t.db.oauthApps && t.db.oauthApps.google) || {}; return a.id && a.secret ? { id: String(a.id), secret: String(a.secret) } : null; };
-const creds = t => own(t) || { id: store.setting('google_client_id', '').trim(), secret: store.setting('google_client_secret', '').trim() };
+const creds = t => own(t) || { id: '', secret: '' };
 const configured = t => { const c = creds(t); return !!(c.id && c.secret); };
 
 // Giriş oturumları: state -> { tid, at } (15 dk geçerli, tek kullanımlık)
@@ -206,6 +206,6 @@ async function tracks(t, listId) {
   return items;
 }
 
-const status = t => { const a = t.db.ytAuth; return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', shared: configured(), connected: !!(a && a.refresh && !a.expired), expired: !!(a && a.expired), name: (a && a.name) || '', at: (a && a.at) || 0 }; };
+const status = t => { const a = t.db.ytAuth; return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', connected: !!(a && a.refresh && !a.expired), expired: !!(a && a.expired), name: (a && a.name) || '', at: (a && a.at) || 0 }; };
 
 module.exports = { configured, authUrl, callback, playlists, tracks, disconnect, status, redirectUri, search };
