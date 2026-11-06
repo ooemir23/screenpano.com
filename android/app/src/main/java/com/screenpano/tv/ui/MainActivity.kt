@@ -596,7 +596,13 @@ class MainActivity : AppCompatActivity() {
 
         /** Son dakika bildirim bandı: yerel çizilir, yerel widget'ların üstünde, opak zeminli. */
         @JavascriptInterface
-        fun brkShow(title: String, source: String) {
+        fun brkShow(title: String, source: String) = brkDraw(title, source, 0.02f)
+
+        /** Aynı bant; sağ kenarı logoya binmesin diye sayfa, genişliğin kaçta kaçının boş kalacağını bildirir (APK 3.22+). */
+        @JavascriptInterface
+        fun brkShowR(title: String, source: String, right: Double) = brkDraw(title, source, right.toFloat().coerceIn(0.02f, 0.6f))
+
+        private fun brkDraw(title: String, source: String, rightFrac: Float) {
             handler.post {
                 try {
                     val H = resources.displayMetrics.heightPixels.toFloat(); val W = resources.displayMetrics.widthPixels.toFloat()
@@ -620,7 +626,7 @@ class MainActivity : AppCompatActivity() {
                     val head = tx(title, 2.9f, android.graphics.Color.WHITE, true).apply { maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; setLineSpacing(0f, 1.05f) }
                     bar.addView(head, android.widget.LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = (W * 0.014f).toInt(); rightMargin = (W * 0.014f).toInt() })
                     if (source.isNotEmpty()) bar.addView(tx(source, 1.5f, android.graphics.Color.parseColor("#ffb0b0"), true))
-                    val lp = FrameLayout.LayoutParams(-1, -2).apply { leftMargin = (W * 0.02f).toInt(); rightMargin = (W * 0.02f).toInt(); topMargin = (vh * 2f).toInt() }
+                    val lp = FrameLayout.LayoutParams(-1, -2).apply { leftMargin = (W * 0.02f).toInt(); rightMargin = (W * rightFrac).toInt(); topMargin = (vh * 2f).toInt() }
                     binding.rootContainer.addView(bar, lp); bar.bringToFront()
                     bar.alpha = 0f; bar.translationY = -vh * 6; bar.animate().alpha(1f).translationY(0f).setDuration(450).start()
                     brkView = bar

@@ -1731,11 +1731,23 @@ function checkBreaking() {
   brkShown.add(n.title); brkAt = Date.now();
   try { localStorage.setItem('brkShown', JSON.stringify([...brkShown].slice(-40))); } catch (e) {}
   clearTimeout(brkTimer);
+  const rt = brkRight();
   if (window.__N && window.__N.brkShow) { // APK 3.18+: bant yerel çizilir (yerel widget'ların altında kalıp karışmasın)
-    try { window.__N.brkShow(n.title, n.source || ''); brkTimer = setTimeout(() => { try { window.__N.brkHide(); } catch (e) {} }, 25000); return; } catch (e) {}
+    try { if (window.__N.brkShowR) window.__N.brkShowR(n.title, n.source || '', rt); else window.__N.brkShow(n.title, n.source || ''); brkTimer = setTimeout(() => { try { window.__N.brkHide(); } catch (e) {} }, 25000); return; } catch (e) {}
   }
+  brkEl.style.right = (rt * 100).toFixed(2) + 'vw';
   brkEl.innerHTML = `<b>SON DAKİKA</b><span>${esc(n.title)}</span><small>${esc(n.source)}</small>`;
   brkEl.classList.add('on'); brkTimer = setTimeout(() => brkEl.classList.remove('on'), 25000);
+}
+// Son dakika bandının sağ kenarı: üst şeritte logo varsa logonun soluna kadar (üstüne binmez); değilse kenar boşluğu. Genişliğin kesri olarak döner.
+function brkRight() {
+  const def = 0.02;
+  try {
+    const c = document.querySelector('.cell[data-w="logo"]'); if (!c || !c.offsetParent) return def;
+    const r = c.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    if (r.width < 4 || r.top > H * 0.16 || r.left < W * 0.3) return def; // logo üst şeritte değil ya da sol yarıdaysa dokunma
+    return Math.max(def, Math.min(0.6, (W - r.left) / W + 0.009));
+  } catch (e) { return def; }
 }
 setInterval(checkBreaking, 30000);
 let tickSeg = 0, tickInfoPos = 0, segCount = 1, segIsInfo = false, liveLeagues = [];
