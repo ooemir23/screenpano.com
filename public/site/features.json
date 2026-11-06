@@ -986,7 +986,8 @@
       "points": [
         "Kenar ve köşe tutamaçları kutuya gelince görünür",
         "Saat ve tarih kutusu: Yalnız saat, yalnız tarih ya da ikisi birden",
-        "Logo: Kutuya sığdır, kutuyu doldur ya da ger; hizalama ve iç boşluk ayarı"
+        "Logo: Kutuya sığdır, kutuyu doldur ya da ger; hizalama ve iç boşluk ayarı",
+        "Hava ve piyasalar kutusu da birden çok eklenebilir: biri yalnız hava, diğeri yalnız piyasa"
       ],
       "plan": "all",
       "compare": "Serbest düzen boyutlandırma",
@@ -1004,7 +1005,8 @@
           "points": [
             "Edge and corner handles appear when you hover a box",
             "Clock box: time only, date only or both",
-            "Logo: fit, fill or stretch to the box; alignment and padding options"
+            "Logo: fit, fill or stretch to the box; alignment and padding options",
+            "Weather and markets boxes can also be added several times: one for weather only, another for markets only"
           ]
         },
         "de": {
@@ -1015,7 +1017,8 @@
           "points": [
             "Kanten- und Eckgriffe erscheinen beim Überfahren einer Box",
             "Uhr-Box: nur Uhrzeit, nur Datum oder beides",
-            "Logo: einpassen, füllen oder strecken; Ausrichtung und Innenabstand"
+            "Logo: einpassen, füllen oder strecken; Ausrichtung und Innenabstand",
+            "Auch Wetter-und-Märkte-Boxen lassen sich mehrfach hinzufügen: eine nur für Wetter, eine nur für Märkte"
           ]
         },
         "ar": {
@@ -1026,7 +1029,8 @@
           "points": [
             "تظهر مقابض الحواف والزوايا عند مرور المؤشر فوق المربع",
             "مربع الساعة: الوقت فقط أو التاريخ فقط أو كلاهما",
-            "الشعار: ملاءمة أو ملء أو تمديد؛ مع خيارات المحاذاة والهامش"
+            "الشعار: ملاءمة أو ملء أو تمديد؛ مع خيارات المحاذاة والهامش",
+            "يمكن أيضاً إضافة مربع الطقس والأسواق عدة مرات: أحدهما للطقس فقط والآخر للأسواق فقط"
           ]
         }
       }

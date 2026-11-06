@@ -63,7 +63,11 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
     private var spec: WidgetSpec? = null
     private fun fitScale(): Float {
         if (width <= 0 || height <= 0) return 1f
-        return min(height / (17f * baseVh), width / (42f * baseVh)).coerceIn(0.7f, 2.6f)
+        // içeriğe göre referans ölçü: yalnız hava ya da yalnız piyasa kutusu daha alçak/dar olabilir
+        val wx = props?.optBoolean("weather", true) != false; val rt = props?.optBoolean("rates", true) != false; val qr = props?.optBoolean("qr", false) == true
+        val refH = if (qr || (wx && rt)) 17f else 9f
+        val refW = if (qr || wx) 42f else 30f
+        return min(height / (refH * baseVh), width / (refW * baseVh)).coerceIn(0.3f, 2.6f)
     }
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
         super.onSizeChanged(w, h, ow, oh)
