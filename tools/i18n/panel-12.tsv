@@ -126,3 +126,11 @@ Uygulamayı açın ¦ Open the app ¦ App öffnen ¦ افتح التطبيق
 Ekranda giriş formu ve 6 haneli bir kod çıkar. ¦ A sign-in form and a 6-digit code appear on screen. ¦ Auf dem Bildschirm erscheinen ein Anmeldeformular und ein 6-stelliger Code. ¦ يظهر على الشاشة نموذج دخول ورمز من 6 أرقام.
 Kodu yazın ¦ Enter the code ¦ Code eingeben ¦ اكتب الرمز
 TV’deki QR’ı telefonla okutursanız kod kendiliğinden dolar. İsterseniz kutuda kullanıcı adı ve şifrenizle de giriş yapabilirsiniz. ¦ If you scan the QR on the TV with your phone, the code fills in by itself. You can also sign in on the box with your username and password. ¦ Scannen Sie den QR-Code auf dem Fernseher mit dem Handy, wird der Code automatisch ausgefüllt. Sie können sich auf der Box auch mit Benutzername und Passwort anmelden. ¦ إذا مسحت رمز QR على التلفزيون بهاتفك يُملأ الرمز تلقائيًا. ويمكنك أيضًا تسجيل الدخول على الجهاز باسم المستخدم وكلمة المرور.
+İşlemci ¦ Processor ¦ Prozessor ¦ المعالج
+Bellek (uygulama) ¦ Memory (app) ¦ Speicher (App) ¦ ذاكرة التطبيق
+Cihaz belleği ¦ Device memory ¦ Gerätespeicher ¦ ذاكرة الجهاز
+{} MB dolu ¦ {} MB used ¦ {} MB belegt ¦ {} ميغابايت مستخدمة
+Grafik belleği ¦ Graphics memory ¦ Grafikspeicher ¦ ذاكرة الرسوميات
+Ekran kartı: {} ¦ GPU: {} ¦ Grafikchip: {} ¦ وحدة الرسوميات: {}
+{} çekirdek ¦ {} cores ¦ {} Kerne ¦ {} أنوية
+Cihazın belleği doldu: uygulama yavaşlayabilir, kutuyu yeniden başlatın ¦ The device is out of memory: the app may slow down, restart the box ¦ Der Gerätespeicher ist voll: die App kann langsamer werden, starten Sie die Box neu ¦ ذاكرة الجهاز ممتلئة: قد يبطؤ التطبيق، أعد تشغيل الجهاز

@@ -890,6 +890,10 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun wsReconnect() { handler.post { tvSocket?.reconnect() } }
 
+        /** CPU / RAM / grafik belleği / GPU adı (JSON); panelde Cihazlar kartında görünür. */
+        @JavascriptInterface
+        fun sysInfo(): String = try { SysStats.json(this@MainActivity) } catch (_: Throwable) { "{}" }
+
         @JavascriptInterface
         fun versionName(): String = BuildConfig.VERSION_NAME
 

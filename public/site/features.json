@@ -706,10 +706,83 @@
           ]
         }
       }
+    },
+    {
+      "id": "kaynak",
+      "icon": "📊",
+      "title": "Cihaz kaynak kullanımı",
+      "short": "Cihaz sağlığı",
+      "text": "Her TV kutusunun işlemci, bellek ve grafik belleği kullanımını panelden görün. Kutu zorlanıyorsa takılma başlamadan fark edersiniz.",
+      "points": [
+        "Uygulamanın işlemci ve bellek kullanımı",
+        "Cihaz belleği dolunca uyarı",
+        "Ekran kartı (GPU) adı ve grafik belleği"
+      ],
+      "plan": "all",
+      "compare": "Cihaz kaynak izleme",
+      "added": "2026-11-06",
+      "visual": {
+        "type": "win",
+        "img": "p-cihaz"
+      },
+      "i18n": {
+        "en": {
+          "title": "Device resource usage",
+          "short": "Device health",
+          "compare": "Device resource monitoring",
+          "text": "See each TV box's processor, memory and graphics memory use from the panel. If a box is struggling you notice before it starts to stutter.",
+          "points": [
+            "The app's processor and memory use",
+            "Warning when device memory runs out",
+            "GPU name and graphics memory"
+          ]
+        },
+        "de": {
+          "title": "Ressourcenverbrauch der Geräte",
+          "short": "Gerätezustand",
+          "compare": "Ressourcenüberwachung der Geräte",
+          "text": "Prozessor-, Speicher- und Grafikspeicher-Nutzung jeder TV-Box im Panel ansehen. Wenn eine Box ins Schwitzen kommt, merken Sie es, bevor es ruckelt.",
+          "points": [
+            "Prozessor- und Speichernutzung der App",
+            "Warnung bei vollem Gerätespeicher",
+            "Name des Grafikchips und Grafikspeicher"
+          ]
+        },
+        "ar": {
+          "title": "استهلاك موارد الأجهزة",
+          "short": "حالة الجهاز",
+          "compare": "مراقبة موارد الجهاز",
+          "text": "اطّلع من اللوحة على استهلاك كل جهاز تلفاز للمعالج والذاكرة وذاكرة الرسوميات. إن كان الجهاز مجهدًا تلاحظ ذلك قبل أن يبدأ التقطيع.",
+          "points": [
+            "استهلاك التطبيق للمعالج والذاكرة",
+            "تنبيه عند امتلاء ذاكرة الجهاز",
+            "اسم وحدة الرسوميات وذاكرتها"
+          ]
+        }
+      }
     }
   ],
   "extras": [
-    {"icon": "🎧", "title": "Spotify hesabı ve yeni müzik bölümü", "text": "Spotify hesabınızı bağlayın: listeleriniz ve şarkıları panelde görünür, TV kutusundaki Spotify uygulamasını panelden ya da telefondan çalıp durdurursunuz (Spotify Premium gerekir). Müzik bölümü YouTube Music düzeninde; YouTube ve Spotify kurulumu resimli adımlarla anlatılır.", "added": "2026-11-06", "i18n": {"en": {"title": "Spotify account and a new music section", "text": "Connect your Spotify account: your playlists and their songs appear in the panel, and you play or pause the Spotify app on the TV box from the panel or your phone (Spotify Premium required). The music section follows the YouTube Music layout, with illustrated setup steps for YouTube and Spotify."}, "de": {"title": "Spotify-Konto und neuer Musikbereich", "text": "Verbinden Sie Ihr Spotify-Konto: Ihre Playlists und deren Songs erscheinen im Panel, und Sie starten oder pausieren die Spotify-App auf der TV-Box über das Panel oder Ihr Handy (Spotify Premium erforderlich). Der Musikbereich folgt dem Aufbau von YouTube Music, mit bebilderten Einrichtungsschritten für YouTube und Spotify."}, "ar": {"title": "حساب Spotify وقسم موسيقى جديد", "text": "اربط حساب Spotify: تظهر قوائمك وأغانيها في اللوحة، وتشغّل تطبيق Spotify على صندوق التلفاز أو توقفه من اللوحة أو هاتفك (يتطلب Spotify Premium). يتبع قسم الموسيقى تصميم YouTube Music مع خطوات إعداد مصوّرة لـ YouTube و Spotify."}}},
+    {
+      "icon": "🎧",
+      "title": "Spotify hesabı ve yeni müzik bölümü",
+      "text": "Spotify hesabınızı bağlayın: listeleriniz ve şarkıları panelde görünür, TV kutusundaki Spotify uygulamasını panelden ya da telefondan çalıp durdurursunuz (Spotify Premium gerekir). Müzik bölümü YouTube Music düzeninde; YouTube ve Spotify kurulumu resimli adımlarla anlatılır.",
+      "added": "2026-11-06",
+      "i18n": {
+        "en": {
+          "title": "Spotify account and a new music section",
+          "text": "Connect your Spotify account: your playlists and their songs appear in the panel, and you play or pause the Spotify app on the TV box from the panel or your phone (Spotify Premium required). The music section follows the YouTube Music layout, with illustrated setup steps for YouTube and Spotify."
+        },
+        "de": {
+          "title": "Spotify-Konto und neuer Musikbereich",
+          "text": "Verbinden Sie Ihr Spotify-Konto: Ihre Playlists und deren Songs erscheinen im Panel, und Sie starten oder pausieren die Spotify-App auf der TV-Box über das Panel oder Ihr Handy (Spotify Premium erforderlich). Der Musikbereich folgt dem Aufbau von YouTube Music, mit bebilderten Einrichtungsschritten für YouTube und Spotify."
+        },
+        "ar": {
+          "title": "حساب Spotify وقسم موسيقى جديد",
+          "text": "اربط حساب Spotify: تظهر قوائمك وأغانيها في اللوحة، وتشغّل تطبيق Spotify على صندوق التلفاز أو توقفه من اللوحة أو هاتفك (يتطلب Spotify Premium). يتبع قسم الموسيقى تصميم YouTube Music مع خطوات إعداد مصوّرة لـ YouTube و Spotify."
+        }
+      }
+    },
     {
       "icon": "🎨",
       "title": "Hazır başlangıç paketleri",

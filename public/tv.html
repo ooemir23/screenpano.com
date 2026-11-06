@@ -3288,6 +3288,7 @@ function sendStatus() {
     cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,
     jank: (() => { const j = window.__jank, now = performance.now(), t0 = j.r || BOOT, sec = Math.max(1, (now - t0) / 1000); const out = { fps: Math.round(j.f / sec), drops: j.d }; j.f = 0; j.d = 0; j.r = now; return out; })(),
     mem: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0,
+    res: (() => { try { const r = n && n.sysInfo ? JSON.parse(n.sysInfo() || '{}') : {}; if (!r.cores && navigator.hardwareConcurrency) r.cores = navigator.hardwareConcurrency; if (!r.ramTotal && navigator.deviceMemory) r.ramTotal = Math.round(navigator.deviceMemory * 1024); return r; } catch (e) { return {}; } })(),
   });
 }
 setInterval(sendStatus, 60000);

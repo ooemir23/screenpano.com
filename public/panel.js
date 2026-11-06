@@ -1305,12 +1305,29 @@ function devCards() {
   const st = new Map(((DEVST && DEVST.devices) || []).map(x => [x.id, x]));
   return devs.map(d => devCard(d, (st.get(d.id) || {}).report || {})).join('');
 }
+// Kaynak çubuğu: yüzde değerine göre renk (yeşil / sarı / kırmızı)
+function devMeter(label, pct, text) {
+  const p = Math.max(0, Math.min(100, Math.round(pct))), c = p >= 90 ? 'r' : p >= 70 ? 'y' : 'g';
+  return `<div class="dv-m"><span class="l">${label}</span><span class="bar"><i class="${c}" style="width:${p}%"></i></span><b>${esc(text)}</b></div>`;
+}
+function devRes(r, on) {
+  const x = r.res; if (!x || !on) return '';
+  const m = [];
+  if (x.cpu >= 0 && x.cpu !== undefined) m.push(devMeter('İşlemci', x.cpu, '%' + Math.round(x.cpu)));
+  if (x.ramApp > 0 && x.ramTotal > 0) m.push(devMeter('Bellek (uygulama)', x.ramApp / x.ramTotal * 100, `${x.ramApp} MB / ${x.ramTotal} MB`));
+  if (x.ramTotal > 0 && x.ramFree >= 0 && x.ramFree !== undefined) m.push(devMeter('Cihaz belleği', (x.ramTotal - x.ramFree) / x.ramTotal * 100, `${x.ramTotal - x.ramFree} MB dolu`));
+  if (x.gfx > 0) m.push(devMeter('Grafik belleği', x.ramTotal > 0 ? x.gfx / x.ramTotal * 100 : 0, x.gfx + ' MB'));
+  if (!m.length && !x.gpu) return '';
+  const info = [x.gpu ? 'Ekran kartı: ' + x.gpu : '', x.cores ? x.cores + ' çekirdek' : ''].filter(Boolean).join(' · ');
+  return `<div class="dv-res">${m.join('')}${info ? `<small>${esc(info)}</small>` : ''}</div>`;
+}
 function devCard(d, r) {
   const on = !!d.online, old = !!(DEVST && DEVST.build && r.build && r.build !== DEVST.build);
   const flags = [];
   if (old) flags.push('Eski sürüm: birkaç dakika içinde kendini güncellemeli');
   if (r.boot === 'izin-yok') flags.push('Kutu açılınca ekran gelmez: kutuda Ayarlar › Uygulamalar › ScreenPano › “Diğer uygulamaların üzerinde göster” iznini açın');
   if (r.jank && r.jank.drops > 5) flags.push(`Ekranda takılma var (~${r.jank.fps} fps)`);
+  if (r.res && r.res.low) flags.push('Cihazın belleği doldu: uygulama yavaşlayabilir, kutuyu yeniden başlatın');
   if (r.lastError) flags.push('Son hata: ' + r.lastError);
   const rows = [['Model', r.model], ['Adres', r.ip], ['Uygulama', r.app], ['Yayın sürümü', r.build ? r.build.slice(0, 8) + (old ? ' ⚠' : '') : ''], ['Ekran', r.screen], ['Açık kalma', r.uptime ? upFmt(r.uptime) : ''], ['Müzik', r.mus ? musDiag(r.mus) : ''], ['Akıcılık', r.jank ? `~${r.jank.fps} fps` : ''], ['Çevrimdışı önbellek', r.cached ? `${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}` : ''], ['Eklendi', fmtDate(d.created)]].filter(x => x[1]);
   return `<article class="dv ${on ? 'on' : 'off'}">
@@ -1320,6 +1337,7 @@ function devCard(d, r) {
         <button type="button" onclick="logoutDev('${d.id}')">${ic('log-out')}Uygulamadan çıkış yaptır</button>
         <button type="button" class="d" onclick="delDev('${d.id}')">${ic('trash-2')}Cihazı kaldır</button></div></details></header>
     ${r.playing ? `<div class="dv-now">${ic('play-f')}<span>Şu an: ${esc(r.playing)}</span></div>` : ''}
+    ${devRes(r, on)}
     ${flags.map(f => `<div class="dv-flag">${ic('triangle-alert')}<span>${esc(f)}</span></div>`).join('')}
     <div class="dv-act">${on ? `<button class="btn s" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button>` : `<span class="muted">Cihaz kapalı ya da internete bağlı değil: elektriğini ve internetini kontrol edin.</span>`}</div>
     <div id="snap-${d.id}"></div>

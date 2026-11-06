@@ -46,6 +46,12 @@ function report(tid, deviceId, s, ip) {
     cached: Math.max(0, Math.round(Number(s.cached) || 0)), cacheMB: Math.max(0, Math.round(Number(s.cacheMB) || 0)),
     online: s.online !== false,
     jank: s.jank && typeof s.jank === 'object' ? { fps: Math.max(0, Math.round(Number(s.jank.fps) || 0)), drops: Math.max(0, Math.round(Number(s.jank.drops) || 0)) } : undefined, mem: Math.round(Number(s.mem) || 0) || undefined,
+    res: (() => { // cihazın kaynak kullanımı: yalnız bilinen sayısal alanlar, sınırlı aralıkta
+      const r = s.res; if (!r || typeof r !== 'object') return undefined;
+      const n = (v, max) => { v = Number(v); return Number.isFinite(v) && v >= 0 ? Math.min(max, Math.round(v * 10) / 10) : undefined; };
+      const out = { cpu: n(r.cpu, 100), cores: n(r.cores, 256), ramApp: n(r.ramApp, 1e6), ramTotal: n(r.ramTotal, 1e6), ramFree: n(r.ramFree, 1e6), gfx: n(r.gfx, 1e6), heap: n(r.heap, 1e6), procs: n(r.procs, 64), low: r.low === true, gpu: String(r.gpu || '').replace(/[<>]/g, '').slice(0, 60) };
+      return Object.values(out).some(v => v !== undefined && v !== false && v !== '') ? out : undefined;
+    })(),
   };
   // adı hâlâ varsayılan ("TV kutusu") olan cihaz, bağlanan cihazın model adıyla adlandırılır; elle verilen ad değişmez
   if (clean.model && !/^(unknown|generic)\b/i.test(clean.model)) { const nm = clean.model.charAt(0).toUpperCase() + clean.model.slice(1); try { store.q.deviceAutoName.run(nm.slice(0, 40), deviceId); } catch (e) { /* adlandırma başarısız olsa da rapor kaydedilir */ } }
