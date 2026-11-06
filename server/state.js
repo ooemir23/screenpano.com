@@ -167,6 +167,7 @@ function publicState(t) {
     matches: pro ? [
       ...F.autoMatches.filter(m => enabled.some(([, label]) => label === m.league)),
     ].slice(0, 30).map(m => ({ ...m, hl: F.localLogo(m.hl), al: F.localLogo(m.al) })) : [],
+    videoGapSec: Math.max(0, Math.min(30, Number.isFinite(Number(db.videoGapSec)) && db.videoGapSec !== undefined ? Math.round(Number(db.videoGapSec)) : 3)), xfadeSec: Math.max(0.4, Math.min(4, Number.isFinite(Number(db.xfadeSec)) && db.xfadeSec !== undefined ? Number(db.xfadeSec) : 1.2)),
     showStandings: pro && db.showStandings !== false,
     standings: pro ? Object.fromEntries(enabled.filter(([code]) => F.standings.has(code) && !(db.hideTables || []).includes(code)).map(([code, label]) => [label, F.standings.get(code).map(r => ({ ...r, logo: F.localLogo(r.logo) }))])) : {},
     trafficApi: pro && F.wantsTraffic(t) ? store.setting('traffic_api', '') : '',

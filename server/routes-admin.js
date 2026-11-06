@@ -573,6 +573,8 @@ r.put('/options', (req, res) => {
   if (typeof b.showTraffic === 'boolean') db.showTraffic = b.showTraffic;
   if (typeof b.showBookSlides === 'boolean') db.showBookSlides = b.showBookSlides;
   if (b.bookEvery != null && isFinite(Number(b.bookEvery))) db.bookEvery = Math.max(1, Math.min(50, Math.round(Number(b.bookEvery))));
+  if (b.videoGapSec != null && isFinite(Number(b.videoGapSec))) db.videoGapSec = Math.max(0, Math.min(30, Math.round(Number(b.videoGapSec))));
+  if (b.xfadeSec != null && isFinite(Number(b.xfadeSec))) db.xfadeSec = Math.max(0.4, Math.min(4, Math.round(Number(b.xfadeSec) * 10) / 10));
   if (b.bookGapMin != null && isFinite(Number(b.bookGapMin))) db.bookGapMin = Math.max(0, Math.min(120, Math.round(Number(b.bookGapMin))));
   if (['auto', 'lite', 'ultra', 'full'].includes(b.fxMode)) db.fxMode = b.fxMode;
   if (b.safeInset !== undefined && isFinite(Number(b.safeInset))) db.safeInset = Math.max(0, Math.min(12, Math.round(Number(b.safeInset) * 2) / 2));

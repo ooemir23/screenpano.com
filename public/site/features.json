@@ -868,6 +868,60 @@
           ]
         }
       }
+    },
+    {
+      "id": "medya-gecis",
+      "icon": "🎞️",
+      "title": "Videolar bitince nefes alır, içerikler yumuşak geçer",
+      "short": "Yumuşak geçiş",
+      "text": "Video bittiğinde son karede istediğiniz süre kadar beklenir, sonraki içeriğe ani kesmeyle değil yavaşça sönüp açılarak geçilir. Bekleme ve geçiş hızını panelden ayarlarsınız.",
+      "points": [
+        "Video sonrası bekleme: hemen, 2, 3, 5, 10 ya da 20 sn",
+        "Geçiş hızı: hızlı, yumuşak, çok yumuşak ya da yavaş",
+        "Ayar tüm ekranlara kendiliğinden yansır"
+      ],
+      "plan": "all",
+      "compare": "Medya geçiş ayarları",
+      "added": "2026-11-06",
+      "visual": {
+        "type": "win",
+        "img": "p-cihaz"
+      },
+      "i18n": {
+        "en": {
+          "title": "Videos get a pause, content fades smoothly",
+          "short": "Smooth transitions",
+          "compare": "Media transition settings",
+          "text": "When a video ends, the last frame stays for as long as you choose, and the next item fades in softly instead of cutting abruptly. Set the wait and the fade speed in the panel.",
+          "points": [
+            "Wait after video: none, 2, 3, 5, 10 or 20 s",
+            "Fade speed: fast, soft, very soft or slow",
+            "The setting reaches every screen automatically"
+          ]
+        },
+        "de": {
+          "title": "Videos bekommen eine Pause, Inhalte blenden weich über",
+          "short": "Weiche Übergänge",
+          "compare": "Übergangseinstellungen für Medien",
+          "text": "Nach Videoende bleibt das letzte Bild so lange stehen, wie Sie möchten, und der nächste Inhalt blendet weich ein statt hart zu schneiden. Wartezeit und Überblendtempo stellen Sie im Panel ein.",
+          "points": [
+            "Wartezeit nach dem Video: sofort, 2, 3, 5, 10 oder 20 s",
+            "Überblendtempo: schnell, weich, sehr weich oder langsam",
+            "Die Einstellung erreicht alle Bildschirme automatisch"
+          ]
+        },
+        "ar": {
+          "title": "الفيديو يلتقط أنفاسه والمحتوى ينتقل بنعومة",
+          "short": "انتقال ناعم",
+          "compare": "إعدادات الانتقال بين الوسائط",
+          "text": "عند انتهاء الفيديو تبقى اللقطة الأخيرة للمدة التي تختارها، ثم يظهر المحتوى التالي بتلاشٍ ناعم بدل القطع المفاجئ. تضبط مدة الانتظار وسرعة الانتقال من اللوحة.",
+          "points": [
+            "الانتظار بعد الفيديو: فورًا أو 2 أو 3 أو 5 أو 10 أو 20 ثانية",
+            "سرعة الانتقال: سريع أو ناعم أو ناعم جدًا أو بطيء",
+            "يصل الإعداد إلى كل الشاشات تلقائيًا"
+          ]
+        }
+      }
     }
   ],
   "extras": [

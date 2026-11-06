@@ -63,7 +63,7 @@ html,body{height:100%;width:100%;background:var(--edge);color:var(--white);font-
 #bgw{position:absolute;inset:.6vh;border-radius:1.30vh;overflow:hidden;background:#0e1013}
 #bgc{width:100%;height:100%;display:block;opacity:.6;transform:scale(1.1);contain:paint}
 #bgw::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(var(--a1),.22) 0%,rgba(14,16,19,.85) 75%),linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.6) 100%)}
-video,#img,#img2{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100% - 1.2vh);object-fit:contain;background:transparent;border-radius:1.30vh;display:block;transition:opacity .8s cubic-bezier(.2,.8,.2,1);will-change:opacity}
+video,#img,#img2{position:absolute;inset:.6vh;width:calc(100% - 1.2vh);height:calc(100% - 1.2vh);object-fit:contain;background:transparent;border-radius:1.30vh;display:block;transition:opacity var(--xf,.8s) cubic-bezier(.2,.8,.2,1);will-change:opacity}
 /* APK'da videolar sayfanın ARKASINDAKİ yerel katmanda (ExoPlayer) oynar: görünmesi için video oynarken (exo-on)
    sayfanın o bölgeye kadar her katmanı şeffaf olmalı. Fotoğraf/afiş gösterilirken sayfa yine opak: duraklatılmış
    videonun son karesi arkadan görünmez. Kenar rengi uygulamanın kök katmanına verilir (setBackdrop). */
@@ -286,8 +286,8 @@ html.nat-ticker #ttrack{animation:none !important}
 #bday.on{display:flex}
 #bday p{white-space:nowrap;font-size:5.4vh;font-weight:600;color:var(--white);padding-left:100%;animation:slide var(--d,20s) linear infinite}
 @keyframes slide{to{transform:translateX(-100%)}}
-video{transition:opacity .8s ease-in-out;will-change:opacity;transform:translateZ(0)}
-#img{opacity:0;transition:opacity .8s ease-in-out;will-change:opacity;transform:translateZ(0)}
+video{transition:opacity var(--xf,.8s) ease-in-out;will-change:opacity;transform:translateZ(0)}
+#img{opacity:0;transition:opacity var(--xf,.8s) ease-in-out;will-change:opacity;transform:translateZ(0)}
 /* çok hafif kademe: yalnız GPU'yu yoran süsler kapanır (gölge, bulanıklık, filtre); içerik ve geçişler aynen çalışır */
 html.lite2 *,html.lite2 *::before,html.lite2 *::after{box-shadow:none!important;text-shadow:none!important;filter:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;will-change:auto!important}
 html.lite2 #big .yaura,html.lite2 #big .yglow,html.lite2 #big .ysmk,html.lite2 #big .yflare,html.lite2 #big .ypl{display:none!important}
@@ -1476,7 +1476,7 @@ setInterval(() => {
 }, 250);
 els.forEach(e => {
   e.addEventListener('loadedmetadata', () => fitMedia(e, e.videoWidth, e.videoHeight));
-  e.addEventListener('ended', () => { if (e === curV()) { clearTimeout(timer); timer = setTimeout(next, 2000); } }); // video bitince son karede 2 sn bekle
+  e.addEventListener('ended', () => { if (e === curV()) { clearTimeout(timer); timer = setTimeout(next, typeof window.__vgap === 'number' ? window.__vgap : 3000); } }); // video bitince son karede panelde ayarlı süre kadar bekle
   e.addEventListener('error', () => { if (e === curV()) { clearTimeout(timer); timer = setTimeout(next, 2000); } else prepared = { id: null }; }); // önceden yüklenen öğe hata verdiyse işaret düşer, sıradaki geçiş taze yükler
 });
 
@@ -1929,6 +1929,8 @@ function setState(s) {
   const icSig = JSON.stringify(s.infoCfg || {}); if (icSig !== window.__icSig) { window.__icSig = icSig; window.__infoCfg = s.infoCfg || {}; if (typeof schedule === 'function' && pages.length) schedule(); }
   if (infoSig !== window.__infoSig) { window.__infoSig = infoSig; pharmData = s.pharmacies; showPharm = s.showPharmacy !== false; otdData = s.onThisDay; showOtd = s.showOnThisDay !== false; newsData = s.news; showNews = s.showNews !== false; booksData = s.books; showBooks = s.showBooks !== false; moviesData = s.movies; showMovies = s.showMovies !== false; window.__forceRender = true; }
   if (s.mapAt !== mapAt) { const had = !!mapAt; mapAt = s.mapAt || null; if (!had !== !mapAt) { pagesDirty = true; window.__forceRender = true; } loadTraffic(); }
+  window.__vgap = Math.max(0, Math.min(30, Number(s.videoGapSec))) * 1000; if (!isFinite(window.__vgap)) window.__vgap = 3000; // videodan sonra son karede bekleme
+  { const xf = Math.max(0.4, Math.min(4, Number(s.xfadeSec) || 1.2)); if (xf !== window.__xf) { window.__xf = xf; document.documentElement.style.setProperty('--xf', xf + 's'); } } // medya geçişinde yumuşak sönme/açılma süresi
   setMatches(s.matches, s.standings, s.showStandings);
   lastRates = s.rates || lastRates; if (s.weather) lastWeather = s.weather; // bant çizilmeden önce kur ve hava hazır olsun
   setRates(s.rates);
