@@ -181,3 +181,6 @@ Müzik: {} ¦ Music: {} ¦ Musik: {} ¦ الموسيقى: {}
 Kapat ¦ Close ¦ Schließen ¦ إغلاق
 Cihaz ayrıntıları ¦ Device details ¦ Gerätedetails ¦ تفاصيل الجهاز
 Tamamı görünsün, boşluk bulanık dolsun (önerilen) ¦ Show everything, blurred fill (recommended) ¦ Alles sichtbar, unscharfe Füllung (empfohlen) ¦ إظهار كامل مع تعبئة ضبابية (موصى به)
+Kaç içerikte bir kitap slaytı ¦ Book slide every how many items ¦ Buchfolie nach wie vielen Inhalten ¦ شريحة الكتب كل كم محتوى
+Kitap slaytları arası en az (dakika) ¦ Minimum minutes between book slides ¦ Mindestabstand zwischen Buchfolien (Minuten) ¦ الحد الأدنى بين شرائح الكتب (دقائق)
+Örnek: 10 ve 5 yazarsanız 10 içerik oynadıktan sonra, en az 5 dakika geçmişse kitap slaytı gelir. Dakika 0 ise yalnız içerik sayısına bakılır. ¦ Example: with 10 and 5, the book slide appears after 10 items have played, provided at least 5 minutes have passed. With 0 minutes only the item count matters. ¦ Beispiel: Bei 10 und 5 erscheint die Buchfolie nach 10 Inhalten, sofern mindestens 5 Minuten vergangen sind. Bei 0 Minuten zählt nur die Anzahl. ¦ مثال: عند كتابة 10 و5 تظهر شريحة الكتب بعد تشغيل 10 محتويات إذا مرّت 5 دقائق على الأقل. وإذا كانت الدقائق 0 يُعتمد عدد المحتويات فقط.
