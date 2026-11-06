@@ -1969,7 +1969,8 @@ function accountsHtml() {
         + opt('screenpano', 'ScreenPano oynatıcısı', 'Deneme: Spotify uygulaması kurulamayan ekranlar için (her kutuda çalışmayabilir)', 'monitor', tgt === 'screenpano'))
         + (SPACC.devErr ? `<p class="ytm-muted">${esc(SPACC.devErr)}</p>` : '')
         + (devs && !devs.length ? '<p class="ytm-muted">Spotify cihazı görünmüyor: TV kutusunda Spotify uygulamasını açıp aynı hesapla giriş yapın, sonra Yenile\'ye basın.</p>' : '');
-    spBody = `<p class="ytm-ok">${ic('circle-check')}Bağlı: <b>${esc(sst.name || 'Spotify')}</b> • ${sst.premium ? 'Premium' : esc(sst.product || 'Ücretsiz')} • ${(SPACC.items || []).length} liste</p>
+    spBody = `<p class="ytm-ok">${ic('circle-check')}Bağlı: <b>${esc(sst.name || 'Spotify')}</b> • ${sst.product ? (sst.premium ? 'Premium' : 'Ücretsiz') + ' • ' : ''}${(SPACC.items || []).length} liste</p>
+      ${tgt === 'screenpano' ? `<div class="ytm-warn">${ic('triangle-alert')}<span>“ScreenPano oynatıcısı” çoğu TV kutusunda çalışmaz. Kutuya Spotify uygulamasını kurup yukarıdaki listeden onu seçin.</span></div>` : ''}
       ${!sst.premium ? `<div class="ytm-warn">${ic('triangle-alert')}<span>Hesap Premium değil: listeleriniz görünür ama Spotify, panelden çalma/duraklatma kumandasına yalnız Premium hesaplarda izin verir.</span></div>` : ''}
       <div class="ytm-sh sm"><div><h3>Çalınacak cihaz</h3></div><button class="ytm-more" onclick="SPACC.devs=null;render(true);spDevLoad()">${ic('refresh-cw')}Yenile</button></div>
       <div class="ytm-devs">${devList}</div>

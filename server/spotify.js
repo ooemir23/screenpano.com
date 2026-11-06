@@ -135,17 +135,21 @@ async function tracks(t, type, id) {
   try {
     if (type === 'track') { const tr = track(await call(t, 'GET', `tracks/${id}`), 0); if (tr) items.push(tr); }
     else {
-      let path = type === 'album' ? `albums/${id}/tracks?limit=50` : `playlists/${id}/tracks?limit=100&additional_types=track`;
+      // Spotify (Şub 2026): çalma listesi şarkıları /items yolundan gelir, geliştirici uygulamasında yalnız kendi/ortak listeler okunur; eski /tracks yolu yedek
+      let path = type === 'album' ? `albums/${id}/tracks?limit=50` : `playlists/${id}/items?limit=50&additional_types=track`;
       let albumImg = '';
       if (type === 'album') { try { albumImg = img((await call(t, 'GET', `albums/${id}`)).images, 64); } catch (e) {} }
       for (let i = 0; i < 4 && path && items.length < 200; i++) {
-        const j = await call(t, 'GET', path);
+        let j;
+        try { j = await call(t, 'GET', path); }
+        catch (e) { if (i === 0 && type !== 'album' && (e.status === 404 || e.status === 400) && path.includes('/items?')) j = await call(t, 'GET', `playlists/${id}/tracks?limit=50&additional_types=track`); else throw e; }
+        if (i === 0 && type !== 'album' && !Array.isArray(j.items)) { const er = new Error('gizli'); er.status = 403; throw er; }
         for (const it of j.items || []) { const tr = track(type === 'album' ? { ...it, album: { images: [{ url: albumImg, width: 64 }] } } : (it.track || it.item), items.length); if (tr) items.push(tr); }
         path = j.next ? j.next.replace(API, '') : '';
       }
     }
   } catch (e) {
-    if (e.status === 404 || e.status === 403) { const er = new Error('Spotify bu listenin şarkılarını dışarıya göstermiyor (Spotify\'ın kendi listesi). Liste TV\'de yine de çalınabilir.'); er.code = 'hidden'; throw er; }
+    if (e.status === 404 || e.status === 403) { const er = new Error('Spotify bu listenin şarkılarını uygulamalara göstermiyor (yalnız kendi oluşturduğunuz listelerin şarkıları görünür). Liste TV\'de yine de çalınabilir.'); er.code = 'hidden'; throw er; }
     throw e;
   }
   trackCache.set(key, { at: Date.now(), items });
@@ -156,7 +160,7 @@ async function tracks(t, type, id) {
 async function search(t, q) {
   q = String(q || '').trim().slice(0, 120);
   if (!q) return { tracks: [], playlists: [] };
-  const j = await call(t, 'GET', `search?type=track,playlist&limit=20&market=from_token&q=${encodeURIComponent(q)}`);
+  const j = await call(t, 'GET', `search?type=track,playlist&limit=10&market=from_token&q=${encodeURIComponent(q)}`);
   return {
     tracks: ((j.tracks || {}).items || []).map((x, i) => track(x, i)).filter(Boolean),
     playlists: ((j.playlists || {}).items || []).filter(p => p && p.id).slice(0, 12).map(p => ({ id: p.id, type: 'playlist', title: String(p.name || '').slice(0, 90), thumb: img(p.images), count: ((p.tracks || p.items || {}).total) || 0, owner: String((p.owner || {}).display_name || '').slice(0, 60), url: `https://open.spotify.com/playlist/${p.id}` })),
@@ -219,7 +223,7 @@ async function disconnect(t) {
   cache.delete(t.id); nowCache.delete(t.id); tenants.save(t); onChange(t);
 }
 
-const status = t => { const a = sp(t); return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', connected: !!(a.refreshToken && !a.expired), expired: !!a.expired, name: a.name || '', premium: a.product === 'premium', product: a.product || '', target: a.target || '', targetName: a.targetName || '', at: a.connectedAt || 0 }; };
+const status = t => { const a = sp(t); return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', connected: !!(a.refreshToken && !a.expired), expired: !!a.expired, name: a.name || '', premium: a.product === 'premium' || !a.product, product: a.product || '', target: a.target || '', targetName: a.targetName || '', at: a.connectedAt || 0 }; };
 const connected = t => { const a = (t.db.music || {}).spotify || {}; return !!(a.refreshToken && !a.expired); };
 // Cihaz seçimi "app" (Spotify uygulaması/başka Connect cihazı) ise müziği Spotify çalar, ScreenPano çalmaz
 const external = t => { const a = (t.db.music || {}).spotify || {}; return connected(t) && !!a.target && a.target !== 'screenpano'; };

@@ -3700,7 +3700,7 @@ function initSpotifyConnect(spCfg) {
       volume: Math.max(0.05, Math.min(1, MUS.vol / 100))
     });
     player.addListener('ready', ({ device_id }) => {
-      MUS.spDeviceId = device_id;
+      MUS.spDeviceId = device_id; MUS.spUnsupported = ''; clearTimeout(MUS.spWait);
       const cur = activeMusicItem(MUS.cfg);
       if (MUS.cfg && MUS.cfg.enabled && MUS.cfg.playing && cur && cur.provider === 'spotify') {
         playSpotifyItem(cur, MUS.cfg);
@@ -3721,6 +3721,12 @@ function initSpotifyConnect(spCfg) {
         reportNow({ provider: 'spotify', title: MUS.spConnectTrack.title, artist: MUS.spConnectTrack.artist, thumb: MUS.spConnectTrack.thumb, playing: !st.paused });
       }
     });
+    // bu ekranın tarayıcısı Spotify oynatıcısını (şifreli ses / DRM) desteklemiyorsa nedenini yaz; sonsuza dek "bağlanıyor" demesin
+    const spBad = msg => { MUS.spUnsupported = msg; renderMusicBar(); musicFail(msg); };
+    player.addListener('initialization_error', () => spBad('Bu ekran Spotify oynatıcısını desteklemiyor. TV kutusuna Spotify uygulamasını kurun, panelde Hesaplar › Çalınacak cihaz olarak onu seçin'));
+    player.addListener('authentication_error', () => spBad('Spotify anahtarı reddedildi; panelde Hesaplar sayfasından yeniden bağlanın'));
+    player.addListener('account_error', () => spBad('Spotify Premium gerekiyor'));
+    clearTimeout(MUS.spWait); MUS.spWait = setTimeout(() => { if (!MUS.spDeviceId) spBad('Bu ekran Spotify oynatıcısına bağlanamadı. TV kutusuna Spotify uygulamasını kurun, panelde Hesaplar › Çalınacak cihaz olarak onu seçin'); }, 15000);
     player.connect();
     MUS.spPlayer = player;
   };
@@ -3748,7 +3754,7 @@ function playSpotifyItem(it, m) {
     return;
   }
   // 2) Spotify Connect bağlı değilse başka bir yayın çalınmaz; ekranda nedeni yazar
-  musicFail(MUS.spToken ? 'Spotify Connect bağlanıyor…' : 'Spotify listesi için panelden Spotify Connect bağlantısı gerekli');
+  musicFail(MUS.spToken ? (MUS.spUnsupported || 'Spotify Connect bağlanıyor…') : 'Spotify listesi için panelden Spotify Connect bağlantısı gerekli');
 }
 function syncVideoMute() {
   const m = MUS.cfg;
