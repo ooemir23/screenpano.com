@@ -260,7 +260,7 @@ r.get('/vidlen', (req, res) => res.json(require('./vidlen').dump())); // video s
 // Aşağısı eski tek-kafe sürümünün yönetim uçları; davranış aynı, veri işletmeye ait.
 // ======================================================================
 r.get('/db', (req, res) => {
-  const { trafficSecret, instagram, ytAuth, music, ...rest } = req.t.db; // gizli anahtarlar panele gönderilmez
+  const { trafficSecret, instagram, ytAuth, oauthApps, music, ...rest } = req.t.db; // gizli anahtarlar panele gönderilmez
   if (instagram) { const { token, ...ig } = instagram; rest.instagram = { ...ig, connected: !!token }; }
   // müzik: panele yalnız TV'de çalması için gereken accessToken gider; uzun ömürlü refreshToken dışarı sızmaz
   if (music) rest.music = { ...music, spotify: { ...(music.spotify || {}), refreshToken: undefined } };

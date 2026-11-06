@@ -13,8 +13,10 @@ const tenants = require('./tenants');
 const SCOPE = 'user-read-private user-read-email playlist-read-private playlist-read-collaborative user-library-read user-read-playback-state user-modify-playback-state user-read-currently-playing streaming';
 const API = 'https://api.spotify.com/v1/';
 const redirectUri = () => `${config.BASE_URL}/api/oauth/spotify/callback`;
-const creds = () => ({ id: store.setting('spotify_client_id', '').trim(), secret: store.setting('spotify_client_secret', '').trim() });
-const configured = () => { const c = creds(); return !!(c.id && c.secret); };
+// Uygulama anahtarı: işletme kendi Spotify uygulamasını girdiyse o (yönetimden bağımsız çalışır), yoksa platformun ortak anahtarı
+const own = t => { const a = (t && t.db && t.db.oauthApps && t.db.oauthApps.spotify) || {}; return a.id && a.secret ? { id: String(a.id), secret: String(a.secret) } : null; };
+const creds = t => own(t) || { id: store.setting('spotify_client_id', '').trim(), secret: store.setting('spotify_client_secret', '').trim() };
+const configured = t => { const c = creds(t); return !!(c.id && c.secret); };
 const sp = t => { if (!t.db.music || typeof t.db.music !== 'object') t.db.music = { playlists: [] }; if (!t.db.music.spotify || typeof t.db.music.spotify !== 'object') t.db.music.spotify = {}; return t.db.music.spotify; };
 let onChange = () => {}; // routes-ext bağlar: anahtar yenilenince TV'lere yeni durum gider
 const setOnChange = fn => { onChange = fn; };
@@ -22,16 +24,17 @@ const setOnChange = fn => { onChange = fn; };
 // Giriş oturumları: state -> { tid, at } (15 dk, tek kullanımlık)
 const states = new Map();
 function authUrl(tid) {
+  const t0 = tenants.get(tid);
   const now = Date.now();
   for (const [k, v] of states) if (now - v.at > 15 * 60000) states.delete(k);
   const state = crypto.randomBytes(18).toString('hex');
   states.set(state, { tid, at: now });
-  const q = new URLSearchParams({ client_id: creds().id, response_type: 'code', redirect_uri: redirectUri(), scope: SCOPE, state, show_dialog: 'true' });
+  const q = new URLSearchParams({ client_id: creds(t0).id, response_type: 'code', redirect_uri: redirectUri(), scope: SCOPE, state, show_dialog: 'true' });
   return 'https://accounts.spotify.com/authorize?' + q;
 }
 
-async function tokenCall(params) {
-  const c = creds();
+async function tokenCall(params, t) {
+  const c = creds(t);
   const r = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Authorization: 'Basic ' + Buffer.from(c.id + ':' + c.secret).toString('base64') },
@@ -73,9 +76,9 @@ async function callback(req, res) {
   if (!st) return back('expired');
   if (req.query.error) return back(req.query.error === 'access_denied' ? 'denied' : 'err', req.query.error);
   const t = tenants.get(st.tid);
-  if (!t || !configured()) return back('err');
+  if (!t || !configured(t)) return back('err');
   try {
-    const j = await tokenCall({ grant_type: 'authorization_code', code: String(req.query.code || ''), redirect_uri: redirectUri() });
+    const j = await tokenCall({ grant_type: 'authorization_code', code: String(req.query.code || ''), redirect_uri: redirectUri() }, t);
     const a = sp(t);
     Object.assign(a, { refreshToken: j.refresh_token || a.refreshToken || '', accessToken: j.access_token, expiresAt: Date.now() + ((Number(j.expires_in) || 3600) - 120) * 1000, connectedAt: Date.now(), expired: false });
     if (!a.refreshToken) throw new Error('Spotify yenileme anahtarı vermedi');
@@ -91,7 +94,7 @@ async function access(t) {
   if (!a.refreshToken || a.expired) { const e = new Error('Spotify hesabı bağlı değil'); e.code = 'reconnect'; throw e; }
   if (a.accessToken && a.expiresAt > Date.now()) return a.accessToken;
   try {
-    const j = await tokenCall({ grant_type: 'refresh_token', refresh_token: a.refreshToken });
+    const j = await tokenCall({ grant_type: 'refresh_token', refresh_token: a.refreshToken }, t);
     a.accessToken = j.access_token; a.expiresAt = Date.now() + ((Number(j.expires_in) || 3600) - 120) * 1000;
     if (j.refresh_token) a.refreshToken = j.refresh_token;
     tenants.save(t); onChange(t);
@@ -216,7 +219,7 @@ async function disconnect(t) {
   cache.delete(t.id); nowCache.delete(t.id); tenants.save(t); onChange(t);
 }
 
-const status = t => { const a = sp(t); return { configured: configured(), connected: !!(a.refreshToken && !a.expired), expired: !!a.expired, name: a.name || '', premium: a.product === 'premium', product: a.product || '', target: a.target || '', targetName: a.targetName || '', at: a.connectedAt || 0 }; };
+const status = t => { const a = sp(t); return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', shared: configured(), connected: !!(a.refreshToken && !a.expired), expired: !!a.expired, name: a.name || '', premium: a.product === 'premium', product: a.product || '', target: a.target || '', targetName: a.targetName || '', at: a.connectedAt || 0 }; };
 const connected = t => { const a = (t.db.music || {}).spotify || {}; return !!(a.refreshToken && !a.expired); };
 // Cihaz seçimi "app" (Spotify uygulaması/başka Connect cihazı) ise müziği Spotify çalar, ScreenPano çalmaz
 const external = t => { const a = (t.db.music || {}).spotify || {}; return connected(t) && !!a.target && a.target !== 'screenpano'; };

@@ -452,7 +452,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   r.get('/music/google', (req, res) => res.json(yt.status(req.t)));
   // panelde bağlantıya tıklanınca tarayıcı buraya gelir ve Google'ın giriş sayfasına yönlendirilir
   r.get('/music/google/connect', ownerOnly, (req, res) => {
-    if (!yt.configured()) return res.redirect('/panel?yt=nocfg#music');
+    if (!yt.configured(req.t)) return res.redirect('/panel?yt=nocfg#music');
     res.redirect(yt.authUrl(req.t.id));
   });
   r.get('/music/google/playlists', async (req, res) => {
@@ -516,10 +516,31 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   });
 
   // ================= SPOTIFY HESABI (OAuth; listeler, arama, cihaz seçimi) =================
+  // ---- İşletmenin kendi uygulama anahtarı (Google / Spotify): yönetimden bağımsız hesap bağlama ----
+  const APPS = {
+    google: { ok: id => /^[\w-]{10,}\.apps\.googleusercontent\.com$/.test(id), bad: 'Client ID “…apps.googleusercontent.com” ile bitmelidir', off: async t => { await yt.disconnect(t); } },
+    spotify: { ok: id => /^[0-9a-f]{32}$/i.test(id), bad: 'Spotify Client ID 32 karakterlik bir koddur', off: async t => { await SP.disconnect(t); } },
+  };
+  r.put('/music/app/:k', ownerOnly, async (req, res) => {
+    const A = APPS[req.params.k]; if (!A) return res.status(404).json({ error: 'Bilinmeyen kaynak' });
+    const id = String((req.body || {}).id || '').trim(), secret = String((req.body || {}).secret || '').trim();
+    if (!A.ok(id)) return res.status(400).json({ error: A.bad });
+    if (secret.length < 12 || secret.length > 200 || /\s/.test(secret)) return res.status(400).json({ error: 'Client Secret geçersiz görünüyor' });
+    const apps = req.t.db.oauthApps || (req.t.db.oauthApps = {});
+    const changed0 = !apps[req.params.k] || apps[req.params.k].id !== id;
+    apps[req.params.k] = { id, secret };
+    if (changed0) await A.off(req.t); // eski uygulamayla alınmış bağlantı yeni uygulamada geçmez
+    changed(req.t); res.json({ ok: true });
+  });
+  r.delete('/music/app/:k', ownerOnly, async (req, res) => {
+    const A = APPS[req.params.k]; if (!A) return res.status(404).json({ error: 'Bilinmeyen kaynak' });
+    if (req.t.db.oauthApps && req.t.db.oauthApps[req.params.k]) { delete req.t.db.oauthApps[req.params.k]; await A.off(req.t); changed(req.t); }
+    res.json({ ok: true });
+  });
   const spErr = (res, e) => res.status(e.code === 'reconnect' ? 409 : e.code === 'hidden' ? 404 : 502).json({ error: e.message, reconnect: e.code === 'reconnect', hidden: e.code === 'hidden' });
   r.get('/music/spotify', (req, res) => res.json({ ...SP.status(req.t), redirect: SP.redirectUri() }));
   r.get('/music/spotify/connect', ownerOnly, (req, res) => {
-    if (!SP.configured()) return res.redirect('/panel?sp=nocfg#music/accounts');
+    if (!SP.configured(req.t)) return res.redirect('/panel?sp=nocfg#music/accounts');
     res.redirect(SP.authUrl(req.t.id));
   });
   r.get('/music/spotify/playlists', async (req, res) => { try { res.json({ items: await SP.playlists(req.t, req.query.force === '1') }); } catch (e) { spErr(res, e); } });
@@ -545,7 +566,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
 
   // ================= KVKK: verilerim, hesap silme =================
   r.get('/privacy/export', ownerOnly, (req, res) => {
-    const t = req.t, { trafficSecret, ytAuth, ...db } = t.db;
+    const t = req.t, { trafficSecret, ytAuth, oauthApps, ...db } = t.db;
+    if (db.music && db.music.spotify) db.music = { ...db.music, spotify: { ...db.music.spotify, refreshToken: undefined } };
     if (db.instagram) db.instagram = { ...db.instagram, token: db.instagram.token ? '(gizli)' : '' };
     const out = {
       exportedAt: new Date().toISOString(), product: config.BRAND,

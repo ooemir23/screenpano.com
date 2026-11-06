@@ -1866,17 +1866,54 @@ async function spAdd(id, playNow) {
   if (j && j.warn) toast(j.warn, true);
   if (j && j.music) { S.db.music = j.music; render(true); }
 }
+// ---- İşletmenin kendi Google / Spotify uygulaması: yönetimden bağımsız hesap bağlama ----
+const APPSTEPS = {
+  google: [
+    ['Google Cloud\'da yeni bir proje oluşturun (adı: ScreenPano).', 'https://console.cloud.google.com/projectcreate', 'Proje oluştur'],
+    ['Bu projede “YouTube Data API v3” hizmetini etkinleştirin (Enable).', 'https://console.cloud.google.com/apis/library/youtube.googleapis.com', 'API sayfasını aç'],
+    ['Google Auth Platform\'u kurun: uygulama adı ScreenPano, destek e-postanız, Audience: External. Data Access bölümünde “youtube.readonly” iznini ekleyin.', 'https://console.cloud.google.com/auth/overview', 'Auth Platform\'u aç'],
+    ['Clients › Create client: Application type “Web application”. Authorized redirect URIs bölümüne aşağıdaki adresi ekleyip Create\'e basın.', 'https://console.cloud.google.com/auth/clients', 'Clients sayfasını aç'],
+    ['Audience sayfasında “Publish app” düğmesine basın (durum “In production” olsun; bağlantı 7 günde bir düşmesin). Google “doğrulanmamış uygulama” uyarısı gösterirse Gelişmiş › “git” ile devam edin.', 'https://console.cloud.google.com/auth/audience', 'Audience sayfasını aç'],
+    ['Çıkan Client ID ve Client Secret\'ı aşağıdaki kutulara yapıştırıp Kaydet\'e basın.'],
+  ],
+  spotify: [
+    ['Spotify hesabınızla Developer Dashboard\'a girin ve “Create app” düğmesine basın.', 'https://developer.spotify.com/dashboard', 'Dashboard\'ı aç'],
+    ['App name: ScreenPano. Açıklama: istediğiniz bir cümle. Redirect URI: aşağıdaki adresi yapıştırıp “Add” deyin. “Which API/SDKs” bölümünde Web API ve Web Playback SDK\'yı işaretleyin, şartları kabul edip Save\'e basın.'],
+    ['Açılan uygulamada Settings\'e girin: Client ID\'yi kopyalayın; “View client secret” ile Client Secret\'ı da kopyalayın.'],
+    ['İkisini aşağıdaki kutulara yapıştırıp Kaydet\'e basın.'],
+  ],
+};
+function appBox(k, st, open) {
+  if (!owner()) return '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>';
+  const uri = location.origin + '/api/oauth/' + k + '/callback', G = k === 'google';
+  return `<details class="ytm-app" ${open ? 'open' : ''}><summary>${ic('settings')}${G ? 'Kendi Google uygulamamla bağlan' : 'Kendi Spotify uygulamamla bağlan'}</summary>
+    <p class="ytm-muted">Bu kurulum yalnız bir kez yapılır; ScreenPano yöneticisinden izin ya da onay gerekmez. Uygulama sizin hesabınızda oluşur, anahtarlar yalnız bu işletmede saklanır.</p>
+    <ol class="ytm-gd">${APPSTEPS[k].map(([t, u, l]) => `<li><span>${t}</span>${u ? `<a class="ytm-btn sm" href="${u}" target="_blank" rel="noopener">${l} ↗</a>` : ''}</li>`).join('')}</ol>
+    <div class="ytm-copy"><code>${esc(uri)}</code><button type="button" class="ytm-btn sm" data-t="${esc(uri)}" onclick="navigator.clipboard&&navigator.clipboard.writeText(this.dataset.t).then(()=>{this.textContent='Kopyalandı'})">Kopyala</button></div>
+    <div class="ytm-add"><input type="text" id="app-${k}-id" class="ytm-in" autocomplete="off" placeholder="Client ID"><input type="password" id="app-${k}-sec" class="ytm-in" autocomplete="off" placeholder="Client Secret"></div>
+    <div class="row"><button class="ytm-btn w" onclick="appSave('${k}')">${ic('link')}Kaydet ve hesabı bağla</button></div></details>`;
+}
+const appOwn = (k, st) => owner() ? `<p class="ytm-muted" style="margin-top:12px">${ic('settings')}Kendi uygulamanız kullanılıyor <code>${esc(String(st.appId || '').slice(0, 14))}…</code> <button class="ytm-more" onclick="appDel('${k}')">Kaldır</button></p>` : '';
+async function appSave(k) {
+  const id = ($('app-' + k + '-id').value || '').trim(), secret = ($('app-' + k + '-sec').value || '').trim();
+  if (!id || !secret) return toast('Client ID ve Client Secret\'ı yapıştırın', true);
+  if (await act('PUT', '/music/app/' + k, { id, secret }, '', false)) location.href = '/api/admin/music/' + k + '/connect';
+}
+async function appDel(k) {
+  if (!await UI.ask('Kendi uygulama anahtarınız kaldırılsın mı? Bağlı hesap da kesilir.', { ok: 'Kaldır', danger: true })) return;
+  if (await act('DELETE', '/music/app/' + k, undefined, 'Kaldırıldı', false)) { if (k === 'google') { YTACC = { st: null, items: null, err: '' }; ytAccLoad(true); } else { SPACC = { st: null, items: null, devs: null, err: '' }; spAccLoad(true); } render(true); }
+}
 function accountsHtml() {
   const m = musicData(), yst = YTACC.st || {}, sst = SPACC.st || {};
   const own = owner();
-  const ytBody = !yst.configured ? '<p class="ytm-muted">YouTube hesabı bağlantısı henüz açılmadı; destek ekibimizle iletişime geçin.</p>'
+  const ytBody = !yst.configured ? appBox('google', yst, true)
     : yst.expired ? `<p class="ytm-muted">Bağlantının süresi doldu. Listelerinizi görmek için yeniden bağlanın.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/google/connect">${ic('refresh-cw')}Yeniden bağlan</a>` : ''}`
-    : !yst.connected ? `<p class="ytm-muted">YouTube ve YouTube Music'te oluşturduğunuz listeler kitaplığınızda görünür. Yalnız okuma izni istenir.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/google/connect">${ic('link')}YouTube ile bağlan</a>` : '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>'}`
-    : `<p class="ytm-ok">${ic('circle-check')}Bağlı: <b>${esc(yst.name || 'YouTube')}</b> • ${(YTACC.items || []).length} liste</p>${YTACC.err ? `<p class="ytm-muted">${esc(YTACC.err)}</p>` : ''}<div class="row"><button class="ytm-btn" onclick="ytAccLoad(true)">${ic('refresh-cw')}Listeleri yenile</button>${own ? `<button class="ytm-btn" onclick="ytAccOff()">Bağlantıyı kes</button>` : ''}</div>`;
+    : !yst.connected ? `<p class="ytm-muted">YouTube ve YouTube Music'te oluşturduğunuz listeler kitaplığınızda görünür. Yalnız okuma izni istenir.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/google/connect">${ic('link')}YouTube ile bağlan</a>` : '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>'}${yst.own ? appOwn('google', yst) : appBox('google', yst, false)}`
+    : `<p class="ytm-ok">${ic('circle-check')}Bağlı: <b>${esc(yst.name || 'YouTube')}</b> • ${(YTACC.items || []).length} liste</p>${YTACC.err ? `<p class="ytm-muted">${esc(YTACC.err)}</p>` : ''}<div class="row"><button class="ytm-btn" onclick="ytAccLoad(true)">${ic('refresh-cw')}Listeleri yenile</button>${own ? `<button class="ytm-btn" onclick="ytAccOff()">Bağlantıyı kes</button>` : ''}</div>${yst.own ? appOwn('google', yst) : ''}`;
   let spBody;
-  if (!sst.configured) spBody = '<p class="ytm-muted">Spotify bağlantısı henüz açılmadı; destek ekibimizle iletişime geçin.</p>';
+  if (!sst.configured) spBody = appBox('spotify', sst, true);
   else if (sst.expired) spBody = `<p class="ytm-muted">Bağlantının süresi doldu; yeniden bağlanın.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/spotify/connect">${ic('refresh-cw')}Yeniden bağlan</a>` : ''}`;
-  else if (!sst.connected) spBody = `<p class="ytm-muted">Spotify listeleriniz kitaplığınızda görünür; panelden ya da telefondan TV'deki müziği yönetirsiniz. Uzaktan kumanda için <b>Spotify Premium</b> gerekir.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/spotify/connect">${ic('link')}Spotify ile bağlan</a>` : '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>'}`;
+  else if (!sst.connected) spBody = `<p class="ytm-muted">Spotify listeleriniz kitaplığınızda görünür; panelden ya da telefondan TV'deki müziği yönetirsiniz. Uzaktan kumanda için <b>Spotify Premium</b> gerekir.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/spotify/connect">${ic('link')}Spotify ile bağlan</a>` : '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>'}${sst.own ? appOwn('spotify', sst) : appBox('spotify', sst, false)}`;
   else {
     const devs = SPACC.devs, tgt = sst.target;
     const opt = (id, name, sub, icn, on) => `<button type="button" class="ytm-dev ${on ? 'on' : ''}" onclick="spSetDevice('${esc(id)}','${esc(name).replace(/'/g, '')}')"><span class="i">${ic(icn)}</span><span class="t"><b>${esc(name)}</b><span>${sub}</span></span>${on ? ic('circle-check') : ''}</button>`;
@@ -1890,7 +1927,7 @@ function accountsHtml() {
       <div class="ytm-sh sm"><div><h3>Çalınacak cihaz</h3></div><button class="ytm-more" onclick="SPACC.devs=null;render(true);spDevLoad()">${ic('refresh-cw')}Yenile</button></div>
       <div class="ytm-devs">${devList}</div>
       ${SPACC.err ? `<p class="ytm-muted">${esc(SPACC.err)}</p>` : ''}
-      <div class="row"><button class="ytm-btn" onclick="spAccLoad(true)">${ic('refresh-cw')}Listeleri yenile</button>${own ? `<button class="ytm-btn" onclick="spOff()">Bağlantıyı kes</button>` : ''}</div>`;
+      <div class="row"><button class="ytm-btn" onclick="spAccLoad(true)">${ic('refresh-cw')}Listeleri yenile</button>${own ? `<button class="ytm-btn" onclick="spOff()">Bağlantıyı kes</button>` : ''}</div>${sst.own ? appOwn('spotify', sst) : ''}`;
   }
   const acc = (name, cls, body, help) => `<section class="ytm-acc ${cls}"><div class="h"><span class="lg">${ic(cls === 'sp' ? 'headphones' : 'music')}</span><h2>${name}</h2><button class="ytm-more" onclick="goM('setup')">${ic('book-open')}${help}</button></div>${body}</section>`;
   return `<div class="ytm-sh"><div><h2>Hesaplar</h2></div></div><p class="ytm-muted" style="margin:-6px 0 14px">${ic('lock')}Bağladığınız hesap yalnız bu işletmeye aittir; başka işletmeler hesabınızı ve listelerinizi göremez.</p><div class="ytm-accs">`

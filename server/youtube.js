@@ -7,22 +7,25 @@ const tenants = require('./tenants');
 
 const SCOPE = 'https://www.googleapis.com/auth/youtube.readonly';
 const redirectUri = () => `${config.BASE_URL}/api/oauth/google/callback`;
-const creds = () => ({ id: store.setting('google_client_id', '').trim(), secret: store.setting('google_client_secret', '').trim() });
-const configured = () => { const c = creds(); return !!(c.id && c.secret); };
+// Uygulama anahtarı: işletme kendi Google OAuth istemcisini girdiyse o (yönetimden bağımsız çalışır), yoksa platformun ortak anahtarı
+const own = t => { const a = (t && t.db && t.db.oauthApps && t.db.oauthApps.google) || {}; return a.id && a.secret ? { id: String(a.id), secret: String(a.secret) } : null; };
+const creds = t => own(t) || { id: store.setting('google_client_id', '').trim(), secret: store.setting('google_client_secret', '').trim() };
+const configured = t => { const c = creds(t); return !!(c.id && c.secret); };
 
 // Giriş oturumları: state -> { tid, at } (15 dk geçerli, tek kullanımlık)
 const states = new Map();
 function authUrl(tid) {
+  const t0 = tenants.get(tid);
   const now = Date.now();
   for (const [k, v] of states) if (now - v.at > 15 * 60000) states.delete(k);
   const state = crypto.randomBytes(18).toString('hex');
   states.set(state, { tid, at: now });
-  const q = new URLSearchParams({ client_id: creds().id, redirect_uri: redirectUri(), response_type: 'code', scope: SCOPE, access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true', state });
+  const q = new URLSearchParams({ client_id: creds(t0).id, redirect_uri: redirectUri(), response_type: 'code', scope: SCOPE, access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true', state });
   return 'https://accounts.google.com/o/oauth2/v2/auth?' + q;
 }
 
-async function tokenCall(params) {
-  const c = creds();
+async function tokenCall(params, t) {
+  const c = creds(t);
   const r = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ client_id: c.id, client_secret: c.secret, ...params }), signal: AbortSignal.timeout(10000),
@@ -46,9 +49,9 @@ async function callback(req, res) {
   if (!st) return back('expired');
   if (req.query.error) return back(req.query.error === 'access_denied' ? 'denied' : 'err', req.query.error);
   const t = tenants.get(st.tid);
-  if (!t || !configured()) return back('err');
+  if (!t || !configured(t)) return back('err');
   try {
-    const j = await tokenCall({ code: String(req.query.code || ''), grant_type: 'authorization_code', redirect_uri: redirectUri() });
+    const j = await tokenCall({ code: String(req.query.code || ''), grant_type: 'authorization_code', redirect_uri: redirectUri() }, t);
     const old = t.db.ytAuth || {};
     const a = { refresh: j.refresh_token || old.refresh || '', access: j.access_token, exp: Date.now() + ((Number(j.expires_in) || 3600) - 60) * 1000, at: Date.now(), name: '' };
     if (!a.refresh) throw new Error('Google yenileme anahtarı vermedi');
@@ -64,7 +67,7 @@ async function access(t) {
   if (!a || !a.refresh || a.expired) { const e = new Error('YouTube hesabı bağlı değil'); e.code = 'reconnect'; throw e; }
   if (a.access && a.exp > Date.now()) return a.access;
   try {
-    const j = await tokenCall({ refresh_token: a.refresh, grant_type: 'refresh_token' });
+    const j = await tokenCall({ refresh_token: a.refresh, grant_type: 'refresh_token' }, t);
     a.access = j.access_token; a.exp = Date.now() + ((Number(j.expires_in) || 3600) - 60) * 1000;
     tenants.save(t);
     return a.access;
@@ -203,6 +206,6 @@ async function tracks(t, listId) {
   return items;
 }
 
-const status = t => { const a = t.db.ytAuth; return { configured: configured(), connected: !!(a && a.refresh && !a.expired), expired: !!(a && a.expired), name: (a && a.name) || '', at: (a && a.at) || 0 }; };
+const status = t => { const a = t.db.ytAuth; return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', shared: configured(), connected: !!(a && a.refresh && !a.expired), expired: !!(a && a.expired), name: (a && a.name) || '', at: (a && a.at) || 0 }; };
 
 module.exports = { configured, authUrl, callback, playlists, tracks, disconnect, status, redirectUri, search };
