@@ -78,10 +78,8 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
         spec = w; baseVh = vh
         this.vh = vh * fitScale(); st = s; props = w.props
-        val p = Palette(s)
-        background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(p.a(p.accent2, 0.16f), p.a(Color.WHITE, 0.03f))).apply {
-            cornerRadius = 1.3f * vh; setStroke(max(1, (vh * 0.1f).toInt()), p.a(p.accent2, 0.35f))
-        }
+        val p = Palette(s, props?.optString("tint"))
+        background = BoxSkin.bg(p, vh, w.props)
         setPadding((vh * 1.9f).toInt(), (vh * 1.1f).toInt(), (vh * 1.9f).toInt(), (vh * 1.1f).toInt())
         // veri ya da ayar değişmediyse zamanlayıcıları sıfırlama
         val nsig = listOf(s.raw.optJSONObject("rates"), s.raw.optJSONObject("weather"), w.props, s.raw.optJSONArray("qrs"), s.raw.optString("city"), s.theme).joinToString("|") { it.toString() }
@@ -128,7 +126,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
     private fun renderMain() {
         val s = st ?: return
         if (views().let { it[viewIdx % it.size] } != -1) return
-        val p = Palette(s)
+        val p = Palette(s, props?.optString("tint"))
         content.removeAllViews()
         content.gravity = Gravity.CENTER_VERTICAL
         val gap = (vh * 0.9f).toInt()
@@ -185,7 +183,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     private fun renderQr(v: Int) {
         val s = st ?: return
-        val p = Palette(s)
+        val p = Palette(s, props?.optString("tint"))
         wifiRunnable?.let { main.removeCallbacks(it) }
         content.removeAllViews(); content.gravity = Gravity.CENTER
         val l = qrList()

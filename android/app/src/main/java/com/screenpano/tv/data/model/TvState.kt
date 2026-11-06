@@ -6,7 +6,7 @@ import org.json.JSONObject
 /** Izgaradaki bir kutu: (x, y) sol üst hücre, (w, h) hücre sayısı. */
 data class WidgetSpec(val type: String, val x: Int, val y: Int, val w: Int, val h: Int, val props: JSONObject?)
 
-data class ThemeSpec(val bg: Int, val accent: Int, val accent2: Int, val text: Int, val font: String, val plate: Boolean)
+data class ThemeSpec(val bg: Int, val accent: Int, val accent2: Int, val text: Int, val font: String, val plate: Boolean, val box: String = "accent")
 
 /** Ekran kenar payları (% olarak): TV görüntüyü keserse içerik küçültülüp ortalanır. */
 data class SafeSpec(val l: Float, val r: Float, val t: Float, val b: Float) {
@@ -48,7 +48,7 @@ class TvState private constructor(
                 cols = lay?.optInt("cols", 24)?.coerceAtLeast(1) ?: 24,
                 rows = lay?.optInt("rows", 24)?.coerceAtLeast(1) ?: 24,
                 widgets = ws,
-                theme = ThemeSpec(col("bg", "#151717"), col("accent", "#d4a64a"), col("accent2", "#8a6a2a"), col("text", "#ffffff"), th?.optString("font") ?: "", th?.optBoolean("plate", false) ?: false),
+                theme = ThemeSpec(col("bg", "#151717"), col("accent", "#d4a64a"), col("accent2", "#8a6a2a"), col("text", "#ffffff"), th?.optString("font") ?: "", th?.optBoolean("plate", false) ?: false, (th?.optString("box") ?: "").let { if (it in setOf("accent", "glass", "dark", "outline", "none")) it else if (th?.optBoolean("glass", false) == true) "glass" else "accent" }),
                 safe = SafeSpec(sv("L"), sv("R"), sv("T"), sv("B")),
                 brandName = o.optJSONObject("brand")?.optString("name") ?: "",
                 blocked = if (o.isNull("blocked")) null else o.optString("blocked"),

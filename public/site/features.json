@@ -1552,6 +1552,26 @@
           "text": "حتى في مربع الطقس والأسواق الصغير يُقاس النص بحسب المربع ولا يتجاوزه، ويكبر في المربع الكبير. ومربع الساعة يناسب أيضاً مساحة بصف واحد."
         }
       }
+    },
+    {
+      "icon": "🎨",
+      "title": "Widget kutuları tek stilde; istersen kutu kutu farklı",
+      "text": "Tasarım → Renkler'de seçtiğiniz kart stili (düz, cam, koyu, çerçeve, kutusuz) tüm widget kutularına aynı uygulanır. Düzen editöründe her kutu için ayrıca stil ve renk seçebilir, ya da 'Temayla aynı' diyerek temayı izletebilirsiniz.",
+      "added": "2026-11-07",
+      "i18n": {
+        "en": {
+          "title": "One style for all widget boxes; per-box override if you like",
+          "text": "The card style you pick in Design → Colors (flat, glass, dark, border, no box) applies to every widget box alike. In the layout editor you can also choose a style and color for each box, or set it to 'Same as theme'."
+        },
+        "de": {
+          "title": "Ein Stil für alle Widget-Boxen; auf Wunsch pro Box anders",
+          "text": "Der unter Design → Farben gewählte Kartenstil (flach, Glas, dunkel, Rahmen, ohne Box) gilt für alle Widget-Boxen gleich. Im Layout-Editor können Sie für jede Box zusätzlich Stil und Farbe wählen oder 'Wie das Design' einstellen."
+        },
+        "ar": {
+          "title": "نمط واحد لكل مربعات الودجات، ويمكن تخصيص كل مربع",
+          "text": "يُطبَّق نمط البطاقة الذي تختاره في التصميم ← الألوان (مسطح، زجاجي، داكن، إطار، بدون مربع) على كل مربعات الودجات بالتساوي. وفي محرر التخطيط يمكنك اختيار نمط ولون لكل مربع أو تركه 'مثل التصميم'."
+        }
+      }
     }
   ],
   "shots": {

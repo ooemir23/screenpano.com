@@ -52,7 +52,7 @@ class ClockWidget(context: Context) : LinearLayout(context), NativeWidget {
     }
 
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
-        val p = Palette(s)
+        val p = Palette(s, w.props?.optString("tint"))
         show = w.props?.optString("show").orEmpty().let { if (it == "time" || it == "date") it else "both" }
         seconds = (w.props?.optBoolean("seconds", false) ?: false) && show != "date"
         time.visibility = if (show == "date") GONE else VISIBLE
@@ -60,10 +60,7 @@ class ClockWidget(context: Context) : LinearLayout(context), NativeWidget {
         val tz = TimeZone.getTimeZone(s.raw.optString("tz").ifEmpty { "Europe/Istanbul" })
         fmtTime = SimpleDateFormat(if (seconds) "HH:mm:ss" else "HH:mm", Locale("tr", "TR")).also { it.timeZone = tz }
         fmtDate.timeZone = tz
-        background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(p.a(p.accent2, 0.14f), p.a(Color.WHITE, 0.03f))).apply {
-            cornerRadius = 1.3f * vh
-            setStroke(max(1, vh.toInt() / 10), p.a(p.accent2, 0.35f))
-        }
+        background = BoxSkin.bg(p, vh, w.props)
         time.setTextColor(p.white)
         date.setTextColor(p.accent2)
         date.letterSpacing = 0.12f

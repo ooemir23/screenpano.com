@@ -264,7 +264,7 @@ SECTIONS.design = {
             ${fl('Arka plan', `<input type="color" id="th-bg" value="${th.bg}">`)}${fl('Ana renk', `<input type="color" id="th-accent" value="${th.accent}">`)}
             ${fl('Vurgu rengi', `<input type="color" id="th-accent2" value="${th.accent2}">`)}${fl('Yazı rengi', `<input type="color" id="th-text" value="${th.text}">`)}
             ${fl('Logo zemini', `<select id="th-plate"><option value="0" ${th.plate ? '' : 'selected'}>Şeffaf (açık renkli logolar)</option><option value="1" ${th.plate ? 'selected' : ''}>Beyaz zemin (koyu logolar)</option></select>`)}
-            ${fl('Kart stili', `<select id="th-glass"><option value="0" ${th.glass ? '' : 'selected'}>Düz</option><option value="1" ${th.glass ? 'selected' : ''}>Cam (yarı saydam kartlar)</option></select>`)}
+            ${fl('Kart stili (tüm widget kutuları)', `<select id="th-box">${BOXES.map(([k, l]) => `<option value="${k}" ${(th.box || (th.glass ? 'glass' : 'accent')) === k ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
             ${fl('Yazı tipi', `<select id="th-font">${S.cat.fonts.map(f => `<option ${f === th.font ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>`)}
           </div><div class="row end mt"><button class="btn" onclick="saveTheme()">Renkleri kaydet</button></div>`)
         + card('Önizleme', '', pvFrame());
@@ -298,6 +298,13 @@ function drawPal() {
   $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} ${esc(d.name)}${d.pro && !pro() ? ' 🔒' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
 }
 const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Yorumlar <a href="#promo">Kampanya ve yorumlar</a> sayfasından eklenir.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
+const BOXES = [['accent', 'Düz (vurgu rengi tonlu)'], ['glass', 'Cam (yarı saydam koyu)'], ['dark', 'Koyu dolgu'], ['outline', 'Yalnız çerçeve'], ['none', 'Kutusuz']];
+// her widget için kutu görünümü: tema stilini izler ya da kutuya özel stil ve renk
+function boxSection(w) {
+  const p = w.props || {}, th = S.me.tenant.theme || {};
+  return `<div class="fl mt"><span>Kutu stili</span><select onchange="setP('box',this.value);drawCanvas()"><option value="">Temayla aynı</option>${BOXES.map(([k, l]) => `<option value="${k}" ${p.box === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
+    + `<div class="fl mt"><span>Kutu rengi</span><div class="row" style="gap:8px;align-items:center"><input type="color" value="${p.tint || th.accent2 || '#c9955c'}" onchange="setP('tint',this.value);drawProps()"><button class="btn xs g" onclick="setP('tint','');drawProps()" ${p.tint ? '' : 'disabled'}>Temayla aynı</button></div></div>`;
+}
 function drawProps() {
   const box = $('props'), w = EDIT.layout.widgets[EDIT.sel];
   if (!w) { box.innerHTML = `<h4>Widget ayarları</h4><p class="muted">Ayarlarını görmek için bir kutuya tıklayın.</p>${badSet().size ? '<p class="muted mt" style="color:var(--bad)">Kırmızı kutular üst üste biniyor; kaydetmeden önce düzeltin.</p>' : ''}${EDIT.dirty ? '<p class="muted mt" style="color:var(--warn)">Kaydedilmemiş değişiklikler var.</p>' : ''}`; return; }
@@ -333,7 +340,7 @@ function drawProps() {
   // çoklu dil açıksa: başlık ve metnin çevirileri
   const LL = langList();
   if (LL.length && (w.type === 'text' || w.type === 'menu')) f += `<div class="mt"><b style="font-size:13px">Çeviriler</b>${LL.map(l => fl(LANG_NAMES[l] + ' başlık', `<input type="text" maxlength="200" value="${esc(((p.i18n || {})[l] || {}).title || '')}" onchange="setPI('${l}','title',this.value)">`) + (w.type === 'text' ? fl(LANG_NAMES[l] + ' metin', `<textarea maxlength="400" onchange="setPI('${l}','body',this.value)">${esc(((p.i18n || {})[l] || {}).body || '')}</textarea>`) : '')).join('')}</div>`;
-  box.innerHTML = `<h4>${ICON[w.type] || ''} ${esc(d.name)}</h4><p class="muted">${esc(d.desc || '')}${HINT[w.type] ? '<br><br>' + HINT[w.type] : ''}</p>${f}<div class="row mt"><button class="btn d s" onclick="rmW(${EDIT.sel})">Kaldır</button></div>`;
+  box.innerHTML = `<h4>${ICON[w.type] || ''} ${esc(d.name)}</h4><p class="muted">${esc(d.desc || '')}${HINT[w.type] ? '<br><br>' + HINT[w.type] : ''}</p>${f}${w.type === 'media' ? '' : boxSection(w)}<div class="row mt"><button class="btn d s" onclick="rmW(${EDIT.sel})">Kaldır</button></div>`;
 }
 function snap() { EDIT.hist.push(clone(EDIT.layout)); if (EDIT.hist.length > 40) EDIT.hist.shift(); EDIT.dirty = true; lbarSync(); }
 function undoL() { if (!EDIT.hist.length) return toast('Geri alınacak değişiklik yok'); EDIT.layout = EDIT.hist.pop(); if (!EDIT.hist.length) EDIT.dirty = false; EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
@@ -419,9 +426,9 @@ async function resetDesign(sub) {
     EDIT.dirty = false; EDIT.layout = null; drawBrand(); render(true);
   }
 }
-async function pickTheme(k) { const v = S.cat.themes[k]; await saveTheme({ bg: v.bg, accent: v.accent, accent2: v.accent2, text: v.text, font: v.font, plate: !!(S.me.tenant.theme || {}).plate, glass: !!v.glass }); }
+async function pickTheme(k) { const v = S.cat.themes[k]; await saveTheme({ bg: v.bg, accent: v.accent, accent2: v.accent2, text: v.text, font: v.font, plate: !!(S.me.tenant.theme || {}).plate, box: v.box || (v.glass ? 'glass' : 'accent') }); }
 async function saveTheme(body) {
-  body = body || { bg: $('th-bg').value, accent: $('th-accent').value, accent2: $('th-accent2').value, text: $('th-text').value, font: $('th-font').value, plate: $('th-plate').value === '1', glass: $('th-glass').value === '1' };
+  body = body || { bg: $('th-bg').value, accent: $('th-accent').value, accent2: $('th-accent2').value, text: $('th-text').value, font: $('th-font').value, plate: $('th-plate').value === '1', box: $('th-box').value };
   const { name, ...clean } = body;
   const j = await act('PUT', '/theme', clean, 'Renkler kaydedildi', false);
   if (j) { S.me.tenant.theme = j.theme; drawBrand(); render(true); }

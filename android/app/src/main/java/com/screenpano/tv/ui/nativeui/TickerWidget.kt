@@ -113,7 +113,7 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
         val first = state == null
         state = s; this.vh = vh
-        val p = Palette(s)
+        val p = Palette(s, w.props?.optString("tint"))
         showClock = w.props?.optBoolean("clock", true) ?: true
         val tz = TimeZone.getTimeZone(s.raw.optString("tz").ifEmpty { "Europe/Istanbul" })
         fmtTime = SimpleDateFormat("HH:mm", Locale("tr", "TR")).also { it.timeZone = tz }
@@ -123,7 +123,7 @@ class TickerWidget(context: Context) : LinearLayout(context), NativeWidget {
         val r = 1.3f * vh
         topLine = if (edgeB) p.a(p.accent2, 0.55f) else 0
         topLinePx = max(1, (vh * 0.1f).toInt())
-        background = GradientDrawable().apply {
+        background = if (!edgeB && BoxSkin.of(p, w.props) != "accent") BoxSkin.bg(p, vh, w.props) else GradientDrawable().apply {
             setColor(p.edge)
             if (!edgeB) { cornerRadius = r; setStroke(max(1, (vh * 0.1f).toInt()), p.a(p.accent2, 0.45f)) }
         }

@@ -113,7 +113,7 @@ class TextWidget(context: Context) : LinearLayout(context), NativeWidget {
     private var vh = 10f
 
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
-        val p = Palette(s); this.vh = vh
+        val p = Palette(s, w.props?.optString("tint")); this.vh = vh
         val pr = w.props
         val t = pr?.optString("title") ?: ""
         val b = pr?.optString("body") ?: ""
@@ -125,9 +125,7 @@ class TextWidget(context: Context) : LinearLayout(context), NativeWidget {
         size = when (pr?.optString("size")) { "s" -> 0.75f; "l" -> 1.3f; else -> 1f }
         title.setTextColor(p.white)
         body.setTextColor(p.white); body.alpha = 0.9f
-        background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(p.a(p.accent2, 0.14f), p.a(Color.WHITE, 0.03f))).apply {
-            cornerRadius = 1.3f * vh; setStroke(max(1, (vh * 0.1f).toInt()), p.a(p.accent2, 0.35f))
-        }
+        background = BoxSkin.bg(p, vh, w.props)
         setPadding((vh * 2.4f).toInt(), (vh * 1.6f).toInt(), (vh * 2.4f).toInt(), (vh * 1.6f).toInt())
         (body.layoutParams as LayoutParams).topMargin = (vh * 1f).toInt()
         fit()

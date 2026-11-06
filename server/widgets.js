@@ -62,6 +62,7 @@ const defaultLayout = (tpl = DEFAULT_TEMPLATE) => ({ cols: COLS, rows: ROWS, wid
 
 // Panelden gelen düzeni doğrula: bilinmeyen tür, taşan kutu, tekrar eden widget ayıklanır (QR kartı en çok 6 kez olabilir)
 const HEX = /^#[0-9a-f]{6}$/i;
+const BOXES = ['accent', 'glass', 'dark', 'outline', 'none']; // kutu stili: tema geneli + widget başına
 function cleanLayout(l) {
   const seen = new Set(), count = {}, out = [];
   for (const w of (l && Array.isArray(l.widgets) ? l.widgets : []).slice(0, 20)) {
@@ -90,6 +91,11 @@ function cleanLayout(l) {
         if (Object.keys(tr).length) item.props.i18n = tr;
       }
     }
+    // kutu görünümü (her widget için): boş = tema stili; renk (tint) boşsa tema vurgu rengi
+    if (w.type !== 'media' && w.props && typeof w.props === 'object') {
+      const bx = BOXES.includes(w.props.box) ? w.props.box : '', tn = HEX.test(w.props.tint || '') ? w.props.tint : '';
+      if (bx || tn) { item.props = item.props || {}; if (bx) item.props.box = bx; if (tn) item.props.tint = tn; }
+    }
     if (!WIDGETS[w.type].multi) seen.add(w.type);
     out.push(item);
   }
@@ -101,7 +107,10 @@ function cleanTheme(t, cur = {}) {
   for (const k of ['bg', 'accent', 'accent2', 'text']) if (HEX.test(t && t[k] || '')) o[k] = t[k];
   if (t && FONTS.includes(t.font)) o.font = t.font;
   if (t && typeof t.plate === 'boolean') o.plate = t.plate; // koyu logolar için açık zemin
-  if (t && typeof t.glass === 'boolean') o.glass = t.glass; // cam kart stili (yarı saydam koyu kartlar, ince çerçeve)
+  if (t && BOXES.includes(t.box)) o.box = t.box; // tüm widget kutularının ortak stili
+  else if (t && typeof t.glass === 'boolean') o.box = t.glass ? 'glass' : 'accent'; // eski kayıtlar
+  if (o.box === undefined && o.glass) o.box = 'glass';
+  o.glass = o.box === 'glass'; // cam kart stili (yarı saydam koyu kartlar, ince çerçeve)
   return o;
 }
 

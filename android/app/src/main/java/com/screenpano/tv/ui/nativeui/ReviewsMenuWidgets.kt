@@ -28,9 +28,7 @@ import java.util.TimeZone
 import kotlin.math.max
 import kotlin.math.min
 
-private fun cardBg(p: Palette, vh: Float) = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(p.a(p.accent2, 0.14f), p.a(Color.WHITE, 0.03f))).apply {
-    cornerRadius = 1.3f * vh; setStroke(max(1, (vh * 0.1f).toInt()), p.a(p.accent2, 0.35f))
-}
+private fun cardBg(p: Palette, vh: Float, props: JSONObject?) = BoxSkin.bg(p, vh, props)
 
 /** "Google yorumları" şeridi: 10 sn'de bir sıradaki yorum (sunucu saatine göre, tüm ekranlarda aynı). */
 class ReviewsWidget(context: Context) : LinearLayout(context), NativeWidget {
@@ -55,8 +53,8 @@ class ReviewsWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
         st = s; this.vh = vh
-        val p = Palette(s)
-        background = cardBg(p, vh)
+        val p = Palette(s, w.props?.optString("tint"))
+        background = cardBg(p, vh, w.props)
         setPadding((vh * 2.9f).toInt(), 0, (vh * 2.9f).toInt(), 0)
         quote.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2.3f); quote.setTextColor(p.white)
         stars.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 3.2f); stars.setTextColor(Color.parseColor("#f5b73b")); stars.letterSpacing = 0.1f
@@ -138,9 +136,9 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
     }
 
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
-        st = s; this.vh = vh; p = Palette(s)
+        st = s; this.vh = vh; p = Palette(s, w.props?.optString("tint"))
         val pal = p!!
-        background = cardBg(pal, vh)
+        background = cardBg(pal, vh, w.props)
         setPadding((vh * 2.5f).toInt(), (vh * 1.8f).toInt(), (vh * 2.5f).toInt(), (vh * 1.2f).toInt())
         title.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 3f); title.setTextColor(pal.white); title.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD); title.letterSpacing = 0.12f
         pg.setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.8f); pg.setTextColor(pal.mute); pg.letterSpacing = 0.14f; pg.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
