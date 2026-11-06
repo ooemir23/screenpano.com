@@ -304,7 +304,8 @@ function hubClean(h, db) {
     return { label: s(l && l.label, 30), url: u };
   }).filter(l => l.label && tq.isUrl(l.url));
   const wifi = (db.qrs || []).some(x => x.id === h.wifi && x.kind === 'wifi') ? h.wifi : '';
-  return { title: s(h.title, 50), menu: h.menu === true, wifi, links };
+  let mu = s(h.menuUrl, 300); if (/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(mu) && !/^https?:\/\//i.test(mu)) mu = 'https://' + mu;
+  return { title: s(h.title, 50), menu: h.menu === true && !tq.isUrl(mu), menuUrl: tq.isUrl(mu) ? mu : '', wifi, links };
 }
 async function qrFields(b, tid, id, oldCode) {
   const kind = b.kind === 'wifi' ? 'wifi' : b.kind === 'hub' ? 'hub' : 'link';
@@ -312,7 +313,7 @@ async function qrFields(b, tid, id, oldCode) {
   if (!label) throw new Error('Etiket gerekli (örn. "Menü için okutun")');
   if (kind === 'hub') {
     const hub = hubClean(b.hub, req_db(tid), id);
-    if (!hub.menu && !hub.wifi && !hub.links.length) throw new Error('En az bir buton seçin (menü, Wi-Fi ya da bağlantı)');
+    if (!hub.menu && !hub.menuUrl && !hub.wifi && !hub.links.length) throw new Error('En az bir buton seçin (menü, Wi-Fi ya da bağlantı)');
     return { kind, label, hub, ...(await require('./qrtrack').buildHub(tid, id, oldCode)) };
   }
   const text = qrText({ ...b, kind });

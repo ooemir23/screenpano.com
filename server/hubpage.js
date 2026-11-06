@@ -43,7 +43,8 @@ function page(req, res) {
   const menu = hub.menu ? menuHtml(t) : '';
   const logo = t.db.logo ? t.upBase + t.db.logo : '';
   const btns = [];
-  if (menu) btns.push(`<button class="btn" data-go="menu"><span>Menü</span><i>›</i></button>`);
+  if (hub.menuUrl) btns.push(`<a class="btn" href="${esc(hub.menuUrl)}" rel="noopener"><span>Menü</span><i>↗</i></a>`);
+  else if (menu) btns.push(`<button class="btn" data-go="menu"><span>Menü</span><i>›</i></button>`);
   if (wifi && wifi.ssid) btns.push(`<button class="btn" data-go="wifi"><span>Wi-Fi'ye bağlan</span><i>›</i></button>`);
   for (const l of hub.links || []) btns.push(`<a class="btn" href="${esc(l.url)}" rel="noopener"><span>${esc(l.label)}</span><i>↗</i></a>`);
   const wifiBox = wifi && wifi.ssid ? `<section id="s-wifi" hidden><button class="back" data-go="">‹ Geri</button><h2>Wi-Fi</h2>
@@ -64,6 +65,10 @@ ${menu ? `<section id="s-menu" hidden><button class="back" data-go="">‹ Geri</
 (function(){var s=['home','menu','wifi'];function go(n){s.forEach(function(k){var e=document.getElementById('s-'+k);if(e)e.hidden=k!==(n||'home')});scrollTo(0,0)}
 document.addEventListener('click',function(e){var b=e.target.closest('[data-go]');if(b)go(b.getAttribute('data-go'))});
 var ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1),an=/Android/i.test(ua);
+var wb=document.querySelector('#s-home [data-go=wifi]');
+if(wb&&(ios||an))wb.addEventListener('click',function(){
+if(ios){setTimeout(function(){location.href=document.getElementById('w-ios').getAttribute('href')},50)}
+else{var pe=document.getElementById('w-pass');if(pe&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(pe.textContent).catch(function(){});setTimeout(function(){location.href='intent:#Intent;action=android.settings.WIFI_SETTINGS;end'},300)}});
 var i=document.getElementById('w-ios'),n=document.getElementById('w-note');if(i&&ios){i.hidden=false;n.textContent='Profili yükledikten sonra Ayarlar → Genel → VPN ve Aygıt Yönetimi bölümünden onaylayın; telefon ağa kendisi bağlanır. İsterseniz Wi-Fi ayarlarından ağı seçip şifreyi yapıştırabilirsiniz.'}
 else if(an&&n)n.textContent='Şifreyi kopyalayın, Wi-Fi ayarlarında bu ağı seçip şifreyi yapıştırın.';
 var c=document.getElementById('w-copy');if(c)c.addEventListener('click',function(){var p=document.getElementById('w-pass').textContent,d=function(){c.firstChild.textContent='Kopyalandı ✓'};

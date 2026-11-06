@@ -897,15 +897,15 @@ function qrHide(id, k) {
   act('PATCH', '/qrs/' + id, { hide: [...h] }, 'Kaydedildi');
 }
 // "Tek QR" türü: okutan kişi bir sayfa görür; menü, Wi-Fi ve bağlantı butonları
-const hubSummary = h => { h = h || {}; return [h.menu ? 'Menü' : '', h.wifi ? 'Wi-Fi' : '', ...(h.links || []).map(l => l.label)].filter(Boolean).join(', '); };
+const hubSummary = h => { h = h || {}; return [h.menu || h.menuUrl ? 'Menü' : '', h.wifi ? 'Wi-Fi' : '', ...(h.links || []).map(l => l.label)].filter(Boolean).join(', '); };
 function hubForm(db) {
-  const wifis = (db.qrs || []).filter(q => q.kind === 'wifi'), menuOk = pro() && ((db.menu || {}).categories || []).some(c => (c.items || []).length);
+  const wifis = (db.qrs || []).filter(q => q.kind === 'wifi');
   const rows = [0, 1, 2, 3, 4].map(i => `<div class="f mt">${fl(i ? '' : 'Ek butonlar (en çok 5)', `<input type="text" id="q-hl${i}" maxlength="30" placeholder="Buton yazısı (örn. Instagram)" oninput="qrPrev()">`)}${fl(i ? '' : 'Bağlantı', `<input type="text" id="q-hu${i}" placeholder="https://instagram.com/..." oninput="qrPrev()">`)}</div>`).join('');
-  return `<p class="muted" style="margin:10px 0 0">Okutan kişi bir sayfa görür; Menü, Wi-Fi ve bağlantı butonlarından istediğine basar. iPhone'a Wi-Fi profili yüklenir, Android'de şifre kopyalanır (web sayfası ağa kendiliğinden bağlanamaz).</p>
+  return `<p class="muted" style="margin:10px 0 0">Okutan kişi bir sayfa görür; Menü, Wi-Fi ve bağlantı butonlarından istediğine basar. Wi-Fi butonunda iPhone Wi-Fi profilini yükler; Android şifreyi kopyalayıp Wi-Fi ayarlarını açar (web sayfası telefonu ağa kendiliğinden bağlayamaz).</p>
     <div class="f mt">${fl('Sayfa başlığı (boşsa işletme adı)', '<input type="text" id="q-htitle" maxlength="50" placeholder="Hoş geldiniz">')}${fl('Wi-Fi butonu için ağ', `<select id="q-hwifi" onchange="qrPrev()"><option value="">Wi-Fi butonu yok</option>${wifis.map(w => `<option value="${w.id}">${esc(w.label)} · ${esc(wifiParse(w.text).ssid)}</option>`).join('')}</select>`)}</div>
     ${wifis.length ? '' : '<p class="muted" style="margin:6px 0 0">Wi-Fi butonu için önce "Wi-Fi" türünde bir QR ekleyin.</p>'}
-    <div class="swr mt"><div class="b"><b>Menü butonu göster</b></div>${sw(false, 'qrPrev()', `id="q-hmenu" ${menuOk ? '' : 'disabled'}`)}</div>
-    ${menuOk ? '' : '<p class="muted" style="margin:6px 0 0">Menü butonu için Fiyat Listesi\'ne ürün ekleyin (Pro paket).</p>'}${rows}`;
+    <div class="f mt">${fl('Menü bağlantısı (Menü butonu buraya gider)', '<input type="text" id="q-hmurl" placeholder="https://.../menu" oninput="qrPrev()">')}</div>
+    ${rows}`;
 }
 function qrKindUi() {
   const k = $('q-kind').value;
@@ -914,7 +914,7 @@ function qrKindUi() {
   if (k === 'hub' && !$('q-label').value) $('q-label').placeholder = 'Menü ve Wi-Fi için okutun';
   qrPrev();
 }
-const hubRead = () => ({ title: $('q-htitle').value.trim(), menu: $('q-hmenu').checked, wifi: $('q-hwifi').value, links: [0, 1, 2, 3, 4].map(i => ({ label: $('q-hl' + i).value.trim(), url: $('q-hu' + i).value.trim() })).filter(l => l.label || l.url) });
+const hubRead = () => ({ title: $('q-htitle').value.trim(), menuUrl: $('q-hmurl').value.trim(), wifi: $('q-hwifi').value, links: [0, 1, 2, 3, 4].map(i => ({ label: $('q-hl' + i).value.trim(), url: $('q-hu' + i).value.trim() })).filter(l => l.label || l.url) });
 // Wi-Fi QR metninden (WIFI:T:WPA;S:ad;P:şifre;;) alanları geri okur
 function wifiParse(t) {
   const g = k => { const m = new RegExp(k + ':((?:\\\\.|[^;])*);').exec(t || ''); return m ? m[1].replace(/\\(.)/g, '$1') : ''; };
@@ -926,7 +926,7 @@ function qrEdit(id) {
   $('q-kind').value = q.kind === 'wifi' ? 'wifi' : q.kind === 'hub' ? 'hub' : 'link';
   $('q-link').hidden = q.kind !== 'link' && q.kind !== undefined; $('q-wifi').hidden = q.kind !== 'wifi'; $('q-hub').hidden = q.kind !== 'hub';
   $('q-label').value = q.label || '';
-  if (q.kind === 'hub') { const h = q.hub || {}; $('q-htitle').value = h.title || ''; $('q-hmenu').checked = !!h.menu; $('q-hwifi').value = h.wifi || ''; [0, 1, 2, 3, 4].forEach(i => { const l = (h.links || [])[i] || {}; $('q-hl' + i).value = l.label || ''; $('q-hu' + i).value = l.url || ''; }); }
+  if (q.kind === 'hub') { const h = q.hub || {}; $('q-htitle').value = h.title || ''; $('q-hmurl').value = h.menuUrl || ''; $('q-hwifi').value = h.wifi || ''; [0, 1, 2, 3, 4].forEach(i => { const l = (h.links || [])[i] || {}; $('q-hl' + i).value = l.label || ''; $('q-hu' + i).value = l.url || ''; }); }
   else if (q.kind === 'wifi') { const w = wifiParse(q.text); $('q-ssid').value = w.ssid; $('q-pass').value = w.password; $('q-sec').value = w.security; } else $('q-text').value = q.text || '';
   $('q-mode').textContent = 'QR düzenleniyor: ' + (q.label || ''); $('q-save').textContent = 'Kaydet'; $('q-cancel').hidden = false;
   qrPrev(); $('q-mode').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('q-label').focus();
