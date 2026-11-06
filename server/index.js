@@ -112,6 +112,7 @@ app.get('/api/oauth/google/callback', require('./youtube').callback); // YouTube
 app.get('/api/oauth/spotify/callback', require('./spotify').callback); // Spotify hesabı bağlantısı dönüşü
 app.use('/api/tv', require('./routes-tv').router);
 app.use('/api/admin', require('./routes-admin').router);
+app.use('/api/transfer', require('./transfer').pub);
 app.use('/api/super', require('./routes-super'));
 
 // İBB trafik değeri (Cloudflare Worker imzalı)

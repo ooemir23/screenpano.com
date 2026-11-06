@@ -516,11 +516,22 @@ PAGES.backup = {
       (list.local.length ? `<div class="scroll"><table><thead><tr><th>Sunucudaki yedek</th><th class="num">Boyut</th><th></th></tr></thead><tbody>${list.local.slice(0, 8).map(x => `<tr><td>${esc(x.name)}</td><td class="num">${size(x.size)}</td><td><a class="btn ghost sm" href="/api/super/backups/${encodeURIComponent(x.name)}">İndir</a></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz yedek yok</div>')
         + (list.remote.length ? `<p class="hint" style="margin-top:10px">R2'de ${list.remote.length} yedek var (en yenisi ${esc(list.remote[0].name)}).</p>` : list.remoteError ? `<p class="hint" style="color:var(--bad)">R2 yedek listesi alınamadı: ${esc(list.remoteError)}</p>` : ''),
       '<button class="btn" onclick="runBk()">Şimdi yedekle</button>')
+      + xferCard()
       + card('Medya depolama', '', `<p class="hint" style="margin:0">${st.enabled ? `Cloudflare R2 açık · kova <b>${esc(st.bucket)}</b> · ${st.objects} dosya, ${size(st.bytes)}${st.pending ? ` · bekleyen ${st.pending}` : ''}${st.publicUrl ? ' · herkese açık adres: ' + esc(st.publicUrl) : ' · dosyalar sunucu üzerinden aktarılıyor'}${st.keepLocal ? ' · yerel kopyalar tutuluyor' : ''}${st.lastError ? ` · <span style="color:var(--bad)">${esc(st.lastError)}</span>` : ''}`
         : st.configError ? `<span style="color:var(--bad)">R2 ayarı hatalı: ${esc(st.configError)}. Dokploy → Environment'ta değeri düzeltip yeniden deploy edin.</span>` : "R2 kapalı: medya sunucunun diskinde duruyor. Açmak için ortam değişkenlerine R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY ve R2_BUCKET girin; mevcut dosyalar arka planda R2'ye taşınır."}</p>`,
         st.enabled ? `<button class="btn ghost" onclick="api('POST','/storage/sync').then(()=>toast('Eşitleme başladı'))">Şimdi eşitle</button>` : '', st.enabled ? '<span class="tag ok">R2 açık</span>' : '<span class="tag mute">R2 kapalı</span>');
   },
 };
+/* İşletme aktarımı: canlı → test */
+function xferCard() {
+  const test = D.system && D.system.env === 'test';
+  if (test) return card('Canlıdan işletme al', 'Canlı sunucuda Yedek sayfasından aktarım kodu üretin, burada yapıştırın. İşletmenin içeriği, teması, menüsü, medyası, ekranları ve kullanıcıları kopyalanır; aynı işletme varsa üzerine yazılır. Spotify/YouTube/Instagram bağlantıları ve cihazlar kopyalanmaz.',
+    '<input id="xf-code" placeholder="Aktarım kodu" style="width:100%;max-width:420px" autocomplete="off">', '<button class="btn" onclick="xferPull()">Canlıdan çek</button>');
+  return card('Test sunucusuna aktar', 'Seçtiğiniz işletmenin kopyasını test sunucusuna göndermek için 15 dakika geçerli, tek kullanımlık bir kod üretir. Kodu test sunucusunun Yedek sayfasına yapıştırın.',
+    '<select id="xf-t">' + D.tenants.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') + '</select> <div id="xf-out" class="hint" style="margin-top:10px"></div>', '<button class="btn" onclick="xferOffer()">Aktarım kodu üret</button>');
+}
+async function xferOffer() { try { const j = await api('POST', '/transfer/offer', { tenantId: $('xf-t').value }); $('xf-out').innerHTML = T('Kod') + ` (${j.minutes} ` + T('dakika geçerli') + `): <b style="user-select:all;word-break:break-all">${esc(j.code)}</b>`; } catch (e) { toast(e.message, true); } }
+async function xferPull() { toast('İşletme çekiliyor…'); try { const j = await api('POST', '/transfer/pull', { code: $('xf-code').value }); toast(`${j.name}: ${j.files} ` + T('dosya') + `, ${j.users} ` + T('kullanıcı')); await load(); } catch (e) { toast(e.message, true); } }
 async function runBk() { toast('Yedek alınıyor…'); try { const j = await api('POST', '/backups'); toast(T('Yedek alındı') + ': ' + j.name); await load(); } catch (e) { toast(e.message, true); } }
 
 /* ================= HESABIM ================= */

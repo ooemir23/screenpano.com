@@ -144,6 +144,9 @@ r.put('/password', (req, res) => {
 });
 
 // ---- platform yedekleri ----
+// İşletme aktarımı (canlı → test): canlıda kod üret, test sunucusunda kodla çek
+r.post('/transfer/offer', (req, res) => { try { res.json({ ok: true, ...require('./transfer').offer(String((req.body || {}).tenantId || '')) }); } catch (e) { res.status(400).json({ error: e.message }); } });
+r.post('/transfer/pull', async (req, res) => { try { res.json({ ok: true, ...(await require('./transfer').pull((req.body || {}).code)) }); } catch (e) { res.status(400).json({ error: e.message }); } });
 r.get('/backups', async (req, res) => {
   const b = require('./backup');
   let remote = [], remoteError = '';

@@ -209,3 +209,15 @@ Cam (yarı saydam kartlar) ¦ Glass (translucent cards) ¦ Glas (halbtransparent
 Kokteyller ¦ Cocktails ¦ Cocktails ¦ كوكتيلات
 Şefin Önerileri ¦ Chef's Selection ¦ Empfehlungen des Küchenchefs ¦ اختيارات الشيف
 Günün Burgeri ¦ Burger of the Day ¦ Burger des Tages ¦ برجر اليوم
+Canlıdan işletme al ¦ Get a business from live ¦ Betrieb vom Live-System holen ¦ استيراد منشأة من النظام الحي
+Canlı sunucuda Yedek sayfasından aktarım kodu üretin, burada yapıştırın. İşletmenin içeriği, teması, menüsü, medyası, ekranları ve kullanıcıları kopyalanır; aynı işletme varsa üzerine yazılır. Spotify/YouTube/Instagram bağlantıları ve cihazlar kopyalanmaz. ¦ Generate a transfer code on the Backup page of the live server and paste it here. The business's content, theme, menu, media, screens and users are copied; an existing business with the same ID is overwritten. Spotify/YouTube/Instagram connections and devices are not copied. ¦ Erzeugen Sie auf der Backup-Seite des Live-Servers einen Übertragungscode und fügen Sie ihn hier ein. Inhalt, Design, Menü, Medien, Bildschirme und Benutzer des Betriebs werden kopiert; ein vorhandener Betrieb mit gleicher ID wird überschrieben. Spotify-/YouTube-/Instagram-Verbindungen und Geräte werden nicht kopiert. ¦ أنشئ رمز نقل في صفحة النسخ الاحتياطي على الخادم الحي ثم الصقه هنا. يُنسخ محتوى المنشأة وتصميمها وقائمتها والوسائط والشاشات والمستخدمون؛ وتُستبدل المنشأة الموجودة بنفس المعرّف. لا تُنسخ روابط Spotify/YouTube/Instagram ولا الأجهزة.
+Aktarım kodu ¦ Transfer code ¦ Übertragungscode ¦ رمز النقل
+Canlıdan çek ¦ Pull from live ¦ Vom Live-System holen ¦ جلب من النظام الحي
+Test sunucusuna aktar ¦ Transfer to test server ¦ Auf Testserver übertragen ¦ نقل إلى خادم الاختبار
+Seçtiğiniz işletmenin kopyasını test sunucusuna göndermek için 15 dakika geçerli, tek kullanımlık bir kod üretir. Kodu test sunucusunun Yedek sayfasına yapıştırın. ¦ Generates a single-use code valid for 15 minutes to copy the selected business to the test server. Paste the code on the test server's Backup page. ¦ Erzeugt einen 15 Minuten gültigen Einmalcode, um den gewählten Betrieb auf den Testserver zu kopieren. Fügen Sie den Code auf der Backup-Seite des Testservers ein. ¦ ينشئ رمزًا للاستخدام مرة واحدة صالحًا 15 دقيقة لنسخ المنشأة المحددة إلى خادم الاختبار. الصق الرمز في صفحة النسخ الاحتياطي على خادم الاختبار.
+Aktarım kodu üret ¦ Generate transfer code ¦ Übertragungscode erzeugen ¦ إنشاء رمز نقل
+Kod ¦ Code ¦ Code ¦ الرمز
+dakika geçerli ¦ minutes valid ¦ Minuten gültig ¦ دقيقة صالح
+İşletme çekiliyor… ¦ Pulling business… ¦ Betrieb wird geholt… ¦ جارٍ جلب المنشأة…
+dosya ¦ files ¦ Dateien ¦ ملف
+kullanıcı ¦ users ¦ Benutzer ¦ مستخدم
