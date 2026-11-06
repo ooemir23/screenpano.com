@@ -1034,6 +1034,64 @@
           ]
         }
       }
+    },
+    {
+      "id": "tek-qr-sayfa",
+      "icon": "🔗",
+      "title": "Tek QR ile menü, Wi-Fi ve bağlantılar: QR kartı yeni yerleşimlerle",
+      "short": "Tek QR sayfası",
+      "text": "Ekrandaki tek bir QR kodu okutan kişi bir sayfa görür; sayfadaki Menü, Wi-Fi ve Instagram gibi butonlardan istediğine basar. Menü butonu fiyat listenizi telefonda gösterir; Wi-Fi butonu ağ adını ve şifreyi verir, iPhone'a Wi-Fi profili yükleyebilir, Android'de şifreyi kopyalar. QR kartında yazıyı QR'ın altında, yanında dikey olarak (sağda ya da solda) gösterebilir ya da yalnız QR'ı bırakabilirsiniz.",
+      "points": [
+        "Tek QR, en çok 5 ek bağlantı butonu",
+        "Menü butonu fiyat listesini telefonda açar (Pro)",
+        "Wi-Fi butonu: ağ adı, şifre kopyalama, iPhone için Wi-Fi profili",
+        "Okutmalar istatistikte sayılır",
+        "QR kartı: etiket altta, sağda/solda dikey ya da yalnız QR"
+      ],
+      "plan": "all",
+      "compare": "Tek QR ile menü, Wi-Fi ve bağlantı sayfası",
+      "added": "2026-11-07",
+      "i18n": {
+        "en": {
+          "title": "One QR for menu, Wi-Fi and links: QR card with new layouts",
+          "short": "One-QR page",
+          "compare": "One-QR page for menu, Wi-Fi and links",
+          "text": "Whoever scans the single QR code on your screen sees a page and taps the button they want: Menu, Wi-Fi, Instagram and so on. The Menu button shows your price list on the phone; the Wi-Fi button gives the network name and password, can install a Wi-Fi profile on iPhone and copies the password on Android. On the QR card the text can sit below the QR, vertically beside it (right or left), or you can show the QR alone.",
+          "points": [
+            "One QR, up to 5 extra link buttons",
+            "The Menu button opens the price list on the phone (Pro)",
+            "Wi-Fi button: network name, copy password, Wi-Fi profile for iPhone",
+            "Scans are counted in the statistics",
+            "QR card: label below, vertical on the right/left, or QR only"
+          ]
+        },
+        "de": {
+          "title": "Ein QR für Speisekarte, WLAN und Links: QR-Karte mit neuen Anordnungen",
+          "short": "Ein-QR-Seite",
+          "compare": "Ein-QR-Seite für Speisekarte, WLAN und Links",
+          "text": "Wer den einen QR-Code auf Ihrem Bildschirm scannt, sieht eine Seite und tippt auf die gewünschte Schaltfläche: Speisekarte, WLAN, Instagram usw. Die Speisekarten-Schaltfläche zeigt Ihre Preisliste auf dem Handy; die WLAN-Schaltfläche nennt Netzwerkname und Passwort, kann auf dem iPhone ein WLAN-Profil installieren und kopiert das Passwort unter Android. Auf der QR-Karte kann der Text unter dem QR, senkrecht daneben (rechts oder links) stehen, oder Sie zeigen nur den QR.",
+          "points": [
+            "Ein QR, bis zu 5 weitere Link-Schaltflächen",
+            "Die Speisekarten-Schaltfläche öffnet die Preisliste auf dem Handy (Pro)",
+            "WLAN-Schaltfläche: Netzwerkname, Passwort kopieren, WLAN-Profil für iPhone",
+            "Scans werden in der Statistik gezählt",
+            "QR-Karte: Beschriftung unten, senkrecht rechts/links oder nur QR"
+          ]
+        },
+        "ar": {
+          "title": "رمز QR واحد للقائمة والواي فاي والروابط: بطاقة QR بتخطيطات جديدة",
+          "short": "صفحة الرمز الواحد",
+          "compare": "صفحة رمز واحد للقائمة والواي فاي والروابط",
+          "text": "من يمسح رمز QR الواحد على شاشتك يرى صفحة ويضغط على الزر الذي يريده: القائمة أو الواي فاي أو إنستغرام وغيرها. يعرض زر القائمة قائمة الأسعار على الهاتف؛ ويعطي زر الواي فاي اسم الشبكة وكلمة المرور، ويمكنه تثبيت ملف تعريف الواي فاي على iPhone ونسخ كلمة المرور على Android. وفي بطاقة QR يمكن وضع النص أسفل الرمز أو بجانبه عمودياً (يميناً أو يساراً) أو عرض الرمز وحده.",
+          "points": [
+            "رمز واحد وحتى 5 أزرار روابط إضافية",
+            "زر القائمة يفتح قائمة الأسعار على الهاتف (Pro)",
+            "زر الواي فاي: اسم الشبكة ونسخ كلمة المرور وملف تعريف لـ iPhone",
+            "تُحتسب عمليات المسح في الإحصاءات",
+            "بطاقة QR: التسمية أسفل الرمز أو عمودية يميناً/يساراً أو الرمز فقط"
+          ]
+        }
+      }
     }
   ],
   "extras": [

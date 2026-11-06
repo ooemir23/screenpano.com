@@ -118,6 +118,9 @@ for (const k of require('./legal').KEYS) app.get('/' + k, (req, res) => { res.se
 app.get('/sw.js', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.setHeader('Service-Worker-Allowed', '/'); res.type('js').sendFile(path.join(config.PUBLIC_DIR, 'sw.js')); });
 // QR okutma sayacı: kısa adres sayar ve asıl adrese yönlendirir
 app.get('/q/:code', require('./qrtrack').handler);
+// Tek QR ile açılan sayfa (menü, Wi-Fi, bağlantı butonları)
+app.get('/h/:code', require('./hubpage').page);
+app.get('/h/:code/wifi.mobileconfig', require('./hubpage').profile);
 // Reklam verene gönderilen rapor (giriş istemez, adres tahmin edilemez)
 app.get('/r/:token', require('./ads').page);
 app.get('/login', page('login.html'));

@@ -44,6 +44,13 @@ async function build(tid, id, kind, target, oldCode) {
   return { code, svg: await svgOf(trackUrl(code)) };
 }
 
+// "Tek QR, çok buton": QR kısa adrese (sayılır) gider, oradan /h/kod açılış sayfasına yönlenir
+const hubUrl = code => `${config.BASE_URL}/h/${code}`;
+async function buildHub(tid, id, oldCode) {
+  const code = oldCode || newCode(); register(code, tid, id, 'qr');
+  return { code, text: hubUrl(code), svg: await svgOf(trackUrl(code)) };
+}
+
 // Kodsuz (eski) ya da başka işletmeden kopyalanmış (aynı kod iki yerde) QR ve kampanyalara kod verir; değişen varsa true döner
 async function ensure(t) {
   if (!idxAt) rebuild();
@@ -51,7 +58,7 @@ async function ensure(t) {
   const bad = (code, kind, id) => { const e = code && idx.get(code); return !code || (e && (e.tid !== t.id || e.id !== id)); };
   for (const q of t.db.qrs || []) {
     if (q.kind === 'wifi' || !isUrl(q.text)) continue;
-    if (bad(q.code, 'qr', q.id)) { Object.assign(q, await build(t.id, q.id, 'qr', q.text, '')); changed = true; }
+    if (bad(q.code, 'qr', q.id)) { Object.assign(q, q.kind === 'hub' ? await buildHub(t.id, q.id, '') : await build(t.id, q.id, 'qr', q.text, '')); changed = true; }
   }
   for (const c of t.db.campaigns || []) {
     if (!c.url || !isUrl(c.url)) continue;
@@ -96,4 +103,4 @@ function handler(req, res) {
   res.redirect(302, target);
 }
 
-module.exports = { build, ensure, migrate, handler, isUrl, trackUrl, newCode, register };
+module.exports = { build, buildHub, find, ensure, migrate, handler, isUrl, trackUrl, newCode, register };

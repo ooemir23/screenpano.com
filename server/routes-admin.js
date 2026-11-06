@@ -286,7 +286,7 @@ function qrText(b) {
 // Önizleme: kaydetmeden QR üretir (panelde yazarken canlı görünür)
 r.post('/qrs/preview', async (req, res) => {
   try {
-    const text = qrText(req.body); if (text.length > 400) throw new Error('İçerik çok uzun');
+    const text = req.body && req.body.kind === 'hub' ? require('./qrtrack').trackUrl('onizleme') : qrText(req.body); if (text.length > 400) throw new Error('İçerik çok uzun');
     res.json({ svg: await QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } }) });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
@@ -295,14 +295,30 @@ const QR_HIDE = ['video', 'image', 'poster', 'trailer', 'camp', 'big', 'goal'];
 const qrHide = v => Array.isArray(v) ? QR_HIDE.filter(k => v.includes(k)) : [];
 const QR_SVG = text => QRCode.toString(text, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
 // QR'ın içeriği (tür, etiket, bağlantı/Wi-Fi bilgisi) gövdeden okunur ve doğrulanır; bağlantı QR'ları sayılabilmesi için kısa adres (/q/kod) taşır
+const req_db = tid => (require('./tenants').get(tid) || { db: {} }).db;
+// Tek QR sayfasının butonları: menü, Wi-Fi (işletmenin Wi-Fi QR'larından biri) ve en çok 5 bağlantı
+function hubClean(h, db) {
+  h = h || {}; const s = (v, n) => String(v == null ? '' : v).trim().slice(0, n), tq = require('./qrtrack');
+  const links = (Array.isArray(h.links) ? h.links : []).slice(0, 5).map(l => {
+    let u = s(l && l.url, 300); if (/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(u) && !/^https?:\/\//i.test(u)) u = 'https://' + u;
+    return { label: s(l && l.label, 30), url: u };
+  }).filter(l => l.label && tq.isUrl(l.url));
+  const wifi = (db.qrs || []).some(x => x.id === h.wifi && x.kind === 'wifi') ? h.wifi : '';
+  return { title: s(h.title, 50), menu: h.menu === true, wifi, links };
+}
 async function qrFields(b, tid, id, oldCode) {
-  const kind = b.kind === 'wifi' ? 'wifi' : 'link';
+  const kind = b.kind === 'wifi' ? 'wifi' : b.kind === 'hub' ? 'hub' : 'link';
   const label = (String(b.label || '').trim() || (kind === 'wifi' ? 'Wi-Fi Şifresi' : '')).slice(0, 40); // Wi-Fi için etiket boşsa varsayılan
   if (!label) throw new Error('Etiket gerekli (örn. "Menü için okutun")');
+  if (kind === 'hub') {
+    const hub = hubClean(b.hub, req_db(tid), id);
+    if (!hub.menu && !hub.wifi && !hub.links.length) throw new Error('En az bir buton seçin (menü, Wi-Fi ya da bağlantı)');
+    return { kind, label, hub, ...(await require('./qrtrack').buildHub(tid, id, oldCode)) };
+  }
   const text = qrText({ ...b, kind });
   if (text.length > 400) throw new Error('İçerik çok uzun');
   const { code, svg } = kind === 'wifi' ? { code: '', svg: await QR_SVG(text) } : await require('./qrtrack').build(tid, id, 'qr', text, oldCode);
-  return { kind, label, text, svg, code };
+  return { kind, label, text, svg, code, hub: undefined };
 }
 r.post('/qrs', async (req, res) => {
   try {

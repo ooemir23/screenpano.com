@@ -10,7 +10,7 @@ const WIDGETS = {
   ticker:  { name: 'Kayan bant', desc: 'Skorlar, haberler, kurlar ve bilgiler kayar', pro: false, min: [10, 2], props: { clock: true } },
   text:    { name: 'Duyuru metni', desc: 'Başlık ve kısa metin', pro: false, min: [4, 2], props: { title: 'Hoş geldiniz', body: '', align: 'center', size: 'm' } },
   image:   { name: 'Görsel', desc: 'Sabit afiş veya fotoğraf', pro: false, min: [3, 3], props: { url: '', fit: 'cover' } },
-  qr:      { name: 'QR kart', desc: 'Seçtiğiniz QR kodu ya da tüm QR kodlarınızı sırayla gösterir; birden çok eklenebilir ve diğer kutuların üstüne konabilir', pro: false, min: [3, 4], multi: 6, props: { qr: '' } },
+  qr:      { name: 'QR kart', desc: 'Seçtiğiniz QR kodu ya da tüm QR kodlarınızı sırayla gösterir; birden çok eklenebilir ve diğer kutuların üstüne konabilir', pro: false, min: [3, 4], multi: 6, props: { qr: '', style: 'below' }, enums: { style: ['below', 'right', 'left', 'plain'] } },
   info:    { name: 'Maçlar ve bilgi sayfaları', desc: 'Maçlar, puan durumu, nöbetçi eczane, haber, sinema, tarihte bugün, trafik', pro: true, min: [5, 8] },
   reviews: { name: 'Google yorumları', desc: 'Müşteri yorumları şeridi', pro: true, min: [8, 2] },
   menu:    { name: 'Fiyat tarifesi', desc: 'Kategori, ürün ve fiyat listesi (Fiyat Etiketi Yönetmeliği için)', pro: true, min: [5, 6], props: { title: 'Fiyat Listesi' } },

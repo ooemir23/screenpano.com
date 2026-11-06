@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -31,6 +32,7 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
     private var st: TvState? = null
     private var vh = 10f
     private var selected = ""
+    private var style = "below" // yerleşim: below (etiket altta) | right / left (dikey etiket yanda) | plain (yalnız QR)
     private var idx = 0
     private var cur: JSONObject? = null
     private var phase = 0
@@ -57,8 +59,9 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
         val sig = s.raw.optJSONArray("qrs")?.toString()
         val newSel = w.props?.optString("qr") ?: ""
-        val changed = sig != st?.raw?.optJSONArray("qrs")?.toString() || newSel != selected || vh != this.vh
-        st = s; this.vh = vh; selected = newSel
+        val newStyle = (w.props?.optString("style") ?: "").let { if (it in setOf("right", "left", "plain")) it else "below" }
+        val changed = sig != st?.raw?.optJSONArray("qrs")?.toString() || newSel != selected || vh != this.vh || newStyle != style
+        st = s; this.vh = vh; selected = newSel; style = newStyle
         if (changed) { idx = 0; draw() }
         main.removeCallbacks(rotate); main.postDelayed(rotate, 12_000L)
     }
@@ -84,16 +87,39 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
         box.addView(iv, LayoutParams(-1, -1))
         val svg = q.optString("svg")
         if (svg.isNotEmpty()) iv.load(ByteBuffer.wrap(svg.toByteArray())) { crossfade(false) }
-        content.addView(box, LinearLayout.LayoutParams(qs, qs))
+        val side = style == "right" || style == "left"
+        content.orientation = if (side) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
+        content.gravity = if (side) Gravity.CENTER_VERTICAL else Gravity.CENTER_HORIZONTAL
+        (label.parent as? ViewGroup)?.removeView(label)
+        label.rotation = 0f; label.minimumWidth = 0
+        if (style == "plain") { content.addView(box, LinearLayout.LayoutParams(qs, qs)); setSize(qs, qs); applyVisibility(); return }
         val wf = q.optString("marquee").isNotEmpty()
-        val lw = if (wf) qs else (qs + (vh * 8f).toInt())
         val lh = (vh * 5.4f).toInt()
-        label.text = ""; setLabel(q.optString("label"), p.white, lw, p)
-        label.background = GradientDrawable().apply { setColor(Color.argb(235, 10, 8, 6)); cornerRadius = vh * 2f; setStroke(max(2, (vh * 0.25f).toInt()), p.al) }
-        (label.parent as? LinearLayout)?.removeView(label)
-        content.addView(label, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, lh).also { it.topMargin = (vh * 0.8f).toInt() })
-        label.minimumWidth = if (wf) qs else 0
-        setSize(max(qs, lw), qs + lh + (vh * 0.8f).toInt())
+        val gap = (vh * 0.8f).toInt()
+        if (side) {
+            // dikey etiket: kutu QR yüksekliğinde yatay çizilir, 90° (sağda) / 270° (solda) döndürülür
+            label.text = ""; setLabel(q.optString("label"), p.white, qs, p)
+            label.background = GradientDrawable().apply { setColor(Color.argb(235, 10, 8, 6)); cornerRadius = vh * 2f; setStroke(max(2, (vh * 0.25f).toInt()), p.al) }
+            val wrap = FrameLayout(context).also { it.clipChildren = false }
+            wrap.addView(label, FrameLayout.LayoutParams(qs, lh, Gravity.CENTER))
+            label.rotation = if (style == "right") 90f else 270f
+            if (style == "right") {
+                content.addView(box, LinearLayout.LayoutParams(qs, qs))
+                content.addView(wrap, LinearLayout.LayoutParams(lh, qs).also { it.leftMargin = gap })
+            } else {
+                content.addView(wrap, LinearLayout.LayoutParams(lh, qs).also { it.rightMargin = gap })
+                content.addView(box, LinearLayout.LayoutParams(qs, qs))
+            }
+            setSize(qs + gap + lh, qs)
+        } else {
+            content.addView(box, LinearLayout.LayoutParams(qs, qs))
+            val lw = if (wf) qs else (qs + (vh * 8f).toInt())
+            label.text = ""; setLabel(q.optString("label"), p.white, lw, p)
+            label.background = GradientDrawable().apply { setColor(Color.argb(235, 10, 8, 6)); cornerRadius = vh * 2f; setStroke(max(2, (vh * 0.25f).toInt()), p.al) }
+            content.addView(label, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, lh).also { it.topMargin = gap })
+            label.minimumWidth = if (wf) qs else 0
+            setSize(max(qs, lw), qs + lh + gap)
+        }
         if (wf) main.postDelayed(wifi, 4000)
         applyVisibility()
     }
