@@ -830,6 +830,10 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #cphoto b{position:absolute;left:0;right:0;bottom:0;padding:2.4vh 2vw 1.8vh;background:linear-gradient(transparent,rgba(120,8,16,.92));color:#fff;font-size:2vh;font-weight:700;letter-spacing:.14em;text-transform:uppercase;text-align:center}
 /* ===== widget kutuları ===== */
 .wbox{flex:1;min-height:0;overflow:hidden;border-radius:1.3vh;background:linear-gradient(160deg,rgba(var(--a2),.14),rgba(255,255,255,.03));border:max(1px,.1vh) solid rgba(var(--a2),.35);position:relative}
+body.glass #app{background:radial-gradient(circle at 80% 20%,#151b26 0%,var(--edge) 60%,#040507 100%)}
+body.glass .wbox{border-radius:2.2vh;background:linear-gradient(160deg,rgba(26,34,48,.82),rgba(14,19,28,.88));border:max(1px,.1vh) solid rgba(255,255,255,.09);box-shadow:0 2vh 5vh rgba(0,0,0,.5),inset 0 max(1px,.1vh) 0 rgba(255,255,255,.1)}
+body.glass .cell:not(.edge-b)>#ticker{border:max(1px,.1vh) solid rgba(255,255,255,.09);border-radius:2vh;background:linear-gradient(160deg,rgba(26,34,48,.82),rgba(14,19,28,.88));box-shadow:0 2vh 5vh rgba(0,0,0,.5),inset 0 max(1px,.1vh) 0 rgba(255,255,255,.1)}
+body.glass #wclock b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%,var(--accent) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .cell.edge-b{margin:0 -1.2vw -1.8vh}
 .cell:not(.edge-b)>#ticker{border:max(1px,.1vh) solid rgba(var(--a2),.45);border-radius:1.3vh}
 #wclock{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.6vh}
@@ -2864,6 +2868,7 @@ function applyTheme(th) {
   const sig = JSON.stringify(th); if (sig === themeSig) return; themeSig = sig;
   const r = document.documentElement.style, W = [255, 255, 255], K = [0, 0, 0];
   const bg = hexRgb(th.bg || '#151717'), a1 = hexRgb(th.accent || '#906538'), a2 = hexRgb(th.accent2 || '#c9955c'), tx = hexRgb(th.text || '#fbfbfb');
+  document.body.classList.toggle('glass', !!th.glass); // cam kart stili (Lüks lounge teması)
   r.setProperty('--edge', rgb(bg));
   try { if (window.__N && window.__N.setBackdrop) window.__N.setBackdrop('#' + bg.map(v => v.toString(16).padStart(2, '0')).join('')); } catch (e) {}
   r.setProperty('--bg', rgb(mix(bg, W, 0.04))); r.setProperty('--glow', rgb(mix(bg, W, 0.08)));

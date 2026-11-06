@@ -36,6 +36,10 @@ const TEMPLATES = {
     name: 'Temel', desc: 'Medya, logo, saat, hava ve kurlar, QR ve kayan bant (Başlangıç paketine uygun)',
     widgets: [W('media', 0, 0, 17, 22), W('logo', 17, 0, 7, 4), W('clock', 17, 4, 7, 5), W('rates', 17, 9, 7, 7), W('qr', 17, 16, 7, 6), W('ticker', 0, 22, 24, 2)],
   },
+  lounge: {
+    name: 'Lüks lounge (cam)', desc: 'Üstte logo ve saat, solda geniş medya, sağda maçlar ile hava/kurlar ve QR, altta kayan bant',
+    widgets: [W('logo', 0, 0, 8, 3), W('clock', 17, 0, 7, 3), W('media', 0, 3, 16, 19), W('info', 16, 3, 8, 9), W('rates', 16, 12, 8, 6), W('qr', 16, 18, 8, 4), W('ticker', 0, 22, 24, 2)],
+  },
   sade: {
     name: 'Sade', desc: 'Tam ekran medya ve altta kayan bant',
     widgets: [W('media', 0, 0, 24, 22), W('ticker', 0, 22, 24, 2)],
@@ -48,9 +52,10 @@ const THEMES = {
   gece:   { name: 'Neon Lounge', bg: '#120d1c', accent: '#6b2fb3', accent2: '#c77dff', text: '#f6f0ff', font: 'Montserrat' },
   bordo:  { name: 'Bordo', bg: '#160e10', accent: '#7a1f2b', accent2: '#d0606d', text: '#fbf6f4', font: 'Montserrat' },
   deniz:  { name: 'Deniz', bg: '#0b1519', accent: '#1d5f73', accent2: '#4fb3cf', text: '#f2fafc', font: 'Montserrat' },
+  obsidyen: { name: 'Obsidiyen Altın (cam)', bg: '#07090d', accent: '#be9322', accent2: '#ecd067', text: '#f8fafc', font: 'Plus Jakarta Sans', glass: true },
   altin:  { name: 'Siyah Altın', bg: '#0c0c0c', accent: '#8a6d1f', accent2: '#e2bd52', text: '#fffaf0', font: 'Montserrat' },
 };
-const FONTS = ['Montserrat', 'Poppins', 'Oswald', 'Nunito', 'Playfair Display', 'Roboto Condensed'];
+const FONTS = ['Montserrat', 'Plus Jakarta Sans', 'Poppins', 'Oswald', 'Nunito', 'Playfair Display', 'Roboto Condensed'];
 
 const DEFAULT_TEMPLATE = 'spor';
 const defaultLayout = (tpl = DEFAULT_TEMPLATE) => ({ cols: COLS, rows: ROWS, widgets: JSON.parse(JSON.stringify((TEMPLATES[tpl] || TEMPLATES[DEFAULT_TEMPLATE]).widgets)) });
@@ -93,6 +98,7 @@ function cleanTheme(t, cur = {}) {
   for (const k of ['bg', 'accent', 'accent2', 'text']) if (HEX.test(t && t[k] || '')) o[k] = t[k];
   if (t && FONTS.includes(t.font)) o.font = t.font;
   if (t && typeof t.plate === 'boolean') o.plate = t.plate; // koyu logolar için açık zemin
+  if (t && typeof t.glass === 'boolean') o.glass = t.glass; // cam kart stili (yarı saydam koyu kartlar, ince çerçeve)
   return o;
 }
 

@@ -922,6 +922,60 @@
           ]
         }
       }
+    },
+    {
+      "id": "luks-lounge-sablon",
+      "icon": "✨",
+      "title": "Lüks lounge şablonu: obsidiyen siyah, altın ve cam kartlar",
+      "short": "Yeni şablon",
+      "text": "Tek tıkla kurulan yeni ekran şablonu: koyu zemin, altın vurgu ve yarı saydam cam kartlar. Solda geniş medya, sağda maçlar, hava ve kurlar ile QR menü, üstte logo ve canlı saat, altta kayan bant. Her şey kendi içeriğinizle ve canlı verilerle dolar.",
+      "points": [
+        "Başlangıç paketlerinden “Lüks lounge (cam)” seçilir ya da Tasarım → Düzen’den uygulanır",
+        "Renk ve logo bölümünden kart stilini Düz ya da Cam yapabilirsiniz",
+        "Cam görünüm zayıf TV kutularında da akıcıdır, ekranı yormaz"
+      ],
+      "plan": "all",
+      "compare": "Lüks lounge şablonu",
+      "added": "2026-11-06",
+      "visual": {
+        "type": "win",
+        "img": "p-cihaz"
+      },
+      "i18n": {
+        "en": {
+          "title": "Luxury lounge template: obsidian black, gold and glass cards",
+          "short": "New template",
+          "compare": "Luxury lounge template",
+          "text": "A new one-click screen template: dark background, gold accents and translucent glass cards. Wide media on the left, matches, weather and rates with a QR menu on the right, logo and live clock on top, ticker at the bottom. Everything fills with your own content and live data.",
+          "points": [
+            "Pick “Luxury lounge (glass)” among the starter packs or apply it from Design → Layout",
+            "Switch the card style between Flat and Glass under Colours and logo",
+            "The glass look stays smooth even on weak TV boxes"
+          ]
+        },
+        "de": {
+          "title": "Luxus-Lounge-Vorlage: Obsidianschwarz, Gold und Glaskarten",
+          "short": "Neue Vorlage",
+          "compare": "Luxus-Lounge-Vorlage",
+          "text": "Eine neue Bildschirmvorlage mit einem Klick: dunkler Hintergrund, Goldakzente und halbtransparente Glaskarten. Links breite Medien, rechts Spiele, Wetter und Kurse mit QR-Menü, oben Logo und Live-Uhr, unten Laufband. Alles füllt sich mit Ihren eigenen Inhalten und Live-Daten.",
+          "points": [
+            "„Luxus-Lounge (Glas)“ bei den Startpaketen wählen oder unter Design → Layout anwenden",
+            "Kartenstil unter Farben und Logo zwischen Flach und Glas umschalten",
+            "Der Glas-Look läuft auch auf schwachen TV-Boxen flüssig"
+          ]
+        },
+        "ar": {
+          "title": "قالب اللاونج الفاخر: أسود أوبسيديان وذهبي وبطاقات زجاجية",
+          "short": "قالب جديد",
+          "compare": "قالب اللاونج الفاخر",
+          "text": "قالب شاشة جديد بنقرة واحدة: خلفية داكنة ولمسات ذهبية وبطاقات زجاجية شبه شفافة. وسائط عريضة يسارًا، والمباريات والطقس والأسعار مع قائمة QR يمينًا، والشعار والساعة المباشرة في الأعلى، وشريط متحرك في الأسفل. كل شيء يمتلئ بمحتواك وبياناتك الحية.",
+          "points": [
+            "اختر «لاونج فاخر (زجاجي)» من الحزم الجاهزة أو طبّقه من التصميم ← التخطيط",
+            "بدّل نمط البطاقات بين مسطح وزجاجي من قسم الألوان والشعار",
+            "يبقى المظهر الزجاجي سلسًا حتى على صناديق التلفاز الضعيفة"
+          ]
+        }
+      }
     }
   ],
   "extras": [

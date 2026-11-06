@@ -250,6 +250,7 @@ SECTIONS.design = {
             ${fl('Arka plan', `<input type="color" id="th-bg" value="${th.bg}">`)}${fl('Ana renk', `<input type="color" id="th-accent" value="${th.accent}">`)}
             ${fl('Vurgu rengi', `<input type="color" id="th-accent2" value="${th.accent2}">`)}${fl('Yazı rengi', `<input type="color" id="th-text" value="${th.text}">`)}
             ${fl('Logo zemini', `<select id="th-plate"><option value="0" ${th.plate ? '' : 'selected'}>Şeffaf (açık renkli logolar)</option><option value="1" ${th.plate ? 'selected' : ''}>Beyaz zemin (koyu logolar)</option></select>`)}
+            ${fl('Kart stili', `<select id="th-glass"><option value="0" ${th.glass ? '' : 'selected'}>Düz</option><option value="1" ${th.glass ? 'selected' : ''}>Cam (yarı saydam kartlar)</option></select>`)}
             ${fl('Yazı tipi', `<select id="th-font">${S.cat.fonts.map(f => `<option ${f === th.font ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>`)}
           </div><div class="row end mt"><button class="btn" onclick="saveTheme()">Renkleri kaydet</button></div>`)
         + card('Önizleme', '', pvFrame());
@@ -382,9 +383,9 @@ async function resetDesign(sub) {
     EDIT.dirty = false; EDIT.layout = null; drawBrand(); render(true);
   }
 }
-async function pickTheme(k) { const v = S.cat.themes[k]; await saveTheme({ bg: v.bg, accent: v.accent, accent2: v.accent2, text: v.text, font: v.font, plate: !!(S.me.tenant.theme || {}).plate }); }
+async function pickTheme(k) { const v = S.cat.themes[k]; await saveTheme({ bg: v.bg, accent: v.accent, accent2: v.accent2, text: v.text, font: v.font, plate: !!(S.me.tenant.theme || {}).plate, glass: !!v.glass }); }
 async function saveTheme(body) {
-  body = body || { bg: $('th-bg').value, accent: $('th-accent').value, accent2: $('th-accent2').value, text: $('th-text').value, font: $('th-font').value, plate: $('th-plate').value === '1' };
+  body = body || { bg: $('th-bg').value, accent: $('th-accent').value, accent2: $('th-accent2').value, text: $('th-text').value, font: $('th-font').value, plate: $('th-plate').value === '1', glass: $('th-glass').value === '1' };
   const { name, ...clean } = body;
   const j = await act('PUT', '/theme', clean, 'Renkler kaydedildi', false);
   if (j) { S.me.tenant.theme = j.theme; drawBrand(); render(true); }

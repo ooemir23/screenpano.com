@@ -41,6 +41,15 @@ const STARTERS = {
       c('Atıştırmalıklar', 'Snacks', [['Karışık Tabak', 'Mixed Platter'], ['Patates Kızartması', 'French Fries']]),
     ] },
   },
+  luks: {
+    name: 'Lüks lounge (cam)', desc: 'Obsidiyen siyah zemin, altın vurgu, cam kartlar: medya, maçlar, hava ve kurlar, QR menü ve kayan bant.',
+    layout: 'lounge', theme: 'obsidyen',
+    menu: { title: 'Menü', categories: [
+      c('Kokteyller', 'Cocktails', [['Mojito', 'Mojito'], ['Margarita', 'Margarita'], ['Long Island', 'Long Island']]),
+      c('Şefin Önerileri', "Chef's Selection", [['Günün Burgeri', 'Burger of the Day'], ['Patates Kızartması', 'French Fries']]),
+      c('Alkolsüz', 'Non-alcoholic', [['Limonata', 'Lemonade'], ['Soda', 'Soda']]),
+    ] },
+  },
   vitrin: {
     name: 'Vitrin / giriş ekranı', desc: 'Kapı önü ekranı: büyük fiyat listesi, logo, saat ve QR. Siyah altın.',
     layout: 'vitrin', theme: 'altin',
