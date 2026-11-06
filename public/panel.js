@@ -111,6 +111,7 @@ function render(keepScroll) {
   const y = scrollY;
   drawNav();
   const sec = SECTIONS[TAB];
+  document.body.classList.toggle('ytm-on', TAB === 'music'); // müzik bölümü YouTube Music'in koyu zemininde
   $('view').innerHTML = sec.html();
   if (sec.after) sec.after();
   drawJump();
@@ -1463,16 +1464,18 @@ async function adUp(id, files) {
   toast('Yükleniyor…'); try { await req('POST', `/ads/${id}/media`, fd); toast('Yüklendi; hazır olunca yayına girer'); refresh(); } catch (e) { toast(e.message, true); }
 }
 
-/* ================= MÜZİK (Spotify, YouTube Music, radyo; telefondan uzaktan kumanda) ================= */
+/* ================= MÜZİK — YouTube Music düzeninde (YouTube, YouTube Music, Spotify, radyo; telefondan uzaktan kumanda) =================
+ * Görünüm: üstte arama, altında bölüm çipleri (Ana sayfa · Keşfet · Kitaplık · Hesaplar · Kurulum), raflar ve kare kapaklı kartlar,
+ * liste sayfası (büyük kapak + Oynat), en altta sabit çalar çubuğu. Spotify hesabı OAuth ile bağlanır (server/spotify.js). */
 const MUSIC_PRESETS = [
-  { title: 'Kafe & Lofi Chill Beats (7/24)', category: 'Kafe & Akustik', provider: 'ytm', url: 'https://music.youtube.com/watch?v=lTRiuFIWV54', desc: 'Kafeler ve çalışma alanları için kesintisiz sakin Lofi & enstrümantal ritimler.' },
-  { title: 'Restoran & Smooth Jazz / Bossa Nova', category: 'Restoran & Caz', provider: 'ytm', url: 'https://music.youtube.com/watch?v=Dx5qFachd3A', desc: 'Yemek ve sohbet ortamına uygun sıcak saksafon, piyano ve Bossa Nova.' },
-  { title: 'Lounge & Deep Chill Synth / House', category: 'Lounge & Bar', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Akşam saatleri, pub ve lounge mekânlar için modern atmosferik müzik.' },
+  { title: 'Kafe & Lofi Chill Beats (7/24)', category: 'Kafe & Akustik', provider: 'ytm', url: 'https://music.youtube.com/watch?v=lTRiuFIWV54', desc: 'Kafeler ve çalışma alanları için kesintisiz sakin Lofi & enstrümantal ritimler.', thumb: 'https://i.ytimg.com/vi/lTRiuFIWV54/hqdefault.jpg' },
+  { title: 'Restoran & Smooth Jazz / Bossa Nova', category: 'Restoran & Caz', provider: 'ytm', url: 'https://music.youtube.com/watch?v=Dx5qFachd3A', desc: 'Yemek ve sohbet ortamına uygun sıcak saksafon, piyano ve Bossa Nova.', thumb: 'https://i.ytimg.com/vi/Dx5qFachd3A/hqdefault.jpg' },
+  { title: 'Lounge & Deep Chill Synth / House', category: 'Lounge & Bar', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Akşam saatleri, pub ve lounge mekânlar için modern atmosferik müzik.', thumb: 'https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg' },
   { title: 'Spotify Chill Hits · Kafe & Lounge', category: 'Kafe & Lounge', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6', desc: 'Spotify’ın en sevilen güncel sakin ve popüler mekan şarkıları listesi.' },
   { title: 'Spotify Türkçe Pop & Güncel Hitler', category: 'Türkçe Pop', provider: 'spotify', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', desc: 'Mekânlarda en çok dinlenen güncel Türkçe pop parçalar.' },
   { title: 'Spotify Coffee Table Jazz', category: 'Kafe & Caz', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DWVqfgj8NZEp1', desc: 'Kahve dükkanları ve pastaneler için yumuşak caz klasikleri.' },
   { title: 'Spor Salonu & Yüksek Enerji (Beast Mode)', category: 'Spor & Fitness', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DX76Wlfdnj7AP', desc: 'Spor salonları ve antrenman saatleri için yüksek tempolu motivasyon listesi.' },
-  { title: 'Maç Öncesi & Sosyal Mekân Ritmi', category: 'Maç Günü', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Maç öncesi toplanma saatlerinde arka planda akıcı ritmik yayın.' },
+  { title: 'Maç Öncesi & Sosyal Mekân Ritmi', category: 'Maç Günü', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Maç öncesi toplanma saatlerinde arka planda akıcı ritmik yayın.', thumb: 'https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg' },
 ];
 function musicData() {
   if (!S.db.music || typeof S.db.music !== 'object') S.db.music = { enabled: false, playing: true, volume: 75, muteVideo: true, showNowPlaying: true, activeId: '', playlists: [], spotify: {} };
@@ -1480,56 +1483,89 @@ function musicData() {
   if (!S.db.music.spotify || typeof S.db.music.spotify !== 'object') S.db.music.spotify = {};
   return S.db.music;
 }
-const PROV = p => p === 'spotify' ? 'Spotify' : p === 'ytm' ? 'YouTube Music' : p === 'ytmix' ? 'Kendi Listem' : p === 'yt' ? 'YouTube' : 'Canlı Radyo';
-function musicBadge(p) {
-  if (p === 'spotify') return '<span class="mtag sp">Spotify</span>';
-  if (p === 'ytm') return '<span class="mtag yt">YouTube Music</span>';
-  if (p === 'ytmix') return '<span class="mtag yt">Kendi Listem</span>';
-  if (p === 'yt') return '<span class="mtag yt">YouTube</span>';
-  return '<span class="mtag rd">Canlı Radyo</span>';
-}
-const provIcon = p => p === 'spotify' ? '🎧' : p === 'radio' ? '📻' : '▶';
+const PROV = p => p === 'spotify' ? 'Spotify' : p === 'ytm' ? 'YouTube Music' : p === 'ytmix' ? 'Kendi listem' : p === 'yt' ? 'YouTube' : 'Canlı radyo';
+const provIc = p => p === 'spotify' ? 'headphones' : p === 'radio' ? 'radio-tower' : p === 'ytmix' ? 'list-music' : 'music';
+const kindName = it => it.provider === 'radio' ? 'Radyo' : it.provider === 'spotify' && it.spotifyType === 'track' || (it.provider === 'yt' || it.provider === 'ytm') && !it.listId && it.videoId ? 'Şarkı' : it.provider === 'spotify' && it.spotifyType === 'album' ? 'Albüm' : 'Çalma listesi';
 const fmtDur = s => !s ? '' : (s >= 3600 ? Math.floor(s / 3600) + ':' + String(Math.floor(s % 3600 / 60)).padStart(2, '0') : Math.floor(s / 60)) + ':' + String(s % 60).padStart(2, '0');
-let MV = null;               // açık liste ayrıntısı: { src: 'lib' | 'yt', id, listId, title, thumb, provider, url }
-let MNOW = null, MNOW_T = 0; // TV'nin bildirdiği o an çalan şarkı
-const TRK = new Map();       // listId -> { items, err, reconnect }
+const fmtLong = s => !s ? '' : s >= 3600 ? `${Math.floor(s / 3600)} sa ${Math.floor(s % 3600 / 60)} dk` : `${Math.max(1, Math.round(s / 60))} dk`;
+let MV = null;               // açık liste: { src: 'lib'|'yt'|'sp', id, provider, title, thumb, url, listId, spType, spId, count, tracks }
+let MNOW = null, MNOW_T = 0; // o an çalan (TV'nin bildirdiği ya da Spotify'ın verdiği)
+const TRK = new Map();       // YouTube listId -> { items, err, reconnect }
+const SPTRK = new Map();     // 'tür:kimlik' -> { items, err, hidden }
+let LF = 'all';              // kitaplık süzgeci
+let MSRC = 'yt';             // arama kaynağı: yt | sp
 const musicActive = () => { const m = musicData(); return m.playlists.find(x => x.id === m.activeId) || m.playlists[0] || null; };
+const MSUB = { yt: 'accounts', add: 'accounts', presets: 'explore' }; // eski bağlantılar
 
 SECTIONS.music = {
   after() {
-    ytAccLoad(); musicNowLoad();
+    ytAccLoad(); spAccLoad(); musicNowLoad();
     clearInterval(MNOW_T); MNOW_T = setInterval(() => { if (TAB !== 'music') return clearInterval(MNOW_T); musicNowLoad(); }, 6000);
     if (MV && MV.listId && (MV.provider === 'yt' || MV.provider === 'ytm')) loadTracks(MV.listId);
+    if (MV && MV.provider === 'spotify' && MV.spId) loadSpTracks(MV.spType, MV.spId);
+    if ((SUB.music || 'home') === 'accounts' && SPACC.st && SPACC.st.connected && !SPACC.devs) spDevLoad();
   },
   html() {
-    const sub = ['lib', 'search', 'yt', 'presets', 'add'].includes(SUB.music) ? SUB.music : 'lib';
-    if (MV && MV.src !== sub) MV = null;
-    return head('Müzik', 'TV\'lerinizde çalan arka plan müziğini buradan ya da telefonunuzdan yönetin.')
-      + `<div id="mnowbox">${nowBar()}</div>`
-      + tabs('music', [['lib', 'Kütüphanem'], ['search', 'Şarkı ara'], ['yt', 'YouTube hesabım'], ['presets', 'Hazır listeler'], ['add', 'Bağlantı ekle']])
-      + (MV ? detailHtml() : { lib: libHtml, search: searchHtml, yt: () => '<div id="ytacc"><div class="muted">Yükleniyor…</div></div>', presets: presetHtml, add: addHtml }[sub]());
+    let sub = MSUB[SUB.music] || SUB.music;
+    if (!['home', 'explore', 'lib', 'search', 'accounts', 'setup'].includes(sub)) sub = 'home';
+    const body = MV ? detailHtml() : { home: homeHtml, explore: exploreHtml, lib: libHtml, search: searchHtml, accounts: accountsHtml, setup: setupHtml }[sub]();
+    return `<div class="ytm">${ytmTop(sub)}<div class="ytm-body">${body}</div></div><div id="mnowbox">${nowBar()}</div>`;
   },
 };
+const goM = k => { MV = null; go('music/' + k); };
 
-// ---- Şimdi çalıyor çubuğu ----
+// ---- Üst şerit: arama + bölüm çipleri ----
+function ytmTop(sub) {
+  const chips = [['home', 'house', 'Ana sayfa'], ['explore', 'compass', 'Keşfet'], ['lib', 'library', 'Kitaplık'], ['accounts', 'link', 'Hesaplar'], ['setup', 'book-open', 'Kurulum']];
+  return `<div class="ytm-top">
+      <form class="ytm-search" onsubmit="musicSearch();return false">${ic('search')}<input type="search" id="ms-q" placeholder="Şarkı, sanatçı ya da liste arayın" value="${esc(MSEARCH.q)}" autocomplete="off"></form>
+      <button class="ytm-ib" type="button" title="Bağlantı ekle" onclick="goM('accounts');setTimeout(()=>{const e=$('m-url');if(e){e.scrollIntoView({block:'center'});e.focus();}},120)">${ic('plus')}</button>
+    </div>
+    <div class="ytm-chips">${chips.map(([k, i, l]) => `<button type="button" class="${!MV && sub === k ? 'on' : ''}" onclick="goM('${k}')">${ic(i)}${l}</button>`).join('')}</div>`;
+}
+
+// ---- Kart, raf, satır ----
+function mcard(o) {
+  return `<div class="ytm-card ${o.on ? 'on' : ''}">
+    <div class="ytm-cov ${o.round ? 'round' : ''}"><button type="button" class="ytm-open" onclick="${o.open}" aria-label="${esc(o.title)}">${o.thumb ? `<img src="${esc(o.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<i>${ic(o.ic || 'music')}</i>`}</button>
+      ${o.on && o.playing ? '<em class="meq"><b></b><b></b><b></b></em>' : ''}${o.play ? `<button type="button" class="ytm-cplay" title="TV'de çal" onclick="${o.play}">${ic(o.on && o.playing ? 'pause-f' : 'play-f')}</button>` : ''}</div>
+    <button type="button" class="ytm-ct" onclick="${o.open}"><b>${esc(o.title)}</b><span>${o.sub || ''}</span></button></div>`;
+}
+const shelf = (title, cards, more = '', sub = '') => cards.length ? `<section class="ytm-shelf"><div class="ytm-sh"><div>${sub ? `<small>${sub}</small>` : ''}<h2>${title}</h2></div>${more}</div><div class="ytm-row">${cards.join('')}</div></section>` : '';
+const moreBtn = (k, l = 'Tümü') => `<button type="button" class="ytm-more" onclick="goM('${k}')">${l}</button>`;
+function libCard(it) {
+  const m = musicData(), act = musicActive(), on = !!(act && act.id === it.id);
+  return mcard({ thumb: it.thumb, ic: provIc(it.provider), title: it.title, sub: `${kindName(it)} • ${PROV(it.provider)}${isPriv(it.listId) ? ' • 🔒' : ''}`, open: `openList('lib','${it.id}')`, play: on && m.enabled && m.playing ? "musicCmd('pause')" : `musicSelect('${it.id}')`, on, playing: m.enabled && m.playing });
+}
+function trow(o) { // YouTube Music şarkı satırı: kapak (üstünde oynat), ad, sanatçı, süre, işlemler
+  return `<div class="ytm-tr ${o.on ? 'on' : ''}" ${o.v ? `data-v="${esc(o.v)}"` : ''} ${o.uri ? `data-u="${esc(o.uri)}"` : ''}>
+    <button type="button" class="ytm-tth" title="TV'de çal" onclick="${o.play}">${o.thumb ? `<img src="${esc(o.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<i></i>'}<span>${ic('play-f')}</span>${o.on ? '<em class="meq"><b></b><b></b><b></b></em>' : ''}</button>
+    <button type="button" class="ytm-tb" onclick="${o.play}"><b>${esc(o.title)}</b><span class="m">${esc(o.artist || '')}</span></button>
+    <span class="ytm-ta">${esc(o.artist || '')}</span><span class="ytm-td">${fmtDur(o.dur)}</span><span class="ytm-tx">${o.acts || ''}</span></div>`;
+}
+
+// ---- Alt çalar çubuğu ----
 function nowBar() {
   const m = musicData(), act = musicActive();
   const n = MNOW && act && (!MNOW.itemId || MNOW.itemId === act.id) ? MNOW : null;
-  const on = !!m.enabled, playing = on && m.playing, err = n && n.err;
+  const on = !!m.enabled, playing = on && (n && n.provider === 'spotify' && n.playing != null ? n.playing : m.playing), err = n && n.err;
   const title = n && n.title ? n.title : act ? act.title : 'Henüz liste seçilmedi';
-  const sub = err ? err : n && n.artist && act ? `${n.artist} · ${act.title}` : act ? PROV(act.provider) : 'Kütüphanenizden bir liste seçin';
+  const sub = err ? err : !on ? 'Müzik kapalı' : n && n.artist ? `${n.artist}${act ? ' • ' + act.title : ''}` : act ? `${kindName(act)} • ${PROV(act.provider)}` : 'Kitaplığınızdan bir liste seçin';
   const thumb = (n && n.thumb) || (act && act.thumb) || '';
-  return `<div class="mnow ${err ? 'err' : ''}">
-    <div class="mnow-cov">${thumb ? `<img src="${esc(thumb)}" alt="">` : '🎵'}${playing && !err ? '<i class="meq"><b></b><b></b><b></b></i>' : ''}</div>
-    <div class="mnow-info"><small>${!on ? 'Müzik kapalı' : err ? 'Çalınamadı' : playing ? 'TV\'de çalıyor' : 'Duraklatıldı'}</small><b>${esc(title)}</b><span>${esc(sub)}</span></div>
-    <div class="mnow-ctl">
-      <button class="mrem-btn" title="Önceki" onclick="musicCmd('prev')">⏮</button>
-      <button class="mrem-btn play" title="${playing ? 'Duraklat' : 'TV\'de Oynat'}" onclick="musicCmd(${on ? "'toggle'" : "'play'"})">${playing ? '⏸' : '▶'}</button>
-      <button class="mrem-btn" title="Sonraki" onclick="musicCmd('next')">⏭</button>
+  const prog = n && n.dur ? Math.min(100, Math.round((n.progress || 0) / n.dur * 100)) : 0;
+  return `<div class="ytm-bar ${err ? 'err' : ''} ${on ? '' : 'off'}">${prog ? `<i class="ytm-prog" style="width:${prog}%"></i>` : ''}
+    <div class="ytm-bar-ctl">
+      <button type="button" title="Önceki" onclick="musicCmd('prev')">${ic('skip-back-f')}</button>
+      <button type="button" class="big" title="${playing ? 'Duraklat' : 'TV\'de oynat'}" onclick="musicCmd(${on ? "'toggle'" : "'play'"})">${ic(playing ? 'pause-f' : 'play-f')}</button>
+      <button type="button" title="Sonraki" onclick="musicCmd('next')">${ic('skip-forward-f')}</button>
     </div>
-    <div class="mnow-vol"><span>🔊</span><input type="range" min="0" max="100" value="${m.volume ?? 75}" oninput="this.nextElementSibling.textContent=this.value+'%'" onchange="musicCmd('volume',{volume:+this.value})"><b>${m.volume ?? 75}%</b></div>
-    <div class="mnow-sw" title="Müzik açık / kapalı">${sw(on, "musicOpt({enabled:this.checked,playing:true})")}</div>
-  </div>`;
+    <button type="button" class="ytm-bar-np" onclick="${act ? `openList('lib','${act.id}')` : "goM('lib')"}">
+      <span class="c">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer">` : ic('music')}</span>
+      <span class="t"><b>${esc(title)}</b><span>${esc(sub)}</span></span></button>
+    <div class="ytm-bar-r">
+      <label class="ytm-vol" title="Ses">${ic('volume-2')}<input type="range" min="0" max="100" value="${m.volume ?? 75}" onchange="musicCmd('volume',{volume:+this.value})"></label>
+      <span class="ytm-onoff" title="Müzik açık / kapalı">${sw(on, "musicOpt({enabled:this.checked,playing:true})")}</span>
+    </div></div>`;
 }
 async function musicNowLoad() {
   try {
@@ -1537,54 +1573,96 @@ async function musicNowLoad() {
     if (k === JSON.stringify(MNOW)) return;
     MNOW = n && n.at ? n : null;
     const box = $('mnowbox'); if (box) box.innerHTML = nowBar();
-    document.querySelectorAll('.trk').forEach(r => r.classList.toggle('on', !!(MNOW && MNOW.videoId && r.dataset.v === MNOW.videoId)));
+    document.querySelectorAll('.ytm-tr').forEach(r => r.classList.toggle('on', !!(MNOW && (MNOW.videoId && r.dataset.v === MNOW.videoId || MNOW.uri && r.dataset.u === MNOW.uri))));
   } catch (e) {}
 }
 
-// ---- Kütüphanem ----
-function tile(it, onclick, extra = '') {
-  const m = musicData(), act = musicActive(), cur = act && it.id && act.id === it.id;
-  return `<button type="button" class="mtile ${cur ? 'on' : ''}" onclick="${onclick}">
-    <span class="mtile-cov">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy">` : `<i>${provIcon(it.provider)}</i>`}${cur && m.enabled && m.playing ? '<em class="meq"><b></b><b></b><b></b></em>' : ''}</span>
-    <b>${esc(it.title)}</b><span>${musicBadge(it.provider)}${extra}</span></button>`;
+// ---- Ana sayfa ----
+function homeHtml() {
+  const m = musicData(), act = musicActive();
+  const lib = m.playlists.map(libCard);
+  const yt = YTACC.st && YTACC.st.connected ? (YTACC.items || []).slice(0, 12).map(p => mcard({ thumb: p.thumb, title: p.title, sub: `Çalma listesi • ${p.count} şarkı`, open: `openList('yt','${esc(p.id)}')`, play: `ytAccAdd('${esc(p.id)}',true)` })) : [];
+  const sp = SPACC.st && SPACC.st.connected ? (SPACC.items || []).slice(0, 12).map(p => mcard({ thumb: p.thumb, ic: 'headphones', title: p.title, sub: `Çalma listesi • ${p.count} şarkı`, open: `openList('sp','${esc(p.id)}')`, play: `spAdd('${esc(p.id)}',true)` })) : [];
+  const pre = MUSIC_PRESETS.map((p, i) => mcard({ thumb: p.thumb, ic: provIc(p.provider), title: p.title, sub: `${esc(p.category)} • ${PROV(p.provider)}`, open: `addMusicPreset(${i},false)`, play: `addMusicPreset(${i},true)` }));
+  const hero = act ? `<div class="ytm-hero"><div class="c">${act.thumb ? `<img src="${esc(act.thumb)}" alt="" referrerpolicy="no-referrer">` : ic(provIc(act.provider))}</div><div class="b"><small>${m.enabled && m.playing ? 'TV\'de çalıyor' : 'Son çalınan'}</small><h2>${esc(act.title)}</h2><span>${kindName(act)} • ${PROV(act.provider)}</span>
+      <div class="row"><button class="ytm-btn w" onclick="${m.enabled && m.playing ? "musicCmd('pause')" : `musicSelect('${act.id}')`}">${ic(m.enabled && m.playing ? 'pause-f' : 'play-f')}${m.enabled && m.playing ? 'Duraklat' : 'Oynat'}</button><button class="ytm-btn" onclick="openList('lib','${act.id}')">${ic('list-music')}Şarkılar</button></div></div></div>` : '';
+  const empty = !m.playlists.length ? `<div class="ytm-empty">${ic('music')}<b>Kitaplığınız boş</b><span>Hesabınızı bağlayın, şarkı arayın ya da aşağıdaki hazır listelerden birini çalın.</span><div class="row"><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesap bağla</button><button class="ytm-btn" onclick="goM('setup')">${ic('book-open')}Kurulum adımları</button></div></div>` : '';
+  return hero + empty
+    + shelf('Kitaplığınız', lib.slice(0, 14), lib.length > 14 ? moreBtn('lib') : '', 'Tekrar dinleyin')
+    + shelf('YouTube listeleriniz', yt, moreBtn('accounts', 'Hesap'), YTACC.st && YTACC.st.name ? esc(YTACC.st.name) : '')
+    + shelf('Spotify listeleriniz', sp, moreBtn('accounts', 'Hesap'), SPACC.st && SPACC.st.name ? esc(SPACC.st.name) : '')
+    + shelf('Mekânınız için hazır listeler', pre, moreBtn('explore', 'Keşfet'));
 }
+
+// ---- Keşfet: hazır listeler kategoriye göre ----
+function exploreHtml() {
+  const cats = [...new Set(MUSIC_PRESETS.map(p => p.category))];
+  return `<div class="ytm-moods">${cats.map(c => `<button type="button" onclick="document.getElementById('cat-${esc(c).replace(/[^a-z0-9]/gi, '')}').scrollIntoView({behavior:'smooth',block:'center'})">${esc(c)}</button>`).join('')}</div>`
+    + `<div class="ytm-grid">${MUSIC_PRESETS.map((p, i) => `<div class="ytm-pre" id="cat-${esc(p.category).replace(/[^a-z0-9]/gi, '')}">${mcard({ thumb: p.thumb, ic: provIc(p.provider), title: p.title, sub: `${esc(p.category)} • ${PROV(p.provider)}`, open: `addMusicPreset(${i},false)`, play: `addMusicPreset(${i},true)` })}<p>${esc(p.desc)}</p></div>`).join('')}</div>`;
+}
+
+// ---- Kitaplık ----
 function libHtml() {
   const m = musicData();
-  if (!m.playlists.length) return `<div class="empty">Kütüphaneniz boş. <a href="#music/search">Şarkı arayıp kendi listenizi kurun</a>, <a href="#music/yt">YouTube hesabınızdan</a>, <a href="#music/presets">hazır listelerden</a> ya da <a href="#music/add">bağlantı yapıştırarak</a> liste ekleyin.</div>`;
-  return `<div class="mgrid">${m.playlists.map(it => tile(it, `openList('lib','${it.id}')`, (it.category ? ` <small>${esc(it.category)}</small>` : '') + (isPriv(it.listId) ? ' <small class="privb">🔒 Gizli</small>' : ''))).join('')}</div>`;
+  const F = { all: () => true, mine: x => x.provider === 'ytmix', yt: x => x.provider === 'yt' || x.provider === 'ytm', sp: x => x.provider === 'spotify', radio: x => x.provider === 'radio' };
+  const list = m.playlists.filter(F[LF] || F.all);
+  const chips = [['all', 'Tümü'], ['mine', 'Kendi listelerim'], ['yt', 'YouTube'], ['sp', 'Spotify'], ['radio', 'Radyo']];
+  return `<div class="ytm-sh"><div><h2>Kitaplık</h2></div></div><div class="ytm-filt">${chips.map(([k, l]) => `<button type="button" class="${LF === k ? 'on' : ''}" onclick="LF='${k}';render(true)">${l}</button>`).join('')}</div>`
+    + (list.length ? `<div class="ytm-grid">${list.map(libCard).join('')}</div>`
+      : `<div class="ytm-empty">${ic('library')}<b>${m.playlists.length ? 'Bu süzgeçte liste yok' : 'Kitaplığınız boş'}</b><span>Arama yapın, hesabınızı bağlayın ya da Keşfet'ten hazır liste ekleyin.</span></div>`);
 }
 function openList(src, id) {
-  if (src === 'lib') { const it = musicData().playlists.find(x => x.id === id); if (!it) return; MV = { src, id, listId: it.listId || '', title: it.title, thumb: it.thumb, provider: it.provider, url: it.url || '', videoId: it.videoId || '', tracks: it.provider === 'ytmix' ? (it.tracks || []) : null, count: it.provider === 'ytmix' ? (it.tracks || []).length : 0 }; }
-  else { const p = (YTACC.items || []).find(x => x.id === id); if (!p) return; MV = { src, id, listId: p.id, title: p.title, thumb: p.thumb, provider: 'ytm', url: 'https://music.youtube.com/playlist?list=' + p.id, count: p.count }; }
+  if (src === 'lib') {
+    const it = musicData().playlists.find(x => x.id === id); if (!it) return;
+    MV = { src, id, provider: it.provider, title: it.title, thumb: it.thumb, url: it.url || '', listId: it.listId || '', videoId: it.videoId || '', spType: it.spotifyType || '', spId: it.spotifyId || '', tracks: it.provider === 'ytmix' ? (it.tracks || []) : null, count: it.provider === 'ytmix' ? (it.tracks || []).length : 0 };
+  } else if (src === 'yt') {
+    const p = (YTACC.items || []).find(x => x.id === id); if (!p) return;
+    MV = { src, id, listId: p.id, title: p.title, thumb: p.thumb, provider: 'ytm', url: 'https://music.youtube.com/playlist?list=' + p.id, count: p.count };
+  } else {
+    const p = (SPACC.items || []).concat((SPS.r && SPS.r.playlists) || []).find(x => x.id === id); if (!p) return;
+    MV = { src, id, provider: 'spotify', spType: 'playlist', spId: p.id, title: p.title, thumb: p.thumb, url: p.url, count: p.count, owner: p.owner };
+  }
   render(); scrollTo(0, 0);
 }
 const isPriv = listId => !!listId && !!((YTACC.items || []).find(x => x.id === listId) || {}).priv; // gizli YouTube listesi (TV çalamaz)
 const libByList = listId => musicData().playlists.find(x => x.listId && x.listId === listId);
+const libBySp = id => musicData().playlists.find(x => x.provider === 'spotify' && x.spotifyId === id);
 
-// ---- Liste ayrıntısı ve şarkılar ----
+// ---- Liste sayfası (büyük kapak, Oynat, şarkılar) ----
 function detailHtml() {
-  const v = MV, inLib = v.src === 'lib' ? musicData().playlists.find(x => x.id === v.id) : libByList(v.listId);
-  const act = musicActive(), m = musicData(), cur = inLib && act && act.id === inLib.id;
-  const btns = inLib
-    ? `<button class="btn" onclick="musicSelect('${inLib.id}')">${cur && m.enabled && m.playing ? '🔊 TV\'de Çalıyor' : '▶ TV\'de Çal'}</button>${(v.url || inLib.url) ? `<a class="btn g" href="${esc(v.url || inLib.url)}" target="_blank" rel="noopener">↗ Uygulamada Aç</a>` : ''}${v.provider === 'ytmix' ? `<button class="btn g" onclick="editCustom('${inLib.id}')">✎ Düzenle</button>` : ''}${v.src === 'lib' ? `<button class="btn d" onclick="delMusicPlaylist('${inLib.id}')">Sil</button>` : '<span class="pill ok">Kütüphanede ✓</span>'}`
-    : `<button class="btn" onclick="ytAccAdd('${esc(v.listId)}',true)">▶ Ekle ve TV'de çal</button><button class="btn g" onclick="ytAccAdd('${esc(v.listId)}',false)">+ Kütüphaneye ekle</button>`;
+  const v = MV, m = musicData(), act = musicActive();
+  const inLib = v.src === 'lib' ? m.playlists.find(x => x.id === v.id) : v.provider === 'spotify' ? libBySp(v.spId) : libByList(v.listId);
+  const cur = inLib && act && act.id === inLib.id, playingNow = cur && m.enabled && m.playing;
+  const playJs = inLib ? (playingNow ? "musicCmd('pause')" : `musicSelect('${inLib.id}')`) : v.provider === 'spotify' ? `spAdd('${esc(v.spId)}',true)` : `ytAccAdd('${esc(v.listId)}',true)`;
+  const acts = `<button class="ytm-btn w" onclick="${playJs}">${ic(playingNow ? 'pause-f' : 'play-f')}${playingNow ? 'Duraklat' : 'Oynat'}</button>`
+    + (!inLib ? `<button class="ytm-btn" onclick="${v.provider === 'spotify' ? `spAdd('${esc(v.spId)}',false)` : `ytAccAdd('${esc(v.listId)}',false)`}">${ic('plus')}Kitaplığa ekle</button>` : '')
+    + (v.provider === 'ytmix' && inLib ? `<button class="ytm-ib" title="Düzenle" onclick="editCustom('${inLib.id}')">${ic('pencil')}</button>` : '')
+    + ((v.url || (inLib && inLib.url)) ? `<a class="ytm-ib" title="Uygulamada aç" href="${esc(v.url || inLib.url)}" target="_blank" rel="noopener">${ic('external-link')}</a>` : '')
+    + (v.src === 'lib' && inLib ? `<button class="ytm-ib" title="Kitaplıktan sil" onclick="delMusicPlaylist('${inLib.id}')">${ic('trash-2')}</button>` : '');
   let body;
   if (v.provider === 'ytmix' && Array.isArray(v.tracks)) {
     const sum = v.tracks.reduce((a, t) => a + (t.d || 0), 0);
-    body = v.tracks.length
-      ? `<div class="trks">${v.tracks.map((t, i) => `<button type="button" class="trk ${MNOW && MNOW.videoId === t.v ? 'on' : ''}" data-v="${esc(t.v)}" onclick="playCustomTrack(${i})"><span class="n">${i + 1}</span>${t.th ? `<img src="${esc(t.th)}" alt="" loading="lazy">` : '<i></i>'}<span class="b"><b>${esc(t.t)}</b><span>${esc(t.c)}</span></span><span class="d">${fmtDur(t.d)}</span><span class="p">▶</span></button>`).join('')}</div>`
-      : '<div class="empty">Bu listede şarkı yok.</div>';
-    setTimeout(() => { const el = $('mcount'); if (el) el.textContent = `${v.tracks.length} şarkı · ${fmtDur(sum)}`; }, 0);
+    body = v.tracks.length ? v.tracks.map((t, i) => trow({ v: t.v, thumb: t.th, title: t.t, artist: t.c, dur: t.d, on: MNOW && MNOW.videoId === t.v, play: `playCustomTrack(${i})` })).join('') : '<div class="ytm-empty sm">Bu listede şarkı yok.</div>';
+    setTimeout(() => { const el = $('mcount'); if (el) el.textContent = `${v.tracks.length} şarkı • ${fmtLong(sum)}`; }, 0);
   }
-  else if (v.listId && (v.provider === 'yt' || v.provider === 'ytm')) body = '<div id="mtracks"><div class="muted">Şarkılar yükleniyor…</div></div>';
-  else if (v.provider === 'spotify') body = '<div class="empty">Spotify listelerinin şarkıları Spotify hesabı bağlantısı kurulunca burada görünecek.</div>';
-  else if (v.provider === 'radio') body = '<div class="empty">Canlı radyo yayını; tek bir akıştır, şarkı listesi yoktur.</div>';
-  else body = '<div class="empty">Tek bir video; liste değil.</div>';
-  const privW = isPriv(v.listId) ? `<div class="bn trial" style="margin-bottom:14px"><span>Bu liste gizli: TV'deki oynatıcı sizin hesabınızla giriş yapmadığı için çalamaz. YouTube'da listeyi “Liste dışı” ya da “Herkese açık” yapın.</span></div>` : '';
-  return `<a href="#" class="mback" onclick="MV=null;render();return false">← ${v.src === 'yt' ? 'YouTube listelerim' : 'Kütüphanem'}</a>
-    <div class="mhead"><div class="mhead-cov">${v.thumb ? `<img src="${esc(v.thumb)}" alt="">` : `<i>${provIcon(v.provider)}</i>`}</div>
-      <div class="mhead-b">${musicBadge(v.provider)}<h2>${esc(v.title)}</h2><p class="muted" id="mcount">${v.count ? `${v.count} şarkı` : ''}</p><div class="row">${btns}</div></div></div>
-    ${privW}${card('Şarkılar', 'Bir şarkıya dokununca liste TV\'de o şarkıdan başlar.', body)}`;
+  else if (v.listId && (v.provider === 'yt' || v.provider === 'ytm')) body = '<div id="mtracks"><div class="ytm-empty sm">Şarkılar yükleniyor…</div></div>';
+  else if (v.provider === 'spotify' && v.spId) body = '<div id="mtracks"><div class="ytm-empty sm">Şarkılar yükleniyor…</div></div>';
+  else if (v.provider === 'radio') body = '<div class="ytm-empty sm">Canlı radyo yayını: tek bir akıştır, şarkı listesi yoktur.</div>';
+  else body = '<div class="ytm-empty sm">Tek şarkı; liste değil.</div>';
+  const privW = isPriv(v.listId) ? `<div class="ytm-warn">${ic('lock')}<span>Bu liste gizli: TV'deki oynatıcı sizin hesabınızla giriş yapmadığı için çalamaz. YouTube'da listeyi “Liste dışı” ya da “Herkese açık” yapın.</span></div>` : '';
+  const spW = v.provider === 'spotify' ? spWarn() : '';
+  const kind = inLib ? kindName(inLib) : 'Çalma listesi';
+  return `<button type="button" class="ytm-back" onclick="MV=null;render()">${ic('chevron-left')}Geri</button>
+    <div class="ytm-head"><div class="c">${v.thumb ? `<img src="${esc(v.thumb)}" alt="" referrerpolicy="no-referrer">` : ic(provIc(v.provider))}</div>
+      <div class="b"><h1>${esc(v.title)}</h1><p class="meta">${kind} • ${PROV(v.provider)}${v.owner ? ' • ' + esc(v.owner) : ''}</p><p class="meta" id="mcount">${v.count ? `${v.count} şarkı` : ''}</p><div class="row">${acts}</div></div></div>
+    ${privW}${spW}<div class="ytm-tracks">${body}</div>`;
+}
+function spWarn() { // Spotify listesinin TV'de çalabilmesi için eksik adım
+  const st = SPACC.st || {};
+  if (!st.connected) return `<div class="ytm-warn">${ic('info')}<span>Spotify listelerini TV'de çalmak için Spotify hesabınızı bağlayın.</span><button class="ytm-btn sm" onclick="goM('accounts')">Bağla</button></div>`;
+  if (!st.target) return `<div class="ytm-warn">${ic('speaker')}<span>Müziğin hangi cihazda çalacağını seçin (TV kutusundaki Spotify uygulaması önerilir).</span><button class="ytm-btn sm" onclick="goM('accounts')">Cihaz seç</button></div>`;
+  if (!st.premium) return `<div class="ytm-warn">${ic('triangle-alert')}<span>Spotify'ı panelden yönetmek için Spotify Premium gerekir.</span></div>`;
+  return '';
 }
 async function loadTracks(listId) {
   const c = TRK.get(listId);
@@ -1597,11 +1675,10 @@ async function loadTracks(listId) {
 function drawTracks(listId) {
   const box = $('mtracks'); if (!box || !MV || MV.listId !== listId) return;
   const c = TRK.get(listId) || {};
-  if (c.err) { box.innerHTML = `<div class="empty">${esc(c.err)}${c.reconnect ? ' <a href="#music/yt">YouTube hesabım</a>' : ''}</div>`; return; }
+  if (c.err) { box.innerHTML = `<div class="ytm-empty sm">${esc(c.err)}${c.reconnect ? ` <a href="#music/accounts">Hesaplar</a>` : ''}</div>`; return; }
   const items = c.items || [];
-  if ($('mcount')) $('mcount').textContent = `${items.length} şarkı · ${fmtDur(items.reduce((a, x) => a + x.dur, 0))}`;
-  box.innerHTML = items.length ? `<div class="trks">${items.map((t, i) => `<button type="button" class="trk ${MNOW && MNOW.videoId === t.videoId ? 'on' : ''}" data-v="${esc(t.videoId)}" onclick="playTrack(${i})">
-      <span class="n">${i + 1}</span>${t.thumb ? `<img src="${esc(t.thumb)}" alt="" loading="lazy">` : '<i></i>'}<span class="b"><b>${esc(t.title)}</b><span>${esc(t.channel)}</span></span><span class="d">${fmtDur(t.dur)}</span><span class="p">▶</span></button>`).join('')}</div>` : '<div class="empty">Bu listede şarkı yok.</div>';
+  if ($('mcount')) $('mcount').textContent = `${items.length} şarkı • ${fmtLong(items.reduce((a, x) => a + x.dur, 0))}`;
+  box.innerHTML = items.length ? items.map((t, i) => trow({ v: t.videoId, thumb: t.thumb, title: t.title, artist: t.channel, dur: t.dur, on: MNOW && MNOW.videoId === t.videoId, play: `playTrack(${i})` })).join('') : '<div class="ytm-empty sm">Bu listede şarkı yok.</div>';
 }
 async function playTrack(i) {
   const v = MV, t = ((TRK.get(v.listId) || {}).items || [])[i]; if (!t) return;
@@ -1613,36 +1690,82 @@ async function playTrack(i) {
   const j = await act('POST', '/music/cmd', { cmd: 'select', id: it.id, index: t.idx, videoId: t.videoId }, `TV'de çalıyor: ${t.title}`, false);
   if (j && j.music) { S.db.music = j.music; MNOW = { ...(MNOW || {}), itemId: it.id, title: t.title, artist: t.channel, thumb: `https://i.ytimg.com/vi/${t.videoId}/mqdefault.jpg`, videoId: t.videoId, err: '', at: Date.now() }; render(true); }
 }
+// Spotify listesinin şarkıları
+async function loadSpTracks(type, id) {
+  const k = (type || 'playlist') + ':' + id;
+  if (!SPTRK.has(k)) {
+    if (!(SPACC.st && SPACC.st.connected)) { SPTRK.set(k, { err: 'Şarkıları görmek için Spotify hesabınızı bağlayın.', reconnect: true }); }
+    else {
+      try { SPTRK.set(k, { items: (await req('GET', `/music/spotify/tracks?type=${encodeURIComponent(type || 'playlist')}&id=${encodeURIComponent(id)}`)).items }); }
+      catch (e) { SPTRK.set(k, { err: e.message, reconnect: /bağla/i.test(e.message) }); }
+    }
+  }
+  const box = $('mtracks'); if (!box || !MV || MV.spId !== id) return;
+  const c = SPTRK.get(k) || {};
+  if (c.err) { box.innerHTML = `<div class="ytm-empty sm">${esc(c.err)}${c.reconnect ? ` <a href="#music/accounts">Hesaplar</a>` : ''}</div>`; return; }
+  const items = c.items || [];
+  if ($('mcount')) $('mcount').textContent = `${items.length} şarkı • ${fmtLong(items.reduce((a, x) => a + x.dur, 0))}`;
+  box.innerHTML = items.length ? items.map((t, i) => trow({ uri: t.uri, thumb: t.thumb, title: t.title, artist: t.artist, dur: t.dur, on: MNOW && MNOW.uri === t.uri, play: `playSpTrack(${i})` })).join('') : '<div class="ytm-empty sm">Bu listede şarkı yok.</div>';
+}
+async function playSpTrack(i) {
+  const v = MV, t = ((SPTRK.get((v.spType || 'playlist') + ':' + v.spId) || {}).items || [])[i]; if (!t) return;
+  let it = v.src === 'lib' ? musicData().playlists.find(x => x.id === v.id) : libBySp(v.spId);
+  if (!it) { const j = await act('POST', '/music/playlist', { url: v.url || `https://open.spotify.com/playlist/${v.spId}`, title: v.title, thumb: v.thumb, category: 'Spotify hesabım' }, '', false); if (!j || !j.item) return; S.db.music = j.music; it = j.item; }
+  const j = await act('POST', '/music/cmd', { cmd: 'select', id: it.id, uri: t.uri }, `TV'de çalıyor: ${t.title}`, false);
+  if (j && j.warn) toast(j.warn, true);
+  if (j && j.music) { S.db.music = j.music; MNOW = { ...(MNOW || {}), provider: 'spotify', itemId: it.id, title: t.title, artist: t.artist, thumb: t.thumb, uri: t.uri, err: '', at: Date.now() }; render(true); }
+}
 
-// ---- Şarkı ara + kendi listemi yap ----
-let MSEARCH = { q: '', items: null, busy: false, err: '' }; // arama durumu (bölüm değişince kaybolmaz)
+// ---- Arama: YouTube (kendi listemi kur) ve Spotify ----
+let MSEARCH = { q: '', items: null, busy: false, err: '' }; // YouTube araması
+let SPS = { q: '', r: null, busy: false, err: '' };          // Spotify araması
 let MDRAFT = null; // kurulmakta olan liste: { id: düzenleme ise liste kimliği, title, tracks: [{v,t,c,th,d}] }
 function searchHtml() {
+  const spOn = SPACC.st && SPACC.st.connected;
+  const src = `<div class="ytm-filt">${[['yt', 'YouTube'], ['sp', 'Spotify']].map(([k, l]) => `<button type="button" class="${MSRC === k ? 'on' : ''}" onclick="MSRC='${k}';musicSearch()">${l}</button>`).join('')}</div>`;
+  let out = `<div class="ytm-sh"><div><small>Arama sonuçları</small><h2>“${esc(MSEARCH.q || SPS.q)}”</h2></div></div>` + src;
+  if (MSRC === 'sp') {
+    if (!spOn) return out + `<div class="ytm-empty">${ic('headphones')}<b>Spotify hesabı bağlı değil</b><span>Spotify'da arama yapmak için önce hesabınızı bağlayın.</span><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesaplar</button></div>`;
+    const r = SPS;
+    if (r.busy) return out + '<div class="ytm-empty sm">Aranıyor…</div>';
+    if (r.err) return out + `<div class="ytm-empty sm">${esc(r.err)}</div>`;
+    if (!r.r) return out;
+    const tr = r.r.tracks || [], pl = r.r.playlists || [];
+    return out + (tr.length ? `<section class="ytm-shelf"><div class="ytm-sh"><div><h2>Şarkılar</h2></div></div><div class="ytm-tracks">${tr.map((t, i) => trow({ uri: t.uri, thumb: t.thumb, title: t.title, artist: t.artist, dur: t.dur, on: MNOW && MNOW.uri === t.uri, play: `spPlayHit(${i})`, acts: `<button class="ytm-ib sm" title="Kitaplığa ekle" onclick="spAddHit(${i})">${ic('plus')}</button>` })).join('')}</div></section>` : '')
+      + shelf('Listeler', pl.map(p => mcard({ thumb: p.thumb, ic: 'headphones', title: p.title, sub: `Çalma listesi • ${esc(p.owner || 'Spotify')}`, open: `openList('sp','${esc(p.id)}')`, play: `spAdd('${esc(p.id)}',true)` })))
+      + (!tr.length && !pl.length ? '<div class="ytm-empty sm">Sonuç bulunamadı.</div>' : '');
+  }
   const r = MSEARCH, d = MDRAFT;
-  const res = r.busy ? '<div class="muted">Aranıyor…</div>'
-    : r.err ? `<div class="empty">${esc(r.err)}</div>`
-    : !r.items ? '<div class="muted">Şarkı ya da sanatçı yazıp Ara\'ya basın.</div>'
-    : r.items.length ? `<div class="trks">${r.items.map((t, i) => `<div class="trk"><span class="n">${i + 1}</span><img src="${esc(t.thumb)}" alt="" loading="lazy"><span class="b"><b>${esc(t.title)}</b><span>${esc(t.channel)}</span></span><span class="d">${fmtDur(t.dur)}</span><span class="row" style="gap:4px;align-self:center"><button class="btn xs g" title="Listeme ekle" onclick="draftAdd(${i})">＋</button><button class="btn xs" title="Tek şarkı olarak TV'de çal" onclick="playNowVideo(${i})">▶</button></span></div>`).join('')}</div>`
-    : '<div class="empty">Sonuç bulunamadı.</div>';
-  let out = card('Şarkı ara', 'YouTube\'da şarkı, sanatçı ya da yayın arayın; sonuçlardan kendi çalma listenizi kurun.',
-    `<div class="row"><input type="search" id="ms-q" placeholder="Şarkı ya da sanatçı adı…" value="${esc(r.q)}" onkeydown="if(event.key==='Enter')musicSearch()"><button class="btn g" onclick="musicSearch()">Ara</button></div><div style="margin-top:12px">${res}</div>`);
+  const res = r.busy ? '<div class="ytm-empty sm">Aranıyor…</div>'
+    : r.err ? `<div class="ytm-empty sm">${esc(r.err)}</div>`
+    : !r.items ? '<div class="ytm-empty sm">Yukarıdaki arama kutusuna şarkı ya da sanatçı adı yazın.</div>'
+    : r.items.length ? r.items.map((t, i) => trow({ v: t.videoId, thumb: t.thumb, title: t.title, artist: t.channel, dur: t.dur, on: MNOW && MNOW.videoId === t.videoId, play: `playNowVideo(${i})`, acts: `<button class="ytm-ib sm" title="Listeme ekle" onclick="draftAdd(${i})">${ic('plus')}</button>` })).join('')
+    : '<div class="ytm-empty sm">Sonuç bulunamadı.</div>';
+  out += `<section class="ytm-shelf"><div class="ytm-sh"><div><h2>Şarkılar</h2></div><span class="ytm-hint">${ic('plus')} ile kendi listenizi kurun</span></div><div class="ytm-tracks">${res}</div></section>`;
   if (d) {
-    out += card(d.id ? 'Listemi düzenle' : 'Yeni listem', '', `
-      <div class="f"><input type="text" id="md-title" placeholder="Liste başlığı (örn. Akşam Listem)" value="${esc(d.title)}" maxlength="90"></div>
-      <div style="margin:10px 0">${d.tracks.length ? `<div class="trks">${d.tracks.map((t, i) => `<div class="trk"><span class="n">${i + 1}</span>${t.th ? `<img src="${esc(t.th)}" alt="" loading="lazy">` : '<i></i>'}<span class="b"><b>${esc(t.t)}</b><span>${esc(t.c)}</span></span><span class="d">${fmtDur(t.d)}</span><span class="row" style="gap:4px;align-self:center"><button class="btn xs" title="Yukarı taşı" onclick="draftMove(${i},-1)">↑</button><button class="btn xs" title="Aşağı taşı" onclick="draftMove(${i},1)">↓</button><button class="btn xs d" title="Listeden çıkar" onclick="draftDel(${i})">✕</button></span></div>`).join('')}</div>` : '<div class="empty">Henüz şarkı eklemediniz. Yukarıdaki arama sonuçlarından ＋ ile şarkı ekleyin.</div>'}</div>
-      <div class="row end"><button class="btn ghost d" onclick="draftClear()">Temizle</button><button class="btn" data-save onclick="draftSave(false)">Kaydet</button><button class="btn g" onclick="draftSave(true)">Kaydet ve TV'de Çal ▶</button></div>`);
-  } else {
-    out += `<div class="empty" style="margin-top:14px">Arama sonuçlarından ＋ düğmesiyle şarkı topladıkça listeniz burada kurulur.</div>`;
+    out += `<section class="ytm-draft"><div class="ytm-sh"><div><small>${d.id ? 'Listemi düzenle' : 'Yeni listem'}</small><h2>${d.tracks.length} şarkı</h2></div></div>
+      <input type="text" id="md-title" class="ytm-in" placeholder="Liste başlığı (örn. Akşam Listem)" value="${esc(d.title)}" maxlength="90">
+      <div class="ytm-tracks">${d.tracks.length ? d.tracks.map((t, i) => trow({ v: t.v, thumb: t.th, title: t.t, artist: t.c, dur: t.d, play: '', acts: `<button class="ytm-ib sm" title="Yukarı taşı" onclick="draftMove(${i},-1)">${ic('chevron-up')}</button><button class="ytm-ib sm" title="Aşağı taşı" onclick="draftMove(${i},1)">${ic('chevron-down')}</button><button class="ytm-ib sm" title="Listeden çıkar" onclick="draftDel(${i})">${ic('x')}</button>` })).join('') : '<div class="ytm-empty sm">Arama sonuçlarından + ile şarkı ekleyin.</div>'}</div>
+      <div class="row end"><button class="ytm-btn" onclick="draftClear()">Temizle</button><button class="ytm-btn" data-save onclick="draftSave(false)">Kaydet</button><button class="ytm-btn w" onclick="draftSave(true)">${ic('play-f')}Kaydet ve TV'de çal</button></div></section>`;
   }
   return out;
 }
 async function musicSearch() {
-  const q = ($('ms-q').value || '').trim();
-  if (q.length < 2) return toast('En az 2 harf yazın', true);
-  MSEARCH = { q, items: null, busy: true, err: '' }; render(true);
-  try { MSEARCH = { q, items: (await req('GET', '/music/search?q=' + encodeURIComponent(q))).items, busy: false, err: '' }; }
-  catch (e) { MSEARCH = { q, items: null, busy: false, err: e.message }; }
-  render(true);
+  const inp = $('ms-q'), q = ((inp && inp.value) || MSEARCH.q || SPS.q || '').trim();
+  if (q.length < 2) { toast('En az 2 harf yazın', true); return; }
+  MV = null;
+  if (MSRC === 'sp' && SPACC.st && SPACC.st.connected) {
+    SPS = { q, r: null, busy: true, err: '' }; MSEARCH.q = q;
+    if ((SUB.music || '') !== 'search') go('music/search'); else render(true);
+    try { SPS = { q, r: await req('GET', '/music/spotify/search?q=' + encodeURIComponent(q)), busy: false, err: '' }; }
+    catch (e) { SPS = { q, r: null, busy: false, err: e.message }; }
+  } else {
+    MSEARCH = { q, items: null, busy: true, err: '' }; SPS.q = q;
+    if ((SUB.music || '') !== 'search') go('music/search'); else render(true);
+    try { MSEARCH = { q, items: (await req('GET', '/music/search?q=' + encodeURIComponent(q))).items, busy: false, err: '' }; }
+    catch (e) { MSEARCH = { q, items: null, busy: false, err: e.message }; }
+  }
+  if (TAB === 'music') render(true);
 }
 function draftAdd(i) {
   const t = (MSEARCH.items || [])[i]; if (!t) return;
@@ -1661,14 +1784,8 @@ function draftClear() { MDRAFT = null; render(true); }
 async function draftSave(playNow) {
   if (!MDRAFT || !MDRAFT.tracks.length) return toast('Listeye en az bir şarkı ekleyin', true);
   const body = { title: ($('md-title').value || '').trim(), tracks: MDRAFT.tracks, playNow };
-  const j = MDRAFT.id
-    ? await act('PUT', '/music/custom/' + MDRAFT.id, body, '', false)
-    : await act('POST', '/music/custom', body, '', false);
-  if (j && j.music) {
-    S.db.music = j.music; MDRAFT = null;
-    toast(playNow ? 'Liste kaydedildi ve TV\'de başlatıldı' : 'Listeniz kaydedildi');
-    go('music/lib');
-  }
+  const j = MDRAFT.id ? await act('PUT', '/music/custom/' + MDRAFT.id, body, '', false) : await act('POST', '/music/custom', body, '', false);
+  if (j && j.music) { S.db.music = j.music; MDRAFT = null; toast(playNow ? 'Liste kaydedildi ve TV\'de başlatıldı' : 'Listeniz kaydedildi'); goM('lib'); }
 }
 async function playNowVideo(i) { // arama sonucunu tek şarkı olarak TV'de çal
   const t = (MSEARCH.items || [])[i]; if (!t) return;
@@ -1679,7 +1796,7 @@ function editCustom(id) {
   const it = musicData().playlists.find(x => x.id === id);
   if (!it || it.provider !== 'ytmix') return;
   MDRAFT = { id: it.id, title: it.title, tracks: (it.tracks || []).map(t => ({ ...t })) };
-  MV = null; go('music/search'); scrollTo(0, 0);
+  MSRC = 'yt'; goM('search'); scrollTo(0, 0);
 }
 async function playCustomTrack(i) {
   const it = musicData().playlists.find(x => x.id === MV.id); if (!it) return;
@@ -1687,87 +1804,177 @@ async function playCustomTrack(i) {
   const j = await act('POST', '/music/cmd', { cmd: 'select', id: it.id, index: i, videoId: t.v }, `TV'de çalıyor: ${t.t}`, false);
   if (j && j.music) { S.db.music = j.music; MNOW = { ...(MNOW || {}), itemId: it.id, title: t.t, artist: t.c, thumb: t.th, videoId: t.v, err: '', at: Date.now() }; render(true); }
 }
+async function spPlayHit(i) { // Spotify arama sonucu: tek şarkı olarak TV'de çal
+  const t = ((SPS.r || {}).tracks || [])[i]; if (!t) return;
+  const id = t.uri.split(':')[2];
+  const j = await act('POST', '/music/playlist', { url: 'https://open.spotify.com/track/' + id, title: t.title, thumb: t.thumb, playNow: true }, `TV'de çalıyor: ${t.title}`, false);
+  if (j && j.warn) toast(j.warn, true);
+  if (j && j.music) { S.db.music = j.music; render(true); }
+}
+async function spAddHit(i) {
+  const t = ((SPS.r || {}).tracks || [])[i]; if (!t) return;
+  if (libBySp(t.uri.split(':')[2])) return toast('Bu şarkı kitaplığınızda zaten var');
+  const j = await act('POST', '/music/playlist', { url: 'https://open.spotify.com/track/' + t.uri.split(':')[2], title: t.title, thumb: t.thumb, category: 'Spotify' }, 'Kitaplığa eklendi', false);
+  if (j && j.music) { S.db.music = j.music; }
+}
 
-// ---- YouTube hesabım ----
+// ---- Hesaplar: YouTube, Spotify, ayarlar, bağlantı ekle ----
 let YTACC = { st: null, items: null, err: '' };
+let SPACC = { st: null, items: null, err: '', devs: null, devErr: '' };
 async function ytAccLoad(force) {
-  if (SUB.music !== 'yt' && !force) {
-    if (!YTACC.st) { try { YTACC.st = await req('GET', '/music/google'); } catch (e) {} }
-    // kütüphane ve ayrıntıda gizli listeleri işaretlemek için listeler bir kez arka planda çekilir
-    if (YTACC.st && YTACC.st.connected && !YTACC.items && !YTACC.bg) { YTACC.bg = true; try { YTACC.items = (await req('GET', '/music/google/playlists')).items; render(true); } catch (e) {} }
-    return;
-  }
   try {
-    YTACC.st = await req('GET', '/music/google'); YTACC.err = '';
+    if (!YTACC.st || force) YTACC.st = await req('GET', '/music/google');
     if (YTACC.st.connected && (force || !YTACC.items)) {
-      try { YTACC.items = (await req('GET', '/music/google/playlists' + (force ? '?force=1' : ''))).items; }
+      try { YTACC.items = (await req('GET', '/music/google/playlists' + (force ? '?force=1' : ''))).items; YTACC.err = ''; }
       catch (e) { YTACC.items = null; YTACC.err = e.message; YTACC.st = await req('GET', '/music/google'); }
+      if (TAB === 'music') render(true);
     }
   } catch (e) { YTACC.err = e.message; }
-  ytAccDraw();
 }
-function ytAccDraw() {
-  const box = $('ytacc'); if (!box) return;
-  const st = YTACC.st || {};
-  const connectBtn = l => owner() ? `<a class="btn" href="/api/admin/music/google/connect">${l}</a>` : '<span class="muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</span>';
-  if (!st.configured) { box.innerHTML = '<div class="empty">YouTube hesabı bağlantısı henüz açılmadı. Platform yöneticisinin Google anahtarlarını girmesi gerekiyor.</div>'; return; }
-  if (st.expired) { box.innerHTML = `<div class="bn trial"><span>YouTube bağlantısının süresi doldu. Listelerinizi görmek için yeniden bağlanın.</span>${connectBtn('▶ Yeniden bağlan')}</div>`; return; }
-  if (!st.connected) { box.innerHTML = `<div class="mconnect"><div class="mconnect-i">▶</div><div><b>YouTube hesabınızı bağlayın</b><p class="muted">YouTube ve YouTube Music'te oluşturduğunuz çalma listeleri burada görünür; şarkılarını görüp TV'de istediğiniz şarkıdan başlatabilirsiniz. Yalnız okuma izni istenir.</p></div>${connectBtn('▶ YouTube ile bağlan')}</div>`; return; }
-  const head2 = `<div class="row" style="justify-content:space-between;margin-bottom:14px"><span>Bağlı hesap: <b>${esc(st.name || 'YouTube')}</b></span><div class="row"><button class="btn xs g" onclick="ytAccLoad(true)">↻ Listeleri yenile</button>${owner() ? '<button class="btn xs d" onclick="ytAccOff()">Bağlantıyı kes</button>' : ''}</div></div>`;
-  if (YTACC.err) { box.innerHTML = head2 + `<div class="empty">${esc(YTACC.err)}</div>`; return; }
-  const items = YTACC.items || [];
-  box.innerHTML = head2 + (items.length ? `<div class="mgrid">${items.map(p => { const lib = libByList(p.id); return tile({ ...p, id: lib ? lib.id : '', provider: 'ytm' }, `openList('yt','${esc(p.id)}')`, ` <small>${p.count} video${lib ? ' · ✓' : ''}</small>${p.priv ? ' <small class="privb">🔒 Gizli</small>' : ''}`); }).join('')}</div>` : '<div class="empty">Bu hesapta çalma listesi bulunamadı.</div>');
+async function spAccLoad(force) {
+  try {
+    const was = JSON.stringify(SPACC.st);
+    if (!SPACC.st || force) SPACC.st = await req('GET', '/music/spotify');
+    let changed = was !== JSON.stringify(SPACC.st);
+    if (SPACC.st.connected && (force || !SPACC.items)) {
+      try { SPACC.items = (await req('GET', '/music/spotify/playlists' + (force ? '?force=1' : ''))).items; SPACC.err = ''; }
+      catch (e) { SPACC.items = []; SPACC.err = e.message; }
+      changed = true;
+    }
+    if (changed && TAB === 'music') render(true);
+  } catch (e) { SPACC.err = e.message; }
 }
-async function ytAccAdd(id, playNow) {
-  const p = (YTACC.items || []).find(x => x.id === id) || (MV && MV.listId === id ? MV : null); if (!p) return;
-  const j = await act('POST', '/music/playlist', { url: 'https://music.youtube.com/playlist?list=' + encodeURIComponent(id), title: p.title, thumb: p.thumb, category: 'YouTube hesabım', playNow }, playNow ? 'Liste eklendi ve TV\'de başlatıldı' : 'Çalma listesi eklendi', false);
+async function spDevLoad() {
+  SPACC.devErr = '';
+  try { SPACC.devs = (await req('GET', '/music/spotify/devices')).items; } catch (e) { SPACC.devs = []; SPACC.devErr = e.message; }
+  if (TAB === 'music' && (SUB.music || '') === 'accounts') render(true);
+}
+async function spSetDevice(id, name) {
+  const j = await act('PUT', '/music/spotify/device', { id, name }, 'Çalınacak cihaz kaydedildi', false);
+  if (j && j.music) { S.db.music = j.music; SPACC.st = j.status; render(true); }
+}
+async function spOff() {
+  if (!await UI.ask('Spotify hesabının bağlantısı kesilsin mi? Kitaplığınızdaki listeler kalır.')) return;
+  const j = await act('DELETE', '/music/spotify', undefined, 'Spotify bağlantısı kesildi', false);
+  if (j) { if (j.music) S.db.music = j.music; SPACC = { st: null, items: null, err: '', devs: null, devErr: '' }; SPTRK.clear(); spAccLoad(true); }
+}
+async function spAdd(id, playNow) {
+  const p = (SPACC.items || []).concat((SPS.r && SPS.r.playlists) || []).find(x => x.id === id) || (MV && MV.spId === id ? MV : null); if (!p) return;
+  const ex = libBySp(id);
+  if (ex) { if (playNow) return musicSelect(ex.id); return toast('Bu liste kitaplığınızda zaten var'); }
+  const j = await act('POST', '/music/playlist', { url: p.url || `https://open.spotify.com/playlist/${id}`, title: p.title, thumb: p.thumb, category: 'Spotify hesabım', playNow }, playNow ? 'Liste eklendi ve TV\'de başlatıldı' : 'Kitaplığa eklendi', false);
+  if (j && j.warn) toast(j.warn, true);
   if (j && j.music) { S.db.music = j.music; render(true); }
+}
+function accountsHtml() {
+  const m = musicData(), yst = YTACC.st || {}, sst = SPACC.st || {};
+  const own = owner();
+  const ytBody = !yst.configured ? '<p class="ytm-muted">YouTube hesabı bağlantısı henüz açılmadı. Platform yöneticisinin Google anahtarlarını girmesi gerekiyor.</p>'
+    : yst.expired ? `<p class="ytm-muted">Bağlantının süresi doldu. Listelerinizi görmek için yeniden bağlanın.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/google/connect">${ic('refresh-cw')}Yeniden bağlan</a>` : ''}`
+    : !yst.connected ? `<p class="ytm-muted">YouTube ve YouTube Music'te oluşturduğunuz listeler kitaplığınızda görünür. Yalnız okuma izni istenir.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/google/connect">${ic('link')}YouTube ile bağlan</a>` : '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>'}`
+    : `<p class="ytm-ok">${ic('circle-check')}Bağlı: <b>${esc(yst.name || 'YouTube')}</b> • ${(YTACC.items || []).length} liste</p>${YTACC.err ? `<p class="ytm-muted">${esc(YTACC.err)}</p>` : ''}<div class="row"><button class="ytm-btn" onclick="ytAccLoad(true)">${ic('refresh-cw')}Listeleri yenile</button>${own ? `<button class="ytm-btn" onclick="ytAccOff()">Bağlantıyı kes</button>` : ''}</div>`;
+  let spBody;
+  if (!sst.configured) spBody = '<p class="ytm-muted">Spotify bağlantısı henüz açılmadı. Platform yöneticisinin Spotify anahtarlarını girmesi gerekiyor.</p>';
+  else if (sst.expired) spBody = `<p class="ytm-muted">Bağlantının süresi doldu; yeniden bağlanın.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/spotify/connect">${ic('refresh-cw')}Yeniden bağlan</a>` : ''}`;
+  else if (!sst.connected) spBody = `<p class="ytm-muted">Spotify listeleriniz kitaplığınızda görünür; panelden ya da telefondan TV'deki müziği yönetirsiniz. Uzaktan kumanda için <b>Spotify Premium</b> gerekir.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/spotify/connect">${ic('link')}Spotify ile bağlan</a>` : '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>'}`;
+  else {
+    const devs = SPACC.devs, tgt = sst.target;
+    const opt = (id, name, sub, icn, on) => `<button type="button" class="ytm-dev ${on ? 'on' : ''}" onclick="spSetDevice('${esc(id)}','${esc(name).replace(/'/g, '')}')"><span class="i">${ic(icn)}</span><span class="t"><b>${esc(name)}</b><span>${sub}</span></span>${on ? ic('circle-check') : ''}</button>`;
+    const devList = devs == null ? '<p class="ytm-muted">Cihazlar yükleniyor…</p>'
+      : (devs.map(d => opt(d.id, d.name, `${d.type === 'TV' ? 'TV' : d.type === 'Smartphone' ? 'Telefon' : d.type === 'Computer' ? 'Bilgisayar' : d.type || 'Cihaz'}${d.active ? ' • şu an çalıyor' : ''}`, d.type === 'Smartphone' ? 'smartphone' : d.type === 'Computer' ? 'monitor' : 'tv', tgt === d.id || !devs.some(x => x.id === tgt) && sst.targetName === d.name)).join('')
+        + opt('screenpano', 'ScreenPano oynatıcısı', 'Deneme: Spotify uygulaması kurulamayan ekranlar için (her kutuda çalışmayabilir)', 'monitor', tgt === 'screenpano'))
+        + (SPACC.devErr ? `<p class="ytm-muted">${esc(SPACC.devErr)}</p>` : '')
+        + (devs && !devs.length ? '<p class="ytm-muted">Spotify cihazı görünmüyor: TV kutusunda Spotify uygulamasını açıp aynı hesapla giriş yapın, sonra Yenile\'ye basın.</p>' : '');
+    spBody = `<p class="ytm-ok">${ic('circle-check')}Bağlı: <b>${esc(sst.name || 'Spotify')}</b> • ${sst.premium ? 'Premium' : esc(sst.product || 'Ücretsiz')} • ${(SPACC.items || []).length} liste</p>
+      ${!sst.premium ? `<div class="ytm-warn">${ic('triangle-alert')}<span>Hesap Premium değil: listeleriniz görünür ama Spotify, panelden çalma/duraklatma kumandasına yalnız Premium hesaplarda izin verir.</span></div>` : ''}
+      <div class="ytm-sh sm"><div><h3>Çalınacak cihaz</h3></div><button class="ytm-more" onclick="SPACC.devs=null;render(true);spDevLoad()">${ic('refresh-cw')}Yenile</button></div>
+      <div class="ytm-devs">${devList}</div>
+      ${SPACC.err ? `<p class="ytm-muted">${esc(SPACC.err)}</p>` : ''}
+      <div class="row"><button class="ytm-btn" onclick="spAccLoad(true)">${ic('refresh-cw')}Listeleri yenile</button>${own ? `<button class="ytm-btn" onclick="spOff()">Bağlantıyı kes</button>` : ''}</div>`;
+  }
+  const acc = (name, cls, body, help) => `<section class="ytm-acc ${cls}"><div class="h"><span class="lg">${ic(cls === 'sp' ? 'headphones' : 'music')}</span><h2>${name}</h2><button class="ytm-more" onclick="goM('setup')">${ic('book-open')}${help}</button></div>${body}</section>`;
+  return `<div class="ytm-sh"><div><h2>Hesaplar</h2></div></div><div class="ytm-accs">`
+    + acc('YouTube ve YouTube Music', 'yt', ytBody, 'Kurulum')
+    + acc('Spotify', 'sp', spBody, 'Kurulum')
+    + `</div><section class="ytm-acc"><div class="h"><span class="lg">${ic('link')}</span><h2>Bağlantı ekle</h2></div>
+        <p class="ytm-muted">Spotify, YouTube Music ya da YouTube bağlantısı veya radyo yayın adresi yapıştırın; ad ve kapak otomatik gelir.</p>
+        <div class="ytm-add"><input type="url" id="m-url" class="ytm-in" placeholder="https://open.spotify.com/playlist/… ya da https://music.youtube.com/…"><input type="text" id="m-title" class="ytm-in" maxlength="90" placeholder="Başlık (isteğe bağlı)"></div>
+        <div class="row"><button class="ytm-btn" onclick="addMusicPlaylist(false)">${ic('plus')}Kitaplığa ekle</button><button class="ytm-btn w" onclick="addMusicPlaylist(true)">${ic('play-f')}Ekle ve TV'de çal</button></div></section>
+      <section class="ytm-acc"><div class="h"><span class="lg">${ic('settings')}</span><h2>Ekran ayarları</h2></div>
+        <div class="swr"><div class="b"><b>Ses düzeyi</b><span>TV'deki müziğin sesi</span></div><input type="range" min="0" max="100" value="${m.volume ?? 75}" style="width:160px;accent-color:#fff" onchange="musicCmd('volume',{volume:+this.value})"></div>
+        <div class="swr"><div class="b"><b>"Şu an çalıyor" çubuğu</b><span>TV ekranının köşesinde çalan şarkıyı gösterir</span></div>${sw(m.showNowPlaying !== false, "musicOpt({showNowPlaying:this.checked})")}</div>
+        <div class="swr"><div class="b"><b>Videoların sesini kapat</b><span>Müzik çalarken medyadaki videolar sessiz oynar</span></div>${sw(m.muteVideo !== false, "musicOpt({muteVideo:this.checked})")}</div></section>`;
 }
 async function ytAccOff() {
   if (!await UI.ask('YouTube hesabının bağlantısı kesilsin mi? Eklediğiniz listeler kalır.')) return;
   if (await act('DELETE', '/music/google', undefined, 'YouTube bağlantısı kesildi', false)) { YTACC = { st: null, items: null, err: '' }; TRK.clear(); ytAccLoad(true); }
 }
-// Google'dan dönüşte sonucu bildir ve adres çubuğunu temizle
-(function ytReturn() {
-  const q = new URLSearchParams(location.search), c = q.get('yt'); if (!c) return;
-  history.replaceState(null, '', '/panel' + (c === 'ok' ? '#music/yt' : location.hash));
-  setTimeout(() => {
-    if (c === 'ok') toast('YouTube hesabı bağlandı');
-    else if (c === 'denied') toast('YouTube izni verilmedi', true);
-    else if (c === 'expired') toast('Giriş oturumunun süresi doldu; yeniden deneyin', true);
-    else if (c === 'nocfg') toast('YouTube bağlantısı henüz açılmadı', true);
-    else toast('YouTube hesabı bağlanamadı' + (q.get('ytm') ? ': ' + q.get('ytm') : ''), true);
-  }, 600);
+async function ytAccAdd(id, playNow) {
+  const p = (YTACC.items || []).find(x => x.id === id) || (MV && MV.listId === id ? MV : null); if (!p) return;
+  const ex = libByList(id);
+  if (ex) { if (playNow) return musicSelect(ex.id); return toast('Bu liste kitaplığınızda zaten var'); }
+  const j = await act('POST', '/music/playlist', { url: 'https://music.youtube.com/playlist?list=' + encodeURIComponent(id), title: p.title, thumb: p.thumb, category: 'YouTube hesabım', playNow }, playNow ? 'Liste eklendi ve TV\'de başlatıldı' : 'Kitaplığa eklendi', false);
+  if (j && j.music) { S.db.music = j.music; render(true); }
+}
+// Google ve Spotify'dan dönüşte sonucu bildir ve adres çubuğunu temizle
+(function oauthReturn() {
+  const q = new URLSearchParams(location.search);
+  for (const [k, name] of [['yt', 'YouTube'], ['sp', 'Spotify']]) {
+    const c = q.get(k); if (!c) continue;
+    history.replaceState(null, '', '/panel#music/accounts');
+    setTimeout(() => {
+      if (c === 'ok') toast(`${name} hesabı bağlandı`);
+      else if (c === 'denied') toast(`${name} izni verilmedi`, true);
+      else if (c === 'expired') toast('Giriş oturumunun süresi doldu; yeniden deneyin', true);
+      else if (c === 'nocfg') toast(`${name} bağlantısı henüz açılmadı`, true);
+      else toast(`${name} hesabı bağlanamadı` + (q.get(k + 'm') ? ': ' + q.get(k + 'm') : ''), true);
+    }, 600);
+  }
 })();
 
-// ---- Hazır listeler ----
-function presetHtml() {
-  return `<p class="muted" style="margin:0 0 14px">İşletmenizin atmosferine uygun hazır listeleri tek tıkla kütüphanenize ekleyip TV'de çalmaya başlayın.</p>
-    <div class="mpreset-grid">${MUSIC_PRESETS.map((p, i) => `<div class="mpreset"><div>
-      <div class="row" style="justify-content:space-between">${musicBadge(p.provider)}<span class="muted" style="font-size:11.5px">${esc(p.category)}</span></div>
-      <b>${esc(p.title)}</b><p>${esc(p.desc)}</p></div>
-      <div class="row" style="margin-top:6px"><button class="btn xs g" style="flex:1" onclick="addMusicPreset(${i},false)">+ Listelerime Ekle</button><button class="btn xs" style="flex:1" onclick="addMusicPreset(${i},true)">📺 TV'de Çal</button></div></div>`).join('')}</div>`;
+// ---- Kurulum: resimli adımlar (YouTube Music ve Spotify) ----
+// Küçük çizimler: telefon/panel, giriş, liste, TV, TV kutusu, hoparlör, Premium rozeti. Renkler: --sv servis rengi
+function ill(k) {
+  const S0 = '<svg viewBox="0 0 160 100" aria-hidden="true">', E = '</svg>';
+  const tv = (x, y, w, h, inner = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#151718" stroke="#3a3f41" stroke-width="2"/>${inner}<rect x="${x + w / 2 - 14}" y="${y + h + 2}" width="28" height="4" rx="2" fill="#3a3f41"/>`;
+  const phone = (x, y, inner = '') => `<rect x="${x}" y="${y}" width="40" height="72" rx="7" fill="#151718" stroke="#3a3f41" stroke-width="2"/>${inner}`;
+  const D = {
+    login: S0 + phone(60, 14, `<rect x="66" y="26" width="28" height="5" rx="2" fill="#5b6163"/><rect x="66" y="36" width="28" height="7" rx="3" fill="#2a2e30"/><rect x="66" y="47" width="28" height="7" rx="3" fill="#2a2e30"/><rect x="66" y="60" width="28" height="9" rx="4.5" fill="var(--sv)"/>`) + `<path d="M112 50h22m-6-6 6 6-6 6" stroke="var(--sv)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="30" cy="50" r="13" fill="none" stroke="#5b6163" stroke-width="2.5"/><path d="M24 50l4 4 8-8" stroke="var(--sv)" stroke-width="3" fill="none" stroke-linecap="round"/>` + E,
+    list: S0 + [0, 1, 2].map(i => `<rect x="${20 + i * 42}" y="18" width="36" height="36" rx="5" fill="${i === 1 ? 'var(--sv)' : '#2a2e30'}"/><rect x="${20 + i * 42}" y="60" width="32" height="5" rx="2" fill="#5b6163"/><rect x="${20 + i * 42}" y="70" width="22" height="4" rx="2" fill="#3a3f41"/>`).join('') + `<circle cx="80" cy="36" r="9" fill="#fff"/><path d="M77 31.5v9l7.5-4.5z" fill="#111"/>` + E,
+    play: S0 + tv(26, 10, 108, 66, `<rect x="32" y="16" width="64" height="54" rx="3" fill="#202426"/><rect x="100" y="16" width="28" height="24" rx="3" fill="#202426"/><rect x="100" y="44" width="28" height="26" rx="3" fill="#202426"/><circle cx="64" cy="43" r="11" fill="var(--sv)"/><path d="M60 37.5v11l9-5.5z" fill="#fff"/><g fill="var(--sv)"><rect x="104" y="58" width="3" height="8" rx="1"/><rect x="109" y="53" width="3" height="13" rx="1"/><rect x="114" y="56" width="3" height="10" rx="1"/></g>`) + E,
+    remote: S0 + phone(22, 14, `<rect x="28" y="24" width="28" height="22" rx="3" fill="var(--sv)" opacity=".85"/><rect x="28" y="50" width="28" height="4" rx="2" fill="#5b6163"/><circle cx="34" cy="64" r="3" fill="#5b6163"/><circle cx="42" cy="64" r="4.5" fill="#fff"/><circle cx="50" cy="64" r="3" fill="#5b6163"/>`) + `<path d="M70 38c8-8 8-16 0-24M78 44c14-14 14-30 0-44" stroke="#5b6163" stroke-width="2.5" fill="none" stroke-linecap="round" transform="translate(0 20)"/>` + tv(96, 26, 50, 34, '<circle cx="121" cy="43" r="7" fill="var(--sv)"/>') + E,
+    box: S0 + `<rect x="14" y="56" width="52" height="16" rx="5" fill="#202426" stroke="#3a3f41" stroke-width="2"/><circle cx="58" cy="64" r="2" fill="#3ecf74"/><path d="M66 64h14" stroke="#3a3f41" stroke-width="3"/>` + tv(82, 14, 66, 46, `<rect x="90" y="22" width="16" height="16" rx="4" fill="#2a2e30"/><rect x="110" y="22" width="16" height="16" rx="4" fill="var(--sv)"/><rect x="130" y="22" width="12" height="16" rx="4" fill="#2a2e30"/><rect x="90" y="42" width="52" height="10" rx="3" fill="#202426"/><path d="M114 30h8" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>`) + `<path d="M28 44v-18h24v18" stroke="#5b6163" stroke-width="2.5" fill="none" stroke-linejoin="round"/><path d="M34 30l6 6 6-6" stroke="var(--sv)" stroke-width="3" fill="none" stroke-linecap="round"/>` + E,
+    device: S0 + phone(18, 14, `<rect x="24" y="24" width="28" height="4" rx="2" fill="#5b6163"/><rect x="24" y="34" width="28" height="10" rx="3" fill="#2a2e30"/><rect x="24" y="48" width="28" height="10" rx="3" fill="var(--sv)"/><rect x="24" y="62" width="28" height="10" rx="3" fill="#2a2e30"/>`) + `<path d="M66 53h18m-6-6 6 6-6 6" stroke="var(--sv)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` + tv(94, 22, 54, 38, `<rect x="112" y="30" width="18" height="22" rx="3" fill="none" stroke="var(--sv)" stroke-width="2.5"/><circle cx="121" cy="44" r="4" fill="var(--sv)"/>`) + E,
+    premium: S0 + `<rect x="34" y="22" width="92" height="56" rx="10" fill="#202426" stroke="#3a3f41" stroke-width="2"/><path d="M58 60l6-20 10 12 6-16 6 16 10-12 6 20z" fill="var(--sv)"/><rect x="58" y="62" width="44" height="5" rx="2.5" fill="var(--sv)"/>` + E,
+    panel: S0 + `<rect x="18" y="14" width="124" height="70" rx="6" fill="#151718" stroke="#3a3f41" stroke-width="2"/><rect x="18" y="14" width="30" height="70" rx="6" fill="#202426"/><rect x="24" y="24" width="18" height="4" rx="2" fill="#5b6163"/><rect x="24" y="34" width="18" height="4" rx="2" fill="var(--sv)"/><rect x="24" y="44" width="18" height="4" rx="2" fill="#5b6163"/><rect x="56" y="22" width="78" height="9" rx="4.5" fill="#2a2e30"/>${[0, 1, 2].map(i => `<rect x="${56 + i * 27}" y="38" width="22" height="22" rx="3" fill="${i ? '#2a2e30' : 'var(--sv)'}"/>`).join('')}<rect x="56" y="68" width="78" height="10" rx="3" fill="#202426"/>` + E,
+  };
+  return D[k] || '';
 }
-
-// ---- Bağlantı ekle + ayarlar ----
-function addHtml() {
-  const m = musicData(), sp = m.spotify || {}, devName = sp.deviceName || (S.me.tenant.name + ' TV');
-  return card('Bağlantı yapıştır', 'Spotify çalma listesi/albüm/şarkı linkini veya YouTube Music / YouTube linkini yapıştırın; sistem otomatik tanır ve kapak görseliyle ekler.',
-      `<div class="f">${fl('Spotify / YouTube Music / YouTube Bağlantısı', `<input type="url" id="m-url" placeholder="https://open.spotify.com/playlist/... veya https://music.youtube.com/...">`)}${fl('Liste Başlığı (boş bırakırsanız otomatik çekilir)', `<input type="text" id="m-title" maxlength="90" placeholder="Örn: Sabah Akustik Listemiz">`)}</div>
-      <div class="row end mt"><button class="btn g" onclick="addMusicPlaylist(false)">Listeye Ekle</button><button class="btn" onclick="addMusicPlaylist(true)">Ekle ve TV'de Çal ▶</button></div>`)
-    + `<div class="swr" style="margin-bottom:14px"><div class="b"><b>"Şu an çalıyor" çubuğu</b><span>TV ekranının sol altında çalan şarkıyı gösterir</span></div>${sw(m.showNowPlaying !== false, "musicOpt({showNowPlaying:this.checked})")}</div>`
-    + `<details class="mdet"><summary><span>🎧 Spotify Connect (deneme)</span> <span class="pill ${sp.accessToken ? 'ok' : ''}">${sp.accessToken ? '● Bağlı' : 'İsteğe Bağlı'}</span></summary>
-      <p class="muted">Spotify Premium erişim anahtarınızı bağladığınızda TV ekranınız telefonunuzdaki Spotify uygulamasında <b>"${esc(devName)}"</b> adıyla cihaz olarak görünür ve çalan şarkı TV ekranında canlı gösterilir.</p>
-      <div class="f">${fl('TV Cihaz Adı (Spotify\'da görünecek ad)', `<input type="text" id="sp-dev" value="${esc(devName)}" placeholder="Örn: Kafe TV">`)}${fl('Spotify Web Playback Erişim Anahtarı (Access Token)', `<input type="password" id="sp-tok" value="${esc(sp.accessToken || '')}" placeholder="BQD... (Spotify Premium Token)">`)}</div>
-      <div class="row end mt">${sp.accessToken ? `<button class="btn xs d" onclick="saveSpotifyConnect(true)">Bağlantıyı Kes</button>` : ''}<button class="btn xs" onclick="saveSpotifyConnect(false)">Spotify Connect'i Kaydet</button></div></details>`
-    + `<details class="mdet"><summary>📱 Telefondaki Spotify uygulamasından yönetme</summary>
-      <p class="muted"><span>TV kutunuza Google Play'den resmî <b>Spotify</b> uygulamasını bir kez kurup hesabınızla giriş yapın. ScreenPano TV uygulaması ekranda açıkken bile telefonunuzdan <b>Spotify ➔ Cihazlar ( hoparlör simgesi ) ➔ TV Kutusu</b>'nu seçerek dilediğiniz listeyi doğrudan telefonunuzdan açıp değiştirebilirsiniz!</span></p></details>`;
+function setupHtml() {
+  const flow = (cls, title, sub, steps) => `<section class="ytm-flow ${cls}"><div class="ytm-sh"><div><small>${sub}</small><h2>${title}</h2></div></div>
+    <ol class="ytm-steps">${steps.map(([k, h, p], i) => `<li><div class="ill">${ill(k)}</div><span class="n">${i + 1}</span><b>${h}</b><p>${p}</p></li>`).join('')}</ol></section>`;
+  return `<div class="ytm-sh"><div><small>Adım adım</small><h2>Müzik kurulumu</h2></div></div>`
+    + flow('yt', 'YouTube Music', 'Ücretsiz • 4 adım', [
+      ['login', 'Hesabı bağlayın', 'Müzik › Hesaplar › “YouTube ile bağlan”. Google hesabınızla giriş yapın; yalnız okuma izni istenir.'],
+      ['list', 'Listenizi seçin', 'Listeleriniz Kitaplık’ta görünür. İsterseniz arayıp kendi listenizi kurun. Gizli listeleri YouTube’da “Liste dışı” yapın.'],
+      ['play', 'TV’de çalın', 'Listeyi açıp “Oynat”a basın. Müzik birkaç saniye içinde TV kutusunda başlar.'],
+      ['remote', 'Telefondan yönetin', 'Alttaki çalar çubuğundan duraklatın, şarkı değiştirin, sesi ayarlayın.'],
+    ])
+    + flow('sp', 'Spotify', 'Spotify Premium • 5 adım', [
+      ['premium', 'Premium hesap', 'Panelden çalma ve kumanda için Spotify Premium gerekir. Ücretsiz hesapta listeler görünür ama kumanda edilemez.'],
+      ['box', 'Spotify’ı TV kutusuna kurun', 'Kutunun Google Play mağazasından Spotify’ı kurun ve aynı hesapla bir kez giriş yapın.'],
+      ['login', 'Hesabı bağlayın', 'Müzik › Hesaplar › “Spotify ile bağlan”. Spotify hesabınızla izin verin.'],
+      ['device', 'Cihazı seçin', '“Çalınacak cihaz” listesinden TV kutusunu seçin. Görünmüyorsa kutuda Spotify’ı açıp Yenile’ye basın.'],
+      ['play', 'Listeden çalın', 'Spotify listenizi açıp “Oynat”a basın. Çalan şarkı TV’de ve panelde görünür.'],
+    ])
+    + `<p class="ytm-muted" style="margin-top:6px">${ic('info')} Ses TV kutusundan gelir: TV’nin ya da ses sisteminin sesi açık olmalı. Spotify ve YouTube hesap kuralları kişisel kullanım içindir; mekânda ticari yayın için ilgili lisansları kontrol edin.</p>`;
 }
 
 // ---- Komutlar ----
 async function musicCmd(cmd, extra = {}) {
   const j = await act('POST', '/music/cmd', { cmd, ...extra }, '', false);
-  if (j && j.music) { S.db.music = j.music; const box = $('mnowbox'); if (box && TAB === 'music') { box.innerHTML = nowBar(); if (!MV && (SUB.music || 'lib') === 'lib') render(true); } }
+  if (j && j.warn) toast(j.warn, true);
+  if (j && j.music) { S.db.music = j.music; if (TAB === 'music') { const box = $('mnowbox'); if (box) box.innerHTML = nowBar(); if (!MV && ['home', 'lib', 'explore'].includes(MSUB[SUB.music] || SUB.music || 'home')) render(true); else if (MV) render(true); } setTimeout(musicNowLoad, 1500); }
 }
 async function musicOpt(patch) {
   const j = await act('PUT', '/music', patch, 'Müzik ayarları güncellendi', false);
@@ -1775,32 +1982,28 @@ async function musicOpt(patch) {
 }
 async function musicSelect(id) {
   const j = await act('POST', '/music/cmd', { cmd: 'select', id }, 'TV ekranında çalmaya başladı', false);
-  if (j && j.music) { S.db.music = j.music; MNOW = null; render(true); }
+  if (j && j.warn) toast(j.warn, true);
+  if (j && j.music) { S.db.music = j.music; MNOW = null; render(true); setTimeout(musicNowLoad, 1500); }
 }
 async function addMusicPlaylist(playNow) {
   const url = ($('m-url').value || '').trim(), title = ($('m-title').value || '').trim();
   if (!url) return toast('Lütfen bir Spotify veya YouTube Music bağlantısı yapıştırın', true);
   const j = await act('POST', '/music/playlist', { url, title, playNow }, playNow ? 'Liste eklendi ve TV\'de başlatıldı' : 'Çalma listesi eklendi', false);
-  if (j && j.music) { S.db.music = j.music; go('music/lib'); }
+  if (j && j.warn) toast(j.warn, true);
+  if (j && j.music) { S.db.music = j.music; goM('lib'); }
 }
 async function addMusicPreset(idx, playNow) {
   const p = MUSIC_PRESETS[idx]; if (!p) return;
   const existing = musicData().playlists.find(x => x.url === p.url);
-  if (existing && playNow) return musicSelect(existing.id);
-  if (existing) return toast('Bu liste zaten kütüphanenizde');
-  const j = await act('POST', '/music/playlist', { url: p.url, title: p.title, category: p.category, playNow }, playNow ? `${p.title} TV'de başlatıldı` : 'Hazır liste kütüphanenize eklendi', false);
-  if (j && j.music) { S.db.music = j.music; render(true); }
+  if (existing) { if (playNow) return musicSelect(existing.id); MV = null; return openList('lib', existing.id); }
+  const j = await act('POST', '/music/playlist', { url: p.url, title: p.title, thumb: p.thumb || '', category: p.category, playNow }, playNow ? `${p.title} TV'de başlatıldı` : 'Hazır liste kütüphanenize eklendi', false);
+  if (j && j.warn) toast(j.warn, true);
+  if (j && j.music) { S.db.music = j.music; if (!playNow && j.item) return openList('lib', j.item.id); render(true); }
 }
 async function delMusicPlaylist(id) {
   if (!await UI.ask('Bu liste kütüphaneden silinsin mi?', { ok: 'Sil', danger: true })) return;
   const j = await act('DELETE', '/music/playlist/' + id, undefined, 'Liste silindi', false);
   if (j && j.music) { S.db.music = j.music; MV = null; render(true); }
-}
-async function saveSpotifyConnect(clear) {
-  const deviceName = ($('sp-dev') && $('sp-dev').value.trim()) || (S.me.tenant.name + ' TV');
-  const accessToken = clear ? '' : (($('sp-tok') && $('sp-tok').value.trim()) || '');
-  const j = await act('PUT', '/music', { spotify: { deviceName, accessToken } }, clear ? 'Spotify Connect bağlantısı kaldırıldı' : 'Spotify Connect kaydedildi! TV ekranınız Spotify cihazlar listesinde görünecek.', false);
-  if (j && j.music) { S.db.music = j.music; render(true); }
 }
 
 /* ================= ŞUBELER ================= */

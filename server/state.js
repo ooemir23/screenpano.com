@@ -133,6 +133,8 @@ function tvMusic(m) {
   const x = fixMusic(m);
   if (!x || !x.spotify) return x;
   const { refreshToken, ...sp } = x.spotify;
+  // ext: müziği TV kutusundaki Spotify uygulaması (ya da başka bir Spotify cihazı) çalar; TV yalnız çalanı gösterir
+  sp.ext = !!(refreshToken && !sp.expired && sp.target && sp.target !== 'screenpano');
   return { ...x, spotify: sp };
 }
 function publicState(t) {

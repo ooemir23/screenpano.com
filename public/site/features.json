@@ -709,6 +709,7 @@
     }
   ],
   "extras": [
+    {"icon": "🎧", "title": "Spotify hesabı ve yeni müzik bölümü", "text": "Spotify hesabınızı bağlayın: listeleriniz ve şarkıları panelde görünür, TV kutusundaki Spotify uygulamasını panelden ya da telefondan çalıp durdurursunuz (Spotify Premium gerekir). Müzik bölümü YouTube Music düzeninde; YouTube ve Spotify kurulumu resimli adımlarla anlatılır.", "added": "2026-11-06", "i18n": {"en": {"title": "Spotify account and a new music section", "text": "Connect your Spotify account: your playlists and their songs appear in the panel, and you play or pause the Spotify app on the TV box from the panel or your phone (Spotify Premium required). The music section follows the YouTube Music layout, with illustrated setup steps for YouTube and Spotify."}, "de": {"title": "Spotify-Konto und neuer Musikbereich", "text": "Verbinden Sie Ihr Spotify-Konto: Ihre Playlists und deren Songs erscheinen im Panel, und Sie starten oder pausieren die Spotify-App auf der TV-Box über das Panel oder Ihr Handy (Spotify Premium erforderlich). Der Musikbereich folgt dem Aufbau von YouTube Music, mit bebilderten Einrichtungsschritten für YouTube und Spotify."}, "ar": {"title": "حساب Spotify وقسم موسيقى جديد", "text": "اربط حساب Spotify: تظهر قوائمك وأغانيها في اللوحة، وتشغّل تطبيق Spotify على صندوق التلفاز أو توقفه من اللوحة أو هاتفك (يتطلب Spotify Premium). يتبع قسم الموسيقى تصميم YouTube Music مع خطوات إعداد مصوّرة لـ YouTube و Spotify."}}},
     {
       "icon": "🎨",
       "title": "Hazır başlangıç paketleri",

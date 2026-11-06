@@ -285,6 +285,29 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   });
 
   // ================= MÜZİK (SPOTIFY & YOUTUBE MUSIC & UZAKTAN KUMANDA) =================
+  const SP = require('./spotify');
+  SP.setOnChange(t => changed(t)); // erişim anahtarı yenilenince TV'lere yeni durum gider
+  // ScreenPano'nun kendi Spotify oynatıcısı (TV'de) kısa ömürlü anahtarla çalışır: süresi dolmadan sunucu yeniler
+  setInterval(() => {
+    for (const t of tenants.all()) {
+      const m = t.db.music, a = m && m.spotify;
+      if (!a || !a.refreshToken || a.expired || !m.enabled || SP.external(t)) continue;
+      if (!(m.playlists || []).some(x => x.provider === 'spotify')) continue;
+      if (!a.expiresAt || a.expiresAt - Date.now() < 15 * 60000) SP.access(t).catch(() => {});
+    }
+  }, 5 * 60000).unref();
+  // Harici Spotify cihazında çalan şarkı TV'lerdeki "şu an çalıyor" çubuğuna gider (değişince)
+  const spNowSig = new Map();
+  setInterval(async () => {
+    for (const t of tenants.all()) {
+      const m = t.db.music; if (!m || !m.enabled || !SP.external(t)) { spNowSig.delete(t.id); continue; }
+      const cur = (m.playlists || []).find(x => x.id === m.activeId); if (!cur || cur.provider !== 'spotify') continue;
+      const n = await SP.nowPlaying(t).catch(() => null), now = n && n.title ? { title: n.title, artist: n.artist, thumb: n.thumb, playing: n.playing } : null;
+      const sig = JSON.stringify(now), last = spNowSig.get(t.id); // değişince, değişmese de dakikada bir (yeni açılan TV de görsün)
+      if (last && last.sig === sig && Date.now() - last.at < 60000) continue;
+      spNowSig.set(t.id, { sig, at: Date.now() }); sendTo(t, { type: 'music_now', now });
+    }
+  }, 8000).unref();
   function ensureMusic(db) {
     if (!db.music || typeof db.music !== 'object') {
       db.music = { enabled: false, playing: true, volume: 75, muteVideo: true, showNowPlaying: true, activeId: '', playlists: [], spotify: {} };
@@ -352,13 +375,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     if (typeof b.muteVideo === 'boolean') m.muteVideo = b.muteVideo;
     if (typeof b.showNowPlaying === 'boolean') m.showNowPlaying = b.showNowPlaying;
     if (typeof b.activeId === 'string') m.activeId = s(b.activeId, 40);
-    if (b.spotify && typeof b.spotify === 'object') {
-      if (typeof b.spotify.clientId === 'string') m.spotify.clientId = s(b.spotify.clientId, 120);
-      if (typeof b.spotify.accessToken === 'string') { m.spotify.accessToken = s(b.spotify.accessToken, 800); m.spotify.connectedAt = b.spotify.accessToken ? Date.now() : 0; }
-      if (typeof b.spotify.refreshToken === 'string') m.spotify.refreshToken = s(b.spotify.refreshToken, 800);
-      if (b.spotify.expiresAt !== undefined) m.spotify.expiresAt = Number(b.spotify.expiresAt) || 0;
-      if (typeof b.spotify.deviceName === 'string') m.spotify.deviceName = s(b.spotify.deviceName, 60);
-    }
+    // Spotify anahtarları yalnız hesap bağlantısıyla (OAuth) gelir; panelden elle girilmez
+    if (b.spotify && typeof b.spotify === 'object' && typeof b.spotify.deviceName === 'string') m.spotify.deviceName = s(b.spotify.deviceName, 60);
     changed(req.t);
     res.json({ ok: true, music: m });
   });
@@ -378,7 +396,9 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     if (b.playNow || !m.activeId) { m.activeId = item.id; m.enabled = true; m.playing = true; }
     changed(req.t);
     if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: item.id, music: m });
-    res.json({ ok: true, item, music: m });
+    let warn = '';
+    if (b.playNow && item.provider === 'spotify' && SP.external(req.t)) { try { await SP.play(req.t, item, null, m.volume); } catch (e) { warn = e.message; } }
+    res.json({ ok: true, item, music: m, warn });
   });
   r.delete('/music/playlist/:id', (req, res) => {
     const m = ensureMusic(req.t.db);
@@ -387,7 +407,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     changed(req.t);
     res.json({ ok: true, music: m });
   });
-  r.post('/music/cmd', (req, res) => {
+  r.post('/music/cmd', async (req, res) => {
     const m = ensureMusic(req.t.db), b = req.body || {}, cmd = String(b.cmd || '');
     if (!['play', 'pause', 'toggle', 'next', 'prev', 'volume', 'select', 'enabled'].includes(cmd)) return res.status(400).json({ error: 'Geçersiz komut' });
     if (cmd === 'play') { m.enabled = true; m.playing = true; }
@@ -403,13 +423,28 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     let rotated = false;
     if ((cmd === 'next' || cmd === 'prev') && m.playlists.length > 1) {
       const i0 = Math.max(0, m.playlists.findIndex(x => x.id === m.activeId)), cur = m.playlists[i0];
-      const inner = (cur.provider === 'yt' || cur.provider === 'ytm') && cur.listId || cur.provider === 'ytmix' && (cur.tracks || []).length || cur.provider === 'spotify' && m.spotify.accessToken;
+      const inner = (cur.provider === 'yt' || cur.provider === 'ytm') && cur.listId || cur.provider === 'ytmix' && (cur.tracks || []).length || cur.provider === 'spotify' && (m.spotify.accessToken || SP.connected(req.t));
       if (!inner) { m.activeId = m.playlists[(i0 + (cmd === 'next' ? 1 : m.playlists.length - 1)) % m.playlists.length].id; rotated = true; }
+    }
+    // Spotify (TV kutusundaki Spotify uygulaması gibi harici cihaz seçiliyse): komut Spotify Web API ile o cihaza gider
+    let warn = '';
+    const curIt = m.playlists.find(x => x.id === m.activeId);
+    // başka bir listeye geçilince Spotify uygulaması susturulur (iki müzik üst üste çalmasın)
+    if (SP.external(req.t) && cmd === 'select' && curIt && curIt.provider !== 'spotify') { try { await SP.control(req.t, 'pause'); } catch (e) {} }
+    if (SP.external(req.t) && curIt && curIt.provider === 'spotify') {
+      const spStart = cmd === 'select' && typeof b.uri === 'string' && /^spotify:track:[A-Za-z0-9]{10,40}$/.test(b.uri) ? { uri: b.uri } : null;
+      try {
+        if (cmd === 'select' || cmd === 'play' || (cmd === 'enabled' && m.enabled)) await SP.play(req.t, curIt, spStart, m.volume);
+        else if (cmd === 'pause' || (cmd === 'enabled' && !m.enabled) || (cmd === 'toggle' && !m.playing)) await SP.control(req.t, 'pause');
+        else if (cmd === 'toggle' && m.playing) await SP.control(req.t, 'resume');
+        else if (cmd === 'next' || cmd === 'prev') await SP.control(req.t, cmd);
+        else if (cmd === 'volume') await SP.control(req.t, 'volume', { volume: m.volume });
+      } catch (e) { warn = e.message; }
     }
     tenants.save(req.t);
     sendTo(req.t, { type: 'music_cmd', cmd, rotated, start, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: m });
     hub.pushTenant(req.t.id);
-    res.json({ ok: true, music: m });
+    res.json({ ok: true, music: m, warn });
   });
 
   // ================= YOUTUBE HESABI (Google OAuth, yalnız okuma) =================
@@ -474,7 +509,38 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     res.json({ ok: true, item: it, music: m });
   });
   // TV'nin bildirdiği o an çalan şarkı (panelin "Şimdi çalıyor" çubuğu için)
-  r.get('/music/now', (req, res) => { const n = require('./musicnow').get(req.t.id); res.json(n || {}); });
+  r.get('/music/now', async (req, res) => {
+    const m = ensureMusic(req.t.db), cur = m.playlists.find(x => x.id === m.activeId);
+    if (cur && cur.provider === 'spotify' && SP.external(req.t) && m.enabled) { const n = await SP.nowPlaying(req.t); return res.json(n ? { ...n, itemId: cur.id } : {}); }
+    const n = require('./musicnow').get(req.t.id); res.json(n || {});
+  });
+
+  // ================= SPOTIFY HESABI (OAuth; listeler, arama, cihaz seçimi) =================
+  const spErr = (res, e) => res.status(e.code === 'reconnect' ? 409 : e.code === 'hidden' ? 404 : 502).json({ error: e.message, reconnect: e.code === 'reconnect', hidden: e.code === 'hidden' });
+  r.get('/music/spotify', (req, res) => res.json({ ...SP.status(req.t), redirect: SP.redirectUri() }));
+  r.get('/music/spotify/connect', ownerOnly, (req, res) => {
+    if (!SP.configured()) return res.redirect('/panel?sp=nocfg#music/accounts');
+    res.redirect(SP.authUrl(req.t.id));
+  });
+  r.get('/music/spotify/playlists', async (req, res) => { try { res.json({ items: await SP.playlists(req.t, req.query.force === '1') }); } catch (e) { spErr(res, e); } });
+  r.get('/music/spotify/tracks', async (req, res) => { try { res.json({ items: await SP.tracks(req.t, String(req.query.type || 'playlist'), String(req.query.id || '')) }); } catch (e) { spErr(res, e); } });
+  r.get('/music/spotify/search', async (req, res) => {
+    const h = searchHits.get('sp' + req.t.id) || { n: 0, at: Date.now() };
+    if (Date.now() - h.at > 60000) { h.n = 0; h.at = Date.now(); }
+    if (++h.n > 20) return res.status(429).json({ error: 'Çok sık arama yapıyorsunuz; biraz bekleyin' });
+    searchHits.set('sp' + req.t.id, h);
+    try { res.json(await SP.search(req.t, req.query.q)); } catch (e) { spErr(res, e); }
+  });
+  r.get('/music/spotify/devices', async (req, res) => { try { res.json({ items: await SP.devices(req.t, true) }); } catch (e) { spErr(res, e); } });
+  // çalınacak cihaz: 'screenpano' = ScreenPano'nun kendi oynatıcısı; diğerleri Spotify Connect cihaz kimliği
+  r.put('/music/spotify/device', (req, res) => {
+    const b = req.body || {}, a = SP.sp(req.t), id = s(b.id, 80);
+    if (id && id !== 'screenpano' && !/^[A-Za-z0-9_-]{6,80}$/.test(id)) return res.status(400).json({ error: 'Geçersiz cihaz' });
+    a.target = id; a.targetName = id === 'screenpano' ? '' : s(b.name, 60);
+    changed(req.t);
+    res.json({ ok: true, music: ensureMusic(req.t.db), status: SP.status(req.t) });
+  });
+  r.delete('/music/spotify', ownerOnly, async (req, res) => { await SP.disconnect(req.t); changed(req.t); res.json({ ok: true, music: ensureMusic(req.t.db) }); });
   r.delete('/music/google', ownerOnly, async (req, res) => { await yt.disconnect(req.t); res.json({ ok: true }); });
 
   // ================= KVKK: verilerim, hesap silme =================

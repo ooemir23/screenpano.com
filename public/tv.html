@@ -3093,6 +3093,7 @@ function connect() {
     else if (m.type === 'bigmatch') { if (m.force) { if (MEDIA_ON && videos.length && !big.showing && (trailerOn || videos.length > 1 || NMED())) { window.__pendingBig = m; return; } /* içerik bitince */ big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
     else if (m.type === 'music_cmd') onMusicCmd(m);
+    else if (m.type === 'music_now') { const n = m.now; MUS.spConnectTrack = n && n.title ? { title: n.title, artist: n.artist || '', thumb: n.thumb || '', paused: !n.playing } : null; renderMusicBar(); }
     else if (m.type === 'music_tracks') onMusicTracks(m);
   };
   ws.onclose = () => { clearInterval(wsDog); if (!authFail && !dead) wsRetry(); };
@@ -3678,13 +3679,17 @@ function playRadioItem(it, m) {
 }
 function initSpotifyConnect(spCfg) {
   if (IN_IFRAME) return;
-  const tok = spCfg && spCfg.accessToken ? spCfg.accessToken.trim() : '';
+  // Spotify uygulaması (ya da başka bir Spotify cihazı) seçiliyse müziği o çalar: ScreenPano'nun kendi oynatıcısı kurulmaz
+  const ext = !!(spCfg && spCfg.ext);
+  const tok = !ext && spCfg && spCfg.accessToken ? spCfg.accessToken.trim() : '';
   if (!tok) {
     if (MUS.spPlayer) { try { MUS.spPlayer.disconnect(); } catch (e) {} MUS.spPlayer = null; MUS.spDeviceId = ''; MUS.spConnectTrack = null; }
     MUS.spToken = '';
     return;
   }
   if (tok === MUS.spToken && MUS.spPlayer) return;
+  // anahtar sunucuda yenilendi: oynatıcı yeniden kurulmaz (çalan şarkı kesilmesin), getOAuthToken yeni anahtarı okur
+  if (MUS.spPlayer && MUS.spToken) { MUS.spToken = tok; return; }
   MUS.spToken = tok;
   const setup = () => {
     if (MUS.spPlayer) { try { MUS.spPlayer.disconnect(); } catch (e) {} }
@@ -3728,6 +3733,8 @@ function initSpotifyConnect(spCfg) {
 }
 function playSpotifyItem(it, m) {
   ensureMusicHosts();
+  // Harici Spotify cihazı (TV kutusundaki Spotify uygulaması): çalmayı sunucu Spotify'a yaptırır; TV yalnız çalanı gösterir
+  if (m && m.spotify && m.spotify.ext) { stopAllMusicEngines(''); MUS.err = ''; renderMusicBar(); return; }
   const uri = `spotify:${it.spotifyType || 'playlist'}:${it.spotifyId}`;
   // 1) Spotify Connect Web Playback SDK bağlıysa doğrudan tam şarkı/liste çal
   if (MUS.spDeviceId && MUS.spToken) {

@@ -66,7 +66,7 @@ function visual(f, t) {
 }
 
 // D1: features.json'daki emoji simgeleri tek tip çizgi ikona çevrilir (/icons.svg); eşlemesi olmayan emoji olduğu gibi kalır
-const EMO = { '🚨': 'siren', '🎞': 'film', '🧾': 'receipt-text', '⚽': 'trophy', '📣': 'megaphone', '🎉': 'party-popper', '📰': 'newspaper', '⏱': 'timer', '📡': 'radio-tower', '📊': 'chart-column', '🏬': 'store', '💼': 'briefcase', '📷': 'camera', '🎨': 'palette', '💻': 'monitor', '🔒': 'lock', '💾': 'hard-drive', '📺': 'tv', '⚡': 'zap', '🔑': 'key-round', '🧩': 'puzzle', '🌐': 'globe', '📚': 'book-open', '🔥': 'flame', '📥': 'download', '🏟': 'trophy', '🔳': 'scan-line', '🧭': 'compass', '🔎': 'search', '🎯': 'target', '🍹': 'clock' };
+const EMO = { '🎧': 'headphones', '🚨': 'siren', '🎞': 'film', '🧾': 'receipt-text', '⚽': 'trophy', '📣': 'megaphone', '🎉': 'party-popper', '📰': 'newspaper', '⏱': 'timer', '📡': 'radio-tower', '📊': 'chart-column', '🏬': 'store', '💼': 'briefcase', '📷': 'camera', '🎨': 'palette', '💻': 'monitor', '🔒': 'lock', '💾': 'hard-drive', '📺': 'tv', '⚡': 'zap', '🔑': 'key-round', '🧩': 'puzzle', '🌐': 'globe', '📚': 'book-open', '🔥': 'flame', '📥': 'download', '🏟': 'trophy', '🔳': 'scan-line', '🧭': 'compass', '🔎': 'search', '🎯': 'target', '🍹': 'clock' };
 const ico = em => { const k = String(em || '').replace(/\uFE0F/g, ''); return EMO[k] ? `<svg class="si" aria-hidden="true"><use href="/icons.svg#i-${EMO[k]}"></use></svg>` : e(em || ''); };
 const isNew = f => f.added && (Date.now() - Date.parse(f.added)) / 864e5 < NEW_DAYS;
 const badges = (f, t) => (isNew(f) ? `<span class="nb">${e(t('s.new'))}</span>` : '') + (f.plan === 'pro' ? '<span class="pb">PRO</span>' : '');

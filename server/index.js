@@ -81,6 +81,7 @@ app.get('/super', (req, res, next) => { const u = auth.sessionUser(req); return 
 
 app.use('/api/auth', require('./routes-auth'));
 app.get('/api/oauth/google/callback', require('./youtube').callback); // YouTube hesabı bağlantısı dönüşü
+app.get('/api/oauth/spotify/callback', require('./spotify').callback); // Spotify hesabı bağlantısı dönüşü
 app.use('/api/tv', require('./routes-tv').router);
 app.use('/api/admin', require('./routes-admin').router);
 app.use('/api/super', require('./routes-super'));
