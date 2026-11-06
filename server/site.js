@@ -108,7 +108,8 @@ function render(store, tenants, access, lang = 'tr') {
   if (!LANGS.includes(lang)) lang = 'tr';
   const t = dict(lang);
   const st = k => store.setting(k, '');
-  const price = v => v ? e(v) : `<small>${e(t('s.priceAsk'))}</small>`;
+  // D9: fiyat yazılmadıysa iletişim bölümüne giden "Teklif al" bağlantısı öne çıkar
+  const price = v => v ? e(v) : `<small>${e(t('s.priceAsk'))}</small><a class="ask" href="#contact">${e(t('s.quote'))} →</a>`;
   const phone = st('site_phone'), wa = st('site_whatsapp').replace(/\D/g, ''), mail = st('site_email') || st('legal_email');
   const contact = [wa && `<a class="btn" href="https://wa.me/${wa}" rel="noopener">${e(t('contact.wa'))}</a>`, phone && `<a class="btn ghost" href="tel:${e(phone.replace(/\s/g, ''))}" dir="ltr">${e(phone)}</a>`, mail && `<a class="btn ghost" href="mailto:${e(mail)}">${e(mail)}</a>`].filter(Boolean).join('');
   const live = tenants.all().filter(x => access(x).ok).length;

@@ -177,6 +177,8 @@ function attention() {
     else if (a.ok && a.kind === 'paid' && a.until - now <= 7 * day) out.push({ lv: 'warn', t: x.name, s: `${T('Abonelik bitiyor')}: ${fmt(a.until)}`, act: [T('Aç'), `openTenant('${x.id}')`] });
     else if (!a.ok && a.reason === 'expired' && now - Math.max(x.paidUntil || 0, x.trialUntil || 0) <= 14 * day) out.push({ lv: 'bad', t: x.name, s: `${T('Süresi doldu')}: ${fmt(Math.max(x.paidUntil || 0, x.trialUntil || 0))}`, act: [T('Aç'), `openTenant('${x.id}')`] });
   }
+  // S3: depolaması %90'ı geçen işletme
+  for (const x of D.tenants) if (x.storageLimitMB && x.storageMB >= x.storageLimitMB * 0.9) out.push({ lv: x.storageMB >= x.storageLimitMB ? 'bad' : 'warn', t: x.name, s: `${T('Depolama dolmak üzere')}: ${x.storageMB} / ${x.storageLimitMB} MB`, act: [T('Aç'), `openTenant('${x.id}')`] });
   const fl = (D.system || {}).fleet || {};
   for (const d of (fl.old || []).slice(0, 10)) out.push({ lv: 'warn', t: `${d.tenant} · ${d.name || T('TV kutusu')}`, s: `${T('Eski uygulama sürümü')}: ${d.app} → ${D.system.apk}`, act: [T('Panele gir'), `imp('${d.tenantId}')`] });
   for (const d of (fl.noBoot || []).slice(0, 10)) out.push({ lv: 'warn', t: `${d.tenant} · ${d.name || T('TV kutusu')}`, s: T('Açılışta otomatik başlama izni verilmemiş'), act: [T('Panele gir'), `imp('${d.tenantId}')`] });

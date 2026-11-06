@@ -101,3 +101,4 @@ Cihaz limiti (TV sayısı) ¦ Device limit (number of TVs) ¦ Gerätelimit (Anza
 Test ortamı düğmesi ¦ Test environment button ¦ Testumgebungs-Schaltfläche ¦ زر بيئة الاختبار
 Bu işletmenin ekranlarında menüde "Test ortamına geç" düğmesi görünür (yalnız kendi işletmeniz için açın). ¦ A "Switch to test environment" button appears in the menu on this business's screens (turn on only for your own business). ¦ Auf den Bildschirmen dieses Unternehmens erscheint im Menü die Schaltfläche „Zur Testumgebung wechseln" (nur für Ihr eigenes Unternehmen aktivieren). ¦ يظهر زر "الانتقال إلى بيئة الاختبار" في القائمة على شاشات هذا النشاط التجاري (فعّله لنشاطك التجاري فقط).
 Sunucuya ulaşılamıyor ¦ Can't reach the server ¦ Server nicht erreichbar ¦ تعذر الوصول إلى الخادم
+Depolama dolmak üzere ¦ Storage almost full ¦ Speicher fast voll ¦ التخزين على وشك الامتلاء

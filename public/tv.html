@@ -48,7 +48,7 @@ html,body{height:100%;width:100%;background:var(--edge);color:var(--white);font-
 #qr-right .code svg,#qr-left .code svg{width:100%;height:100%;display:block}
 #qr-right .lbl,#qr-left .lbl{background:rgba(10,8,6,.92);backdrop-filter:blur(0.56vh);border:max(2px,.25vh) solid var(--al);color:#fff;font-size:2.3vh;font-weight:800;letter-spacing:.1em;text-transform:uppercase;text-shadow:0 .2vh .5vh #000;padding:0 1.2vw;border-radius:2vh;max-width:calc(var(--qrs,17vh) + 8vh);text-align:center;line-height:1.3;height:5.4vh;box-sizing:border-box;display:flex;align-items:center;justify-content:center;white-space:nowrap}
 #qr-right .lbl.wf,#qr-left .lbl.wf{width:calc(var(--qrs,17vh) * 1.7);max-width:none;padding:0 .8vh;overflow:hidden}
-.lbl.wf .wt{transition:opacity .6s ease}
+.lbl.wf .wt{transition:opacity .4s ease}
 #qr-right .lbl.wf{align-self:flex-end}
 #qr-left .lbl.wf{align-self:flex-start}
 #qr-right .lbl.pw,#qr-left .lbl.pw,.wqr .lbl.qp.pw{text-transform:none;letter-spacing:.04em;font-size:3vh;color:var(--al)}
@@ -174,38 +174,38 @@ position:absolute;top:.8vh;right:.8vw}
 .mid .sc{font-size:3.6vh;font-weight:800;letter-spacing:.04em;white-space:nowrap}
 .mid .sc i{font-style:normal;color:var(--mute);margin:0 .25vw;font-weight:400}
 .mid .sc.fin{color:var(--accent2)}
-#rates{flex:1;justify-content:center;background:linear-gradient(160deg,rgba(var(--a2),.16),rgba(255,255,255,.03));border:max(1px,.1vh) solid rgba(var(--a2),.35);border-radius:1.30vh;padding:1.6vh 1.2vw;display:flex;flex-direction:column;gap:.9vh}
+#rates{--rv:1vh;flex:1;justify-content:center;background:linear-gradient(160deg,rgba(var(--a2),.16),rgba(255,255,255,.03));border:max(1px,calc(.1*var(--rv))) solid rgba(var(--a2),.35);border-radius:calc(1.30*var(--rv));padding:calc(1.6*var(--rv)) 1.2vw;display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
 #wx{display:flex;align-items:center;gap:.9vw}
-#wx .wi{font-size:4.6vh;line-height:1}
-#wx .wt{font-size:4vh;font-weight:600;line-height:1}
+#wx .wi{font-size:calc(4.6*var(--rv));line-height:1}
+#wx .wt{font-size:calc(4*var(--rv));font-weight:600;line-height:1}
 #wx .wd{flex:1;min-width:0}
-#wx .wd b{display:block;font-size:2vh;font-weight:600;color:var(--white)}
-#wx .wd small{display:block;font-size:1.8vh;color:var(--mute);margin-top:.3vh;letter-spacing:.04em}
-#wx .city{font-size:1.6vh;letter-spacing:.28em;color:var(--accent2);font-weight:600;text-transform:uppercase;text-align:right}
-#wx .city small{display:block;letter-spacing:.04em;color:var(--mute);font-weight:400;text-transform:none;margin-top:.3vh;font-size:1.6vh}
+#wx .wd b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(1.85*var(--rv));font-weight:600;color:var(--white)}
+#wx .wd small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(1.8*var(--rv));color:var(--mute);margin-top:calc(.3*var(--rv));letter-spacing:.04em}
+#wx .city{font-size:calc(1.8*var(--rv));letter-spacing:.28em;color:var(--accent2);font-weight:600;text-transform:uppercase;text-align:right}
+#wx .city small{display:block;letter-spacing:.04em;color:var(--mute);font-weight:400;text-transform:none;margin-top:calc(.3*var(--rv));font-size:calc(1.8*var(--rv))}
 /* Hava ve piyasalar widget'ındaki QR bölümü: 2 QR yan yana, fazlası sırayla */
-#rmain{display:flex;flex-direction:column;gap:.9vh}
-#rqr{flex:1;min-height:0;display:none;align-items:stretch;justify-content:center;gap:1.4vh}
+#rmain{display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
+#rqr{flex:1;min-height:0;display:none;align-items:stretch;justify-content:center;gap:calc(1.4*var(--rv))}
 #rates>#rmain,#rates>#rqr{transition:opacity .4s}
 #rates.out>#rmain,#rates.out>#rqr{opacity:0}
 #rqr.one .rq{flex-basis:62%}
-#rqr .rq{flex:0 1 calc(50% - .7vh);min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6vh;container-type:size}
+#rqr .rq{flex:0 1 calc(50% - calc(.7*var(--rv)));min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(.6*var(--rv));container-type:size}
 #rqr .rq.solo{flex-basis:100%}
 #rqr .rq .qw{display:contents}
-#rqr .rq .code{flex:none;width:min(100cqw,calc(100cqh - 4vh));height:min(100cqw,calc(100cqh - 4vh));background:#fff;border-radius:1vh;padding:.4vh;box-sizing:border-box;border:max(1px,.18vh) solid rgba(var(--a2),.85);box-shadow:0 .6vh 1.8vh rgba(0,0,0,.45)}
+#rqr .rq .code{flex:none;width:min(100cqw,calc(100cqh - calc(4*var(--rv))));height:min(100cqw,calc(100cqh - calc(4*var(--rv))));background:#fff;border-radius:calc(1*var(--rv));padding:calc(.4*var(--rv));box-sizing:border-box;border:max(1px,calc(.18*var(--rv))) solid rgba(var(--a2),.85);box-shadow:0 calc(.6*var(--rv)) calc(1.8*var(--rv)) rgba(0,0,0,.45)}
 #rqr .rq .code svg{width:100%;height:100%;display:block}
-#rqr .rq .lbl{flex:none;width:100%;box-sizing:border-box;height:3.2vh;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;background:rgba(10,8,6,.92);border:max(1px,.15vh) solid var(--al);border-radius:2vh;color:#fff;font-size:1.8vh;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:0 .6vw;text-shadow:0 .2vh .4vh #000}
-#rqr .rq .lbl.pw{text-transform:none;letter-spacing:.03em;color:var(--al);font-size:2vh}
-#rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:5.6vh;border-top:max(1px,.1vh) solid var(--line);padding-top:.9vh}
-#rrow div{min-width:0;overflow:hidden;text-align:center;border-right:max(1px,.1vh) solid var(--line)}
+#rqr .rq .lbl{flex:none;width:100%;box-sizing:border-box;height:calc(3.2*var(--rv));display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;background:rgba(10,8,6,.92);border:max(1px,calc(.15*var(--rv))) solid var(--al);border-radius:calc(2*var(--rv));color:#fff;font-size:calc(1.8*var(--rv));font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:0 .6vw;text-shadow:0 calc(.2*var(--rv)) calc(.4*var(--rv)) #000}
+#rqr .rq .lbl.pw{text-transform:none;letter-spacing:.03em;color:var(--al);font-size:calc(2*var(--rv))}
+#rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:calc(5.6*var(--rv));border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.9*var(--rv))}
+#rrow div{min-width:0;overflow:hidden;text-align:center;border-right:max(1px,calc(.1*var(--rv))) solid var(--line)}
 #rrow div:last-child{border:0}
 #rrow.swap{transition:opacity .4s}
 #rrow.swap.out{opacity:0}
-.chg{font-style:normal;font-weight:700;letter-spacing:0;margin-left:.35vw;font-size:1.6vh}
+.chg{font-style:normal;font-weight:700;letter-spacing:0;margin-left:.35vw;font-size:calc(1.6*var(--rv))}
 .chg.up{color:#3ecf4a}.chg.dn{color:#ff6b6b}.chg.fl{color:var(--mute)}
-#rrow small{display:block;white-space:nowrap;overflow:hidden;font-size:1.6vh;letter-spacing:.12em;color:var(--accent2);font-weight:600}
-#rrow strong{display:block;font-size:2.1vh;font-weight:600;white-space:nowrap;overflow:hidden}
-#rrow strong i{font-style:normal;font-size:1.8vh;color:var(--mute);margin-left:.15vw;font-weight:400}
+#rrow small{display:block;white-space:nowrap;overflow:hidden;font-size:calc(1.6*var(--rv));letter-spacing:.12em;color:var(--accent2);font-weight:600}
+#rrow strong{display:block;font-size:calc(2.6*var(--rv));font-weight:600;white-space:nowrap;overflow:hidden}
+#rrow strong i{font-style:normal;font-size:calc(2*var(--rv));color:var(--mute);margin-left:.15vw;font-weight:400}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -262,7 +262,7 @@ html.nat-ticker #ttrack{animation:none !important}
 #tview::before,#tview::after{content:"";position:absolute;top:0;bottom:0;width:2.4vw;z-index:3;pointer-events:none}
 #tview::before{left:0;background:linear-gradient(90deg,var(--edge),transparent)}
 #tview::after{right:0;background:linear-gradient(270deg,var(--edge),transparent)}
-#tview,#tl{transition:opacity .55s ease}
+#tview,#tl{transition:opacity .4s ease}
 #tview.fade,#tl.fade{opacity:0}
 #ttrack{display:flex;flex:none;white-space:nowrap;animation:tscroll 60s linear infinite;will-change:transform;transform:translate3d(0,0,0);backface-visibility:hidden;-webkit-backface-visibility:hidden;contain:layout paint}
 #ttrack>div{display:flex;align-items:center;flex:none;transform:translateZ(0)}
@@ -315,7 +315,7 @@ html.lite #big .yemb{display:none!important}
 #cflagw{position:relative;flex:none;height:11vh;padding-left:.5vh}
 #cflagw::before{content:"";position:absolute;left:0;top:-.8vh;bottom:-2.4vh;width:.5vh;border-radius:.3vh;background:linear-gradient(90deg,#8a8f94,#e8eaec 50%,#6c7176)}
 #cflag{height:100%;width:auto;display:block}
-#cmid{flex:1;min-width:0;display:flex;flex-direction:column;gap:.7vh;transition:opacity .6s}
+#cmid{flex:1;min-width:0;display:flex;flex-direction:column;gap:.7vh;transition:opacity .4s}
 #cmid.out{opacity:0}
 #ctitle{font-size:1.8vh;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--al)}
 #cquote{font-size:2.7vh;font-weight:600;line-height:1.3;color:#fff;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -351,7 +351,7 @@ html.lite #big .yemb{display:none!important}
 #menu button#mout:focus{background:#b3261e;color:#fff;border-color:#ff4d4d;box-shadow:0 0 0 .35vh #ff4d4d, 0 0 1.5vh rgba(255,0,0,.5)}
 #menu .hint{margin-top:1.6vh;font-size:1.8vh;color:#888;text-align:center;letter-spacing:.02em}
 /* kampanya kartı */
-#poster{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .9s ease-in-out;pointer-events:none}#poster.on{opacity:1}
+#poster{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .8s ease-in-out;pointer-events:none}#poster.on{opacity:1}
 #langchip{position:absolute;top:.8vh;right:.8vw;font:700 1.2vh/1 var(--font),sans-serif;letter-spacing:.08em;padding:.45vh .6vw;border-radius:.6vh;background:var(--accent);color:var(--white);opacity:.85}
 #a-branches{display:grid;gap:1.2vh;margin-top:1vh}#a-branches button{font-size:2.2vh}
 #camp{position:absolute;inset:.6vh;z-index:7;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .8s ease-in-out;display:flex;align-items:center;justify-content:center;gap:4vw;padding:3vh 3vw;background:radial-gradient(ellipse 70% 70% at 30% 40%,var(--ad) 0%,#2a1b0f 60%,#1a110a 100%)}
@@ -371,7 +371,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #camp .qb svg{width:100%;height:100%;display:block}
 #camp .ql{font-size:2.2vh;font-weight:700;letter-spacing:.06em;color:#fff;text-align:center;max-width:32vh}
 #camp .ql small{display:block;margin-top:.5vh;font-size:2vh;font-weight:500;color:var(--al);letter-spacing:.1em}
-#big{position:absolute;inset:.6vh;z-index:7;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity 1.4s ease-in-out;background:#0a0a0c;color:#fff}
+#big{position:absolute;inset:.6vh;z-index:7;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .8s ease-in-out;background:#0a0a0c;color:#fff}
 #big.on{opacity:1}
 /* büyük maç: klasik tasarımın medya alanına göre ölçeklenen hâli (Klasik uyumlu) */
 #big.d-uyum .bl,#big.d-uyum .br{position:absolute;inset:0}
@@ -784,7 +784,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-uyum .bnm b.sm{font-size:calc(5*var(--u))}
 #big.d-uyum .bnote{font-size:calc(3.6*var(--u));font-weight:900}
 #big.d-uyum .bft{font-size:calc(2.5*var(--u));font-weight:800;color:#fff}
-#cphoto{position:absolute;inset:.6vh;z-index:6;border-radius:1.30vh;overflow:hidden;background:#0d0d0e;opacity:0;pointer-events:none;transition:opacity .9s}
+#cphoto{position:absolute;inset:.6vh;z-index:6;border-radius:1.30vh;overflow:hidden;background:#0d0d0e;opacity:0;pointer-events:none;transition:opacity .8s}
 #cphoto.on{opacity:1}
 #cphoto img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:grayscale(1) contrast(1.05)}
 #cphoto b{position:absolute;left:0;right:0;bottom:0;padding:2.4vh 2vw 1.8vh;background:linear-gradient(transparent,rgba(120,8,16,.92));color:#fff;font-size:2vh;font-weight:700;letter-spacing:.14em;text-transform:uppercase;text-align:center}
@@ -803,7 +803,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #wimage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 #wimage.contain img{object-fit:contain}
 #wimage .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:2vh}
-.cell.qrcell{z-index:20;transition:opacity .5s ease} /* QR kutuları diğer widget'ların üstünde durabilir */
+.cell.qrcell{z-index:20;transition:opacity .4s ease} /* QR kutuları diğer widget'ların üstünde durabilir */
 .cell.qrcell.qpin{z-index:65} /* "Her zaman üstte": kayan haber bandı, kampanya vb. her şeyin üstünde kalır */
 .cell.qrcell.qhide{opacity:0;pointer-events:none}
 .cell.qrcell .wqr{background:none;border:none;border-radius:0;overflow:visible;gap:.8vh;padding:0;backdrop-filter:none;box-shadow:none}
@@ -822,7 +822,7 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #wmenu .mh h3{font-size:3vh;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--white)}
 #wmenu .mh .pg{font-size:1.8vh;letter-spacing:.14em;color:var(--mute);font-weight:600}
 #wmenu .mb{flex:1;min-height:0;position:relative;overflow:hidden}
-#wmenu .mcols{position:absolute;inset:0;display:grid;gap:0 2vw;transition:opacity .5s}
+#wmenu .mcols{position:absolute;inset:0;display:grid;gap:0 2vw;transition:opacity .4s}
 #wmenu .mcols.out{opacity:0}
 #wmenu .mc{font-size:2vh;letter-spacing:.24em;text-transform:uppercase;color:var(--accent2);font-weight:800;padding:1.4vh 0 .5vh}
 #wmenu .mi{display:flex;align-items:baseline;gap:.6vw;padding:.75vh 0}
@@ -1984,7 +1984,7 @@ function renderPanel() {
   const rp = WPROPS.rates || {};
   const main = (rp.weather === false ? '' : wx) + (rp.rates === false ? '' : `<div id="rrow" class="swap">${rateSets[rateIdx % rateSets.length]}</div>`);
   document.getElementById('rates').innerHTML = rp.qr ? `<div id="rmain">${main}</div><div id="rqr"></div>` : main; // QR açıksa hava/piyasa bir sayfa, QR'lar sonraki sayfa(lar)
-  startRateSwap(); ratesQr();
+  startRateSwap(); ratesQr(); fitRates();
 }
 // Hava ve piyasalar widget'ında sayfalar: 1) hava + piyasa, 2…) seçili QR'lar (seçim yoksa hepsi): 1-2 QR yan yana, 3 ve fazlası tek tek; 12 sn'de bir yumuşak geçişle döner
 const rQr = { i: 0, timer: null };
@@ -1994,7 +1994,7 @@ function ratesQr() {
   if (!box || !main) return;
   const rp = WPROPS.rates || {}, hasMain = rp.weather !== false || rp.rates !== false;
   const ids = String(rp.qrs || '').split(',').filter(Boolean);
-  const all = qrTile.list || [], list = ids.length ? all.filter(q => ids.includes(q.id)) : all;
+  const all = (qrTile.list || []).filter(q => q && q.svg), list = ids.length ? all.filter(q => ids.includes(q.id)) : all; // T4: çizilemeyen QR boş sayfa yapmasın
   const pages = list.length <= 2 ? (list.length ? [list] : []) : list.map(q => [q]); // 1-2 QR yan yana tek sayfa; 3 ve fazlası tek tek sırayla
   const views = (hasMain ? [-1] : []).concat(pages.map((_, i) => i)); // -1 = hava/piyasa
   if (!views.length) { main.style.display = ''; box.style.display = 'none'; return; }
@@ -2008,6 +2008,14 @@ function ratesQr() {
   show(views[rQr.i % views.length]);
   if (views.length > 1) rQr.timer = setInterval(() => { host.classList.add('out'); setTimeout(() => { rQr.i = (rQr.i + 1) % views.length; show(views[rQr.i]); host.classList.remove('out'); }, 450); }, 12000);
 }
+// T6: hava/piyasa kutusu yazıları kutu boyutuna göre küçülür (native RatesWidget.fitScale ile aynı taban: 17×42 vh)
+function fitRates() {
+  const el = document.getElementById('rates'); if (!el) return;
+  const vh = innerHeight / 100, w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
+  const k = Math.max(.7, Math.min(1, Math.min(h / (17 * vh), w / (42 * vh)))); // web: yalnız küçültür (büyük kutuda yerleşim 1080p ölçüsünde kalır)
+  el.style.setProperty('--rv', (k * vh).toFixed(2) + 'px');
+}
+addEventListener('resize', fitRates);
 function setRates(r) { lastRates = r; renderPanel(); if (window.__tickerInfo) setTicker(matches); }
 function setWeather(w) { lastWeather = w; renderPanel(); if (window.__tickerInfo) setTicker(matches); }
 const goalQueue = []; let goalBusy = false;
@@ -2684,6 +2692,7 @@ function fillEmpty() {
   const isWidgetEmpty = w => (w.type === 'music' && musicOff) || (w.type === 'reviews' && reviewsOff);
 
   const sig = `${reviewsOff}|${musicOff}|${layoutSig}`;
+  setTimeout(fitRates, 60); // yerleşim değişince hava/piyasa yazı ölçeği yeniden hesaplanır
   if (sig === fillSig) return; fillSig = sig;
 
   // Hücreleri özgün gridArea ve display durumlarına getir

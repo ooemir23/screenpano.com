@@ -97,7 +97,8 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
 
     private fun qrList(): List<JSONObject> {
         val s = st ?: return emptyList()
-        val all = s.raw.optJSONArray("qrs")?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) } } ?: emptyList()
+        // T4: SVG'si gelmemiş QR boş sayfa üretmesin
+        val all = s.raw.optJSONArray("qrs")?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) } }?.filter { it.optString("svg").isNotEmpty() } ?: emptyList()
         val ids = (props?.optString("qrs") ?: "").split(",").filter { it.isNotEmpty() }
         return if (ids.isEmpty()) all else all.filter { it.optString("id") in ids }
     }
@@ -116,6 +117,8 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         val vs = views(); if (vs.isEmpty()) { content.removeAllViews(); return }
         val v = vs[viewIdx % vs.size]
         if (v == -1) renderMain() else renderQr(v)
+        // T4: sayfa boş çıktıysa (veri yok) kutu boş kalmasın: hava/piyasa sayfasına dön
+        if (content.childCount == 0 && v != -1 && hasMain()) { viewIdx = vs.indexOf(-1).coerceAtLeast(0); renderMain() }
     }
 
     private fun renderMain() {
@@ -182,7 +185,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         wifiRunnable?.let { main.removeCallbacks(it) }
         content.removeAllViews(); content.gravity = Gravity.CENTER
         val l = qrList()
-        val pg = if (l.size <= 2) l else listOf(l[v])
+        val pg = if (l.size <= 2) l else listOfNotNull(l.getOrNull(v))
         val row = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER }
         for (q in pg) {
             val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER }
