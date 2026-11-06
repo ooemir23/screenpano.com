@@ -465,7 +465,11 @@ class MainActivity : AppCompatActivity() {
             val lp = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             lastBounds?.let { b -> lp.leftMargin = b[0]; lp.topMargin = b[1]; lp.width = b[2]; lp.height = b[3] }
             binding.rootContainer.addView(this, binding.rootContainer.indexOfChild(a) + 1, lp)
-            roundCorners(this)
+            val rr = resources.displayMetrics.heightPixels * 0.0139f // sayfadaki köşe yuvarlaklığıyla aynı
+            outlineProvider = object : android.view.ViewOutlineProvider() {
+                override fun getOutline(view: View, o: android.graphics.Outline) { o.setRoundRect(0, 0, view.width, view.height, rr) }
+            }
+            clipToOutline = true
         }
     }
     private fun resetPhoto(v: ImageView) { v.animate().cancel(); v.visibility = View.GONE; v.setImageDrawable(null); v.alpha = 1f }
