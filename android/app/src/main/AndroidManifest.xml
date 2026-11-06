@@ -12,6 +12,13 @@
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/vnd.android.package-archive" />
+        </intent>
+    </queries>
+
     <application
         android:name=".TvApp"
         android:label="@string/app_name"
@@ -42,10 +49,16 @@
             android:grantUriPermissions="true" />
 
         <!-- Cihaz açılınca uygulamayı başlatmayı dener -->
+        <!-- Yükleyici sonucu (onay ekranı / hata) -->
+        <receiver
+            android:name=".receiver.InstallResultReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".receiver.BootReceiver"
             android:exported="true">
             <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />

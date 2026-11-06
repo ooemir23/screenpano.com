@@ -41,6 +41,7 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.screenpano.tv.BuildConfig
+import com.screenpano.tv.receiver.UpdateBus
 import com.screenpano.tv.R
 import com.screenpano.tv.data.net.ApiClient
 import com.screenpano.tv.data.net.TvWebSocket
@@ -1139,6 +1140,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun launchInstaller(f: File) {
+        // önce PackageInstaller oturumu (içerik adresi/izin devri gerektirmez); olmazsa eski ACTION_VIEW yoluna düşer
+        UpdateBus.onStatus = { msg -> updateStatus(msg) }
+        try {
+            com.screenpano.tv.receiver.UpdateInstaller.install(this, f)
+            updateStatus("Yükleme ekranı hazırlanıyor…")
+            return
+        } catch (e: Throwable) {
+            Log.w(TAG, "Oturumlu yükleme başlamadı, eski yola düşülüyor: ${e.message}")
+        }
+        launchInstallerView(f)
+    }
+
+    private fun launchInstallerView(f: File) {
         try {
             val contentUri = Uri.parse("content://$packageName.update/update.apk")
             val intent = Intent(Intent.ACTION_VIEW).apply {

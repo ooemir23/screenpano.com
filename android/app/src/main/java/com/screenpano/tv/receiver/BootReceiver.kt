@@ -12,7 +12,7 @@ import com.screenpano.tv.ui.MainActivity
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val a = intent.action ?: return
-        if (!a.endsWith("BOOT_COMPLETED") && !a.endsWith("QUICKBOOT_POWERON")) return
+        if (!a.endsWith("BOOT_COMPLETED") && !a.endsWith("QUICKBOOT_POWERON") && !a.endsWith("MY_PACKAGE_REPLACED")) return // güncelleme kurulunca da uygulama kendiliğinden açılır
         val i = Intent(context, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
         }
