@@ -62,15 +62,30 @@ function parseCookies(req) {
   return out;
 }
 function isHttps(req) { return req.secure || String(req.headers['x-forwarded-proto'] || '').split(',')[0] === 'https'; }
+// Oturum çerezi: ana adres ve alt alan adları (admin., music., sadmin.) aynı oturumu paylaşsın diye Domain=taban adres.
+// Test ortamı ayrı ada sahip (sid_test): canlının Domain çerezi test.screenpano.com'a da gider, ikisi karışmasın.
+const COOKIE = config.APP_ENV === 'test' ? 'sid_test' : 'sid';
+const BASE_HOST = (() => { try { return new URL(config.BASE_URL).hostname.toLowerCase(); } catch (e) { return ''; } })();
+function cookieDomain(req) {
+  const h = String(req.headers.host || '').split(':')[0].toLowerCase();
+  return BASE_HOST && BASE_HOST.includes('.') && (h === BASE_HOST || h.endsWith('.' + BASE_HOST)) ? `; Domain=${BASE_HOST}` : '';
+}
 function setSession(req, res, user, extra = {}) {
   const token = sign({ uid: user.id, exp: Date.now() + 30 * DAY, ...extra });
-  res.setHeader('Set-Cookie', `sid=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 86400}${isHttps(req) ? '; Secure' : ''}`);
+  const sec = isHttps(req) ? '; Secure' : '';
+  const list = [`${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 86400}${cookieDomain(req)}${sec}`];
+  if (cookieDomain(req)) list.push(`${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${sec}`); // eski, yalnız bu adrese ait çerezi sil (Domain çerezle çakışmasın)
+  res.setHeader('Set-Cookie', list);
 }
-function clearSession(res) { res.setHeader('Set-Cookie', 'sid=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'); }
+function clearSession(res, req) {
+  const list = [`${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`];
+  if (req && cookieDomain(req)) list.push(`${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${cookieDomain(req)}`);
+  res.setHeader('Set-Cookie', list);
+}
 
 // Oturumdaki kullanıcı (+ süper yöneticinin "işletme olarak gir" bilgisi)
 function sessionUser(req) {
-  const p = verify(parseCookies(req).sid);
+  const p = verify(parseCookies(req)[COOKIE]);
   if (!p) return null;
   const u = store.q.userGet.get(p.uid);
   if (!u) return null;

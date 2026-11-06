@@ -24,20 +24,47 @@ app.use((req, res, next) => {
   if (/^www\./i.test(host)) return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
   next();
 });
+// Alt alan adları: admin.* panel, tv.* TV ekranı, music.* yalnız müzik sayfası, sadmin.* süper yönetim. Ana adres (ve eski yollar) olduğu gibi çalışır;
+// yalnız kök adres ("/") ve girişten sonra gidilecek sayfa alt alana göre seçilir. Test ortamında taban adres test.screenpano.com olur (admin.test.screenpano.com ...).
+const SUBS = { admin: 1, tv: 1, music: 1, sadmin: 1 };
+const baseHost = (() => { try { return new URL(config.BASE_URL).hostname.toLowerCase(); } catch (e) { return 'screenpano.com'; } })();
+function subOf(req) {
+  const h = String(req.headers.host || '').split(':')[0].toLowerCase();
+  if (!h.endsWith('.' + baseHost)) return '';
+  const l = h.slice(0, -baseHost.length - 1);
+  return SUBS[l] ? l : '';
+}
+auth.subOf = subOf;
 app.use(require('compression')());
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); next(); });
 
 // TV sayfasına sunucu sürümü pişirilir: önbellekten açılan bayat kopya, WS sürüm mesajıyla karşılaştırıp
 // kendini yenileyebilir (pişmiş sürüm yoksa taze açılan sayfa "uyumlu" sanılır ve asla güncellenmezdi)
-const page = file => (req, res) => {
+const page = (file, only) => (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
+  if (only) { // müzik sayfası: panel, yalnız Müzik bölümüyle açılır
+    return fs.readFile(path.join(config.PUBLIC_DIR, file), 'utf8', (err, html) => err ? res.sendStatus(404) : res.type('html').send(String(html).replace('<head>', '<head><script>window.__ONLY=' + JSON.stringify(only) + ';</script>')));
+  }
   if (file !== 'tv.html') return res.sendFile(path.join(config.PUBLIC_DIR, file));
   require('fs').readFile(path.join(config.PUBLIC_DIR, file), 'utf8', (err, html) => {
     if (err) return res.sendStatus(404);
     res.type('html').send(String(html).replace('<head>', '<head><script>window.__pageBuild="' + require('./realtime').build + '";</script>'));
   });
 };
+app.get('/', (req, res, next) => {
+  const sub = subOf(req);
+  if (sub) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    if (sub === 'tv') return res.redirect('/tv');
+    const u = auth.sessionUser(req);
+    if (!u) return res.redirect('/login');
+    if (sub === 'music') return res.redirect('/music');
+    if (sub === 'sadmin') return res.redirect(u.role === 'super' ? '/super' : '/panel');
+    return res.redirect(u.role === 'super' && !u.imp ? '/super' : '/panel'); // admin
+  }
+  next();
+});
 app.get('/', (req, res) => {
   // eski APK'lar kök adresi açar: Android WebView'dan gelen istek TV sayfasına gider
   if (/; wv\)/.test(String(req.headers['user-agent'] || ''))) return res.redirect('/tv');
@@ -52,9 +79,9 @@ app.get(/^\/(en|de|ar)\/?$/, (req, res) => {
   res.type('html').send(sitePage(req.params[0]));
 });
 // Arama motorları: panel, TV ve API sayfaları dizine girmez; site ve hukuki sayfalar girer
-app.use((req, res, next) => { if (/^\/(panel|super|tv|api|login)(\/|$)/.test(req.path)) res.setHeader('X-Robots-Tag', 'noindex, nofollow'); next(); });
+app.use((req, res, next) => { if (/^\/(panel|super|tv|api|login|music)(\/|$)/.test(req.path)) res.setHeader('X-Robots-Tag', 'noindex, nofollow'); next(); });
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /super\nDisallow: /tv\nDisallow: /api/\nDisallow: /login\n\nSitemap: ${require('./site').BASE}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /super\nDisallow: /music\nDisallow: /tv\nDisallow: /api/\nDisallow: /login\n\nSitemap: ${require('./site').BASE}/sitemap.xml\n`);
 });
 app.get('/sitemap.xml', (req, res) => {
   const { LANGS, BASE, PATH } = require('./site'), fs = require('fs');
@@ -77,6 +104,7 @@ app.get('/r/:token', require('./ads').page);
 app.get('/login', page('login.html'));
 app.get('/tv', page('tv.html'));
 app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html')(req, res, next) : res.redirect('/login')));
+app.get('/music', (req, res, next) => (auth.sessionUser(req) ? page('panel.html', 'music')(req, res, next) : res.redirect('/login')));
 app.get('/super', (req, res, next) => { const u = auth.sessionUser(req); return u && u.role === 'super' ? page('super.html')(req, res, next) : res.redirect('/login'); });
 
 app.use('/api/auth', require('./routes-auth'));

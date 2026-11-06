@@ -80,7 +80,9 @@ const NAV = [
   null, ['settings', 'settings', 'Ayarlar'],
 ];
 function drawNav() {
-  $('nav').innerHTML = NAV.map(n => typeof n === 'string' ? `<div class="grp">${n}</div>` : n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}">${ic(n[1])}${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
+  const NV = window.__ONLY ? NAV.filter(n => Array.isArray(n) && n[0] === window.__ONLY) : NAV; // music.* adresi: yalnız Müzik bölümü
+  $('nav').innerHTML = NV.map(n => typeof n === 'string' ? `<div class="grp">${n}</div>` : n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}">${ic(n[1])}${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
+  if (window.__ONLY === 'music') document.title = 'ScreenPano Müzik';
   const cur = NAV.find(n => Array.isArray(n) && n[0] === TAB); $('toptitle').textContent = cur ? cur[2] : '';
 }
 function go(h) { if (location.hash !== '#' + h) location.hash = h; else route(); }
@@ -89,6 +91,7 @@ function route() {
   const pm = /^pair=(\d{6})$/.exec(h);
   if (pm) { SUB.settings = 'devices'; TAB = 'settings'; window.__pair = pm[1]; history.replaceState(null, '', '#settings/devices'); }
   else { const [t, s] = h.split('/'); TAB = SECTIONS[t] ? t : 'home'; if (s) SUB[TAB] = s; }
+  if (window.__ONLY) TAB = window.__ONLY; // yalnız Müzik sayfası: başka bölüme geçilemez
   // kaydedilmemiş değişiklik varsa önce bölümde kalınır; kullanıcı "Kaydetmeden çık" derse hedefe gidilir
   const leave = (sec, back, msg, clear) => { const to = location.hash.slice(1); TAB = sec; history.replaceState(null, '', '#' + back);
     UI.ask(msg, { ok: 'Kaydetmeden çık', danger: true }).then(ok => { if (ok) { clear(); location.hash = to; } }); };
@@ -2154,7 +2157,7 @@ async function ytAccAdd(id, playNow) {
   const q = new URLSearchParams(location.search);
   for (const [k, name] of [['yt', 'YouTube'], ['sp', 'Spotify']]) {
     const c = q.get(k); if (!c) continue;
-    history.replaceState(null, '', '/panel#music/accounts');
+    history.replaceState(null, '', (window.__ONLY ? '/music' : '/panel') + '#music/accounts');
     setTimeout(() => {
       if (c === 'ok') toast(`${name} hesabı bağlandı`);
       else if (c === 'denied') toast(`${name} izni verilmedi`, true);

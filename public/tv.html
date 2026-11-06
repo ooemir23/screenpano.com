@@ -2672,6 +2672,23 @@ document.addEventListener('keydown', e => {
     window.__menu();
   }
 });
+// Kumanda, müzik çalarken (menü kapalı): sağ/sol = sonraki/önceki parça, yukarı/aşağı = ses. Müzik çalmıyorsa oklar eskisi gibi içerik/sayfa geçer.
+let lastMusKey = 0, mkVol = null, mkTimer = 0;
+function musicKeysOn() { const m = MUS.cfg; return !!(m && m.enabled && m.playing && activeMusicItem(m) && !MUS.err); }
+function musicToast(txt) {
+  let el = document.getElementById('mktoast');
+  if (!el) { el = document.createElement('div'); el.id = 'mktoast'; el.style.cssText = 'position:fixed;left:50%;bottom:9vh;transform:translateX(-50%);z-index:60;padding:1.2vh 2.4vw;border-radius:99px;background:rgba(14,16,18,.88);color:#fff;font:600 2.6vh system-ui,sans-serif;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap'; document.body.appendChild(el); }
+  el.textContent = txt; el.style.opacity = '1'; clearTimeout(mkTimer); mkTimer = setTimeout(() => { el.style.opacity = '0'; }, 1600);
+}
+document.addEventListener('keydown', e => {
+  if (window.__auth || ($m('menu') && $m('menu').classList.contains('on')) || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) || !musicKeysOn()) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (Date.now() - lastMusKey < 400) return; lastMusKey = Date.now();
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const nx = e.key === 'ArrowRight'; musicToast(nx ? 'Sonraki parça ⏭' : '⏮ Önceki parça'); menuMusicCmd(nx ? 'next' : 'prev'); return; }
+  const cur = mkVol != null && Date.now() - mkVol.at < 2500 ? mkVol.v : Math.round(MUS.vol != null ? MUS.vol : ((MUS.cfg && MUS.cfg.volume) || 0));
+  const v = Math.max(0, Math.min(100, Math.round(cur / 5) * 5 + (e.key === 'ArrowUp' ? 5 : -5)));
+  mkVol = { v, at: Date.now() }; musicToast('🔊 Ses %' + v); menuMusicCmd('volume', { volume: v });
+});
 // Kumanda sağ/sol okları: sonraki / önceki içerik (menü açıkken çalışmaz)
 let lastSkip = 0;
 document.addEventListener('keydown', e => {

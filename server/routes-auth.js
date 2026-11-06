@@ -17,9 +17,9 @@ r.post('/login', async (req, res) => {
   auth.clearFails(ip, username);
   store.q.userLogin.run(Date.now(), u.id);
   auth.setSession(req, res, u);
-  res.json({ ok: true, role: u.role, next: u.role === 'super' ? '/super' : '/panel' });
+  res.json({ ok: true, role: u.role, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : u.role === 'super' ? '/super' : '/panel' });
 });
-r.post('/logout', (req, res) => { auth.clearSession(res); res.json({ ok: true }); });
+r.post('/logout', (req, res) => { auth.clearSession(res, req); res.json({ ok: true }); });
 r.get('/config', (req, res) => res.json({ env: config.APP_ENV, brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, starters: require('./starters').list().map(({ key, name }) => ({ key, name })) }));
 r.post('/signup', (req, res) => {
   if (!config.ALLOW_SIGNUP) return res.status(403).json({ error: 'Yeni kayıt şu an kapalı' });
@@ -36,7 +36,7 @@ r.post('/signup', (req, res) => {
     auth.noteFail(ip); // kayıtlar da sayılır: tek IP'den seri hesap açılmasın
     const u = store.q.userByName.get(String(b.username).trim().toLowerCase());
     auth.setSession(req, res, u);
-    res.json({ ok: true, tenant: t.id, next: '/panel' });
+    res.json({ ok: true, tenant: t.id, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : '/panel' });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
