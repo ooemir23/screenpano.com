@@ -1015,17 +1015,7 @@ SECTIONS.settings = {
         <div class="geo" id="geo"></div><p class="muted mt">Şu anki konum: <b style="color:var(--text)">${esc(loc.city || '-')}</b>${loc.custom ? '' : ' (varsayılan)'}</p>
         <div class="row end mt"><button class="btn" data-save onclick="saveProfile()">Kaydet</button></div>`);
     } else if (sub === 'devices') {
-      const devs = S.scr.devices, lim = S.scr.limit;
-      h += card('Performans', 'Ekran takılıyorsa efektleri azaltın; video ağırlıklı takılmada Medya sekmesindeki kaliteyi 720p\'ye düşürün. TV kutusunda "Otomatik" zaten hafif modu seçer.',
-        `<div class="f">${fl('Efekt modu', `<select onchange="opt('fxMode',this.value)">${[['auto', 'Otomatik (TV kutusunda hafif)'], ['lite', 'Hafif (her yerde)'], ['full', 'Tam (her yerde)']].map(([v, l]) => `<option value="${v}" ${(S.db.fxMode || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`)
-      + `<div class="grid g2" style="margin-bottom:18px">`
-        + card('TV kutusunu bağla', 'Mekândaki Android kutu, HDMI dağıtıcıyla tüm TV\'lere aynı görüntüyü verir; tek kutu yeterli.',
-          `<ol style="padding-left:20px;line-height:1.9;color:var(--soft);font-size:14px"><li><a href="/app.apk?name=${encodeURIComponent(S.me.tenant.name)}">Android uygulamasını (APK) indirin</a> ve kutuya kurun. Kutu yerine televizyona bağlı bir <b>Windows bilgisayar</b> kullanacaksanız <a href="/app.exe">Windows uygulamasını indirin</a>; televizyon ikinci ekransa yayın oraya açılır.</li><li>Uygulamayı açın. Ekranda giriş formu ve 6 haneli bir kod çıkar.</li><li>Kutuda kullanıcı adı ve şifrenizle giriş yapın, <b>ya da</b> kodu aşağıya yazın (TV'deki QR'ı telefonla okutursanız kendiliğinden dolar).</li></ol>
-           <div class="row mt"><input type="text" id="pcode" class="code-in" inputmode="numeric" maxlength="7" placeholder="123 456" value="${window.__pair ? window.__pair.replace(/(\d{3})(\d{3})/, '$1 $2') : ''}"><button class="btn" onclick="pairTv()">Bağla</button></div>`)
-        + card(`Bağlı cihazlar <span class="muted">· ${devs.length}/${lim === 999 ? '∞' : lim}</span>`, 'Kutu değiştirirseniz eskisini buradan kaldırın.',
-          devs.length ? `<div class="list">${devs.map(d => `<div class="it"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b"><b>${esc(d.name || 'TV kutusu')}</b><span>${d.online ? 'Şu an bağlı' : 'Son görülme: ' + ago(d.last_seen)} · eklendi ${fmtDate(d.created)}</span></div><button class="btn xs g" title="Deneysel: ekranı sayfa yerine uygulamanın yerel bileşenleriyle çizer (Android 3.3+)" onclick="act('PUT','/devices/${d.id}',{native:${!d.native}},'${d.native ? 'Yerel ekran kapatıldı' : 'Yerel ekran açıldı (deneysel)'}')">${d.native ? 'Yerel ekran: açık' : 'Yerel ekran: kapalı'}</button><button class="btn xs g" data-nm="${esc(d.name || '')}" onclick="renDev('${d.id}', this.dataset.nm)">Adlandır</button><button class="btn xs g" onclick="logoutDev('${d.id}')">Çıkış yap</button><button class="btn xs d" onclick="delDev('${d.id}')">Kaldır</button></div>`).join('')}</div>
-            <div class="row mt"><button class="btn g s" onclick="act('POST','/devices/reload',undefined,'Yenileme komutu gönderildi',false)">↻ Ekranı yenile</button></div>` : '<div class="empty">Henüz bağlı cihaz yok</div>')
-        + `</div>` + `<div id="devstat"></div>`;
+      h += devicesPage();
       window.__pair = null;
     } else if (sub === 'users') {
       h += `<div class="grid g2">` + (owner() ? card('Kullanıcılar', 'Personel hesapları içerik ekleyebilir (medya, duyuru, doğum günü); yedek geri yükleme ve kullanıcı yönetimi yapamaz.', `<div id="ulist" class="list"><div class="muted">Yükleniyor…</div></div>
@@ -1057,7 +1047,7 @@ SECTIONS.settings = {
       const bs = await req('GET', '/backups').catch(() => []);
       $('blist').innerHTML = bs.length ? bs.map(b => `<div class="it"><div class="b"><b>${new Date(b.time).toLocaleString(I18N.locale, { dateStyle: 'medium', timeStyle: 'short' })}</b><span>${esc(b.name.replace(/^db-|\.json$/g, '').split('-').pop())} · ${fmtSize(b.size)}</span></div><a class="btn xs g" href="/api/admin/backups/${encodeURIComponent(b.name)}/download">İndir</a>${owner() ? `<button class="btn xs g" onclick="restore('${b.name}')">Geri yükle</button>` : ''}</div>`).join('') : '<div class="empty">Henüz yedek yok</div>';
     }
-    if (sub === 'devices') { drawDevStatus(); if ($('pcode').value) $('pcode').focus(); }
+    if (sub === 'devices') { drawDevStatus(); const pc = $('pcode'); if (pc && pc.value) pc.focus(); }
     if (sub === 'branches') drawBranches();
   },
 };
@@ -1298,31 +1288,86 @@ const musDiag = m => {
 };
 const upFmt = s => s < 3600 ? Math.round(s / 60) + ' dk' : s < 86400 ? Math.round(s / 3600) + ' saat' : Math.round(s / 86400) + ' gün';
 const omLbl = m => m >= 1440 ? '1 gün' : m >= 60 ? (m >= 720 ? '12 saat' : (m / 60) + ' saat') : m + ' dakika';
-async function drawDevStatus() {
-  const box = $('devstat'); if (!box) return;
-  let j; try { j = await req('GET', '/devices/status'); } catch (e) { return; }
+// ================= CİHAZLAR SEKMESİ =================
+// Tek yerde: durum özeti, her cihaz için bir kart (durum + işlemler + ayrıntı), cihaz ekleme adımları, uyarılar ve performans
+let DEVADD = false;     // cihaz ekleme bölümü açık mı (tür değişince kapanmasın)
+let DEVT = 'android';   // bağlanacak cihaz türü: android | windows
+let DEVST = null;       // /devices/status yanıtı (cihaz ayrıntıları için)
+const refreshDev = () => render(true);
+function devicesPage() {
+  const devs = S.scr.devices, lim = S.scr.limit, full = lim !== 999 && devs.length >= lim, on = devs.filter(d => d.online).length;
+  const top = `<div class="dv-top"><div><b>${devs.length ? `${on}/${devs.length} cihaz çevrimiçi` : 'Henüz cihaz yok'}</b><span>${lim === 999 ? 'Paketinizde cihaz sayısı sınırsız' : `Paketiniz ${lim} cihaza kadar izin verir`}</span></div>${devs.length ? `<button class="btn g s" onclick="act('POST','/devices/reload',undefined,'Yenileme komutu gönderildi',false)">${ic('refresh-cw')}Tüm ekranları yenile</button>` : ''}</div>`;
+  return top + `<div id="dvcards" class="dv-grid">${devCards()}</div>` + devAddHtml(!devs.length || !!window.__pair, full) + `<div id="dvmore">${devMoreHtml()}</div>`;
+}
+function devCards() {
+  const devs = S.scr.devices;
+  if (!devs.length) return `<div class="dv-empty">${ic('tv')}<b>Henüz bağlı cihaz yok</b><span>Aşağıdaki üç adımla ilk TV kutunuzu bağlayın.</span></div>`;
+  const st = new Map(((DEVST && DEVST.devices) || []).map(x => [x.id, x]));
+  return devs.map(d => devCard(d, (st.get(d.id) || {}).report || {})).join('');
+}
+function devCard(d, r) {
+  const on = !!d.online, old = !!(DEVST && DEVST.build && r.build && r.build !== DEVST.build);
+  const flags = [];
+  if (old) flags.push('Eski sürüm: birkaç dakika içinde kendini güncellemeli');
+  if (r.boot === 'izin-yok') flags.push('Kutu açılınca ekran gelmez: kutuda Ayarlar › Uygulamalar › ScreenPano › “Diğer uygulamaların üzerinde göster” iznini açın');
+  if (r.jank && r.jank.drops > 5) flags.push(`Ekranda takılma var (~${r.jank.fps} fps)`);
+  if (r.lastError) flags.push('Son hata: ' + r.lastError);
+  const rows = [['Model', r.model], ['Adres', r.ip], ['Uygulama', r.app], ['Yayın sürümü', r.build ? r.build.slice(0, 8) + (old ? ' ⚠' : '') : ''], ['Ekran', r.screen], ['Açık kalma', r.uptime ? upFmt(r.uptime) : ''], ['Müzik', r.mus ? musDiag(r.mus) : ''], ['Akıcılık', r.jank ? `~${r.jank.fps} fps` : ''], ['Çevrimdışı önbellek', r.cached ? `${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}` : ''], ['Eklendi', fmtDate(d.created)]].filter(x => x[1]);
+  return `<article class="dv ${on ? 'on' : 'off'}">
+    <header><span class="dot ${on ? 'on' : ''}"></span><div class="t"><h3>${esc(d.name || 'TV kutusu')}</h3><p>${on ? 'Çevrimiçi' : 'Çevrimdışı · son görülme ' + ago(d.last_seen)}</p></div>
+      <details class="dv-menu"><summary title="Diğer işlemler" aria-label="Diğer işlemler">${ic('ellipsis')}</summary><div class="pop">
+        <button type="button" data-nm="${esc(d.name || '')}" onclick="renDev('${d.id}', this.dataset.nm)">${ic('pencil')}Adlandır</button>
+        <button type="button" onclick="logoutDev('${d.id}')">${ic('log-out')}Uygulamadan çıkış yaptır</button>
+        <button type="button" class="d" onclick="delDev('${d.id}')">${ic('trash-2')}Cihazı kaldır</button></div></details></header>
+    ${r.playing ? `<div class="dv-now">${ic('play-f')}<span>Şu an: ${esc(r.playing)}</span></div>` : ''}
+    ${flags.map(f => `<div class="dv-flag">${ic('triangle-alert')}<span>${esc(f)}</span></div>`).join('')}
+    <div class="dv-act">${on ? `<button class="btn s" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button>` : `<span class="muted">Cihaz kapalı ya da internete bağlı değil: elektriğini ve internetini kontrol edin.</span>`}</div>
+    <div id="snap-${d.id}"></div>
+    <details class="dv-more"><summary>Ayrıntılar</summary>
+      ${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>` : ''}
+      <div class="swr"><div class="b"><b>Yerel ekran (deneysel)</b><span>Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+)</span></div>${sw(!!d.native, `act('PUT','/devices/${d.id}',{native:this.checked},'Kaydedildi')`)}</div>
+    </details></article>`;
+}
+function devAddHtml(open, full) {
+  const win = DEVT === 'windows', nm = encodeURIComponent(S.me.tenant.name);
+  const pair = window.__pair ? window.__pair.replace(/(\d{3})(\d{3})/, '$1 $2') : '';
+  return `<details class="dv-add" ${open || DEVADD ? 'open' : ''} ontoggle="DEVADD=this.open"><summary>${ic('plus')}<b>Cihaz ekle</b><span>Android TV kutusu ya da Windows bilgisayar</span></summary>
+    ${full ? `<div class="dv-flag">${ic('triangle-alert')}<span>Paket sınırına ulaştınız. Yeni cihaz için önce eskisini kaldırın.</span></div>` : ''}
+    <div class="dv-types"><button type="button" class="${win ? '' : 'on'}" onclick="DEVT='android';refreshDev()">${ic('tv')}Android TV kutusu</button><button type="button" class="${win ? 'on' : ''}" onclick="DEVT='windows';refreshDev()">${ic('monitor')}Windows bilgisayar</button></div>
+    <ol class="dv-steps">
+      <li><span class="n">1</span><b>Uygulamayı indirin</b><p>${win ? 'Televizyona bağlı bilgisayara kurun; televizyon ikinci ekransa yayın oraya açılır.' : 'Kutuya kurun. Tek kutu, HDMI dağıtıcıyla tüm TV’lere aynı görüntüyü verir.'}</p><a class="btn s" href="${win ? '/app.exe' : '/app.apk?name=' + nm}">${ic('download')}${win ? 'Windows uygulaması' : 'Android uygulaması (APK)'}</a></li>
+      <li><span class="n">2</span><b>Uygulamayı açın</b><p>Ekranda giriş formu ve 6 haneli bir kod çıkar.</p></li>
+      <li><span class="n">3</span><b>Kodu yazın</b><p>TV’deki QR’ı telefonla okutursanız kod kendiliğinden dolar. İsterseniz kutuda kullanıcı adı ve şifrenizle de giriş yapabilirsiniz.</p>
+        <div class="row"><input type="text" id="pcode" class="code-in" inputmode="numeric" maxlength="7" placeholder="123 456" value="${pair}" ${full ? 'disabled' : ''}><button class="btn" onclick="pairTv()" ${full ? 'disabled' : ''}>Bağla</button></div></li>
+    </ol></details>`;
+}
+function devMoreHtml() {
+  const perf = card('Performans', 'Ekran takılıyorsa efektleri azaltın; video ağırlıklı takılmada Medya sekmesindeki kaliteyi 720p\'ye düşürün. TV kutusunda "Otomatik" zaten hafif modu seçer.',
+    `<div class="f">${fl('Efekt modu', `<select onchange="opt('fxMode',this.value)">${[['auto', 'Otomatik (TV kutusunda hafif)'], ['lite', 'Hafif (her yerde)'], ['full', 'Tam (her yerde)']].map(([v, l]) => `<option value="${v}" ${(S.db.fxMode || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`);
+  const j = DEVST;
+  return `<div class="grid g2" style="margin-top:18px">${j ? notifyCard(j) : card('Uyarılar', '', '<div class="muted">Yükleniyor…</div>')}${perf}</div>`;
+}
+function notifyCard(j) {
   const n = j.notify || {}, om = n.offlineMin || j.offlineMin;
-  box.innerHTML = `<div class="grid g2">`
-    + card('Cihaz durumu', `Kutular dakikada bir durum bildirir. Ekran görüntüsü yalnız Android uygulamasında alınır. Yayındaki yazılım: <b>${(j.build || '').slice(0, 8) || '-'}</b> — kutu satırındaki "yayın" değeri bundan farklıysa kutu eski sürümde kalır, kendini birkaç dakikada güncellemesi gerekir.`, j.devices.length ? `<div class="list">${j.devices.map(d => { const r = d.report || {}; const id = [r.model, r.hwid ? 'ID ' + r.hwid.slice(0, 24) : '', r.ip ? 'IP ' + r.ip : ''].filter(Boolean); return `<div class="it" style="flex-wrap:wrap"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b" style="min-width:200px"><b>${esc(d.name || 'TV kutusu')}</b>
-        <span>${d.online ? 'Bağlı' : 'Çevrimdışı · son görülme ' + ago(d.last_seen)}${r.app ? ' · uygulama ' + esc(r.app) : ''}${r.build ? ' · yayın ' + esc(r.build.slice(0, 8)) + (j.build && r.build !== j.build ? ' ⚠ eski' : '') : ''}${r.screen ? ' · ' + esc(r.screen) : ''}${r.uptime ? ' · ' + upFmt(r.uptime) + 'dir açık' : ''}</span>
-        ${id.length ? `<span class="muted" style="font-size:12px">${id.map(esc).join(' · ')}</span>` : ''}
-        ${r.mus ? `<span>Müzik: ${musDiag(r.mus)}</span>` : ''}
-        ${r.jank ? `<span>Akıcılık: ~${r.jank.fps} fps · uzun kare ${r.jank.drops}/dk${r.jank.drops > 5 ? ' · <b style="color:#e6a23c">⚠ takılma var</b>' : ''}</span>` : ''}
-        ${r.boot === 'izin-yok' ? `<span style="color:var(--warn,#e6a23c)">⚠ Kutu açılınca ekran kendiliğinden gelmez: kutuda Ayarlar → Uygulamalar → ScreenPano → "Diğer uygulamaların üzerinde göster" iznini açın</span>` : ''}
-        ${r.playing ? `<span>Şu an: ${esc(r.playing)}</span>` : ''}${r.cached ? `<span>Çevrimdışı önbellek: ${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}</span>` : ''}${r.lastError ? `<span style="color:var(--warn,#e6a23c)">Son hata: ${esc(r.lastError)}</span>` : ''}</div>
-        ${d.online ? `<button class="btn xs g" onclick="snapDev('${d.id}')">📷 Ekran görüntüsü</button>` : ''}</div>`; }).join('')}</div><div id="snapbox"></div>` : '<div class="empty">Bağlı cihaz yok</div>')
-    + card('Uyarılar', `Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,
+  return card('Uyarılar', `Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,
       `${owner() ? `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" data-save onclick="saveNotify()">Kaydet</button>${n.email && j.mail ? '<button class="btn g" onclick="act(\'POST\',\'/notify/test\',undefined,\'Deneme e-postası gönderildi\',false)">Dene</button>' : ''}</div>
        <div class="row mt" style="align-items:center"><span style="flex:1">Kutunun uyarılmadan bağlantısız kalabileceği süre:</span><select id="nt-offmin" style="width:130px">${[5, 10, 15, 30, 60, 120, 360, 720, 1440].map(m => `<option value="${m}"${m === om ? ' selected' : ''}>${omLbl(m)}</option>`).join('')}</select></div>
        <div class="swr mt"><div class="b"><b>Ekran kapanınca</b></div>${sw(n.offline !== false, '', 'id="nt-off"')}</div><div class="swr"><div class="b"><b>Ekran geri açılınca</b></div>${sw(n.online !== false, '', 'id="nt-on"')}</div>
        <div class="swr"><div class="b"><b>Haftalık özet</b><span>Her pazartesi sabah: ekran süresi, kampanya okutmaları, reklam gösterimleri</span></div>${sw(!!n.weekly, '', 'id="nt-wk"')}</div>${n.email && j.mail ? `<div class="row end"><button class="btn xs g" onclick="act('POST','/notify/weekly-test',undefined,'Haftalık özet örneği gönderildi',false)">Özet örneğini şimdi gönder</button></div>` : ''}
        ${j.mail ? '' : '<p class="muted" style="font-size:12.5px">Sunucuda e-posta gönderimi henüz ayarlı değil; uyarılar şimdilik yalnız burada görünür.</p>'}` : ''}
-       <div class="list mt">${(j.alerts || []).length ? j.alerts.slice(0, 12).map(a => `<div class="it"><span class="dot ${a.kind === 'online' ? 'on' : ''}"></span><div class="b"><b>${esc(a.text)}</b><span>${new Date(a.at).toLocaleString(I18N.locale, { dateStyle: 'short', timeStyle: 'short' })}</span></div></div>`).join('') + `<div class="row end"><button class="btn xs g" onclick="act('DELETE','/alerts',undefined,'Temizlendi',false).then(drawDevStatus)">Temizle</button></div>` : '<div class="muted">Uyarı yok.</div>'}</div>`)
-    + `</div>`;
+       <div class="list mt">${(j.alerts || []).length ? j.alerts.slice(0, 12).map(a => `<div class="it"><span class="dot ${a.kind === 'online' ? 'on' : ''}"></span><div class="b"><b>${esc(a.text)}</b><span>${new Date(a.at).toLocaleString(I18N.locale, { dateStyle: 'short', timeStyle: 'short' })}</span></div></div>`).join('') + `<div class="row end"><button class="btn xs g" onclick="act('DELETE','/alerts',undefined,'Temizlendi',false).then(drawDevStatus)">Temizle</button></div>` : '<div class="muted">Uyarı yok.</div>'}</div>`);
+}
+// açık cihaz menüsü dışarı tıklanınca kapanır
+document.addEventListener('click', e => { document.querySelectorAll('.dv-menu[open]').forEach(d => { if (!d.contains(e.target)) d.removeAttribute('open'); }); });
+async function drawDevStatus() {
+  let j; try { j = await req('GET', '/devices/status'); } catch (e) { return; }
+  DEVST = j;
+  const c = $('dvcards'); if (c) c.innerHTML = devCards();
+  const m = $('dvmore'); if (m) m.innerHTML = devMoreHtml();
 }
 const saveNotify = () => act('PUT', '/notify', { email: $('nt-mail').value.trim(), offline: $('nt-off').checked, online: $('nt-on').checked, offlineMin: $('nt-offmin') ? +$('nt-offmin').value : undefined, weekly: $('nt-wk') ? $('nt-wk').checked : undefined }, 'Uyarı ayarları kaydedildi', false);
 async function snapDev(id) {
-  const box = $('snapbox'); box.innerHTML = '<p class="muted">Ekran görüntüsü isteniyor…</p>';
+  const box = $('snap-' + id); if (!box) return; box.innerHTML = '<p class="muted">Ekran görüntüsü isteniyor…</p>';
   try { await req('POST', `/devices/${id}/snapshot`); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
   const t0 = Date.now();
   const poll = async () => {

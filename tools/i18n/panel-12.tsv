@@ -81,3 +81,48 @@ YouTube pasif: önce hesabı bağlayın ¦ YouTube is inactive: connect the acco
 Müzik kaynağı ¦ Music source ¦ Musikquelle ¦ مصدر الموسيقى
 Önce Spotify hesabınızı bağlayın ¦ First connect your Spotify account ¦ Verbinden Sie zuerst Ihr Spotify-Konto ¦ اربط حساب Spotify الخاص بك أولًا
 “ScreenPano oynatıcısı” çoğu TV kutusunda çalışmaz. Kutuya Spotify uygulamasını kurup yukarıdaki listeden onu seçin. ¦ The “ScreenPano player” does not work on most TV boxes. Install the Spotify app on the box and pick it from the list above. ¦ Der „ScreenPano-Player“ funktioniert auf den meisten TV-Boxen nicht. Installieren Sie die Spotify-App auf der Box und wählen Sie sie oben aus. ¦ “مشغّل ScreenPano” لا يعمل على معظم أجهزة التلفزيون. ثبّت تطبيق Spotify على الجهاز واخترْه من القائمة أعلاه.
+{}/{} cihaz çevrimiçi ¦ {}/{} devices online ¦ {}/{} Geräte online ¦ {}/{} أجهزة متصلة
+Henüz cihaz yok ¦ No devices yet ¦ Noch keine Geräte ¦ لا توجد أجهزة بعد
+Paketinizde cihaz sayısı sınırsız ¦ Your plan has no device limit ¦ Ihr Paket hat keine Gerätegrenze ¦ باقتك بلا حد لعدد الأجهزة
+Paketiniz {} cihaza kadar izin verir ¦ Your plan allows up to {} devices ¦ Ihr Paket erlaubt bis zu {} Geräte ¦ تسمح باقتك بما يصل إلى {} جهازًا
+Tüm ekranları yenile ¦ Refresh all screens ¦ Alle Bildschirme aktualisieren ¦ تحديث كل الشاشات
+Henüz bağlı cihaz yok ¦ No connected devices yet ¦ Noch keine Geräte verbunden ¦ لا توجد أجهزة متصلة بعد
+Aşağıdaki üç adımla ilk TV kutunuzu bağlayın. ¦ Connect your first TV box with the three steps below. ¦ Verbinden Sie Ihre erste TV-Box mit den drei Schritten unten. ¦ اربط أول جهاز تلفزيون لديك بالخطوات الثلاث أدناه.
+Eski sürüm: birkaç dakika içinde kendini güncellemeli ¦ Old version: it should update itself within a few minutes ¦ Alte Version: sie sollte sich in wenigen Minuten selbst aktualisieren ¦ إصدار قديم: يجب أن يحدّث نفسه خلال دقائق
+Kutu açılınca ekran gelmez: kutuda Ayarlar › Uygulamalar › ScreenPano › “Diğer uygulamaların üzerinde göster” iznini açın ¦ The screen will not appear when the box starts: on the box, open Settings › Apps › ScreenPano › enable “Display over other apps” ¦ Der Bildschirm erscheint beim Start der Box nicht: Öffnen Sie auf der Box Einstellungen › Apps › ScreenPano › „Über anderen Apps anzeigen“ ¦ لن تظهر الشاشة عند تشغيل الجهاز: على الجهاز افتح الإعدادات › التطبيقات › ScreenPano › فعّل “العرض فوق التطبيقات الأخرى”
+Ekranda takılma var (~{} fps) ¦ The screen is stuttering (~{} fps) ¦ Der Bildschirm ruckelt (~{} fps) ¦ هناك تقطّع في الشاشة (~{} إطارًا/ث)
+Son hata: {} ¦ Last error: {} ¦ Letzter Fehler: {} ¦ آخر خطأ: {}
+Model ¦ Model ¦ Modell ¦ الطراز
+Adres ¦ Address ¦ Adresse ¦ العنوان
+Uygulama ¦ App ¦ App ¦ التطبيق
+Yayın sürümü ¦ Release version ¦ Release-Version ¦ إصدار النشر
+Ekran ¦ Screen ¦ Bildschirm ¦ الشاشة
+Açık kalma ¦ Uptime ¦ Betriebszeit ¦ مدة التشغيل
+Müzik ¦ Music ¦ Musik ¦ الموسيقى
+Akıcılık ¦ Smoothness ¦ Flüssigkeit ¦ السلاسة
+Çevrimdışı önbellek ¦ Offline cache ¦ Offline-Cache ¦ التخزين المؤقت دون اتصال
+Eklendi ¦ Added ¦ Hinzugefügt ¦ تمت الإضافة
+Çevrimiçi ¦ Online ¦ Online ¦ متصل
+Çevrimdışı · son görülme {} ¦ Offline · last seen {} ¦ Offline · zuletzt gesehen {} ¦ غير متصل · آخر ظهور {}
+Uygulamadan çıkış yaptır ¦ Sign out of the app ¦ Aus der App abmelden ¦ تسجيل الخروج من التطبيق
+Cihazı kaldır ¦ Remove device ¦ Gerät entfernen ¦ إزالة الجهاز
+Şu an: {} ¦ Now: {} ¦ Jetzt: {} ¦ الآن: {}
+Ekran görüntüsü ¦ Screenshot ¦ Screenshot ¦ لقطة شاشة
+Cihaz kapalı ya da internete bağlı değil: elektriğini ve internetini kontrol edin. ¦ The device is off or not online: check its power and internet. ¦ Das Gerät ist aus oder nicht online: Prüfen Sie Strom und Internet. ¦ الجهاز مطفأ أو غير متصل بالإنترنت: تحقق من الكهرباء والإنترنت.
+Ayrıntılar ¦ Details ¦ Details ¦ التفاصيل
+Yerel ekran (deneysel) ¦ Native screen (experimental) ¦ Native Ansicht (experimentell) ¦ الشاشة الأصلية (تجريبي)
+Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+) ¦ Draws the screen with the app's own components instead of the web page (Android 3.3+) ¦ Zeichnet den Bildschirm mit den App-eigenen Komponenten statt der Webseite (Android 3.3+) ¦ يرسم الشاشة بمكونات التطبيق نفسه بدل صفحة الويب (Android 3.3+)
+Cihaz ekle ¦ Add device ¦ Gerät hinzufügen ¦ إضافة جهاز
+Android TV kutusu ya da Windows bilgisayar ¦ Android TV box or Windows computer ¦ Android-TV-Box oder Windows-Computer ¦ جهاز Android TV أو حاسوب Windows
+Paket sınırına ulaştınız. Yeni cihaz için önce eskisini kaldırın. ¦ You have reached the plan limit. Remove an old device first to add a new one. ¦ Sie haben die Paketgrenze erreicht. Entfernen Sie zuerst ein altes Gerät. ¦ وصلت إلى حد الباقة. أزل جهازًا قديمًا أولًا لإضافة جديد.
+Android TV kutusu ¦ Android TV box ¦ Android-TV-Box ¦ جهاز Android TV
+Windows bilgisayar ¦ Windows computer ¦ Windows-Computer ¦ حاسوب Windows
+Uygulamayı indirin ¦ Download the app ¦ App herunterladen ¦ نزّل التطبيق
+Televizyona bağlı bilgisayara kurun; televizyon ikinci ekransa yayın oraya açılır. ¦ Install it on the computer connected to the TV; if the TV is a second screen, the broadcast opens there. ¦ Installieren Sie sie auf dem an den Fernseher angeschlossenen Computer; ist der Fernseher ein zweiter Bildschirm, öffnet sich die Ausgabe dort. ¦ ثبّته على الحاسوب المتصل بالتلفزيون؛ إذا كان التلفزيون شاشة ثانية يُفتح البث عليه.
+Kutuya kurun. Tek kutu, HDMI dağıtıcıyla tüm TV’lere aynı görüntüyü verir. ¦ Install it on the box. One box gives the same picture to all TVs through an HDMI splitter. ¦ Installieren Sie sie auf der Box. Eine Box liefert über einen HDMI-Verteiler allen Fernsehern dasselbe Bild. ¦ ثبّته على الجهاز. جهاز واحد يعرض الصورة نفسها على كل التلفزيونات عبر موزّع HDMI.
+Windows uygulaması ¦ Windows app ¦ Windows-App ¦ تطبيق Windows
+Android uygulaması (APK) ¦ Android app (APK) ¦ Android-App (APK) ¦ تطبيق Android (APK)
+Uygulamayı açın ¦ Open the app ¦ App öffnen ¦ افتح التطبيق
+Ekranda giriş formu ve 6 haneli bir kod çıkar. ¦ A sign-in form and a 6-digit code appear on screen. ¦ Auf dem Bildschirm erscheinen ein Anmeldeformular und ein 6-stelliger Code. ¦ يظهر على الشاشة نموذج دخول ورمز من 6 أرقام.
+Kodu yazın ¦ Enter the code ¦ Code eingeben ¦ اكتب الرمز
+TV’deki QR’ı telefonla okutursanız kod kendiliğinden dolar. İsterseniz kutuda kullanıcı adı ve şifrenizle de giriş yapabilirsiniz. ¦ If you scan the QR on the TV with your phone, the code fills in by itself. You can also sign in on the box with your username and password. ¦ Scannen Sie den QR-Code auf dem Fernseher mit dem Handy, wird der Code automatisch ausgefüllt. Sie können sich auf der Box auch mit Benutzername und Passwort anmelden. ¦ إذا مسحت رمز QR على التلفزيون بهاتفك يُملأ الرمز تلقائيًا. ويمكنك أيضًا تسجيل الدخول على الجهاز باسم المستخدم وكلمة المرور.
