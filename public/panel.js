@@ -221,6 +221,14 @@ SECTIONS.home = {
 
 /* ================= TASARIM ================= */
 const EDIT = { layout: null, sel: -1, hist: [], dirty: false };
+// Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al + Kaydet görünür
+const layoutBar = () => `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button></div>`;
+const lbarSync = () => document.querySelectorAll('.lbar').forEach(b => b.classList.toggle('clean', !EDIT.dirty));
+function gotoPv() {
+  const c = document.querySelector('.pvcard'); if (!c) return;
+  if (EDIT.dirty) toast('Önizleme kaydedilmiş hâli gösterir; değişikliklerinizi görmek için önce "Düzeni kaydet"e basın');
+  c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+}
 SECTIONS.design = {
   html() {
     const sub = SUB.design || 'layout';
@@ -232,11 +240,11 @@ SECTIONS.design = {
       const T = S.cat.templates;
       const fresh = !S.me.tenant.logo && !S.db.videos.length;
       h += `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
-        + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin.', `<div class="tpls">${Object.entries(T).map(([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`)
+        + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin.', `<div class="tpls">${Object.entries(T).map(([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`, layoutBar())
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır.',
           `<div class="editor"><div id="cw"><div id="cv"></div></div><div id="props"></div></div>
-           <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`)
-        + card('Kaydedilmiş hâli', 'TV\'de şu an görünen. Kaydetmediğiniz değişiklikler burada görünmez.', pvFrame());
+           <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`, layoutBar())
+        + card('Kaydedilmiş hâli', 'TV\'de şu an görünen. Kaydetmediğiniz değişiklikler burada görünmez.', pvFrame(), '', 'pvcard');
     } else if (sub === 'colors') {
       const th = S.me.tenant.theme, logo = S.me.tenant.logo;
       h += (logo ? card('✨ Logonuzdan önerilen renkler', 'Logonuzdaki renklerden TV\'de okunaklı kalacak şekilde üretildi. Tıklayınca hemen uygulanır.', '<div class="swatches" id="lsug"><span class="muted">Logo inceleniyor…</span></div>') : '')
@@ -275,7 +283,7 @@ const floats = (a, b) => (a.type === 'qr') !== (b.type === 'qr'); // QR kartı d
 const badSet = () => { const ws = EDIT.layout.widgets, bad = new Set(); ws.forEach((a, i) => ws.forEach((b, j) => { if (i < j && overlap(a, b) && !floats(a, b)) { bad.add(i); bad.add(j); } })); return bad; };
 function drawCanvas() {
   const c = $('cv'); if (!c) return;
-  const bad = badSet();
+  const bad = badSet(); lbarSync();
   c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%">${ICON[w.type] || ''}${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small>${['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].map(h => `<i class="rz rz-${h}" data-h="${h}"></i>`).join('')}</div>`; }).join('');
 }
 function drawPal() {
@@ -318,8 +326,8 @@ function drawProps() {
   if (LL.length && (w.type === 'text' || w.type === 'menu')) f += `<div class="mt"><b style="font-size:13px">Çeviriler</b>${LL.map(l => fl(LANG_NAMES[l] + ' başlık', `<input type="text" maxlength="200" value="${esc(((p.i18n || {})[l] || {}).title || '')}" onchange="setPI('${l}','title',this.value)">`) + (w.type === 'text' ? fl(LANG_NAMES[l] + ' metin', `<textarea maxlength="400" onchange="setPI('${l}','body',this.value)">${esc(((p.i18n || {})[l] || {}).body || '')}</textarea>`) : '')).join('')}</div>`;
   box.innerHTML = `<h4>${ICON[w.type] || ''} ${esc(d.name)}</h4><p class="muted">${esc(d.desc || '')}${HINT[w.type] ? '<br><br>' + HINT[w.type] : ''}</p>${f}<div class="row mt"><button class="btn d s" onclick="rmW(${EDIT.sel})">Kaldır</button></div>`;
 }
-function snap() { EDIT.hist.push(clone(EDIT.layout)); if (EDIT.hist.length > 40) EDIT.hist.shift(); EDIT.dirty = true; }
-function undoL() { if (!EDIT.hist.length) return toast('Geri alınacak değişiklik yok'); EDIT.layout = EDIT.hist.pop(); EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
+function snap() { EDIT.hist.push(clone(EDIT.layout)); if (EDIT.hist.length > 40) EDIT.hist.shift(); EDIT.dirty = true; lbarSync(); }
+function undoL() { if (!EDIT.hist.length) return toast('Geri alınacak değişiklik yok'); EDIT.layout = EDIT.hist.pop(); if (!EDIT.hist.length) EDIT.dirty = false; EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
 function setPI(l, k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); const i = clone((w.props || {}).i18n || {}); i[l] = { ...(i[l] || {}), [k]: v }; w.props = { ...(w.props || {}), i18n: i }; }
 function rQrPick(id) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; const sel = new Set(String((w.props || {}).qrs || '').split(',').filter(Boolean)); sel.has(id) ? sel.delete(id) : sel.add(id); setP('qrs', [...sel].join(',')); drawProps(); }
 function setP(k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); w.props = { ...(w.props || {}), [k]: v }; }
@@ -355,7 +363,7 @@ async function applyTpl(k) {
 async function saveL() {
   if (badSet().size) return toast('Bazı kutular üst üste biniyor (kırmızı). Önce düzeltin.', true);
   const ok = await act('PUT', '/screen', { layout: EDIT.layout }, 'Düzen kaydedildi, TV güncellendi', false);
-  if (ok) { EDIT.dirty = false; S.scr = await req('GET', '/screen'); render(true); }
+  if (ok) { EDIT.dirty = false; lbarSync(); S.scr = await req('GET', '/screen'); render(true); }
 }
 function dragSetup() {
   const wrap = $('cw'); let st = null;

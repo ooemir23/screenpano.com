@@ -237,6 +237,8 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 .wb.fl{z-index:2;background:rgba(var(--a2),.38);backdrop-filter:blur(2px)}
 .wb.sel{border-color:#fff;box-shadow:0 0 0 2px var(--accent2);z-index:3}
 .wb.bad{border-color:var(--bad);background:rgba(239,91,79,.22)}
+.lbar{gap:8px;flex-wrap:wrap;justify-content:flex-end}.lbar.clean .dyn{display:none}
+.pvcard.flash{animation:pvflash 1.6s ease-out}@keyframes pvflash{0%,40%{box-shadow:0 0 0 3px var(--accent2)}100%{box-shadow:0 0 0 0 transparent}}
 .wb .rz{position:absolute;z-index:2;opacity:0;transition:opacity .12s}
 .wb:hover .rz,.wb.sel .rz{opacity:1}
 .wb .rz-n,.wb .rz-s{left:12px;right:12px;height:8px;cursor:ns-resize}.wb .rz-n{top:0}.wb .rz-s{bottom:0}
