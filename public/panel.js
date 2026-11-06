@@ -1499,8 +1499,8 @@ const musicActive = () => { const m = musicData(); return m.playlists.find(x => 
 // ---- Kaynak seçimi: işletme Müzik'e girince YouTube Music ya da Spotify'ı seçer; tüm sayfa seçilene döner ----
 let MSRCV = null;
 const isSp = x => x.provider === 'spotify';
-// kaynak kullanılabilir: hesabı bağlı ya da kitaplığında o kaynaktan liste var; değilse bağlanana kadar pasif
-const srcAvail = k => { const acc = k === 'spotify' ? SPACC.st : YTACC.st; return !!(acc && acc.connected) || musicData().playlists.some(x => isSp(x) === (k === 'spotify')); };
+// kaynak kullanılabilir: Spotify için hesap bağlı olmalı (hesapsız çalamaz); YouTube için hesap bağlı ya da kitaplıkta herkese açık liste var. Değilse bağlanana kadar pasif
+const srcAvail = k => { if (k === 'spotify') return !!(SPACC.st && SPACC.st.connected); return !!(YTACC.st && YTACC.st.connected) || musicData().playlists.some(x => !isSp(x)); };
 function srcView() {
   let v = MSRCV;
   if (!v) { try { v = localStorage.getItem('mus.src'); } catch (e) { /* kayıt yoksa varsayılan */ } }
@@ -1617,7 +1617,7 @@ function spHomeHtml() {
     return `<div class="sp-tile ${on ? 'on' : ''}"><button type="button" class="o" onclick="openList('lib','${it.id}')">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<i>${ic('headphones')}</i>`}<b>${esc(it.title)}</b></button><button type="button" class="p" title="TV'de çal" onclick="${pl ? "musicCmd('pause')" : `musicSelect('${it.id}')`}">${ic(pl ? 'pause-f' : 'play-f')}</button></div>`; };
   const acct = SPACC.st && SPACC.st.connected ? (SPACC.items || []).slice(0, 12).map(p => mcard({ thumb: p.thumb, ic: 'headphones', title: p.title, sub: `Çalma listesi • ${p.count} şarkı`, open: `openList('sp','${esc(p.id)}')`, play: `spAdd('${esc(p.id)}',true)` })) : [];
   const empty = !libSp.length && !acct.length ? `<div class="ytm-empty">${ic('headphones')}<b>Spotify listen boş</b><span>Hesabını bağla; listelerin burada görünür.</span><div class="row"><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesap bağla</button></div></div>` : '';
-  return `<div class="sp-hi"><h1>${hi}</h1></div>` + (libSp.length ? `<div class="sp-tiles">${libSp.slice(0, 8).map(tile).join('')}</div>` : '') + empty
+  return `<div class="sp-hi"><h1>${hi}</h1></div>` + spWarn() + (libSp.length ? `<div class="sp-tiles">${libSp.slice(0, 8).map(tile).join('')}</div>` : '') + empty
     + shelf('Kitaplığın', libSp.map(libCard), '', '')
     + shelf('Spotify listelerin', acct, moreBtn('accounts', 'Hesap'), SPACC.st && SPACC.st.name ? esc(SPACC.st.name) : '');
 }
@@ -1771,7 +1771,7 @@ function searchHtml() {
   let out = `<div class="ytm-sh"><div><small>Arama sonuçları</small><h2>“${esc(MSEARCH.q || SPS.q)}”</h2></div></div>` + src;
   if (MSRC === 'sp') {
     if (!spOn) return out + `<div class="ytm-empty">${ic('headphones')}<b>Spotify hesabı bağlı değil</b><span>Spotify'da arama yapmak için önce hesabınızı bağlayın.</span><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesaplar</button></div>`;
-    const r = SPS;
+    const r = SPS; out += spWarn();
     if (r.busy) return out + '<div class="ytm-empty sm">Aranıyor…</div>';
     if (r.err) return out + `<div class="ytm-empty sm">${esc(r.err)}</div>`;
     if (!r.r) return out;
@@ -1800,7 +1800,8 @@ async function musicSearch() {
   if (q.length < 2) { toast('En az 2 harf yazın', true); return; }
   MV = null;
   MSRC = SPMODE() ? 'sp' : 'yt';
-  if (MSRC === 'sp' && SPACC.st && SPACC.st.connected) {
+  if (MSRC === 'sp' && !(SPACC.st && SPACC.st.connected)) { toast('Önce Spotify hesabınızı bağlayın', true); return goM('accounts'); }
+  if (MSRC === 'sp') {
     SPS = { q, r: null, busy: true, err: '' }; MSEARCH.q = q;
     if ((SUB.music || '') !== 'search') go('music/search'); else render(true);
     try { SPS = { q, r: await req('GET', '/music/spotify/search?q=' + encodeURIComponent(q)), busy: false, err: '' }; }
