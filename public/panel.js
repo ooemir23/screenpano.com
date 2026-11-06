@@ -1321,9 +1321,9 @@ function devRes(r, on) {
   const info = [x.gpu ? 'Ekran kartı: ' + x.gpu : '', x.cores ? x.cores + ' çekirdek' : ''].filter(Boolean).join(' · ');
   return `<div class="dv-res"><h4>Kaynak kullanımı</h4>${m.join('')}${info ? `<small>${esc(info)}</small>` : ''}</div>`;
 }
-function devCard(d, r) {
-  const on = !!d.online, old = !!(DEVST && DEVST.build && r.build && r.build !== DEVST.build);
-  const flags = [];
+// Bir cihazın uyarıları ve bilgi satırları (kart ve yan pencere aynı veriyi kullanır)
+function devInfo(d, r) {
+  const old = !!(DEVST && DEVST.build && r.build && r.build !== DEVST.build), flags = [];
   if (old) flags.push('Eski sürüm: birkaç dakika içinde kendini güncellemeli');
   if (r.boot === 'izin-yok') flags.push('Kutu açılınca ekran gelmez: kutuda Ayarlar › Uygulamalar › ScreenPano › “Diğer uygulamaların üzerinde göster” iznini açın');
   // birkaç kısa aksama (video/fotoğraf geçişi gibi) normaldir; ancak hız düşükse ya da dakikada çok aksama varsa uyar (takılma testinin ölçütüyle uyumlu)
@@ -1331,8 +1331,19 @@ function devCard(d, r) {
   if (r.weak && r.fx >= 2) flags.push('Düşük bellekli cihaz: “çok hafif” mod otomatik açıldı. Videoları Medya sekmesinde 720p ya da 480p yapmanız önerilir');
   else if (r.fxAuto && r.fx >= 2) flags.push('Cihaz takıldığı için “çok hafif” moda otomatik geçti. Efekt modunu Ayarlar › Cihazlar altında değiştirebilirsiniz');
   if (r.res && r.res.low) flags.push('Cihazın belleği doldu: uygulama yavaşlayabilir, kutuyu yeniden başlatın');
+  if (r.mus && r.mus.on && r.mus.err) flags.push('Müzik: ' + r.mus.err);
   if (r.lastError) flags.push('Son hata: ' + r.lastError);
-  const rows = [['Model', r.model], ['Adres', r.ip], ['Uygulama', r.app], ['Yayın sürümü', r.build ? r.build.slice(0, 8) + (old ? ' ⚠' : '') : ''], ['Ekran', r.screen], ['Açık kalma', r.uptime ? upFmt(r.uptime) : ''], ['Müzik', r.mus ? musDiag(r.mus) : ''], ['Akıcılık', r.jank ? `~${r.jank.fps} fps` : ''], ['Görüntü modu', r.fx === 2 ? 'Çok hafif' : r.fx === 1 ? 'Hafif' : r.fx === 0 && r.app ? 'Tam' : ''], ['Çevrimdışı önbellek', r.cached ? `${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}` : ''], ['Eklendi', fmtDate(d.created)]].filter(x => x[1]);
+  const rows = [['Model', r.model], ['Adres', r.ip], ['Uygulama', r.app], ['Yayın sürümü', r.build ? r.build.slice(0, 8) + (old ? ' ⚠' : '') : ''], ['Ekran', r.screen], ['Açık kalma', r.uptime ? upFmt(r.uptime) : ''], ['Müzik', r.mus ? musDiag(r.mus) : '', 1], ['Akıcılık', r.jank ? `~${r.jank.fps} fps` : ''], ['Görüntü modu', r.fx === 2 ? 'Çok hafif' : r.fx === 1 ? 'Hafif' : r.fx === 0 && r.app ? 'Tam' : ''], ['Çevrimdışı önbellek', r.cached ? `${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}` : ''], ['Eklendi', fmtDate(d.created)]].filter(x => x[1]);
+  return { flags, rows };
+}
+const devRep = id => ((((DEVST && DEVST.devices) || []).find(x => x.id === id)) || {}).report || {};
+// Kart: kısa özet (durum, şu an oynayan, üç ölçüm, uyarı sayısı). Ayrıntılar ve araçlar yan pencerede açılır; sayfa uzamaz.
+function devCard(d, r) {
+  const on = !!d.online, { flags } = devInfo(d, r), x = r.res || {};
+  const m = [];
+  if (on && x.cpu >= 0 && x.cpu !== undefined) m.push(devMeter('İşlemci', x.cpu, '%' + Math.round(x.cpu)));
+  if (on && x.ramApp > 0 && x.ramTotal > 0) m.push(devMeter('Bellek (uygulama)', x.ramApp / x.ramTotal * 100, `${x.ramApp} / ${x.ramTotal} MB`));
+  if (on && x.ramTotal > 0 && x.ramFree >= 0 && x.ramFree !== undefined) m.push(devMeter('Cihaz belleği', (x.ramTotal - x.ramFree) / x.ramTotal * 100, `${x.ramTotal - x.ramFree} MB dolu`));
   return `<article class="dv ${on ? 'on' : 'off'}">
     <header><span class="dot ${on ? 'on' : ''}"></span><div class="t"><h3>${esc(d.name || 'TV kutusu')}</h3><p>${on ? 'Çevrimiçi' : 'Çevrimdışı · son görülme ' + ago(d.last_seen)}</p></div>
       <details class="dv-menu"><summary title="Diğer işlemler" aria-label="Diğer işlemler">${ic('ellipsis')}</summary><div class="pop">
@@ -1340,15 +1351,39 @@ function devCard(d, r) {
         <button type="button" onclick="logoutDev('${d.id}')">${ic('log-out')}Uygulamadan çıkış yaptır</button>
         <button type="button" class="d" onclick="delDev('${d.id}')">${ic('trash-2')}Cihazı kaldır</button></div></details></header>
     ${r.playing ? `<div class="dv-now">${ic('play-f')}<span>Şu an: ${esc(r.playing)}</span></div>` : ''}
-    ${devRes(r, on)}
-    ${flags.map(f => `<div class="dv-flag">${ic('triangle-alert')}<span>${esc(f)}</span></div>`).join('')}
-    ${on ? `<div class="dv-act"><button type="button" class="dv-b" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button><button type="button" class="dv-b" onclick="perfDev('${d.id}')">${ic('activity')}Takılma testi</button></div>` : `<div class="dv-off">${ic('wifi-off')}<span>Cihaz kapalı ya da internete bağlı değil: elektriğini ve internetini kontrol edin.</span></div>`}
-    <div id="snap-${d.id}" class="dv-out"></div><div id="perf-${d.id}" class="dv-out"></div>
-    <details class="dv-more"><summary>Ayrıntılar</summary>
-      ${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>` : ''}
-      <div class="swr"><div class="b"><b>Yerel ekran (deneysel)</b><span>Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+)</span></div>${sw(!!d.native, `act('PUT','/devices/${d.id}',{native:this.checked},'Kaydedildi')`)}</div>
-    </details></article>`;
+    ${m.length ? `<div class="dv-res c">${m.join('')}</div>` : ''}
+    ${on ? '' : `<div class="dv-off">${ic('wifi-off')}<span>Cihaz kapalı ya da internete bağlı değil: elektriğini ve internetini kontrol edin.</span></div>`}
+    <button type="button" class="dv-open" onclick="devOpen('${d.id}')">${flags.length ? `<span class="n">${ic('triangle-alert')}${flags.length} uyarı</span>` : '<span class="ok">' + ic('circle-check') + 'Sorun yok</span>'}<span class="g">Ayrıntılar ve araçlar${ic('chevron-right')}</span></button></article>`;
 }
+// Yan pencere: bir cihazın tüm bilgisi ve araçları. Çıktılar (ekran görüntüsü, test) yenilemede silinmesin diye bilgi bölümü ayrı çizilir.
+let DRW = null;
+function devOpen(id) {
+  DRW = id;
+  let el = $('dvd'); if (!el) { el = document.createElement('div'); el.id = 'dvd'; document.body.appendChild(el); }
+  const d = S.scr.devices.find(x => x.id === id); if (!d) return devClose();
+  el.innerHTML = `<div class="dvd-bg" onclick="devClose()"></div><aside class="dvd-p" role="dialog" aria-label="Cihaz ayrıntıları">
+    <div class="dvd-h"><b id="dvd-t"></b><button type="button" class="dvd-x" onclick="devClose()" aria-label="Kapat">${ic('x')}</button></div>
+    <div class="dvd-b"><div id="dvd-info"></div>
+      <section class="dvd-s"><h4>Araçlar</h4><div id="dvd-tools"></div><div id="snap-${id}" class="dv-out"></div><div id="perf-${id}" class="dv-out"></div></section>
+      <div id="dvd-more"></div></div></aside>`;
+  el.className = 'on'; document.body.classList.add('dvd-open');
+  devDrawInfo();
+}
+function devClose() { DRW = null; const el = $('dvd'); if (el) el.remove(); document.body.classList.remove('dvd-open'); }
+function devDrawInfo() {
+  if (!DRW || !$('dvd-info')) return;
+  const d = S.scr.devices.find(x => x.id === DRW); if (!d) return devClose();
+  const r = devRep(d.id), on = !!d.online, { flags, rows } = devInfo(d, r);
+  $('dvd-t').innerHTML = `<span class="dot ${on ? 'on' : ''}"></span>${esc(d.name || 'TV kutusu')}<small>${on ? 'Çevrimiçi' : 'Çevrimdışı · son görülme ' + ago(d.last_seen)}</small>`;
+  $('dvd-info').innerHTML = (r.playing ? `<div class="dv-now">${ic('play-f')}<span>Şu an: ${esc(r.playing)}</span></div>` : '')
+    + (flags.length ? `<section class="dvd-s"><h4>Uyarılar</h4>${flags.map(f => `<div class="dv-flag">${ic('triangle-alert')}<span>${esc(f)}</span></div>`).join('')}</section>` : '')
+    + (devRes(r, on) ? `<section class="dvd-s">${devRes(r, on)}</section>` : '');
+  $('dvd-tools').innerHTML = on ? `<div class="dv-act"><button type="button" class="dv-b" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button><button type="button" class="dv-b" onclick="perfDev('${d.id}')">${ic('activity')}Takılma testi</button></div>` : `<div class="dv-off">${ic('wifi-off')}<span>Cihaz kapalı: araçlar yalnız çevrimiçi cihazda çalışır.</span></div>`;
+  $('dvd-more').innerHTML = `<section class="dvd-s"><h4>Bilgiler</h4>${rows.length ? `<dl class="dvd-dl">${rows.map(([k, v, raw]) => `<dt>${k}</dt><dd>${raw ? v : esc(String(v))}</dd>`).join('')}</dl>` : '<p class="muted">Henüz bilgi gelmedi.</p>'}</section>
+    <section class="dvd-s"><div class="swr"><div class="b"><b>Yerel ekran (deneysel)</b><span>Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+)</span></div>${sw(!!d.native, `act('PUT','/devices/${d.id}',{native:this.checked},'Kaydedildi')`)}</div></section>`;
+}
+addEventListener('keydown', e => { if (e.key === 'Escape' && DRW) devClose(); });
+addEventListener('hashchange', () => { if (DRW) devClose(); });
 function devAddHtml(open, full) {
   const win = DEVT === 'windows', nm = encodeURIComponent(S.me.tenant.name);
   const pair = window.__pair ? window.__pair.replace(/(\d{3})(\d{3})/, '$1 $2') : '';
@@ -1384,6 +1419,7 @@ async function drawDevStatus() {
   let j; try { j = await req('GET', '/devices/status'); } catch (e) { return; }
   DEVST = j;
   const c = $('dvcards'); if (c) c.innerHTML = devCards();
+  if (DRW) devDrawInfo();
   const m = $('dvmore'); if (m) m.innerHTML = devMoreHtml();
 }
 const saveNotify = () => act('PUT', '/notify', { email: $('nt-mail').value.trim(), offline: $('nt-off').checked, online: $('nt-on').checked, offlineMin: $('nt-offmin') ? +$('nt-offmin').value : undefined, weekly: $('nt-wk') ? $('nt-wk').checked : undefined }, 'Uyarı ayarları kaydedildi', false);

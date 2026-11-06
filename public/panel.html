@@ -622,6 +622,20 @@ body.imp .ytm-top{top:32px}body.imp .ytm-chips{top:96px}
 .dv-out:empty{display:none}.dv-out{display:flex;flex-direction:column;gap:10px}.dv-out img{margin-top:0!important}
 .dv-more{border-top:1px solid var(--line);padding-top:12px}.dv-more summary{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--soft);list-style:none}.dv-more summary::-webkit-details-marker{display:none}.dv-more summary::before{content:'';width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;margin:0 4px 0 2px}.dv-more[open]>summary::before{transform:rotate(45deg)}.dv-out .dv-more{margin-top:0;border-top:0;padding-top:0}
 .dv-pt{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0 2px}.dv-pt th{text-align:left;color:var(--mute);font-weight:600;padding:5px 8px;border-bottom:1px solid var(--line)}.dv-pt td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.05);font-variant-numeric:tabular-nums}.dv-pt tr.b td{color:var(--accent2);font-weight:600}
+/* kart özeti + yan pencere */
+.dv-res.c{background:none;padding:0;gap:8px}
+.dv-open{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:2px;padding:10px 12px;border-radius:var(--r-m);border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);font:inherit;font-size:13.5px;cursor:pointer;transition:background .15s,border-color .15s}.dv-open:hover{background:rgba(255,255,255,.08);border-color:var(--accent2)}
+.dv-open .n,.dv-open .ok{display:inline-flex;align-items:center;gap:7px;font-weight:600}.dv-open .n{color:#f0c27a}.dv-open .ok{color:var(--ok)}.dv-open .ic{width:16px;height:16px}.dv-open .g{display:inline-flex;align-items:center;gap:4px;color:var(--soft)}
+#dvd{position:fixed;inset:0;z-index:90}.dvd-bg{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.dvd-p{position:absolute;top:0;right:0;bottom:0;width:min(460px,100vw);background:var(--panel);border-left:1px solid var(--line);box-shadow:-16px 0 40px rgba(0,0,0,.4);display:flex;flex-direction:column;animation:dvdin .18s ease-out}
+@keyframes dvdin{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
+.dvd-h{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}.dvd-h b{flex:1;display:flex;align-items:center;gap:10px;font-size:17px;min-width:0;flex-wrap:wrap}.dvd-h small{flex-basis:100%;margin-left:20px;color:var(--mute);font-size:13px;font-weight:400}
+.dvd-x{width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.06);color:var(--text);display:grid;place-items:center;cursor:pointer}.dvd-x:hover{background:rgba(255,255,255,.12)}.dvd-x .ic{width:18px;height:18px}
+.dvd-b{flex:1;overflow-y:auto;padding:16px 18px 28px;display:flex;flex-direction:column;gap:18px}
+.dvd-s{display:flex;flex-direction:column;gap:10px}.dvd-s>h4{margin:0;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.dvd-dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;font-size:13.5px}.dvd-dl dt{color:var(--mute)}.dvd-dl dd{margin:0;word-break:break-word;min-width:0}
+#dvd-info{display:flex;flex-direction:column;gap:18px}.dvd-p .dv-res{background:var(--panel2);border-radius:var(--r-m);padding:12px 14px}
+@media(max-width:700px){.dvd-p{width:100vw}}
 @media(max-width:700px){.dv-grid{grid-template-columns:1fr}.dv-add{padding:4px 12px}.dv-add>summary span{display:none}}
 /* ---- Spotify görünümü: çalan kaynak Spotify iken ---- */
 .ytm.sp{--y-bg:#121212;--y-s1:#181818;--y-s2:#282828;--y-hv:rgba(255,255,255,.08);--sp:#1ed760}
