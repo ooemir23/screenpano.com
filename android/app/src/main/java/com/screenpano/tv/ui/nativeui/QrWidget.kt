@@ -32,6 +32,9 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
     private var st: TvState? = null
     private var vh = 10f
     private var selected = ""
+    private var sizeKey = "auto" // QR boyutu: xs | s | auto | l | xl | box (kutuya sığdır)
+    private var tf = 1f // etiket yazı çarpanı
+    private var curQs = 0 // çizilen QR kenarı (px)
     private var style = "below" // yerleşim: below (etiket altta) | right / left (dikey etiket yanda) | plain (yalnız QR)
     private var idx = 0
     private var cur: JSONObject? = null
@@ -60,8 +63,10 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
         val sig = s.raw.optJSONArray("qrs")?.toString()
         val newSel = w.props?.optString("qr") ?: ""
         val newStyle = (w.props?.optString("style") ?: "").let { if (it in setOf("right", "left", "plain")) it else "below" }
-        val changed = sig != st?.raw?.optJSONArray("qrs")?.toString() || newSel != selected || vh != this.vh || newStyle != style
-        st = s; this.vh = vh; selected = newSel; style = newStyle
+        val newSize = (w.props?.optString("size") ?: "").let { if (it in setOf("xs", "s", "l", "xl", "box")) it else "auto" }
+        val newTf = when (w.props?.optString("text")) { "s" -> 0.8f; "l" -> 1.35f; else -> 1f }
+        val changed = sig != st?.raw?.optJSONArray("qrs")?.toString() || newSel != selected || vh != this.vh || newStyle != style || newSize != sizeKey || newTf != tf
+        st = s; this.vh = vh; selected = newSel; style = newStyle; sizeKey = newSize; tf = newTf
         if (changed) { idx = 0; draw() }
         main.removeCallbacks(rotate); main.postDelayed(rotate, 12_000L)
     }
@@ -78,7 +83,9 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
             val t = TextView(context).apply { text = "Panelden QR kod ekleyin"; setTextColor(p.mute); setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 2f) }
             content.addView(t); setSize((vh * 17f).toInt(), (vh * 4f).toInt()); applyVisibility(); return
         }
-        val qs = (s.raw.optDouble("qrSize", 17.0).toFloat() * vh).toInt()
+        val lhPx = (vh * 5.4f * tf).toInt(); val gapPx = (vh * 0.8f).toInt()
+        val qs = qrSide(lhPx + gapPx)
+        curQs = qs
         val box = FrameLayout(context)
         val pad = max(1, (vh * 0.4f).toInt())
         box.setPadding(pad, pad, pad, pad)
@@ -94,8 +101,8 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
         label.rotation = 0f; label.minimumWidth = 0
         if (style == "plain") { content.addView(box, LinearLayout.LayoutParams(qs, qs)); setSize(qs, qs); applyVisibility(); return }
         val wf = q.optString("marquee").isNotEmpty()
-        val lh = (vh * 5.4f).toInt()
-        val gap = (vh * 0.8f).toInt()
+        val lh = lhPx
+        val gap = gapPx
         if (side) {
             // dikey etiket: kutu QR yüksekliğinde yatay çizilir, 90° (sağda) / 270° (solda) döndürülür
             label.text = ""; setLabel(q.optString("label"), p.white, qs, p)
@@ -131,21 +138,38 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
     private fun setLabel(t: String, color: Int, maxW: Int, p: Palette) {
         label.text = t.uppercase(Locale("tr", "TR")); label.setTextColor(color)
         label.setPadding((vh * 1.2f).toInt(), 0, (vh * 1.2f).toInt(), 0)
-        var px = vh * 2.3f
+        var px = vh * 2.3f * tf
         label.setTextSize(TypedValue.COMPLEX_UNIT_PX, px)
         val avail = maxW - (vh * 2.4f)
-        while (px > vh * 1.6f && label.paint.measureText(label.text.toString()) > avail) { px -= vh * 0.1f; label.setTextSize(TypedValue.COMPLEX_UNIT_PX, px) }
+        while (px > vh * 1.6f * tf && label.paint.measureText(label.text.toString()) > avail) { px -= vh * 0.1f; label.setTextSize(TypedValue.COMPLEX_UNIT_PX, px) }
     }
 
     private val wifi: Runnable = object : Runnable {
         override fun run() {
             val q = cur ?: return; val s = st ?: return; val p = Palette(s)
             phase = phase xor 1
-            val qs = (s.raw.optDouble("qrSize", 17.0).toFloat() * vh).toInt()
+            val qs = curQs
             if (phase == 1) { setLabel(q.optString("marquee"), p.al, qs, p); label.letterSpacing = 0.04f }
             else { setLabel(q.optString("label"), p.white, qs, p); label.letterSpacing = 0.1f }
             main.postDelayed(this, if (phase == 1) 7000L else 4000L)
         }
+    }
+
+    /** QR kenarı (px): sabit boyutlar vh çarpanıdır; "box" kutuya sığar (etiket payı düşülür). */
+    private fun qrSide(labelExtra: Int): Int {
+        val fixed = mapOf("xs" to 10f, "s" to 13.5f, "auto" to 17f, "l" to 21f, "xl" to 26f)[sizeKey]
+        if (fixed != null) return (fixed * vh).toInt()
+        val w = width; val h = height
+        if (w <= 0 || h <= 0) return (17f * vh).toInt()
+        val side = style == "right" || style == "left"
+        val extra = if (style == "plain") 0 else labelExtra
+        val q = if (side) minOf(h, w - extra) else minOf(w, h - extra)
+        return max((6f * vh).toInt(), q)
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
+        super.onSizeChanged(w, h, ow, oh)
+        if (sizeKey == "box" && w > 0 && h > 0 && (w != ow || h != oh) && st != null) draw()
     }
 
     private fun setSize(w: Int, h: Int) {

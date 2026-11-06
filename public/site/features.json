@@ -1046,7 +1046,8 @@
         "Menü butonu fiyat listesini telefonda açar (Pro)",
         "Wi-Fi butonu: ağ adı, şifre kopyalama, iPhone için Wi-Fi profili",
         "Okutmalar istatistikte sayılır",
-        "QR kartı: etiket altta, sağda/solda dikey ya da yalnız QR"
+        "QR kartı: etiket altta, sağda/solda dikey ya da yalnız QR",
+        "QR ve yazı boyutu: çok küçükten çok büyüğe ya da kutuya sığdır"
       ],
       "plan": "all",
       "compare": "Tek QR ile menü, Wi-Fi ve bağlantı sayfası",
@@ -1062,7 +1063,8 @@
             "The Menu button opens the price list on the phone (Pro)",
             "Wi-Fi button: network name, copy password, Wi-Fi profile for iPhone",
             "Scans are counted in the statistics",
-            "QR card: label below, vertical on the right/left, or QR only"
+            "QR card: label below, vertical on the right/left, or QR only",
+            "QR and text size: from extra small to extra large, or fit to box"
           ]
         },
         "de": {
@@ -1075,7 +1077,8 @@
             "Die Speisekarten-Schaltfläche öffnet die Preisliste auf dem Handy (Pro)",
             "WLAN-Schaltfläche: Netzwerkname, Passwort kopieren, WLAN-Profil für iPhone",
             "Scans werden in der Statistik gezählt",
-            "QR-Karte: Beschriftung unten, senkrecht rechts/links oder nur QR"
+            "QR-Karte: Beschriftung unten, senkrecht rechts/links oder nur QR",
+            "QR- und Schriftgröße: von sehr klein bis sehr groß oder an die Box angepasst"
           ]
         },
         "ar": {
@@ -1088,7 +1091,8 @@
             "زر القائمة يفتح قائمة الأسعار على الهاتف (Pro)",
             "زر الواي فاي: اسم الشبكة ونسخ كلمة المرور وملف تعريف لـ iPhone",
             "تُحتسب عمليات المسح في الإحصاءات",
-            "بطاقة QR: التسمية أسفل الرمز أو عمودية يميناً/يساراً أو الرمز فقط"
+            "بطاقة QR: التسمية أسفل الرمز أو عمودية يميناً/يساراً أو الرمز فقط",
+            "حجم الرمز والنص: من صغير جداً إلى كبير جداً أو ملاءمة الصندوق"
           ]
         }
       }

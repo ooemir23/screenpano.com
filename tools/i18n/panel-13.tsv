@@ -14,3 +14,9 @@ Etiket solda (dikey) ¦ Label on the left (vertical) ¦ Beschriftung links (senk
 Yalnız QR (yazısız) ¦ QR only (no text) ¦ Nur QR (ohne Text) ¦ الرمز فقط (بدون نص)
 Okutan kişi bir sayfa görür; Menü, Wi-Fi ve bağlantı butonlarından istediğine basar. Wi-Fi butonunda iPhone Wi-Fi profilini yükler; Android şifreyi kopyalayıp Wi-Fi ayarlarını açar (web sayfası telefonu ağa kendiliğinden bağlayamaz). ¦ The person who scans sees a page and taps Menu, Wi-Fi or a link button. On the Wi-Fi button iPhone installs the Wi-Fi profile; Android copies the password and opens Wi-Fi settings (a web page cannot join a phone to a network by itself). ¦ Wer scannt, sieht eine Seite und tippt auf Speisekarte, WLAN oder einen Link. Bei der WLAN-Schaltfläche installiert das iPhone das WLAN-Profil; Android kopiert das Passwort und öffnet die WLAN-Einstellungen (eine Webseite kann ein Telefon nicht selbst mit einem Netzwerk verbinden). ¦ من يمسح الرمز يرى صفحة ويضغط على زر القائمة أو الواي فاي أو أحد الروابط. في زر الواي فاي يثبّت iPhone ملف التعريف، ويقوم Android بنسخ كلمة المرور وفتح إعدادات الواي فاي (لا تستطيع صفحة الويب توصيل الهاتف بالشبكة تلقائياً).
 Menü bağlantısı (Menü butonu buraya gider) ¦ Menu link (the Menu button goes here) ¦ Speisekarten-Link (die Speisekarten-Schaltfläche führt hierhin) ¦ رابط القائمة (يذهب إليه زر القائمة)
+QR boyutu ¦ QR size ¦ QR-Größe ¦ حجم رمز QR
+Yazı boyutu ¦ Text size ¦ Schriftgröße ¦ حجم النص
+Çok küçük ¦ Extra small ¦ Sehr klein ¦ صغير جداً
+Normal ¦ Normal ¦ Normal ¦ عادي
+Çok büyük ¦ Extra large ¦ Sehr groß ¦ كبير جداً
+Kutuya sığdır ¦ Fit to box ¦ An Box anpassen ¦ ملاءمة الصندوق
