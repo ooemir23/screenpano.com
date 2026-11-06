@@ -451,6 +451,80 @@ class MainActivity : AppCompatActivity() {
         handler.postDelayed({ if (token == mediaTok && mediaKind != "video") { exoPlayer?.pause(); binding.playerView.visibility = View.INVISIBLE } }, 450)
     }
     private var mediaTok = 0
+    private val PHOTO_FADE_MS = 800L // web geçişiyle aynı süre: kısa geçiş keskin görünür
+
+    // ---- Fotoğraf geçişi: iki katman (A altta, B üstte), yalnız alpha animasyonu (GPU'yu yormaz) ----
+    // Yeni fotoğraf B'ye gelirse B eskinin üstünde açılır; A'ya gelirse eski (B) sönerek altındaki yeniyi gösterir.
+    // Böylece geçiş boyunca ekran hiç kararmaz (iki yarı saydam katmanın toplamındaki "parlama/çukur" olmaz),
+    // ölçek modu da geçiş başlamadan ayarlandığı için görüntü ortada zıplamaz.
+    private var photoTop = false
+    private val photoB: ImageView by lazy {
+        ImageView(this).apply {
+            visibility = View.GONE; scaleType = ImageView.ScaleType.FIT_CENTER; isClickable = false; isFocusable = false
+            val a = binding.imageView
+            val lp = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            lastBounds?.let { b -> lp.leftMargin = b[0]; lp.topMargin = b[1]; lp.width = b[2]; lp.height = b[3] }
+            binding.rootContainer.addView(this, binding.rootContainer.indexOfChild(a) + 1, lp)
+            roundCorners(this)
+        }
+    }
+    private fun resetPhoto(v: ImageView) { v.animate().cancel(); v.visibility = View.GONE; v.setImageDrawable(null); v.alpha = 1f }
+    /** Her iki fotoğraf katmanını anında temizler. */
+    private fun clearPhotos() { resetPhoto(binding.imageView); if (photoBInit) resetPhoto(photoB); photoTop = false }
+    private var photoBInit = false
+
+    /** Görünen fotoğrafları yumuşakça kaldırır (fotoğraftan videoya geçişte keskin kesme olmasın). */
+    private fun fadePhotosOut(ms: Long) {
+        val vs = listOf(binding.imageView).plus(if (photoBInit) listOf(photoB) else emptyList()).filter { it.visibility == View.VISIBLE }
+        if (vs.isEmpty()) return
+        vs.forEach { v -> v.animate().cancel(); v.animate().alpha(0f).setDuration(ms).withEndAction { resetPhoto(v) }.start() }
+        photoTop = false
+    }
+
+    /**
+     * url'yi boştaki katmana çözer; hazır olunca (ve valid() hâlâ doğruysa) eskinin yerine yumuşakça getirir.
+     * ok: ölçü modu ayarlanmış, gösterim başlamış; err: yüklenemedi.
+     */
+    private fun showPhotoSwap(full: String, fadeMs: Long, valid: () -> Boolean, ok: () -> Unit, err: (Throwable?) -> Unit) {
+        photoBInit = true
+        val a = binding.imageView; val b = photoB
+        val target = if (photoTop) a else b
+        val old = if (photoTop) b else a
+        val toTop = target === b
+        target.animate().cancel()
+        target.visibility = View.INVISIBLE
+        target.load(full) {
+            allowHardware(true)
+            listener(
+                onSuccess = { _, r ->
+                    if (!valid()) { return@listener }
+                    fitImage(target, r.drawable)
+                    val oldVisible = old.visibility == View.VISIBLE && old.drawable != null
+                    old.animate().cancel()
+                    if (fadeMs <= 0L) {
+                        target.alpha = 1f; target.visibility = View.VISIBLE
+                        if (oldVisible) resetPhoto(old)
+                    } else if (!oldVisible) {
+                        target.alpha = 0f; target.visibility = View.VISIBLE
+                        target.animate().alpha(1f).setDuration(fadeMs).setInterpolator(android.view.animation.AccelerateDecelerateInterpolator()).start()
+                    } else if (toTop) {
+                        // yeni üstte açılır, eski altta tam opak kalır; bitince eski kaldırılır
+                        target.alpha = 0f; target.visibility = View.VISIBLE
+                        target.animate().alpha(1f).setDuration(fadeMs).setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+                            .withEndAction { resetPhoto(old) }.start()
+                    } else {
+                        // yeni altta hazır; eskisi (üstte) sönerek onu gösterir
+                        target.alpha = 1f; target.visibility = View.VISIBLE
+                        old.animate().alpha(0f).setDuration(fadeMs).setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+                            .withEndAction { resetPhoto(old) }.start()
+                    }
+                    photoTop = toTop
+                    ok()
+                },
+                onError = { _, r -> target.visibility = View.GONE; err(r.throwable) }
+            )
+        }
+    }
 
     private fun mediaPlayVideo(url: String, startMs: Long) {
         val tk = ++mediaTok
@@ -461,7 +535,7 @@ class MainActivity : AppCompatActivity() {
         val reveal = {
             if (!shown && tk == mediaTok) {
                 shown = true
-                binding.imageView.visibility = View.GONE; binding.imageView.setImageDrawable(null)
+                if (wasVideo) clearPhotos() else fadePhotosOut(350)
                 posterView?.visibility = View.GONE
                 pageTransparent(true)
             }
@@ -480,28 +554,15 @@ class MainActivity : AppCompatActivity() {
     private fun mediaShowPhoto(url: String, done: (Boolean) -> Unit) {
         val tk = ++mediaTok
         val full = if (url.startsWith("http")) url else "$baseUrl$url"
-        val iv = binding.imageView
         val fade = mediaKind.isNotEmpty()
-        iv.scaleType = ImageView.ScaleType.FIT_CENTER
-        iv.visibility = View.VISIBLE
-        iv.load(full) {
-            crossfade(if (fade) 350 else 0)
-            allowHardware(true)
-            listener(
-                onSuccess = { _, r ->
-                    fitImage(iv, r.drawable)
-                    if (tk == mediaTok) {
-                        val prevVideo = mediaKind == "video"
-                        mediaKind = "photo"
-                        posterView?.visibility = View.GONE
-                        pageTransparent(true)
-                        if (prevVideo) dropVideoLater(tk) else exoPlayer?.pause()
-                        done(true)
-                    }
-                },
-                onError = { _, r -> Log.w(TAG, "Medya fotoğrafı yüklenemedi: ${r.throwable.message}"); if (tk == mediaTok) done(false) }
-            )
-        }
+        showPhotoSwap(full, if (fade) PHOTO_FADE_MS else 0L, { tk == mediaTok }, {
+            val prevVideo = mediaKind == "video"
+            mediaKind = "photo"
+            posterView?.visibility = View.GONE
+            pageTransparent(true)
+            if (prevVideo) dropVideoLater(tk) else exoPlayer?.pause()
+            done(true)
+        }, { t -> Log.w(TAG, "Medya fotoğrafı yüklenemedi: ${t?.message}"); if (tk == mediaTok) done(false) })
     }
 
     private fun mediaShowPoster(item: JSONObject, lang: String, done: (Boolean) -> Unit) {
@@ -510,7 +571,7 @@ class MainActivity : AppCompatActivity() {
         val tk = ++mediaTok
         try {
             val pv = ensurePoster()
-            binding.imageView.visibility = View.GONE
+            clearPhotos()
             pv.visibility = View.VISIBLE
             pv.bind(item, st, lang.ifEmpty { "tr" })
             val wait = if (item.optString("image").isNotEmpty() || item.has("books")) 450L else 150L
@@ -518,7 +579,7 @@ class MainActivity : AppCompatActivity() {
                 if (tk == mediaTok) {
                     val prevVideo = mediaKind == "video"
                     mediaKind = "photo"
-                    binding.imageView.setImageDrawable(null)
+                    clearPhotos()
                     pageTransparent(true)
                     if (prevVideo) dropVideoLater(tk) else exoPlayer?.pause()
                     done(true)
@@ -530,7 +591,7 @@ class MainActivity : AppCompatActivity() {
     private fun mediaRelease() {
         ++mediaTok; mediaKind = ""; mediaFirstFrame = null
         exoPlayer?.pause()
-        binding.imageView.visibility = View.GONE; binding.imageView.setImageDrawable(null)
+        clearPhotos()
         posterView?.visibility = View.GONE
         pageTransparent(false)
     }
@@ -683,7 +744,7 @@ class MainActivity : AppCompatActivity() {
                 if (widthPx > 0 && heightPx > 0) {
                     lastBounds = intArrayOf(leftPx, topPx, widthPx, heightPx)
                     // video ve fotoğraf katmanları birlikte konumlanır
-                    for (v in listOfNotNull<View>(binding.playerView, binding.imageView, posterView)) {
+                    for (v in listOfNotNull<View>(binding.playerView, binding.imageView, if (photoBInit) photoB else null, posterView)) {
                         roundCorners(v)
                         val params = v.layoutParams as FrameLayout.LayoutParams
                         if (params.leftMargin != leftPx || params.topMargin != topPx ||
@@ -726,24 +787,13 @@ class MainActivity : AppCompatActivity() {
         fun showImage2(url: String, fade: Boolean) {
             handler.post {
                 val fullUrl = if (url.startsWith("http")) url else "$baseUrl$url"
-                val iv = binding.imageView
                 posterView?.visibility = View.GONE // afişten fotoğrafa: afiş fotoğrafın üstünde kalmasın
-                iv.scaleType = ImageView.ScaleType.FIT_CENTER
-                iv.visibility = View.VISIBLE
-                iv.load(fullUrl) {
-                    crossfade(if (fade) 350 else 0)
-                    allowHardware(true)
-                    listener(
-                        onSuccess = { _, r ->
-                            fitImage(iv, r.drawable)
-                            binding.webView.evaluateJavascript("window.__imgShown && window.__imgShown(${JSONObject.quote(url)});", null)
-                        },
-                        onError = { _, r ->
-                            Log.w(TAG, "Fotoğraf yüklenemedi: $fullUrl - ${r.throwable.message}")
-                            binding.webView.evaluateJavascript("window.__imgFailed && window.__imgFailed(${JSONObject.quote(url)});", null)
-                        }
-                    )
-                }
+                showPhotoSwap(fullUrl, if (fade) PHOTO_FADE_MS else 0L, { true }, {
+                    binding.webView.evaluateJavascript("window.__imgShown && window.__imgShown(${JSONObject.quote(url)});", null)
+                }, { t ->
+                    Log.w(TAG, "Fotoğraf yüklenemedi: $fullUrl - ${t?.message}")
+                    binding.webView.evaluateJavascript("window.__imgFailed && window.__imgFailed(${JSONObject.quote(url)});", null)
+                })
             }
         }
 
@@ -751,8 +801,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun hideImage() {
             handler.post {
-                binding.imageView.visibility = View.GONE
-                binding.imageView.setImageDrawable(null)
+                clearPhotos()
                 posterView?.visibility = View.GONE
             }
         }
@@ -778,7 +827,7 @@ class MainActivity : AppCompatActivity() {
                         binding.rootContainer.addView(it, binding.rootContainer.indexOfChild(binding.webView), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
                         posterView = it
                     }
-                    binding.imageView.visibility = View.GONE
+                    clearPhotos()
                     pv.visibility = View.VISIBLE
                     pv.bind(o, st, lang.ifEmpty { "tr" })
                     val wait = if (o.optString("image").isNotEmpty() || o.has("books")) 450L else 150L // görseller yüklenirken sayfa açılmasın

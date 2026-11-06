@@ -302,7 +302,7 @@ html.lite #goal.in{animation:gin .7s cubic-bezier(.2,1.3,.4,1) both}
 html.lite #goal::before,html.lite #goal::after{display:none}
 html.lite #goal .ball{filter:none}
 /* hafif modda medya geçişleri kısa sürer: iki tam ekran katman üst üste az zaman kalır, solma ucuzlar */
-html.lite video,html.lite #img{transition-duration:.35s}
+html.lite video,html.lite #img{transition-duration:.6s}
 /* hafif mod: ekolayzerin parlaması ve QR etiketinin arka plan bulanıklığı kapanır (her karede yeniden hesaplanıyordu) */
 html.lite #music-bar .meq-bars i,html.lite #music-bar .meq-icon{box-shadow:none!important}
 html.lite .wqr .lbl.qp{-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -1166,8 +1166,14 @@ function cleanupLayers(keep) {
 }
 function showEl(el) {
   if (window.__lite) {
-    els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else { e.style.opacity = '0'; e.style.zIndex = '1'; } });
-    imgs.forEach(im => { if (im !== el) { im.style.opacity = '0'; im.style.display = 'none'; } });
+    // hafif mod (yalnız opaklık, GPU'yu yormaz): yeni öğe eskinin ÜSTÜNDE açılır, eski tam opak kalır → geçişte ekran kararmaz, keskin kesme olmaz; eski, geçiş bitince kaldırılır
+    const tok = window.__liteTok = (window.__liteTok || 0) + 1;
+    els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; });
+    setTimeout(() => {
+      if (tok !== window.__liteTok) return;
+      els.forEach(e => { if (e !== el) e.style.opacity = '0'; });
+      imgs.forEach(im => { if (im !== el) { im.style.opacity = '0'; im.style.display = 'none'; } });
+    }, 700);
     return;
   }
   els.forEach(e => { if (e === el) { e.style.zIndex = '2'; e.style.opacity = '1'; } else e.style.zIndex = '1'; });
