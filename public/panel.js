@@ -45,8 +45,9 @@ async function req(method, path, body) {
 // işlem + bildirim; reload: veriyi yenileyip bölümü yeniden çiz
 async function act(method, path, body, ok, reload = true) {
   try { const j = await req(method, path, body); if (reload) await refresh(); if (ok) toast(ok, false, method !== 'GET' && !NOTV.test(path) ? await tvNote() : ''); return j || true; }
-  catch (e) { toast(e.message, true); return false; }
+  catch (e) { LASTERR = e.message || 'Hata'; toast(e.message, true); return false; }
 }
+let LASTERR = '';
 // ekrana gitmeyen işlemler (kayıt sonrası "ekrana gönderildi" notu yazılmaz)
 const NOTV = /^\/(users|profile|password|notify|privacy|backups|branches|google\/(search|connect)|instagram\/connect|ads\/[^/]+\/token|devices|pair)/;
 const opt = (key, val, msg) => { S.db[key] = val; return act('PUT', '/options', { [key]: val }, msg || 'Kaydedildi', false); };
@@ -81,6 +82,13 @@ const NAV = [
 ];
 function drawNav() {
   const NV = window.__ONLY ? NAV.filter(n => Array.isArray(n) && n[0] === window.__ONLY) : NAV; // music.* adresi: yalnız Müzik bölümü
+  if (window.__ONLY === 'music') { // music.* adresi: sol menüde iki kaynak; seçilen kaynak tüm sayfayı ve çalmayı değiştirir
+    const v = typeof srcView === 'function' ? srcView() : 'yt';
+    const it = (k, icn, name) => { const av = srcAvail(k); return `<a href="#music" class="${v === k ? 'on' : ''}${av ? '' : ' off'}" onclick="switchSrc('${k}');return false">${ic(icn)}${name}${av ? '' : '<span class="pro">Pasif</span>'}</a>`; };
+    $('nav').innerHTML = `<div class="grp">Kaynak</div>` + it('yt', 'music', 'YouTube Music') + it('spotify', 'headphones', 'Spotify');
+    document.title = 'ScreenPano Müzik'; $('toptitle').textContent = v === 'spotify' ? 'Spotify' : 'YouTube Music';
+    return;
+  }
   $('nav').innerHTML = NV.map(n => typeof n === 'string' ? `<div class="grp">${n}</div>` : n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}">${ic(n[1])}${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
   if (window.__ONLY === 'music') document.title = 'ScreenPano Müzik';
   const cur = NAV.find(n => Array.isArray(n) && n[0] === TAB); $('toptitle').textContent = cur ? cur[2] : '';
@@ -1665,8 +1673,32 @@ function setSrc(k) {
   if ((SUB.music || 'home') === 'explore' && k === 'spotify') SUB.music = 'home';
   render(true); spDevLoadIf();
 }
+// music.* sol menüsünden kaynak değişir: sayfa o kaynağa geçer, o kaynağın son listesi TV'de çalmaya başlar, diğer kaynak durur ve sıfırlanır
+let MERR = '';
+async function switchSrc(k) {
+  MERR = '';
+  if (!SPACC.st) await spAccLoad(); if (!YTACC.st) await ytAccLoad(); // durum henüz gelmediyse yanlış "bağlı değil" demesin
+  if (!srcAvail(k)) {
+    MERR = k === 'spotify' ? 'Spotify hesabı bağlı değil. Hesaplar bölümünden Spotify’ı bağlayın.' : 'YouTube hesabı bağlı değil ve kitaplıkta herkese açık liste yok. Hesaplar bölümünden bağlayın.';
+    MV = null; go('music/accounts'); render(true); return;
+  }
+  const cur = srcView(); if (cur === k && !MV) { go('music/home'); return; }
+  MSRCV = k; try { localStorage.setItem('mus.src', k); } catch (e) { /* kayıt kapalıysa yalnız bu oturumda */ }
+  MV = null; MNOW = null; MSEARCH.q = ''; SPS = { q: '', r: null, busy: false, err: '' }; LF = 'all';
+  if (SUB.music === 'explore' && k === 'spotify') SUB.music = 'home';
+  go('music/home'); render(true);
+  await musicCmd('source', { source: k }); // yanıt gelmezse (liste yok vb.) hata şeritte görünür
+}
+function merrHtml() {
+  const n = MNOW, a = musicActive();
+  const nerr = n && n.err && (!a || !n.itemId || n.itemId === a.id) ? n.err : '';
+  const e = MERR || nerr || (SPMODE() ? SPACC.err : YTACC.err) || '';
+  return e ? `<div class="ytm-merr" role="alert">${ic('triangle-alert')}<span>${esc(e)}</span><button type="button" aria-label="Kapat" onclick="MERR='';drawMerr()">${ic('x')}</button></div>` : '';
+}
+function drawMerr() { const b = $('merrbox'); if (b) b.innerHTML = merrHtml(); }
 function spDevLoadIf() { if (SPMODE() && (SUB.music || '') === 'accounts' && SPACC.st && SPACC.st.connected && !SPACC.devs) spDevLoad(); }
 function srcPicker() {
+  if (window.__ONLY === 'music') return ''; // kaynak sol menüden seçilir
   const v = srcView(), none = !srcAvail('yt') && !srcAvail('spotify');
   const b = (k, name, icn) => { const av = none || srcAvail(k); return `<button type="button" class="${v === k ? 'on' : ''} ${av ? '' : 'off'}" ${av ? '' : 'title="Hesap bağlanana kadar pasif"'} onclick="setSrc('${k}')">${ic(icn)}<span>${name}</span>${av ? '' : `<small>Pasif</small>`}</button>`; };
   return `<div class="ytm-pick" role="group" aria-label="Müzik kaynağı">${b('yt', 'YouTube Music', 'music')}${b('spotify', 'Spotify', 'headphones')}</div>`;
@@ -1686,7 +1718,7 @@ SECTIONS.music = {
     if (!['home', 'explore', 'lib', 'search', 'accounts', 'setup'].includes(sub)) sub = 'home';
     if (SPMODE() && sub === 'explore') sub = 'home'; // Keşfet YouTube hazır listeleridir; Spotify görünümünde yok
     const body = MV ? detailHtml() : { home: homeHtml, explore: exploreHtml, lib: libHtml, search: searchHtml, accounts: accountsHtml, setup: setupHtml }[sub]();
-    return `<div class="ytm${SPMODE() ? ' sp' : ''}">${ytmTop(sub)}<div class="ytm-body">${body}</div></div><div id="mnowbox">${nowBar()}</div>`;
+    return `<div class="ytm${SPMODE() ? ' sp' : ''}"><div id="merrbox">${merrHtml()}</div>${ytmTop(sub)}<div class="ytm-body">${body}</div></div><div id="mnowbox">${nowBar()}</div>`;
   },
 };
 const goM = k => { MV = null; go('music/' + k); };
@@ -1750,7 +1782,7 @@ async function musicNowLoad() {
     const n = await req('GET', '/music/now'), k = JSON.stringify(n);
     if (k === JSON.stringify(MNOW)) return;
     MNOW = n && n.at ? n : null;
-    const box = $('mnowbox'); if (box) box.innerHTML = nowBar();
+    const box = $('mnowbox'); if (box) box.innerHTML = nowBar(); drawMerr();
     document.querySelectorAll('.ytm-tr').forEach(r => r.classList.toggle('on', !!(MNOW && (MNOW.videoId && r.dataset.v === MNOW.videoId || MNOW.uri && r.dataset.u === MNOW.uri))));
   } catch (e) {}
 }
@@ -2209,7 +2241,8 @@ function setupHtml() {
 // ---- Komutlar ----
 async function musicCmd(cmd, extra = {}) {
   const j = await act('POST', '/music/cmd', { cmd, ...extra }, '', false);
-  if (j && j.warn) toast(j.warn, true);
+  if (!j) MERR = LASTERR; else if (j.warn) { MERR = j.warn; toast(j.warn, true); } else if (cmd !== 'volume') MERR = '';
+  drawMerr();
   if (j && j.music) { S.db.music = j.music; if (TAB === 'music') { const box = $('mnowbox'); if (box) box.innerHTML = nowBar(); if (cmd === 'source' || cmd === 'select' || (!MV && ['home', 'lib', 'explore'].includes(MSUB[SUB.music] || SUB.music || 'home'))) render(true); else if (MV) render(true); } setTimeout(musicNowLoad, 1500); }
 }
 async function musicOpt(patch) {
@@ -2218,7 +2251,8 @@ async function musicOpt(patch) {
 }
 async function musicSelect(id) {
   const j = await act('POST', '/music/cmd', { cmd: 'select', id }, 'TV ekranında çalmaya başladı', false);
-  if (j && j.warn) toast(j.warn, true);
+  if (!j) MERR = LASTERR; else if (j.warn) { MERR = j.warn; toast(j.warn, true); } else MERR = '';
+  drawMerr();
   if (j && j.music) { S.db.music = j.music; MNOW = null; render(true); setTimeout(musicNowLoad, 1500); }
 }
 async function addMusicPlaylist(playNow) {
