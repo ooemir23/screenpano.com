@@ -121,6 +121,16 @@ function onMessage(ws, raw) {
   let m; try { m = JSON.parse(raw); } catch { return; }
   if (!m || typeof m !== 'object') return;
   if (m.type === 'ping') { sendRaw(ws, '{"type":"pong"}'); return; } // TV'nin bağlantı yoklaması
+  // TV menüsünden müzik kontrolü (oynat/duraklat/sonraki/önceki/ses): panelle aynı komut yolu; cihaz başına saniyede birkaç komutla sınırlı
+  if (m.type === 'music_ctl') {
+    const k = 'mc' + (ws.deviceId || ws.tid), now = Date.now();
+    if (!ws.preview && ['toggle', 'next', 'prev', 'volume'].includes(m.cmd) && now - (onMessage.mc.get(k) || 0) > 350) {
+      onMessage.mc.set(k, now);
+      const t = tenants.get(ws.tid), hub = require('./hub');
+      if (t && hub.musicCmd) hub.musicCmd(t, { cmd: m.cmd, volume: m.volume }).catch(() => {});
+    }
+    return;
+  }
   if (m.type === 'music_now') { require('./musicnow').report(ws.tid, ws.deviceId || 'preview', m); return; }
   if (m.type === 'music_tracks' && m.listId) {
     const t = tenants.get(ws.tid);
@@ -183,4 +193,5 @@ function attach(server) {
   return wss;
 }
 
+onMessage.mc = new Map();
 module.exports = { attach, clients, sendState, computeBuild, get build() { return BUILD; } };

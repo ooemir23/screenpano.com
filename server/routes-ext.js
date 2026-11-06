@@ -407,15 +407,16 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     changed(req.t);
     res.json({ ok: true, music: m });
   });
-  r.post('/music/cmd', async (req, res) => {
-    const m = ensureMusic(req.t.db), b = req.body || {}; let cmd = String(b.cmd || '');
-    if (!['play', 'pause', 'toggle', 'next', 'prev', 'volume', 'select', 'enabled', 'source'].includes(cmd)) return res.status(400).json({ error: 'Geçersiz komut' });
+  // Müzik komutu (panelden HTTP ile, TV menüsünden WebSocket ile gelir; aynı mantık)
+  const musicCmd = async (t, b) => {
+    const req = { t }, m = ensureMusic(t.db); b = b || {}; let cmd = String(b.cmd || '');
+    if (!['play', 'pause', 'toggle', 'next', 'prev', 'volume', 'select', 'enabled', 'source'].includes(cmd)) return { code: 400, body: { error: 'Geçersiz komut' } };
     // Kaynak değiştir (YouTube ↔ Spotify): o kaynağın son çalan ya da ilk listesi seçilir; diğer kaynak aşağıda susturulur
     if (cmd === 'source') {
       const want = b.source === 'spotify', grp = x => (x.provider === 'spotify') === want, key = want ? 'spotify' : 'yt';
       let it = m.playlists.find(x => x.id === (m.lastBy || {})[key]);
       if (!it || !grp(it)) it = m.playlists.find(grp);
-      if (!it) return res.status(400).json({ error: want ? 'Önce kitaplığa bir Spotify listesi ekleyin' : 'Önce kitaplığa bir YouTube listesi ekleyin' });
+      if (!it) return { code: 400, body: { error: want ? 'Önce kitaplığa bir Spotify listesi ekleyin' : 'Önce kitaplığa bir YouTube listesi ekleyin' } };
       b.id = it.id; cmd = 'select';
     }
     if (cmd === 'play') { m.enabled = true; m.playing = true; }
@@ -455,8 +456,10 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     tenants.save(req.t);
     sendTo(req.t, { type: 'music_cmd', cmd, rotated, start, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: m });
     hub.pushTenant(req.t.id);
-    res.json({ ok: true, music: m, warn });
-  });
+    return { code: 200, body: { ok: true, music: m, warn } };
+  };
+  hub.musicCmd = musicCmd;
+  r.post('/music/cmd', async (req, res) => { const o = await musicCmd(req.t, req.body || {}); res.status(o.code).json(o.body); });
 
   // ================= YOUTUBE HESABI (Google OAuth, yalnız okuma) =================
   const yt = require('./youtube');

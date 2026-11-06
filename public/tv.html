@@ -342,24 +342,54 @@ html.lite #big .yemb{display:none!important}
 #updot i{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--accent2);animation:updotp 1.6s ease-in-out infinite}
 @keyframes updotp{50%{opacity:.25}}
 #touch-menu-btn{display:none !important}
-#menu{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:#0a0b0c;touch-action:manipulation;cursor:pointer}
+#menu{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 70% at 50% 30%,#14181d 0%,#07080a 100%);touch-action:manipulation;cursor:pointer}
 #menu.on{display:flex}
-#menu .box{width:52vw;max-width:820px;max-height:90vh;overflow-y:auto;padding:3vh 2.4vw;border-radius:2vh;background:rgba(18,20,24,.98);border:max(1px,.1vh) solid rgba(var(--a2),.8);box-shadow:0 2vh 6vh rgba(0,0,0,.85);color:#fff;font-size:2vh;line-height:1.45;cursor:default;position:relative}
-#menu h3{margin:0 0 1.4vh;font-size:2.8vh;color:var(--al);display:flex;align-items:center;justify-content:space-between}
-#menu .row{display:flex;justify-content:space-between;align-items:center;gap:2vw;padding:.6vh 0;border-bottom:max(1px,.1vh) solid rgba(255,255,255,.1)}
-#menu .row span:first-child{color:#aaa;font-weight:500}
-#menu .row span:last-child{color:#fff;font-weight:700;text-align:right}
-#menu #mnew{margin:1.4vh 0 0;padding:1.1vh 1vw;border-radius:1vh;background:rgba(76,175,80,.2);border:1px solid rgba(76,175,80,.4);color:#81c784;font-weight:700;display:none}
-#menu #mst{min-height:2.6vh;margin:1vh 0 .6vh;color:var(--al);font-weight:600}
-#menu .btns{display:flex;flex-direction:column;gap:.9vh;margin-top:1vh}
-#menu button{font:700 2vh Montserrat,sans-serif;background:rgba(255,255,255,.08);color:#fff;border:max(1px,.1vh) solid rgba(255,255,255,.12);border-radius:1vh;padding:1.3vh 1.4vw;text-align:left;cursor:pointer;outline:none;transition:background .15s,box-shadow .15s,transform .15s;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.2);user-select:none;-webkit-user-select:none}
+html.menu-open #brk,html.menu-open #updot{display:none!important}
+#menu .mx{width:86vw;max-width:1560px;max-height:94vh;display:flex;flex-direction:column;gap:2vh;color:#fff;font-size:2vh;line-height:1.4;cursor:default;position:relative}
+#menu .mh2{display:flex;align-items:center;gap:1.6vw}
+#menu .mh2 .mt{flex:1;min-width:0;display:flex;flex-direction:column}
+#menu #mbrand{margin:0;font-size:3.4vh;font-weight:800;letter-spacing:.01em;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#menu #mbiz{font-size:1.9vh;color:#9aa3ad;font-weight:500}
+#menu .chips{display:flex;gap:.8vw}
+#menu .chip{display:inline-flex;align-items:center;gap:.6vw;padding:.7vh 1.1vw;border-radius:5vh;background:rgba(255,255,255,.07);font-size:1.7vh;font-weight:600;color:#cfd5db;white-space:nowrap}
+#menu .chip.ok{color:#7fe3b4;background:rgba(62,207,142,.13)}#menu .chip.warn{color:#f0c27a;background:rgba(230,162,60,.15)}#menu .chip.bad{color:#ff9d9d;background:rgba(229,83,75,.15)}
+#menu .mgrid{display:grid;grid-template-columns:1.15fr 1fr;grid-auto-rows:min-content;gap:2vh 1.6vw;overflow-y:auto;min-height:0;padding:.4vh .4vh 1vh}
+#menu .mc{background:rgba(255,255,255,.045);border:max(1px,.1vh) solid rgba(255,255,255,.08);border-radius:2vh;padding:2.2vh 1.5vw;display:flex;flex-direction:column;gap:1.4vh;min-width:0}
+#menu .mc>h4{margin:0;font-size:1.5vh;letter-spacing:.12em;text-transform:uppercase;color:#8d96a0;font-weight:700}
+#menu .mus{grid-row:span 1}
+#menu .np{display:flex;align-items:center;gap:1.2vw;min-width:0}
+#menu .np .cv{flex:none;width:8vh;height:8vh;border-radius:1.4vh;background:rgba(var(--a2),.18) center/cover no-repeat;display:grid;place-items:center;font-size:3.6vh}
+#menu .np .tx{min-width:0;display:flex;flex-direction:column}
+#menu .np b{font-size:2.5vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#menu .np span{font-size:1.8vh;color:#9aa3ad;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#menu .ctl{display:flex;align-items:center;justify-content:center;gap:1.4vw}
+#menu .ctl button{width:9vh;height:9vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:3.4vh;text-align:center}
+#menu .ctl button.big{width:11vh;height:11vh;font-size:4.4vh;background:var(--accent2);color:#111;border-color:transparent}
+#menu .vol{display:flex;align-items:center;gap:1vw}
+#menu .vol button{width:6vh;height:6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.8vh;text-align:center}
+#menu .vol .bar{flex:1;height:1.1vh;border-radius:1vh;background:rgba(255,255,255,.12);overflow:hidden}#menu .vol .bar i{display:block;height:100%;width:0;background:var(--accent2);border-radius:1vh;transition:width .2s}
+#menu .vol b{width:5.4vh;text-align:right;font-size:2vh;font-variant-numeric:tabular-nums}
+#menu .mc.off .ctl,#menu .mc.off .vol{opacity:.4;pointer-events:none}
+#menu .row{display:flex;justify-content:space-between;align-items:center;gap:2vw;padding:.7vh 0;border-bottom:max(1px,.1vh) solid rgba(255,255,255,.07)}
+#menu .row:last-child{border-bottom:0}
+#menu .row span:first-child{color:#9aa3ad;font-weight:500;font-size:1.8vh}
+#menu .row span:last-child{color:#fff;font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere;font-size:1.8vh}
+#menu #mnew{display:none;padding:1.1vh 1vw;border-radius:1.2vh;background:rgba(62,207,142,.14);color:#7fe3b4;font-weight:700;font-size:1.9vh}
+#menu #mprog{display:none;height:1.1vh;border-radius:1vh;background:rgba(255,255,255,.12);overflow:hidden}#menu #mprog i{display:block;height:100%;width:0;background:#3ecf8e;transition:width .3s}
+#menu #mst{min-height:2.6vh;color:var(--al);font-weight:600;font-size:1.9vh;text-align:center}
+#menu .acts{display:grid;grid-template-columns:1fr 1fr;gap:1.2vh .9vw}
+#menu button{font:700 2vh Montserrat,sans-serif;background:rgba(255,255,255,.08);color:#fff;border:max(1px,.1vh) solid rgba(255,255,255,.12);border-radius:1.4vh;padding:1.5vh 1.2vw;text-align:left;cursor:pointer;outline:none;transition:background .15s,box-shadow .15s,transform .15s;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.2);user-select:none;-webkit-user-select:none}
+#menu .acts button,#menu #mupd,#menu #mchk{display:flex;align-items:center;gap:.8vw}
 #menu button:active{background:rgba(255,255,255,.28);transform:scale(.98)}
-#menu button.pri{background:linear-gradient(135deg,#2e7d32,#4caf50);border-color:#81c784;color:#fff}
-#menu button#mout{color:#ff9999;border-color:rgba(255,100,100,.2)}
-#menu button:focus{box-shadow:0 0 0 .35vh #fff, 0 0 1.5vh rgba(255,255,255,.5);background:rgba(255,255,255,.22);transform:scale(1.015)}
-#menu button.pri:focus{box-shadow:0 0 0 .35vh #a5d6a7, 0 0 1.5vh rgba(76,175,80,.6)}
-#menu button#mout:focus{background:#b3261e;color:#fff;border-color:#ff4d4d;box-shadow:0 0 0 .35vh #ff4d4d, 0 0 1.5vh rgba(255,0,0,.5)}
-#menu .hint{margin-top:1.6vh;font-size:1.8vh;color:#888;text-align:center;letter-spacing:.02em}
+#menu button.pri{background:linear-gradient(135deg,#2e7d32,#4caf50);border-color:#81c784;color:#fff;justify-content:center}
+#menu button#mout{color:#ff9d9d;border-color:rgba(255,100,100,.25)}
+#menu button:focus{box-shadow:0 0 0 .35vh #fff,0 0 1.6vh rgba(255,255,255,.45);background:rgba(255,255,255,.2);transform:scale(1.02);z-index:1}
+#menu .ctl button.big:focus{background:#fff;color:#111}
+#menu button.pri:focus{box-shadow:0 0 0 .35vh #a5d6a7,0 0 1.6vh rgba(76,175,80,.6);background:linear-gradient(135deg,#388e3c,#66bb6a)}
+#menu button#mout:focus{background:#b3261e;color:#fff;border-color:#ff4d4d;box-shadow:0 0 0 .35vh #ff4d4d,0 0 1.6vh rgba(255,0,0,.5)}
+#menu #mtopcls{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.4vh;text-align:center}
+#menu .hint{font-size:1.6vh;color:#7d8791;text-align:center;letter-spacing:.02em}
+@media (max-aspect-ratio:1/1){#menu .mgrid{grid-template-columns:1fr}#menu .mx{width:94vw}}
 /* kampanya kartı */
 #poster{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .8s ease-in-out;pointer-events:none}#poster.on{opacity:1}
 #langchip{position:absolute;top:.8vh;right:.8vw;font:700 1.2vh/1 var(--font),sans-serif;letter-spacing:.08em;padding:.45vh .6vw;border-radius:.6vh;background:var(--accent);color:var(--white);opacity:.85}
@@ -989,27 +1019,42 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 <div id="bday"><p id="btxt"></p></div>
 <div id="touch-menu-btn" onclick="window.__menu()">⚙ Menü</div>
 <div id="updot"><i></i>Güncelleme var · Menü</div>
-<div id="menu"><div class="box">
-  <h3 id="mbrand"><span>TV</span><span id="mtopcls" onclick="menuClose()" style="cursor:pointer;font-size:2.6vh;opacity:.8;padding:.4vh .8vw;touch-action:manipulation" title="Kapat">✕</span></h3>
-  <div class="row"><span>İşletme / Şube</span><span id="mbiz">-</span></div>
-  <div class="row"><span>Kurulu APK sürümü</span><span id="mver">-</span></div>
-  <div class="row"><span>Sunucu APK sürümü</span><span id="msrv">-</span></div>
-  <div class="row"><span>Ekran yazılımı (yayın)</span><span id="msoft">-</span></div>
-  <div class="row"><span>Bağlantı durumu</span><span id="mconn">-</span></div>
-  <div class="row"><span>Ekran çözünürlüğü</span><span id="mres">-</span></div>
-  <div class="row"><span>Arka plan müzik</span><span id="mmus">-</span></div>
-  <div class="row"><span>Sunucu adresi</span><span id="mhost">-</span></div>
-  <div id="mnew"></div>
-  <div id="mst"></div>
-  <div class="btns">
-    <button id="mupd" class="pri" type="button" style="display:none">⚡ Yeni sürümü indir ve kur</button>
-    <button id="mchk" type="button">🔄 Güncellemeyi kontrol et</button>
-    <button id="mrel" type="button" onclick="location.reload()">🔁 Sayfayı yenile</button>
-    <button id="mtest" type="button" style="display:none">🧪 Test ortamına geç</button>
-    <button id="mcls" type="button" onclick="menuClose()">✕ Kapat</button>
-    <button id="mout" type="button">🚪 Bu cihazın oturumunu kapat (Çıkış)</button>
+<div id="menu"><div class="mx">
+  <div class="mh2">
+    <div class="mt"><b id="mbrand">TV</b><span id="mbiz">-</span></div>
+    <div class="chips"><span id="mconn" class="chip">-</span><span id="mchip" class="chip">-</span></div>
+    <button id="mtopcls" type="button" data-nav title="Kapat" aria-label="Kapat">✕</button>
   </div>
-  <div class="hint">Kumanda: ▲ / ▼ gezin &nbsp;•&nbsp; OK / Tamam: seç &nbsp;•&nbsp; Geri / Menü: kapat &nbsp;•&nbsp; Ekrana dokunarak da kullanabilirsiniz</div>
+  <div class="mgrid">
+    <section class="mc mus" id="mmc"><h4>Müzik</h4>
+      <div class="np"><div class="cv" id="mmcv">♪</div><div class="tx"><b id="mmtitle">-</b><span id="mmsub">-</span></div></div>
+      <div class="ctl"><button id="mmprev" type="button" data-nav aria-label="Önceki">⏮</button><button id="mmplay" class="big" type="button" data-nav aria-label="Oynat / duraklat">▶</button><button id="mmnext" type="button" data-nav aria-label="Sonraki">⏭</button></div>
+      <div class="vol"><button id="mmvolm" type="button" data-nav aria-label="Sesi kıs">−</button><span class="bar"><i id="mmbar"></i></span><button id="mmvolp" type="button" data-nav aria-label="Sesi aç">+</button><b id="mmvol">-</b></div>
+      <span id="mmus" style="display:none"></span>
+    </section>
+    <section class="mc"><h4>Cihaz bilgisi</h4>
+      <div class="row"><span>Kurulu APK sürümü</span><span id="mver">-</span></div>
+      <div class="row"><span>Sunucu APK sürümü</span><span id="msrv">-</span></div>
+      <div class="row"><span>Ekran yazılımı (yayın)</span><span id="msoft">-</span></div>
+      <div class="row"><span>Ekran çözünürlüğü</span><span id="mres">-</span></div>
+      <div class="row"><span>Sunucu adresi</span><span id="mhost">-</span></div>
+    </section>
+    <section class="mc"><h4>Güncelleme</h4>
+      <div id="mnew"></div><div id="mprog"><i></i></div>
+      <button id="mupd" class="pri" type="button" data-nav style="display:none">⚡ Yeni sürümü indir ve kur</button>
+      <button id="mchk" type="button" data-nav>🔄 Güncellemeyi kontrol et</button>
+    </section>
+    <section class="mc"><h4>İşlemler</h4>
+      <div class="acts">
+        <button id="mrel" type="button" data-nav>🔁 Sayfayı yenile</button>
+        <button id="mtest" type="button" data-nav style="display:none">🧪 Test ortamına geç</button>
+        <button id="mout" type="button" data-nav>🚪 Oturumu kapat</button>
+        <button id="mcls" type="button" data-nav>✕ Kapat</button>
+      </div>
+    </section>
+  </div>
+  <div id="mst"></div>
+  <div class="hint">Kumanda: ◀ ▲ ▼ ▶ gezin &nbsp;•&nbsp; OK / Tamam: seç &nbsp;•&nbsp; Geri / Menü: kapat &nbsp;•&nbsp; Ekrana dokunarak da kullanabilirsiniz</div>
 </div></div>
 <div id="badge"></div>
 <div id="blocked"><small id="b-brand"></small><h1 id="b-title">Ekran duraklatıldı</h1><p id="b-text"></p></div>
@@ -2392,7 +2437,7 @@ setInterval(() => {
   }
 }, 5000);
 // ---- kumanda Menü tuşu: sürüm bilgisi ve güncelleme kontrolü (güncelleme bildirimi de burada) ----
-const upd = { avail: null, last: null, timer: 0 };
+const upd = { avail: null, last: null, timer: 0, live: 0, busy: false };
 const $m = id => document.getElementById(id);
 function menuSt(t) { $m('mst').textContent = t || ''; }
 function menuInfo() {
@@ -2403,12 +2448,11 @@ function menuInfo() {
   $m('mhost').textContent = location.host;
   $m('mres').textContent = `${screen.width}×${screen.height} (${window.innerWidth}×${window.innerHeight})`;
   const isWs = window.__ws && window.__ws.readyState === 1;
-  $m('mconn').textContent = isWs ? '🟢 Çevrimiçi (Canlı senkron)' : (navigator.onLine === false ? '🔴 Çevrimdışı (İnternet yok)' : '🟡 Bağlanıyor…');
-  const m = MUS.cfg;
-  const it = activeMusicItem(m);
-  $m('mmus').textContent = (m && m.enabled && it) ? `${it.title || it.category || 'Açık'} (Ses: %${MUS.vol})` : 'Kapalı';
+  const cn = $m('mconn'); cn.textContent = isWs ? '● Çevrimiçi' : (navigator.onLine === false ? '● İnternet yok' : '● Bağlanıyor…'); cn.className = 'chip ' + (isWs ? 'ok' : navigator.onLine === false ? 'bad' : 'warn');
+  menuMusic();
   const a = upd.avail, last = upd.last;
-  $m('msrv').textContent = last ? 'v' + last.versionName + ' (kod ' + last.versionCode + ')' : 'v2.1 (kod 11)';
+  $m('msrv').textContent = last ? 'v' + last.versionName + ' (kod ' + last.versionCode + ')' : 'Kontrol ediliyor…';
+  const ch = $m('mchip'); ch.textContent = a ? '⚡ Yeni sürüm var' : (last && n && n.versionCode ? '✓ Uygulama güncel' : 'Sürüm: ' + (n && n.versionName ? 'v' + n.versionName() : 'tarayıcı')); ch.className = 'chip ' + (a ? 'warn' : last && n && n.versionCode ? 'ok' : '');
   $m('mnew').style.display = a ? 'block' : 'none';
   if (a) $m('mnew').textContent = '⚡ Yeni sürüm hazır: v' + a.versionName + ' (kod ' + a.versionCode + ')';
   $m('mupd').style.display = (a && n && n.installUpdate) ? '' : 'none';
@@ -2418,6 +2462,33 @@ function menuInfo() {
   $m('mtest').style.display = showT ? '' : 'none';
   $m('mtest').textContent = env === 'test' ? '🔙 Canlı ortama dön' : '🧪 Test ortamına geç';
 }
+// Menüdeki müzik kartı: çalan şarkı, önceki / oynat-duraklat / sonraki ve ses. Komutlar panelle aynı yoldan (sunucu) gider; durum sunucudan dönünce kesinleşir.
+let mmOpt = null; // iyimser durum (basılınca hemen değişsin): { playing, vol, at }
+function menuMusic() {
+  const m = MUS.cfg, it = activeMusicItem(m), has = !!(m && (m.playlists || []).length), on = !!(m && m.enabled && it);
+  const opt = mmOpt && Date.now() - mmOpt.at < 2500 ? mmOpt : null;
+  const playing = opt && opt.playing != null ? opt.playing : !!(on && m.playing && !MUS.err);
+  const vol = Math.max(0, Math.min(100, Math.round(opt && opt.vol != null ? opt.vol : (MUS.vol != null ? MUS.vol : (m && m.volume) || 0))));
+  const sp = MUS.spConnectTrack;
+  $m('mmc').classList.toggle('off', !has);
+  $m('mmtitle').textContent = !has ? 'Müzik ayarlanmamış' : sp && sp.title ? sp.title : (on && MUS.trackTitle) || (it && it.title) || 'Müzik kapalı';
+  $m('mmsub').textContent = !has ? 'Panelde Müzik sayfasından bir liste ekleyin' : !on ? 'Kapalı: ▶ ile açın' : MUS.err ? MUS.err : sp && sp.artist ? sp.artist : (MUS.trackSub || '') + (playing ? '' : (MUS.trackSub ? ' · ' : '') + 'duraklatıldı');
+  const th = (sp && sp.thumb) || (on && MUS.trackThumb) || (it && it.thumb) || '', cv = $m('mmcv');
+  if (cv.dataset.t !== th) { cv.dataset.t = th; cv.style.backgroundImage = th ? `url("${th.replace(/"/g, '%22')}")` : ''; cv.textContent = th ? '' : '♪'; }
+  $m('mmplay').textContent = playing ? '⏸' : '▶';
+  $m('mmbar').style.width = vol + '%'; $m('mmvol').textContent = '%' + vol;
+  $m('mmus').textContent = on ? `${(it && it.title) || ''} (Ses: %${vol})` : 'Kapalı';
+}
+function menuMusicCmd(cmd, extra) {
+  if (PREVIEW) { menuSt('Önizlemede müzik kontrolü kapalı'); return; }
+  wsSend({ type: 'music_ctl', cmd, ...(extra || {}) });
+}
+attachTap('mmplay', () => { const m = MUS.cfg, was = !!(m && m.enabled && m.playing); mmOpt = { playing: !was, at: Date.now() }; menuMusic(); menuMusicCmd('toggle'); });
+attachTap('mmnext', () => { menuSt('Sonraki'); menuMusicCmd('next'); });
+attachTap('mmprev', () => { menuSt('Önceki'); menuMusicCmd('prev'); });
+const mmVol = d => { const v = Math.max(0, Math.min(100, Math.round(((mmOpt && Date.now() - mmOpt.at < 2500 && mmOpt.vol != null ? mmOpt.vol : MUS.vol) || 0) / 10) * 10 + d)); mmOpt = { ...(mmOpt || {}), vol: v, at: Date.now() }; menuMusic(); menuMusicCmd('volume', { volume: v }); };
+attachTap('mmvolm', () => mmVol(-10));
+attachTap('mmvolp', () => mmVol(10));
 async function checkUpdateSilently() {
   try {
     const a = await (await fetch('/apk-version.json?t=' + Date.now(), { cache: 'no-store' })).json();
@@ -2426,14 +2497,17 @@ async function checkUpdateSilently() {
 }
 let lastMenuToggle = 0;
 function menuOpen() {
-  $m('menu').classList.add('on'); try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} menuInfo(); menuSt('');
+  upd.openedAt = Date.now(); document.documentElement.classList.add('menu-open'); try { clearTimeout(brkTimer); brkEl.classList.remove('on'); window.__N && window.__N.brkHide && window.__N.brkHide(); } catch (e) {} $m('menu').classList.add('on'); try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} menuInfo(); menuSt('');
   $m('menu').scrollTop = 0;
   checkUpdateSilently();
-  const firstBtn = upd.avail ? $m('mupd') : $m('mchk');
-  setTimeout(() => { if (firstBtn && firstBtn.focus) firstBtn.focus(); }, 50);
-  clearTimeout(upd.timer); upd.timer = setTimeout(menuClose, 90000);
+  const pickFirst = () => upd.avail && $m('mupd').style.display !== 'none' ? $m('mupd') : (MUS.cfg && (MUS.cfg.playlists || []).length ? $m('mmplay') : $m('mchk'));
+  setTimeout(() => { const b = pickFirst(); if (b && b.focus) b.focus(); }, 50);
+  menuIdle(90000);
+  clearInterval(upd.live); upd.live = setInterval(() => { if ($m('menu').classList.contains('on')) menuInfo(); }, 1500);
 }
-function menuClose() { clearTimeout(upd.timer); $m('menu').classList.remove('on'); try { window.__N && window.__N.overlay && window.__N.overlay(false); } catch (e) {} }
+// menü işlem yapılmazsa kapanır; güncelleme sürerken kapanmaz
+function menuIdle(ms) { clearTimeout(upd.timer); upd.timer = setTimeout(() => { if (upd.busy) return menuIdle(60000); menuClose(); }, ms); }
+function menuClose() { clearTimeout(upd.timer); clearInterval(upd.live); upd.busy = false; document.documentElement.classList.remove('menu-open'); $m('menu').classList.remove('on'); try { window.__N && window.__N.overlay && window.__N.overlay(false); } catch (e) {} }
 window.__menu = () => {
   const now = Date.now();
   if (now - lastMenuToggle < 300) return;
@@ -2441,7 +2515,14 @@ window.__menu = () => {
   $m('menu').classList.contains('on') ? menuClose() : menuOpen();
 }; // Menü tuşu
 window.__menuClose = () => { if ($m('menu').classList.contains('on')) menuClose(); }; // Geri tuşu
-window.__updateStatus = msg => { if (!$m('menu').classList.contains('on')) menuOpen(); menuSt(msg); };
+window.__updateStatus = msg => {
+  if (!$m('menu').classList.contains('on')) menuOpen(); menuSt(msg);
+  const pr = /%(\d+)/.exec(msg || ''), bar = $m('mprog');
+  if (pr) { bar.style.display = 'block'; bar.firstElementChild.style.width = pr[1] + '%'; upd.busy = true; }
+  else if (/^İndiriliyor/.test(msg || '')) { bar.style.display = 'block'; upd.busy = true; }
+  else { bar.style.display = 'none'; upd.busy = false; }
+  if (/^(İndirilemedi|Yükleyici|Geçersiz|İzin verilmedi)/.test(msg || '')) { try { checkUpdate(upd.last); } catch (e) {} }
+};
 function checkUpdate(a) {
   const n = window.__N;
   if (a) upd.last = a;
@@ -2449,7 +2530,11 @@ function checkUpdate(a) {
   const srvCode = (a && a.versionCode) ? Number(a.versionCode) : 0;
   upd.avail = (n && !n.desktop && curCode > 0 && srvCode > curCode) ? a : null;
   $m('updot').classList.toggle('on', !!(upd.avail && n.versionName));
-  if ($m('menu').classList.contains('on')) menuInfo();
+  if ($m('menu').classList.contains('on')) {
+    menuInfo();
+    // menü yeni açıldıysa ve yeni sürüm bu sırada bulunduysa odak doğrudan "indir ve kur"a gelir (iki kez basmak gerekmesin)
+    if (upd.avail && Date.now() - (upd.openedAt || 0) < 3000 && $m('mupd').style.display !== 'none' && ['mchk', 'mmplay'].includes((document.activeElement || {}).id)) $m('mupd').focus();
+  }
 }
 
 // Dokunmatik ve kumanda tıklama birleştirici (gecikmesiz tepki)
@@ -2486,9 +2571,10 @@ attachTap('mupd', () => {
   }
   const apkPath = (upd.avail && upd.avail.url) || '/app.apk';
   const fullUrl = apkPath.startsWith('http') ? apkPath : (location.origin + apkPath);
-  menuSt('İndiriliyor ve hazırlanıyor…');
-  $m('updot').classList.remove('on');
-  window.__N.installUpdate(fullUrl);
+  menuSt('İndiriliyor ve hazırlanıyor…'); upd.busy = true;
+  const pb = $m('mprog'); pb.style.display = 'block'; pb.firstElementChild.style.width = '2%';
+  if (window.__N.installUpdateV) window.__N.installUpdateV(fullUrl, Number(upd.avail && upd.avail.versionCode) || 0);
+  else window.__N.installUpdate(fullUrl);
 });
 
 attachTap('mrel', () => location.reload());
@@ -2505,7 +2591,7 @@ attachTap('mcls', menuClose);
 attachTap('mtopcls', menuClose);
 
 // Menü kutusuna dokunulduğunda arka plan tıklamasının tetiklenmesini engelle
-const mBox = $m('menu') ? $m('menu').querySelector('.box') : null;
+const mBox = $m('menu') ? $m('menu').querySelector('.mx') : null;
 if (mBox) {
   mBox.addEventListener('click', e => e.stopPropagation());
   mBox.addEventListener('touchend', e => e.stopPropagation(), { passive: true });
@@ -2538,24 +2624,31 @@ document.addEventListener('touchend', e => {
   }
 }, { passive: true });
 
-// Kumanda: Menü açıkken yukarı/aşağı butonlar arasında gezinme, OK ile seçme, Geri ile kapatma
+// Kumanda: Menü açıkken ▲▼◀▶ ile en yakın düğmeye geçilir (ızgara düzeni), OK seçer, Geri kapatır
+function menuNav(dir) {
+  const btns = [...$m('menu').querySelectorAll('[data-nav]')].filter(b => b.offsetParent !== null && getComputedStyle(b).display !== 'none');
+  if (!btns.length) return;
+  const cur = btns.indexOf(document.activeElement);
+  if (cur < 0) { btns[0].focus(); return; }
+  const r0 = btns[cur].getBoundingClientRect(), cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2;
+  let best = null, bs = 1e12;
+  btns.forEach((b, i) => {
+    if (i === cur) return;
+    const r = b.getBoundingClientRect(), x = r.left + r.width / 2 - cx, y = r.top + r.height / 2 - cy;
+    const along = dir === 'down' ? y : dir === 'up' ? -y : dir === 'right' ? x : -x, across = dir === 'down' || dir === 'up' ? x : y;
+    if (along < 6) return;
+    const sc = along + Math.abs(across) * 2.2; // yönde yakın ve hizalı olan kazanır
+    if (sc < bs) { bs = sc; best = b; }
+  });
+  if (best) { best.focus(); try { best.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
+}
 document.addEventListener('keydown', e => {
   if (!$m('menu') || !$m('menu').classList.contains('on')) return;
-  const isDown = e.key === 'ArrowDown' || e.keyCode === 20;
-  const isUp = e.key === 'ArrowUp' || e.keyCode === 19;
+  menuIdle(90000); // her tuşta bekleme süresi yenilenir
+  const dir = e.key === 'ArrowDown' || e.keyCode === 20 ? 'down' : e.key === 'ArrowUp' || e.keyCode === 19 ? 'up' : e.key === 'ArrowRight' || e.keyCode === 22 ? 'right' : e.key === 'ArrowLeft' || e.keyCode === 21 ? 'left' : '';
   const isOk = e.key === 'Enter' || e.key === ' ' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23 || e.keyCode === 66;
   const isBack = e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack' || e.keyCode === 4 || e.keyCode === 27;
-
-  if (isDown || isUp) {
-    e.preventDefault();
-    const btns = [...$m('menu').querySelectorAll('.btns button')].filter(b => b.offsetParent !== null && getComputedStyle(b).display !== 'none');
-    if (!btns.length) return;
-    let cur = btns.indexOf(document.activeElement);
-    if (cur < 0) cur = 0;
-    else cur = (cur + (isDown ? 1 : -1) + btns.length) % btns.length;
-    btns[cur].focus();
-    return;
-  }
+  if (dir) { e.preventDefault(); e.stopImmediatePropagation(); menuNav(dir); return; }
   if (isOk) {
     if (document.activeElement && document.activeElement.tagName === 'BUTTON' && $m('menu').contains(document.activeElement)) {
       e.preventDefault();
@@ -3036,6 +3129,13 @@ document.addEventListener('keydown', e => {
   if (n) { e.preventDefault(); n.focus(); }
 });
 attachTap('mout', async () => {
+  const b = $m('mout');
+  if (!b.dataset.arm) { // yanlışlıkla basılıp cihaz eşleşmesi kaybolmasın: 5 sn içinde ikinci basış gerekir
+    menuSt('Bu cihazın oturumu kapanacak, yeniden eşleştirmeniz gerekecek. Onaylamak için tekrar basın.');
+    b.textContent = '⚠ Onaylamak için tekrar basın'; b.dataset.arm = String(setTimeout(() => { b.dataset.arm = ''; b.textContent = '🚪 Oturumu kapat'; menuSt(''); }, 5000));
+    return;
+  }
+  clearTimeout(+b.dataset.arm); b.dataset.arm = '';
   menuSt('Oturum kapatılıyor…');
   const t = tokenGet();
   tokenSet('');

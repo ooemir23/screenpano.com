@@ -760,6 +760,60 @@
           ]
         }
       }
+    },
+    {
+      "id": "kumanda-menu",
+      "icon": "🎛️",
+      "title": "Kumandadan müzik ve güncelleme",
+      "short": "Kumanda menüsü",
+      "text": "Kumandadaki Menü tuşuyla ekranın yönetimine girin: müziği oynatın, duraklatın, şarkı ve sesi değiştirin, yeni sürümü tek adımda indirip kurun. Okla gezilen, büyük ve net bir ekran.",
+      "points": [
+        "Müzik: önceki, oynat/duraklat, sonraki, ses",
+        "Yeni sürüm tek seferde indirilir ve kurulur",
+        "Oturum kapatma yanlışlıkla yapılmasın diye onay ister"
+      ],
+      "plan": "all",
+      "compare": "Kumandadan müzik kontrolü",
+      "added": "2026-11-06",
+      "visual": {
+        "type": "win",
+        "img": "p-cihaz"
+      },
+      "i18n": {
+        "en": {
+          "title": "Music and updates from the remote",
+          "short": "Remote menu",
+          "compare": "Music control from the remote",
+          "text": "Press the Menu key on the remote to manage the screen: play, pause, change the track and volume, and download and install a new version in one step. A large, clear screen you navigate with the arrow keys.",
+          "points": [
+            "Music: previous, play/pause, next, volume",
+            "A new version downloads and installs in one go",
+            "Signing out asks for confirmation so it can't happen by accident"
+          ]
+        },
+        "de": {
+          "title": "Musik und Updates per Fernbedienung",
+          "short": "Fernbedienungsmenü",
+          "compare": "Musiksteuerung per Fernbedienung",
+          "text": "Mit der Menü-Taste der Fernbedienung steuern Sie den Bildschirm: Musik abspielen, pausieren, Titel und Lautstärke ändern und eine neue Version in einem Schritt laden und installieren. Ein großer, klarer Bildschirm, per Pfeiltasten bedienbar.",
+          "points": [
+            "Musik: zurück, Wiedergabe/Pause, weiter, Lautstärke",
+            "Eine neue Version wird in einem Zug geladen und installiert",
+            "Abmelden fragt nach, damit es nicht versehentlich passiert"
+          ]
+        },
+        "ar": {
+          "title": "الموسيقى والتحديثات من جهاز التحكم",
+          "short": "قائمة جهاز التحكم",
+          "compare": "التحكم بالموسيقى من جهاز التحكم",
+          "text": "اضغط زر القائمة في جهاز التحكم لإدارة الشاشة: شغّل الموسيقى أو أوقفها مؤقتًا، غيّر المقطع والصوت، ونزّل الإصدار الجديد وثبّته بخطوة واحدة. شاشة كبيرة وواضحة تتنقل فيها بالأسهم.",
+          "points": [
+            "الموسيقى: السابق، تشغيل/إيقاف مؤقت، التالي، الصوت",
+            "يُنزَّل الإصدار الجديد ويُثبَّت دفعة واحدة",
+            "تسجيل الخروج يطلب تأكيدًا حتى لا يحدث بالخطأ"
+          ]
+        }
+      }
     }
   ],
   "extras": [

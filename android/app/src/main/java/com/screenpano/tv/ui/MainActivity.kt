@@ -1008,7 +1008,15 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun installUpdate(url: String) {
             runOnUiThread {
-                startUpdate(url)
+                startUpdate(url, 0)
+            }
+        }
+
+        /** Aynı işlem; sunucudaki sürüm kodu da bildirilir: indirilmiş uygun APK varsa yeniden indirilmez (APK 3.23+). */
+        @JavascriptInterface
+        fun installUpdateV(url: String, versionCode: Int) {
+            runOnUiThread {
+                startUpdate(url, versionCode)
             }
         }
     }
@@ -1022,7 +1030,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startUpdate(url: String) {
+    /** Bekleyen güncelleme: "bilinmeyen kaynak" izni için ayar ekranına gidildiyse, dönüşte kendiliğinden devam eder (tekrar basmaya gerek kalmaz). */
+    private var pendingUpdate: Pair<String, Int>? = null
+
+    /** İndirilmiş APK'nın sürüm kodu; okunamazsa -1. */
+    private fun apkVersionCode(f: File): Long {
+        return try {
+            val info = packageManager.getPackageArchiveInfo(f.absolutePath, 0) ?: return -1L
+            if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else @Suppress("DEPRECATION") info.versionCode.toLong()
+        } catch (e: Throwable) { -1L }
+    }
+
+    private fun startUpdate(url: String, wantCode: Int) {
         if (isUpdating) return
         val curHost = binding.webView.url?.split("/tv")?.getOrNull(0) ?: baseUrl
         if (!url.startsWith("$baseUrl/") && !url.startsWith("$curHost/")) {
@@ -1031,17 +1050,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
-            updateStatus("Açılan ekranda bu uygulama için izni açıp geri dönün, sonra tekrar OK'a basın")
+            pendingUpdate = Pair(url, wantCode)
+            updateStatus("Açılan ekranda bu uygulama için izni açıp geri dönün; güncelleme kendiliğinden devam edecek")
             val i = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
             startActivity(i)
             return
+        }
+
+        // Daha önce indirilmiş (tam) ve yeni sürümü taşıyan APK varsa yeniden indirmeden doğrudan yükleyiciyi aç
+        val targetApk = UpdateProvider.apkFile(this)
+        if (targetApk.exists() && targetApk.length() > 0) {
+            val have = apkVersionCode(targetApk)
+            val cur = try { BuildConfig.VERSION_CODE.toLong() } catch (e: Throwable) { 0L }
+            val usable = have > cur && (wantCode <= 0 || have == wantCode.toLong())
+            if (usable) { updateStatus("İndirilmiş sürüm hazır, yükleme ekranı açılıyor…"); launchInstaller(targetApk); return }
         }
 
         isUpdating = true
         updateStatus("İndiriliyor…")
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val targetApk = UpdateProvider.apkFile(this@MainActivity)
             val res = apiClient.downloadFile(url, targetApk) { percent ->
                 if (percent % 10 == 0) updateStatus("İndiriliyor %$percent…")
             }
@@ -1133,6 +1161,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // izin ekranından dönüldü: izin verildiyse güncelleme kaldığı yerden devam eder, verilmediyse nedenini söyler
+        pendingUpdate?.let { p ->
+            pendingUpdate = null
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || packageManager.canRequestPackageInstalls()) startUpdate(p.first, p.second)
+            else updateStatus("İzin verilmedi: güncelleme için “Bu kaynaktan izin ver” seçeneği açık olmalı")
+        }
         binding.webView.onResume()
         binding.webView.requestFocus()
         if (playOnResume) exoPlayer?.play() // yalnız duraklatılmadan önce oynuyorsa (durdurulmuş video arka planda oynamasın)
