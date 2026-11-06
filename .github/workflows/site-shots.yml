@@ -43,7 +43,11 @@ jobs:
       - name: Görselleri üret
         env:
           TZ: Europe/Istanbul
-        run: npm run site-shots -- ${{ github.event.inputs.only }}
+          ONLY: ${{ github.event.inputs.only }}
+        # girdi doğrudan betiğe gömülmez (komut enjeksiyonu): ortam değişkeninden, yalnız güvenli karakterlerle
+        run: |
+          case "$ONLY" in *[!a-zA-Z0-9_,\ -]*) echo "Geçersiz ad"; exit 1;; esac
+          npm run site-shots -- $ONLY
       - name: Değiştiyse gönder
         run: |
           git add public/site/*.webp

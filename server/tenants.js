@@ -70,7 +70,8 @@ function remove(id) {
   store.q.tenantDel.run(id); cache.delete(id);
   fs.rmSync(path.join(DATA_DIR, 'tenants', id), { recursive: true, force: true });
 }
-process.on('exit', () => { for (const [id] of saveTimers) { const t = cache.get(id); if (t) saveNow(t); } });
+function flushAll() { for (const [id] of [...saveTimers]) { const t = cache.get(id); if (t) saveNow(t); } }
+process.on('exit', flushAll);
 
 // İşletme başına tek ekran (düzen). Yoksa varsayılan düzenle oluşturulur.
 function mainScreen(t) {
@@ -82,4 +83,4 @@ function mainScreen(t) {
   return row;
 }
 
-module.exports = { defaultDoc, get, all, refreshRow, save, saveNow, remove, dirsFor, mainScreen };
+module.exports = { defaultDoc, get, all, refreshRow, save, saveNow, flushAll, remove, dirsFor, mainScreen };

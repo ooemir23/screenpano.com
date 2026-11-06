@@ -38,6 +38,19 @@ r.use((req, res, next) => {
 });
 const ownerOnly = (req, res, next) => (req.user.role === 'staff' ? res.status(403).json({ error: 'Bu işlem için işletme sahibi yetkisi gerekir' }) : next());
 const changed = t => { tenants.save(t); hub.pushTenant(t.id); };
+// Yüklenen SVG içinde betik çalışabilir: PNG'ye çevrilir (sharp/librsvg betik çalıştırmaz), asıl dosya silinir.
+// Çevrilemezse SVG reddedilir.
+async function svgToPng(t, f) {
+  if (!/\.svg$/i.test(f.originalname)) return f.filename;
+  let sharp; try { sharp = require('sharp'); } catch (e) { sharp = null; }
+  const src = path.join(t.dirs.uploads, f.filename);
+  if (!sharp) { rmUpload(t, f.filename); return null; }
+  const name = f.filename.replace(/\.[^.]+$/, '') + '.png';
+  try { await sharp(src, { density: 300 }).resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: false }).png().toFile(path.join(t.dirs.uploads, name)); }
+  catch (e) { rmUpload(t, f.filename); return null; }
+  rmUpload(t, f.filename);
+  return name;
+}
 const sendTo = (t, msg) => hub.send(x => x.id === t.id, msg);
 
 // ---- yükleme: işletmenin kendi klasörü + paket kotası ----
@@ -159,7 +172,8 @@ r.post('/logo', quota, upload.single('file'), async (req, res) => {
     if (!f) return res.status(400).json({ error: 'dosya yok' });
     if (!/\.(png|jpe?g|webp|svg)$/i.test(f.originalname) || f.size > 5 * 1024 * 1024) { rmUpload(t, f.filename); return res.status(400).json({ error: 'PNG/JPG/WEBP/SVG ve en çok 5 MB olmalı' }); }
     // beyaz zeminli (alfasız) logolarda zemini kenardan şeffaf yap; şeffaf dosyalara ve SVG'ye dokunulmaz
-    let name = f.filename, bg = '';
+    let name = await svgToPng(t, f), bg = '';
+    if (!name) return res.status(400).json({ error: 'SVG dosyası okunamadı; PNG olarak yükleyin' });
     if (/\.(png|jpe?g|webp)$/i.test(f.originalname)) {
       try {
         const c = await require('./logobg').clean(path.join(t.dirs.uploads, f.filename), t.dirs.uploads);
@@ -173,12 +187,14 @@ r.post('/logo', quota, upload.single('file'), async (req, res) => {
 });
 r.delete('/logo', (req, res) => { rmUpload(req.t, req.t.db.logo); req.t.db.logo = null; changed(req.t); res.json({ ok: true }); });
 // görsel widget'ı için resim
-r.post('/assets', quota, upload.single('file'), (req, res) => {
+r.post('/assets', quota, upload.single('file'), async (req, res) => {
   const f = req.file, t = req.t;
   if (!f) return res.status(400).json({ error: 'dosya yok' });
   if (!/\.(png|jpe?g|webp|gif|svg)$/i.test(f.originalname) || f.size > 15 * 1024 * 1024) { rmUpload(t, f.filename); return res.status(400).json({ error: 'Resim dosyası ve en çok 15 MB olmalı' }); }
-  t.db.assets = (t.db.assets || []).concat({ id: auth.uid(), file: f.filename, name: f.originalname.slice(0, 80) }).slice(-50);
-  changed(t); res.json({ ok: true, url: t.upBase + f.filename });
+  const file = await svgToPng(t, f);
+  if (!file) return res.status(400).json({ error: 'SVG dosyası okunamadı; PNG olarak yükleyin' });
+  t.db.assets = (t.db.assets || []).concat({ id: auth.uid(), file, name: f.originalname.slice(0, 80) }).slice(-50);
+  changed(t); res.json({ ok: true, url: t.upBase + file });
 });
 
 // ================= EKRAN VE CİHAZLAR =================

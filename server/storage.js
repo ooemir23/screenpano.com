@@ -66,6 +66,7 @@ async function serve(req, res, t, file) {
     res.status(up.statusCode);
     for (const h of ['content-type', 'content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified']) if (up.headers[h]) res.set(h, up.headers[h]);
     res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    up.on('error', () => res.destroy()); // aktarım sırasında depo koparsa yalnız bu istek kapanır
     up.pipe(res);
     req.on('close', () => up.destroy());
   } catch (e) { res.status(e.status === 416 ? 416 : 502).end(); }

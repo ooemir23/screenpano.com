@@ -8,12 +8,12 @@ const { createTenant } = require('./accounts');
 const r = express.Router();
 const LEGAL_VERSION = require('./legal').VERSION;
 
-r.post('/login', (req, res) => {
+r.post('/login', async (req, res) => {
   const ip = auth.clientIp(req);
   const { username, password } = req.body || {};
   if (auth.tooMany(ip, username)) return res.status(429).json({ error: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin.' });
   const u = store.q.userByName.get(String(username || '').trim());
-  if (!u || !auth.checkPassword(password, u.pass)) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
+  if (!u || !(await auth.checkPasswordAsync(password, u.pass))) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
   auth.clearFails(ip, username);
   store.q.userLogin.run(Date.now(), u.id);
   auth.setSession(req, res, u);

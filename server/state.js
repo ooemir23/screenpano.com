@@ -25,7 +25,14 @@ function resetTenantMediaAt(tid) {
 const { plan, access } = require('./plans');
 const { WIDGETS, defaultLayout } = require('./widgets');
 
-const appVersion = () => { try { const v = JSON.parse(fs.readFileSync(path.join(config.PUBLIC_DIR, 'apk-version.json'), 'utf8')); return { versionCode: Number(v.versionCode) || 0, versionName: String(v.versionName || ''), url: '/app.apk' }; } catch { return null; } };
+// apk-version.json her yayında diskten okunmaz: 30 sn önbellek (deploy'da dosya değişince en geç 30 sn'de görülür)
+let _apkV = null, _apkAt = 0;
+const appVersion = () => {
+  if (Date.now() - _apkAt < 30000) return _apkV;
+  _apkAt = Date.now();
+  try { const v = JSON.parse(fs.readFileSync(path.join(config.PUBLIC_DIR, 'apk-version.json'), 'utf8')); _apkV = { versionCode: Number(v.versionCode) || 0, versionName: String(v.versionName || ''), url: '/app.apk' }; } catch { _apkV = null; }
+  return _apkV;
+};
 
 const CAMP_QR = url => QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
 const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch }) => ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch: sch || null });
@@ -121,6 +128,13 @@ function menuView(m) {
   }) });
   return out;
 }
+// TV'ye giden müzik: uzun ömürlü Spotify refreshToken kutulara (fiziksel erişime açık) gitmez
+function tvMusic(m) {
+  const x = fixMusic(m);
+  if (!x || !x.spotify) return x;
+  const { refreshToken, ...sp } = x.spotify;
+  return { ...x, spotify: sp };
+}
 function publicState(t) {
   const screen = require('./tenants').mainScreen(t);
   const db = t.db, p = plan(t), acc = access(t), pro = p.pro;
@@ -187,7 +201,7 @@ function publicState(t) {
     qrSize: 17, // QR boyutu ayarı kaldırıldı: tüm QR'lar aynı boyutta
     qrs: (db.qrs || []).map(({ id, label, svg, kind, text, pin, hide }) => ({ id, label, svg, pin: pin !== false, hide: Array.isArray(hide) ? hide : [], marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
     menu: pro && has('menu') ? menuView(db.menu) : null,
-    music: fixMusic(db.music),
+    music: tvMusic(db.music),
     rates: F.rates,
     weather: F.weatherFor(t),
   };

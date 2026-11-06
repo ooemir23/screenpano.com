@@ -78,7 +78,8 @@ function request({ method, key, query, headers, body, stream, payloadHash }) {
     });
     rq.on('timeout', () => rq.destroy(new Error('Depo zaman aşımı')));
     rq.on('error', reject);
-    if (body && !isBuf && body.pipe) body.pipe(rq); else rq.end(body);
+    // okuma akışı hatası (dosya silindi/disk hatası) süreci düşürmesin: isteği kapatıp reddet
+    if (body && !isBuf && body.pipe) { body.on('error', e => { rq.destroy(e); reject(e); }); body.pipe(rq); } else rq.end(body);
   });
 }
 

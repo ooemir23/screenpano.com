@@ -21,12 +21,12 @@ function issueDevice(t, agent, name) {
 }
 
 // Kullanıcı adı ve şifreyle giriş: doğrudan cihaz token'ı
-r.post('/login', (req, res) => {
+r.post('/login', async (req, res) => {
   const ip = auth.clientIp(req);
   const { username, password } = req.body || {};
   if (auth.tooMany(ip, username)) return res.status(429).json({ error: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin.' });
   const u = store.q.userByName.get(String(username || '').trim());
-  if (!u || !u.tenant_id || !auth.checkPassword(password, u.pass)) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
+  if (!u || !u.tenant_id || !(await auth.checkPasswordAsync(password, u.pass))) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
   auth.clearFails(ip, username);
   let t = tenants.get(u.tenant_id);
   if (!t) return res.status(404).json({ error: 'İşletme bulunamadı' });

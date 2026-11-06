@@ -20,6 +20,16 @@ function checkPassword(pw, stored) {
   const exp = Buffer.from(h, 'hex');
   return got.length === exp.length && crypto.timingSafeEqual(got, exp);
 }
+// Giriş yolunda kullanılır: hesaplama iş parçacığı havuzunda yapılır, sunucu (TV bağlantıları) beklemez
+function checkPasswordAsync(pw, stored) {
+  const [alg, salt, h] = String(stored || '').split('$');
+  if (alg !== 'scrypt' || !salt || !h) return Promise.resolve(false);
+  return new Promise(ok => crypto.scrypt(String(pw), salt, 64, (err, got) => {
+    if (err) return ok(false);
+    const exp = Buffer.from(h, 'hex');
+    ok(got.length === exp.length && crypto.timingSafeEqual(got, exp));
+  }));
+}
 
 // "yük.imza" biçiminde kısa, imzalı token (JWT benzeri, bağımlılıksız)
 function sign(payload) {
@@ -71,11 +81,11 @@ function sessionUser(req) {
 const newDeviceToken = () => crypto.randomBytes(32).toString('hex');
 const hashToken = t => crypto.createHash('sha256').update(String(t)).digest('hex');
 
-// Deneme sınırı: aynı IP'den ya da aynı kullanıcı adına 10 dakikada en çok 5 hatalı giriş.
-// Şimdilik kapalı (istek üzerine); açmak için ortam değişkeni LOGIN_LIMIT=on. Sınır dolunca 10 dakika beklenir; doğru girişte kullanıcı sayacı sıfırlanır.
+// Deneme sınırı: aynı IP'den ya da aynı kullanıcı adına 10 dakikada en çok 8 hatalı giriş.
+// Varsayılan açık; kapatmak için ortam değişkeni LOGIN_LIMIT=off. Sınır dolunca 10 dakika beklenir; doğru girişte kullanıcı sayacı sıfırlanır.
 const fails = new Map();
-const LIMIT_ON = process.env.LOGIN_LIMIT === 'on';
-const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS) || 5, WINDOW = 10 * 60 * 1000;
+const LIMIT_ON = process.env.LOGIN_LIMIT !== 'off';
+const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS) || 8, WINDOW = 10 * 60 * 1000;
 const keys = (ip, user) => [ip && 'ip:' + ip, user && 'u:' + String(user).trim().toLowerCase()].filter(Boolean);
 function tooMany(ip, user) {
   if (!LIMIT_ON) return false;
@@ -93,4 +103,4 @@ setInterval(() => { const t = Date.now(); for (const [k, r] of fails) if (t - r.
 // Traefik/Dokploy gerçek istemci IP'sini X-Forwarded-For'un SONUNA ekler; baştaki değer istemci tarafından uydurulabilir
 const clientIp = req => { const x = String(req.headers['x-forwarded-for'] || '').split(',').map(v => v.trim()).filter(Boolean); return x.length ? x[x.length - 1] : String(req.socket.remoteAddress || ''); };
 
-module.exports = { uid, hashPassword, checkPassword, sign, verify, setSession, clearSession, sessionUser, newDeviceToken, hashToken, tooMany, noteFail, clearFails, clientIp, parseCookies };
+module.exports = { uid, hashPassword, checkPassword, checkPasswordAsync, sign, verify, setSession, clearSession, sessionUser, newDeviceToken, hashToken, tooMany, noteFail, clearFails, clientIp, parseCookies };

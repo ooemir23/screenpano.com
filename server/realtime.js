@@ -18,10 +18,19 @@ const computeBuild = () => { try { const h = crypto.createHash('md5'); for (cons
 computeBuild();
 
 const sendRaw = (ws, msg) => { if (ws.readyState === 1) ws.send(typeof msg === 'string' ? msg : JSON.stringify(msg)); };
-function sendState(ws) {
+function sendState(ws, cache) {
   const t = tenants.get(ws.tid); if (!t) return;
-  // nativeWidgets: bu kutu ekranı yerel widget'larla çizsin mi (panelden kutu başına açılır; yoksa sayfa çizer)
-  sendRaw(ws, { type: 'state', state: { ...publicState(t), nativeWidgets: !!ws.native } });
+  // Toplu yayında kiracı başına durum bir kez hesaplanır ve iki biçimde (yerel/sayfa) bir kez metne çevrilir
+  const key = ws.tid + '|' + (ws.native ? 1 : 0);
+  let s = cache && cache.get(key);
+  if (!s) {
+    let base = cache && cache.get(ws.tid);
+    if (!base) { base = publicState(t); if (cache) cache.set(ws.tid, base); }
+    // nativeWidgets: bu kutu ekranı yerel widget'larla çizsin mi (panelden kutu başına açılır; yoksa sayfa çizer)
+    s = JSON.stringify({ type: 'state', state: { ...base, nativeWidgets: !!ws.native } });
+    if (cache) cache.set(key, s);
+  }
+  sendRaw(ws, s);
 }
 
 // Aynı anda gelen çok sayıda değişiklikte işletme başına tek yayın
@@ -31,7 +40,8 @@ function schedule(tid) {
   if (!flushTimer) flushTimer = setTimeout(() => {
     flushTimer = null;
     const ids = new Set(pending); pending.clear();
-    for (const ws of clients) if (ids.has('*') || ids.has(ws.tid)) sendState(ws);
+    const cache = new Map();
+    for (const ws of clients) if (ids.has('*') || ids.has(ws.tid)) sendState(ws, cache);
   }, 250);
 }
 

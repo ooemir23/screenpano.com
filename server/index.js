@@ -17,7 +17,7 @@ require('./qrtrack').migrate().catch(e => console.error('QR geçişi:', e.messag
 
 const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', true);
+app.set('trust proxy', 1); // önde tek vekil (Traefik); istemci IP'si için auth.clientIp kullanılır
 // www.screenpano.com -> screenpano.com (tek adres; arama motorları için kalıcı yönlendirme)
 app.use((req, res, next) => {
   const host = String(req.headers.host || '');
@@ -110,6 +110,9 @@ app.get('/u/:tid/:file', (req, res) => {
   const { tid, file } = req.params;
   if (!/^[a-f0-9]{6,32}$/.test(tid) || !/^[\w-]+\.[a-z0-9]{1,5}$/i.test(file)) return res.status(400).end();
   const t = tenants.get(tid); if (!t) return res.status(404).end();
+  // yüklenen dosya hiçbir zaman sayfa gibi çalışamaz (SVG içi betik vb.): sandbox + tür tahmini kapalı
+  res.set('Content-Security-Policy', "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox");
+  res.set('X-Content-Type-Options', 'nosniff');
   require('./storage').serve(req, res, t, file);
 });
 function makeApkFilename(name) {
@@ -155,6 +158,13 @@ app.use(express.static(config.PUBLIC_DIR, {
   },
 }));
 app.use('/api', (req, res) => res.status(404).json({ error: 'bulunamadı' }));
+// Beklenmeyen hatalar (dosya boyutu, bozuk JSON vb.): süreç düşmez, anlaşılır yanıt döner
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const code = err.status || err.statusCode || (err.code === 'LIMIT_FILE_SIZE' ? 413 : 500);
+  if (code >= 500) console.error('İstek hatası:', req.method, req.path, err.message);
+  res.status(code).json({ error: code === 413 ? 'Dosya çok büyük' : code === 400 ? 'Geçersiz istek' : 'Sunucu hatası' });
+});
 
 const server = http.createServer(app);
 realtime.attach(server);
@@ -169,4 +179,19 @@ require('./stats').start();
 require('./weekly').start();
 require('./happy').start();
 require('./social').start();
+// Sağlık kontrolü (Dokploy/izleme)
+app.get('/health', (req, res) => res.json({ ok: true, up: Math.round(process.uptime()) }));
+process.on('unhandledRejection', e => console.error('Yakalanmamış söz:', e && e.message ? e.message : e));
+// Kapatma (deploy/docker stop): bekleyen kayıtlar diske yazılır, WAL birleştirilir, bağlantılar kapanır
+let closing = false;
+function shutdown(sig) {
+  if (closing) return; closing = true;
+  console.log(sig + ': kapanıyor, bekleyen kayıtlar yazılıyor');
+  try { tenants.flushAll(); } catch (e) { console.error('Kayıt yazılamadı:', e.message); }
+  try { require('./store').sql.pragma('wal_checkpoint(TRUNCATE)'); } catch (e) {}
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 3000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 server.listen(config.PORT, () => console.log(`${config.BRAND} çalışıyor: http://localhost:${config.PORT}`));
