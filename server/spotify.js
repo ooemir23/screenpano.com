@@ -195,7 +195,16 @@ async function play(t, it, start, volume) {
   if (volume != null) { try { await call(t, 'PUT', `me/player/volume?volume_percent=${Math.max(0, Math.min(100, Math.round(volume)))}&device_id=${encodeURIComponent(dev)}`); } catch (e) {} }
 }
 async function control(t, cmd, opt = {}) {
-  const dev = await targetId(t), q = dev ? 'device_id=' + encodeURIComponent(dev) : '';
+  const dev = await targetId(t);
+  try { return await control1(t, cmd, opt, dev); }
+  catch (e) {
+    // kayıtlı cihaz kimliği eskimiş olabilir: kimliksiz dene (Spotify o an etkin cihaza uygular); özellikle "durdur" bu yüzden kaçmasın
+    if (dev && e.status && e.status !== 401 && e.reason !== 'PREMIUM_REQUIRED') return control1(t, cmd, opt, '');
+    throw e;
+  }
+}
+async function control1(t, cmd, opt, dev) {
+  const q = dev ? 'device_id=' + encodeURIComponent(dev) : '';
   if (cmd === 'pause') return call(t, 'PUT', 'me/player/pause?' + q);
   if (cmd === 'resume') return call(t, 'PUT', 'me/player/play?' + q, {});
   if (cmd === 'next') return call(t, 'POST', 'me/player/next?' + q);

@@ -1691,7 +1691,7 @@ async function switchSrc(k) {
 }
 function merrHtml() {
   const n = MNOW, a = musicActive();
-  const nerr = n && n.err && (!a || !n.itemId || n.itemId === a.id) ? n.err : '';
+  const nerr = n && n.err && (n.provider === 'spotify') === SPMODE() && (!a || !n.itemId || n.itemId === a.id) ? n.err : '';
   const e = MERR || nerr || (SPMODE() ? SPACC.err : YTACC.err) || '';
   return e ? `<div class="ytm-merr" role="alert">${ic('triangle-alert')}<span>${esc(e)}</span><button type="button" aria-label="Kapat" onclick="MERR='';drawMerr()">${ic('x')}</button></div>` : '';
 }

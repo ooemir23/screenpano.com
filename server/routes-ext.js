@@ -442,7 +442,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     let warn = '';
     const curIt = m.playlists.find(x => x.id === m.activeId);
     // başka bir listeye geçilince Spotify uygulaması susturulur (iki müzik üst üste çalmasın)
-    if (SP.external(req.t) && ['select', 'play', 'toggle', 'enabled', 'next', 'prev'].includes(cmd) && m.playing && curIt && curIt.provider !== 'spotify') { try { await SP.control(req.t, 'pause'); } catch (e) {} }
+    if (SP.external(req.t) && ['select', 'play', 'toggle', 'enabled', 'next', 'prev'].includes(cmd) && m.playing && curIt && curIt.provider !== 'spotify') { try { await SP.control(req.t, 'pause'); } catch (e) { warn = 'Spotify durdurulamadı: ' + e.message; } }
     if (SP.external(req.t) && curIt && curIt.provider === 'spotify') {
       const spStart = cmd === 'select' && typeof b.uri === 'string' && /^spotify:track:[A-Za-z0-9]{10,40}$/.test(b.uri) ? { uri: b.uri } : null;
       try {
