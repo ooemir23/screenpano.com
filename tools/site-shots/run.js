@@ -162,6 +162,7 @@ async function save(buf, name, width) {
       const mobile = s.view === 'mobile';
       const ctx = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 }, deviceScaleFactor: mobile ? 2 : 1, storageState: t.state });
       await ctx.addInitScript(() => document.addEventListener('DOMContentLoaded', () => { const st = document.createElement('style'); st.textContent = '.bn.trial{display:none!important}'; document.head.appendChild(st); }));
+      if (s.api) { const r = await request.newContext({ baseURL: B, storageState: t.state }); await r.fetch(s.api[1], { method: s.api[0], data: s.body || {} }); await r.dispose(); } // panel görüntüsünden önce örnek veri
       const pg = await ctx.newPage(); await pg.goto(B + '/panel#' + (s.hash || 'home')); await pg.waitForTimeout(3500);
       if (s.scroll) { await pg.evaluate(y => scrollTo(0, y), s.scroll); await pg.waitForTimeout(400); }
       await save(await pg.screenshot(), name, s.width || (mobile ? 780 : 1440)); await ctx.close();

@@ -72,6 +72,8 @@ for (const k of require('./legal').KEYS) app.get('/' + k, (req, res) => { res.se
 app.get('/sw.js', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.setHeader('Service-Worker-Allowed', '/'); res.type('js').sendFile(path.join(config.PUBLIC_DIR, 'sw.js')); });
 // QR okutma sayacı: kısa adres sayar ve asıl adrese yönlendirir
 app.get('/q/:code', require('./qrtrack').handler);
+// Reklam verene gönderilen rapor (giriş istemez, adres tahmin edilemez)
+app.get('/r/:token', require('./ads').page);
 app.get('/login', page('login.html'));
 app.get('/tv', page('tv.html'));
 app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html')(req, res, next) : res.redirect('/login')));
@@ -164,5 +166,7 @@ require('./storage').start();
 require('./backup').start();
 require('./monitor').start();
 require('./stats').start();
+require('./weekly').start();
+require('./happy').start();
 require('./social').start();
 server.listen(config.PORT, () => console.log(`${config.BRAND} çalışıyor: http://localhost:${config.PORT}`));

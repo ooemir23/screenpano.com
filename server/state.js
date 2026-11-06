@@ -49,13 +49,19 @@ const LANGS = ['tr', 'en', 'de', 'ru', 'ar', 'fr', 'es'];
 const langList = db => ['tr', ...(((db.lang || {}).list) || []).filter(l => l !== 'tr' && LANGS.includes(l))].slice(0, 4);
 
 // Medya döngüsü: videolar, fotoğraflar, hazır afişler (+ Instagram paylaşımları araya serpiştirilir)
-function mediaList(t) {
+// Medya kaydı -> ekrana giden öğe (reklam görselleri de aynı biçimle gider)
+function mediaItem(t, v) {
+  if (v.type === 'poster') return { id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null };
+  return { id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null };
+}
+// Reklamlar (server/ads.js) son hâlin arasına serpiştirilir
+const mediaList = t => require('./ads').inject(t, baseMediaList(t), v => mediaItem(t, v));
+function baseMediaList(t) {
   const db = t.db, out = [];
   for (const v of db.videos) {
     if (v.status === 'processing' && !v.reopt) continue;
-    if (v.hidden || SCH.expired(v.sch)) continue;
-    if (v.type === 'poster') out.push({ id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null });
-    else out.push({ id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null });
+    if (v.ad || v.hidden || SCH.expired(v.sch)) continue; // reklam görselleri normal sırada oynamaz
+    out.push(mediaItem(t, v));
   }
   const bk = F.booksView();
   const covers = require('./plans').plan(t).pro && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR
@@ -96,6 +102,24 @@ function fixMusic(m) {
   if (!m || !Array.isArray(m.playlists)) return m || null;
   for (const x of m.playlists) if (x.spotifyId === '37i9dQZF1DX4Wsb4d7NKfP') Object.assign(x, { spotifyId: '7uGniGmKxD4fmxGJWPqZAl', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', thumb: '' });
   return m;
+}
+// İndirim saati (happy hour): menu.happy = { label, pct, sch }. Saat içindeyse "İndirim saatine dahil" kategorilerdeki
+// ürünlerin fiyatı indirimli fiyata (ürünün kendi indirimli fiyatı ya da %pct) çevrilir, eski fiyat "was" olarak gider.
+// Hesap sunucuda yapılır: eski APK'lar da indirimli fiyatı gösterir; sınır anında happy.js ekranlara yeni durumu iter.
+const parsePrice = v => { const x = String(v || '').replace(/\s|₺|TL/gi, ''); if (!/^\d[\d.,]*$/.test(x)) return null; const n = Number(/,\d{1,2}$/.test(x) ? x.replace(/\./g, '').replace(',', '.') : x.replace(/[.,](?=\d{3}(\D|$))/g, '')); return isFinite(n) ? n : null; };
+const fmtNum = (n, dec) => dec ? n.toFixed(2).replace('.', ',') : String(Math.round(n));
+const happyOn = m => !!(m && m.happy && m.happy.sch && (m.categories || []).some(c => c.happy) && SCH.active(m.happy.sch));
+function menuView(m) {
+  if (!m || !happyOn(m)) return m;
+  const h = m.happy, pct = Math.max(0, Math.min(90, Number(h.pct) || 0));
+  const out = { ...m, happyNow: h.label || 'Happy Hour', title: `${m.title || 'Fiyat Listesi'} · ${h.label || 'Happy Hour'}` };
+  out.categories = m.categories.map(c => !c.happy ? c : { ...c, items: (c.items || []).map(i => {
+    if (i.off) return i;
+    let np = i.hp ? String(i.hp) : null;
+    if (!np && pct) { const n = parsePrice(i.price); if (n != null) np = fmtNum(n * (1 - pct / 100), /,\d{1,2}$/.test(String(i.price)) && n % 1 !== 0); }
+    return np && np !== i.price ? { ...i, was: i.price, price: np } : i;
+  }) });
+  return out;
 }
 function publicState(t) {
   const screen = require('./tenants').mainScreen(t);
@@ -162,11 +186,11 @@ function publicState(t) {
     safeGuide: !!db.safeGuide,
     qrSize: 17, // QR boyutu ayarı kaldırıldı: tüm QR'lar aynı boyutta
     qrs: (db.qrs || []).map(({ id, label, svg, kind, text, pin, hide }) => ({ id, label, svg, pin: pin !== false, hide: Array.isArray(hide) ? hide : [], marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
-    menu: pro && has('menu') ? db.menu : null,
+    menu: pro && has('menu') ? menuView(db.menu) : null,
     music: fixMusic(db.music),
     rates: F.rates,
     weather: F.weatherFor(t),
   };
 }
 
-module.exports = { publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, resetTenantMediaAt, LANGS };
+module.exports = { happyOn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, resetTenantMediaAt, LANGS };

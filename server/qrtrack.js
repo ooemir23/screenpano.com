@@ -13,13 +13,14 @@ const isUrl = t => /^https?:\/\/\S+$/i.test(String(t || ''));
 const trackUrl = code => `${config.BASE_URL}/q/${code}`;
 const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
 
-// kod -> { tid, id, kind: 'qr' | 'camp' }
+// kod -> { tid, id, kind: 'qr' | 'camp' | 'media' }
 let idx = new Map(), idxAt = 0;
 function rebuild() {
   idx = new Map();
   for (const t of tenants.all()) {
     for (const q of t.db.qrs || []) if (q.code) idx.set(q.code, { tid: t.id, id: q.id, kind: 'qr' });
     for (const c of t.db.campaigns || []) if (c.code) idx.set(c.code, { tid: t.id, id: c.id, kind: 'camp' });
+    for (const v of t.db.videos || []) if (v.qrCode) idx.set(v.qrCode, { tid: t.id, id: v.id, kind: 'media' }); // QR'lı afiş / reklam
   }
   idxAt = Date.now();
 }
@@ -56,6 +57,8 @@ async function ensure(t) {
     if (!c.url || !isUrl(c.url)) continue;
     if (bad(c.code, 'camp', c.id)) { Object.assign(c, await build(t.id, c.id, 'camp', c.url, '')); changed = true; }
   }
+  // QR'lı afiş/reklam başka şubeye kopyalandıysa kod çakışır: kopyada QR yeniden üretilmez, yalnız kod düşer (afiş yeniden kaydedilince yenisi alınır)
+  for (const v of t.db.videos || []) if (v.qrCode && bad(v.qrCode, 'media', v.id)) { delete v.qrCode; changed = true; }
   return changed;
 }
 // Açılışta tüm işletmeler için bir kez
@@ -82,15 +85,15 @@ function handler(req, res) {
   const code = String(req.params.code || '').toLowerCase();
   const e = /^[a-z0-9]{5,12}$/.test(code) ? find(code) : null;
   const t = e && tenants.get(e.tid);
-  const item = t && (e.kind === 'qr' ? (t.db.qrs || []).find(x => x.id === e.id) : (t.db.campaigns || []).find(x => x.id === e.id));
-  const target = item && (e.kind === 'qr' ? item.text : item.url);
+  const item = t && (e.kind === 'qr' ? (t.db.qrs || []).find(x => x.id === e.id) : e.kind === 'media' ? (t.db.videos || []).find(x => x.id === e.id && x.qrCode === code) : (t.db.campaigns || []).find(x => x.id === e.id));
+  const target = item && (e.kind === 'qr' ? item.text : e.kind === 'media' ? item.qrUrl : item.url);
   res.set('Cache-Control', 'no-store'); res.set('X-Robots-Tag', 'noindex, nofollow');
   if (!target || !isUrl(target)) return res.status(404).type('text/plain; charset=utf-8').send('Bağlantı bulunamadı');
   const ua = String(req.headers['user-agent'] || '');
   if (req.method === 'GET' && ua && !BOT.test(ua) && !dupe(req, code)) {
-    try { stats.scan(e.tid, e.kind === 'qr' ? e.id : 'camp:' + e.id, deviceOf(ua)); } catch (err) { /* sayaç hatası yönlendirmeyi engellemez */ }
+    try { stats.scan(e.tid, e.kind === 'qr' ? e.id : (e.kind === 'media' ? 'm:' : 'camp:') + e.id, deviceOf(ua)); } catch (err) { /* sayaç hatası yönlendirmeyi engellemez */ }
   }
   res.redirect(302, target);
 }
 
-module.exports = { build, ensure, migrate, handler, isUrl };
+module.exports = { build, ensure, migrate, handler, isUrl, trackUrl, newCode, register };

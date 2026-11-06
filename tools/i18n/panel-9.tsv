@@ -1,0 +1,157 @@
+Reklamlar ¦ Ads ¦ Werbung ¦ الإعلانات
+<0>💼</0>Reklamlar ¦ <0>💼</0>Ads ¦ <0>💼</0>Werbung ¦ <0>💼</0>الإعلانات
+İndirim saati (happy hour) ¦ Discount hours (happy hour) ¦ Rabattzeit (Happy Hour) ¦ ساعة الخصم (هابي آور)
+Belirli saatlerde seçili kategorilerde indirimli fiyat. ¦ Discounted prices in selected categories at set hours. ¦ Reduzierte Preise in ausgewählten Kategorien zu bestimmten Zeiten. ¦ أسعار مخفّضة في فئات مختارة خلال ساعات محددة.
+Ekranda görünecek ad ¦ Name shown on screen ¦ Name auf dem Bildschirm ¦ الاسم الظاهر على الشاشة
+İndirim (%) ¦ Discount (%) ¦ Rabatt (%) ¦ الخصم (%)
+Saat seçin ¦ Choose hours ¦ Zeiten wählen ¦ اختر الساعات
+● Şu an indirim saatinde ¦ ● Discount hours are on now ¦ ● Rabattzeit läuft gerade ¦ ● ساعة الخصم سارية الآن
+Şu an indirim saatinde değil ¦ Not in discount hours right now ¦ Gerade keine Rabattzeit ¦ ليست ساعة الخصم الآن
+Saat aralığı vermeden indirim ekranda görünmez. ¦ The discount isn't shown until you set hours. ¦ Ohne Zeitraum wird der Rabatt nicht angezeigt. ¦ لن يظهر الخصم دون تحديد نطاق زمني.
+İndirim saati kaldırılsın mı? ¦ Remove the discount hours? ¦ Rabattzeit entfernen? ¦ هل تريد إزالة ساعة الخصم؟
+Kategorilerde <0>%</0> düğmesiyle indirime dahil edin. Ürünün yanındaki küçük kutuya ayrı bir indirimli fiyat yazabilirsiniz; boşsa yüzdeyle hesaplanır. Ekranda eski fiyat üstü çizili, yanında yeni fiyat görünür ve liste başlığına "{}" eklenir. ¦ Include categories with the <0>%</0> button. You can type a separate discounted price in the small box next to a product; if empty, the percentage is used. On screen the old price is crossed out with the new price beside it, and "{}" is added to the list title. ¦ Kategorien mit der Schaltfläche <0>%</0> einbeziehen. Im kleinen Feld neben dem Produkt können Sie einen eigenen Rabattpreis eintragen; leer bleibt der Prozentsatz. Auf dem Bildschirm wird der alte Preis durchgestrichen, daneben der neue, und „{}“ erscheint im Listentitel. ¦ أدرج الفئات عبر زر <0>%</0>. يمكنك كتابة سعر مخفّض مستقل في المربع الصغير بجانب المنتج؛ وإن تُرك فارغًا تُحسب النسبة. على الشاشة يظهر السعر القديم مشطوبًا وبجانبه السعر الجديد، ويُضاف "{}" إلى عنوان القائمة.
+Örneğin hafta içi 17:00–19:00 arası kokteyllerde %30 indirim. Saat gelince fiyatlar kendiliğinden düşer, bitince eski hâline döner. ¦ For example, 30% off cocktails on weekdays 17:00–19:00. Prices drop automatically at the start and go back when it ends. ¦ Zum Beispiel werktags 17:00–19:00 30 % auf Cocktails. Die Preise sinken automatisch und kehren danach zurück. ¦ مثلًا خصم 30% على الكوكتيلات أيام الأسبوع من 17:00 إلى 19:00. تنخفض الأسعار تلقائيًا وتعود بعد انتهاء الوقت.
+İndirim saati ekle ¦ Add discount hours ¦ Rabattzeit hinzufügen ¦ إضافة ساعة خصم
+Gün akışı ¦ Day plan ¦ Tagesablauf ¦ مخطط اليوم
+Bugün hangi kategori hangi saatlerde ekranda. Kategorinin ⏱ düğmesinden kahvaltı, öğle, akşam gibi saat verin; saati geçen kategori kendiliğinden kalkar. ¦ Which category is on screen at which hours today. Set hours like breakfast, lunch or dinner with a category's ⏱ button; it disappears on its own when the time is over. ¦ Welche Kategorie heute wann angezeigt wird. Mit der ⏱-Schaltfläche Zeiten wie Frühstück, Mittag oder Abend festlegen; danach verschwindet die Kategorie von selbst. ¦ أي فئة تظهر على الشاشة في أي ساعات اليوم. حدّد أوقاتًا مثل الفطور أو الغداء أو العشاء عبر زر ⏱؛ تختفي الفئة تلقائيًا بعد انتهاء وقتها.
+Kategori ekleyince burada görünür. ¦ Appears here once you add a category. ¦ Erscheint hier, sobald Sie eine Kategorie hinzufügen. ¦ يظهر هنا بعد إضافة فئة.
+Adsız kategori ¦ Unnamed category ¦ Unbenannte Kategorie ¦ فئة بلا اسم
+Bu kategori indirim saatinde indirimli fiyatla görünsün ¦ Show this category at discounted prices during discount hours ¦ Diese Kategorie in der Rabattzeit mit reduzierten Preisen zeigen ¦ اعرض هذه الفئة بأسعار مخفّضة خلال ساعة الخصم
+% İndirimsiz ¦ % No discount ¦ % Ohne Rabatt ¦ % بلا خصم
+İnd. fiyat ¦ Disc. price ¦ Rabattpreis ¦ سعر الخصم
+İndirim saatindeki fiyat (boşsa %{} indirimle hesaplanır) ¦ Price during discount hours (if empty, {}% off is applied) ¦ Preis in der Rabattzeit (leer: {} % Rabatt) ¦ السعر خلال ساعة الخصم (إن تُرك فارغًا يُطبّق خصم {}%)
+İndirim ne zaman geçerli? ¦ When is the discount valid? ¦ Wann gilt der Rabatt? ¦ متى يسري الخصم؟
+Hazır saatler ¦ Preset hours ¦ Vorlagen ¦ أوقات جاهزة
+Öğle ¦ Lunch ¦ Mittag ¦ الغداء
+Akşam ¦ Evening ¦ Abend ¦ المساء
+Gece ¦ Night ¦ Nacht ¦ الليل
+Kahvaltı <0>{}</0> ¦ Breakfast <0>{}</0> ¦ Frühstück <0>{}</0> ¦ الفطور <0>{}</0>
+Öğle <0>{}</0> ¦ Lunch <0>{}</0> ¦ Mittag <0>{}</0> ¦ الغداء <0>{}</0>
+Akşam <0>{}</0> ¦ Evening <0>{}</0> ¦ Abend <0>{}</0> ¦ المساء <0>{}</0>
+Gece <0>{}</0> ¦ Night <0>{}</0> ¦ Nacht <0>{}</0> ¦ الليل <0>{}</0>
+Öğle {} ¦ Lunch {} ¦ Mittag {} ¦ الغداء {}
+İndirim saati için başlangıç ve bitiş saati girin ¦ Enter a start and end time for the discount hours ¦ Geben Sie Beginn und Ende der Rabattzeit ein ¦ أدخل وقت البداية والنهاية لساعة الخصم
+Kampanya etkisi ¦ Campaign impact ¦ Kampagnenwirkung ¦ أثر الحملة
+Her kampanya ekranda kaç kez göründü ve müşteriler QR'ını kaç kez okuttu. "100 gösterimde" sütunu kampanyaları birbiriyle karşılaştırmanın en adil yolu. ¦ How often each campaign appeared on screen and how often customers scanned its QR. The "Per 100 views" column is the fairest way to compare campaigns. ¦ Wie oft jede Kampagne angezeigt wurde und wie oft Kunden ihren QR-Code gescannt haben. Die Spalte „Pro 100 Anzeigen“ ist der fairste Vergleich. ¦ كم مرة ظهرت كل حملة على الشاشة وكم مرة مسح العملاء رمز QR الخاص بها. عمود "لكل 100 عرض" هو أعدل طريقة للمقارنة بين الحملات.
+Gösterim ¦ Views ¦ Anzeigen ¦ مرات العرض
+100 gösterimde ¦ Per 100 views ¦ Pro 100 Anzeigen ¦ لكل 100 عرض
+Önceki döneme göre ¦ vs. previous period ¦ ggü. Vorperiode ¦ مقارنة بالفترة السابقة
+Yorum ¦ Insight ¦ Einschätzung ¦ ملاحظة
+QR'lı afiş ¦ Poster with QR ¦ Plakat mit QR ¦ ملصق مع QR
+Reklam ¦ Ad ¦ Werbung ¦ إعلان
+yeni ¦ new ¦ neu ¦ جديد
+aynı ¦ same ¦ gleich ¦ نفسه
+· kapalı ¦ · off ¦ · aus ¦ · متوقف
+QR yok; yalnız gösterim sayılır ¦ No QR; only views are counted ¦ Kein QR; nur Anzeigen werden gezählt ¦ لا يوجد QR؛ تُحتسب مرات العرض فقط
+Yorum için daha fazla gösterim gerekiyor ¦ More views needed for an insight ¦ Für eine Einschätzung braucht es mehr Anzeigen ¦ نحتاج إلى مزيد من مرات العرض للتقييم
+Hiç okutulmadı: teklifi güçlendirin (ör. "ilk siparişe ikram") ya da QR'ı büyütün ¦ Never scanned: make the offer stronger (e.g. "a treat with your first order") or enlarge the QR ¦ Nie gescannt: Angebot verbessern (z. B. „Gratis zur ersten Bestellung“) oder QR vergrößern ¦ لم يُمسح أبدًا: قوِّ العرض (مثل "ضيافة مع أول طلب") أو كبّر رمز QR
+Çok iyi çalışıyor ¦ Working very well ¦ Funktioniert sehr gut ¦ يعمل بشكل ممتاز
+Çok iyi çalışıyor · en çok {} civarı ¦ Working very well · most around {} ¦ Funktioniert sehr gut · am meisten gegen {} ¦ يعمل بشكل ممتاز · الأكثر حوالي {}
+Ortalamanın altında: başlığı kısaltın, teklifi öne çıkarın ¦ Below average: shorten the headline, highlight the offer ¦ Unter dem Durchschnitt: Titel kürzen, Angebot hervorheben ¦ أقل من المتوسط: اختصر العنوان وأبرز العرض
+Ortalama ¦ Average ¦ Durchschnitt ¦ متوسط
+Ortalama · en çok {} civarı ¦ Average · most around {} ¦ Durchschnitt · am meisten gegen {} ¦ متوسط · الأكثر حوالي {}
+Ortalama: 100 gösterimde {} okutma. Kampanya kartlarının gösterim sayımı bu sürümle başladı; eski günler için gösterim sıfır görünebilir. ¦ Average: {} scans per 100 views. Counting views of campaign cards started with this version; earlier days may show zero views. ¦ Durchschnitt: {} Scans pro 100 Anzeigen. Anzeigen von Kampagnenkarten werden erst seit dieser Version gezählt; frühere Tage können null zeigen. ¦ المتوسط: {} مسحًا لكل 100 عرض. بدأ احتساب عرض بطاقات الحملات مع هذا الإصدار؛ قد تظهر الأيام السابقة صفرًا.
+Henüz ölçülecek kampanya yok. <0>Duyurular</0> sayfasından kampanya kartını açın ya da <1>Fotoğraftan afiş</1> ile QR'lı bir afiş hazırlayın; ekranda kaç kez göründüğü ve QR'ının kaç kez okutulduğu burada karşılaştırılır. ¦ No campaigns to measure yet. Turn on the campaign card on the <0>Announcements</0> page or make a poster with a QR using <1>Poster from photo</1>; views and QR scans are compared here. ¦ Noch keine Kampagnen zum Messen. Aktivieren Sie die Kampagnenkarte auf der Seite <0>Ankündigungen</0> oder erstellen Sie mit <1>Plakat aus Foto</1> ein Plakat mit QR; Anzeigen und Scans werden hier verglichen. ¦ لا توجد حملات للقياس بعد. فعّل بطاقة الحملة من صفحة <0>الإعلانات</0> أو أنشئ ملصقًا مع QR عبر <1>ملصق من صورة</1>؛ تُقارن هنا مرات العرض والمسح.
+Haftalık özet ¦ Weekly summary ¦ Wochenübersicht ¦ الملخص الأسبوعي
+Her pazartesi sabah: ekran süresi, kampanya okutmaları, reklam gösterimleri ¦ Every Monday morning: screen time, campaign scans, ad views ¦ Jeden Montagmorgen: Bildschirmzeit, Kampagnen-Scans, Werbeanzeigen ¦ كل صباح اثنين: مدة تشغيل الشاشة، مسح الحملات، عروض الإعلانات
+Özet örneğini şimdi gönder ¦ Send a sample summary now ¦ Beispielübersicht jetzt senden ¦ أرسل ملخصًا تجريبيًا الآن
+Haftalık özet örneği gönderildi ¦ Sample weekly summary sent ¦ Beispiel-Wochenübersicht gesendet ¦ تم إرسال ملخص أسبوعي تجريبي
+Ekranınızın bir kısmını başka işletmelere satın: reklamları belirlediğiniz gün, saat ve sıklıkta yayınlanır; reklam verene gösterim raporu bağlantısı gönderirsiniz. ¦ Sell part of your screen to other businesses: ads run on the days, hours and frequency you set, and you send the advertiser a link to a views report. ¦ Verkaufen Sie einen Teil Ihres Bildschirms an andere Betriebe: Werbung läuft an den Tagen, Zeiten und in der Häufigkeit, die Sie festlegen; dem Werbekunden senden Sie einen Link zum Bericht. ¦ بع جزءًا من شاشتك لمنشآت أخرى: تُعرض الإعلانات في الأيام والساعات والتكرار الذي تحدده، وترسل للمعلن رابط تقرير العروض.
+＋ Reklam ekle ¦ ＋ Add ad ¦ ＋ Werbung hinzufügen ¦ ＋ إضافة إعلان
+Reklam alanı ¦ Ad space ¦ Werbefläche ¦ مساحة الإعلان
+Yayında ¦ Live ¦ Läuft ¦ قيد العرض
+Başlamadı ¦ Not started ¦ Nicht gestartet ¦ لم يبدأ
+Sona erdi ¦ Ended ¦ Beendet ¦ انتهى
+Durduruldu ¦ Paused ¦ Pausiert ¦ متوقف
+Görsel bekleniyor ¦ Waiting for an image ¦ Bild fehlt ¦ بانتظار صورة
+{} <0>{}</0> ¦ {} <0>{}</0> ¦ {} <0>{}</0> ¦ {} <0>{}</0>
+{} · her {} içerikte bir ¦ {} · every {} items ¦ {} · alle {} Inhalte ¦ {} · كل {} محتويات
+{} · her {} içerikte bir · {} ¦ {} · every {} items · {} ¦ {} · alle {} Inhalte · {} ¦ {} · كل {} محتويات · {}
+{} · her {} içerikte bir · {} · {} ¦ {} · every {} items · {} · {} ¦ {} · alle {} Inhalte · {} · {} ¦ {} · كل {} محتويات · {} · {}
+Durdur ¦ Pause ¦ Pausieren ¦ إيقاف
+Devam ettir ¦ Resume ¦ Fortsetzen ¦ استئناف
+Son 30 günde gösterim ¦ Views in the last 30 days ¦ Anzeigen in den letzten 30 Tagen ¦ العروض في آخر 30 يومًا
+Görsel / video ¦ Image / video ¦ Bild / Video ¦ صورة / فيديو
+Geçici olarak durdur ¦ Pause temporarily ¦ Vorübergehend pausieren ¦ إيقاف مؤقت
+Açık ¦ On ¦ An ¦ مفعّل
+Hazırlanıyor ¦ Processing ¦ Wird vorbereitet ¦ قيد التجهيز
+＋ Dosya yükle ¦ ＋ Upload file ¦ ＋ Datei hochladen ¦ ＋ رفع ملف
+Görsel ya da video ¦ Image or video ¦ Bild oder Video ¦ صورة أو فيديو
+📷 Fotoğraftan hazırla ¦ 📷 Make from photo ¦ 📷 Aus Foto erstellen ¦ 📷 إنشاء من صورة
+QR'lı reklam görseli ¦ Ad image with QR ¦ Werbebild mit QR ¦ صورة إعلان مع QR
+Reklam verene bu bağlantıyı gönderin: gösterim sayısını ve QR okutmalarını giriş yapmadan görür. ¦ Send this link to the advertiser: they see the view count and QR scans without logging in. ¦ Senden Sie diesen Link an den Werbekunden: Er sieht Anzeigen und QR-Scans ohne Anmeldung. ¦ أرسل هذا الرابط إلى المعلن: يرى عدد العروض ومسح QR دون تسجيل الدخول.
+🔗 Rapor bağlantısını kopyala ¦ 🔗 Copy report link ¦ 🔗 Berichtslink kopieren ¦ 🔗 نسخ رابط التقرير
+Raporu aç ¦ Open report ¦ Bericht öffnen ¦ فتح التقرير
+Yeni bağlantı ¦ New link ¦ Neuer Link ¦ رابط جديد
+Eski bağlantı çalışmaz olur ¦ The old link stops working ¦ Der alte Link funktioniert nicht mehr ¦ يتوقف الرابط القديم عن العمل
+Nasıl çalışır? ¦ How does it work? ¦ Wie funktioniert es? ¦ كيف يعمل؟
+<0>Reklam ekleyin:</0> reklam verenin adı, anlaştığınız ücret, başlangıç ve bitiş günü, hangi saatlerde ve ne sıklıkla çıkacağı. ¦ <0>Add an ad:</0> the advertiser's name, the agreed fee, start and end day, which hours and how often it runs. ¦ <0>Werbung anlegen:</0> Name des Werbekunden, vereinbarter Preis, Start- und Endtag, Uhrzeiten und Häufigkeit. ¦ <0>أضف إعلانًا:</0> اسم المعلن، الأجر المتفق عليه، يوم البداية والنهاية، والساعات وعدد مرات الظهور.
+<0>Görselini yükleyin</0> ya da fotoğrafından birkaç saniyede reklam görseli hazırlayın; isterseniz okutmaları sayılan bir QR ekleyin. ¦ <0>Upload its image</0> or make an ad image from a photo in seconds; add a QR whose scans are counted if you like. ¦ <0>Bild hochladen</0> oder in Sekunden aus einem Foto ein Werbebild erstellen; auf Wunsch mit QR, dessen Scans gezählt werden. ¦ <0>ارفع صورته</0> أو أنشئ صورة إعلان من صورة فوتوغرافية في ثوانٍ؛ وأضف رمز QR تُحتسب مرات مسحه إن أردت.
+<0>Rapor bağlantısını gönderin:</0> reklam veren kaç kez gösterildiğini ve QR okutmalarını kendisi takip eder. Bitiş günü gelince reklam kendiliğinden kalkar. ¦ <0>Send the report link:</0> the advertiser follows views and QR scans on their own. The ad stops by itself on the end day. ¦ <0>Berichtslink senden:</0> Der Werbekunde verfolgt Anzeigen und QR-Scans selbst. Am Endtag endet die Werbung automatisch. ¦ <0>أرسل رابط التقرير:</0> يتابع المعلن مرات العرض ومسح QR بنفسه. يتوقف الإعلان تلقائيًا في يوم الانتهاء.
+Kimlere satabilirsiniz? Yakındaki emlakçı, oto yıkama, kuaför, spor salonu, dershane, yerel etkinlikler… Spor barda maç saatleri en değerli zamandır; bu saatler için ayrı fiyat verebilirsiniz. ¦ Who can you sell to? Nearby estate agents, car washes, hairdressers, gyms, tutoring centres, local events… In a sports bar match hours are the most valuable time; you can price them separately. ¦ An wen können Sie verkaufen? Makler, Autowaschanlagen, Friseure, Fitnessstudios, Nachhilfe, lokale Veranstaltungen in der Nähe… In der Sportbar sind Spielzeiten am wertvollsten; dafür können Sie einen eigenen Preis verlangen. ¦ لمن يمكنك البيع؟ مكاتب العقارات القريبة، مغاسل السيارات، صالونات الحلاقة، الصالات الرياضية، مراكز الدروس، الفعاليات المحلية… في المقهى الرياضي أوقات المباريات هي الأثمن؛ ويمكنك تسعيرها بشكل منفصل.
+＋ İlk reklamı ekle ¦ ＋ Add your first ad ¦ ＋ Erste Werbung hinzufügen ¦ ＋ أضف أول إعلان
+Reklamı düzenle ¦ Edit ad ¦ Werbung bearbeiten ¦ تعديل الإعلان
+Yeni reklam ¦ New ad ¦ Neue Werbung ¦ إعلان جديد
+Reklam veren ¦ Advertiser ¦ Werbekunde ¦ المعلن
+Örn. Güneş Emlak ¦ e.g. Sunny Estates ¦ z. B. Sonnen Immobilien ¦ مثال: عقارات الشمس
+İletişim (isteğe bağlı) ¦ Contact (optional) ¦ Kontakt (optional) ¦ التواصل (اختياري)
+Telefon ya da e-posta ¦ Phone or e-mail ¦ Telefon oder E-Mail ¦ هاتف أو بريد إلكتروني
+Ücret (kendi notunuz) ¦ Fee (your own note) ¦ Preis (eigene Notiz) ¦ الأجر (ملاحظتك الخاصة)
+Örn. Aylık 1.500 ₺ ¦ e.g. 1,500 ₺ monthly ¦ z. B. 1.500 ₺ monatlich ¦ مثال: 1500 ₺ شهريًا
+Sıklık ¦ Frequency ¦ Häufigkeit ¦ التكرار
+Her {} içerikte bir ¦ Once every {} items ¦ Alle {} Inhalte ¦ مرة كل {} محتويات
+Boş bırakılan alanlar sınır koymaz. Son gün geçince reklam kendiliğinden kalkar. ¦ Empty fields set no limit. The ad stops by itself after the last day. ¦ Leere Felder setzen keine Grenze. Nach dem letzten Tag endet die Werbung automatisch. ¦ الحقول الفارغة لا تضع حدًا. يتوقف الإعلان تلقائيًا بعد اليوم الأخير.
+Not (isteğe bağlı) ¦ Note (optional) ¦ Notiz (optional) ¦ ملاحظة (اختياري)
+Örn. Ödeme ayın 1'inde ¦ e.g. Payment on the 1st ¦ z. B. Zahlung am 1. ¦ مثال: الدفع في أول الشهر
+Reklamı ekle ¦ Add ad ¦ Werbung hinzufügen ¦ إضافة الإعلان
+Reklam verenin adını yazın ¦ Enter the advertiser's name ¦ Namen des Werbekunden eingeben ¦ اكتب اسم المعلن
+Reklam kaydedildi ¦ Ad saved ¦ Werbung gespeichert ¦ تم حفظ الإعلان
+Reklam eklendi; şimdi görselini yükleyin ¦ Ad added; now upload its image ¦ Werbung hinzugefügt; jetzt Bild hochladen ¦ تمت إضافة الإعلان؛ ارفع صورته الآن
+Reklam durduruldu ¦ Ad paused ¦ Werbung pausiert ¦ تم إيقاف الإعلان
+Reklam yeniden yayında ¦ Ad is live again ¦ Werbung läuft wieder ¦ الإعلان قيد العرض مجددًا
+"{}" reklamı ve görselleri silinsin mi? ¦ Delete the ad "{}" and its images? ¦ Werbung „{}“ samt Bildern löschen? ¦ هل تريد حذف إعلان "{}" وصوره؟
+Reklam silindi ¦ Ad deleted ¦ Werbung gelöscht ¦ تم حذف الإعلان
+Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz. ¦ Create a new report link? The old link will no longer open. ¦ Neuen Berichtslink erstellen? Der alte Link öffnet sich nicht mehr. ¦ هل تريد إنشاء رابط تقرير جديد؟ لن يعمل الرابط القديم بعد الآن.
+Yeni bağlantı oluşturuldu ¦ New link created ¦ Neuer Link erstellt ¦ تم إنشاء رابط جديد
+Bağlantı kopyalandı ¦ Link copied ¦ Link kopiert ¦ تم نسخ الرابط
+Bağlantıyı kopyalayın: ¦ Copy the link: ¦ Link kopieren: ¦ انسخ الرابط:
+Yüklendi; hazır olunca yayına girer ¦ Uploaded; goes live once ready ¦ Hochgeladen; läuft, sobald bereit ¦ تم الرفع؛ سيُعرض عند جاهزيته
+Fotoğraftan afiş ¦ Poster from photo ¦ Plakat aus Foto ¦ ملصق من صورة
+Ürününüzün fotoğrafını seçin, adını ve fiyatını yazın: dört hazır tasarımdan birini seçip medyaya ekleyin. Renkler fotoğraftan alınır; isterseniz okutmaları sayılan bir QR kod da eklenir. ¦ Pick a photo of your product, type its name and price, choose one of four ready designs and add it to your media. Colours come from the photo; you can also add a QR code whose scans are counted. ¦ Wählen Sie ein Produktfoto, geben Sie Name und Preis ein, wählen Sie eines von vier Designs und fügen Sie es zu den Medien hinzu. Die Farben kommen aus dem Foto; optional mit QR-Code, dessen Scans gezählt werden. ¦ اختر صورة منتجك واكتب اسمه وسعره، ثم اختر أحد التصاميم الأربعة الجاهزة وأضفه إلى الوسائط. تؤخذ الألوان من الصورة؛ ويمكنك إضافة رمز QR تُحتسب مرات مسحه.
+📷 Fotoğraftan afiş yap ¦ 📷 Make a poster from a photo ¦ 📷 Plakat aus Foto erstellen ¦ 📷 أنشئ ملصقًا من صورة
+Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın. ¦ No designer? Make a poster from a product photo in seconds. ¦ Kein Designer? Erstellen Sie in Sekunden ein Plakat aus einem Produktfoto. ¦ لا يوجد لديك مصمم؟ أنشئ ملصقًا من صورة المنتج في ثوانٍ.
+Ürününüzün fotoğrafını seçin ya da telefonla çekin. Ürün adı ve fiyatı yazın; hazır tasarımlardan birini seçin. Renkler fotoğraftan alınır. ¦ Choose a photo of your product or take one with your phone. Type the product name and price, then choose a ready design. Colours come from the photo. ¦ Wählen Sie ein Produktfoto oder machen Sie eins mit dem Handy. Name und Preis eingeben, dann ein Design wählen. Die Farben kommen aus dem Foto. ¦ اختر صورة لمنتجك أو التقطها بالهاتف. اكتب اسم المنتج وسعره ثم اختر تصميمًا جاهزًا. تؤخذ الألوان من الصورة.
+📷 Fotoğraf seç ¦ 📷 Choose photo ¦ 📷 Foto wählen ¦ 📷 اختر صورة
+JPG, PNG ya da telefon kamerası ¦ JPG, PNG or phone camera ¦ JPG, PNG oder Handykamera ¦ JPG أو PNG أو كاميرا الهاتف
+Fotoğraf hazırlanıyor… ¦ Preparing photo… ¦ Foto wird vorbereitet… ¦ جارٍ تجهيز الصورة…
+Bir fotoğraf seçin ¦ Choose a photo ¦ Wählen Sie ein Foto ¦ اختر صورة
+Fotoğraf açılamadı ¦ The photo couldn't be opened ¦ Foto konnte nicht geöffnet werden ¦ تعذّر فتح الصورة
+Kaynak fotoğraf açılamadı; yeni bir fotoğraf seçin ¦ The source photo couldn't be opened; choose a new photo ¦ Ausgangsfoto konnte nicht geöffnet werden; wählen Sie ein neues ¦ تعذّر فتح الصورة الأصلية؛ اختر صورة جديدة
+Reklam görseli ¦ Ad image ¦ Werbebild ¦ صورة الإعلان
+Tam kadraj ¦ Full frame ¦ Vollbild ¦ إطار كامل
+Yarım panel ¦ Half panel ¦ Halbes Feld ¦ نصف لوحة
+Çerçeveli ¦ Framed ¦ Gerahmt ¦ بإطار
+Vitrin bandı ¦ Showcase band ¦ Schaufensterband ¦ شريط العرض
+Ürün adı / başlık ¦ Product name / title ¦ Produktname / Titel ¦ اسم المنتج / العنوان
+Rozet ¦ Badge ¦ Abzeichen ¦ شارة
+Bugüne özel ¦ Today only ¦ Nur heute ¦ لليوم فقط
+%20 indirim ¦ 20% off ¦ 20 % Rabatt ¦ خصم 20%
+Şefin önerisi ¦ Chef's pick ¦ Empfehlung des Küchenchefs ¦ اختيار الشيف
+Kampanya ¦ Offer ¦ Aktion ¦ عرض
+Sadece bu hafta ¦ This week only ¦ Nur diese Woche ¦ هذا الأسبوع فقط
+Renkler ¦ Colours ¦ Farben ¦ الألوان
+Fotoğraftan ¦ From the photo ¦ Aus dem Foto ¦ من الصورة
+Ekran teması ¦ Screen theme ¦ Bildschirmthema ¦ سمة الشاشة
+QR kod ekle (okutmalar sayılır) ¦ Add a QR code (scans are counted) ¦ QR-Code hinzufügen (Scans werden gezählt) ¦ إضافة رمز QR (تُحتسب مرات المسح)
+Bağlantı (sipariş, menü, Instagram, yorum…) ¦ Link (order, menu, Instagram, review…) ¦ Link (Bestellung, Menü, Instagram, Bewertung…) ¦ الرابط (طلب، قائمة، إنستغرام، تقييم…)
+Okutun ¦ Scan me ¦ Scannen ¦ امسح الرمز
+QR'ın kaç kez okutulduğu İstatistik → Kampanya etkisi bölümünde görünür. ¦ How often the QR was scanned appears under Statistics → Campaign impact. ¦ Wie oft der QR gescannt wurde, steht unter Statistik → Kampagnenwirkung. ¦ يظهر عدد مرات مسح QR في الإحصاءات ← أثر الحملة.
+Fotoğrafı değiştir ¦ Change photo ¦ Foto ändern ¦ تغيير الصورة
+Reklama ekle ¦ Add to ad ¦ Zur Werbung hinzufügen ¦ إضافة إلى الإعلان
+Kaydediliyor… ¦ Saving… ¦ Wird gespeichert… ¦ جارٍ الحفظ…
+Ürün adını ya da başlığı yazın ¦ Enter the product name or title ¦ Produktname oder Titel eingeben ¦ اكتب اسم المنتج أو العنوان
+Afiş güncellendi ¦ Poster updated ¦ Plakat aktualisiert ¦ تم تحديث الملصق
+Reklam görseli eklendi ¦ Ad image added ¦ Werbebild hinzugefügt ¦ تمت إضافة صورة الإعلان
+Görsel oluşturulamadı ¦ The image couldn't be created ¦ Bild konnte nicht erstellt werden ¦ تعذّر إنشاء الصورة
+Görsel oluşturulamadı: fotoğrafı yeniden seçin ¦ The image couldn't be created: choose the photo again ¦ Bild konnte nicht erstellt werden: Foto erneut wählen ¦ تعذّر إنشاء الصورة: اختر الصورة مجددًا
+Afiş silinsin mi? ¦ Delete the poster? ¦ Plakat löschen? ¦ هل تريد حذف الملصق؟

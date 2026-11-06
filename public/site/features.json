@@ -598,6 +598,114 @@
           ]
         }
       }
+    },
+    {
+      "id": "reklam",
+      "icon": "💼",
+      "title": "Ekranınızda reklam alanı satın",
+      "short": "Reklam alanı",
+      "text": "Yakındaki emlakçı, kuaför ya da spor salonu ekranınızda reklam versin; ekran kendini ödesin. Reklamın hangi gün, saat ve sıklıkta çıkacağını siz belirlersiniz, bitiş günü gelince kendiliğinden kalkar.",
+      "points": [
+        "Gün, saat ve sıklık ayarı (her N içerikte bir)",
+        "Reklam verene giriş gerektirmeyen gösterim raporu bağlantısı",
+        "Fotoğraftan QR'lı reklam görseli, okutmalar sayılır"
+      ],
+      "plan": "pro",
+      "compare": "Reklam alanı satışı ve rapor",
+      "added": "2026-11-06",
+      "visual": {
+        "type": "win",
+        "img": "p-reklam"
+      },
+      "i18n": {
+        "en": {
+          "title": "Sell ad space on your screen",
+          "short": "Ad space",
+          "compare": "Ad space sales and reports",
+          "text": "Let the estate agent, hairdresser or gym next door advertise on your screen, and let the screen pay for itself. You decide the days, hours and frequency; the ad stops by itself on its end date.",
+          "points": [
+            "Days, hours and frequency (once every N items)",
+            "A report link for the advertiser, no login needed",
+            "Ad images with QR made from a photo, scans counted"
+          ]
+        },
+        "de": {
+          "title": "Werbefläche auf Ihrem Bildschirm verkaufen",
+          "short": "Werbefläche",
+          "compare": "Werbeverkauf und Berichte",
+          "text": "Lassen Sie den Makler, Friseur oder das Fitnessstudio nebenan auf Ihrem Bildschirm werben – so finanziert sich der Bildschirm selbst. Tage, Uhrzeiten und Häufigkeit bestimmen Sie; am Endtag endet die Werbung automatisch.",
+          "points": [
+            "Tage, Uhrzeiten und Häufigkeit (alle N Inhalte)",
+            "Berichtslink für den Werbekunden ohne Anmeldung",
+            "Werbebilder mit QR aus einem Foto, Scans werden gezählt"
+          ]
+        },
+        "ar": {
+          "title": "بِع مساحة إعلانية على شاشتك",
+          "short": "مساحة إعلانية",
+          "compare": "بيع المساحات الإعلانية والتقارير",
+          "text": "دع مكتب العقارات أو صالون الحلاقة أو الصالة الرياضية المجاورة يعلن على شاشتك، لتغطي الشاشة تكلفتها بنفسها. أنت تحدد الأيام والساعات وعدد مرات الظهور، ويتوقف الإعلان تلقائيًا في تاريخ انتهائه.",
+          "points": [
+            "الأيام والساعات والتكرار (مرة كل N محتويات)",
+            "رابط تقرير للمعلن دون تسجيل دخول",
+            "صور إعلانية مع QR من صورة فوتوغرافية وتُحتسب مرات المسح"
+          ]
+        }
+      }
+    },
+    {
+      "id": "afis",
+      "icon": "📷",
+      "title": "Ürün fotoğrafından afiş",
+      "short": "Fotoğraftan afiş",
+      "text": "Tasarımcıya gerek yok: ürününüzün fotoğrafını seçin, adını ve fiyatını yazın, dört hazır tasarımdan birini seçin. Renkler fotoğraftan alınır; afiş birkaç saniyede ekranınızda.",
+      "points": [
+        "Tam kadraj, yarım panel, çerçeveli ve vitrin bandı tasarımları",
+        "Okutmaları sayılan QR kod ekleme",
+        "Telefondan çekip hemen yayınlama"
+      ],
+      "plan": "all",
+      "compare": "Fotoğraftan afiş hazırlama",
+      "added": "2026-11-06",
+      "visual": {
+        "type": "win",
+        "img": "p-afis"
+      },
+      "i18n": {
+        "en": {
+          "title": "Posters from a product photo",
+          "short": "Photo posters",
+          "compare": "Posters from photos",
+          "text": "No designer needed: pick a photo of your product, type its name and price and choose one of four ready designs. Colours are taken from the photo, and the poster is on your screen in seconds.",
+          "points": [
+            "Full frame, half panel, framed and showcase designs",
+            "Add a QR code whose scans are counted",
+            "Shoot it on your phone and publish right away"
+          ]
+        },
+        "de": {
+          "title": "Plakate aus einem Produktfoto",
+          "short": "Foto-Plakate",
+          "compare": "Plakate aus Fotos",
+          "text": "Kein Designer nötig: Produktfoto wählen, Name und Preis eingeben, eines von vier Designs auswählen. Die Farben kommen aus dem Foto – in Sekunden ist das Plakat auf dem Bildschirm.",
+          "points": [
+            "Vollbild, halbes Feld, gerahmt und Schaufensterband",
+            "QR-Code hinzufügen, Scans werden gezählt",
+            "Mit dem Handy fotografieren und sofort veröffentlichen"
+          ]
+        },
+        "ar": {
+          "title": "ملصقات من صورة المنتج",
+          "short": "ملصقات من الصور",
+          "compare": "ملصقات من الصور",
+          "text": "لا حاجة إلى مصمم: اختر صورة منتجك واكتب اسمه وسعره واختر أحد التصاميم الأربعة الجاهزة. تؤخذ الألوان من الصورة ويظهر الملصق على شاشتك خلال ثوانٍ.",
+          "points": [
+            "تصاميم الإطار الكامل ونصف اللوحة والإطار وشريط العرض",
+            "إضافة رمز QR تُحتسب مرات مسحه",
+            "التقط الصورة بهاتفك وانشرها فورًا"
+          ]
+        }
+      }
     }
   ],
   "extras": [
@@ -954,6 +1062,46 @@
           "text": "اكتب اسم أغنية أو فنان في اللوحة؛ وابنِ قائمة موسيقى الخلفية من نتائج يوتيوب بلمسة واحدة ورتّبها. وتعمل على التلفاز دون انقطاع."
         }
       }
+    },
+    {
+      "icon": "🎯",
+      "title": "Kampanya etkisi",
+      "text": "Her kampanya ekranda kaç kez göründü, QR'ı kaç kez okutuldu, 100 gösterimde kaç okutma: kampanyaları karşılaştırın, pazartesi sabahları haftalık özeti e-postanızda okuyun.",
+      "added": "2026-11-06",
+      "i18n": {
+        "en": {
+          "title": "Campaign impact",
+          "text": "How often each campaign appeared, how often its QR was scanned and the scans per 100 views: compare campaigns and get a weekly summary by e-mail every Monday morning."
+        },
+        "de": {
+          "title": "Kampagnenwirkung",
+          "text": "Wie oft jede Kampagne lief, wie oft ihr QR gescannt wurde und Scans pro 100 Anzeigen: Kampagnen vergleichen und jeden Montagmorgen eine Wochenübersicht per E-Mail erhalten."
+        },
+        "ar": {
+          "title": "أثر الحملة",
+          "text": "كم مرة ظهرت كل حملة، وكم مرة مُسح رمز QR الخاص بها، وعدد مرات المسح لكل 100 عرض: قارن بين الحملات واحصل على ملخص أسبوعي بالبريد كل صباح اثنين."
+        }
+      }
+    },
+    {
+      "icon": "🍹",
+      "title": "Saate göre menü ve indirim saati",
+      "text": "Kahvaltı, öğle, akşam kategorileri kendi saatinde görünür. Happy hour'da seçtiğiniz kategorilerde eski fiyat üstü çizili, yanında indirimli fiyat çıkar; saat bitince fiyatlar kendiliğinden döner.",
+      "added": "2026-11-06",
+      "i18n": {
+        "en": {
+          "title": "Menus by time of day and happy hour",
+          "text": "Breakfast, lunch and evening categories appear at their own hours. During happy hour the selected categories show the old price crossed out next to the discounted one; prices go back automatically when it ends."
+        },
+        "de": {
+          "title": "Speisekarte nach Tageszeit und Happy Hour",
+          "text": "Frühstücks-, Mittags- und Abendkategorien erscheinen zu ihren Zeiten. In der Happy Hour zeigen ausgewählte Kategorien den alten Preis durchgestrichen neben dem reduzierten; danach kehren die Preise automatisch zurück."
+        },
+        "ar": {
+          "title": "قائمة حسب الوقت وساعة الخصم",
+          "text": "تظهر فئات الفطور والغداء والمساء في أوقاتها. وفي ساعة الخصم تعرض الفئات المختارة السعر القديم مشطوبًا بجانب السعر المخفّض، وتعود الأسعار تلقائيًا عند انتهائها."
+        }
+      }
     }
   ],
   "shots": {
@@ -1063,6 +1211,26 @@
       "tenant": "kafe",
       "view": "mobile",
       "hash": "stats"
+    },
+    "p-reklam": {
+      "tenant": "spor",
+      "view": "panel",
+      "hash": "ads",
+      "api": [
+        "POST",
+        "/api/admin/ads"
+      ],
+      "body": {
+        "name": "Güneş Emlak",
+        "fee": "Aylık 1.500 ₺",
+        "every": 4,
+        "contact": "0212 000 00 00"
+      }
+    },
+    "p-afis": {
+      "tenant": "kafe",
+      "view": "panel",
+      "hash": "media/posters"
     }
   }
 }

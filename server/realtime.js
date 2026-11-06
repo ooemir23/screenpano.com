@@ -119,7 +119,7 @@ function onMessage(ws, raw) {
   if (!ws.deviceId) return;
   if (m.type === 'status') require('./monitor').report(ws.tid, ws.deviceId, m, ws.ip);
   else if (m.type === 'play') require('./stats').play(ws.tid, String(m.id || ''), m.sec);
-  else if (m.type === 'shown') require('./stats').shown(ws.tid, String(m.kind || ''));
+  else if (m.type === 'shown') require('./stats').shown(ws.tid, String(m.kind || ''), m.id ? String(m.id) : '');
   else if (m.type === 'perf' && Array.isArray(m.steps)) require('./monitor').perf.set(ws.deviceId, { at: Date.now(), result: JSON.parse(JSON.stringify({ steps: m.steps.slice(0, 12), sec: m.sec, screen: m.screen, lite: m.lite, exo: m.exo })) });
   else if (m.type === 'snap' && typeof m.data === 'string' && /^data:image\/(jpeg|png);base64,/.test(m.data)) require('./monitor').snaps.set(ws.deviceId, { at: Date.now(), data: m.data });
 }
