@@ -1496,7 +1496,34 @@ const SPTRK = new Map();     // 'tür:kimlik' -> { items, err, hidden }
 let LF = 'all';              // kitaplık süzgeci
 let MSRC = 'yt';             // arama kaynağı: yt | sp
 const musicActive = () => { const m = musicData(); return m.playlists.find(x => x.id === m.activeId) || m.playlists[0] || null; };
-const SPMODE = () => { const a = musicActive(); return !!a && a.provider === 'spotify'; }; // çalan kaynak Spotify ise sayfa Spotify düzenine geçer
+// ---- Kaynak seçimi: işletme Müzik'e girince YouTube Music ya da Spotify'ı seçer; tüm sayfa seçilene döner ----
+let MSRCV = null;
+const isSp = x => x.provider === 'spotify';
+// kaynak kullanılabilir: hesabı bağlı ya da kitaplığında o kaynaktan liste var; değilse bağlanana kadar pasif
+const srcAvail = k => { const acc = k === 'spotify' ? SPACC.st : YTACC.st; return !!(acc && acc.connected) || musicData().playlists.some(x => isSp(x) === (k === 'spotify')); };
+function srcView() {
+  let v = MSRCV;
+  if (!v) { try { v = localStorage.getItem('mus.src'); } catch (e) { /* kayıt yoksa varsayılan */ } }
+  if (v !== 'yt' && v !== 'spotify') { const a = musicActive(); v = a && isSp(a) ? 'spotify' : 'yt'; }
+  const ya = srcAvail('yt'), sa = srcAvail('spotify');
+  if (v === 'spotify' && !sa && ya) v = 'yt';
+  if (v === 'yt' && !ya && sa) v = 'spotify';
+  return v;
+}
+const SPMODE = () => srcView() === 'spotify';
+function setSrc(k) {
+  if (!srcAvail(k) && (srcAvail('yt') || srcAvail('spotify'))) { goM('accounts'); return toast(k === 'spotify' ? 'Spotify pasif: önce hesabı bağlayın' : 'YouTube pasif: önce hesabı bağlayın', true); }
+  MSRCV = k; try { localStorage.setItem('mus.src', k); } catch (e) { /* tarayıcı kaydı kapalıysa yalnız bu oturumda geçerli */ }
+  MV = null; MSEARCH.q = ''; SPS = { q: '', r: null, busy: false, err: '' }; LF = 'all';
+  if ((SUB.music || 'home') === 'explore' && k === 'spotify') SUB.music = 'home';
+  render(true); spDevLoadIf();
+}
+function spDevLoadIf() { if (SPMODE() && (SUB.music || '') === 'accounts' && SPACC.st && SPACC.st.connected && !SPACC.devs) spDevLoad(); }
+function srcPicker() {
+  const v = srcView(), none = !srcAvail('yt') && !srcAvail('spotify');
+  const b = (k, name, icn) => { const av = none || srcAvail(k); return `<button type="button" class="${v === k ? 'on' : ''} ${av ? '' : 'off'}" ${av ? '' : 'title="Hesap bağlanana kadar pasif"'} onclick="setSrc('${k}')">${ic(icn)}<span>${name}</span>${av ? '' : `<small>Pasif</small>`}</button>`; };
+  return `<div class="ytm-pick" role="group" aria-label="Müzik kaynağı">${b('yt', 'YouTube Music', 'music')}${b('spotify', 'Spotify', 'headphones')}</div>`;
+}
 const MSUB = { yt: 'accounts', add: 'accounts', presets: 'explore' }; // eski bağlantılar
 
 SECTIONS.music = {
@@ -1521,7 +1548,7 @@ const goM = k => { MV = null; go('music/' + k); };
 function ytmTop(sub) {
   const chips = SPMODE() ? [['home', 'house', 'Ana sayfa'], ['lib', 'library', 'Kitaplığın'], ['accounts', 'link', 'Hesaplar'], ['setup', 'book-open', 'Kurulum']]
     : [['home', 'house', 'Ana sayfa'], ['explore', 'compass', 'Keşfet'], ['lib', 'library', 'Kitaplık'], ['accounts', 'link', 'Hesaplar'], ['setup', 'book-open', 'Kurulum']];
-  return `<div class="ytm-top">
+  return `${srcPicker()}<div class="ytm-top">
       <form class="ytm-search" onsubmit="musicSearch();return false">${ic('search')}<input type="search" id="ms-q" placeholder="${SPMODE() ? 'Ne çalmak istersin?' : 'Şarkı, sanatçı ya da liste arayın'}" value="${esc(MSEARCH.q)}" autocomplete="off"></form>
       <button class="ytm-ib" type="button" title="Bağlantı ekle" onclick="goM('accounts');setTimeout(()=>{const e=$('m-url');if(e){e.scrollIntoView({block:'center'});e.focus();}},120)">${ic('plus')}</button>
     </div>
@@ -1549,14 +1576,6 @@ function trow(o) { // YouTube Music şarkı satırı: kapak (üstünde oynat), a
 }
 
 // ---- Alt çalar çubuğu ----
-// Çalan kaynak seçici: aynı anda yalnız biri çalar; seçilmeyen kaynak otomatik durdurulur
-function srcSwitch(act, on) {
-  const m = musicData(), spOn = (SPACC.st && SPACC.st.connected) || m.playlists.some(x => x.provider === 'spotify');
-  if (!spOn || !m.playlists.length) return '';
-  const cur = act && act.provider === 'spotify' ? 'spotify' : 'yt';
-  const b = (k, name, icn) => `<button type="button" class="${cur === k && on ? 'on' : ''}" title="${cur === k && on ? 'Şu an bu kaynak çalıyor' : 'Bu kaynağa geç; diğeri durdurulur'}" onclick="musicCmd('source',{source:'${k}'})">${ic(icn)}<span>${name}</span></button>`;
-  return `<div class="ytm-src" role="group" aria-label="Çalan kaynak">${b('yt', 'YouTube', 'music')}${b('spotify', 'Spotify', 'headphones')}</div>`;
-}
 function nowBar() {
   const m = musicData(), act = musicActive();
   const n = MNOW && act && (!MNOW.itemId || MNOW.itemId === act.id) ? MNOW : null;
@@ -1575,7 +1594,6 @@ function nowBar() {
       <span class="c">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer">` : ic('music')}</span>
       <span class="t"><b>${esc(title)}</b><span>${esc(sub)}</span></span></button>
     <div class="ytm-bar-r">
-      ${srcSwitch(act, on)}
       <label class="ytm-vol" title="Ses">${ic('volume-2')}<input type="range" min="0" max="100" value="${m.volume ?? 75}" onchange="musicCmd('volume',{volume:+this.value})"></label>
       <span class="ytm-onoff" title="Müzik açık / kapalı">${sw(on, "musicOpt({enabled:this.checked,playing:true})")}</span>
     </div></div>`;
@@ -1606,25 +1624,24 @@ function spHomeHtml() {
 function homeHtml() {
   if (SPMODE()) return spHomeHtml();
   const m = musicData(), act = musicActive();
-  const lib = m.playlists.map(libCard);
+  const lib = m.playlists.filter(x => !isSp(x)).map(libCard);
   const yt = YTACC.st && YTACC.st.connected ? (YTACC.items || []).slice(0, 12).map(p => mcard({ thumb: p.thumb, title: p.title, sub: `Çalma listesi • ${p.count} şarkı`, open: `openList('yt','${esc(p.id)}')`, play: `ytAccAdd('${esc(p.id)}',true)` })) : [];
-  const sp = SPACC.st && SPACC.st.connected ? (SPACC.items || []).slice(0, 12).map(p => mcard({ thumb: p.thumb, ic: 'headphones', title: p.title, sub: `Çalma listesi • ${p.count} şarkı`, open: `openList('sp','${esc(p.id)}')`, play: `spAdd('${esc(p.id)}',true)` })) : [];
-  const pre = MUSIC_PRESETS.map((p, i) => mcard({ thumb: p.thumb, ic: provIc(p.provider), title: p.title, sub: `${esc(p.category)} • ${PROV(p.provider)}`, open: `addMusicPreset(${i},false)`, play: `addMusicPreset(${i},true)` }));
-  const hero = act ? `<div class="ytm-hero"><div class="c">${act.thumb ? `<img src="${esc(act.thumb)}" alt="" referrerpolicy="no-referrer">` : ic(provIc(act.provider))}</div><div class="b"><small>${m.enabled && m.playing ? 'TV\'de çalıyor' : 'Son çalınan'}</small><h2>${esc(act.title)}</h2><span>${kindName(act)} • ${PROV(act.provider)}</span>
+  const pre = MUSIC_PRESETS.map((p, i) => ({ p, i })).filter(o => o.p.provider !== 'spotify').map(({ p, i }) => mcard({ thumb: p.thumb, ic: provIc(p.provider), title: p.title, sub: `${esc(p.category)} • ${PROV(p.provider)}`, open: `addMusicPreset(${i},false)`, play: `addMusicPreset(${i},true)` }));
+  const hero = act && !isSp(act) ? `<div class="ytm-hero"><div class="c">${act.thumb ? `<img src="${esc(act.thumb)}" alt="" referrerpolicy="no-referrer">` : ic(provIc(act.provider))}</div><div class="b"><small>${m.enabled && m.playing ? 'TV\'de çalıyor' : 'Son çalınan'}</small><h2>${esc(act.title)}</h2><span>${kindName(act)} • ${PROV(act.provider)}</span>
       <div class="row"><button class="ytm-btn w" onclick="${m.enabled && m.playing ? "musicCmd('pause')" : `musicSelect('${act.id}')`}">${ic(m.enabled && m.playing ? 'pause-f' : 'play-f')}${m.enabled && m.playing ? 'Duraklat' : 'Oynat'}</button><button class="ytm-btn" onclick="openList('lib','${act.id}')">${ic('list-music')}Şarkılar</button></div></div></div>` : '';
-  const empty = !m.playlists.length ? `<div class="ytm-empty">${ic('music')}<b>Kitaplığınız boş</b><span>Hesabınızı bağlayın, şarkı arayın ya da aşağıdaki hazır listelerden birini çalın.</span><div class="row"><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesap bağla</button><button class="ytm-btn" onclick="goM('setup')">${ic('book-open')}Kurulum adımları</button></div></div>` : '';
+  const empty = !lib.length ? `<div class="ytm-empty">${ic('music')}<b>Kitaplığınız boş</b><span>Hesabınızı bağlayın, şarkı arayın ya da aşağıdaki hazır listelerden birini çalın.</span><div class="row"><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesap bağla</button><button class="ytm-btn" onclick="goM('setup')">${ic('book-open')}Kurulum adımları</button></div></div>` : '';
   return hero + empty
     + shelf('Kitaplığınız', lib.slice(0, 14), lib.length > 14 ? moreBtn('lib') : '', 'Tekrar dinleyin')
     + shelf('YouTube listeleriniz', yt, moreBtn('accounts', 'Hesap'), YTACC.st && YTACC.st.name ? esc(YTACC.st.name) : '')
-    + shelf('Spotify listeleriniz', sp, moreBtn('accounts', 'Hesap'), SPACC.st && SPACC.st.name ? esc(SPACC.st.name) : '')
     + shelf('Mekânınız için hazır listeler', pre, moreBtn('explore', 'Keşfet'));
 }
 
 // ---- Keşfet: hazır listeler kategoriye göre ----
 function exploreHtml() {
-  const cats = [...new Set(MUSIC_PRESETS.map(p => p.category))];
+  const PRE = MUSIC_PRESETS.map((p, i) => ({ p, i })).filter(o => o.p.provider !== 'spotify');
+  const cats = [...new Set(PRE.map(o => o.p.category))];
   return `<div class="ytm-moods">${cats.map(c => `<button type="button" onclick="document.getElementById('cat-${esc(c).replace(/[^a-z0-9]/gi, '')}').scrollIntoView({behavior:'smooth',block:'center'})">${esc(c)}</button>`).join('')}</div>`
-    + `<div class="ytm-grid">${MUSIC_PRESETS.map((p, i) => `<div class="ytm-pre" id="cat-${esc(p.category).replace(/[^a-z0-9]/gi, '')}">${mcard({ thumb: p.thumb, ic: provIc(p.provider), title: p.title, sub: `${esc(p.category)} • ${PROV(p.provider)}`, open: `addMusicPreset(${i},false)`, play: `addMusicPreset(${i},true)` })}<p>${esc(p.desc)}</p></div>`).join('')}</div>`;
+    + `<div class="ytm-grid">${PRE.map(({ p, i }) => `<div class="ytm-pre" id="cat-${esc(p.category).replace(/[^a-z0-9]/gi, '')}">${mcard({ thumb: p.thumb, ic: provIc(p.provider), title: p.title, sub: `${esc(p.category)} • ${PROV(p.provider)}`, open: `addMusicPreset(${i},false)`, play: `addMusicPreset(${i},true)` })}<p>${esc(p.desc)}</p></div>`).join('')}</div>`;
 }
 
 // ---- Kitaplık ----
@@ -1632,11 +1649,11 @@ function libHtml() {
   const m = musicData();
   const F = { all: () => true, mine: x => x.provider === 'ytmix', yt: x => x.provider === 'yt' || x.provider === 'ytm', sp: x => x.provider === 'spotify', radio: x => x.provider === 'radio' };
   if (SPMODE()) { const l = m.playlists.filter(F.sp); return `<div class="ytm-sh"><div><h2>Kitaplığın</h2></div></div>` + (l.length ? `<div class="ytm-grid">${l.map(libCard).join('')}</div>` : `<div class="ytm-empty">${ic('headphones')}<b>Spotify listen boş</b><span>Hesabını bağla ya da arama yapıp liste ekle.</span><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesap bağla</button></div>`); }
-  const list = m.playlists.filter(F[LF] || F.all);
-  const chips = [['all', 'Tümü'], ['mine', 'Kendi listelerim'], ['yt', 'YouTube'], ['sp', 'Spotify'], ['radio', 'Radyo']];
+  const list = m.playlists.filter(x => !isSp(x)).filter(F[LF] || F.all);
+  const chips = [['all', 'Tümü'], ['mine', 'Kendi listelerim'], ['yt', 'YouTube'], ['radio', 'Radyo']];
   return `<div class="ytm-sh"><div><h2>Kitaplık</h2></div></div><div class="ytm-filt">${chips.map(([k, l]) => `<button type="button" class="${LF === k ? 'on' : ''}" onclick="LF='${k}';render(true)">${l}</button>`).join('')}</div>`
     + (list.length ? `<div class="ytm-grid">${list.map(libCard).join('')}</div>`
-      : `<div class="ytm-empty">${ic('library')}<b>${m.playlists.length ? 'Bu süzgeçte liste yok' : 'Kitaplığınız boş'}</b><span>Arama yapın, hesabınızı bağlayın ya da Keşfet'ten hazır liste ekleyin.</span></div>`);
+      : `<div class="ytm-empty">${ic('library')}<b>${m.playlists.some(x => !isSp(x)) ? 'Bu süzgeçte liste yok' : 'Kitaplığınız boş'}</b><span>Arama yapın, hesabınızı bağlayın ya da Keşfet'ten hazır liste ekleyin.</span></div>`);
 }
 function openList(src, id) {
   if (src === 'lib') {
@@ -1749,8 +1766,8 @@ let SPS = { q: '', r: null, busy: false, err: '' };          // Spotify araması
 let MDRAFT = null; // kurulmakta olan liste: { id: düzenleme ise liste kimliği, title, tracks: [{v,t,c,th,d}] }
 function searchHtml() {
   const spOn = SPACC.st && SPACC.st.connected;
-  if (SPMODE()) MSRC = 'sp';
-  const src = SPMODE() ? '' : `<div class="ytm-filt">${[['yt', 'YouTube'], ['sp', 'Spotify']].map(([k, l]) => `<button type="button" class="${MSRC === k ? 'on' : ''}" onclick="MSRC='${k}';musicSearch()">${l}</button>`).join('')}</div>`;
+  MSRC = SPMODE() ? 'sp' : 'yt';
+  const src = true ? '' : `<div class="ytm-filt">${[['yt', 'YouTube'], ['sp', 'Spotify']].map(([k, l]) => `<button type="button" class="${MSRC === k ? 'on' : ''}" onclick="MSRC='${k}';musicSearch()">${l}</button>`).join('')}</div>`;
   let out = `<div class="ytm-sh"><div><small>Arama sonuçları</small><h2>“${esc(MSEARCH.q || SPS.q)}”</h2></div></div>` + src;
   if (MSRC === 'sp') {
     if (!spOn) return out + `<div class="ytm-empty">${ic('headphones')}<b>Spotify hesabı bağlı değil</b><span>Spotify'da arama yapmak için önce hesabınızı bağlayın.</span><button class="ytm-btn w" onclick="goM('accounts')">${ic('link')}Hesaplar</button></div>`;
@@ -1782,7 +1799,7 @@ async function musicSearch() {
   const inp = $('ms-q'), q = ((inp && inp.value) || MSEARCH.q || SPS.q || '').trim();
   if (q.length < 2) { toast('En az 2 harf yazın', true); return; }
   MV = null;
-  if (SPMODE()) MSRC = 'sp';
+  MSRC = SPMODE() ? 'sp' : 'yt';
   if (MSRC === 'sp' && SPACC.st && SPACC.st.connected) {
     SPS = { q, r: null, busy: true, err: '' }; MSEARCH.q = q;
     if ((SUB.music || '') !== 'search') go('music/search'); else render(true);
@@ -1960,8 +1977,8 @@ function accountsHtml() {
   }
   const acc = (name, cls, body, help) => `<section class="ytm-acc ${cls}"><div class="h"><span class="lg">${ic(cls === 'sp' ? 'headphones' : 'music')}</span><h2>${name}</h2><button class="ytm-more" onclick="goM('setup')">${ic('book-open')}${help}</button></div>${body}</section>`;
   return `<div class="ytm-sh"><div><h2>Hesaplar</h2></div></div><p class="ytm-muted" style="margin:-6px 0 14px">${ic('lock')}Bağladığınız hesap yalnız bu işletmeye aittir; başka işletmeler hesabınızı ve listelerinizi göremez.</p><div class="ytm-accs">`
-    + acc('YouTube ve YouTube Music', 'yt', ytBody, 'Kurulum')
-    + acc('Spotify', 'sp', spBody, 'Kurulum')
+    + (!SPMODE() || !srcAvail('yt') ? acc('YouTube ve YouTube Music', 'yt', ytBody, 'Kurulum') : '')
+    + (SPMODE() || !srcAvail('spotify') ? acc('Spotify', 'sp', spBody, 'Kurulum') : '')
     + `</div><section class="ytm-acc"><div class="h"><span class="lg">${ic('link')}</span><h2>Bağlantı ekle</h2></div>
         <p class="ytm-muted">Spotify, YouTube Music ya da YouTube bağlantısı veya radyo yayın adresi yapıştırın; ad ve kapak otomatik gelir.</p>
         <div class="ytm-add"><input type="url" id="m-url" class="ytm-in" placeholder="https://open.spotify.com/playlist/… ya da https://music.youtube.com/…"><input type="text" id="m-title" class="ytm-in" maxlength="90" placeholder="Başlık (isteğe bağlı)"></div>
@@ -2020,19 +2037,19 @@ function setupHtml() {
   const flow = (cls, title, sub, steps) => `<section class="ytm-flow ${cls}"><div class="ytm-sh"><div><small>${sub}</small><h2>${title}</h2></div></div>
     <ol class="ytm-steps">${steps.map(([k, h, p, lk], i) => `<li><div class="ill">${ill(k)}</div><span class="n">${i + 1}</span><b>${h}</b><p>${p}</p>${lk ? `<a class="ytm-btn sm" href="${lk[0]}"${lk[0][0] === '#' ? '' : ' target="_blank" rel="noopener"'}>${lk[1]}</a>` : ''}</li>`).join('')}</ol></section>`;
   return `<div class="ytm-sh"><div><small>Adım adım</small><h2>Müzik kurulumu</h2></div></div>`
-    + flow('yt', 'YouTube Music', 'Ücretsiz • 4 adım', [
+    + (!SPMODE() || !srcAvail('yt') ? flow('yt', 'YouTube Music', 'Ücretsiz • 4 adım', [
       ['login', 'Hesabı bağlayın', 'Hesaplar sayfasında “YouTube ile bağlan”a basın. Google hesabınızı seçin ve “İzin ver”e tıklayın; yalnız okuma izni istenir.', ['#music/accounts', 'Hesaplar sayfasına git']],
       ['list', 'Listenizi seçin', 'Listeleriniz Kitaplık’ta görünür. Listeniz yoksa YouTube Music’te oluşturun; “Özel” listeler görünmez, “Liste dışı” ya da “Herkese açık” yapın.', ['https://music.youtube.com/library/playlists', 'YouTube Music listelerim']],
       ['play', 'TV’de çalın', 'Listeyi açıp “Oynat”a basın. Müzik birkaç saniye içinde TV kutusunda başlar.'],
       ['remote', 'Telefondan yönetin', 'Alttaki çalar çubuğundan duraklatın, şarkı değiştirin, sesi ayarlayın.'],
-    ])
-    + flow('sp', 'Spotify', 'Spotify Premium • 5 adım', [
+    ]) : '')
+    + (SPMODE() || !srcAvail('spotify') ? flow('sp', 'Spotify', 'Spotify Premium • 5 adım', [
       ['premium', 'Premium hesap', 'Panelden çalma ve kumanda için Spotify Premium gerekir. Ücretsiz hesapta listeler görünür ama kumanda edilemez.', ['https://www.spotify.com/premium/', 'Premium sayfasını aç']],
       ['box', 'Spotify’ı TV kutusuna kurun', 'Kutunun Google Play mağazasından Spotify’ı kurun ve aynı hesapla bir kez giriş yapın.', ['https://play.google.com/store/apps/details?id=com.spotify.tv.android', 'Play Store sayfası']],
       ['login', 'Hesabı bağlayın', 'Hesaplar sayfasında “Spotify ile bağlan”a basın. Spotify hesabınızla giriş yapıp “Kabul ediyorum”a tıklayın.', ['#music/accounts', 'Hesaplar sayfasına git']],
       ['device', 'Cihazı seçin', '“Çalınacak cihaz” listesinden TV kutusunu seçin. Görünmüyorsa kutuda Spotify’ı açıp Yenile’ye basın.'],
       ['play', 'Listeden çalın', 'Spotify listenizi açıp “Oynat”a basın. Çalan şarkı TV’de ve panelde görünür.'],
-    ])
+    ]) : '')
     + `<p class="ytm-muted" style="margin-top:6px">${ic('info')} Ses TV kutusundan gelir: TV’nin ya da ses sisteminin sesi açık olmalı. Spotify ve YouTube hesap kuralları kişisel kullanım içindir; mekânda ticari yayın için ilgili lisansları kontrol edin.</p>`;
 }
 

@@ -582,6 +582,15 @@ body.ytm-on,body.ytm-on main{background:#030303}
 .ytm-vol{display:flex;align-items:center;gap:8px;color:#aaa}.ytm-vol .ic{width:22px;height:22px}
 .ytm-vol input{width:110px;accent-color:#fff}
 body.imp .ytm-top{top:32px}body.imp .ytm-chips{top:96px}
+.ytm-pick{display:flex;gap:10px;margin:0 0 14px}
+.ytm-pick button{position:relative;display:flex;align-items:center;gap:10px;height:46px;padding:0 22px 0 16px;border:2px solid transparent;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
+.ytm-pick button .ic{width:20px;height:20px}
+.ytm-pick button:hover{background:rgba(255,255,255,.18)}
+.ytm-pick button.on{background:#fff;color:#111}
+.ytm-pick button.on:nth-child(1) .ic{color:#f03}
+.ytm-pick button.on:nth-child(2){background:#1ed760;color:#000}
+.ytm-pick button.off{opacity:.45}.ytm-pick button.off small{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.14)}
+@media(max-width:900px){.ytm-pick{gap:8px}.ytm-pick button{flex:1;justify-content:center;padding:0 10px;font-size:13.5px;height:42px}.ytm-pick button small{display:none}}
 /* ---- Spotify görünümü: çalan kaynak Spotify iken ---- */
 .ytm.sp{--y-bg:#121212;--y-s1:#181818;--y-s2:#282828;--y-hv:rgba(255,255,255,.08);--sp:#1ed760}
 body.sp-on,body.sp-on main{background:#121212}
