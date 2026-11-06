@@ -134,3 +134,30 @@ Grafik belleği ¦ Graphics memory ¦ Grafikspeicher ¦ ذاكرة الرسوم�
 Ekran kartı: {} ¦ GPU: {} ¦ Grafikchip: {} ¦ وحدة الرسوميات: {}
 {} çekirdek ¦ {} cores ¦ {} Kerne ¦ {} أنوية
 Cihazın belleği doldu: uygulama yavaşlayabilir, kutuyu yeniden başlatın ¦ The device is out of memory: the app may slow down, restart the box ¦ Der Gerätespeicher ist voll: die App kann langsamer werden, starten Sie die Box neu ¦ ذاكرة الجهاز ممتلئة: قد يبطؤ التطبيق، أعد تشغيل الجهاز
+
+Takılma testi ¦ Stutter test ¦ Ruckel-Test ¦ اختبار التقطيع
+Test yaklaşık 1 dakika sürer. Bu sırada kutunun ekranında bazı parçalar kısa süreliğine kaybolup geri gelir. Başlatılsın mı? ¦ The test takes about 1 minute. During it, parts of the box's screen briefly disappear and come back. Start it? ¦ Der Test dauert etwa 1 Minute. Dabei verschwinden Teile des Bildschirms kurz und kommen wieder. Starten? ¦ يستغرق الاختبار نحو دقيقة. خلاله تختفي أجزاء من شاشة الجهاز لوقت قصير ثم تعود. هل تبدأ؟
+Test başlıyor… ¦ Starting test… ¦ Test startet… ¦ جارٍ بدء الاختبار…
+Ölçülüyor… {} sn (yaklaşık 70 sn sürer) ¦ Measuring… {} s (takes about 70 s) ¦ Messung… {} s (dauert ca. 70 s) ¦ جارٍ القياس… {} ث (يستغرق نحو 70 ث)
+Sonuç gelmedi. Kutudaki uygulama eskiyse bu test çalışmaz; uygulamayı güncelleyin. ¦ No result arrived. The test does not work if the app on the box is old; update the app. ¦ Kein Ergebnis. Bei einer alten App auf der Box funktioniert der Test nicht; aktualisieren Sie die App. ¦ لم تصل نتيجة. لا يعمل الاختبار إن كان التطبيق قديمًا؛ حدّث التطبيق.
+Sonuç okunamadı. ¦ The result could not be read. ¦ Das Ergebnis konnte nicht gelesen werden. ¦ تعذّرت قراءة النتيجة.
+Sorun yok: kutu akıcı çalışıyor. ¦ No problem: the box runs smoothly. ¦ Kein Problem: Die Box läuft flüssig. ¦ لا مشكلة: الجهاز يعمل بسلاسة.
+Sonuç: ¦ Result: ¦ Ergebnis: ¦ النتيجة:
+Ölçüm ayrıntıları ¦ Measurement details ¦ Messdetails ¦ تفاصيل القياس
+Adım ¦ Step ¦ Schritt ¦ الخطوة
+Hız ¦ Speed ¦ Tempo ¦ السرعة
+Büyük takılma ¦ Big stutters ¦ Starke Ruckler ¦ تقطيع كبير
+Medya geçişleri (video ve fotoğraf değişimi) takılmaya neden oluyor. Videoların kalitesini Medya sekmesinde 720p'ye düşürün, çok büyük fotoğrafları küçültün. ¦ Media transitions (video and photo changes) cause the stutter. Lower video quality to 720p in the Media tab and shrink very large photos. ¦ Medienwechsel (Video und Foto) verursachen das Ruckeln. Senken Sie im Medien-Tab die Videoqualität auf 720p und verkleinern Sie sehr große Fotos. ¦ انتقالات الوسائط (تغيير الفيديو والصور) تسبب التقطيع. اخفض جودة الفيديو إلى 720p في تبويب الوسائط وصغّر الصور الكبيرة جدًا.
+Alttaki kayan bant takılmaya neden oluyor. Bilgi bandını kapatın ya da kısaltın. ¦ The scrolling ticker at the bottom causes the stutter. Turn the info ticker off or shorten it. ¦ Das Laufband unten verursacht das Ruckeln. Schalten Sie das Infoband aus oder kürzen Sie es. ¦ الشريط المتحرك في الأسفل يسبب التقطيع. أوقف شريط المعلومات أو اختصره.
+Sayfadaki animasyonlar kutuyu zorluyor. Tasarım ve duyurularda efektleri azaltın. ¦ Animations on the page strain the box. Reduce effects in the design and announcements. ¦ Animationen auf der Seite belasten die Box. Reduzieren Sie Effekte in Design und Ankündigungen. ¦ الحركات في الصفحة تجهد الجهاز. قلّل المؤثرات في التصميم والإعلانات.
+Müzik oynatıcısı (YouTube) kutuyu zorluyor. Bu kutuda müziği kapatın ya da radyo/Spotify kullanın. ¦ The music player (YouTube) strains the box. Turn music off on this box or use radio/Spotify. ¦ Der Musikplayer (YouTube) belastet die Box. Schalten Sie die Musik auf dieser Box aus oder nutzen Sie Radio/Spotify. ¦ مشغّل الموسيقى (يوتيوب) يجهد الجهاز. أوقف الموسيقى على هذا الجهاز أو استخدم الراديو/سبوتيفاي.
+Yandaki paneller (fiyat listesi, saat, hava vb.) takılmaya neden oluyor. Bu panelleri azaltın. ¦ The side panels (price list, clock, weather, etc.) cause the stutter. Reduce them. ¦ Die Seitenpanels (Preisliste, Uhr, Wetter usw.) verursachen das Ruckeln. Reduzieren Sie sie. ¦ اللوحات الجانبية (قائمة الأسعار والساعة والطقس وغيرها) تسبب التقطيع. قلّلها.
+Sayfa boşken bile akıcı değil: sebep içerik değil, kutunun kendisi (donanım ya da TV çözünürlüğü). Kutuda ekran çözünürlüğünü 1080p yapın; sürüyorsa kutu bu iş için zayıf. ¦ Not smooth even with an empty page: the cause is not the content but the box itself (hardware or TV resolution). Set the box's output to 1080p; if it persists, the box is too weak for this. ¦ Selbst bei leerer Seite nicht flüssig: Ursache ist nicht der Inhalt, sondern die Box selbst (Hardware oder TV-Auflösung). Stellen Sie die Box auf 1080p; bleibt es, ist die Box zu schwach. ¦ غير سلس حتى مع صفحة فارغة: السبب ليس المحتوى بل الجهاز نفسه (العتاد أو دقة التلفاز). اضبط خرج الجهاز على 1080p؛ وإن استمر فالجهاز ضعيف لهذا العمل.
+Tek bir parça belirgin sebep değil: takılma birkaç şeyin toplamından. Efektleri azaltmak ve videoları 720p yapmak yardımcı olur. ¦ No single part is the clear cause: the stutter is the sum of several things. Reducing effects and using 720p videos helps. ¦ Kein einzelner Teil ist die klare Ursache: Das Ruckeln ergibt sich aus mehreren Dingen. Weniger Effekte und 720p-Videos helfen. ¦ لا يوجد جزء واحد هو السبب الواضح: التقطيع مجموع عدة أشياء. تقليل المؤثرات واستخدام فيديو 720p يساعد.
+tam ¦ full ¦ komplett ¦ كامل
+medya geçişi yok ¦ no media transitions ¦ ohne Medienwechsel ¦ بدون انتقال وسائط
+kayan bant durdu ¦ ticker stopped ¦ Laufband gestoppt ¦ توقف الشريط
+tüm animasyonlar durdu ¦ all animations stopped ¦ alle Animationen gestoppt ¦ توقفت كل الحركات
+müzik oynatıcısı gizli ¦ music player hidden ¦ Musikplayer ausgeblendet ¦ مشغّل الموسيقى مخفي
+sağ panel gizli ¦ side panel hidden ¦ Seitenpanel ausgeblendet ¦ اللوحة الجانبية مخفية
+boş sayfa ¦ empty page ¦ leere Seite ¦ صفحة فارغة

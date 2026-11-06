@@ -1341,6 +1341,7 @@ function devCard(d, r) {
     ${flags.map(f => `<div class="dv-flag">${ic('triangle-alert')}<span>${esc(f)}</span></div>`).join('')}
     <div class="dv-act">${on ? `<button class="btn s" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button>` : `<span class="muted">Cihaz kapalı ya da internete bağlı değil: elektriğini ve internetini kontrol edin.</span>`}</div>
     <div id="snap-${d.id}"></div>
+    ${on ? `<div class="dv-act"><button class="btn s" onclick="perfDev('${d.id}')">${ic('activity')}Takılma testi</button></div>` : ''}<div id="perf-${d.id}"></div>
     <details class="dv-more"><summary>Ayrıntılar</summary>
       ${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>` : ''}
       <div class="swr"><div class="b"><b>Yerel ekran (deneysel)</b><span>Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+)</span></div>${sw(!!d.native, `act('PUT','/devices/${d.id}',{native:this.checked},'Kaydedildi')`)}</div>
@@ -1393,6 +1394,46 @@ async function snapDev(id) {
     if (Date.now() - t0 < 12000) setTimeout(poll, 1500); else box.innerHTML = '<p class="muted">Görüntü gelmedi. Kutudaki uygulama güncel değilse (sürüm 2.1 öncesi) bu özellik çalışmaz.</p>';
   };
   setTimeout(poll, 1200);
+}
+
+// Takılma testi: kutu sayfanın parçalarını sırayla kapatıp kare hızını ölçer; hangi parça takılma yapıyor söyler
+const PERF_WHY = {
+  'medya geçişi yok': 'Medya geçişleri (video ve fotoğraf değişimi) takılmaya neden oluyor. Videoların kalitesini Medya sekmesinde 720p\'ye düşürün, çok büyük fotoğrafları küçültün.',
+  'kayan bant durdu': 'Alttaki kayan bant takılmaya neden oluyor. Bilgi bandını kapatın ya da kısaltın.',
+  'tüm animasyonlar durdu': 'Sayfadaki animasyonlar kutuyu zorluyor. Tasarım ve duyurularda efektleri azaltın.',
+  'müzik oynatıcısı gizli': 'Müzik oynatıcısı (YouTube) kutuyu zorluyor. Bu kutuda müziği kapatın ya da radyo/Spotify kullanın.',
+  'sağ panel gizli': 'Yandaki paneller (fiyat listesi, saat, hava vb.) takılmaya neden oluyor. Bu panelleri azaltın.',
+};
+async function perfDev(id) {
+  const box = $('perf-' + id); if (!box) return;
+  if (!await UI.ask('Test yaklaşık 1 dakika sürer. Bu sırada kutunun ekranında bazı parçalar kısa süreliğine kaybolup geri gelir. Başlatılsın mı?')) return;
+  box.innerHTML = '<p class="muted">Test başlıyor…</p>';
+  try { await req('POST', `/devices/${id}/perf`, { sec: 8 }); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
+  const t0 = Date.now();
+  const poll = async () => {
+    if (!$('perf-' + id)) return;
+    try { const j = await req('GET', `/devices/${id}/perf`); if (j.at >= t0 - 1000) return perfShow(id, j.result); } catch (e) { /* sonuç henüz yok */ }
+    const sec = Math.round((Date.now() - t0) / 1000);
+    if (sec < 150) { box.innerHTML = `<p class="muted">Ölçülüyor… ${sec} sn (yaklaşık 70 sn sürer)</p>`; setTimeout(poll, 3000); }
+    else box.innerHTML = '<p class="muted">Sonuç gelmedi. Kutudaki uygulama eskiyse bu test çalışmaz; uygulamayı güncelleyin.</p>';
+  };
+  setTimeout(poll, 5000);
+}
+function perfShow(id, r) {
+  const box = $('perf-' + id); if (!box) return;
+  const st = (r && r.steps) || [], base = st.find(x => x.step === 'tam'), blank = st.find(x => x.step === 'boş sayfa');
+  if (!base) { box.innerHTML = '<p class="muted">Sonuç okunamadı.</p>'; return; }
+  let best = null;
+  for (const x of st) if (x !== base && x !== blank && PERF_WHY[x.step] && (!best || x.fps - x.miss * 0.0 > best.fps)) best = x;
+  const gain = best ? best.fps - base.fps : 0, missCut = best ? base.miss - best.miss : 0;
+  let msg, ok = false;
+  if (base.fps >= 55 && base.long <= 3) { msg = 'Sorun yok: kutu akıcı çalışıyor.'; ok = true; }
+  else if (best && (gain >= 6 || missCut >= Math.max(5, base.miss * 0.4))) msg = PERF_WHY[best.step];
+  else if (blank && blank.fps < 50) msg = 'Sayfa boşken bile akıcı değil: sebep içerik değil, kutunun kendisi (donanım ya da TV çözünürlüğü). Kutuda ekran çözünürlüğünü 1080p yapın; sürüyorsa kutu bu iş için zayıf.';
+  else msg = 'Tek bir parça belirgin sebep değil: takılma birkaç şeyin toplamından. Efektleri azaltmak ve videoları 720p yapmak yardımcı olur.';
+  const rows = st.map(x => `<tr><td>${esc(x.step)}</td><td>${x.fps} fps</td><td>${x.long}</td></tr>`).join('');
+  box.innerHTML = `<div class="dv-flag" style="${ok ? 'background:rgba(62,207,142,.12);color:#7fe3b4' : ''}">${ic(ok ? 'circle-check' : 'triangle-alert')}<span><b>Sonuç:</b> ${esc(msg)}</span></div>
+    <details class="dv-more"><summary>Ölçüm ayrıntıları</summary><table style="width:100%;font-size:12.5px"><tr><th align="left">Adım</th><th align="left">Hız</th><th align="left">Büyük takılma</th></tr>${rows}</table></details>`;
 }
 
 /* ================= İSTATİSTİK ================= */
