@@ -1314,12 +1314,12 @@ function devRes(r, on) {
   const x = r.res; if (!x || !on) return '';
   const m = [];
   if (x.cpu >= 0 && x.cpu !== undefined) m.push(devMeter('İşlemci', x.cpu, '%' + Math.round(x.cpu)));
-  if (x.ramApp > 0 && x.ramTotal > 0) m.push(devMeter('Bellek (uygulama)', x.ramApp / x.ramTotal * 100, `${x.ramApp} MB / ${x.ramTotal} MB`));
+  if (x.ramApp > 0 && x.ramTotal > 0) m.push(devMeter('Bellek (uygulama)', x.ramApp / x.ramTotal * 100, `${x.ramApp} / ${x.ramTotal} MB`));
   if (x.ramTotal > 0 && x.ramFree >= 0 && x.ramFree !== undefined) m.push(devMeter('Cihaz belleği', (x.ramTotal - x.ramFree) / x.ramTotal * 100, `${x.ramTotal - x.ramFree} MB dolu`));
   if (x.gfx > 0) m.push(devMeter('Grafik belleği', x.ramTotal > 0 ? x.gfx / x.ramTotal * 100 : 0, x.gfx + ' MB'));
   if (!m.length && !x.gpu) return '';
   const info = [x.gpu ? 'Ekran kartı: ' + x.gpu : '', x.cores ? x.cores + ' çekirdek' : ''].filter(Boolean).join(' · ');
-  return `<div class="dv-res">${m.join('')}${info ? `<small>${esc(info)}</small>` : ''}</div>`;
+  return `<div class="dv-res"><h4>Kaynak kullanımı</h4>${m.join('')}${info ? `<small>${esc(info)}</small>` : ''}</div>`;
 }
 function devCard(d, r) {
   const on = !!d.online, old = !!(DEVST && DEVST.build && r.build && r.build !== DEVST.build);
@@ -1340,9 +1340,8 @@ function devCard(d, r) {
     ${r.playing ? `<div class="dv-now">${ic('play-f')}<span>Şu an: ${esc(r.playing)}</span></div>` : ''}
     ${devRes(r, on)}
     ${flags.map(f => `<div class="dv-flag">${ic('triangle-alert')}<span>${esc(f)}</span></div>`).join('')}
-    <div class="dv-act">${on ? `<button class="btn s" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button>` : `<span class="muted">Cihaz kapalı ya da internete bağlı değil: elektriğini ve internetini kontrol edin.</span>`}</div>
-    <div id="snap-${d.id}"></div>
-    ${on ? `<div class="dv-act"><button class="btn s" onclick="perfDev('${d.id}')">${ic('activity')}Takılma testi</button></div>` : ''}<div id="perf-${d.id}"></div>
+    ${on ? `<div class="dv-act"><button type="button" class="dv-b" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button><button type="button" class="dv-b" onclick="perfDev('${d.id}')">${ic('activity')}Takılma testi</button></div>` : `<div class="dv-off">${ic('wifi-off')}<span>Cihaz kapalı ya da internete bağlı değil: elektriğini ve internetini kontrol edin.</span></div>`}
+    <div id="snap-${d.id}" class="dv-out"></div><div id="perf-${d.id}" class="dv-out"></div>
     <details class="dv-more"><summary>Ayrıntılar</summary>
       ${rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(String(v))}</dd>`).join('')}</dl>` : ''}
       <div class="swr"><div class="b"><b>Yerel ekran (deneysel)</b><span>Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+)</span></div>${sw(!!d.native, `act('PUT','/devices/${d.id}',{native:this.checked},'Kaydedildi')`)}</div>
@@ -1432,9 +1431,9 @@ function perfShow(id, r) {
   else if (best && (gain >= 6 || missCut >= Math.max(5, base.miss * 0.4))) msg = PERF_WHY[best.step];
   else if (blank && blank.fps < 50) msg = 'Sayfa boşken bile akıcı değil: sebep içerik değil, kutunun kendisi (donanım ya da TV çözünürlüğü). Kutuda ekran çözünürlüğünü 1080p yapın; sürüyorsa kutu bu iş için zayıf.';
   else msg = 'Tek bir parça belirgin sebep değil: takılma birkaç şeyin toplamından. Efektleri azaltmak ve videoları 720p yapmak yardımcı olur.';
-  const rows = st.map(x => `<tr><td>${esc(x.step)}</td><td>${x.fps} fps</td><td>${x.long}</td></tr>`).join('');
+  const rows = st.map(x => `<tr class="${x === base ? 'b' : ''}"><td>${esc(x.step)}</td><td>${x.fps} fps</td><td>${x.long}</td></tr>`).join('');
   box.innerHTML = `<div class="dv-flag" style="${ok ? 'background:rgba(62,207,142,.12);color:#7fe3b4' : ''}">${ic(ok ? 'circle-check' : 'triangle-alert')}<span><b>Sonuç:</b> ${esc(msg)}</span></div>
-    <details class="dv-more"><summary>Ölçüm ayrıntıları</summary><table style="width:100%;font-size:12.5px"><tr><th align="left">Adım</th><th align="left">Hız</th><th align="left">Büyük takılma</th></tr>${rows}</table></details>`;
+    <details class="dv-more"><summary>Ölçüm ayrıntıları</summary><table class="dv-pt"><thead><tr><th>Adım</th><th>Hız</th><th>Büyük takılma</th></tr></thead><tbody>${rows}</tbody></table></details>`;
 }
 
 /* ================= İSTATİSTİK ================= */
