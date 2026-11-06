@@ -120,6 +120,7 @@ function onMessage(ws, raw) {
   if ((!ws.deviceId && !ws.preview) || raw.length > 900000) return;
   let m; try { m = JSON.parse(raw); } catch { return; }
   if (!m || typeof m !== 'object') return;
+  if (m.type === 'ping') { sendRaw(ws, '{"type":"pong"}'); return; } // TV'nin bağlantı yoklaması
   if (m.type === 'music_now') { require('./musicnow').report(ws.tid, ws.deviceId || 'preview', m); return; }
   if (m.type === 'music_tracks' && m.listId) {
     const t = tenants.get(ws.tid);

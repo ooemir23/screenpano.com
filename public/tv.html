@@ -2978,14 +2978,27 @@ attachTap('mout', async () => {
   setTimeout(() => location.reload(), 300);
 });
 
+// Bağlantı dayanıklılığı: kopunca 3→30 sn artan (rastgele saçılmalı) bekleme; sunucu yeniden başlarken bütün kutular aynı anda yüklenmesin.
+// Yarı açık bağlantı (modem yeniden başladı, TCP "açık" sanılıyor): 90 sn hiç ileti gelmezse bağlantı bırakılıp yeniden kurulur.
+let wsFails = 0, wsLast = Date.now(), wsDog = null;
+function wsRetry() { const d = Math.min(30000, 3000 * Math.pow(2, Math.min(wsFails, 4))); wsFails++; setTimeout(connect, d * (0.7 + Math.random() * 0.6)); }
 function connect() {
   const tok = tokenGet();
   if (!PREVIEW && !tok) return showAuth();
   const qs = PREVIEW ? 'preview=' + encodeURIComponent(PREVIEW) : 'device=' + encodeURIComponent(tok);
   const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?' + qs);
   window.__ws = ws;
-  let authFail = false;
+  let authFail = false, dead = false;
+  wsLast = Date.now();
+  clearInterval(wsDog);
+  wsDog = setInterval(() => {
+    if (ws.readyState !== 1) return;
+    const q = Date.now() - wsLast;
+    if (q > 90000) { dead = true; clearInterval(wsDog); try { ws.onclose = null; ws.close(); } catch (e) {} wsRetry(); return; }
+    if (q > 40000) { try { ws.send('{"type":"ping"}'); } catch (e) {} } // sunucu "pong" ile yanıtlar
+  }, 15000);
   ws.onopen = () => {
+    wsFails = 0;
     if (!PREVIEW) setTimeout(sendStatus, 3000);
     const it = activeMusicItem(MUS.cfg);
     if (MUS.cfg && MUS.cfg.enabled && it && it.listId && (!MUS.ytTracks || !MUS.ytTracks.length)) {
@@ -2993,7 +3006,9 @@ function connect() {
     }
   };
   ws.onmessage = e => {
-    const m = JSON.parse(e.data);
+    wsLast = Date.now();
+    let m; try { m = JSON.parse(e.data); } catch (err) { return; } // bozuk tek ileti bağlantıyı düşürmesin
+    if (!m || m.type === 'pong') return;
     if (m.type === 'auth') { authFail = true; if (!PREVIEW) { tokenSet(''); showAuth(); } else { document.body.innerHTML = '<p style="color:#aaa;font:600 3vh sans-serif;padding:5vh">Önizleme için panele giriş yapın.</p>'; } return; }
     if (m.type === 'version') { if (m.now) window.__srvOff = m.now - Date.now(); const mine = window.__pageBuild || window.__build; window.__buildFresh = !mine || mine === m.build; if (m.build && mine && mine !== m.build) { try { const k = '__buildReloads', now = Date.now(), arr = (JSON.parse(sessionStorage.getItem(k) || '[]')).filter(t => now - t < 30000); arr.push(now); sessionStorage.setItem(k, JSON.stringify(arr)); if (arr.length <= 4) location.reload(); } catch (e) { location.reload(); } } window.__build = m.build; }
     else if (m.type === 'sync_anchor') {
@@ -3021,7 +3036,7 @@ function connect() {
     else if (m.type === 'music_cmd') onMusicCmd(m);
     else if (m.type === 'music_tracks') onMusicTracks(m);
   };
-  ws.onclose = () => { if (!authFail) setTimeout(connect, 3000); };
+  ws.onclose = () => { clearInterval(wsDog); if (!authFail && !dead) wsRetry(); };
 }
 // =====================================================================
 // Zamanlama, hazır afişler, çoklu dil, kullanım istatistiği, durum raporu ve çevrimdışı önbellek
@@ -3206,7 +3221,7 @@ function sendStatus() {
   };
   wsSend({
     type: 'status', app: n && n.versionName ? n.versionName() : 'tarayıcı', build: window.__build || '',
-    hwid: n && n.hwId ? String(n.hwId()).slice(0, 32) : '', model: n && n.model ? String(n.model()).slice(0, 60) : '',
+    hwid: n && n.hwId ? String(n.hwId()).slice(0, 32) : '', boot: n && n.bootStatus ? String(n.bootStatus()).slice(0, 12) : '', model: n && n.model ? String(n.model()).slice(0, 60) : '',
     mus, nm: `b${window.__nmN || 0} cd${camp.due ? 1 : 0} cl${camp.list.length} cs${camp.showing ? 1 : 0} v${videos.length} m${MEDIA_ON ? 1 : 0} n${NMED() ? 1 : 0} g${big.showing ? 1 : 0}p${window.__pendingBig ? 1 : 0}`,
     screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
     playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,

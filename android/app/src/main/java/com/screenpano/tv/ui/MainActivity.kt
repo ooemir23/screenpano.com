@@ -125,6 +125,19 @@ class MainActivity : AppCompatActivity() {
         startNativeChannel()
 
         binding.webView.loadUrl(tvUrl)
+        askAutostartOnce()
+    }
+
+    /** Android 10+ açılışta kendiliğinden başlama: izin yoksa yalnız eşleştirme ekranındayken (içerik yokken) bir kez sorulur. */
+    private fun askAutostartOnce() {
+        if (Build.VERSION.SDK_INT < 29 || android.provider.Settings.canDrawOverlays(this)) return
+        if (prefs.getDeviceToken().isNotEmpty()) return
+        val sp = getSharedPreferences("sp_misc", MODE_PRIVATE)
+        if (sp.getBoolean("overlay_asked", false)) return
+        sp.edit().putBoolean("overlay_asked", true).apply()
+        try {
+            startActivity(Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:$packageName")))
+        } catch (_: Exception) { /* bazı TV yazılımlarında bu ayar ekranı yok */ }
     }
 
     /** Sunucuyla yerel bağlantı: durum iletisini alır, panelde "Yerel ekran" açıksa ızgarayı gösterir. */
@@ -283,6 +296,8 @@ class MainActivity : AppCompatActivity() {
 
             @Suppress("DEPRECATION")
             override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                // Eski (API 21-22) sürüm alt kaynak (görsel vb.) hatalarını da bildirir: yalnız ana sayfa hatasında yeniden yükle
+                if (failingUrl != null && view?.url != null && failingUrl != view.url) return
                 handler.removeCallbacks(reloadTask)
                 handler.postDelayed(reloadTask, 15000)
             }
@@ -776,6 +791,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun snapshot(): String {
             val out = arrayOf("")
+            val shot = java.util.concurrent.atomic.AtomicReference<Bitmap?>(null)
             val done = CountDownLatch(1)
             runOnUiThread {
                 try {
@@ -785,12 +801,8 @@ class MainActivity : AppCompatActivity() {
                     val k = (960f / w).coerceAtMost(1f)
                     val tw = (w * k).toInt().coerceAtLeast(1)
                     val th = (h * k).toInt().coerceAtLeast(1)
-                    val finish = { b: Bitmap ->
-                        val stream = ByteArrayOutputStream()
-                        b.compress(Bitmap.CompressFormat.JPEG, 70, stream)
-                        b.recycle()
-                        out[0] = "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
-                    }
+                    // JPEG sıkıştırma ve Base64 ana iş parçacığında yapılmaz (zayıf kutuda kare atlatıyordu): çağıran köprü iş parçacığında yapılır
+                    val finish = { b: Bitmap -> shot.set(b) }
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                         val b = Bitmap.createBitmap(tw, th, Bitmap.Config.RGB_565)
                         val c = Canvas(b); c.scale(k, k); binding.root.draw(c)
@@ -831,8 +843,17 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             try { done.await(3, TimeUnit.SECONDS) } catch (_: InterruptedException) {}
-            return out[0]
+            val b = shot.getAndSet(null) ?: return out[0]
+            return try {
+                val stream = ByteArrayOutputStream()
+                b.compress(Bitmap.CompressFormat.JPEG, 70, stream)
+                "data:image/jpeg;base64," + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP)
+            } catch (_: Throwable) { "" } finally { b.recycle() }
         }
+
+        /** Açılışta kendiliğinden başlayabilir mi: "ok", "izin-yok" (Android 10+ izin verilmemiş). */
+        @JavascriptInterface
+        fun bootStatus(): String = if (Build.VERSION.SDK_INT < 29 || android.provider.Settings.canDrawOverlays(this@MainActivity)) "ok" else "izin-yok"
 
         @JavascriptInterface
         fun installUpdate(url: String) {
@@ -962,10 +983,12 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         binding.webView.onResume()
         binding.webView.requestFocus()
-        exoPlayer?.play()
+        if (playOnResume) exoPlayer?.play() // yalnız duraklatılmadan önce oynuyorsa (durdurulmuş video arka planda oynamasın)
     }
 
+    private var playOnResume = false
     override fun onPause() {
+        playOnResume = exoPlayer?.playWhenReady == true
         exoPlayer?.pause()
         binding.webView.onPause()
         super.onPause()

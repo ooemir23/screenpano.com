@@ -1229,6 +1229,7 @@ async function drawDevStatus() {
         ${id.length ? `<span class="muted" style="font-size:12px">${id.map(esc).join(' · ')}</span>` : ''}
         ${r.mus ? `<span>Müzik: ${musDiag(r.mus)}</span>` : ''}
         ${r.jank ? `<span>Akıcılık: ~${r.jank.fps} fps · uzun kare ${r.jank.drops}/dk${r.jank.drops > 5 ? ' · <b style="color:#e6a23c">⚠ takılma var</b>' : ''}</span>` : ''}
+        ${r.boot === 'izin-yok' ? `<span style="color:var(--warn,#e6a23c)">⚠ Kutu açılınca ekran kendiliğinden gelmez: kutuda Ayarlar → Uygulamalar → ScreenPano → "Diğer uygulamaların üzerinde göster" iznini açın</span>` : ''}
         ${r.playing ? `<span>Şu an: ${esc(r.playing)}</span>` : ''}${r.cached ? `<span>Çevrimdışı önbellek: ${r.cached} dosya${r.cacheMB ? ', ' + r.cacheMB + ' MB' : ''}</span>` : ''}${r.lastError ? `<span style="color:var(--warn,#e6a23c)">Son hata: ${esc(r.lastError)}</span>` : ''}</div>
         ${d.online ? `<button class="btn xs g" onclick="snapDev('${d.id}')">📷 Ekran görüntüsü</button>` : ''}</div>`; }).join('')}</div><div id="snapbox"></div>` : '<div class="empty">Bağlı cihaz yok</div>')
     + card('Uyarılar', `Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,
