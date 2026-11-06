@@ -1931,23 +1931,27 @@ async function spAddHit(i) {
 // ---- Hesaplar: YouTube, Spotify, ayarlar, bağlantı ekle ----
 let YTACC = { st: null, items: null, err: '' };
 let SPACC = { st: null, items: null, err: '', devs: null, devErr: '' };
+let YTBUSY = false; // aynı anda tek yükleme; hata olunca sayfa her çizimde yeniden istek atıp döngüye girmesin
 async function ytAccLoad(force) {
+  if (YTBUSY) return;
+  YTBUSY = true;
   try {
     if (!YTACC.st || force) YTACC.st = await req('GET', '/music/google');
-    if (YTACC.st.connected && (force || !YTACC.items)) {
-      try { YTACC.items = (await req('GET', '/music/google/playlists' + (force ? '?force=1' : ''))).items; YTACC.err = ''; }
-      catch (e) { YTACC.items = null; YTACC.err = e.message; YTACC.st = await req('GET', '/music/google'); }
-      if (TAB === 'music') render(true);
+    if (YTACC.st.connected && (force || (!YTACC.items && !YTACC.err))) {
+      try { YTACC.items = (await req('GET', '/music/google/playlists' + (force ? '?force=1' : ''))).items || []; YTACC.err = ''; }
+      catch (e) { YTACC.items = null; YTACC.err = e.message || 'Listeler alınamadı'; YTACC.st = await req('GET', '/music/google'); }
+      if (TAB === 'music') { YTBUSY = false; render(true); }
     }
-  } catch (e) { YTACC.err = e.message; }
+  } catch (e) { YTACC.err = e.message || 'Hata'; }
+  YTBUSY = false;
 }
 async function spAccLoad(force) {
   try {
     const was = JSON.stringify(SPACC.st);
     if (!SPACC.st || force) SPACC.st = await req('GET', '/music/spotify');
     let changed = was !== JSON.stringify(SPACC.st);
-    if (SPACC.st.connected && (force || !SPACC.items)) {
-      try { SPACC.items = (await req('GET', '/music/spotify/playlists' + (force ? '?force=1' : ''))).items; SPACC.err = ''; }
+    if (SPACC.st.connected && (force || (!SPACC.items && !SPACC.err))) {
+      try { SPACC.items = (await req('GET', '/music/spotify/playlists' + (force ? '?force=1' : ''))).items || []; SPACC.err = ''; }
       catch (e) { SPACC.items = []; SPACC.err = e.message; }
       changed = true;
     }
