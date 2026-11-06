@@ -1869,12 +1869,12 @@ async function spAdd(id, playNow) {
 function accountsHtml() {
   const m = musicData(), yst = YTACC.st || {}, sst = SPACC.st || {};
   const own = owner();
-  const ytBody = !yst.configured ? '<p class="ytm-muted">YouTube hesabı bağlantısı henüz açılmadı. Platform yöneticisinin Google anahtarlarını girmesi gerekiyor.</p>'
+  const ytBody = !yst.configured ? '<p class="ytm-muted">YouTube hesabı bağlantısı henüz açılmadı. Platform yöneticisinin Google anahtarlarını girmesi gerekiyor.</p><button class="ytm-btn" onclick="goM(\'setup\')">'+ic('book-open')+'Anahtarlar nereden alınır?</button>'
     : yst.expired ? `<p class="ytm-muted">Bağlantının süresi doldu. Listelerinizi görmek için yeniden bağlanın.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/google/connect">${ic('refresh-cw')}Yeniden bağlan</a>` : ''}`
     : !yst.connected ? `<p class="ytm-muted">YouTube ve YouTube Music'te oluşturduğunuz listeler kitaplığınızda görünür. Yalnız okuma izni istenir.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/google/connect">${ic('link')}YouTube ile bağlan</a>` : '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>'}`
     : `<p class="ytm-ok">${ic('circle-check')}Bağlı: <b>${esc(yst.name || 'YouTube')}</b> • ${(YTACC.items || []).length} liste</p>${YTACC.err ? `<p class="ytm-muted">${esc(YTACC.err)}</p>` : ''}<div class="row"><button class="ytm-btn" onclick="ytAccLoad(true)">${ic('refresh-cw')}Listeleri yenile</button>${own ? `<button class="ytm-btn" onclick="ytAccOff()">Bağlantıyı kes</button>` : ''}</div>`;
   let spBody;
-  if (!sst.configured) spBody = '<p class="ytm-muted">Spotify bağlantısı henüz açılmadı. Platform yöneticisinin Spotify anahtarlarını girmesi gerekiyor.</p>';
+  if (!sst.configured) spBody = '<p class="ytm-muted">Spotify bağlantısı henüz açılmadı. Platform yöneticisinin Spotify anahtarlarını girmesi gerekiyor.</p><button class="ytm-btn" onclick="goM(\'setup\')">'+ic('book-open')+'Anahtarlar nereden alınır?</button>';
   else if (sst.expired) spBody = `<p class="ytm-muted">Bağlantının süresi doldu; yeniden bağlanın.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/spotify/connect">${ic('refresh-cw')}Yeniden bağlan</a>` : ''}`;
   else if (!sst.connected) spBody = `<p class="ytm-muted">Spotify listeleriniz kitaplığınızda görünür; panelden ya da telefondan TV'deki müziği yönetirsiniz. Uzaktan kumanda için <b>Spotify Premium</b> gerekir.</p>${own ? `<a class="ytm-btn w" href="/api/admin/music/spotify/connect">${ic('link')}Spotify ile bağlan</a>` : '<p class="ytm-muted">Hesap bağlamayı yalnız işletme sahibi yapabilir.</p>'}`;
   else {
@@ -1952,22 +1952,39 @@ function ill(k) {
 }
 function setupHtml() {
   const flow = (cls, title, sub, steps) => `<section class="ytm-flow ${cls}"><div class="ytm-sh"><div><small>${sub}</small><h2>${title}</h2></div></div>
-    <ol class="ytm-steps">${steps.map(([k, h, p], i) => `<li><div class="ill">${ill(k)}</div><span class="n">${i + 1}</span><b>${h}</b><p>${p}</p></li>`).join('')}</ol></section>`;
+    <ol class="ytm-steps">${steps.map(([k, h, p, lk], i) => `<li><div class="ill">${ill(k)}</div><span class="n">${i + 1}</span><b>${h}</b><p>${p}</p>${lk ? `<a class="ytm-btn sm" href="${lk[0]}"${lk[0][0] === '#' ? '' : ' target="_blank" rel="noopener"'}>${lk[1]}</a>` : ''}</li>`).join('')}</ol></section>`;
   return `<div class="ytm-sh"><div><small>Adım adım</small><h2>Müzik kurulumu</h2></div></div>`
     + flow('yt', 'YouTube Music', 'Ücretsiz • 4 adım', [
-      ['login', 'Hesabı bağlayın', 'Müzik › Hesaplar › “YouTube ile bağlan”. Google hesabınızla giriş yapın; yalnız okuma izni istenir.'],
-      ['list', 'Listenizi seçin', 'Listeleriniz Kitaplık’ta görünür. İsterseniz arayıp kendi listenizi kurun. Gizli listeleri YouTube’da “Liste dışı” yapın.'],
+      ['login', 'Hesabı bağlayın', 'Hesaplar sayfasında “YouTube ile bağlan”a basın. Google hesabınızı seçin ve “İzin ver”e tıklayın; yalnız okuma izni istenir.', ['#music/accounts', 'Hesaplar sayfasına git']],
+      ['list', 'Listenizi seçin', 'Listeleriniz Kitaplık’ta görünür. Listeniz yoksa YouTube Music’te oluşturun; “Özel” listeler görünmez, “Liste dışı” ya da “Herkese açık” yapın.', ['https://music.youtube.com/library/playlists', 'YouTube Music listelerim']],
       ['play', 'TV’de çalın', 'Listeyi açıp “Oynat”a basın. Müzik birkaç saniye içinde TV kutusunda başlar.'],
       ['remote', 'Telefondan yönetin', 'Alttaki çalar çubuğundan duraklatın, şarkı değiştirin, sesi ayarlayın.'],
     ])
     + flow('sp', 'Spotify', 'Spotify Premium • 5 adım', [
-      ['premium', 'Premium hesap', 'Panelden çalma ve kumanda için Spotify Premium gerekir. Ücretsiz hesapta listeler görünür ama kumanda edilemez.'],
-      ['box', 'Spotify’ı TV kutusuna kurun', 'Kutunun Google Play mağazasından Spotify’ı kurun ve aynı hesapla bir kez giriş yapın.'],
-      ['login', 'Hesabı bağlayın', 'Müzik › Hesaplar › “Spotify ile bağlan”. Spotify hesabınızla izin verin.'],
+      ['premium', 'Premium hesap', 'Panelden çalma ve kumanda için Spotify Premium gerekir. Ücretsiz hesapta listeler görünür ama kumanda edilemez.', ['https://www.spotify.com/premium/', 'Premium sayfasını aç']],
+      ['box', 'Spotify’ı TV kutusuna kurun', 'Kutunun Google Play mağazasından Spotify’ı kurun ve aynı hesapla bir kez giriş yapın.', ['https://play.google.com/store/apps/details?id=com.spotify.tv.android', 'Play Store sayfası']],
+      ['login', 'Hesabı bağlayın', 'Hesaplar sayfasında “Spotify ile bağlan”a basın. Spotify hesabınızla giriş yapıp “Kabul ediyorum”a tıklayın.', ['#music/accounts', 'Hesaplar sayfasına git']],
       ['device', 'Cihazı seçin', '“Çalınacak cihaz” listesinden TV kutusunu seçin. Görünmüyorsa kutuda Spotify’ı açıp Yenile’ye basın.'],
       ['play', 'Listeden çalın', 'Spotify listenizi açıp “Oynat”a basın. Çalan şarkı TV’de ve panelde görünür.'],
     ])
-    + `<p class="ytm-muted" style="margin-top:6px">${ic('info')} Ses TV kutusundan gelir: TV’nin ya da ses sisteminin sesi açık olmalı. Spotify ve YouTube hesap kuralları kişisel kullanım içindir; mekânda ticari yayın için ilgili lisansları kontrol edin.</p>`;
+    + `<p class="ytm-muted" style="margin-top:6px">${ic('info')} Ses TV kutusundan gelir: TV’nin ya da ses sisteminin sesi açık olmalı. Spotify ve YouTube hesap kuralları kişisel kullanım içindir; mekânda ticari yayın için ilgili lisansları kontrol edin.</p>`
+    + (owner() ? `<details class="ytm-flow adm"><summary>${ic('settings')}Platform yöneticisi için tek seferlik kurulum <small>(Client ID ve Secret nereden alınır?)</small></summary>
+      <p class="ytm-muted">Müşteriler “Bağlan”a basmadan önce, platform sahibinin Google ve Spotify’dan birer anahtar alıp <b>Süper yönetim › Veri kaynakları</b> sayfasına girmesi gerekir. Aynı adımlar orada da yazar.</p>
+      <h3>YouTube / Google</h3>
+      <ol class="ytm-gd">
+        <li>Yeni proje açın <a class="ytm-btn sm" href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Aç</a></li>
+        <li>“YouTube Data API v3”ü etkinleştirin <a class="ytm-btn sm" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">Aç</a></li>
+        <li>Google Auth Platform: uygulama adı ScreenPano, Audience “External”, izin “youtube.readonly” <a class="ytm-btn sm" href="https://console.cloud.google.com/auth/overview" target="_blank" rel="noopener">Aç</a></li>
+        <li>Clients › Create client › “Web application”; yönlendirme adresi: <code>${location.origin}/api/oauth/google/callback</code> <a class="ytm-btn sm" href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener">Aç</a></li>
+        <li>Client ID ve Secret’ı Süper yönetim › Veri kaynakları › YouTube’a yapıştırın; Audience › Test users’a müşteri e-postalarını ekleyin <a class="ytm-btn sm" href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener">Aç</a></li>
+      </ol>
+      <h3>Spotify</h3>
+      <ol class="ytm-gd">
+        <li>Developer Dashboard’da “Create app” <a class="ytm-btn sm" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Aç</a></li>
+        <li>Redirect URI: <code>${location.origin}/api/oauth/spotify/callback</code>; API olarak Web API ve Web Playback SDK’yı işaretleyin</li>
+        <li>Settings’ten Client ID ve Client Secret’ı kopyalayıp Süper yönetim › Veri kaynakları › Spotify’a yapıştırın</li>
+        <li>Settings › User Management’a bağlanacak Spotify e-postalarını ekleyin (en çok 25)</li>
+      </ol></details>` : '');
 }
 
 // ---- Komutlar ----
