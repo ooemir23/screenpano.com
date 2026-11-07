@@ -193,7 +193,7 @@ const api = (m, u, b) => call(m, '/api/super' + u, b);
 
 /* ---------- sayfa yapısı ---------- */
 // S8: menü üç başlıkta (izleme, müşteriler, sistem); metin olan öğe grup başlığıdır
-const NAV_G = ['İzleme', ['home', 'layout-dashboard', 'Genel bakış'], ['stats', 'chart-column', 'İstatistik'], ['notify', 'bell', 'Bildirimler'], 'Müşteriler', ['tenants', 'building-2', 'İşletmeler'], 'Sistem', ['sources', 'plug', 'Veri kaynakları'], ['legal', 'file-text', 'Yasal ve site'], ['backup', 'hard-drive', 'Yedek ve depolama'], ['account', 'user', 'Hesabım']];
+const NAV_G = ['İzleme', ['home', 'layout-dashboard', 'Genel bakış'], ['stats', 'chart-column', 'İstatistik'], ['notify', 'bell', 'Bildirimler'], 'Müşteriler', ['tenants', 'building-2', 'İşletmeler'], ['ads', 'megaphone', 'Reklamlar'], 'Sistem', ['sources', 'plug', 'Veri kaynakları'], ['legal', 'file-text', 'Yasal ve site'], ['backup', 'hard-drive', 'Yedek ve depolama'], ['account', 'user', 'Hesabım']];
 const NAV = NAV_G.filter(Array.isArray);
 const ic = n => `<svg class="ic" aria-hidden="true"><use href="/icons.svg#i-${n}"></use></svg>`;
 let D = null, page = 'home', P = null, PAT = 0;
@@ -979,6 +979,143 @@ function xferCard() {
 async function xferOffer() { try { const j = await api('POST', '/transfer/offer', { tenantId: $('xf-t').value }); $('xf-out').innerHTML = T('Kod') + ` (${j.minutes} ` + T('dakika geçerli') + `): <b style="user-select:all;word-break:break-all">${esc(j.code)}</b>`; } catch (e) { toast(e.message, true); } }
 async function xferPull() { toast('İşletme çekiliyor…'); try { const j = await api('POST', '/transfer/pull', { code: $('xf-code').value }); toast(`${j.name}: ${j.files} ` + T('dosya') + `, ${j.users} ` + T('kullanıcı')); await load(); } catch (e) { toast(e.message, true); } }
 async function runBk() { toast('Yedek alınıyor…'); try { const j = await api('POST', '/backups'); toast(T('Yedek alındı') + ': ' + j.name); await load(); } catch (e) { toast(e.message, true); } }
+
+/* ================= REKLAMLAR (platform geneli reklam satışı) ================= */
+const AD = { d: null, f: 'all', q: '', cur: null };
+const tl = n => '₺' + Number(n || 0).toLocaleString(I18N.locale, { maximumFractionDigits: 2 });
+const nfm = n => Number(n || 0).toLocaleString(I18N.locale);
+const AD_ST = { live: ['ok', 'Yayında'], scheduled: ['trial', 'Bekliyor'], awaiting: ['warn', 'Ödeme bekliyor'], ended: ['mute', 'Sona erdi'], paused: ['mute', 'Durduruldu'], draft: ['mute', 'Taslak (görsel yok)'] };
+const AD_PAY = { paid: ['ok', 'Ödendi'], partial: ['warn', 'Kısmi ödeme'], unpaid: ['bad', 'Ödenmedi'], free: ['mute', 'Ücretsiz'] };
+const AD_METHOD = { havale: 'Havale / EFT', nakit: 'Nakit', kart: 'Kart', online: 'Online ödeme', diger: 'Diğer' };
+const tag = (m, l) => `<span class="tag ${m}">${T(l)}</span>`;
+const adDur = sec => sec >= 3600 ? (sec / 3600).toFixed(1) + ' sa' : Math.round(sec / 60) + ' dk';
+PAGES.ads = {
+  html() {
+    return head('Reklamlar', 'Platform genelinde tüm işletmelerin ekranlarında yayınlanan reklamlar, fiyatlar ve tahsilat durumu.',
+      '<div class="acts"><button class="btn ghost" onclick="adPkgs()">Paketler</button><button class="btn" onclick="adNew()">＋ Yeni reklam</button></div>') + '<div id="adv"><div class="empty">Yükleniyor…</div></div>';
+  },
+  async after() { await adLoad(); },
+};
+async function adLoad() { try { AD.d = await api('GET', '/pads'); } catch (e) { if ($('adv')) $('adv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; } if (page === 'ads') adDraw(); }
+function adDraw() {
+  const d = AD.d, S = d.summary, q = AD.q.toLocaleLowerCase('tr-TR');
+  const cnt = k => d.ads.filter(a => k === 'all' || a.status === k || (k === 'unpaid' && ['unpaid', 'partial'].includes(a.pay) && a.due > 0)).length;
+  const rows = d.ads.filter(a => (AD.f === 'all' || a.status === AD.f || (AD.f === 'unpaid' && ['unpaid', 'partial'].includes(a.pay) && a.due > 0))
+    && (!q || [a.advertiser, a.title, a.contact, a.phone, a.email].join(' ').toLocaleLowerCase('tr-TR').includes(q)));
+  const kpi = [[S.live, 'Yayındaki reklam', 'megaphone'], [tl(S.monthCollected), 'Bu ay tahsilat', 'coins'], [tl(S.contracted), 'Toplam sözleşme', 'receipt-text'], [tl(S.collected), 'Tahsil edilen', 'circle-check'], [tl(S.outstanding), 'Bekleyen alacak', 'clock'], [S.expiring, '7 gün içinde bitecek', 'calendar-clock']];
+  $('adv').innerHTML = `<div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${kpi.map(k => `<div class="stat"><b>${k[0]}</b><span>${T(k[1])}</span></div>`).join('')}</div>
+  <div class="toolbar" style="gap:10px"><div class="search-wrap"><svg class="ic s-ic"><use href="/icons.svg#i-search"></use></svg><input type="search" id="adq" placeholder="Reklam veren, başlık, telefon veya e-posta ara..." value="${esc(AD.q)}" oninput="AD.q=this.value;adDraw();$('adq').focus()"></div></div>
+  <div class="chips" style="margin-bottom:14px">${[['all', 'Tümü'], ['live', 'Yayında'], ['scheduled', 'Bekliyor'], ['awaiting', 'Ödeme bekliyor'], ['unpaid', 'Alacaklı'], ['ended', 'Sona erdi'], ['paused', 'Durduruldu'], ['draft', 'Taslak']].map(([k, l]) => `<button class="chip ${AD.f === k ? 'on' : ''}" onclick="AD.f='${k}';adDraw()">${T(l)} <b>${cnt(k)}</b></button>`).join('')}</div>
+  ${rows.length ? `<div class="card" style="padding:0;overflow:hidden"><div class="scroll"><table style="margin:0"><thead style="background:rgba(255,255,255,.02)"><tr><th style="padding-left:16px">${T('Reklam veren')}</th><th>${T('Dönem')}</th><th class="num">${T('Fiyat')}</th><th>${T('Ödeme')}</th><th>${T('Durum')}</th><th class="num">${T('Gösterim')}</th><th></th></tr></thead><tbody>
+  ${rows.map(a => { const st = AD_ST[a.status], pc = a.totalDays ? Math.round(a.elapsed / a.totalDays * 100) : 0;
+    return `<tr style="cursor:pointer" onclick="adOpen('${a.id}')"><td style="padding-left:16px"><b>${esc(a.advertiser)}</b><br><small class="hint">${esc(a.title || '')}${a.creatives.length ? '' : ''}</small></td>
+    <td style="min-width:170px">${a.start ? fmtD(a.start) : '-'} → ${a.end ? fmtD(a.end) : '-'}${a.daysLeft !== null && a.status !== 'ended' && a.end ? `<br><small class="hint">${a.status === 'scheduled' ? T('Henüz başlamadı') : a.daysLeft + ' ' + T('gün kaldı')}</small>` : (a.status === 'ended' ? `<br><small class="hint">${T('Süre doldu')}</small>` : '')}${a.totalDays ? `<div class="bar"><i style="width:${pc}%"></i></div>` : ''}</td>
+    <td class="num"><b>${tl(a.price)}</b></td><td>${tag(AD_PAY[a.pay][0], AD_PAY[a.pay][1])}${a.pay === 'partial' || a.pay === 'unpaid' ? `<br><small class="hint">${T('Kalan')}: ${tl(a.due)}</small>` : ''}${a.overdue ? `<br><small style="color:var(--bad)">${T('Vadesi geçti')}</small>` : ''}</td>
+    <td>${tag(st[0], st[1])}</td><td class="num">${nfm(a.perf.shown)}<br><small class="hint">${a.perf.tenants} ${T('işletme')}</small></td><td onclick="event.stopPropagation()"><button class="btn xs ghost" onclick="adOpen('${a.id}')">${T('Aç')}</button></td></tr>`; }).join('')}
+  </tbody></table></div></div>` : `<div class="empty">${d.ads.length ? T('Bu filtrede reklam yok') : T('Henüz reklam yok. “Yeni reklam” ile ilk reklamı ekleyin; yayına girince tüm işletmelerin ekranlarında görünür.')}</div>`}`;
+}
+// Yeni reklam: temel bilgiler, sonra düzenleme çekmecesi (görsel, ödeme, hedefleme)
+function adNew() {
+  openDrawer(`<div class="m-head"><div><h2 style="margin:0 0 2px;font-size:18px;font-weight:700">${T('Yeni reklam')}</h2><p class="hint" style="margin:0;font-size:12.5px">${T('Reklam veren ve dönem bilgilerini girin; görsel ve ödemeyi sonraki adımda eklersiniz.')}</p></div><button class="modal-x" onclick="closeDrawer()" aria-label="Kapat">×</button></div>
+  <div class="m-body" style="grid-template-columns:1fr"><div class="d-card">${adFormBasic({ every: 4 }, true)}</div></div>
+  <div class="m-foot"><button class="btn ghost" onclick="closeDrawer()">${T('Vazgeç')}</button><button class="btn" onclick="adCreate()">${T('Oluştur ve devam et')}</button></div>`);
+}
+async function adCreate() {
+  try { const j = await api('POST', '/pads', adRead()); await adLoad(); adOpen(j.id); toast('Reklam oluşturuldu'); } catch (e) { toast(e.message, true); }
+}
+const adToday = () => new Date().toLocaleDateString('sv-SE');
+function adFormBasic(a, isNew) {
+  const pk = AD.d.packages, today = adToday();
+  return `<h4>${ic('briefcase')} ${T('Reklam veren')}</h4><div class="row">${field(T('İşletme / reklam veren adı'), 'pa-adv', a.advertiser || '', 'maxlength="80"')}${field(T('Reklam başlığı'), 'pa-title', a.title || '', 'maxlength="80" placeholder="örn. Yaz kampanyası"')}</div>
+  <div class="row">${field(T('Yetkili kişi'), 'pa-contact', a.contact || '', 'maxlength="80"')}${field(T('Telefon'), 'pa-phone', a.phone || '', 'maxlength="30"')}</div>
+  <div class="row">${field('E-posta', 'pa-email', a.email || '', 'maxlength="80"')}${field(T('Not (yalnız size görünür)'), 'pa-note', a.note || '', 'maxlength="300"')}</div>
+  <h4 style="margin-top:16px">${ic('calendar-clock')} ${T('Dönem ve fiyat')}</h4>
+  <div class="row"><div><label>${T('Paket')}</label><select id="pa-pkg" onchange="adPick()"><option value="">${T('Özel (elle gir)')}</option>${pk.map(p => `<option value="${esc(p.id)}" ${a.packageId === p.id ? 'selected' : ''}>${esc(p.name)} · ${p.days} ${T('gün')} · ${tl(p.price)}</option>`).join('')}</select></div>${field(T('Fiyat (₺)'), 'pa-price', a.price || '', 'type="number" min="0" step="0.01"')}</div>
+  <div class="row">${field(T('Başlangıç'), 'pa-start', a.start || (isNew ? today : ''), 'type="date"')}${field(T('Bitiş'), 'pa-end', a.end || '', 'type="date"')}</div>
+  <div class="row">${field(T('Sıklık: kaç içerikte bir'), 'pa-every', a.every || 4, 'type="number" min="1" max="20"')}<div><label>${T('Ödeme')}</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:8px"><input type="checkbox" id="pa-free" ${a.allowUnpaid ? 'checked' : ''}> ${T('Ödeme gelmeden de yayınla')}</label></div></div>`;
+}
+function adPick() {
+  const p = AD.d.packages.find(x => x.id === $('pa-pkg').value); if (!p) return;
+  $('pa-price').value = p.price; const st = $('pa-start').value || adToday(); $('pa-start').value = st;
+  $('pa-end').value = new Date(Date.parse(st + 'T12:00:00Z') + (p.days - 1) * 86400000).toISOString().slice(0, 10);
+}
+function adRead() {
+  const v = id => ($(id) || {}).value, o = {
+    advertiser: v('pa-adv'), title: v('pa-title'), contact: v('pa-contact'), phone: v('pa-phone'), email: v('pa-email'), note: v('pa-note'), packageId: v('pa-pkg'),
+    price: v('pa-price'), start: v('pa-start'), end: v('pa-end'), every: v('pa-every'), allowUnpaid: !!($('pa-free') || {}).checked,
+  };
+  if ($('pa-mode')) {
+    const chk = sel => [...document.querySelectorAll(sel + ':checked')].map(x => x.value);
+    o.target = { mode: v('pa-mode'), plans: chk('.pa-plan'), cities: chk('.pa-city'), exclude: chk('.pa-ex') };
+  }
+  return o;
+}
+async function adOpen(id) {
+  let j; try { j = await api('GET', '/pads/' + id); } catch (e) { return toast(e.message, true); }
+  AD.cur = j; const a = j.ad, p = j.perf, d = AD.d, g = a.target || { mode: 'all' }, st = AD_ST[a.status], py = AD_PAY[a.pay];
+  const bars = p.daily.length ? (mx => `<div style="display:flex;align-items:flex-end;gap:2px;height:70px;margin-top:8px">${p.daily.map(x => `<div title="${fmtD(x.day)}: ${x.shown}" style="flex:1;background:var(--accent2);border-radius:2px 2px 0 0;height:${Math.max(3, Math.round(x.shown / mx * 100))}%"></div>`).join('')}</div>`)(Math.max(1, ...p.daily.map(x => x.shown))) : '';
+  openDrawer(`<div class="m-head"><div><h2 style="margin:0 0 2px;font-size:18px;font-weight:700">${esc(a.advertiser)}</h2><p class="hint" style="margin:0;font-size:12.5px">${tag(st[0], st[1])} ${tag(py[0], py[1])} ${a.daysLeft !== null && a.end && a.status !== 'ended' ? `<span>${a.daysLeft} ${T('gün kaldı')}</span>` : ''}</p></div><button class="modal-x" onclick="closeDrawer()" aria-label="Kapat" title="Kapat (ESC)">×</button></div>
+  <div class="m-body"><div class="m-col">
+    <div class="d-card">${adFormBasic(a)}</div>
+    <div class="d-card"><h4>${ic('target')} ${T('Hedefleme')}</h4>
+      <div><label>${T('Hangi işletmelerde yayınlansın')}</label><select id="pa-mode" onchange="adMode()"><option value="all" ${g.mode === 'all' ? 'selected' : ''}>${T('Tüm işletmeler')}</option><option value="plan" ${g.mode === 'plan' ? 'selected' : ''}>${T('Seçilen paketler')}</option><option value="city" ${g.mode === 'city' ? 'selected' : ''}>${T('Seçilen şehirler')}</option></select></div>
+      <div id="pa-plans" style="margin-top:10px">${d.plans.map(x => `<label style="display:inline-flex;gap:6px;margin-right:14px"><input type="checkbox" class="pa-plan" value="${x.id}" ${(g.plans || []).includes(x.id) ? 'checked' : ''}> ${esc(x.name)}</label>`).join('')}</div>
+      <div id="pa-cities" style="margin-top:10px">${d.cities.map(c => `<label style="display:inline-flex;gap:6px;margin-right:14px"><input type="checkbox" class="pa-city" value="${esc(c)}" ${(g.cities || []).includes(c) ? 'checked' : ''}> ${esc(c)}</label>`).join('') || `<span class="hint">${T('Henüz şehir bilgisi olan işletme yok')}</span>`}</div>
+      <details style="margin-top:12px"><summary style="cursor:pointer">${T('Hariç tutulacak işletmeler')} (${(g.exclude || []).length})</summary><div class="scroll" style="max-height:170px;margin-top:8px">${d.tenants.map(t => `<label style="display:flex;gap:8px;padding:3px 0"><input type="checkbox" class="pa-ex" value="${t.id}" ${(g.exclude || []).includes(t.id) ? 'checked' : ''}> ${esc(t.name)}${t.city ? ` <small class="hint">${esc(t.city)}</small>` : ''}</label>`).join('')}</div></details>
+    </div>
+  </div><div class="m-col">
+    <div class="d-card"><h4>${ic('coins')} ${T('Ödemeler')}</h4>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px"><div class="stat"><b>${tl(a.price)}</b><span>${T('Toplam')}</span></div><div class="stat"><b>${tl(a.paid)}</b><span>${T('Tahsil edilen')}</span></div><div class="stat"><b style="color:${a.due ? 'var(--bad)' : 'var(--ok)'}">${tl(a.due)}</b><span>${T('Kalan')}</span></div></div>
+      ${(a.payments || []).length ? `<table><thead><tr><th>${T('Tarih')}</th><th>${T('Yöntem')}</th><th class="num">${T('Tutar')}</th><th></th></tr></thead><tbody>${a.payments.map(x => `<tr><td>${fmtD(x.date)}</td><td>${T(AD_METHOD[x.method] || 'Diğer')}${x.note ? `<br><small class="hint">${esc(x.note)}</small>` : ''}</td><td class="num">${tl(x.amount)}</td><td><button class="btn xs ghost" onclick="adPayDel('${a.id}','${x.id}')" title="Sil">×</button></td></tr>`).join('')}</tbody></table>` : `<p class="hint">${T('Henüz ödeme kaydı yok.')}</p>`}
+      <div class="row" style="margin-top:10px">${field(T('Tutar (₺)'), 'pp-amt', a.due || '', 'type="number" min="0" step="0.01"')}${field(T('Tarih'), 'pp-date', adToday(), 'type="date"')}</div>
+      <div class="row"><div><label>${T('Yöntem')}</label><select id="pp-m">${Object.entries(AD_METHOD).map(([k, l]) => `<option value="${k}">${T(l)}</option>`).join('')}</select></div>${field(T('Not'), 'pp-note', '', 'maxlength="120"')}</div>
+      <div class="acts" style="margin-top:10px"><button class="btn" onclick="adPay('${a.id}')">${T('Ödeme ekle')}</button><button class="btn ghost" disabled title="${T('Yakında')}">${T('Online ödeme linki (yakında)')}</button></div>
+    </div>
+    <div class="d-card"><h4>${ic('image')} ${T('Görsel ve video')}</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${a.creatives.map(c => `<div style="position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#000">${c.type === 'image' ? `<img src="/u/ads/${c.file}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">` : `<video src="/u/ads/${c.file}" muted preload="metadata" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block"></video>`}<button class="btn xs ghost" style="position:absolute;top:4px;right:4px" onclick="adMediaDel('${a.id}','${c.id}')" title="Sil">×</button><small style="display:block;padding:3px 6px;color:#ccc">${c.type === 'video' ? '▶ ' + (c.dur || '?') + ' sn' : T('Görsel')}</small></div>`).join('')}
+      <label class="btn ghost" style="display:flex;align-items:center;justify-content:center;min-height:80px;cursor:pointer;border-style:dashed"><input type="file" multiple accept="image/*,video/*" hidden onchange="adUp('${a.id}',this.files)">＋ ${T('Ekle')}</label></div>
+      <p class="hint" style="margin-top:8px">${T('Görseller 16:9 (1920×1080) önerilir. Videolar sessiz oynatılır ve otomatik küçültülür. En çok 12 dosya.')}</p>
+    </div>
+    <div class="d-card"><h4>${ic('chart-column')} ${T('Performans')}</h4>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:6px"><div class="stat"><b>${nfm(p.shown)}</b><span>${T('Gösterim')}</span></div><div class="stat"><b>${p.tenants}</b><span>${T('İşletme')}</span></div><div class="stat"><b>${adDur(p.sec)}</b><span>${T('Ekranda kalma')}</span></div></div>${bars}
+      ${p.byTenant.length ? `<details style="margin-top:10px"><summary style="cursor:pointer">${T('İşletme bazında')}</summary><table style="margin-top:6px"><tbody>${p.byTenant.map(x => `<tr><td>${esc(x.name)}</td><td class="num">${nfm(x.shown)}</td></tr>`).join('')}</tbody></table></details>` : ''}
+      <div class="acts" style="margin-top:12px"><button class="btn xs ghost" onclick="adCopy('${a.id}')">🔗 ${T('Rapor bağlantısını kopyala')}</button><a class="btn xs ghost" href="${esc(a.url)}" target="_blank">${T('Raporu aç')} ↗</a><button class="btn xs ghost" onclick="adToken('${a.id}')">${T('Bağlantıyı yenile')}</button></div>
+    </div>
+  </div></div>
+  <div class="m-foot"><button class="btn ghost" style="color:var(--bad)" onclick="adDel('${a.id}')">${T('Sil')}</button><span style="flex:1"></span><button class="btn ghost" onclick="adPause('${a.id}',${!a.paused})">${a.paused ? T('Yeniden başlat') : T('Durdur')}</button><button class="btn" onclick="adSave('${a.id}')">${T('Kaydet')}</button></div>`);
+  adMode();
+}
+function adMode() { const m = ($('pa-mode') || {}).value; if (!$('pa-plans')) return; $('pa-plans').style.display = m === 'plan' ? '' : 'none'; $('pa-cities').style.display = m === 'city' ? '' : 'none'; }
+async function adSave(id) {
+  const o = adRead(); if (!String(o.advertiser).trim()) return toast('Reklam veren adı gerekli', true);
+  if (o.start && o.end && o.end < o.start) return toast('Bitiş tarihi başlangıçtan önce olamaz', true);
+  try { await api('PUT', '/pads/' + id, o); toast('Kaydedildi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
+}
+async function adPay(id) {
+  try { await api('POST', `/pads/${id}/payments`, { amount: $('pp-amt').value, date: $('pp-date').value, method: $('pp-m').value, note: $('pp-note').value }); toast('Ödeme eklendi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
+}
+async function adPayDel(id, pid) { if (!confirm(T('Bu ödeme kaydı silinsin mi?'))) return; try { await api('DELETE', `/pads/${id}/payments/${pid}`); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
+async function adUp(id, files) {
+  if (!files || !files.length) return; const fd = new FormData(); for (const f of files) fd.append('files', f); toast('Yükleniyor…');
+  try { const r = await fetch(`/api/super/pads/${id}/media`, { method: 'POST', body: fd }), j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); if (j.errors && j.errors.length) toast(j.errors[0], true); else toast('Yüklendi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
+}
+async function adMediaDel(id, cid) { try { await api('DELETE', `/pads/${id}/media/${cid}`); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
+async function adPause(id, v) { try { await api('PUT', '/pads/' + id, { paused: v }); toast(v ? 'Reklam durduruldu' : 'Reklam yeniden yayında'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
+async function adDel(id) { if (!confirm(T('Bu reklam ve görselleri silinsin mi? Bu işlem geri alınamaz.'))) return; try { await api('DELETE', '/pads/' + id); closeDrawer(); toast('Silindi'); await adLoad(); } catch (e) { toast(e.message, true); } }
+async function adCopy(id) { try { await navigator.clipboard.writeText(AD.cur.ad.url); toast('Bağlantı kopyalandı'); } catch (e) { prompt(T('Rapor bağlantısı'), AD.cur.ad.url); } }
+async function adToken(id) { if (!confirm(T('Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz.'))) return; try { await api('POST', `/pads/${id}/token`); await adOpen(id); toast('Yeni bağlantı oluşturuldu'); } catch (e) { toast(e.message, true); } }
+// Paketler: ad, gün, fiyat; reklam eklerken seçilince fiyat ve bitiş tarihi otomatik dolar
+function adPkgs() {
+  const rows = AD.d.packages.length ? AD.d.packages : [{ name: '', days: 30, price: '' }];
+  openDrawer(`<div class="m-head"><div><h2 style="margin:0 0 2px;font-size:18px;font-weight:700">${T('Reklam paketleri')}</h2><p class="hint" style="margin:0;font-size:12.5px">${T('Hazır süre ve fiyat paketleri; reklam eklerken seçilince fiyat ve bitiş tarihi otomatik dolar.')}</p></div><button class="modal-x" onclick="closeDrawer()" aria-label="Kapat">×</button></div>
+  <div class="m-body" style="grid-template-columns:1fr"><div class="d-card"><div id="pk-rows">${rows.map(pkRow).join('')}</div><button class="btn ghost" style="margin-top:10px" onclick="$('pk-rows').insertAdjacentHTML('beforeend',pkRow({name:'',days:30,price:''}))">＋ ${T('Paket ekle')}</button></div></div>
+  <div class="m-foot"><button class="btn ghost" onclick="closeDrawer()">${T('Vazgeç')}</button><button class="btn" onclick="adPkgSave()">${T('Kaydet')}</button></div>`);
+}
+const pkRow = p => `<div class="row pk" data-id="${esc(p.id || '')}" style="grid-template-columns:2fr 1fr 1fr auto;align-items:end"><div><label>${T('Paket adı')}</label><input class="pk-n" value="${esc(p.name)}" maxlength="40" placeholder="örn. Aylık"></div><div><label>${T('Gün')}</label><input class="pk-d" type="number" min="1" max="730" value="${p.days}"></div><div><label>${T('Fiyat (₺)')}</label><input class="pk-p" type="number" min="0" step="0.01" value="${p.price}"></div><button class="btn xs ghost" onclick="this.parentNode.remove()" title="Sil">×</button></div>`;
+async function adPkgSave() {
+  const packages = [...document.querySelectorAll('#pk-rows .pk')].map(r => ({ id: r.dataset.id, name: r.querySelector('.pk-n').value, days: r.querySelector('.pk-d').value, price: r.querySelector('.pk-p').value }));
+  try { await api('PUT', '/pad-packages', { packages }); toast('Paketler kaydedildi'); closeDrawer(); await adLoad(); } catch (e) { toast(e.message, true); }
+}
 
 /* ================= HESABIM ================= */
 PAGES.account = {

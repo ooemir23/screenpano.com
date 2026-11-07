@@ -62,13 +62,13 @@ function mediaItem(t, v) {
   if (v.type === 'poster') return { id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null };
   return { id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null };
 }
-// Reklamlar (server/ads.js) son hâlin arasına serpiştirilir
-const mediaList = t => require('./ads').inject(t, baseMediaList(t), v => mediaItem(t, v));
+// Platform reklamları (server/platformads.js) son hâlin arasına serpiştirilir
+const mediaList = t => require('./platformads').inject(t, baseMediaList(t));
 function baseMediaList(t) {
   const db = t.db, out = [];
   for (const v of db.videos) {
     if (v.status === 'processing' && !v.reopt) continue;
-    if (v.ad || v.hidden || SCH.expired(v.sch)) continue; // reklam görselleri normal sırada oynamaz
+    if (v.hidden || SCH.expired(v.sch)) continue;
     out.push(mediaItem(t, v));
   }
   const bk = F.booksView();

@@ -113,6 +113,7 @@ const q = {
   statAdd: sql.prepare('INSERT INTO stats (tenant_id, day, kind, key, value) VALUES (?, ?, ?, ?, ?) ON CONFLICT(tenant_id, day, kind, key) DO UPDATE SET value = value + excluded.value'),
   statRange: sql.prepare('SELECT day, kind, key, value FROM stats WHERE tenant_id = ? AND day >= ? ORDER BY day'),
   statAllRange: sql.prepare("SELECT day, kind, SUM(value) AS value FROM stats WHERE day >= ? AND kind IN ('online','play','qr','drop') GROUP BY day, kind"),
+  statPad: sql.prepare("SELECT tenant_id, day, kind, key, value FROM stats WHERE kind IN ('play','sec') AND key LIKE 'pad:%'"),
   statByTenant: sql.prepare("SELECT tenant_id, kind, SUM(value) AS value FROM stats WHERE day >= ? AND kind IN ('online','play','qr','drop','dropsec') GROUP BY tenant_id, kind"),
   statPurge: sql.prepare('DELETE FROM stats WHERE day < ?'),
   objGet: sql.prepare('SELECT * FROM objects WHERE tenant_id = ? AND file = ?'),

@@ -191,4 +191,5 @@ r.post('/mail/test', async (req, res) => {
 // silme talebini iptal et / hemen uygula
 r.delete('/tenants/:id/deletion', (req, res) => { const t = tenants.get(req.params.id); if (!t) return res.status(404).end(); delete t.db.deletion; tenants.save(t); res.json({ ok: true }); });
 
+require('./platformads').routes(r); // platform reklamları (/api/super/pads)
 module.exports = r;

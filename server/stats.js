@@ -95,11 +95,10 @@ function impact(t, items, qr, shownId, prevQr, dayList) {
   const row = (o, key) => { const s = qr[key] || { scans: 0, daily: {}, hours: new Array(24).fill(0) }, ph = s.scans ? s.hours.indexOf(Math.max(...s.hours)) : -1;
     out.push({ ...o, scans: s.scans, prevScans: prevQr[key] || 0, rate: o.shown ? Math.round(s.scans / o.shown * 1000) / 10 : null, peakHour: ph, daily: dayList.map(d => s.daily[d] || 0) }); };
   for (const c of t.db.campaigns || []) if (c.code) row({ id: c.id, kind: 'camp', name: c.headline || 'Kampanya kartı', enabled: !!c.enabled, shown: shownId['camp:' + c.id] || 0 }, 'camp:' + c.id);
-  const ads = new Map((t.db.ads || []).map(a => [a.id, a]));
   for (const v of t.db.videos || []) {
-    if (!v.qrCode && !v.ad) continue;
-    const it = items[v.id] || { plays: 0, sec: 0 }, a = v.ad && ads.get(v.ad);
-    row({ id: v.id, kind: a ? 'ad' : 'poster', name: a ? `${a.name} · ${v.name}` : v.name, enabled: !v.hidden, shown: it.plays, sec: it.sec, tracked: !!v.qrCode }, 'm:' + v.id);
+    if (!v.qrCode) continue;
+    const it = items[v.id] || { plays: 0, sec: 0 };
+    row({ id: v.id, kind: 'poster', name: v.name, enabled: !v.hidden, shown: it.plays, sec: it.sec, tracked: !!v.qrCode }, 'm:' + v.id);
   }
   return out.sort((a, b) => b.scans - a.scans || b.shown - a.shown);
 }

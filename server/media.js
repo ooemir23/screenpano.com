@@ -92,4 +92,4 @@ function resumeAll() { for (const t of tenants.all()) for (const v of t.db.video
 // İşletmenin diskte kapladığı yer (kota kontrolü için)
 const usedBytes = t => require('./storage').usedBytes(t);
 
-module.exports = { enqueue, resumeAll, backfillDurations, usedBytes, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };
+module.exports = { probeDur, enqueue, resumeAll, backfillDurations, usedBytes, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };

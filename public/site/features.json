@@ -600,60 +600,6 @@
       }
     },
     {
-      "id": "reklam",
-      "icon": "💼",
-      "title": "Ekranınızda reklam alanı satın",
-      "short": "Reklam alanı",
-      "text": "Yakındaki emlakçı, kuaför ya da spor salonu ekranınızda reklam versin; ekran kendini ödesin. Reklamın hangi gün, saat ve sıklıkta çıkacağını siz belirlersiniz, bitiş günü gelince kendiliğinden kalkar.",
-      "points": [
-        "Gün, saat ve sıklık ayarı (her N içerikte bir)",
-        "Reklam verene giriş gerektirmeyen gösterim raporu bağlantısı",
-        "Fotoğraftan QR'lı reklam görseli, okutmalar sayılır"
-      ],
-      "plan": "pro",
-      "compare": "Reklam alanı satışı ve rapor",
-      "added": "2026-11-06",
-      "visual": {
-        "type": "win",
-        "img": "p-reklam"
-      },
-      "i18n": {
-        "en": {
-          "title": "Sell ad space on your screen",
-          "short": "Ad space",
-          "compare": "Ad space sales and reports",
-          "text": "Let the estate agent, hairdresser or gym next door advertise on your screen, and let the screen pay for itself. You decide the days, hours and frequency; the ad stops by itself on its end date.",
-          "points": [
-            "Days, hours and frequency (once every N items)",
-            "A report link for the advertiser, no login needed",
-            "Ad images with QR made from a photo, scans counted"
-          ]
-        },
-        "de": {
-          "title": "Werbefläche auf Ihrem Bildschirm verkaufen",
-          "short": "Werbefläche",
-          "compare": "Werbeverkauf und Berichte",
-          "text": "Lassen Sie den Makler, Friseur oder das Fitnessstudio nebenan auf Ihrem Bildschirm werben – so finanziert sich der Bildschirm selbst. Tage, Uhrzeiten und Häufigkeit bestimmen Sie; am Endtag endet die Werbung automatisch.",
-          "points": [
-            "Tage, Uhrzeiten und Häufigkeit (alle N Inhalte)",
-            "Berichtslink für den Werbekunden ohne Anmeldung",
-            "Werbebilder mit QR aus einem Foto, Scans werden gezählt"
-          ]
-        },
-        "ar": {
-          "title": "بِع مساحة إعلانية على شاشتك",
-          "short": "مساحة إعلانية",
-          "compare": "بيع المساحات الإعلانية والتقارير",
-          "text": "دع مكتب العقارات أو صالون الحلاقة أو الصالة الرياضية المجاورة يعلن على شاشتك، لتغطي الشاشة تكلفتها بنفسها. أنت تحدد الأيام والساعات وعدد مرات الظهور، ويتوقف الإعلان تلقائيًا في تاريخ انتهائه.",
-          "points": [
-            "الأيام والساعات والتكرار (مرة كل N محتويات)",
-            "رابط تقرير للمعلن دون تسجيل دخول",
-            "صور إعلانية مع QR من صورة فوتوغرافية وتُحتسب مرات المسح"
-          ]
-        }
-      }
-    },
-    {
       "id": "afis",
       "icon": "📷",
       "title": "Ürün fotoğrafından afiş",
@@ -1730,21 +1676,6 @@
       "tenant": "kafe",
       "view": "mobile",
       "hash": "stats"
-    },
-    "p-reklam": {
-      "tenant": "spor",
-      "view": "panel",
-      "hash": "ads",
-      "api": [
-        "POST",
-        "/api/admin/ads"
-      ],
-      "body": {
-        "name": "Güneş Emlak",
-        "fee": "Aylık 1.500 ₺",
-        "every": 4,
-        "contact": "0212 000 00 00"
-      }
     },
     "p-afis": {
       "tenant": "kafe",

@@ -71,7 +71,6 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   });
 
   // ================= REKLAM ALANI =================
-  require('./ads').routes(r, { changed, upload, quota, ownerOnly, rmUpload });
 
   // ================= FOTOĞRAFTAN AFİŞ (stüdyo) =================
   // Afiş panelde (tarayıcıda) 1920x1080 JPG olarak çizilir ve fotoğraf gibi medyaya girer: eski ve yeni TV
@@ -102,7 +101,6 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
       Object.assign(v, { file: f.filename, status: 'processing', optimized: false, reopt: true }); // reopt: küçültülürken de ekranda kalır
     } else {
       v = { id: auth.uid(), file: f.filename, type: 'image', status: 'processing', reopt: true };
-      if (m.ad && (t.db.ads || []).some(a => a.id === m.ad)) v.ad = m.ad; // reklam görseli olarak hazırlandıysa
       t.db.videos.push(v);
     }
     v.name = s(m.name, 80) || fields.title || 'Afiş'; v.design = design;
