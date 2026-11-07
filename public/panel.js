@@ -310,7 +310,7 @@ function drawPal() {
   const n = k => EDIT.layout.widgets.filter(w => w.type === k).length;
   $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} ${esc(d.name)}${d.pro && !pro() ? ' 🔒' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
 }
-const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Yorumlar <a href="#promo">Kampanya ve yorumlar</a> sayfasından eklenir.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
+const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Google ve Instagram yorumları <a href="#promo">Kampanya ve yorumlar</a> sayfasından bağlanır.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
 const BOXES = [['accent', 'Düz (vurgu rengi tonlu)'], ['glass', 'Cam (yarı saydam koyu)'], ['dark', 'Koyu dolgu'], ['outline', 'Yalnız çerçeve'], ['none', 'Kutusuz']];
 // her widget için kutu görünümü: tema stilini izler ya da kutuya özel stil ve renk
 function boxSection(w) {
@@ -910,14 +910,10 @@ SECTIONS.promo = {
   after() { if ($('ig-st')) drawInsta(); (S.db.campaigns || []).forEach(c => updateCampPrev(c.id)); },
   html() {
     const db = S.db;
-    return head('Kampanya ve yorumlar', 'Kampanya kartı, Google ve Instagram yorumları, elle eklenen yorumlar.')
+    return head('Kampanya ve yorumlar', 'Kampanya kartı, Google ve Instagram yorumları.')
       + (db.campaigns || []).map(campCard).join('')
       + lock('Google yorumları ve Instagram')
-      + googleCard() + instaCard()
-      + card('★ Elle eklenen yorumlar', 'Medyanın altındaki şeritte döner (düzende "Google yorumları" widget\'ı olmalı). Yalnız 4 ve 5 yıldız.',
-        `${(db.reviews || []).length ? `<div class="list">${db.reviews.map(r => `<div class="it"><div class="b"><b>${esc(r.author)} <span class="stars">${'★'.repeat(r.rating)}</span></b><span>${esc(r.text)}</span></div><button class="btn xs d" onclick="act('DELETE','/reviews/${r.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : '<div class="empty">Henüz yorum yok</div>'}
-         <hr class="sep2"><div class="f">${fl('Yorumcu adı', '<input type="text" id="r-a" maxlength="60">')}${fl('Puan', '<select id="r-r"><option value="5">★★★★★</option><option value="4">★★★★</option></select>')}</div>
-         ${fl('Yorum (Google\'dan kopyalayıp yapıştırın)', '<textarea id="r-t" maxlength="400" rows="3"></textarea>')}<div class="row end mt"><button class="btn" onclick="addReview()">Yorum ekle</button></div>`);
+      + googleCard() + instaCard();
   },
 };
 function campCard(c) {
@@ -1265,7 +1261,6 @@ function addQr() {
   if (kind === 'wifi') Object.assign(b, { ssid: $('q-ssid').value.trim(), password: $('q-pass').value, security: $('q-sec').value }); else if (kind === 'hub') b.hub = hubRead(); else b.text = $('q-text').value.trim();
   if (qrEditId) { const id = qrEditId; qrEditId = null; act('PATCH', '/qrs/' + id, b, 'QR kaydedildi'); } else act('POST', '/qrs', b, 'QR kod eklendi');
 }
-const addReview = () => act('POST', '/reviews', { author: $('r-a').value.trim(), rating: $('r-r').value, text: $('r-t').value.trim() }, 'Yorum eklendi');
 
 /* ================= KUTLAMALAR ================= */
 let TIMES = null;

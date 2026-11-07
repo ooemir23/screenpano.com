@@ -102,11 +102,11 @@ function baseMediaList(t) {
   }
   return withBooks(out);
 }
-// Yorumlar: elle girilenler + Google'dan gelenler (yalnız 4-5 yıldız)
+// Yorumlar: Google'dan gelenler (yalnız 4-5 yıldız)
 function reviewList(db) {
   const g = db.google && db.google.show !== false ? (db.google.reviews || []) : [];
-  return [...(db.reviews || []).map(r => ({ ...r, source: r.source || 'manual' })), ...g].filter(r => r.rating >= 4)
-    .map(({ id, author, rating, text, source }) => ({ id, author, rating, text, source }));
+  return g.filter(r => r.rating >= 4)
+    .map(({ id, author, rating, text, source }) => ({ id, author, rating, text, source: source || 'google' }));
 }
 
 // Hazır "Türkçe Pop" listesi önceden yanlış Spotify listesine gidiyordu; eklenmiş olanlar doğru listeye çevrilir
