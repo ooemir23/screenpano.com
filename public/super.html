@@ -87,8 +87,29 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 #drawer{position:fixed;inset:0;z-index:30;display:none}
 #drawer.on{display:block}
 #drawer .bg{position:absolute;inset:0;background:rgba(0,0,0,.6)}
-#drawer .pane{position:absolute;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:22px}
+#drawer .pane{position:absolute;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:22px}
 #drawer .x{float:right;background:none;border:0;font-size:24px;cursor:pointer;color:var(--mute);line-height:1}
+.kpi-ribbon{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:14px}
+.kpi-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:12px 14px;cursor:pointer;transition:all .15s;user-select:none;position:relative}
+.kpi-card:hover{border-color:var(--accent2);transform:translateY(-1px);background:var(--panel2)}
+.kpi-card.on{border-color:var(--accent2);background:rgba(var(--a2),.15);box-shadow:inset 0 0 0 1px var(--accent2)}
+.kpi-card b{display:block;font-size:22px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi-card span{display:block;font-size:12px;color:var(--mute);margin-top:3px}
+.kpi-card .kic{position:absolute;top:12px;right:12px;width:18px;height:18px;color:var(--mute);opacity:.6}
+.search-wrap{position:relative;flex:1;min-width:260px;display:flex;align-items:center}
+.search-wrap input{padding-inline-start:36px;padding-inline-end:32px;border-radius:var(--r-m)}
+.search-wrap .s-ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mute);width:16px;height:16px;pointer-events:none}
+.search-wrap .clr-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--mute);cursor:pointer;font-size:16px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:1}
+.search-wrap .clr-btn:hover{color:var(--text);background:rgba(255,255,255,.1)}
+.badge-count{font-size:13px;color:var(--mute);white-space:nowrap;padding:4px 0}
+.badge-count b{color:var(--text)}
+.d-top{position:sticky;top:-22px;background:var(--panel);padding:16px 0 14px;margin:-22px 0 16px;border-bottom:1px solid var(--line);z-index:5}
+.d-card{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);padding:16px;margin-bottom:14px}
+.d-card h4{font-size:12.5px;font-weight:700;color:var(--soft);margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.06em}
+.d-card h4 .ic{width:16px;height:16px;color:var(--accent2)}
+.d-foot{position:sticky;bottom:-22px;background:var(--panel);padding:14px 0;margin:18px 0 -22px;border-top:1px solid var(--line);z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.quick-date-btn{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:var(--r-s);padding:4px 9px;font-size:11.5px;color:var(--soft);cursor:pointer;transition:all .15s}
+.quick-date-btn:hover{border-color:var(--accent2);color:var(--text);background:rgba(var(--a2),.15)}
 #toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50}
 .toast{background:#2b2f2f;border-left:4px solid var(--ok);padding:12px 16px;border-radius:var(--r-m);font-size:14px}.toast.err{border-left-color:var(--bad)}
 .nav .grp{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:12px 12px 4px}
@@ -241,10 +262,32 @@ const dl = (cur, prev, goodUp = true) => { if (!prev) return ''; const p = Math.
 const tabs = (cur, fn) => `<div class="tabs">${[7, 30, 90].map(d => `<button class="${cur === d ? 'on' : ''}" onclick="${fn}(${d})">${d} ${T('gün')}</button>`).join('')}</div>`;
 
 function stTag(x) {
-  if (!x.access.ok) return x.access.reason === 'suspended' ? '<span class="tag bad">Askıda</span>' : '<span class="tag bad">Süresi doldu</span>';
-  return (x.deletion ? `<span class="tag bad" title="KVKK silme talebi">Silinecek ${fmt(x.deletion)}</span> ` : '') + (x.access.kind === 'unlimited' ? '<span class="tag ok">∞ Sınırsız</span>' : x.access.kind === 'trial' ? '<span class="tag trial">Deneme</span>' : '<span class="tag ok">Aktif</span>');
+  const now = Date.now(), day = 86400000;
+  if (!x.access.ok) {
+    if (x.access.reason === 'suspended') return '<span class="tag bad">Askıda</span>';
+    const endMs = x.paidUntil || x.trialUntil || 0;
+    const agoDays = endMs ? Math.max(1, Math.round((now - endMs) / day)) : 0;
+    return `<span class="tag bad" title="${fmt(endMs)}">Süresi doldu${agoDays ? ` (${agoDays}g)` : ''}</span>`;
+  }
+  let out = '';
+  if (x.deletion) out += `<span class="tag bad" title="KVKK silme talebi">Silinecek ${fmt(x.deletion)}</span> `;
+  if (x.access.kind === 'unlimited') return out + '<span class="tag ok">∞ Sınırsız</span>';
+  const until = x.access.until || x.paidUntil || x.trialUntil;
+  const rem = until ? Math.ceil((until - now) / day) : null;
+  const remTxt = rem !== null ? (rem <= 0 ? ' (Son gün)' : ` (${rem}g)`) : '';
+  const isWarn = rem !== null && rem <= 3;
+  if (x.access.kind === 'trial') return out + `<span class="tag trial" title="${fmt(until)}">Deneme${remTxt}</span>`;
+  return out + `<span class="tag ${isWarn ? 'warn' : 'ok'}" title="${fmt(until)}">Aktif${remTxt}</span>`;
 }
 const planName = x => x.unlimited ? 'Sınırsız' : (D.plans[x.plan] || {}).name || x.plan;
+function planBadge(x) {
+  if (x.unlimited) return '<span class="tag ok" style="background:rgba(62,207,74,.18);font-weight:700">∞ Sınırsız</span>';
+  const p = x.plan;
+  const name = esc((D.plans[p] || {}).name || p);
+  if (p === 'pro') return `<span class="tag" style="background:rgba(201,149,92,.22);color:var(--accent2);font-weight:700">${name}</span>`;
+  if (p === 'baslangic') return `<span class="tag mute">${name}</span>`;
+  return `<span class="tag">${name}</span>`;
+}
 const headOf = o => D.tenants.find(t => t.org === o && t.owner);
 
 const PAGES = {};
@@ -290,97 +333,452 @@ PAGES.home = {
 };
 
 /* ================= İŞLETMELER ================= */
-const FILTERS = [['all', 'Tümü'], ['trial', 'Deneme'], ['active', 'Aktif'], ['unlimited', 'Sınırsız'], ['suspended', 'Askıda'], ['expired', 'Süresi dolan'], ['offline', 'Çevrimdışı cihazı olan'], ['old', 'Eski sürümde cihazı olan']];
-const inK = (x, k) => { const a = x.access; return { all: true, trial: a.ok && a.kind === 'trial', active: a.ok && a.kind === 'paid', unlimited: a.ok && a.kind === 'unlimited', suspended: !a.ok && a.reason === 'suspended', expired: !a.ok && a.reason === 'expired', offline: D.offline.some(o => o.tenantId === x.id), old: (x.fleet || []).some(d => d.old) }[k]; };
-const inF = x => {
-  return inK(x, TF.f);
+const FILTERS = [['all', 'Tümü'], ['active', 'Aktif'], ['trial', 'Deneme'], ['unlimited', 'Sınırsız'], ['expired', 'Süresi dolan'], ['suspended', 'Askıda'], ['offline', 'Çevrimdışı TV'], ['old', 'Eski APK']];
+const inK = (x, k) => {
+  const a = x.access;
+  return {
+    all: true,
+    trial: a.ok && a.kind === 'trial',
+    active: a.ok && a.kind === 'paid',
+    unlimited: a.ok && a.kind === 'unlimited',
+    suspended: !a.ok && a.reason === 'suspended',
+    expired: !a.ok && a.reason === 'expired',
+    offline: D.offline.some(o => o.tenantId === x.id),
+    old: (x.fleet || []).some(d => d.old)
+  }[k];
 };
+const inF = x => inK(x, TF.f);
+
+function clearSearch() {
+  const el = $('flt');
+  if (el) el.value = '';
+  TF.q = '';
+  drawRows();
+  if (el) el.focus();
+}
+
 PAGES.tenants = {
   html() {
-    return head('İşletmeler', 'Satıra tıklayınca sağda ayrıntıları, düzenleme ve istatistikleri açılır.', '<button class="btn" onclick="newDialog()">＋ Yeni işletme</button>')
-      + `<div class="toolbar"><input type="search" id="flt" class="grow" placeholder="Ara (ad, kullanıcı, telefon)" value="${esc(TF.q)}" oninput="TF.q=this.value;drawRows()">
-        <select id="srt" onchange="TF.sort=this.value;drawRows()">${[['new', 'Yeni kayıt önce'], ['name', 'Ada göre'], ['end', 'Bitiş tarihine göre'], ['login', 'Son girişe göre']].map(([v, l]) => `<option value="${v}"${TF.sort === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`
+    return head('İşletmeler', 'Platformdaki tüm müşteriler. Satıra tıklayarak ayrıntıları görüntüleyebilir ve düzenleyebilirsiniz.', '<button class="btn" onclick="newDialog()">＋ Yeni işletme</button>')
+      + `<div id="tenants-kpi"></div>`
+      + `<div class="toolbar" style="gap:10px">
+          <div class="search-wrap">
+            <svg class="ic s-ic"><use href="/icons.svg#i-search"></use></svg>
+            <input type="search" id="flt" placeholder="İşletme adı, sahip, telefon, e-posta, paket veya not ara..." value="${esc(TF.q)}" oninput="TF.q=this.value;drawRows()">
+            <button type="button" class="clr-btn" id="flt-clear" onclick="clearSearch()" aria-label="Temizle" style="display:${TF.q ? 'flex' : 'none'}">×</button>
+          </div>
+          <select id="srt" onchange="TF.sort=this.value;drawRows()" style="min-width:180px">${[['new', 'En yeni kayıt'], ['name', 'Ada göre (A-Z)'], ['end', 'Bitiş tarihine göre'], ['login', 'Son girişe göre']].map(([v, l]) => `<option value="${v}"${TF.sort === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+          <div id="tenant-count" class="badge-count"></div>
+        </div>`
       + `<div class="chips" id="chips" style="margin-bottom:14px"></div>`
-      + `<div class="card" style="padding:8px 12px"><div class="scroll"><table><thead><tr><th>İşletme</th><th>Paket</th><th>Durum</th><th>Bitiş</th><th class="num">Cihaz</th><th class="num">Depolama</th><th>Son giriş</th><th></th></tr></thead><tbody id="list"></tbody></table></div></div>`;
+      + `<div class="card" style="padding:0;overflow:hidden"><div class="scroll"><table style="margin:0"><thead style="background:rgba(255,255,255,.02)"><tr><th style="padding-left:16px">İşletme</th><th>Paket</th><th>Durum</th><th>Bitiş</th><th class="num">Cihazlar</th><th class="num">Depolama</th><th>Son Giriş</th><th style="padding-right:16px;text-align:right">İşlemler</th></tr></thead><tbody id="list"></tbody></table></div></div>`;
   },
   after() { drawRows(); },
 };
+
 // S4: cihaz sağlığı (çevrimiçi sayısı, eski sürüm)
 function devCell(x) {
   const f = x.fleet || [], on = f.filter(d => d.online).length, lim = x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1)), old = f.filter(d => d.old).length;
-  if (!x.devices) return `<span style="color:var(--mute)">0 / ${lim}</span>`;
-  return `<span class="devh" title="${f.map(d => esc((d.name || 'TV') + (d.app ? ' · ' + d.app : ''))).join('\n')}">${f.map(d => `<i class="${d.online ? 'on' : ''}"></i>`).join('')} ${on}/${x.devices} ${T('çevrimiçi')}</span>${old ? `<br><span class="tag warn">${old} ${T('eski sürüm')}</span>` : ''}<br><span style="color:var(--mute);font-size:12px">${T('sınır')} ${lim}</span>`;
+  if (!x.devices) return `<span style="color:var(--mute);font-size:12px">0 / ${lim} TV</span>`;
+  const dots = f.slice(0, 4).map(d => `<i class="${d.online ? 'on' : ''}"></i>`).join('') + (f.length > 4 ? `+${f.length - 4}` : '');
+  const title = f.map(d => (d.name || 'TV') + ': ' + (d.online ? 'Çevrimiçi' : 'Çevrimdışı') + (d.app ? ' (' + d.app + ')' : '')).join('\n');
+  return `<span class="devh" title="${esc(title)}">${dots} <b style="color:${on > 0 ? 'var(--ok)' : 'var(--mute)'};margin-left:3px">${on}/${x.devices}</b></span>`
+    + (old ? `<br><span class="tag warn" style="font-size:10px;padding:1px 5px;margin-top:2px" title="Eski APK sürümü">${old} eski APK</span>` : '')
+    + `<br><span style="color:var(--mute);font-size:11px">sınır: ${lim}</span>`;
 }
-function rowMenu(ev, id) { ev.stopPropagation(); popMenu(ev.currentTarget, [['Ayrıntılar ve düzenleme', 'pencil', () => openTenant(id)], ['30 gün uzat', 'calendar-clock', () => extend(id, 30)], ['1 yıl uzat', 'calendar-clock', () => extend(id, 365)], ['İstatistikleri gör', 'chart-column', () => { ST.tid = id; ST.days = 30; go('stats'); render(); }]]); }
+
+function rowMenu(ev, id) {
+  ev.stopPropagation();
+  popMenu(ev.currentTarget, [
+    ['Ayrıntılar ve düzenleme', 'pencil', () => openTenant(id)],
+    ['30 gün uzat', 'calendar-clock', () => extend(id, 30)],
+    ['1 yıl uzat', 'calendar-clock', () => extend(id, 365)],
+    ['İstatistikleri gör', 'chart-column', () => { ST.tid = id; ST.days = 30; go('stats'); render(); }],
+    ['Şifre sıfırla', 'key-round', () => resetPw(id)]
+  ]);
+}
+
 function drawRows() {
   if (!$('list')) return;
   const q = TF.q.trim().toLocaleLowerCase('tr-TR');
-  $('chips').innerHTML = FILTERS.map(([k, l]) => { const n = D.tenants.filter(x => inK(x, k)).length; return `<span class="chip ${TF.f === k ? 'on' : ''}" onclick="TF.f='${k}';drawRows()">${l} <b>${n}</b></span>`; }).join('');
+  const clr = $('flt-clear');
+  if (clr) clr.style.display = q ? 'flex' : 'none';
+
+  // KPI şeridi güncelle
+  const kpiEl = $('tenants-kpi');
+  if (kpiEl) {
+    const total = D.tenants.length;
+    const activeN = D.tenants.filter(x => inK(x, 'active') || inK(x, 'unlimited')).length;
+    const trialN = D.tenants.filter(x => inK(x, 'trial')).length;
+    const expN = D.tenants.filter(x => inK(x, 'expired') || inK(x, 'suspended')).length;
+    const offN = D.tenants.filter(x => inK(x, 'offline')).length;
+    const oldN = D.tenants.filter(x => inK(x, 'old')).length;
+
+    kpiEl.innerHTML = `<div class="kpi-ribbon">
+      <div class="kpi-card ${TF.f === 'all' ? 'on' : ''}" onclick="TF.f='all';drawRows()">
+        <span class="kic">${ic('building-2')}</span>
+        <b>${total}</b>
+        <span>Tüm İşletmeler</span>
+      </div>
+      <div class="kpi-card ${TF.f === 'active' ? 'on' : ''}" onclick="TF.f='active';drawRows()">
+        <span class="kic" style="color:var(--ok)">${ic('circle-check')}</span>
+        <b style="color:var(--ok)">${activeN}</b>
+        <span>Aktif / Sınırsız</span>
+      </div>
+      <div class="kpi-card ${TF.f === 'trial' ? 'on' : ''}" onclick="TF.f='trial';drawRows()">
+        <span class="kic" style="color:var(--accent2)">${ic('clock')}</span>
+        <b style="color:var(--accent2)">${trialN}</b>
+        <span>Deneme Süresinde</span>
+      </div>
+      <div class="kpi-card ${TF.f === 'expired' || TF.f === 'suspended' ? 'on' : ''}" onclick="TF.f='expired';drawRows()">
+        <span class="kic" style="color:var(--bad)">${ic('triangle-alert')}</span>
+        <b style="color:var(--bad)">${expN}</b>
+        <span>Süresi Dolan / Askıda</span>
+      </div>
+      <div class="kpi-card ${TF.f === 'offline' ? 'on' : ''}" onclick="TF.f='offline';drawRows()">
+        <span class="kic" style="color:${offN ? 'var(--bad)' : 'var(--mute)'}">${ic('wifi-off')}</span>
+        <b style="color:${offN ? 'var(--bad)' : 'var(--mute)'}">${offN}</b>
+        <span>Çevrimdışı TV</span>
+      </div>
+      <div class="kpi-card ${TF.f === 'old' ? 'on' : ''}" onclick="TF.f='old';drawRows()">
+        <span class="kic" style="color:${oldN ? 'var(--warn)' : 'var(--mute)'}">${ic('package')}</span>
+        <b style="color:${oldN ? 'var(--warn)' : 'var(--mute)'}">${oldN}</b>
+        <span>Eski Sürüm APK</span>
+      </div>
+    </div>`;
+  }
+
+  // Filtre etiketleri
+  const chipsEl = $('chips');
+  if (chipsEl) {
+    chipsEl.innerHTML = FILTERS.map(([k, l]) => {
+      const n = D.tenants.filter(x => inK(x, k)).length;
+      return `<span class="chip ${TF.f === k ? 'on' : ''}" onclick="TF.f='${k}';drawRows()">${l} <b>${n}</b></span>`;
+    }).join('');
+  }
+
   const end = x => x.access.until || x.paidUntil || x.trialUntil || 0;
-  const cmp = { new: (a, b) => b.created - a.created, name: (a, b) => a.name.localeCompare(b.name, 'tr'), end: (a, b) => end(a) - end(b), login: (a, b) => (b.lastLogin || 0) - (a.lastLogin || 0) }[TF.sort];
-  const list = D.tenants.filter(x => inF(x) && (!q || [x.name, x.owner, x.phone].join(' ').toLocaleLowerCase('tr-TR').includes(q))).sort(cmp);
-  $('list').innerHTML = list.map(x => { const h = !x.owner && x.org ? headOf(x.org) : null; return `<tr class="click" onclick="openTenant('${x.id}')"><td><b>${esc(x.name)}</b><br><span style="color:var(--mute)">${x.owner ? esc(x.owner) : h ? T('Şube') + ' · ' + esc(h.name) : ''}${x.phone ? ' · ' + esc(x.phone) : ''}</span></td>
-    <td>${esc(planName(x))}</td><td>${stTag(x)}</td><td>${x.unlimited ? '∞' : fmt(end(x))}</td>
-    <td class="num">${devCell(x)}</td><td class="num">${x.storageMB} MB</td><td>${ago(x.lastLogin)}</td>
-    <td onclick="event.stopPropagation()"><div class="acts"><button class="btn ghost sm" onclick="imp('${x.id}')">Panele gir</button><button class="btn ghost sm" title="Diğer işlemler" aria-label="Diğer işlemler" onclick="rowMenu(event,'${x.id}')">${ic('ellipsis')}</button></div></td></tr>`; }).join('') || '<tr><td colspan="8" class="empty">İşletme yok</td></tr>';
+  const cmp = {
+    new: (a, b) => b.created - a.created,
+    name: (a, b) => a.name.localeCompare(b.name, 'tr'),
+    end: (a, b) => end(a) - end(b),
+    login: (a, b) => (b.lastLogin || 0) - (a.lastLogin || 0)
+  }[TF.sort];
+
+  const list = D.tenants.filter(x => inF(x) && (!q || [x.name, x.owner, x.phone, x.email, x.note, planName(x)].join(' ').toLocaleLowerCase('tr-TR').includes(q))).sort(cmp);
+
+  // Sonuç sayısı
+  const cntEl = $('tenant-count');
+  if (cntEl) {
+    cntEl.innerHTML = (q || TF.f !== 'all')
+      ? `<b>${list.length}</b> / ${D.tenants.length} işletme`
+      : `Toplam <b>${D.tenants.length}</b> işletme`;
+  }
+
+  $('list').innerHTML = list.map(x => {
+    const h = !x.owner && x.org ? headOf(x.org) : null;
+    const endDate = end(x);
+    const endStr = x.unlimited ? '<span style="color:var(--ok);font-weight:600">∞ Sınırsız</span>' : fmt(endDate);
+    return `<tr class="click" onclick="openTenant('${x.id}')">
+      <td style="padding-left:16px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <b style="font-size:13.5px;color:var(--text)">${esc(x.name)}</b>
+          ${x.note ? `<span title="${esc(x.note)}" style="color:var(--accent2);cursor:help;font-size:12px">📝</span>` : ''}
+          ${h ? `<span class="tag mute" style="font-size:10.5px">Şube · ${esc(h.name)}</span>` : ''}
+          ${x.superAccess ? `<span class="tag warn" style="font-size:10px" title="Süper Yönetici">SUPER</span>` : ''}
+        </div>
+        <div style="color:var(--mute);font-size:11.5px;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">
+          ${x.owner ? `<span><span style="opacity:.7">👤</span> ${esc(x.owner)}</span>` : ''}
+          ${x.phone ? `<span><span style="opacity:.7">📞</span> ${esc(x.phone)}</span>` : ''}
+          ${x.email ? `<span><span style="opacity:.7">✉️</span> ${esc(x.email)}</span>` : ''}
+        </div>
+      </td>
+      <td>${planBadge(x)}</td>
+      <td>${stTag(x)}</td>
+      <td style="font-size:12.5px;white-space:nowrap">${endStr}</td>
+      <td class="num">${devCell(x)}</td>
+      <td class="num" style="font-size:12.5px">${x.storageMB} MB</td>
+      <td style="font-size:12px;white-space:nowrap" title="${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : ''}">${ago(x.lastLogin)}</td>
+      <td style="padding-right:16px" onclick="event.stopPropagation()">
+        <div class="acts" style="justify-content:flex-end;gap:5px">
+          <button class="btn sm" onclick="imp('${x.id}')" title="İşletmenin paneline gir (impersonate)">${ic('external-link')} Panele gir</button>
+          <button class="btn ghost sm" onclick="extend('${x.id}',30)" title="Aboneliği 30 gün uzat">+30g</button>
+          <button class="btn ghost sm" title="Diğer işlemler" aria-label="Diğer işlemler" onclick="rowMenu(event,'${x.id}')">${ic('ellipsis')}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="8" class="empty" style="padding:40px 10px"><div style="font-size:24px;margin-bottom:8px">🔍</div>Arama kriterlerine uygun işletme bulunamadı.${q || TF.f !== 'all' ? '<br><button class="btn ghost sm" style="margin-top:12px" onclick="TF.q=\'\';TF.f=\'all\';const el=$(\'flt\');if(el)el.value=\'\';drawRows()">Filtreleri Temizle</button>' : ''}</td></tr>`;
 }
 
 /* ---- yeni işletme / ayrıntı paneli ---- */
 const closeDrawer = () => $('drawer').classList.remove('on');
 const openDrawer = html => { $('pane').innerHTML = `<button class="x" onclick="closeDrawer()" aria-label="Kapat">×</button>` + html; $('drawer').classList.add('on'); };
 const planOpts = sel => Object.values(D.plans).map(p => `<option value="${p.id}"${p.id === sel ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+
 function newDialog() {
-  openDrawer(`<h2>Yeni işletme</h2>
-  <div class="row">${field('İşletme adı', 'n-name')}${field('Telefon', 'n-phone')}</div>
-  <div class="row">${field('Kullanıcı adı', 'n-user')}${field('Şifre (en az 8)', 'n-pass')}</div>
-  <div class="row"><div><label>Paket</label><select id="n-plan" onchange="const p=D.plans[this.value];if(p)$('n-devs').value=p.devices">${planOpts('pro')}</select></div>${field('Bağlanacak TV / Cihaz', 'n-devs', 2, 'type="number" min="1" max="999"')}${field('Ödenmiş gün (0 = yalnız deneme)', 'n-days', 0, 'type="number"')}${field('Deneme günü', 'n-trial', 3, 'type="number"')}</div>
-  <div class="cardfoot"><button class="btn ghost" onclick="closeDrawer()">Vazgeç</button><button class="btn" onclick="createT()">Oluştur</button></div>`);
+  openDrawer(`
+  <div class="d-top">
+    <h2 style="margin:0 0 4px;font-size:18px">Yeni İşletme Ekle</h2>
+    <p class="hint" style="margin:0">Platforma yeni bir müşteri kaydı oluşturun.</p>
+  </div>
+  <div class="d-card">
+    <h4>${ic('building-2')} İşletme ve Giriş Bilgileri</h4>
+    <div class="row">${field('İşletme adı', 'n-name', '', 'placeholder="örn. Kahve Diyarı Beşiktaş"')}${field('Telefon', 'n-phone', '', 'placeholder="0532xxxxxxx"')}</div>
+    <div class="row">${field('Kullanıcı adı', 'n-user', '', 'placeholder="kahvediyari"')}${field('Şifre (en az 8 karakter)', 'n-pass', '', 'type="password" placeholder="••••••••"')}</div>
+  </div>
+  <div class="d-card">
+    <h4>${ic('calendar-clock')} Paket ve Cihaz Ayarları</h4>
+    <div class="row">
+      <div><label>Paket</label><select id="n-plan" onchange="const p=D.plans[this.value];if(p)$('n-devs').value=p.devices">${planOpts('pro')}</select></div>
+      ${field('Bağlanacak TV / Cihaz', 'n-devs', 2, 'type="number" min="1" max="999"')}
+    </div>
+    <div class="row">
+      ${field('Ödenmiş gün (0 = yalnız deneme)', 'n-days', 0, 'type="number"')}
+      ${field('Deneme günü', 'n-trial', 3, 'type="number"')}
+    </div>
+  </div>
+  <div class="d-foot">
+    <button class="btn ghost" onclick="closeDrawer()">Vazgeç</button>
+    <button class="btn" onclick="createT()">İşletmeyi Oluştur</button>
+  </div>`);
 }
+
 async function createT() {
-  try { await api('POST', '/tenants', { name: $('n-name').value, phone: $('n-phone').value, username: $('n-user').value, password: $('n-pass').value, plan: $('n-plan').value, devices: Number($('n-devs').value) || 1, days: Number($('n-days').value), trialDays: Number($('n-trial').value) }); closeDrawer(); toast('İşletme oluşturuldu'); await load(); }
-  catch (e) { toast(e.message, true); }
+  try {
+    await api('POST', '/tenants', { name: $('n-name').value, phone: $('n-phone').value, username: $('n-user').value, password: $('n-pass').value, plan: $('n-plan').value, devices: Number($('n-devs').value) || 1, days: Number($('n-days').value), trialDays: Number($('n-trial').value) });
+    closeDrawer();
+    toast('İşletme oluşturuldu');
+    await load();
+  } catch (e) { toast(e.message, true); }
 }
+
+function addInputDays(id, days) {
+  const el = $(id);
+  if (!el) return;
+  const cur = el.value ? new Date(el.value + 'T12:00:00') : new Date();
+  const base = cur.getTime() > Date.now() ? cur : new Date();
+  base.setDate(base.getDate() + days);
+  const y = base.getFullYear(), m = String(base.getMonth() + 1).padStart(2, '0'), d = String(base.getDate()).padStart(2, '0');
+  el.value = `${y}-${m}-${d}`;
+  toast(`Tarih güncellendi: ${el.value}`);
+}
+
 function openTenant(id) {
   const x = D.tenants.find(t => t.id === id); if (!x) return;
-  const d = ms => ms ? new Date(ms).toISOString().slice(0, 10) : '';
+  const d = ms => {
+    if (!ms) return '';
+    const dt = new Date(ms);
+    const y = dt.getFullYear(), m = String(dt.getMonth() + 1).padStart(2, '0'), day = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
   const h = !x.owner && x.org ? headOf(x.org) : null;
-  openDrawer(`<h2 style="margin-bottom:4px">${esc(x.name)}</h2><p class="hint">${stTag(x)} ${esc(planName(x))}${h ? ' · ' + T('Şube') + ' · ' + esc(h.name) : ''}</p>
-  <div class="acts" style="margin-bottom:14px"><button class="btn sm" onclick="imp('${id}')">Panele gir</button><button class="btn ghost sm" onclick="ST.tid='${id}';ST.days=30;closeDrawer();go('stats');render()">İstatistikleri gör</button></div>
-  <dl class="kv" style="margin-bottom:12px"><dt>Sahip</dt><dd>${esc(x.owner || '-')}</dd><dt>E-posta</dt><dd>${esc(x.email || '-')}</dd><dt>Kayıt</dt><dd>${fmt(x.created)}</dd><dt>Son giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : '-'}</dd><dt>Cihaz</dt><dd>${x.devices} / ${x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1))}${x.online ? ` <span style="color:var(--ok)">● ${x.online} ${T('bağlı')}</span>` : ''}</dd><dt>Depolama</dt><dd>${x.storageMB} MB</dd>${x.consent ? `<dt>Sözleşme/KVKK onayı</dt><dd>${fmt(x.consent)}</dd>` : ''}</dl>
-  <div class="stats" id="dstats" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px"></div>
-  ${(x.fleet || []).length ? `<h3>${T('Cihazlar')}</h3>${x.fleet.map(d => `<div class="it" style="padding:9px 12px"><span class="devh"><i class="${d.online ? 'on' : ''}"></i></span><div class="b"><b>${esc(d.name || T('TV kutusu'))}</b><span>${d.online ? T('Çevrimiçi') : T('Çevrimdışı')}${d.app ? ' · ' + esc(d.app) : ''}</span></div>${d.old ? `<span class="tag warn">${T('eski sürüm')}</span>` : ''}</div>`).join('')}` : ''}
-  ${x.deletion ? `<div class="att bad"><div class="b"><b>KVKK silme talebi</b><span>${fmt(x.deletion)} tarihinde silinecek.</span></div><button class="btn ghost sm" onclick="api('DELETE','/tenants/${id}/deletion').then(()=>{closeDrawer();load()})">Talebi iptal et</button></div>` : ''}
-  <h3>Düzenle</h3>
-  <div class="row">${field('İşletme adı', 'e-name', x.name)}${field('Telefon', 'e-phone', x.phone || '')}</div>
-  <div class="row"><div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div><div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div>${field('Cihaz limiti (TV sayısı)', 'e-devs', x.customDevices || x.deviceLimit || 1, 'type="number" min="1" max="999"')}</div>
-  <div class="row">${field('Deneme bitişi', 'e-trial', d(x.trialUntil), 'type="date"')}${field('Ödeme bitişi', 'e-paid', d(x.paidUntil), 'type="date"')}</div>
-  <div class="row">${field('Kullanıcı adı (giriş)', 'e-user', x.owner || '', 'autocomplete="off" autocapitalize="none"')}${field('E-posta (durum uyarıları)', 'e-mail', x.email || '', 'type="email"')}</div>
-  <div class="row">${field('Not', 'e-note', x.note || '')}</div>
-  <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:11px 13px;border-radius:10px;background:var(--panel2)"><input type="checkbox" id="e-test" ${x.canTest ? 'checked' : ''} style="margin-top:3px"><span><b>Test ortamı düğmesi</b><br><span class="muted" style="font-size:12px">Bu işletmenin ekranlarında menüde "Test ortamına geç" düğmesi görünür (yalnız kendi işletmeniz için açın).</span></span></label>
-  <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:11px 13px;border-radius:10px;background:var(--panel2)"><input type="checkbox" id="e-unl" ${x.unlimited ? 'checked' : ''} style="margin-top:3px"><span><b>Sınırsız (kendi işletmem)</b><br><span class="hint" style="margin:0">Süre dolmaz; tüm Pro özellikler açık; TV kutusu, kullanıcı, şube ve depolama sınırı yok. Kapatınca seçili paket ve tarihler geçerli olur.</span></span></label>
-  <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:11px 13px;border-radius:10px;background:var(--panel2)"><input type="checkbox" id="e-sup" ${x.superAccess ? 'checked' : ''} style="margin-top:3px"><span><b>Süper yönetim yetkisi</b><br><span class="hint" style="margin:0">Bu işletmenin sahibi sadmin adresinden süper yönetime de girebilir (tüm işletmeler, yedekler, platform ayarları). Yalnızca kendi işletmeniz için açın.</span></span></label>
-  ${x.org ? `<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" id="e-org"> Paket, durum, süre ve sınırsız ayarını zincirin tüm şubelerine uygula</label>` : ''}
-  <div class="acts"><button class="btn" onclick="saveT('${id}')">Kaydet</button><button class="btn ghost" onclick="extend('${id}',30)">+30 gün</button><button class="btn ghost" onclick="extend('${id}',365)">+1 yıl</button></div>
-  <h3 style="margin-top:24px">Tehlikeli işlemler</h3>
-  <div class="acts"><button class="btn ghost" onclick="resetPw('${id}')">Şifre sıfırla</button><button class="btn danger" onclick="delT('${id}')">Sil</button></div>`);
-  api('GET', `/tenants/${id}/stats?days=30`).then(j => { const el = $('dstats'); if (el) el.innerHTML = stat(hrs(j.totals.online) + ' ' + T('saat'), 'Ekran süresi (30 gün)') + stat(nf(j.totals.plays), 'Oynatma (30 gün)') + stat(nf(j.totals.scans), 'QR okutma (30 gün)'); }).catch(() => {});
+  const lim = x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1));
+  const devs = x.fleet || [];
+
+  openDrawer(`
+  <div class="d-top">
+    <div style="margin-bottom:8px">
+      <h2 style="font-size:18px;margin:0 0 6px;font-weight:700">${esc(x.name)}</h2>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        ${stTag(x)}
+        ${planBadge(x)}
+        ${h ? `<span class="tag mute">Şube · ${esc(h.name)}</span>` : ''}
+        ${x.superAccess ? `<span class="tag warn">Süper Yönetici</span>` : ''}
+      </div>
+    </div>
+    <div class="acts" style="margin-top:10px">
+      <button class="btn sm" onclick="imp('${id}')">${ic('external-link')} Panele gir</button>
+      <button class="btn ghost sm" onclick="extend('${id}',30)">${ic('calendar-clock')} +30 gün uzat</button>
+      <button class="btn ghost sm" onclick="extend('${id}',365)">+1 yıl uzat</button>
+      <button class="btn ghost sm" onclick="ST.tid='${id}';ST.days=30;closeDrawer();go('stats');render()">${ic('chart-column')} İstatistikler</button>
+    </div>
+  </div>
+
+  ${x.deletion ? `<div class="att bad" style="margin-bottom:14px"><div class="b"><b>KVKK silme talebi</b><span>${fmt(x.deletion)} tarihinde silinecek.</span></div><button class="btn ghost sm" onclick="api('DELETE','/tenants/${id}/deletion').then(()=>{closeDrawer();load()})">Talebi iptal et</button></div>` : ''}
+
+  <!-- Kart 1: Özet & 30 Günlük İstatistikler -->
+  <div class="d-card">
+    <h4>${ic('chart-column')} Genel Durum & İstatistikler</h4>
+    <div class="stats" id="dstats" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px;gap:8px">
+      <div class="stat" style="padding:10px"><b>…</b><span>Ekran süresi</span></div>
+      <div class="stat" style="padding:10px"><b>…</b><span>Oynatma</span></div>
+      <div class="stat" style="padding:10px"><b>…</b><span>QR okutma</span></div>
+    </div>
+    <dl class="kv" style="font-size:12.5px;gap:6px 14px">
+      <dt>Sahip kullanıcı</dt><dd><b>${esc(x.owner || '-')}</b></dd>
+      <dt>Kayıt tarihi</dt><dd>${fmt(x.created)}</dd>
+      <dt>Son aktif giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : 'Henüz giriş yapmadı'}</dd>
+      <dt>Depolama alanı</dt><dd>${x.storageMB} MB ${x.storageLimitMB ? `/ ${x.storageLimitMB} MB` : '(Sınırsız)'}</dd>
+      ${x.consent ? `<dt>KVKK / Sözleşme onayı</dt><dd style="color:var(--ok)">✓ ${fmt(x.consent)}</dd>` : ''}
+    </dl>
+  </div>
+
+  <!-- Kart 2: Bağlı TV Kutuları & Cihazlar -->
+  <div class="d-card">
+    <h4>${ic('tv')} Bağlı Cihazlar (${devs.length} / ${lim})</h4>
+    ${devs.length ? devs.map(d => `
+      <div class="it" style="padding:10px 12px;margin-bottom:6px">
+        <span class="devh"><i class="${d.online ? 'on' : ''}"></i></span>
+        <div class="b">
+          <b>${esc(d.name || T('TV kutusu'))}</b>
+          <span>${d.online ? '<span style="color:var(--ok)">● Çevrimiçi</span>' : '<span style="color:var(--mute)">○ Çevrimdışı</span>'}${d.app ? ' · ' + esc(d.app) : ''}</span>
+        </div>
+        ${d.old ? `<span class="tag warn" title="Yayındaki APK: ${esc(D.system && D.system.apk || '')}">${T('eski sürüm')}</span>` : '<span class="tag ok" style="font-size:11px">güncel</span>'}
+      </div>
+    `).join('') : '<div style="color:var(--mute);font-size:12.5px;padding:6px 0">Henüz bağlı bir TV kutusu veya ekran bulunmuyor.</div>'}
+  </div>
+
+  <!-- Kart 3: İşletme & İletişim Bilgileri -->
+  <div class="d-card">
+    <h4>${ic('building-2')} İşletme ve Giriş Bilgileri</h4>
+    <div class="row">${field('İşletme adı', 'e-name', x.name)}${field('Telefon', 'e-phone', x.phone || '')}</div>
+    <div class="row">${field('Kullanıcı adı (giriş)', 'e-user', x.owner || '', 'autocomplete="off" autocapitalize="none"')}${field('E-posta (durum uyarıları)', 'e-mail', x.email || '', 'type="email"')}</div>
+    <div><label>Yönetici Notu</label><textarea id="e-note" rows="2" style="font-size:13px" placeholder="Müşteriyle ilgili dahili notlar (yalnızca süper admin görür)...">${esc(x.note || '')}</textarea></div>
+  </div>
+
+  <!-- Kart 4: Abonelik, Paket ve Süre -->
+  <div class="d-card">
+    <h4>${ic('calendar-clock')} Paket, Durum ve Süre</h4>
+    <div class="row">
+      <div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div>
+      <div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      ${field('Cihaz limiti (TV sayısı)', 'e-devs', x.customDevices || x.deviceLimit || 1, 'type="number" min="1" max="999"')}
+    </div>
+    <div class="row">
+      <div>
+        <label>Deneme bitiş tarihi</label>
+        <input id="e-trial" value="${d(x.trialUntil)}" type="date">
+        <div style="display:flex;gap:4px;margin-top:5px">
+          <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',3)">+3 gün</button>
+          <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',7)">+7 gün</button>
+          <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',14)">+14 gün</button>
+        </div>
+      </div>
+      <div>
+        <label>Ödeme / Lisans bitiş tarihi</label>
+        <input id="e-paid" value="${d(x.paidUntil)}" type="date">
+        <div style="display:flex;gap:4px;margin-top:5px">
+          <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',30)">+30 gün</button>
+          <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',90)">+90 gün</button>
+          <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',365)">+1 yıl</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kart 5: Özel İzinler & Zincir Ayarları -->
+  <div class="d-card">
+    <h4>${ic('shield-check')} Özel Yetkiler & Şube Ayarları</h4>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px 12px;border-radius:var(--r-m);background:var(--panel);border:1px solid var(--line);cursor:pointer">
+      <input type="checkbox" id="e-unl" ${x.unlimited ? 'checked' : ''} style="margin-top:3px">
+      <span><b>Sınırsız Lisans (Kendi İşletmem)</b><br><span class="hint" style="margin:0;font-size:12px">Süre dolmaz; tüm özellikler açık; cihaz, kullanıcı ve depolama limiti uygulanmaz.</span></span>
+    </label>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px 12px;border-radius:var(--r-m);background:var(--panel);border:1px solid var(--line);cursor:pointer">
+      <input type="checkbox" id="e-sup" ${x.superAccess ? 'checked' : ''} style="margin-top:3px">
+      <span><b>Süper Yönetim Yetkisi</b><br><span class="hint" style="margin:0;font-size:12px">Bu kullanıcının sadmin adresinden tüm platformu yönetmesine izin verir.</span></span>
+    </label>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px 12px;border-radius:var(--r-m);background:var(--panel);border:1px solid var(--line);cursor:pointer">
+      <input type="checkbox" id="e-test" ${x.canTest ? 'checked' : ''} style="margin-top:3px">
+      <span><b>Test Ortamı Geçiş Düğmesi</b><br><span class="hint" style="margin:0;font-size:12px">Ekran menüsünde "Test ortamına geç" seçeneği gösterilir.</span></span>
+    </label>
+    ${x.org ? `<label style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r-m);background:rgba(var(--a2),.1);border:1px solid var(--accent2);cursor:pointer"><input type="checkbox" id="e-org"> <b>Paket, durum ve süreyi zincirin TÜM şubelerine uygula</b></label>` : ''}
+  </div>
+
+  <!-- Kart 6: Tehlikeli İşlemler -->
+  <div class="d-card" style="border-color:rgba(238,91,79,.3)">
+    <h4>${ic('lock')} Hesap Güvenliği & Silme</h4>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <b style="font-size:13px">Şifre Sıfırlama</b>
+        <p class="hint" style="margin:2px 0 0;font-size:12px">Kullanıcı için yeni bir rastgele şifre üretir.</p>
+      </div>
+      <button class="btn ghost sm" onclick="resetPw('${id}')">${ic('key-round')} Şifre Sıfırla</button>
+    </div>
+    <div style="height:1px;background:var(--line);margin:12px 0"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <b style="font-size:13px;color:var(--bad)">İşletmeyi Kalıcı Olarak Sil</b>
+        <p class="hint" style="margin:2px 0 0;font-size:12px">Tüm medya, ayarlar ve ekranlar kalıcı olarak silinir.</p>
+      </div>
+      <button class="btn danger sm" onclick="delT('${id}')">${ic('trash-2')} İşletmeyi Sil</button>
+    </div>
+  </div>
+
+  <!-- Sabit Alt Butonlar -->
+  <div class="d-foot">
+    <button class="btn ghost" onclick="closeDrawer()">Vazgeç</button>
+    <button class="btn" onclick="saveT('${id}')">${ic('circle-check')} Değişiklikleri Kaydet</button>
+  </div>`);
+
+  api('GET', `/tenants/${id}/stats?days=30`).then(j => {
+    const el = $('dstats');
+    if (el) el.innerHTML = stat(hrs(j.totals.online) + ' ' + T('saat'), 'Ekran süresi') + stat(nf(j.totals.plays), 'Oynatma') + stat(nf(j.totals.scans), 'QR okutma');
+  }).catch(() => {});
 }
+
 const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
 async function saveT(id) {
-  try { await api('PUT', '/tenants/' + id, { name: $('e-name').value, phone: $('e-phone').value, plan: $('e-plan').value, devices: Number($('e-devs').value) || 1, status: $('e-status').value, trialUntil: dateMs($('e-trial').value), paidUntil: dateMs($('e-paid').value), note: $('e-note').value, username: $('e-user').value, email: $('e-mail').value, unlimited: $('e-unl').checked, superAccess: $('e-sup').checked, canTest: $('e-test').checked, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast('Kaydedildi'); await load(); }
-  catch (e) { toast(e.message, true); }
+  try {
+    await api('PUT', '/tenants/' + id, {
+      name: $('e-name').value,
+      phone: $('e-phone').value,
+      plan: $('e-plan').value,
+      devices: Number($('e-devs').value) || 1,
+      status: $('e-status').value,
+      trialUntil: dateMs($('e-trial').value),
+      paidUntil: dateMs($('e-paid').value),
+      note: $('e-note').value,
+      username: $('e-user').value,
+      email: $('e-mail').value,
+      unlimited: $('e-unl').checked,
+      superAccess: $('e-sup').checked,
+      canTest: $('e-test').checked,
+      applyOrg: !!($('e-org') && $('e-org').checked)
+    });
+    closeDrawer();
+    toast('Kaydedildi');
+    await load();
+  } catch (e) { toast(e.message, true); }
 }
-async function extend(id, days) { try { await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) }); closeDrawer(); toast(`${days} gün eklendi`); await load(); } catch (e) { toast(e.message, true); } }
+
+async function extend(id, days) {
+  try {
+    await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) });
+    closeDrawer();
+    toast(`${days} gün eklendi`);
+    await load();
+  } catch (e) { toast(e.message, true); }
+}
+
 async function resetPw(id) {
-  const pw = await UI.ask('Yeni şifre (boş bırakırsanız rastgele üretilir):', { input: '', ok: 'Şifreyi sıfırla' }); if (pw === null) return;
-  try { const j = await api('POST', `/tenants/${id}/password`, { password: pw }); UI.ask(`${T('Kullanıcı')}: ${j.username}\n${T('Yeni şifre')}: ${j.password}`, { title: 'Yeni şifre', cancel: 'Kapat', ok: 'Kopyala' }).then(ok => { if (ok) navigator.clipboard.writeText(j.password).then(() => toast('Kopyalandı')).catch(() => {}); }); } catch (e) { toast(e.message, true); }
+  const pw = await UI.ask('Yeni şifre (boş bırakırsanız rastgele üretilir):', { input: '', ok: 'Şifreyi sıfırla' });
+  if (pw === null) return;
+  try {
+    const j = await api('POST', `/tenants/${id}/password`, { password: pw });
+    UI.ask(`${T('Kullanıcı')}: ${j.username}\n${T('Yeni şifre')}: ${j.password}`, { title: 'Yeni şifre', cancel: 'Kapat', ok: 'Kopyala' }).then(ok => {
+      if (ok) navigator.clipboard.writeText(j.password).then(() => toast('Kopyalandı')).catch(() => {});
+    });
+  } catch (e) { toast(e.message, true); }
 }
+
 async function delT(id) {
   const x = D.tenants.find(t => t.id === id);
-  const c = await UI.ask(`${T('Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler.')}\n${T('Onaylamak için işletme adını aynen yazın')}: ${x.name}`, { input: '', ok: 'Sil', danger: true }); if (c === null) return;
-  try { await api('DELETE', '/tenants/' + id, { confirm: c }); closeDrawer(); toast('Silindi'); await load(); } catch (e) { toast(e.message, true); }
+  const c = await UI.ask(`${T('Bu işlem işletmenin tüm verilerini ve medyasını kalıcı olarak siler.')}\n${T('Onaylamak için işletme adını aynen yazın')}: ${x.name}`, { input: '', ok: 'Sil', danger: true });
+  if (c === null) return;
+  try {
+    await api('DELETE', '/tenants/' + id, { confirm: c });
+    closeDrawer();
+    toast('Silindi');
+    await load();
+  } catch (e) { toast(e.message, true); }
 }
-async function imp(id) { try { const j = await api('POST', `/tenants/${id}/impersonate`); location.href = j.next; } catch (e) { toast(e.message, true); } }
+
+async function imp(id) {
+  try {
+    const j = await api('POST', `/tenants/${id}/impersonate`);
+    location.href = j.next;
+  } catch (e) { toast(e.message, true); }
+}
 
 /* ================= İSTATİSTİK ================= */
 PAGES.stats = {
