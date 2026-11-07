@@ -453,7 +453,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
                 layoutParams = LinearLayout.LayoutParams(dotSz, dotSz).apply { rightMargin = (vw * 0.35f).toInt() }
             }
             addView(dot)
-            val lbl = tv("CANLI TRAFİK", 1.0f, (pal ?: Palette(s)).soft, true).apply {
+            val lbl = tv("CANLI TRAFİK", 1.0f, (pal ?: Palette(s)).mute, true).apply {
                 letterSpacing = 0.14f
             }
             addView(lbl)
@@ -509,7 +509,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
                 cornerRadius = vh * 3f
                 setStroke(max(1, (vh * 0.1f).toInt()), Color.argb(35, 255, 255, 255))
             }
-            addView(tv("AKICI", 1.2f, (pal ?: Palette(s)).soft, true))
+            addView(tv("AKICI", 1.2f, (pal ?: Palette(s)).mute, true))
             val bar = View(context).apply {
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(
                     Color.parseColor("#3ECF4A"),
@@ -523,7 +523,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
                 }
             }
             addView(bar)
-            addView(tv("YOĞUN", 1.2f, (pal ?: Palette(s)).soft, true))
+            addView(tv("YOĞUN", 1.2f, (pal ?: Palette(s)).mute, true))
         }
         fl.addView(legend, FrameLayout.LayoutParams(-1, -2).apply {
             gravity = Gravity.BOTTOM
