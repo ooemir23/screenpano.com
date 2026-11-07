@@ -158,9 +158,9 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             fun chg(v: Double?): SpannableStringBuilder? {
                 if (v == null) return null
                 val up = v > 0.005; val dn = v < -0.005
-                val str = (if (up) "▲ " else if (dn) "▼ " else "• ") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
+                val str = (if (up) "+" else if (dn) "-" else "") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
                 return SpannableStringBuilder(str).apply {
-                    setSpan(RunSpan(vh * 1.15f, if (up) Color.parseColor("#34d399") else if (dn) Color.parseColor("#f87171") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(RunSpan(vh * 1.3f, if (up) Color.parseColor("#34d399") else if (dn) Color.parseColor("#f87171") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
             data class Cell(val name: String, val change: Double?, val value: String, val unit: String)
@@ -183,11 +183,6 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 }
                 val head = SpannableStringBuilder(c.name).apply {
                     setSpan(RunSpan(vh * 1.35f, p.accent2, true, 0.05f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    val cSpan = chg(c.change)
-                    if (cSpan != null) {
-                        append(" ")
-                        append(cSpan)
-                    }
                 }
                 col.addView(FitSpanText(context).apply {
                     text = head
@@ -197,11 +192,16 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 })
 
                 val vtxt = SpannableStringBuilder(c.value).apply {
-                    setSpan(RunSpan(vh * 2.4f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(RunSpan(vh * 2.2f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     if (c.unit.isNotEmpty()) {
                         val a = length
                         append(" " + c.unit)
-                        setSpan(RunSpan(vh * 1.5f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        setSpan(RunSpan(vh * 1.4f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                    val cSpan = chg(c.change)
+                    if (cSpan != null) {
+                        append(" ")
+                        append(cSpan)
                     }
                 }
                 col.addView(FitSpanText(context).apply {
