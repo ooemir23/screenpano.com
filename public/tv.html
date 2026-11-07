@@ -1131,46 +1131,99 @@ const img = imgs[0]; // geriye dönük uyumluluk
 let videos = [], idx = 0, current = null, imageSeconds = 10, timer, prepared = { id: null };
 const bgc = document.getElementById('bgc'), bctx = bgc.getContext('2d');
 // Fragmanlar: her 4 içerikte bir (en az 8 dk arayla) sinemadaki filmlerin fragmanı sessiz oynar
-let trailerList = [], trailerIdx = 0, trailerPlays = 0, trailerAt = 0, trailerOn = false, trailerTimer;
+let trailerList = [], trailerIdx = 0, trailerPlays = 0, trailerAt = 0, trailerOn = false;
+let trailerTimer, trailerHandshakeTimer, trailerStallTimer;
+let trailerDur = 0, trailerCurTime = 0;
 const trailerEl = document.getElementById('trailer');
-let trailerTry = 0, trailerCur = null;
+let trailerTry = 0, trailerCur = null, trailerFails = 0, trailerSeen = false;
 function endTrailer() {
   if (!trailerOn) return;
-  trailerOn = false; clearTimeout(trailerTimer); trailerEl.classList.remove('on'); trailerEl.innerHTML = '';
-  trailerAt = Date.now(); trailerPlays = 0;
+  trailerOn = false;
+  clearTimeout(trailerTimer);
+  clearTimeout(trailerStallTimer);
+  clearInterval(trailerHandshakeTimer);
+  trailerDur = 0; trailerCurTime = 0;
+  trailerEl.classList.remove('on');
+  trailerEl.innerHTML = '';
+  trailerAt = Date.now();
+  trailerPlays = 0;
   if (NMED()) { window.__N.mediaResume(); return; }
   idx++; play();
 }
 function trailerError() { // video bu ülkede/gömülü oynatılamıyor: aynı filmin yedek fragmanını dene, yoksa sıradaki filme geç, hepsi başarısızsa döngüye dön
+  clearTimeout(trailerStallTimer);
+  clearInterval(trailerHandshakeTimer);
   const alts = (trailerCur && trailerCur.alts) || [];
   if (trailerCur && ++trailerTry < alts.length) return showTrailer(trailerCur, alts[trailerTry]);
   if (++trailerFails < trailerList.length) return playTrailer(true);
   endTrailer();
 }
-let trailerFails = 0, trailerSeen = false;
 addEventListener('message', e => {
-  if (!trailerOn || !/youtube\.com$/.test(new URL(e.origin).hostname)) return;
-  // yalnız fragman oynatıcısının mesajları: müzik oynatıcısı da YouTube'dan mesaj gönderir (liste değişince "bitti/hazır" olayları fragmanı kesiyordu)
-  const fr = trailerEl.querySelector('iframe'); if (!fr || e.source !== fr.contentWindow) return;
+  if (!trailerOn) return;
+  let org = '';
+  try { org = e.origin ? new URL(e.origin).hostname : ''; } catch (x) {}
+  if (!org || (!org.endsWith('youtube.com') && !org.endsWith('youtube-nocookie.com'))) return;
+  let d;
+  try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+  if (!d) return;
+
+  const fr = trailerEl.querySelector('iframe');
+  const isTr = (fr && e.source === fr.contentWindow) || d.id === 'tr_player' || d.channel === 'tr_player';
+  if (!isTr && e.source !== null) return;
+
   try {
-    const d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-    if (d.event === 'onStateChange' && d.info === 0) endTrailer();
-    else if (d.event === 'infoDelivery' && d.info && d.info.duration > 5 && d.info.currentTime > 0) {
+    if (d.event === 'onError') return trailerError();
+
+    // YouTube'dan süre bilgisi gelince video bitişinden 0.8 sn öncesine kesin zamanlayıcı kur (öneri ekranı ASLA görünmez)
+    if (d.info && typeof d.info.duration === 'number' && d.info.duration > 3) {
+      trailerDur = d.info.duration;
+      clearTimeout(trailerTimer);
+      const remain = Math.max(0.5, trailerDur - (d.info.currentTime || 0) - 0.8);
+      trailerTimer = setTimeout(endTrailer, remain * 1000);
+    }
+
+    if (d.info && typeof d.info.currentTime === 'number' && d.info.currentTime > 0) {
       trailerSeen = true;
-      if (d.info.currentTime >= d.info.duration - 1.2) endTrailer();
-    } else if (d.event === 'onError') trailerError();
+      trailerCurTime = d.info.currentTime;
+      if (trailerDur > 0 && trailerCurTime >= trailerDur - 0.8) return endTrailer();
+    }
+
+    // Video bittiğinde (0) veya biterken duraklatıldığında (2) hemen kapat
+    if (d.event === 'onStateChange') {
+      if (d.info === 0) return endTrailer();
+      if (d.info === 2 && trailerDur > 0 && trailerCurTime >= trailerDur - 2) return endTrailer();
+    }
+    if (d.info && d.info.playerState === 0) return endTrailer();
   } catch (x) {}
 });
-// YouTube altyazıları (otomatik İngilizce dahil) kapatılır: modül geç yüklenebildiği için birkaç kez denenir
-function ytHandshake(f) {
-  const send = o => { try { f.contentWindow.postMessage(JSON.stringify(o), '*'); } catch (e) {} };
-  send({ event: 'listening', id: 1 });
-}
 function showTrailer(m, key) {
-  trailerEl.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/${encodeURIComponent(key)}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&cc_load_policy=0&hl=tr&cc_lang_pref=tr&iv_load_policy=3&disablekb=1&fs=0&enablejsapi=1" onload="ytHandshake(this)"></iframe><div class="tt"><small>BU HAFTA VİZYONDA${m.date ? ' · ' + esc(trDate(m.date)) : ''}</small>${esc(m.title)}</div>`;
-  trailerEl.classList.add('on'); trailerSeen = false;
+  trailerDur = 0; trailerCurTime = 0; trailerSeen = false;
+  const pageOrigin = (location.origin && location.origin !== 'null') ? location.origin : 'https://screenpano.com';
+  const url = `https://www.youtube.com/embed/${encodeURIComponent(key)}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&cc_load_policy=0&hl=tr&iv_load_policy=3&disablekb=1&fs=0&enablejsapi=1&origin=${encodeURIComponent(pageOrigin)}&widgetid=1`;
+  trailerEl.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="${url}"></iframe><div class="tt"><small>BU HAFTA VİZYONDA${m.date ? ' · ' + esc(trDate(m.date)) : ''}</small>${esc(m.title)}</div>`;
+  trailerEl.classList.add('on');
+
   clearTimeout(trailerTimer);
-  trailerTimer = setTimeout(endTrailer, 3 * 60 * 1000); // bitiş haberi gelmezse en çok 3 dk
+  // Süre bilgisi hiç gelmezse tavan süre 95 sn (YouTube öneri ekranında 3 dk beklemeyi önler)
+  trailerTimer = setTimeout(endTrailer, 95 * 1000);
+
+  // Video 9 saniyede başlamazsa (engelli video) alternatif fragmana geç
+  clearTimeout(trailerStallTimer);
+  trailerStallTimer = setTimeout(() => {
+    if (trailerOn && !trailerSeen) trailerError();
+  }, 9000);
+
+  // YouTube iframe hazır olana kadar her 300 ms'de bir el sıkışma gönder
+  clearInterval(trailerHandshakeTimer);
+  trailerHandshakeTimer = setInterval(() => {
+    if (!trailerOn) { clearInterval(trailerHandshakeTimer); return; }
+    const fr = trailerEl.querySelector('iframe');
+    if (!fr || !fr.contentWindow) return;
+    try {
+      fr.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 'tr_player' }), '*');
+      fr.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*');
+    } catch (e) {}
+  }, 300);
 }
 function playTrailer(retry) {
   exoStop(true);
