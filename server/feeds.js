@@ -72,11 +72,14 @@ async function refreshRates() {
   const pv = t => (parts.find(p => p.type === t) || {}).value;
   const mins = Number(pv('hour')) * 60 + Number(pv('minute')), weekday = !['Sat', 'Sun'].includes(pv('weekday'));
   const marketOpen = weekday && mins >= 9 * 60 + 30 && mins <= 18 * 60 + 30;
-  if (cacheAge('rates:gold') > (marketOpen ? 15 * MIN : 2 * HOUR) || rates.bist == null) {
+  if (rates.usdCh == null || rates.bist == null || cacheAge('rates:gold') > (marketOpen ? 15 * MIN : 2 * HOUR)) {
     try {
       const g = await (await fetch('https://finans.truncgil.com/v4/today.json')).json();
       rates = { ...rates, gold: Number(g.GRA.Selling), goldCh: Number(g.GRA.Change) };
-      if (g.XU100 && Number(g.XU100.Selling) > 0) rates = { ...rates, bist: Number(g.XU100.Selling), bistCh: Number(g.XU100.Change) };
+      if (g.XU100 && Number(g.XU100.Selling) > 0) { rates.bist = Number(g.XU100.Selling); rates.bistCh = Number(g.XU100.Change); }
+      if (g.USD && Number(g.USD.Selling) > 0) { rates.usd = Number(g.USD.Selling); rates.usdCh = Number(g.USD.Change); }
+      if (g.EUR && Number(g.EUR.Selling) > 0) { rates.eur = Number(g.EUR.Selling); rates.eurCh = Number(g.EUR.Change); }
+      if (g.GBP && Number(g.GBP.Selling) > 0) { rates.gbp = Number(g.GBP.Selling); rates.gbpCh = Number(g.GBP.Change); }
       cachePut('rates:gold', true); cachePut('rates', rates);
       hub.send(() => true, { type: 'rates', rates });
     } catch (e) { console.error('Altın/BIST alınamadı:', e.message); }

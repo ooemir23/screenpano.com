@@ -159,8 +159,16 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             val r = s.raw.optJSONObject("rates") ?: JSONObject()
             data class Cell(val name: String, val change: Double?, val value: String, val unit: String)
             val sets = listOf(
-                listOf(Cell("USD", null, f(r.num("usd")), "₺"), Cell("EUR", null, f(r.num("eur")), "₺"), Cell("ALTIN", r.num("goldCh"), f(r.num("gold"), 0), "₺")),
-                listOf(Cell("BIST 100", r.num("bistCh"), f(r.num("bist"), 0), ""), Cell("BITCOIN", r.num("btcCh"), r.num("btc")?.let { "$" + f(it, 0) } ?: "--", ""), Cell("STERLİN", null, f(r.num("gbp")), "₺")),
+                listOf(
+                    Cell("USD", r.num("usdCh"), f(r.num("usd")), "₺"),
+                    Cell("EUR", r.num("eurCh"), f(r.num("eur")), "₺"),
+                    Cell("ALTIN", r.num("goldCh"), f(r.num("gold"), 0), "₺")
+                ),
+                listOf(
+                    Cell("BIST 100", r.num("bistCh"), f(r.num("bist"), 0), ""),
+                    Cell("BITCOIN", r.num("btcCh"), r.num("btc")?.let { "$" + f(it, 0) } ?: "--", ""),
+                    Cell("STERLİN", r.num("gbpCh"), f(r.num("gbp")), "₺")
+                ),
             )
             val row = LinearLayout(context).apply {
                 orientation = HORIZONTAL
@@ -178,27 +186,53 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                     gravity = Gravity.CENTER_HORIZONTAL
                     clipChildren = true
                     clipToPadding = true
-                    setPadding((vh * 0.4f).toInt(), 0, (vh * 0.4f).toInt(), 0)
+                    setPadding((vh * 0.25f).toInt(), (vh * 0.1f).toInt(), (vh * 0.25f).toInt(), (vh * 0.1f).toInt())
                 }
                 col.addView(ShrinkText(context, vh * 20f).apply {
                     text = c.name
-                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * (if (isSolo) 1.6f else 1.35f))
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * (if (isSolo) 1.45f else 1.3f))
                     setTextColor(p.accent2)
                     includeFontPadding = false
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    letterSpacing = 0.04f
+                    letterSpacing = 0.06f
                     setSingleLine(true)
                     gravity = Gravity.CENTER
                 }, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
 
+                col.addView(AutoFitRateText(context, vh, p, c.value, c.unit, isSolo), LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f).apply {
+                    topMargin = (vh * 0.15f).toInt()
+                    bottomMargin = (vh * 0.15f).toInt()
+                })
+
                 val chgStr = c.change?.let { (if (it > 0.005) "+" else if (it < -0.005) "-" else "") + String.format(Locale("tr", "TR"), "%.1f", abs(it)) + "%" }
                 val chgColor = if (c.change != null) (if (c.change > 0.005) Color.parseColor("#34d399") else if (c.change < -0.005) Color.parseColor("#f87171") else p.mute) else 0
 
-                col.addView(AutoFitRateText(context, vh, p, c.value, c.unit, chgStr, chgColor, isSolo), LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.25f).toInt() })
+                val badgeView = TextView(context).apply {
+                    setSingleLine(true)
+                    gravity = Gravity.CENTER
+                    includeFontPadding = false
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.05f)
+                    if (chgStr != null) {
+                        text = chgStr
+                        setTextColor(chgColor)
+                        background = GradientDrawable().apply {
+                            setColor(if (c.change != null && c.change > 0.005) Color.argb(41, 52, 211, 153) else if (c.change != null && c.change < -0.005) Color.argb(41, 248, 113, 113) else Color.argb(15, 255, 255, 255))
+                            cornerRadius = vh * 0.35f
+                        }
+                        setPadding((vh * 0.45f).toInt(), (vh * 0.08f).toInt(), (vh * 0.45f).toInt(), (vh * 0.08f).toInt())
+                    } else {
+                        text = ""
+                        visibility = View.INVISIBLE
+                    }
+                }
+                col.addView(badgeView, LayoutParams(LayoutParams.WRAP_CONTENT, (vh * 1.3f).toInt()).apply {
+                    gravity = Gravity.CENTER_HORIZONTAL
+                })
 
-                row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
+                row.addView(col, LayoutParams(0, LayoutParams.MATCH_PARENT, 1f))
             }
-            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = if (wx != null && props?.optBoolean("weather", true) != false) gap else 0 })
+            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT).apply { topMargin = if (wx != null && props?.optBoolean("weather", true) != false) gap else 0 })
         }
     }
 
@@ -274,15 +308,13 @@ internal class ShrinkText(context: Context, private val capPx: Float) : TextView
 }
 
 
-/** Tek satır kur/fiyat yazısı: fiyat, birim ve yüzde sütuna sığmazsa font boyutu orantılı küçülür; komşu sütuna taşmaz, kesilmez. */
+/** Tek satır kur/fiyat yazısı: fiyat ve birim sütuna sığmazsa font boyutu orantılı küçülür; komşu sütuna taşmaz, kesilmez. */
 internal class AutoFitRateText(
     context: Context,
     private val vh: Float,
     private val p: Palette,
     private val valText: String,
     private val unitText: String,
-    private val chgText: String?,
-    private val chgColor: Int,
     private val isSolo: Boolean = false
 ) : TextView(context) {
     private var lastAvail = -1f
@@ -295,35 +327,25 @@ internal class AutoFitRateText(
     }
 
     private fun calcWidth(scale: Float): Float {
-        val baseSize = vh * (if (isSolo) 2.6f else 2.1f) * scale
+        val baseSize = vh * (if (isSolo) 2.9f else 2.3f) * scale
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { isFakeBoldText = true; textSize = baseSize }
         var total = tp.measureText(valText)
         if (unitText.isNotEmpty()) {
-            tp.textSize = baseSize * 0.65f
+            tp.textSize = baseSize * 0.62f
             tp.isFakeBoldText = false
             total += tp.measureText(" $unitText")
-        }
-        if (chgText != null) {
-            tp.textSize = baseSize * 0.55f
-            tp.isFakeBoldText = true
-            total += tp.measureText(" $chgText")
         }
         return total
     }
 
     private fun applyScale(scale: Float) {
-        val baseSize = vh * (if (isSolo) 2.6f else 2.1f) * scale
+        val baseSize = vh * (if (isSolo) 2.9f else 2.3f) * scale
         val s = SpannableStringBuilder(valText).apply {
             setSpan(RunSpan(baseSize, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             if (unitText.isNotEmpty()) {
                 val a = length
                 append(" $unitText")
-                setSpan(RunSpan(baseSize * 0.65f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            }
-            if (chgText != null) {
-                val a = length
-                append(" $chgText")
-                setSpan(RunSpan(baseSize * 0.55f, chgColor, true, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(RunSpan(baseSize * 0.62f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
         text = s
@@ -333,11 +355,11 @@ internal class AutoFitRateText(
         val mode = MeasureSpec.getMode(widthMeasureSpec)
         val size = MeasureSpec.getSize(widthMeasureSpec)
         if (mode != MeasureSpec.UNSPECIFIED && size > 0) {
-            val avail = (size - paddingLeft - paddingRight - (vh * 0.4f)).coerceAtLeast(10f)
+            val avail = (size - paddingLeft - paddingRight - (vh * 0.3f)).coerceAtLeast(10f)
             if (abs(avail - lastAvail) > 1f) {
                 lastAvail = avail
                 val fullW = calcWidth(1.0f)
-                val scale = if (fullW > avail) (avail / fullW).coerceIn(0.52f, 1.0f) else 1.0f
+                val scale = if (fullW > avail) (avail / fullW).coerceIn(0.60f, 1.0f) else 1.0f
                 applyScale(scale)
             }
         }
