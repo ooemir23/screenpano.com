@@ -66,7 +66,7 @@ const liveFor = t => load().filter(a => trialOn(a, t) || (status(a) === 'live' &
 // Medya döngüsüne reklam ekler: her reklam "every" içerikte bir, görselleri sırayla. Ekranda başka içerik yoksa yalnız reklamlar döner.
 function inject(t, list) {
   const ads = liveFor(t); if (!ads.length) return list;
-  const pools = ads.map(a => ({ items: a.creatives.map(c => ({ id: 'pad:' + c.id, name: a.title || a.advertiser, url: '/u/ads/' + c.file, type: c.type, dur: c.type === 'video' ? (c.dur || a.dur || 15) : (a.dur || 10), sch: null, ad: true })), k: 0, every: trialOn(a, t) ? 1 : Math.max(1, Math.min(50, Number(a.every) || 4)) }));
+  const pools = ads.map(a => ({ items: a.creatives.map(c => c.type === 'youtube' ? ({ id: 'pad:' + c.id, name: a.title || a.advertiser, type: 'youtube', yt: c.yt, url: require('./ytlink').thumb(c.yt), dur: c.dur || a.dur || 30, sch: null, ad: true }) : ({ id: 'pad:' + c.id, name: a.title || a.advertiser, url: '/u/ads/' + c.file, type: c.type, dur: c.type === 'video' ? (c.dur || a.dur || 15) : (a.dur || 10), sch: null, ad: true })), k: 0, every: trialOn(a, t) ? 1 : Math.max(1, Math.min(50, Number(a.every) || 4)) }));
   if (!list.length) return pools.flatMap(p => p.items);
   const out = [];
   list.forEach((v, i) => {
@@ -244,6 +244,14 @@ function routes(r) {
       try { f.a.creatives.push(await prepare(x)); } catch (e) { errs.push(e.message); }
     }
     save(f.list); pushAll(); res.json({ ok: true, errors: errs, ad: derive(f.a) });
+  });
+  // YouTube bağlantısı: reklam içeriği olarak eklenir, TV'de gömülü oynatıcıyla belirtilen süre oynar
+  r.post('/pads/:id/youtube', async (req, res) => {
+    const f = find(req, res); if (!f) return; const yt = require('./ytlink'), id = yt.parse((req.body || {}).url);
+    if (!id) return res.status(400).json({ error: 'Geçerli bir YouTube bağlantısı girin' });
+    if (f.a.creatives.length >= 12) return res.status(400).json({ error: 'En fazla 12 görsel' });
+    f.a.creatives.push({ id: auth.uid(10), type: 'youtube', yt: id, name: (await yt.title(id)) || 'YouTube videosu', dur: yt.clampDur((req.body || {}).dur) });
+    save(f.list); pushAll(); res.json({ ok: true, ad: derive(f.a) });
   });
   // Görsel/video sırası: gönderilen kimlik listesine göre yeniden dizilir
   r.put('/pads/:id/media-order', (req, res) => {

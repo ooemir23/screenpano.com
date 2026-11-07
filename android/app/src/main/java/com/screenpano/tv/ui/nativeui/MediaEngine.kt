@@ -12,6 +12,8 @@ interface MediaHost {
     fun playVideo(url: String, startMs: Long)
     fun showPhoto(url: String, done: (Boolean) -> Unit)
     fun showPoster(item: JSONObject, lang: String, done: (Boolean) -> Unit)
+    /** YouTube bağlantılı içerik: sayfadaki gömülü oynatıcı gösterir (süreyi motor sayar). */
+    fun showWeb(item: JSONObject)
     /** Yerel medya katmanları kalkar; sayfa yeniden opak olur. */
     fun release()
     /** Sayfanın medya sınırında çalışmasını ister (kampanya / büyük maç / fragman kararı). Dönüş: "go" | "hold" | null. */
@@ -178,6 +180,10 @@ class MediaEngine(private val h: MediaHost) {
             "video" -> {
                 if (!keepClock) h.playVideo(it.optString("url"), elapsedMs)
                 left = maxOf(dur + 15000L, 45000L) - elapsedMs // bitiş olayı gelmezse güvenlik süresi
+            }
+            "youtube" -> {
+                if (!keepClock) h.showWeb(it)
+                left = dur + (if (online) 2500L else 0L) - elapsedMs
             }
             "poster" -> {
                 h.showPoster(it, lang) { ok -> if (my == tok && !ok) handler.post { if (my == tok) boundary() } }

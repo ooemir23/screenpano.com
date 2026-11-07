@@ -62,6 +62,8 @@ const langList = db => ['tr', ...(((db.lang || {}).list) || []).filter(l => l !=
 // Medya döngüsü: videolar, fotoğraflar, hazır afişler (+ Instagram paylaşımları araya serpiştirilir)
 // Medya kaydı -> ekrana giden öğe (reklam görselleri de aynı biçimle gider)
 function mediaItem(t, v) {
+  // YouTube bağlantısı: TV gömülü oynatıcıyla gösterir; url eski uygulamalar için kapak görseli (süre boyunca fotoğraf gibi görünür)
+  if (v.type === 'youtube') return { id: v.id, name: v.name, type: 'youtube', yt: v.yt, url: require('./ytlink').thumb(v.yt), dur: v.dur || 30, sch: v.sch || null };
   if (v.type === 'poster') return { id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null };
   return { id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null };
 }

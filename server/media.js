@@ -30,7 +30,7 @@ async function backfillDurations() {
   for (const t of tenants.all()) {
     let dirty = false;
     for (const v of t.db.videos) {
-      if (v.type === 'image' || v.type === 'poster' || v.dur || v.status === 'processing') continue;
+      if (v.type === 'image' || v.type === 'poster' || v.type === 'youtube' || v.dur || v.status === 'processing') continue;
       let src = path.join(t.dirs.uploads, v.file);
       if (!fs.existsSync(src)) { try { src = await require('./storage').ensureLocal(t, v.file); } catch (e) { src = null; } }
       if (!src || !fs.existsSync(src)) continue;

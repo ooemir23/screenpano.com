@@ -651,6 +651,8 @@ SECTIONS.media = {
     return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; saat simgesiyle gün ve saat verin.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']])
       + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV için otomatik küçültülür; hazır olunca ekrana girer.',
         `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div><div class="row mt" style="align-items:center"><span class="muted" style="flex:1;font-size:13px">Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın.</span><button class="btn g s" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
+      + card('YouTube bağlantısı ekle', 'Bir YouTube videosunun bağlantısını yapıştırın; ekranda sırası gelince belirttiğiniz süre boyunca oynar (video kısaysa baştan döner). Ses kapalı oynar.',
+        `<div class="row" style="align-items:center;gap:8px"><input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><input type="number" id="yt-dur" min="5" max="3600" value="30" style="width:90px" title="Süre (saniye)"><span class="muted">saniye</span><button class="btn" onclick="addYt()">Ekle</button></div>`)
       + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div id="mbulk" class="mbulk" hidden></div><div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile${MSEL.has(x.id) ? ' picked' : ''}" draggable="true" data-id="${x.id}">
           <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
           <div class="m"><span class="grip" title="Sürükleyerek sıralayın">${ic('grip-vertical')}</span><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g ib" onclick="openSched('video','${x.id}')" title="Zamanla">${ic('clock')}</button><button class="btn xs g ib" onclick="tileMenu(event,'${x.id}')" title="Diğer işlemler">${ic('ellipsis')}</button></div></div>`).join('')}</div>`
@@ -746,7 +748,12 @@ async function delMedia(ids) {
   }
 }
 const togHide = id => { const v = S.db.videos.find(x => x.id === id); act('PUT', '/videos/' + id, { hidden: !v.hidden }, v.hidden ? 'Ekranda gösteriliyor' : 'Gizlendi; ekranda oynamaz'); };
-function pvMedia(i) { const v = S.db.videos[i], u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
+async function addYt() {
+  const url = $('yt-url').value.trim(); if (!url) return toast('Bağlantıyı yapıştırın', true);
+  const ok = await act('POST', '/videos/youtube', { url, dur: $('yt-dur').value }, 'YouTube içeriği eklendi');
+  if (ok) refresh();
+}
+function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return openModal(`<iframe src="https://www.youtube.com/embed/${esc(v.yt)}?rel=0" style="width:100%;aspect-ratio:16/9;border:0" allow="encrypted-media"></iframe><div class="muted">${i + 1}. ${esc(v.name)}</div>`); const u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
 
 /* ================= FİYAT LİSTESİ ================= */
 let MENU = null;
@@ -1432,6 +1439,7 @@ async function saveSched(kind, id, clear) {
 const themeVars = () => { const th = S.me.tenant.theme || {}; return `--bg:${th.bg};--accent:${th.accent};--accent2:${th.accent2};--white:${th.text};--font:'${th.font || 'Montserrat'}'`; };
 const posterItem = x => ({ ...x, image: x.image ? S.me.upBase + x.image : null });
 function thumb(x) {
+  if (x.type === 'youtube') return `<img src="https://i.ytimg.com/vi/${esc(x.yt)}/mqdefault.jpg" loading="lazy"><span style="position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;border-radius:4px;padding:1px 6px;font-size:11px;font-weight:700">▶ YouTube · ${x.dur || 30} sn</span>`;
   if (x.type === 'poster') return `<div class="pmini" data-pid="${x.id}" style="${themeVars()}"></div>`;
   return x.type === 'image' ? `<img src="${S.me.upBase}${x.file}" loading="lazy">` : `<video src="${S.me.upBase}${x.file}#t=0.5" preload="metadata" muted></video>`;
 }

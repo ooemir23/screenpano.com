@@ -507,7 +507,7 @@ r.get('/cache', (req, res) => {
 r.post('/media/optimize-all', (req, res) => {
   const force = !!(req.body || {}).force; // kalite ayarı değiştiğinde eskiden işlenmiş videolar da yeniden küçültülür
   let n = 0;
-  for (const v of req.t.db.videos) if ((force || !v.optimized) && v.status !== 'processing') { v.status = 'processing'; v.reopt = true; media.enqueue(req.t.id, v.id); n++; }
+  for (const v of req.t.db.videos) if (v.type !== 'youtube' && (force || !v.optimized) && v.status !== 'processing') { v.status = 'processing'; v.reopt = true; media.enqueue(req.t.id, v.id); n++; }
   changed(req.t); res.json({ ok: true, count: n });
 });
 r.get('/system', (req, res) => res.json({ ffmpeg: media.ffmpegOk, queue: media.queueLength }));
@@ -693,6 +693,15 @@ r.post('/videos', quota, upload.array('files'), (req, res) => {
     media.enqueue(t.id, rec.id);
   }
   changed(t); res.json({ ok: true });
+});
+// YouTube bağlantısı: dosya yok; TV'de gömülü oynatıcıyla belirtilen süre boyunca (döngülü) oynar
+r.post('/videos/youtube', async (req, res) => {
+  const yt = require('./ytlink'), id = yt.parse((req.body || {}).url);
+  if (!id) return res.status(400).json({ error: 'Geçerli bir YouTube bağlantısı girin (örn. https://www.youtube.com/watch?v=...)' });
+  if (req.t.db.videos.length >= 300) return res.status(400).json({ error: 'En fazla 300 içerik eklenebilir' });
+  const name = (await yt.title(id)) || 'YouTube videosu';
+  req.t.db.videos.push({ id: auth.uid(), type: 'youtube', yt: id, name, dur: yt.clampDur((req.body || {}).dur), status: 'ready', optimized: true });
+  changed(req.t); res.json({ ok: true });
 });
 r.delete('/videos/:id', (req, res) => {
   const t = req.t, v = t.db.videos.find(x => x.id === req.params.id);

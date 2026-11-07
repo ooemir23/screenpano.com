@@ -97,6 +97,7 @@ class MainActivity : AppCompatActivity() {
         override fun playVideo(url: String, startMs: Long) = mediaPlayVideo(url, startMs)
         override fun showPhoto(url: String, done: (Boolean) -> Unit) = mediaShowPhoto(url, done)
         override fun showPoster(item: JSONObject, lang: String, done: (Boolean) -> Unit) = mediaShowPoster(item, lang, done)
+        override fun showWeb(item: JSONObject) = mediaShowWeb(item)
         override fun release() = mediaRelease()
         override fun pageBoundary(cb: (String?) -> Unit) {
             binding.webView.evaluateJavascript("window.__mediaBoundary?window.__mediaBoundary():'none'") { r -> cb(r?.trim('"')) }
@@ -554,7 +555,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** YouTube bağlantılı içerik: yerel katmanlar kalkar, sayfa opak olur ve gömülü oynatıcıyı gösterir. */
+    private fun mediaShowWeb(item: JSONObject) {
+        ++mediaTok
+        if (mediaKind == "video") dropVideoLater(mediaTok)
+        exoPlayer?.pause()
+        clearPhotos()
+        posterView?.visibility = View.GONE
+        mediaKind = "web"
+        pageTransparent(false)
+        binding.webView.evaluateJavascript("window.__ytShow&&window.__ytShow(" + JSONObject.quote(item.toString()) + ")", null)
+    }
+
+    /** YouTube içeriğinden başka bir içeriğe geçilirken sayfadaki oynatıcı kapatılır. */
+    private fun leaveWeb() {
+        if (mediaKind == "web") binding.webView.evaluateJavascript("window.__ytHide&&window.__ytHide()", null)
+    }
+
     private fun mediaPlayVideo(url: String, startMs: Long) {
+        leaveWeb()
         val tk = ++mediaTok
         val wasVideo = mediaKind == "video"
         mediaKind = "video"
@@ -580,6 +599,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun mediaShowPhoto(url: String, done: (Boolean) -> Unit) {
+        leaveWeb()
         val tk = ++mediaTok
         val full = if (url.startsWith("http")) url else "$baseUrl$url"
         val fade = mediaKind.isNotEmpty()
@@ -596,6 +616,7 @@ class MainActivity : AppCompatActivity() {
     private fun mediaShowPoster(item: JSONObject, lang: String, done: (Boolean) -> Unit) {
         val st = lastTvState
         if (st == null) { done(false); return }
+        leaveWeb()
         val tk = ++mediaTok
         try {
             val pv = ensurePoster()
@@ -617,6 +638,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun mediaRelease() {
+        leaveWeb()
         ++mediaTok; mediaKind = ""; mediaFirstFrame = null
         exoPlayer?.pause()
         clearPhotos()

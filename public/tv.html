@@ -133,7 +133,11 @@ html.native-exo video{opacity:0 !important;pointer-events:none !important}
 #brk small{flex:none;color:#ffb0b0;font-size:1.8vh;font-weight:600;letter-spacing:.08em}
 #trailer{position:absolute;inset:.6vh;z-index:5;display:none;background:#000;border-radius:1.30vh;overflow:hidden;contain:paint}
 #trailer.on{display:block}
-#trailer iframe{position:absolute;width:100%;height:100%;left:0;top:0;border:0;pointer-events:none}
+#trailer iframe,#ytm iframe{position:absolute;width:118%;height:118%;left:-9%;top:-9%;border:0;pointer-events:none} /* biraz büyütülür: YouTube'un üstteki başlık/paylaş çubuğu ve alttaki logo kadraj dışında kalır */
+#trailer .tcv{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .9s ease;pointer-events:none;z-index:2}
+#trailer.fade .tcv{opacity:1}
+#ytm{position:absolute;inset:.6vh;z-index:5;display:none;background:#000;border-radius:1.30vh;overflow:hidden;contain:paint}
+#ytm.on{display:block}
 #trailer .tt{position:absolute;left:2vh;top:2vh;max-width:70%;padding:1.4vh 2vw 1.6vh 1.6vw;background:rgba(10,8,6,.88);border-left:.6vh solid var(--accent2);border-radius:1vh;color:#fff;font-size:4.4vh;font-weight:800;line-height:1.15;text-shadow:0 .2vh .6vh #000;box-shadow:0 1vh 3vh rgba(0,0,0,.6);pointer-events:none;animation:ttfade .6s ease}
 @keyframes ttfade{from{opacity:0;transform:translateY(-1vh)}to{opacity:1;transform:translateY(0)}}
 #trailer .tt small{display:block;font-size:2.1vh;font-weight:800;color:var(--accent2);letter-spacing:.14em;margin-bottom:.8vh}
@@ -1132,7 +1136,7 @@ html.theme-glass .pill.live::before {
 <div id="root">
 <div id="app"></div>
 <div id="parking">
-  <div class="cell" data-w="media"><div id="stage"><div id="celeb"><div id="cflagw"><canvas id="cflag" width="270" height="180"></canvas></div><div id="cmid"><span id="ctitle"></span><p id="cquote"></p></div></div><div id="frame"><div id="bgw"><canvas id="bgc"></canvas></div><video id="v" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><video id="v2" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><img id="img" alt=""><img id="img2" alt=""><div id="standby" class="standby-plate"><div class="sb-wrap"><div class="sb-logo" id="sb-logo"></div><div class="sb-title" id="sb-title"></div><div class="sb-sub">YAYIN AKIŞI DEVAM EDİYOR</div></div></div><div id="trailer"></div><div id="qr-left" class="qrc"></div><div id="qr-right" class="qrc"></div><div id="music-bar"></div></div></div></div>
+  <div class="cell" data-w="media"><div id="stage"><div id="celeb"><div id="cflagw"><canvas id="cflag" width="270" height="180"></canvas></div><div id="cmid"><span id="ctitle"></span><p id="cquote"></p></div></div><div id="frame"><div id="bgw"><canvas id="bgc"></canvas></div><video id="v" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><video id="v2" muted playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video><img id="img" alt=""><img id="img2" alt=""><div id="standby" class="standby-plate"><div class="sb-wrap"><div class="sb-logo" id="sb-logo"></div><div class="sb-title" id="sb-title"></div><div class="sb-sub">YAYIN AKIŞI DEVAM EDİYOR</div></div></div><div id="trailer"></div><div id="ytm"></div><div id="qr-left" class="qrc"></div><div id="qr-right" class="qrc"></div><div id="music-bar"></div></div></div></div>
   <div class="cell" data-w="logo"><div id="logo"></div></div>
   <div class="cell" data-w="info"><div id="matches"><div id="goal"></div><div id="mhead"><h2 id="mtitle">Maçlar</h2><div id="dots"></div></div><div id="mbody"><div id="list"></div><div id="traffic" class="off"><img alt=""><div id="tchip">Canlı Trafik</div><div id="tidx"></div><div id="tlegend"><span>Akıcı</span><i></i><span>Yoğun</span></div></div></div></div></div>
   <div class="cell" data-w="rates"><div id="rates"></div></div>
@@ -1219,8 +1223,10 @@ let trailerTimer, trailerHandshakeTimer, trailerStallTimer;
 let trailerDur = 0, trailerCurTime = 0;
 const trailerEl = document.getElementById('trailer');
 let trailerTry = 0, trailerCur = null, trailerFails = 0, trailerSeen = false;
+let trailerFadeT = 0;
 function endTrailer() {
   if (!trailerOn) return;
+  clearTimeout(trailerFadeT); trailerEl.classList.remove('fade');
   trailerOn = false;
   clearTimeout(trailerTimer);
   clearTimeout(trailerStallTimer);
@@ -1263,20 +1269,21 @@ addEventListener('message', e => {
     if (dur > 3) {
       trailerDur = dur;
       clearTimeout(trailerTimer);
-      const remain = Math.max(0.5, trailerDur - cur - 1.2);
+      const remain = Math.max(0.5, trailerDur - cur - 2.2);
       trailerTimer = setTimeout(endTrailer, remain * 1000);
+      clearTimeout(trailerFadeT); trailerFadeT = setTimeout(() => trailerEl.classList.add('fade'), Math.max(0, remain - 1.1) * 1000); // bitişe doğru kararır: öneri ekranı hiç görünmez
     }
 
     if (cur > 0) {
       trailerSeen = true;
       trailerCurTime = cur;
-      if (trailerDur > 0 && trailerCurTime >= trailerDur - 1.2) return endTrailer();
+      if (trailerDur > 0 && trailerCurTime >= trailerDur - 2.2) return endTrailer();
     }
 
     // Video bittiğinde (0) veya biterken duraklatıldığında (2) hemen kapat
     const st = (d.info && typeof d.info.playerState === 'number') ? d.info.playerState : (typeof d.info === 'number' ? d.info : (d.data !== undefined ? d.data : null));
     if (st === 0) return endTrailer();
-    if (st === 2 && trailerDur > 0 && trailerCurTime >= trailerDur - 2.5) return endTrailer();
+    if (st === 2 && trailerDur > 0 && trailerCurTime >= trailerDur - 3.5) return endTrailer();
     if (d.event === 'onStateChange' && (d.info === 0 || d.info === '0')) return endTrailer();
   } catch (x) {}
 });
@@ -1284,7 +1291,8 @@ function showTrailer(m, key) {
   trailerDur = 0; trailerCurTime = 0; trailerSeen = false;
   const pageOrigin = (location.origin && location.origin !== 'null') ? location.origin : 'https://screenpano.com';
   const url = `https://www.youtube.com/embed/${encodeURIComponent(key)}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&cc_load_policy=0&hl=tr&iv_load_policy=3&disablekb=1&fs=0&enablejsapi=1&origin=${encodeURIComponent(pageOrigin)}&widgetid=1`;
-  trailerEl.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="${url}"></iframe><div class="tt"><small>BU HAFTA VİZYONDA${m.date ? ' · ' + esc(trDate(m.date)) : ''}</small>${esc(m.title)}</div>`;
+  clearTimeout(trailerFadeT); trailerEl.classList.remove('fade');
+  trailerEl.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="${url}"></iframe><div class="tcv"></div><div class="tt"><small>BU HAFTA VİZYONDA${m.date ? ' · ' + esc(trDate(m.date)) : ''}</small>${esc(m.title)}</div>`;
   trailerEl.classList.add('on');
 
   clearTimeout(trailerTimer);
@@ -1310,7 +1318,37 @@ function showTrailer(m, key) {
     } catch (e) {}
   }, 300);
 }
+// ---- YouTube bağlantılı medya (panelden ya da reklamdan eklenen): gömülü oynatıcı, süre dolunca sıradakine geçilir ----
+let ytOn = false, ytHs = 0;
+function showYt(it) {
+  const el = document.getElementById('ytm'); if (!el || !it.yt) return;
+  const pageOrigin = (location.origin && location.origin !== 'null') ? location.origin : 'https://screenpano.com';
+  const k = encodeURIComponent(it.yt);
+  el.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/${k}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&loop=1&playlist=${k}&enablejsapi=1&origin=${encodeURIComponent(pageOrigin)}"></iframe>`;
+  el.classList.add('on'); ytOn = true;
+  clearInterval(ytHs); let n = 0; // hata bildirimi için kısa süre el sıkışma: oynatılamayan video hata ekranı göstermesin
+  ytHs = setInterval(() => {
+    const fr = el.querySelector('iframe');
+    if (!ytOn || !fr || ++n > 20) return clearInterval(ytHs);
+    try { fr.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 'ytm' }), '*'); fr.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onError'] }), '*'); } catch (e) {}
+  }, 500);
+}
+function hideYt() {
+  if (!ytOn) return; ytOn = false; clearInterval(ytHs);
+  const el = document.getElementById('ytm'); if (el) { el.classList.remove('on'); el.innerHTML = ''; }
+}
+addEventListener('message', e => {
+  if (!ytOn) return;
+  let org = ''; try { org = new URL(e.origin).hostname; } catch (x) {}
+  if (!org.endsWith('youtube.com') && !org.endsWith('youtube-nocookie.com')) return;
+  let d; try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+  const fr = document.querySelector('#ytm iframe');
+  if (d && d.event === 'onError' && fr && e.source === fr.contentWindow) hideYt();
+});
+window.__ytShow = it => { try { exoStop(true); showYt(typeof it === 'string' ? JSON.parse(it) : it); } catch (e) {} };
+window.__ytHide = hideYt;
 function playTrailer(retry) {
+  hideYt();
   exoStop(true);
   const m = trailerList[trailerIdx++ % trailerList.length];
   if (!retry) trailerFails = 0;
@@ -1545,7 +1583,16 @@ function play() {
   current = it.id;
   playStartedAt = Date.now();
   const fullDurMs = (it.dur || imageSeconds || 10) * 1000;
-
+  hideYt();
+  if (it.type === 'youtube') {
+    exoStop();
+    if (window.__N && window.__N.hideImage) window.__N.hideImage();
+    els.forEach(e => e.pause());
+    hidePoster(); showYt(it);
+    timer = setTimeout(next, (window.__ws && window.__ws.readyState === 1) ? fullDurMs + 2500 : fullDurMs);
+    setTimeout(prepNext, 500);
+    return;
+  }
   if (it.type === 'poster') {
     exoStop();
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
@@ -1608,7 +1655,16 @@ function syncToMedia(m) {
   current = it.id;
   notePlay(it);
   playStartedAt = Date.now();
-
+  hideYt();
+  if (it.type === 'youtube') {
+    exoStop();
+    if (window.__N && window.__N.hideImage) window.__N.hideImage();
+    els.forEach(e => e.pause());
+    hidePoster(); showYt(it);
+    timer = setTimeout(next, remainMs);
+    setTimeout(prepNext, 500);
+    return;
+  }
   if (it.type === 'poster') {
     exoStop();
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
@@ -2538,6 +2594,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && ce
 const camp = { list: [], last: {}, showing: false, due: null, after: null, started: Date.now() };
 function campShow(c) {
   if (camp.showing || !c) return;
+  hideYt();
   camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp', id: c.id });
   if (NMED() && window.__N.campShow && c.svg && (!c.photo || window.__N.campPhoto)) { // APK 3.13+: kart yerel çizilir; sayfa yalnız zamanlar
     exoStop(true); window.__nativeCampOn = true; window.__N.campShow(JSON.stringify(c)); exoShow(true);
@@ -2739,6 +2796,7 @@ function bigDemo() {
 }
 function setBig(list, cfg) { big.list = list || []; big.cfg = cfg || big.cfg; }
 function bigShow(m, cfg) {
+  hideYt();
   if (big.showing || !m) return;
   big.showing = true; camp.showing = true; big.last = Date.now(); wsSend({ type: 'shown', kind: 'big' });
   exoStop();
