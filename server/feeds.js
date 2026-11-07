@@ -634,8 +634,8 @@ const isBig4 = name => ['galatasaray', 'fenerbahce', 'besiktas', 'trabzonspor'].
 const BIG_LEAGUES = [['tur.1', 'Süper Lig'], ['uefa.champions', 'Şampiyonlar Ligi'], ['uefa.europa', 'Avrupa Ligi'], ['uefa.europa.conf', 'Konferans Ligi'], ['uefa.champions_qual', 'Şampiyonlar Ligi Eleme']];
 const LEAGUE_LOGOS = { 'Süper Lig': '/logo/l-18.png?v=2', 'Şampiyonlar Ligi': '/logo/l-2.png?v=2', 'Şampiyonlar Ligi Eleme': '/logo/l-2.png?v=2', 'Avrupa Ligi': '/logo/l-2310.png?v=2', 'Konferans Ligi': '/logo/l-20296.png?v=2' };
 // Büyük maç tasarımları; kaldırılan eski tasarımlar (klasik, yan, sade, skor) Klasik (ekrana uyumlu) olarak gösterilir
-const BIG_STYLES = ['uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena', 'matchday', 'neonarena'];
-const bigCfg = t => { const c = { enabled: true, style: 'uyum', note: 'Rezervasyon yaptırmayı unutmayın!', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''], ...(t.db.bigMatch || {}) }; if (!BIG_STYLES.includes(c.style)) c.style = 'uyum'; return c; };
+const BIG_STYLES = ['prime', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena', 'matchday', 'neonarena'];
+const bigCfg = t => { const c = { enabled: true, style: 'prime', note: 'Rezervasyon yaptırmayı unutmayın!', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''], ...(t.db.bigMatch || {}) }; if (!BIG_STYLES.includes(c.style)) c.style = 'prime'; return c; };
 let bigMatches = cacheGet('bigmatches') || [];
 let bigError = '';
 async function refreshBigMatches() {

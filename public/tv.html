@@ -203,18 +203,20 @@ position:absolute;top:.8vh;right:.8vw}
 #rqr .rq .code svg{width:100%;height:100%;display:block}
 #rqr .rq .lbl{flex:none;width:100%;box-sizing:border-box;height:calc(3.2*var(--rv));display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;background:rgba(10,8,6,.92);border:max(1px,calc(.15*var(--rv))) solid var(--al);border-radius:calc(2*var(--rv));color:#fff;font-size:calc(1.8*var(--rv));font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:0 .6vw;text-shadow:0 calc(.2*var(--rv)) calc(.4*var(--rv)) #000}
 #rqr .rq .lbl.pw{text-transform:none;letter-spacing:.03em;color:var(--al);font-size:calc(2*var(--rv))}
-#rrow{display:flex;align-items:center;justify-content:space-around;width:100%;box-sizing:border-box}
+#rrow{display:flex;align-items:stretch;justify-content:space-between;width:100%;box-sizing:border-box;gap:calc(.8*var(--rv))}
 #rrow.swap{transition:opacity .35s ease}
 #rrow.swap.out{opacity:0}
 #wx+#rrow{border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.8*var(--rv));margin-top:calc(.4*var(--rv))}
-.r-col{flex:1 1 0;min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 calc(.35*var(--rv));box-sizing:border-box;overflow:hidden}
-.r-sym{display:flex;align-items:center;justify-content:center;font-size:calc(1.35*var(--rv));font-weight:700;letter-spacing:.05em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.r-col{flex:1 1 0;min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 calc(.35*var(--rv));box-sizing:border-box;position:relative}
+.r-col:not(:last-child)::after{content:"";position:absolute;right:calc(-.4*var(--rv));top:15%;bottom:15%;width:1px;background:var(--line);opacity:.4}
+.r-sym{display:flex;align-items:center;justify-content:center;font-size:calc(1.3*var(--rv));font-weight:700;letter-spacing:.04em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .r-sym span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chg{font-style:normal;font-size:.56em;font-weight:700;letter-spacing:0;line-height:1;white-space:nowrap;margin-left:calc(.2*var(--rv))}
-.chg.up{color:#34d399}
-.chg.dn{color:#f87171}
+.chg{font-style:normal;font-size:.52em;font-weight:700;letter-spacing:0;line-height:1;white-space:nowrap;padding:calc(.1*var(--rv)) calc(.3*var(--rv));border-radius:calc(.35*var(--rv));margin-left:calc(.3*var(--rv));flex-shrink:0}
+.chg.up{color:#34d399;background:rgba(52,211,153,.15)}
+.chg.dn{color:#f87171;background:rgba(248,113,113,.15)}
 .chg.fl{color:var(--mute)}
-.r-val{display:flex;align-items:baseline;justify-content:center;font-size:calc(2.1*var(--rv));font-weight:700;color:var(--white);line-height:1.15;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:calc(.2*var(--rv));max-width:100%}
+.r-val{display:inline-flex;align-items:baseline;justify-content:center;font-size:calc(2.0*var(--rv));font-weight:700;color:var(--white);line-height:1.15;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:calc(.2*var(--rv));max-width:100%}
+.r-val .r-num{white-space:nowrap;flex-shrink:0}
 .r-val i{font-style:normal;font-size:.65em;color:var(--mute);margin-left:calc(.15*var(--rv));font-weight:400}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
@@ -816,6 +818,46 @@ html.lite #camp .cup .st{animation:none;opacity:.7}
 #big.d-neonarena .team-card.home .team-status{color:var(--c1b)}
 #big.d-neonarena .team-card.away .team-status{color:var(--c2b)}
 #big.d-neonarena .team-name-panel{width:100%;padding:calc(1.1*var(--u)) calc(2*var(--w));background:rgba(14,20,36,.95);border:calc(.22*var(--u)) solid rgba(255,255,255,.15);border-top:calc(.45*var(--u)) solid var(--tc);clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);text-align:center;font-size:min(calc(5*var(--u)),calc(3*var(--w)));font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+/* ===== 2026 Prime Yayın (d-prime — Ultra Profesyonel beIN/UCL Stüdyo Yayını) ===== */
+#big.d-prime{position:absolute;inset:0;overflow:hidden;background:#05070c;color:#fff;user-select:none;font-family:'Montserrat',sans-serif}
+#big.d-prime .pr-bg{position:absolute;inset:-5%;background:radial-gradient(circle at 50% 30%,#0e1422 0%,#06080e 70%,#020305 100%);z-index:1}
+#big.d-prime .pr-stadium-mesh{position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.05) 0%,transparent 65%),repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0px,rgba(255,255,255,.015) 1px,transparent 1px,transparent 4px);z-index:2;pointer-events:none}
+#big.d-prime .pr-glow-l{position:absolute;inset:-15%;background:radial-gradient(circle at 16% 45%,color-mix(in srgb,var(--c1) 45%,transparent) 0%,transparent 55%);z-index:2;mix-blend-mode:screen;pointer-events:none;animation:pr-pulse-l 4.5s ease-in-out infinite alternate}
+#big.d-prime .pr-glow-r{position:absolute;inset:-15%;background:radial-gradient(circle at 84% 45%,color-mix(in srgb,var(--c2) 45%,transparent) 0%,transparent 55%);z-index:2;mix-blend-mode:screen;pointer-events:none;animation:pr-pulse-r 4.5s ease-in-out infinite alternate-reverse}
+@keyframes pr-pulse-l{0%{opacity:.6;transform:scale(.98)}100%{opacity:.95;transform:scale(1.02)}}
+@keyframes pr-pulse-r{0%{opacity:.6;transform:scale(.98)}100%{opacity:.95;transform:scale(1.02)}}
+#big.d-prime .pr-vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 85% 75% at 50% 50%,transparent 45%,rgba(2,3,6,.85) 100%),linear-gradient(180deg,rgba(2,4,8,.75) 0%,transparent 18%,transparent 82%,rgba(2,4,8,.92) 100%)}
+#big.d-prime .pr-wrap{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(2.4*var(--u)) calc(4*var(--w)) calc(2.4*var(--u));box-sizing:border-box}
+#big.d-prime .pr-header{width:100%;display:flex;align-items:center;justify-content:space-between;z-index:5}
+#big.d-prime .pr-comp{display:flex;align-items:center;gap:calc(1*var(--w));padding:calc(.7*var(--u)) calc(2.2*var(--w));background:linear-gradient(135deg,rgba(20,26,42,.85),rgba(10,14,24,.92));border:1px solid rgba(255,255,255,.14);border-radius:99px;box-shadow:0 calc(.8*var(--u)) calc(2.4*var(--u)) rgba(0,0,0,.6);backdrop-filter:blur(10px)}
+#big.d-prime .pr-comp-logo{height:calc(3.6*var(--u));width:calc(3.6*var(--u));object-fit:contain;filter:drop-shadow(0 0 calc(.6*var(--u)) rgba(255,255,255,.4))}
+#big.d-prime .pr-comp-title{font-size:calc(2.2*var(--u));font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#fff}
+#big.d-prime .pr-live-tag{display:inline-flex;align-items:center;gap:calc(.4*var(--w));padding:calc(.35*var(--u)) calc(1*var(--w));background:rgba(239,68,68,.18);border:1px solid rgba(239,68,68,.4);border-radius:99px;color:#fca5a5;font-size:calc(1.4*var(--u));font-weight:900;letter-spacing:.15em;text-transform:uppercase}
+#big.d-prime .pr-live-tag i{width:calc(.8*var(--u));height:calc(.8*var(--u));border-radius:50%;background:#ef4444;box-shadow:0 0 calc(.8*var(--u)) #ef4444;animation:pulse 1.2s infinite}
+#big.d-prime .pr-brand{max-height:calc(4.5*var(--u));max-width:calc(18*var(--w))}
+#big.d-prime .pr-brand img{max-height:calc(4.5*var(--u));max-width:calc(18*var(--w));object-fit:contain;filter:drop-shadow(0 calc(.4*var(--u)) calc(1*var(--u)) rgba(0,0,0,.7))}
+#big.d-prime .pr-brand-text{font-size:calc(2.2*var(--u));font-weight:800;letter-spacing:.14em;color:rgba(255,255,255,.75);text-transform:uppercase}
+#big.d-prime .pr-stage{width:100%;flex:1;display:flex;align-items:center;justify-content:space-around;padding:calc(1*var(--u)) 0;z-index:4}
+#big.d-prime .pr-team-box{display:flex;flex-direction:column;align-items:center;gap:calc(1.4*var(--u));width:calc(32*var(--w));max-width:calc(42*var(--u))}
+#big.d-prime .pr-podium{position:relative;width:calc(24*var(--u));height:calc(24*var(--u));display:grid;place-items:center}
+#big.d-prime .pr-halo{position:absolute;inset:-15%;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--tc) 35%,transparent) 0%,transparent 70%);filter:blur(calc(1.5*var(--u)));pointer-events:none}
+#big.d-prime .pr-crest-wrap{width:100%;height:100%;display:grid;place-items:center;background:radial-gradient(circle at 35% 25%,rgba(32,40,60,.75),rgba(12,16,26,.88));border:calc(.25*var(--u)) solid color-mix(in srgb,var(--tc2,var(--tc)) 75%,rgba(255,255,255,.4));border-radius:calc(3.5*var(--u));box-shadow:0 calc(1.8*var(--u)) calc(4*var(--u)) rgba(0,0,0,.85),0 0 calc(2.5*var(--u)) color-mix(in srgb,var(--tc) 45%,transparent),inset 0 0 calc(2*var(--u)) rgba(255,255,255,.08);backdrop-filter:blur(8px)}
+#big.d-prime .pr-crest-wrap .ylg{width:76%;height:76%;object-fit:contain;filter:drop-shadow(0 calc(1*var(--u)) calc(2.2*var(--u)) rgba(0,0,0,.85))}
+#big.d-prime .pr-crest-wrap .ymono{width:76%;height:76%;display:grid;place-items:center;font-size:calc(8*var(--u));font-weight:900;color:var(--tc);text-shadow:0 calc(.4*var(--u)) calc(1.2*var(--u)) #000}
+#big.d-prime .pr-player{max-height:calc(28*var(--u));max-width:calc(28*var(--u));object-fit:contain;filter:drop-shadow(0 calc(1.6*var(--u)) calc(3*var(--u)) rgba(0,0,0,.88))}
+#big.d-prime .pr-pedestal{width:100%;display:flex;flex-direction:column;align-items:center;gap:calc(.3*var(--u));padding:calc(.9*var(--u)) calc(1.5*var(--w));background:linear-gradient(180deg,rgba(22,28,45,.82),rgba(10,14,24,.92));border:1px solid rgba(255,255,255,.1);border-top:calc(.35*var(--u)) solid var(--tc);border-radius:calc(1.2*var(--u));box-shadow:0 calc(1.2*var(--u)) calc(3*var(--u)) rgba(0,0,0,.75);backdrop-filter:blur(10px)}
+#big.d-prime .pr-role{font-size:calc(1.4*var(--u));font-weight:900;letter-spacing:.22em;color:color-mix(in srgb,var(--tc2,var(--tc)) 75%,#fff 25%);text-transform:uppercase}
+#big.d-prime .pr-tname{font-size:min(calc(4.8*var(--u)),calc(3.2*var(--w)));font-weight:900;letter-spacing:.04em;color:#fff;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 calc(.3*var(--u)) calc(1.2*var(--u)) #000}
+#big.d-prime .pr-tname.sm{font-size:min(calc(3.8*var(--u)),calc(2.5*var(--w)))}
+#big.d-prime .pr-center-hub{display:flex;flex-direction:column;align-items:center;gap:calc(1.2*var(--u));z-index:5}
+#big.d-prime .pr-vs-badge{width:calc(7.2*var(--u));height:calc(7.2*var(--u));border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,#ffe696,#d98e1a 62%,#703c00 100%);border:calc(.25*var(--u)) solid #fff;box-shadow:0 0 calc(2.4*var(--u)) rgba(255,190,65,.8),0 calc(1*var(--u)) calc(2.5*var(--u)) rgba(0,0,0,.85);color:#120c02;font-size:calc(3.6*var(--u));font-weight:900;font-style:italic;letter-spacing:.05em}
+#big.d-prime .pr-time-card{display:flex;flex-direction:column;align-items:center;gap:calc(.25*var(--u));padding:calc(1*var(--u)) calc(2.8*var(--w));border-radius:calc(1.6*var(--u));background:linear-gradient(180deg,rgba(16,22,36,.88),rgba(8,11,18,.95));border:1px solid rgba(255,212,120,.35);box-shadow:0 calc(1.2*var(--u)) calc(3.5*var(--u)) rgba(0,0,0,.9);backdrop-filter:blur(10px)}
+#big.d-prime .pr-time{font-size:calc(6.2*var(--u));font-weight:900;line-height:1;color:#fff;letter-spacing:.04em;font-variant-numeric:tabular-nums;text-shadow:0 0 calc(2*var(--u)) rgba(255,215,120,.5)}
+#big.d-prime .pr-day{font-size:calc(2.1*var(--u));font-weight:900;letter-spacing:.14em;color:#ffe294;text-transform:uppercase}
+#big.d-prime .pr-meta-pill{padding:calc(.5*var(--u)) calc(1.8*var(--w));background:rgba(12,18,30,.8);border:1px solid rgba(255,255,255,.12);border-radius:99px;font-size:calc(1.8*var(--u));font-weight:800;color:rgba(255,255,255,.88);letter-spacing:.05em;box-shadow:0 calc(.6*var(--u)) calc(1.8*var(--u)) rgba(0,0,0,.6)}
+#big.d-prime .pr-footer{width:92%;padding:calc(1*var(--u)) calc(3*var(--w));background:linear-gradient(90deg,transparent,rgba(16,22,36,.92) 12%,rgba(20,28,45,.96) 50%,rgba(16,22,36,.92) 88%,transparent);border-top:calc(.2*var(--u)) solid rgba(255,212,120,.65);border-bottom:calc(.2*var(--u)) solid rgba(255,212,120,.3);display:flex;flex-direction:column;align-items:center;gap:calc(.4*var(--u));text-align:center;z-index:5}
+#big.d-prime .pr-foot-note{font-size:calc(2.6*var(--u));font-weight:900;color:#fff;letter-spacing:.06em;text-shadow:0 calc(.3*var(--u)) calc(1.2*var(--u)) #000}
+#big.d-prime .pr-foot-infos{display:flex;gap:calc(2.5*var(--w));font-size:calc(1.9*var(--u));font-weight:800;color:#ffe294}
 /* Klasik ve Klasik (ekrana uyumlu) */
 #big .bbg{filter:drop-shadow(0 0 1.2vh rgba(255,255,255,.55)) drop-shadow(0 1vh 2.4vh rgba(0,0,0,.85))}
 #big .bk1{font-size:3vh;font-weight:900;color:#fff;text-shadow:0 .3vh 1vh #000}
@@ -1168,32 +1210,33 @@ addEventListener('message', e => {
   if (!d) return;
 
   const fr = trailerEl.querySelector('iframe');
-  const isTr = (fr && e.source === fr.contentWindow) || d.id === 'tr_player' || d.channel === 'tr_player';
-  if (!isTr && e.source !== null) return;
+  const isTr = !fr || e.source === fr.contentWindow || d.id === 'tr_player' || d.id === 1 || String(d.id || '').includes('tr_') || !e.source;
+  if (!isTr) return;
 
   try {
     if (d.event === 'onError') return trailerError();
 
-    // YouTube'dan süre bilgisi gelince video bitişinden 0.8 sn öncesine kesin zamanlayıcı kur (öneri ekranı ASLA görünmez)
-    if (d.info && typeof d.info.duration === 'number' && d.info.duration > 3) {
-      trailerDur = d.info.duration;
+    // YouTube'dan süre bilgisi gelince video bitişinden 1.2 sn öncesine kesin zamanlayıcı kur (öneri ekranı ASLA görünmez)
+    const dur = (d.info && typeof d.info.duration === 'number') ? d.info.duration : (typeof d.duration === 'number' ? d.duration : 0);
+    const cur = (d.info && typeof d.info.currentTime === 'number') ? d.info.currentTime : (typeof d.currentTime === 'number' ? d.currentTime : 0);
+    if (dur > 3) {
+      trailerDur = dur;
       clearTimeout(trailerTimer);
-      const remain = Math.max(0.5, trailerDur - (d.info.currentTime || 0) - 0.8);
+      const remain = Math.max(0.5, trailerDur - cur - 1.2);
       trailerTimer = setTimeout(endTrailer, remain * 1000);
     }
 
-    if (d.info && typeof d.info.currentTime === 'number' && d.info.currentTime > 0) {
+    if (cur > 0) {
       trailerSeen = true;
-      trailerCurTime = d.info.currentTime;
-      if (trailerDur > 0 && trailerCurTime >= trailerDur - 0.8) return endTrailer();
+      trailerCurTime = cur;
+      if (trailerDur > 0 && trailerCurTime >= trailerDur - 1.2) return endTrailer();
     }
 
     // Video bittiğinde (0) veya biterken duraklatıldığında (2) hemen kapat
-    if (d.event === 'onStateChange') {
-      if (d.info === 0) return endTrailer();
-      if (d.info === 2 && trailerDur > 0 && trailerCurTime >= trailerDur - 2) return endTrailer();
-    }
-    if (d.info && d.info.playerState === 0) return endTrailer();
+    const st = (d.info && typeof d.info.playerState === 'number') ? d.info.playerState : (typeof d.info === 'number' ? d.info : (d.data !== undefined ? d.data : null));
+    if (st === 0) return endTrailer();
+    if (st === 2 && trailerDur > 0 && trailerCurTime >= trailerDur - 2.5) return endTrailer();
+    if (d.event === 'onStateChange' && (d.info === 0 || d.info === '0')) return endTrailer();
   } catch (x) {}
 });
 function showTrailer(m, key) {
@@ -1204,8 +1247,8 @@ function showTrailer(m, key) {
   trailerEl.classList.add('on');
 
   clearTimeout(trailerTimer);
-  // Süre bilgisi hiç gelmezse tavan süre 95 sn (YouTube öneri ekranında 3 dk beklemeyi önler)
-  trailerTimer = setTimeout(endTrailer, 95 * 1000);
+  // Süre bilgisi hiç gelmezse tavan süre 75 sn (YouTube öneri ekranında beklemeyi önler)
+  trailerTimer = setTimeout(endTrailer, 75 * 1000);
 
   // Video 9 saniyede başlamazsa (engelli video) alternatif fragmana geç
   clearTimeout(trailerStallTimer);
@@ -1222,6 +1265,7 @@ function showTrailer(m, key) {
     try {
       fr.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 'tr_player' }), '*');
       fr.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*');
+      fr.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['infoDelivery'] }), '*');
     } catch (e) {}
   }, 300);
 }
@@ -2146,7 +2190,7 @@ const chg = v => (v == null || !isFinite(v)) ? '' : `<span class="chg ${v > 0.00
 const rateCol = (sym, cVal, val, unit = '') => `
   <div class="r-col">
     <div class="r-sym"><span>${esc(sym)}</span></div>
-    <div class="r-val">${val}${unit ? `<i>${unit}</i>` : ''}${chg(cVal)}</div>
+    <div class="r-val"><span class="r-num">${val}${unit ? `<i>${unit}</i>` : ''}</span>${chg(cVal)}</div>
   </div>`;
 function renderPanel() {
   const sig = JSON.stringify([lastRates, lastWeather, WPROPS.rates, CITY]);
@@ -2209,7 +2253,16 @@ function fitRates() {
       for (const c of el.children) { if (!c.offsetHeight) continue; const r = c.getBoundingClientRect(); top = Math.min(top, r.top); bot = Math.max(bot, r.bottom); }
       if (isFinite(top) && bot - top > el.clientHeight - padV + 1) return false;
       if (el.scrollWidth > el.clientWidth + 1) return false;
-      return ![...el.querySelectorAll('#rrow, #wx')].some(d => d.scrollWidth > d.clientWidth + 1);
+      const wx = el.querySelector('#wx');
+      if (wx && wx.scrollWidth > wx.clientWidth + 1) return false;
+      const cols = el.querySelectorAll('.r-col');
+      for (const col of cols) {
+        const val = col.querySelector('.r-val');
+        const sym = col.querySelector('.r-sym');
+        if (val && val.scrollWidth > col.clientWidth - 4) return false;
+        if (sym && sym.scrollWidth > col.clientWidth - 2) return false;
+      }
+      return true;
     };
     let lo = .2, hi = 2.4;
     for (let n = 0; n < 9; n++) { const mid = (lo + hi) / 2; set(mid); if (fits()) lo = mid; else hi = mid; }
@@ -2220,10 +2273,13 @@ function fitRates() {
       const v = col.querySelector('.r-val');
       if (v) {
         v.style.fontSize = '';
+        const ch = v.querySelector('.chg');
+        if (ch) ch.style.fontSize = '';
         const maxW = col.clientWidth - 6;
         if (maxW > 0 && v.scrollWidth > maxW) {
-          const s = Math.max(0.55, maxW / v.scrollWidth);
-          v.style.fontSize = `calc(2.1 * var(--rv) * ${s.toFixed(3)})`;
+          const s = Math.max(0.60, maxW / v.scrollWidth);
+          v.style.fontSize = `calc(2.0 * var(--rv) * ${s.toFixed(3)})`;
+          if (ch) ch.style.fontSize = `calc(.52em * ${s < 0.85 ? 0.9 : 1})`;
         }
       }
       const s = col.querySelector('.r-sym');
@@ -2232,7 +2288,7 @@ function fitRates() {
         const maxW = col.clientWidth - 4;
         if (maxW > 0 && s.scrollWidth > maxW) {
           const sc = Math.max(0.65, maxW / s.scrollWidth);
-          s.style.fontSize = `calc(1.35 * var(--rv) * ${sc.toFixed(3)})`;
+          s.style.fontSize = `calc(1.3 * var(--rv) * ${sc.toFixed(3)})`;
         }
       }
     });
@@ -2412,7 +2468,7 @@ function bigUnits(el) { // ek tasarımlar medya alanının boyutuna göre ölçe
   el.style.setProperty('--u', Math.min(H, W * 9 / 16) / 100 + 'px'); el.style.setProperty('--w', W / 100 + 'px');
 }
 addEventListener('resize', () => { const el = document.getElementById('big'); if (el && el.className.includes('d-')) bigUnits(el); });
-const BIG_STYLES = ['uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena', 'matchday', 'neonarena'];
+const BIG_STYLES = ['prime', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena', 'matchday', 'neonarena'];
 function teamPair(name, c1, c2, raw1, raw2) {
   const n = String(name || '').toLocaleLowerCase('tr-TR');
   if (n.includes('galatasaray')) return ['#c9082a', '#ffb800'];
@@ -2446,7 +2502,32 @@ function bigDesign(el, m, cfg, design, o) {
   const [lc1, lc2] = ({ 'Süper Lig': ['#e30a17', '#ffd478'], 'Avrupa Ligi': ['#ff6b00', '#ffb800'], 'Konferans Ligi': ['#00d65b', '#a8ff78'], 'Şampiyonlar Ligi': ['#1a5cff', '#ffe08a'], 'Şampiyonlar Ligi Eleme': ['#1a5cff', '#ffe08a'] }[m.league]) || (m.derby ? ['#e30a17', '#ffd478'] : ['#1a5cff', '#ffe08a']);
   el.style.setProperty('--lc1', lc1); el.style.setProperty('--lc2', lc2);
   let h;
-  if (design === 'stadyum') h = `<div class="yh l"></div><div class="yh r"></div><div class="yseam"></div><div class="ybeam"></div>`
+  if (design === 'prime') {
+    const footNote = cfg.note || 'REZERVASYON YAPTIRMAYI UNUTMAYIN!';
+    const channelPill = m.channel || 'beIN Sports 1';
+    const venueTxt = m.venue ? `🏟 ${m.venue}` : '';
+    const broadcastTxt = channelPill ? `📺 ${channelPill}` : '';
+    const centerMeta = [venueTxt, broadcastTxt].filter(Boolean).join(' · ');
+    const pod = (role, photo, crestHtml, name, col, col2) => `
+      <div class="pr-team-box" style="--tc:${esc(col)};--tc2:${esc(col2)}">
+        <div class="pr-podium">
+          <div class="pr-halo"></div>
+          ${photo ? `<img class="pr-player" src="${esc(photo)}" alt="">` : `<div class="pr-crest-wrap">${crestHtml}</div>`}
+        </div>
+        <div class="pr-pedestal">
+          <div class="pr-role">${role}</div>
+          <div class="pr-tname${String(name).length > 13 ? ' sm' : ''}"${lng(name)}>${esc(name)}</div>
+        </div>
+      </div>`;
+    h = `<div class="pr-bg"></div><div class="pr-stadium-mesh"></div>`
+      + `<div class="pr-glow-l"></div><div class="pr-glow-r"></div><div class="pr-vignette"></div>`
+      + `<div class="pr-wrap">`
+      + `  <div class="pr-header"><div class="pr-comp"><img class="pr-comp-logo" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"><span class="pr-comp-title">${esc(league || kick)}</span><span class="pr-live-tag"><i></i>CANLI YAYIN</span></div>${LOGO ? `<div class="pr-brand">${brand}</div>` : `<div class="pr-brand-text">${esc(up(BNAME))}</div>`}</div>`
+      + `  <div class="pr-stage">${pod('EV SAHİBİ', m.hp, H, m.home, c1, c1b)}<div class="pr-center-hub"><div class="pr-vs-badge">VS</div><div class="pr-time-card"><div class="pr-time">${esc(o.tm)}</div><div class="pr-day">${esc(o.dayTxt)}</div></div>${centerMeta ? `<div class="pr-meta-pill">${esc(centerMeta)}</div>` : ''}</div>${pod('DEPLASMAN', m.ap, A, m.away, c2, c2b)}</div>`
+      + `  <div class="pr-footer"><div class="pr-foot-note">${esc(footNote)}</div>${infos ? `<div class="pr-foot-infos">${infos}</div>` : ''}</div>`
+      + `</div>`;
+  }
+  else if (design === 'stadyum') h = `<div class="yh l"></div><div class="yh r"></div><div class="yseam"></div><div class="ybeam"></div>`
     + (m.hp ? `<img class="yph" style="left:0" src="${esc(m.hp)}" alt="">` : '') + (m.ap ? `<img class="yph" style="right:0" src="${esc(m.ap)}" alt="">` : '') + `<div class="yvig"></div>`
     + `<div class="ywrap">${top}<div class="ymid"><div class="yteam"><div class="yring" style="--tc:${esc(c1)}">${H}</div>${nm(m.home)}</div>`
     + `<div class="yvs"><b>VS</b><div class="yclock">${esc(o.tm)}</div><div class="yday">${esc(o.dayTxt)}</div></div>`
