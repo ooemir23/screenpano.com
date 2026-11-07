@@ -84,11 +84,20 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 .big{font-size:24px;font-weight:700;min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
 .heat{display:grid;grid-template-columns:38px repeat(24,1fr);gap:3px;align-items:center}.heat i{display:block;height:22px;border-radius:4px}.heat .hl{font-size:12px;color:var(--mute);text-align:center}.heat .dn{font-size:12px;color:var(--mute)}
 .empty{color:var(--mute);text-align:center;padding:26px 10px;font-size:13.5px}
-#drawer{position:fixed;inset:0;z-index:30;display:none}
-#drawer.on{display:block}
-#drawer .bg{position:absolute;inset:0;background:rgba(0,0,0,.6)}
-#drawer .pane{position:absolute;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:22px}
-#drawer .x{float:right;background:none;border:0;font-size:24px;cursor:pointer;color:var(--mute);line-height:1}
+#drawer{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:24px;overflow:hidden}
+#drawer.on{display:flex}
+#drawer .bg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);cursor:pointer}
+#drawer .pane{position:relative;z-index:2;width:min(1240px,96vw);max-height:92vh;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-l);box-shadow:0 25px 75px rgba(0,0,0,.8);display:flex;flex-direction:column;overflow:hidden;padding:0;animation:modalIn .18s cubic-bezier(.16,1,.3,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.m-head{padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;flex-shrink:0}
+.m-body{flex:1;overflow-y:auto;padding:20px 24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:18px;background:var(--bg)}
+.m-col{display:flex;flex-direction:column;gap:14px}
+.m-foot{padding:14px 24px;background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.modal-x{background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--mute);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s}
+.modal-x:hover{color:var(--text);background:rgba(255,255,255,.15);border-color:var(--soft)}
+.check-box-label{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:var(--r-m);background:var(--panel);border:1px solid var(--line);cursor:pointer;margin-bottom:8px;font-size:13px;transition:border-color .15s}
+.check-box-label:hover{border-color:var(--accent2)}
+.check-box-label input[type=checkbox]{margin-top:3px}
 .kpi-ribbon{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:14px}
 .kpi-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);padding:12px 14px;cursor:pointer;transition:all .15s;user-select:none;position:relative}
 .kpi-card:hover{border-color:var(--accent2);transform:translateY(-1px);background:var(--panel2)}
@@ -103,13 +112,17 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
 .search-wrap .clr-btn:hover{color:var(--text);background:rgba(255,255,255,.1)}
 .badge-count{font-size:13px;color:var(--mute);white-space:nowrap;padding:4px 0}
 .badge-count b{color:var(--text)}
-.d-top{position:sticky;top:-22px;background:var(--panel);padding:16px 0 14px;margin:-22px 0 16px;border-bottom:1px solid var(--line);z-index:5}
-.d-card{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);padding:16px;margin-bottom:14px}
+.d-card{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);padding:16px;margin-bottom:0}
 .d-card h4{font-size:12.5px;font-weight:700;color:var(--soft);margin-bottom:12px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.06em}
 .d-card h4 .ic{width:16px;height:16px;color:var(--accent2)}
-.d-foot{position:sticky;bottom:-22px;background:var(--panel);padding:14px 0;margin:18px 0 -22px;border-top:1px solid var(--line);z-index:5;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .quick-date-btn{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:var(--r-s);padding:4px 9px;font-size:11.5px;color:var(--soft);cursor:pointer;transition:all .15s}
 .quick-date-btn:hover{border-color:var(--accent2);color:var(--text);background:rgba(var(--a2),.15)}
+@media(max-width:960px){
+  #drawer{padding:10px}
+  #drawer .pane{width:100%;max-height:96vh}
+  .m-body{grid-template-columns:minmax(0,1fr);padding:14px}
+  .m-head,.m-foot{padding:12px 14px}
+}
 #toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50}
 .toast{background:#2b2f2f;border-left:4px solid var(--ok);padding:12px 16px;border-radius:var(--r-m);font-size:14px}.toast.err{border-left-color:var(--bad)}
 .nav .grp{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);padding:12px 12px 4px}
@@ -510,36 +523,46 @@ function drawRows() {
   }).join('') || `<tr><td colspan="8" class="empty" style="padding:40px 10px"><div style="font-size:24px;margin-bottom:8px">🔍</div>Arama kriterlerine uygun işletme bulunamadı.${q || TF.f !== 'all' ? '<br><button class="btn ghost sm" style="margin-top:12px" onclick="TF.q=\'\';TF.f=\'all\';const el=$(\'flt\');if(el)el.value=\'\';drawRows()">Filtreleri Temizle</button>' : ''}</td></tr>`;
 }
 
-/* ---- yeni işletme / ayrıntı paneli ---- */
+/* ---- yeni işletme / ayrıntı paneli (modal) ---- */
 const closeDrawer = () => $('drawer').classList.remove('on');
-const openDrawer = html => { $('pane').innerHTML = `<button class="x" onclick="closeDrawer()" aria-label="Kapat">×</button>` + html; $('drawer').classList.add('on'); };
+const openDrawer = html => { $('pane').innerHTML = html; $('drawer').classList.add('on'); };
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && $('drawer') && $('drawer').classList.contains('on')) closeDrawer(); });
 const planOpts = sel => Object.values(D.plans).map(p => `<option value="${p.id}"${p.id === sel ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
 
 function newDialog() {
   openDrawer(`
-  <div class="d-top">
-    <h2 style="margin:0 0 4px;font-size:18px">Yeni İşletme Ekle</h2>
-    <p class="hint" style="margin:0">Platforma yeni bir müşteri kaydı oluşturun.</p>
-  </div>
-  <div class="d-card">
-    <h4>${ic('building-2')} İşletme ve Giriş Bilgileri</h4>
-    <div class="row">${field('İşletme adı', 'n-name', '', 'placeholder="örn. Kahve Diyarı Beşiktaş"')}${field('Telefon', 'n-phone', '', 'placeholder="0532xxxxxxx"')}</div>
-    <div class="row">${field('Kullanıcı adı', 'n-user', '', 'placeholder="kahvediyari"')}${field('Şifre (en az 8 karakter)', 'n-pass', '', 'type="password" placeholder="••••••••"')}</div>
-  </div>
-  <div class="d-card">
-    <h4>${ic('calendar-clock')} Paket ve Cihaz Ayarları</h4>
-    <div class="row">
-      <div><label>Paket</label><select id="n-plan" onchange="const p=D.plans[this.value];if(p)$('n-devs').value=p.devices">${planOpts('pro')}</select></div>
-      ${field('Bağlanacak TV / Cihaz', 'n-devs', 2, 'type="number" min="1" max="999"')}
+  <div class="m-head">
+    <div>
+      <h2 style="margin:0 0 2px;font-size:18px;font-weight:700">Yeni İşletme Ekle</h2>
+      <p class="hint" style="margin:0;font-size:12.5px">Platforma yeni bir müşteri kaydı oluşturun.</p>
     </div>
-    <div class="row">
-      ${field('Ödenmiş gün (0 = yalnız deneme)', 'n-days', 0, 'type="number"')}
-      ${field('Deneme günü', 'n-trial', 3, 'type="number"')}
+    <button class="modal-x" onclick="closeDrawer()" aria-label="Kapat" title="Kapat (ESC)">×</button>
+  </div>
+  <div class="m-body" style="grid-template-columns:1fr 1fr">
+    <div class="m-col">
+      <div class="d-card" style="height:100%">
+        <h4>${ic('building-2')} İşletme ve Giriş Bilgileri</h4>
+        <div class="row">${field('İşletme adı', 'n-name', '', 'placeholder="örn. Kahve Diyarı Beşiktaş"')}${field('Telefon', 'n-phone', '', 'placeholder="0532xxxxxxx"')}</div>
+        <div class="row">${field('Kullanıcı adı', 'n-user', '', 'placeholder="kahvediyari"')}${field('Şifre (en az 8 karakter)', 'n-pass', '', 'type="password" placeholder="••••••••"')}</div>
+      </div>
+    </div>
+    <div class="m-col">
+      <div class="d-card" style="height:100%">
+        <h4>${ic('calendar-clock')} Paket ve Cihaz Ayarları</h4>
+        <div class="row">
+          <div><label>Paket</label><select id="n-plan" onchange="const p=D.plans[this.value];if(p)$('n-devs').value=p.devices">${planOpts('pro')}</select></div>
+          ${field('Bağlanacak TV / Cihaz', 'n-devs', 2, 'type="number" min="1" max="999"')}
+        </div>
+        <div class="row">
+          ${field('Ödenmiş gün (0 = yalnız deneme)', 'n-days', 0, 'type="number"')}
+          ${field('Deneme günü', 'n-trial', 3, 'type="number"')}
+        </div>
+      </div>
     </div>
   </div>
-  <div class="d-foot">
+  <div class="m-foot">
     <button class="btn ghost" onclick="closeDrawer()">Vazgeç</button>
-    <button class="btn" onclick="createT()">İşletmeyi Oluştur</button>
+    <button class="btn" onclick="createT()">${ic('circle-check')} İşletmeyi Oluştur</button>
   </div>`);
 }
 
@@ -576,138 +599,162 @@ function openTenant(id) {
   const devs = x.fleet || [];
 
   openDrawer(`
-  <div class="d-top">
-    <div style="margin-bottom:8px">
-      <h2 style="font-size:18px;margin:0 0 6px;font-weight:700">${esc(x.name)}</h2>
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        ${stTag(x)}
-        ${planBadge(x)}
-        ${h ? `<span class="tag mute">Şube · ${esc(h.name)}</span>` : ''}
-        ${x.superAccess ? `<span class="tag warn">Süper Yönetici</span>` : ''}
+  <div class="m-head">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <h2 style="font-size:20px;font-weight:700;margin:0">${esc(x.name)}</h2>
+          ${stTag(x)}
+          ${planBadge(x)}
+          ${h ? `<span class="tag mute">Şube · ${esc(h.name)}</span>` : ''}
+          ${x.superAccess ? `<span class="tag warn" title="Süper Yönetici">SUPER</span>` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--mute);margin-top:4px">
+          Kayıt: <b>${fmt(x.created)}</b> &nbsp;·&nbsp; Son Giriş: <b>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : 'Giriş yok'}</b> &nbsp;·&nbsp; TV Limiti: <b>${devs.length} / ${lim}</b>
+        </div>
       </div>
     </div>
-    <div class="acts" style="margin-top:10px">
-      <button class="btn sm" onclick="imp('${id}')">${ic('external-link')} Panele gir</button>
+    <div class="acts">
+      <button class="btn sm" onclick="imp('${id}')" title="İşletmenin yönetim paneline gir">${ic('external-link')} Panele gir</button>
       <button class="btn ghost sm" onclick="extend('${id}',30)">${ic('calendar-clock')} +30 gün uzat</button>
       <button class="btn ghost sm" onclick="extend('${id}',365)">+1 yıl uzat</button>
       <button class="btn ghost sm" onclick="ST.tid='${id}';ST.days=30;closeDrawer();go('stats');render()">${ic('chart-column')} İstatistikler</button>
+      <button class="modal-x" onclick="closeDrawer()" aria-label="Kapat" title="Kapat (ESC)">×</button>
     </div>
   </div>
 
-  ${x.deletion ? `<div class="att bad" style="margin-bottom:14px"><div class="b"><b>KVKK silme talebi</b><span>${fmt(x.deletion)} tarihinde silinecek.</span></div><button class="btn ghost sm" onclick="api('DELETE','/tenants/${id}/deletion').then(()=>{closeDrawer();load()})">Talebi iptal et</button></div>` : ''}
-
-  <!-- Kart 1: Özet & 30 Günlük İstatistikler -->
-  <div class="d-card">
-    <h4>${ic('chart-column')} Genel Durum & İstatistikler</h4>
-    <div class="stats" id="dstats" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px;gap:8px">
-      <div class="stat" style="padding:10px"><b>…</b><span>Ekran süresi</span></div>
-      <div class="stat" style="padding:10px"><b>…</b><span>Oynatma</span></div>
-      <div class="stat" style="padding:10px"><b>…</b><span>QR okutma</span></div>
-    </div>
-    <dl class="kv" style="font-size:12.5px;gap:6px 14px">
-      <dt>Sahip kullanıcı</dt><dd><b>${esc(x.owner || '-')}</b></dd>
-      <dt>Kayıt tarihi</dt><dd>${fmt(x.created)}</dd>
-      <dt>Son aktif giriş</dt><dd>${x.lastLogin ? new Date(x.lastLogin).toLocaleString(I18N.locale) : 'Henüz giriş yapmadı'}</dd>
-      <dt>Depolama alanı</dt><dd>${x.storageMB} MB ${x.storageLimitMB ? `/ ${x.storageLimitMB} MB` : '(Sınırsız)'}</dd>
-      ${x.consent ? `<dt>KVKK / Sözleşme onayı</dt><dd style="color:var(--ok)">✓ ${fmt(x.consent)}</dd>` : ''}
-    </dl>
-  </div>
-
-  <!-- Kart 2: Bağlı TV Kutuları & Cihazlar -->
-  <div class="d-card">
-    <h4>${ic('tv')} Bağlı Cihazlar (${devs.length} / ${lim})</h4>
-    ${devs.length ? devs.map(d => `
-      <div class="it" style="padding:10px 12px;margin-bottom:6px">
-        <span class="devh"><i class="${d.online ? 'on' : ''}"></i></span>
-        <div class="b">
-          <b>${esc(d.name || T('TV kutusu'))}</b>
-          <span>${d.online ? '<span style="color:var(--ok)">● Çevrimiçi</span>' : '<span style="color:var(--mute)">○ Çevrimdışı</span>'}${d.app ? ' · ' + esc(d.app) : ''}</span>
-        </div>
-        ${d.old ? `<span class="tag warn" title="Yayındaki APK: ${esc(D.system && D.system.apk || '')}">${T('eski sürüm')}</span>` : '<span class="tag ok" style="font-size:11px">güncel</span>'}
+  <div class="m-body">
+    <!-- SOL SÜTUN: Form & Ayarlar -->
+    <div class="m-col">
+      <!-- Kart 1: İşletme ve Giriş Bilgileri -->
+      <div class="d-card">
+        <h4>${ic('building-2')} İşletme ve Giriş Bilgileri</h4>
+        <div class="row">${field('İşletme adı', 'e-name', x.name)}${field('Telefon', 'e-phone', x.phone || '')}</div>
+        <div class="row">${field('Kullanıcı adı (giriş)', 'e-user', x.owner || '', 'autocomplete="off" autocapitalize="none"')}${field('E-posta (bildirimler)', 'e-mail', x.email || '', 'type="email"')}</div>
+        <div><label>Yönetici Notu</label><textarea id="e-note" rows="2" style="font-size:13px" placeholder="Müşteriyle ilgili dahili notlar (yalnızca süper admin görür)...">${esc(x.note || '')}</textarea></div>
       </div>
-    `).join('') : '<div style="color:var(--mute);font-size:12.5px;padding:6px 0">Henüz bağlı bir TV kutusu veya ekran bulunmuyor.</div>'}
-  </div>
 
-  <!-- Kart 3: İşletme & İletişim Bilgileri -->
-  <div class="d-card">
-    <h4>${ic('building-2')} İşletme ve Giriş Bilgileri</h4>
-    <div class="row">${field('İşletme adı', 'e-name', x.name)}${field('Telefon', 'e-phone', x.phone || '')}</div>
-    <div class="row">${field('Kullanıcı adı (giriş)', 'e-user', x.owner || '', 'autocomplete="off" autocapitalize="none"')}${field('E-posta (durum uyarıları)', 'e-mail', x.email || '', 'type="email"')}</div>
-    <div><label>Yönetici Notu</label><textarea id="e-note" rows="2" style="font-size:13px" placeholder="Müşteriyle ilgili dahili notlar (yalnızca süper admin görür)...">${esc(x.note || '')}</textarea></div>
-  </div>
-
-  <!-- Kart 4: Abonelik, Paket ve Süre -->
-  <div class="d-card">
-    <h4>${ic('calendar-clock')} Paket, Durum ve Süre</h4>
-    <div class="row">
-      <div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div>
-      <div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
-      ${field('Cihaz limiti (TV sayısı)', 'e-devs', x.customDevices || x.deviceLimit || 1, 'type="number" min="1" max="999"')}
-    </div>
-    <div class="row">
-      <div>
-        <label>Deneme bitiş tarihi</label>
-        <input id="e-trial" value="${d(x.trialUntil)}" type="date">
-        <div style="display:flex;gap:4px;margin-top:5px">
-          <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',3)">+3 gün</button>
-          <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',7)">+7 gün</button>
-          <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',14)">+14 gün</button>
+      <!-- Kart 2: Paket, Durum ve Süre -->
+      <div class="d-card">
+        <h4>${ic('calendar-clock')} Abonelik, Paket ve Süre</h4>
+        <div class="row">
+          <div><label>Paket</label><select id="e-plan">${planOpts(x.plan)}</select></div>
+          <div><label>Durum</label><select id="e-status">${[['trial', 'Deneme'], ['active', 'Aktif'], ['suspended', 'Askıda']].map(([v, l]) => `<option value="${v}"${v === x.status ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+          ${field('TV Sayısı Limiti', 'e-devs', x.customDevices || x.deviceLimit || 1, 'type="number" min="1" max="999"')}
+        </div>
+        <div class="row">
+          <div>
+            <label>Deneme bitiş tarihi</label>
+            <input id="e-trial" value="${d(x.trialUntil)}" type="date">
+            <div style="display:flex;gap:4px;margin-top:5px">
+              <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',3)">+3g</button>
+              <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',7)">+7g</button>
+              <button type="button" class="quick-date-btn" onclick="addInputDays('e-trial',14)">+14g</button>
+            </div>
+          </div>
+          <div>
+            <label>Ödeme / Lisans bitiş tarihi</label>
+            <input id="e-paid" value="${d(x.paidUntil)}" type="date">
+            <div style="display:flex;gap:4px;margin-top:5px">
+              <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',30)">+30g</button>
+              <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',90)">+90g</button>
+              <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',365)">+1 yıl</button>
+            </div>
+          </div>
         </div>
       </div>
-      <div>
-        <label>Ödeme / Lisans bitiş tarihi</label>
-        <input id="e-paid" value="${d(x.paidUntil)}" type="date">
-        <div style="display:flex;gap:4px;margin-top:5px">
-          <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',30)">+30 gün</button>
-          <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',90)">+90 gün</button>
-          <button type="button" class="quick-date-btn" onclick="addInputDays('e-paid',365)">+1 yıl</button>
+
+      <!-- Kart 3: Özel Yetkiler -->
+      <div class="d-card">
+        <h4>${ic('shield-check')} Özel Yetkiler & Şube Ayarları</h4>
+        <label class="check-box-label">
+          <input type="checkbox" id="e-unl" ${x.unlimited ? 'checked' : ''}>
+          <span><b>Sınırsız Lisans (Kendi İşletmem)</b><br><small class="hint" style="margin:0">Süre dolmaz; TV, kullanıcı ve depolama limiti uygulanmaz.</small></span>
+        </label>
+        <label class="check-box-label">
+          <input type="checkbox" id="e-sup" ${x.superAccess ? 'checked' : ''}>
+          <span><b>Süper Yönetim Yetkisi</b><br><small class="hint" style="margin:0">Bu işletmenin sahibi süper yönetime (sadmin) giriş yapabilir.</small></span>
+        </label>
+        <label class="check-box-label">
+          <input type="checkbox" id="e-test" ${x.canTest ? 'checked' : ''}>
+          <span><b>Test Ortamı Geçiş Düğmesi</b><br><small class="hint" style="margin:0">TV menüsünde test ortamı düğmesi görünür.</small></span>
+        </label>
+        ${x.org ? `<label class="check-box-label" style="border-color:var(--accent2);background:rgba(var(--a2),.08)"><input type="checkbox" id="e-org"><span><b>Zincir Şube Eşitleme:</b> Paket ve süreyi zincirin tüm şubelerine uygula</span></label>` : ''}
+      </div>
+    </div>
+
+    <!-- SAĞ SÜTUN: İstatistikler, TV Cihazları, Güvenlik -->
+    <div class="m-col">
+      ${x.deletion ? `<div class="att bad"><div class="b"><b>KVKK silme talebi</b><span>${fmt(x.deletion)} tarihinde silinecek.</span></div><button class="btn ghost sm" onclick="api('DELETE','/tenants/${id}/deletion').then(()=>{closeDrawer();load()})">Talebi iptal et</button></div>` : ''}
+
+      <!-- 30 Günlük Canlı İstatistikler & Kullanım -->
+      <div class="d-card">
+        <h4>${ic('chart-column')} Kullanım & Performans (Son 30 Gün)</h4>
+        <div class="stats" id="dstats" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px;gap:8px">
+          <div class="stat" style="padding:10px"><b>…</b><span>Ekran süresi</span></div>
+          <div class="stat" style="padding:10px"><b>…</b><span>Oynatma</span></div>
+          <div class="stat" style="padding:10px"><b>…</b><span>QR okutma</span></div>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:var(--r-s);padding:10px 14px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px">
+            <span>Depolama Alanı Kullanımı</span>
+            <b>${x.storageMB} MB ${x.storageLimitMB ? `/ ${x.storageLimitMB} MB` : '(Sınırsız)'}</b>
+          </div>
+          ${x.storageLimitMB ? `<div class="bar" style="margin-top:6px"><i style="width:${Math.min(100, Math.round(x.storageMB / x.storageLimitMB * 100))}%;${x.storageMB >= x.storageLimitMB * 0.9 ? 'background:var(--bad)' : ''}"></i></div>` : ''}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--mute)">
+          <span>KVKK / Sözleşme Onayı:</span>
+          <b style="color:${x.consent ? 'var(--ok)' : 'var(--warn)'}">${x.consent ? '✓ Onaylandı (' + fmt(x.consent) + ')' : 'Henüz onaylanmadı'}</b>
+        </div>
+      </div>
+
+      <!-- Bağlı TV Cihazları -->
+      <div class="d-card">
+        <h4>${ic('tv')} Bağlı Ekranlar & TV Kutuları (${devs.length} / ${lim})</h4>
+        <div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
+          ${devs.length ? devs.map(d => `
+            <div class="it" style="padding:9px 12px;margin:0">
+              <span class="devh"><i class="${d.online ? 'on' : ''}"></i></span>
+              <div class="b">
+                <b>${esc(d.name || T('TV kutusu'))}</b>
+                <span>${d.online ? '<span style="color:var(--ok)">● Çevrimiçi</span>' : '<span style="color:var(--mute)">○ Çevrimdışı</span>'}${d.app ? ' · ' + esc(d.app) : ''}</span>
+              </div>
+              ${d.old ? `<span class="tag warn" title="Yayındaki APK: ${esc(D.system && D.system.apk || '')}">${T('eski sürüm')}</span>` : '<span class="tag ok" style="font-size:11px">güncel</span>'}
+            </div>
+          `).join('') : '<div style="color:var(--mute);font-size:12.5px;padding:12px 0;text-align:center">Henüz bağlı bir TV kutusu veya ekran bulunmuyor.</div>'}
+        </div>
+      </div>
+
+      <!-- Hesap Güvenliği & Tehlikeli Bölge -->
+      <div class="d-card" style="border-color:rgba(238,91,79,.3)">
+        <h4>${ic('lock')} Hesap Güvenliği & Silme</h4>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <b style="font-size:13px">Giriş Şifresini Sıfırla</b>
+            <p class="hint" style="margin:2px 0 0;font-size:12px">Yeni rastgele şifre üretir ve panoya kopyalama seçeneği sunar.</p>
+          </div>
+          <button class="btn ghost sm" onclick="resetPw('${id}')">${ic('key-round')} Şifre Sıfırla</button>
+        </div>
+        <div style="height:1px;background:var(--line);margin:12px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <b style="font-size:13px;color:var(--bad)">İşletmeyi Kalıcı Olarak Sil</b>
+            <p class="hint" style="margin:2px 0 0;font-size:12px">Tüm medya, ayarlar ve ekranlar kalıcı olarak silinir.</p>
+          </div>
+          <button class="btn danger sm" onclick="delT('${id}')">${ic('trash-2')} İşletmeyi Sil</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Kart 5: Özel İzinler & Zincir Ayarları -->
-  <div class="d-card">
-    <h4>${ic('shield-check')} Özel Yetkiler & Şube Ayarları</h4>
-    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px 12px;border-radius:var(--r-m);background:var(--panel);border:1px solid var(--line);cursor:pointer">
-      <input type="checkbox" id="e-unl" ${x.unlimited ? 'checked' : ''} style="margin-top:3px">
-      <span><b>Sınırsız Lisans (Kendi İşletmem)</b><br><span class="hint" style="margin:0;font-size:12px">Süre dolmaz; tüm özellikler açık; cihaz, kullanıcı ve depolama limiti uygulanmaz.</span></span>
-    </label>
-    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px 12px;border-radius:var(--r-m);background:var(--panel);border:1px solid var(--line);cursor:pointer">
-      <input type="checkbox" id="e-sup" ${x.superAccess ? 'checked' : ''} style="margin-top:3px">
-      <span><b>Süper Yönetim Yetkisi</b><br><span class="hint" style="margin:0;font-size:12px">Bu kullanıcının sadmin adresinden tüm platformu yönetmesine izin verir.</span></span>
-    </label>
-    <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:10px 12px;border-radius:var(--r-m);background:var(--panel);border:1px solid var(--line);cursor:pointer">
-      <input type="checkbox" id="e-test" ${x.canTest ? 'checked' : ''} style="margin-top:3px">
-      <span><b>Test Ortamı Geçiş Düğmesi</b><br><span class="hint" style="margin:0;font-size:12px">Ekran menüsünde "Test ortamına geç" seçeneği gösterilir.</span></span>
-    </label>
-    ${x.org ? `<label style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:var(--r-m);background:rgba(var(--a2),.1);border:1px solid var(--accent2);cursor:pointer"><input type="checkbox" id="e-org"> <b>Paket, durum ve süreyi zincirin TÜM şubelerine uygula</b></label>` : ''}
-  </div>
-
-  <!-- Kart 6: Tehlikeli İşlemler -->
-  <div class="d-card" style="border-color:rgba(238,91,79,.3)">
-    <h4>${ic('lock')} Hesap Güvenliği & Silme</h4>
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-      <div>
-        <b style="font-size:13px">Şifre Sıfırlama</b>
-        <p class="hint" style="margin:2px 0 0;font-size:12px">Kullanıcı için yeni bir rastgele şifre üretir.</p>
-      </div>
-      <button class="btn ghost sm" onclick="resetPw('${id}')">${ic('key-round')} Şifre Sıfırla</button>
+  <div class="m-foot">
+    <div style="font-size:12.5px;color:var(--mute)">
+      Değişikliklerin kaydedilmesi için "Değişiklikleri Kaydet" butonuna tıklayın.
     </div>
-    <div style="height:1px;background:var(--line);margin:12px 0"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-      <div>
-        <b style="font-size:13px;color:var(--bad)">İşletmeyi Kalıcı Olarak Sil</b>
-        <p class="hint" style="margin:2px 0 0;font-size:12px">Tüm medya, ayarlar ve ekranlar kalıcı olarak silinir.</p>
-      </div>
-      <button class="btn danger sm" onclick="delT('${id}')">${ic('trash-2')} İşletmeyi Sil</button>
+    <div class="acts">
+      <button class="btn ghost" onclick="closeDrawer()">Vazgeç</button>
+      <button class="btn" onclick="saveT('${id}')">${ic('circle-check')} Değişiklikleri Kaydet</button>
     </div>
-  </div>
-
-  <!-- Sabit Alt Butonlar -->
-  <div class="d-foot">
-    <button class="btn ghost" onclick="closeDrawer()">Vazgeç</button>
-    <button class="btn" onclick="saveT('${id}')">${ic('circle-check')} Değişiklikleri Kaydet</button>
   </div>`);
 
   api('GET', `/tenants/${id}/stats?days=30`).then(j => {
