@@ -68,8 +68,8 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         // içeriğe göre referans ölçü: yalnız hava ya da yalnız piyasa kutusu daha alçak/dar olabilir
         val wx = props?.optBoolean("weather", true) != false; val rt = props?.optBoolean("rates", true) != false; val qr = props?.optBoolean("qr", false) == true
         val refH = if (qr || (wx && rt)) 18f else 10f
-        val refW = if (qr || wx) 44f else 38f
-        return min(height / (refH * baseVh), width / (refW * baseVh)).coerceIn(0.3f, 2.6f)
+        val refW = if (qr || wx) 44f else 28f
+        return min(height / (refH * baseVh), width / (refW * baseVh)).coerceIn(0.35f, 3.2f)
     }
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
         super.onSizeChanged(w, h, ow, oh)
@@ -170,6 +170,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             }
             val line = LinearLayout(context).apply { setBackgroundColor(Color.argb(23, 255, 255, 255)) }
             if (wx != null && props?.optBoolean("weather", true) != false) content.addView(line, LayoutParams(LayoutParams.MATCH_PARENT, max(1, (vh * 0.1f).toInt())).apply { topMargin = gap })
+            val isSolo = (wx == null || props?.optBoolean("weather", true) == false)
             val activeSet = sets[rateIdx % sets.size]
             for (c in activeSet) {
                 val col = LinearLayout(context).apply {
@@ -181,7 +182,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 }
                 col.addView(ShrinkText(context, vh * 20f).apply {
                     text = c.name
-                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.35f)
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * (if (isSolo) 1.6f else 1.35f))
                     setTextColor(p.accent2)
                     includeFontPadding = false
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
@@ -193,7 +194,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 val chgStr = c.change?.let { (if (it > 0.005) "+" else if (it < -0.005) "-" else "") + String.format(Locale("tr", "TR"), "%.1f", abs(it)) + "%" }
                 val chgColor = if (c.change != null) (if (c.change > 0.005) Color.parseColor("#34d399") else if (c.change < -0.005) Color.parseColor("#f87171") else p.mute) else 0
 
-                col.addView(AutoFitRateText(context, vh, p, c.value, c.unit, chgStr, chgColor), LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.25f).toInt() })
+                col.addView(AutoFitRateText(context, vh, p, c.value, c.unit, chgStr, chgColor, isSolo), LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.25f).toInt() })
 
                 row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             }
@@ -281,7 +282,8 @@ internal class AutoFitRateText(
     private val valText: String,
     private val unitText: String,
     private val chgText: String?,
-    private val chgColor: Int
+    private val chgColor: Int,
+    private val isSolo: Boolean = false
 ) : TextView(context) {
     private var lastAvail = -1f
 
@@ -293,15 +295,16 @@ internal class AutoFitRateText(
     }
 
     private fun calcWidth(scale: Float): Float {
-        val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { isFakeBoldText = true; textSize = vh * 2.1f * scale }
+        val baseSize = vh * (if (isSolo) 2.6f else 2.1f) * scale
+        val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { isFakeBoldText = true; textSize = baseSize }
         var total = tp.measureText(valText)
         if (unitText.isNotEmpty()) {
-            tp.textSize = vh * 1.35f * scale
+            tp.textSize = baseSize * 0.65f
             tp.isFakeBoldText = false
             total += tp.measureText(" $unitText")
         }
         if (chgText != null) {
-            tp.textSize = vh * 1.15f * scale
+            tp.textSize = baseSize * 0.55f
             tp.isFakeBoldText = true
             total += tp.measureText(" $chgText")
         }
@@ -309,17 +312,18 @@ internal class AutoFitRateText(
     }
 
     private fun applyScale(scale: Float) {
+        val baseSize = vh * (if (isSolo) 2.6f else 2.1f) * scale
         val s = SpannableStringBuilder(valText).apply {
-            setSpan(RunSpan(vh * 2.1f * scale, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(RunSpan(baseSize, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             if (unitText.isNotEmpty()) {
                 val a = length
                 append(" $unitText")
-                setSpan(RunSpan(vh * 1.35f * scale, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(RunSpan(baseSize * 0.65f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             if (chgText != null) {
                 val a = length
                 append(" $chgText")
-                setSpan(RunSpan(vh * 1.15f * scale, chgColor, true, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(RunSpan(baseSize * 0.55f, chgColor, true, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
         text = s
