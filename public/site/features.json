@@ -170,8 +170,9 @@
       "icon": "📣",
       "title": "Kampanya kartı, QR kodlar ve Google yorumları",
       "short": "Kampanya ve QR",
-      "text": "Belirli aralıklarla medyanın yerine QR kodlu bir kampanya kartı çıkar: \"Google'da yorum yapın, kahveniz bizden\" gibi. Menü, Wi‑Fi ya da Instagram için QR kodlar ekranda döner; 4 ve 5 yıldızlı Google yorumlarınız ekranın altında akar.",
+      "text": "Belirli aralıklarla medyanın yerine kendi fotoğrafınız tam ekran çıkar; bağlantıdan ürettiğiniz QR kodu fotoğrafın istediğiniz yerine koyarsınız. Örneğin: \"Google'da yorum yapın, kahveniz bizden\" gibi. Menü, Wi‑Fi ya da Instagram için QR kodlar ekranda döner; 4 ve 5 yıldızlı Google yorumlarınız ekranın altında akar.",
       "points": [
+        "Kampanya fotoğrafını yükleyin, QR kodunu sürükleyerek istediğiniz yere yerleştirin; gün ve saat zamanlaması da yapılır",
         "Kaç dakikada bir, kaç saniye görüneceğini siz seçin",
         "En çok 6 QR kod; Wi‑Fi QR'ı tek dokunuşla bağlanır",
         "Instagram paylaşımlarınız medya döngüsüne girer",
@@ -190,8 +191,9 @@
           "title": "Promotion card, QR codes and Google reviews",
           "short": "Promotions & QR",
           "compare": "QR codes and promotion card",
-          "text": "At set intervals, a promotion card with a QR code takes over the media area, for example: \"Review us on Google and your coffee is on us\". QR codes for your menu, Wi‑Fi or Instagram rotate on screen, and your 4- and 5-star Google reviews scroll along the bottom.",
+          "text": "At set intervals, your own photo takes over the screen, with a QR code made from a link placed wherever you want on it. For example: \"Review us on Google and your coffee is on us\". QR codes for your menu, Wi‑Fi or Instagram rotate on screen, and your 4- and 5-star Google reviews scroll along the bottom.",
           "points": [
+            "Upload your campaign photo and drag the QR code anywhere on it; day and time scheduling is included",
             "You choose how often and for how long it appears",
             "Up to 6 QR codes; the Wi‑Fi code connects with one tap",
             "Your Instagram posts join the media rotation",
@@ -203,8 +205,9 @@
           "title": "Aktionskarte, QR-Codes und Google-Bewertungen",
           "short": "Aktionen & QR",
           "compare": "QR-Codes und Aktionskarte",
-          "text": "In festen Abständen ersetzt eine Aktionskarte mit QR-Code die Medienfläche, etwa: „Bewerten Sie uns bei Google – der Kaffee geht aufs Haus.“ QR-Codes für Speisekarte, WLAN oder Instagram wechseln sich ab, und Ihre 4- und 5-Sterne-Bewertungen von Google laufen am unteren Rand.",
+          "text": "In festen Abständen erscheint Ihr eigenes Foto im Vollbild, mit einem QR-Code aus einem Link an der Stelle, die Sie wünschen. Zum Beispiel: „Bewerten Sie uns bei Google – der Kaffee geht aufs Haus.“ QR-Codes für Speisekarte, WLAN oder Instagram wechseln sich ab, und Ihre 4- und 5-Sterne-Bewertungen von Google laufen am unteren Rand.",
           "points": [
+            "Aktionsfoto hochladen und den QR-Code an eine beliebige Stelle ziehen; Zeitplanung nach Tag und Uhrzeit inklusive",
             "Sie legen fest, wie oft und wie lange sie erscheint",
             "Bis zu 6 QR-Codes; der WLAN-Code verbindet mit einem Tipp",
             "Ihre Instagram-Beiträge laufen in der Medienschleife mit",
@@ -216,8 +219,9 @@
           "title": "بطاقة العروض ورموز QR وتقييمات Google",
           "short": "العروض وQR",
           "compare": "رموز QR وبطاقة العروض",
-          "text": "على فترات تحددها، تظهر بطاقة عرض تحمل رمز QR مكان الوسائط، مثل: «قيّمنا على Google وقهوتك علينا». وتتناوب على الشاشة رموز QR لقائمة الطعام أو شبكة Wi‑Fi أو Instagram، فيما تمرّ تقييماتك ذات الأربع والخمس نجوم على Google أسفل الشاشة.",
+          "text": "على فترات تحددها، تظهر صورتك الخاصة بملء الشاشة مع رمز QR منشأ من رابط وتضعه في المكان الذي تريده عليها. مثل: «قيّمنا على Google وقهوتك علينا». وتتناوب على الشاشة رموز QR لقائمة الطعام أو شبكة Wi‑Fi أو Instagram، فيما تمرّ تقييماتك ذات الأربع والخمس نجوم على Google أسفل الشاشة.",
           "points": [
+            "ارفع صورة الحملة واسحب رمز QR إلى أي مكان عليها؛ مع جدولة حسب اليوم والساعة",
             "تحدّد عدد مرات ظهورها ومدته",
             "حتى 6 رموز QR؛ ورمز Wi‑Fi يتصل بلمسة واحدة",
             "تنضم منشوراتك على Instagram إلى دورة العرض",

@@ -28,9 +28,12 @@ const appVersion = () => {
 };
 
 const CAMP_QR = url => QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
-const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch, image, emoji, textAlign, font, style, pos }) => ({
+const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch, image, emoji, textAlign, font, style, pos, qrX, qrY, qrSize }) => ({
   id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch: sch || null,
   image: image || null,
+  // Fotoğraflı kampanya: tam ekran fotoğraf + sürüklenip yerleştirilen QR (konum/boyut yüzde)
+  photo: !!image,
+  qrX: qrX != null ? qrX : 85, qrY: qrY != null ? qrY : 75, qrSize: qrSize || 26,
   emoji: emoji !== undefined ? emoji : '☕',
   textAlign: textAlign || 'left',
   font: font || 'Montserrat',

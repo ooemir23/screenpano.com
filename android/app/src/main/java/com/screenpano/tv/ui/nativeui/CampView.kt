@@ -19,8 +19,42 @@ import kotlin.math.max
 
 /** Kampanya kartı (tam kadraj, QR kodlu duyuru). Sayfadaki #camp ile aynı yerleşim; zamanlamayı sayfa yönetir. */
 class CampView(context: Context) : FrameLayout(context) {
+    // Fotoğraflı kampanya: tam ekran fotoğraf + seçilen yere konmuş QR (konum/boyut yüzde)
+    private var photoQr: View? = null
+    private var qx = 85f; private var qy = 75f; private var qs = 26f
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        val box = photoQr ?: return
+        val w = r - l; val h = b - t
+        val size = (h * qs / 100f).toInt().coerceAtLeast(1)
+        val cx = (w * qx / 100f).toInt(); val cy = (h * qy / 100f).toInt()
+        box.measure(MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY))
+        box.layout(cx - size / 2, cy - size / 2, cx + size / 2, cy + size / 2)
+    }
+
+    private fun bindPhoto(c: JSONObject) {
+        photoQr = null
+        val vh = resources.displayMetrics.heightPixels / 100f
+        background = GradientDrawable().apply { setColor(Color.BLACK); cornerRadius = vh * 1.39f }
+        clipToOutline = true
+        val bgIv = ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+        bgIv.load(NativeEnv.url(c.optString("image"))) { crossfade(false) }
+        addView(bgIv, LayoutParams(-1, -1))
+        qx = c.optDouble("qrX", 85.0).toFloat(); qy = c.optDouble("qrY", 75.0).toFloat(); qs = c.optDouble("qrSize", 26.0).toFloat()
+        val box = FrameLayout(context).apply { background = GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = vh * 1.6f } }
+        val iv = ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+        box.addView(iv, LayoutParams(-1, -1))
+        box.post { val pd = (box.height * 0.06f).toInt(); box.setPadding(pd, pd, pd, pd) }
+        val svg = c.optString("svg"); if (svg.isNotEmpty()) iv.load(ByteBuffer.wrap(svg.toByteArray())) { crossfade(false) }
+        addView(box, LayoutParams(1, 1))
+        photoQr = box
+    }
+
     fun bind(c: JSONObject, s: TvState) {
         removeAllViews()
+        if (c.optBoolean("photo") && c.optString("image").isNotEmpty()) { bindPhoto(c); return }
+        photoQr = null
         val p = Palette(s)
         val dm = resources.displayMetrics
         val vh = dm.heightPixels / 100f
