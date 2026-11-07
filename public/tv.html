@@ -211,8 +211,8 @@ position:absolute;top:.8vh;right:.8vw}
 .r-col{flex:1 1 0;min-width:0;height:100%;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 calc(.25*var(--rv));box-sizing:border-box;position:relative}
 .r-col:not(:last-child)::after{content:"";position:absolute;right:0;top:15%;bottom:15%;width:1px;background:var(--line);opacity:.35}
 
-.r-sym{flex:none;display:flex;align-items:center;justify-content:center;font-size:calc(1.35*var(--rv));font-weight:700;letter-spacing:.06em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;margin-bottom:calc(.3*var(--rv))}
-.r-sym span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-sym{flex:none;display:flex;align-items:center;justify-content:center;font-size:calc(1.22*var(--rv));font-weight:700;letter-spacing:.03em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2;max-width:100%;overflow:hidden;margin-bottom:calc(.3*var(--rv))}
+.r-sym span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 .r-val{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:calc(2.25*var(--rv)*var(--vscale,1));font-weight:800;color:var(--white);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;transition:opacity .22s ease,transform .22s ease}
 .r-val .r-num{white-space:nowrap;flex-shrink:0}
@@ -2354,9 +2354,18 @@ function fitRates() {
         const s = col.querySelector('.r-sym');
         if (s) {
           s.style.fontSize = '';
-          if (s.scrollWidth > maxW) {
-            const sc = Math.max(0.70, maxW / s.scrollWidth);
-            s.style.fontSize = `calc(1.3 * var(--rv) * ${sc.toFixed(3)})`;
+          s.style.letterSpacing = '';
+          const sp = s.querySelector('span') || s;
+          const prevOv = sp.style.overflow, prevW = sp.style.whiteSpace;
+          sp.style.overflow = 'visible';
+          sp.style.whiteSpace = 'nowrap';
+          const textW = Math.max(sp.scrollWidth, sp.offsetWidth, sp.getBoundingClientRect().width);
+          sp.style.overflow = prevOv;
+          sp.style.whiteSpace = prevW;
+          if (textW > maxW) {
+            const sc = Math.max(0.55, (maxW - 1) / textW);
+            s.style.fontSize = `calc(1.22 * var(--rv) * ${sc.toFixed(3)})`;
+            s.style.letterSpacing = sc < 0.9 ? '0' : '0.02em';
           }
         }
       }

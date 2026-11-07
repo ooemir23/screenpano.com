@@ -199,11 +199,11 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 }
                 col.addView(ShrinkText(context, vh * 20f).apply {
                     text = c.name
-                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * (if (isSolo) 1.45f else 1.3f))
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * (if (isSolo) 1.35f else 1.2f))
                     setTextColor(p.accent2)
                     includeFontPadding = false
                     typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    letterSpacing = 0.06f
+                    letterSpacing = if (c.name.length > 5) 0.015f else 0.04f
                     setSingleLine(true)
                     gravity = Gravity.CENTER
                 }, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
@@ -293,9 +293,9 @@ internal class ShrinkText(context: Context, private val capPx: Float) : TextView
         val t = text?.toString() ?: ""
         val avail = (if (MeasureSpec.getMode(w) == MeasureSpec.UNSPECIFIED) capPx else minOf(capPx, MeasureSpec.getSize(w).toFloat())) - paddingLeft - paddingRight - 2
         var size = base
-        while (size > base * 0.4f) {
+        while (size > base * 0.35f) {
             paint.textSize = size
-            if (paint.measureText(t) + letterSpacing * size * t.length <= avail) break
+            if (paint.measureText(t) <= avail) break
             size *= 0.94f
         }
         setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
