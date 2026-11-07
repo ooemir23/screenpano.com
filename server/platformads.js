@@ -59,12 +59,14 @@ function eligible(a, t) {
   if (g.mode === 'city') { const c = String(((t.db || {}).location || {}).city || '').toLocaleLowerCase('tr-TR'); return (g.cities || []).some(x => String(x).toLocaleLowerCase('tr-TR') === c); }
   return true;
 }
-const liveFor = t => load().filter(a => status(a) === 'live' && eligible(a, t));
+// Deneme gönderimi: reklam yalnız seçilen işletmenin ekranlarında, kısa süreliğine (ödeme/dönem/hedef gözetmeden) sık aralıkla gösterilir
+const trialOn = (a, t) => !!(a.trial && a.trial.until > Date.now() && (!t || a.trial.tid === t.id) && (a.creatives || []).length && !a.paused);
+const liveFor = t => load().filter(a => trialOn(a, t) || (status(a) === 'live' && eligible(a, t)));
 
 // Medya döngüsüne reklam ekler: her reklam "every" içerikte bir, görselleri sırayla. Ekranda başka içerik yoksa yalnız reklamlar döner.
 function inject(t, list) {
   const ads = liveFor(t); if (!ads.length) return list;
-  const pools = ads.map(a => ({ items: a.creatives.map(c => ({ id: 'pad:' + c.id, name: a.title || a.advertiser, url: '/u/ads/' + c.file, type: c.type, dur: c.type === 'image' ? null : (c.dur || null), sch: null, ad: true })), k: 0, every: Math.max(1, Math.min(20, Number(a.every) || 4)) }));
+  const pools = ads.map(a => ({ items: a.creatives.map(c => ({ id: 'pad:' + c.id, name: a.title || a.advertiser, url: '/u/ads/' + c.file, type: c.type, dur: c.type === 'image' ? null : (c.dur || null), sch: null, ad: true })), k: 0, every: trialOn(a, t) ? 1 : Math.max(1, Math.min(20, Number(a.every) || 4)) }));
   if (!list.length) return pools.flatMap(p => p.items);
   const out = [];
   list.forEach((v, i) => {
@@ -93,7 +95,7 @@ function derive(a, withPerf) {
   const total = a.start && a.end ? dayDiff(a.start, a.end) + 1 : null;
   const left = a.end ? Math.max(0, dayDiff(d, a.end) + 1) : null;
   const elapsed = total ? Math.max(0, Math.min(total, a.start && d >= a.start ? dayDiff(a.start, d) + 1 : 0)) : null;
-  const out = { ...a, status: status(a), pay: payState(a), paid: got, due: Math.max(0, price - got), totalDays: total, daysLeft: a.end && d <= a.end ? left : (a.end ? 0 : null), elapsed,
+  const out = { ...a, trial: trialOn(a) ? a.trial : null, status: status(a), pay: payState(a), paid: got, due: Math.max(0, price - got), totalDays: total, daysLeft: a.end && d <= a.end ? left : (a.end ? 0 : null), elapsed,
     overdue: payState(a) === 'unpaid' && !!a.start && d >= a.start, url: `${config.BASE_URL}/ra/${a.token}` };
   if (withPerf) { const p = perf(a); out.perf = { shown: p.shown, sec: p.sec, tenants: p.tenants.size }; }
   return out;
@@ -143,7 +145,7 @@ const pushAll = () => { for (const t of tenants.all()) { try { hub.pushTenant(t.
 
 // Tarih geçişleri (başlangıç/bitiş günü, ödeme) için: yayındaki reklam kümesi değişince ekranlara bildir
 let lastSig = '';
-const sig = () => load().filter(a => status(a) === 'live').map(a => a.id + ':' + a.creatives.length + ':' + (a.every || 4) + ':' + JSON.stringify(a.target || {})).join('|');
+const sig = () => load().filter(a => status(a) === 'live' || trialOn(a)).map(a => a.id + ':' + a.creatives.length + ':' + (a.every || 4) + ':' + JSON.stringify(a.target || {})).join('|');
 function watch() { lastSig = sig(); setInterval(() => { const n = sig(); if (n !== lastSig) { lastSig = n; pushAll(); } }, 5 * 60 * 1000).unref(); }
 
 // Eski sistem (işletme kendi reklam alanı): kaldırıldı; kalan reklam kayıtları ve görselleri bir kez temizlenir
@@ -211,6 +213,21 @@ function routes(r) {
     list.push(a); save(list); res.json({ ok: true, id: a.id });
   });
   r.put('/pads/:id', (req, res) => { const f = find(req, res); if (!f) return; clean(req.body || {}, f.a); save(f.list); pushAll(); res.json({ ok: true, ad: derive(f.a) }); });
+  // Deneme gönderimi: seçilen işletmeye 10 dk (en çok 60 dk) göster / iptal et
+  r.post('/pads/:id/trial', (req, res) => {
+    const f = find(req, res); if (!f) return;
+    const t = tenants.get(String((req.body || {}).tenantId || '')); if (!t) return res.status(400).json({ error: 'İşletme seçin' });
+    if (!f.a.creatives.length) return res.status(400).json({ error: 'Önce görsel veya video ekleyin' });
+    const min = Math.max(1, Math.min(60, Number((req.body || {}).minutes) || 10));
+    f.a.trial = { tid: t.id, name: t.name, until: Date.now() + min * 60000 }; save(f.list);
+    try { hub.pushTenant(t.id); } catch (e) { /* bağlı ekran yok */ }
+    setTimeout(() => { try { hub.pushTenant(t.id); } catch (e) { /* */ } }, min * 60000 + 2000).unref();
+    res.json({ ok: true, trial: f.a.trial });
+  });
+  r.delete('/pads/:id/trial', (req, res) => {
+    const f = find(req, res); if (!f) return; const tid = f.a.trial && f.a.trial.tid; delete f.a.trial; save(f.list);
+    if (tid) { try { hub.pushTenant(tid); } catch (e) { /* */ } } res.json({ ok: true });
+  });
   r.delete('/pads/:id', (req, res) => { const f = find(req, res); if (!f) return; f.a.creatives.forEach(rm); save(f.list.filter(x => x !== f.a)); pushAll(); res.json({ ok: true }); });
   r.post('/pads/:id/token', (req, res) => { const f = find(req, res); if (!f) return; f.a.token = crypto.randomBytes(15).toString('base64url'); save(f.list); res.json({ ok: true, url: `${config.BASE_URL}/ra/${f.a.token}` }); });
   r.post('/pads/:id/media', upload.array('files'), async (req, res) => {
