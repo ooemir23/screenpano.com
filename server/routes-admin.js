@@ -144,7 +144,7 @@ r.get('/catalog', (req, res) => res.json({ cols: W.COLS, rows: W.ROWS, widgets: 
 const designAll = () => { try { return JSON.parse(store.setting('sharedDesigns', '[]')) || []; } catch { return []; } };
 const designList = () => designAll().map(({ id, name, desc, by, at, layout, theme }) => ({ id, name, desc, by, at, layout, theme }));
 const designCan = req => auth.superOk(req.user);
-const designStrip = l => {
+const designStrip = l => { // işletmeye özel props alanları atılır; cleanLayout eksikleri varsayılanla doldurur
   const out = W.cleanLayout(l);
   for (const w of out.widgets) if (w.props) for (const k of ['qr', 'qrs', 'url', 'i18n', 'body', 'title']) delete w.props[k];
   return W.cleanLayout(out);
