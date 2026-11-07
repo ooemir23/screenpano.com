@@ -155,23 +155,12 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         }
         if (props?.optBoolean("rates", true) != false) {
             val r = s.raw.optJSONObject("rates") ?: JSONObject()
-            fun chg(v: Double?): View? {
+            fun chg(v: Double?): SpannableStringBuilder? {
                 if (v == null) return null
                 val up = v > 0.005; val dn = v < -0.005
                 val str = (if (up) "▲ " else if (dn) "▼ " else "• ") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
-                return TextView(context).apply {
-                    text = str
-                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 0.92f)
-                    setTextColor(if (up) Color.parseColor("#34d399") else if (dn) Color.parseColor("#f87171") else p.mute)
-                    includeFontPadding = false
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    setPadding((vh * 0.4f).toInt(), (vh * 0.12f).toInt(), (vh * 0.4f).toInt(), (vh * 0.12f).toInt())
-                    background = GradientDrawable().apply {
-                        cornerRadius = vh * 0.4f
-                        setColor(if (up) Color.argb(40, 16, 185, 129) else if (dn) Color.argb(40, 239, 68, 68) else Color.argb(16, 255, 255, 255))
-                        setStroke(max(1, (vh * 0.08f).toInt()), if (up) Color.argb(70, 16, 185, 129) else if (dn) Color.argb(70, 239, 68, 68) else Color.TRANSPARENT)
-                    }
-                    setSingleLine(true)
+                return SpannableStringBuilder(str).apply {
+                    setSpan(RunSpan(vh * 1.15f, if (up) Color.parseColor("#34d399") else if (dn) Color.parseColor("#f87171") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
             data class Cell(val name: String, val change: Double?, val value: String, val unit: String)
@@ -179,59 +168,52 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 listOf(Cell("USD", null, f(r.num("usd")), "₺"), Cell("EUR", null, f(r.num("eur")), "₺"), Cell("ALTIN", r.num("goldCh"), f(r.num("gold"), 0), "₺")),
                 listOf(Cell("BIST 100", r.num("bistCh"), f(r.num("bist"), 0), ""), Cell("BITCOIN", r.num("btcCh"), r.num("btc")?.let { "$" + f(it, 0) } ?: "--", ""), Cell("STERLİN", null, f(r.num("gbp")), "₺")),
             )
-            val row = LinearLayout(context).apply { orientation = HORIZONTAL }
-            val cardGap = (vh * 0.45f).toInt()
+            val row = LinearLayout(context).apply {
+                orientation = HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            val line = LinearLayout(context).apply { setBackgroundColor(Color.argb(23, 255, 255, 255)) }
+            if (wx != null && props?.optBoolean("weather", true) != false) content.addView(line, LayoutParams(LayoutParams.MATCH_PARENT, max(1, (vh * 0.1f).toInt())).apply { topMargin = gap })
             val activeSet = sets[rateIdx % sets.size]
-            for ((idx, c) in activeSet.withIndex()) {
-                val card = LinearLayout(context).apply {
+            for (c in activeSet) {
+                val col = LinearLayout(context).apply {
                     orientation = VERTICAL
-                    setPadding((vh * 0.65f).toInt(), (vh * 0.55f).toInt(), (vh * 0.65f).toInt(), (vh * 0.55f).toInt())
-                    background = GradientDrawable().apply {
-                        cornerRadius = vh * 0.85f
-                        setColor(Color.argb(14, 255, 255, 255))
-                        setStroke(max(1, (vh * 0.09f).toInt()), Color.argb(20, 255, 255, 255))
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding((vh * 0.35f).toInt(), 0, (vh * 0.35f).toInt(), 0)
+                }
+                val head = SpannableStringBuilder(c.name).apply {
+                    setSpan(RunSpan(vh * 1.35f, p.accent2, true, 0.05f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    val cSpan = chg(c.change)
+                    if (cSpan != null) {
+                        append(" ")
+                        append(cSpan)
                     }
                 }
-                val topRow = LinearLayout(context).apply {
-                    orientation = HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                }
-                val symTv = FitText(context).apply {
-                    text = c.name
-                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.05f)
-                    setTextColor(p.accent2)
+                col.addView(FitSpanText(context).apply {
+                    text = head
                     includeFontPadding = false
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    letterSpacing = 0.03f
                     setSingleLine(true)
-                }
-                topRow.addView(symTv, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
-                val chgView = chg(c.change)
-                if (chgView != null) {
-                    topRow.addView(chgView, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { leftMargin = (vh * 0.2f).toInt() })
-                }
-                card.addView(topRow)
+                    gravity = Gravity.CENTER
+                })
 
                 val vtxt = SpannableStringBuilder(c.value).apply {
-                    setSpan(RunSpan(vh * 1.85f, p.white, true, -0.01f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    setSpan(RunSpan(vh * 2.4f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     if (c.unit.isNotEmpty()) {
                         val a = length
                         append(" " + c.unit)
-                        setSpan(RunSpan(vh * 1.25f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        setSpan(RunSpan(vh * 1.5f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     }
                 }
-                card.addView(FitSpanText(context).apply {
+                col.addView(FitSpanText(context).apply {
                     text = vtxt
                     includeFontPadding = false
                     setSingleLine(true)
-                }, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.35f).toInt() })
+                    gravity = Gravity.CENTER
+                }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.25f).toInt() })
 
-                val lp = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply {
-                    if (idx > 0) leftMargin = cardGap
-                }
-                row.addView(card, lp)
+                row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             }
-            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = gap })
+            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = if (wx != null && props?.optBoolean("weather", true) != false) gap else 0 })
         }
             }
             content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = gap })

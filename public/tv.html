@@ -203,19 +203,19 @@ position:absolute;top:.8vh;right:.8vw}
 #rqr .rq .code svg{width:100%;height:100%;display:block}
 #rqr .rq .lbl{flex:none;width:100%;box-sizing:border-box;height:calc(3.2*var(--rv));display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;background:rgba(10,8,6,.92);border:max(1px,calc(.15*var(--rv))) solid var(--al);border-radius:calc(2*var(--rv));color:#fff;font-size:calc(1.8*var(--rv));font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:0 .6vw;text-shadow:0 calc(.2*var(--rv)) calc(.4*var(--rv)) #000}
 #rqr .rq .lbl.pw{text-transform:none;letter-spacing:.03em;color:var(--al);font-size:calc(2*var(--rv))}
-#rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(.5*var(--rv));box-sizing:border-box}
-#rrow.swap{transition:opacity .4s}
+#rrow{display:flex;align-items:center;justify-content:space-around;width:100%;box-sizing:border-box}
+#rrow.swap{transition:opacity .35s ease}
 #rrow.swap.out{opacity:0}
-.rcard{min-width:0;background:rgba(255,255,255,.035);border:max(1px,calc(.1*var(--rv))) solid rgba(255,255,255,.07);border-radius:calc(.85*var(--rv));padding:calc(.55*var(--rv)) calc(.55*var(--rv));display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden;box-shadow:0 calc(.3*var(--rv)) calc(.8*var(--rv)) rgba(0,0,0,.18)}
-.rcard-head{display:flex;align-items:center;justify-content:space-between;gap:calc(.2*var(--rv));min-width:0;margin-bottom:calc(.25*var(--rv))}
-.rcard-sym,#rrow small{display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(1.1*var(--rv));letter-spacing:.03em;color:var(--accent2);font-weight:700;text-transform:uppercase}
-.chg{font-style:normal;font-size:calc(.95*var(--rv));font-weight:700;letter-spacing:0;display:inline-flex;align-items:center;padding:calc(.12*var(--rv)) calc(.35*var(--rv));border-radius:calc(.4*var(--rv));line-height:1.15;white-space:nowrap;flex-shrink:0}
-.chg.up{color:#34d399;background:rgba(16,185,129,.16);border:max(1px,calc(.08*var(--rv))) solid rgba(16,185,129,.28)}
-.chg.dn{color:#f87171;background:rgba(239,68,68,.16);border:max(1px,calc(.08*var(--rv))) solid rgba(239,68,68,.28)}
-.chg.fl{color:var(--mute);background:rgba(255,255,255,.06)}
-.rcard-val,#rrow strong{display:block;font-size:calc(1.9*var(--rv));font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.2}
-.rcard-val i,#rrow strong i{font-style:normal;font-size:calc(1.25*var(--rv));color:var(--mute);margin-left:calc(.15*var(--rv));font-weight:500}
-html.theme-glass .rcard{background:rgba(18,24,34,.58);border-color:rgba(255,255,255,.09);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+#wx+#rrow{border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.8*var(--rv));margin-top:calc(.4*var(--rv))}
+.r-col{flex:1 1 0;min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 calc(.4*var(--rv));box-sizing:border-box}
+.r-sym{display:flex;align-items:center;justify-content:center;gap:calc(.35*var(--rv));font-size:calc(1.35*var(--rv));font-weight:700;letter-spacing:.05em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2}
+.r-sym span{white-space:nowrap}
+.chg{font-style:normal;font-size:calc(1.15*var(--rv));font-weight:700;letter-spacing:0;line-height:1;white-space:nowrap}
+.chg.up{color:#34d399}
+.chg.dn{color:#f87171}
+.chg.fl{color:var(--mute)}
+.r-val{display:block;font-size:calc(2.4*var(--rv));font-weight:700;color:var(--white);line-height:1.15;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:calc(.2*var(--rv))}
+.r-val i{font-style:normal;font-size:calc(1.5*var(--rv));color:var(--mute);margin-left:calc(.2*var(--rv));font-weight:400}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -2090,13 +2090,10 @@ function startRateSwap() { // 8 sn'de bir USD/EUR/ALTIN ile BIST 100/BITCOIN/STE
 }
 // günlük değişim: ▲ yeşil, ▼ kırmızı
 const chg = v => (v == null || !isFinite(v)) ? '' : `<span class="chg ${v > 0.005 ? 'up' : v < -0.005 ? 'dn' : 'fl'}">${v > 0.005 ? '▲' : v < -0.005 ? '▼' : '•'} ${Math.abs(v).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</span>`;
-const rateCard = (sym, cVal, val, unit = '') => `
-  <div class="rcard">
-    <div class="rcard-head">
-      <small class="rcard-sym">${esc(sym)}</small>
-      ${chg(cVal)}
-    </div>
-    <strong class="rcard-val">${val}${unit ? `<i>${unit}</i>` : ''}</strong>
+const rateCol = (sym, cVal, val, unit = '') => `
+  <div class="r-col">
+    <div class="r-sym"><span>${esc(sym)}</span>${chg(cVal)}</div>
+    <div class="r-val">${val}${unit ? `<i>${unit}</i>` : ''}</div>
   </div>`;
 function renderPanel() {
   const sig = JSON.stringify([lastRates, lastWeather, WPROPS.rates, CITY]);
@@ -2113,8 +2110,8 @@ function renderPanel() {
       <div class="city">${esc(CITY)}<small>${Math.round(w.min)}° / ${Math.round(w.max)}°</small></div></div>`;
   }
   rateSets = [
-    rateCard('USD', null, f(r.usd), '₺') + rateCard('EUR', null, f(r.eur), '₺') + rateCard('ALTIN', r.goldCh, f(r.gold, 0), '₺'),
-    rateCard('BIST 100', r.bistCh, f(r.bist, 0)) + rateCard('BITCOIN', r.btcCh, r.btc ? '$' + f(r.btc, 0) : '--') + rateCard('STERLİN', null, f(r.gbp), '₺'),
+    rateCol('USD', null, f(r.usd), '₺') + rateCol('EUR', null, f(r.eur), '₺') + rateCol('ALTIN', r.goldCh, f(r.gold, 0), '₺'),
+    rateCol('BIST 100', r.bistCh, f(r.bist, 0)) + rateCol('BITCOIN', r.btcCh, r.btc ? '$' + f(r.btc, 0) : '--') + rateCol('STERLİN', null, f(r.gbp), '₺'),
   ];
   const rp = WPROPS.rates || {};
   const mk = p => (p.weather === false ? '' : wx) + (p.rates === false ? '' : `<div id="rrow" class="swap rrx">${rateSets[rateIdx % rateSets.length]}</div>`);
@@ -2149,7 +2146,7 @@ function ratesQr() {
 // T6: hava/piyasa kutusu yazıları kutu boyutuna göre küçülür (native RatesWidget.fitScale ile aynı taban: 17×42 vh)
 // Hava ve piyasa kutusu: yazı ölçeği (--rv) kutuya göre ölçülerek bulunur; içerik kutudan taşmaz, küçük kutuda sıkışmaz, büyük kutuda büyür
 function fitRates() {
-  document.querySelectorAll('#rates').forEach(el => {
+  document.querySelectorAll('#rates, .rtx').forEach(el => {
     if (!el.clientWidth || !el.clientHeight) return;
     const vh = innerHeight / 100, cs = getComputedStyle(el);
     const set = k => el.style.setProperty('--rv', (k * vh).toFixed(3) + 'px');
@@ -2159,7 +2156,7 @@ function fitRates() {
       for (const c of el.children) { if (!c.offsetHeight) continue; const r = c.getBoundingClientRect(); top = Math.min(top, r.top); bot = Math.max(bot, r.bottom); }
       if (isFinite(top) && bot - top > el.clientHeight - padV + 1) return false;
       if (el.scrollWidth > el.clientWidth + 1) return false;
-      return ![...el.querySelectorAll('#rrow div,#rrow small,#rrow strong,#wx')].some(d => d.scrollWidth > d.clientWidth + 1);
+      return ![...el.querySelectorAll('#rrow, #wx, .r-sym, .r-val')].some(d => d.scrollWidth > d.clientWidth + 1);
     };
     let lo = .2, hi = 2.4;
     for (let n = 0; n < 9; n++) { const mid = (lo + hi) / 2; set(mid); if (fits()) lo = mid; else hi = mid; }
