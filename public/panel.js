@@ -287,13 +287,24 @@ SECTIONS.design = {
   },
 };
 const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-const floats = (a, b) => (a.type === 'qr') !== (b.type === 'qr'); // QR kartı diğer kutuların üstüne konabilir
+const isFloat = t => t === 'qr' || t === 'text';
+const floats = (a, b) => isFloat(a.type) !== isFloat(b.type); // QR ve yazı kutuları medyanın veya diğer kutuların üstüne konabilir
 const badSet = () => { const ws = EDIT.layout.widgets, bad = new Set(); ws.forEach((a, i) => ws.forEach((b, j) => { if (i < j && overlap(a, b) && !floats(a, b)) { bad.add(i); bad.add(j); } })); return bad; };
 function drawCanvas() {
   const c = $('cv'); if (!c) return;
   const bad = badSet(), G = EDIT.layout.cols || 24; lbarSync();
   c.style.backgroundSize = `calc(100% / ${G}) calc(100% / ${G})`;
-  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / G * 100}%;top:${w.y / G * 100}%;width:${w.w / G * 100}%;height:${w.h / G * 100}%">${ICON[w.type] || ''}${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small>${['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].map(h => `<i class="rz rz-${h}" data-h="${h}"></i>`).join('')}</div>`; }).join('');
+  c.innerHTML = EDIT.layout.widgets.map((w, i) => {
+    const d = S.cat.widgets[w.type] || { name: w.type };
+    const p = w.props || {};
+    const isFl = w.type === 'qr' || w.type === 'text';
+    const txtPrev = w.type === 'text' ? (p.title || p.body ? esc((p.title || '') + (p.title && p.body ? ' ' : '') + (p.body || '')).slice(0, 34) : 'Yazı kutusu') : esc(d.name);
+    const sub = d.pro && !pro() ? '🔒 Pro'
+      : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === p.qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h
+      : w.type === 'text' ? (p.size ? p.size.toUpperCase() + ' · ' : '') + w.w + '×' + w.h
+      : w.w + '×' + w.h;
+    return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${isFl ? ' fl' : ''}" data-i="${i}" style="left:${w.x / G * 100}%;top:${w.y / G * 100}%;width:${w.w / G * 100}%;height:${w.h / G * 100}%">${ICON[w.type] || ''}<span>${txtPrev}</span><small>${sub}</small>${['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].map(h => `<i class="rz rz-${h}" data-h="${h}"></i>`).join('')}</div>`;
+  }).join('');
 }
 // Izgara inceliği: 24 (normal) ya da 48 (ince). Koordinatlar iki katına çıkar / yarıya iner; kutular yerinde kalır
 function gridSet(n, quiet) {
@@ -343,8 +354,29 @@ function drawProps() {
       + fl('Hizalama', so('align', 'center', [['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']]))
       + fl('İç boşluk', so('pad', 'none', [['none', 'Yok'], ['sm', 'Az'], ['lg', 'Çok']]));
   }
-  if (w.type === 'text') f = fl('Başlık', `<input type="text" maxlength="200" value="${esc(p.title || '')}" onchange="setP('title',this.value)">`) + fl('Metin', `<textarea maxlength="400" onchange="setP('body',this.value)">${esc(p.body || '')}</textarea>`)
-    + `<div class="f">${fl('Hizalama', `<select onchange="setP('align',this.value)">${[['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']].map(([v, l]) => `<option value="${v}" ${(p.align || 'center') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}${fl('Boyut', `<select onchange="setP('size',this.value)">${[['s', 'Küçük'], ['m', 'Orta'], ['l', 'Büyük']].map(([v, l]) => `<option value="${v}" ${(p.size || 'm') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`;
+  if (w.type === 'text') {
+    const EMO_LIST = [
+      ['✍️', 'Kalem / Rezervasyon'], ['📝', 'Not'], ['✏️', 'Kurşun Kalem'], ['📅', 'Takvim'], ['🛎️', 'Resepsiyon'],
+      ['📞', 'Telefon'], ['📱', 'Cep Telefonu'], ['☎️', 'Sabit Hat'], ['✉️', 'Mektup'], ['📧', 'E-posta'],
+      ['🍽️', 'Masa / Restoran'], ['☕', 'Kahve'], ['🥂', 'Lounge'], ['📍', 'Konum'],
+      ['⏱️', 'Saat'], ['ℹ️', 'Bilgi'], ['🔔', 'Duyuru'], ['⭐', 'Yıldız'], ['🔥', 'Popüler'], ['✨', 'Özel'], ['💬', 'WhatsApp / Sohbet'], ['🌐', 'Web']
+    ];
+    const PRESETS = [
+      ['✍️ Rezervasyon İçin:', '0216 000 00 00'],
+      ['📞 Rezervasyon:', '0212 000 00 00'],
+      ['📱 WhatsApp İletişim:', '0530 000 00 00'],
+      ['✉️ E-posta:', 'info@ornek.com'],
+      ['🍽️ Masa Rezervasyonu', 'Lütfen rezervasyon yaptırınız'],
+      ['ℹ️ Danışma & Bilgi:', 'Haftanın her günü 09:00 - 00:00'],
+      ['🔔 Özel Duyuru', 'Hoş geldiniz!']
+    ];
+    f = `<div class="fl"><span>Hızlı şablon seç</span><div class="chips" style="gap:5px;flex-wrap:wrap">${PRESETS.map(([t, b]) => `<button type="button" class="chip s" onclick="setTxtPreset('${esc(t)}','${esc(b)}')">${esc(t.replace(':', ''))}</button>`).join('')}</div></div>`
+      + `<div class="fl mt"><span>Emoji ekle <small class="muted">(tıklayınca son seçili alana eklenir)</small></span><div class="chips" style="gap:4px;flex-wrap:wrap;font-size:16px">${EMO_LIST.map(([emo, title]) => `<button type="button" class="chip xs" title="${title}" onclick="insTxtEmoji('${emo}')" style="min-width:32px;padding:3px 6px">${emo}</button>`).join('')}</div></div>`
+      + fl('Başlık', `<input type="text" id="txt-title" maxlength="200" value="${esc(p.title || '')}" onfocus="window.__txtFocus='title'" oninput="setP('title',this.value);drawCanvas()" placeholder="Örn: ✍️ Rezervasyon İçin:">`)
+      + fl('Metin / Açıklama', `<textarea id="txt-body" maxlength="400" rows="3" onfocus="window.__txtFocus='body'" oninput="setP('body',this.value);drawCanvas()" placeholder="Örn: 0216 606 26 27">${esc(p.body || '')}</textarea>`)
+      + `<div class="f">${fl('Hizalama', `<select onchange="setP('align',this.value)">${[['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']].map(([v, l]) => `<option value="${v}" ${(p.align || 'center') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}`
+      + `${fl('Yazı boyutu', `<select onchange="setP('size',this.value)">${[['xs', 'Çok küçük'], ['s', 'Küçük'], ['m', 'Orta'], ['l', 'Büyük'], ['xl', 'Çok büyük']].map(([v, l]) => `<option value="${v}" ${(p.size || 'm') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`;
+  }
   if (w.type === 'image') f = `${p.url ? `<img src="${esc(p.url)}" style="width:100%;max-height:150px;object-fit:contain;background:#000;border-radius:8px;margin-top:8px">` : ''}<input type="file" id="assetf" accept="image/*" hidden onchange="upAsset(this)"><div class="row mt"><button class="btn s" onclick="$('assetf').click()">Resim yükle</button></div>`
     + fl('Yerleşim', `<select onchange="setP('fit',this.value)"><option value="cover" ${p.fit !== 'contain' ? 'selected' : ''}>Kutuyu doldur</option><option value="contain" ${p.fit === 'contain' ? 'selected' : ''}>Tamamı görünsün</option></select>`)
     + ((S.db.assets || []).length ? `<div class="thumbs">${S.db.assets.slice(-10).reverse().map(a => `<div class="t" style="cursor:pointer" onclick="setP('url','${S.me.upBase}${a.file}');drawProps()"><img src="${S.me.upBase}${a.file}"></div>`).join('')}</div>` : '');
@@ -368,20 +400,51 @@ function setClk(k, on) {
 }
 function setP(k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); w.props = { ...(w.props || {}), [k]: v }; }
 function rmW(i) { snap(); EDIT.layout.widgets.splice(i, 1); EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
+window.__txtFocus = 'title';
+function insTxtEmoji(emo) {
+  const fId = window.__txtFocus === 'body' ? 'txt-body' : 'txt-title';
+  const inp = $(fId);
+  if (!inp) return;
+  const start = inp.selectionStart ?? inp.value.length;
+  const end = inp.selectionEnd ?? inp.value.length;
+  const val = inp.value;
+  const nVal = val.slice(0, start) + emo + val.slice(end);
+  inp.value = nVal;
+  inp.setSelectionRange(start + emo.length, start + emo.length);
+  inp.focus();
+  setP(window.__txtFocus === 'body' ? 'body' : 'title', nVal);
+  drawCanvas();
+}
+function setTxtPreset(title, body) {
+  const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return;
+  snap();
+  w.props = { ...(w.props || {}), title, ...(body !== undefined ? { body } : {}) };
+  drawCanvas(); drawProps();
+}
 function addW(type) {
   const d = S.cat.widgets[type];
   const cnt = EDIT.layout.widgets.filter(w => w.type === type).length;
   if (d.multi ? cnt >= d.multi : cnt) return toast(d.multi ? `En fazla ${d.multi} tane eklenebilir` : 'Bu widget düzende zaten var', true);
   if (d.pro && !pro()) toast('Bu widget Pro pakette; paketinizde ekranda görünmez', true);
-  const G = EDIT.layout.cols || 24, [mw, mh] = (d.min || [4, 3]).map(v => v * G / 24); let spot = null;
+  const G = EDIT.layout.cols || 24, [mw, mh] = (d.min || [3, 2]).map(v => v * G / 24); let spot = null;
   for (let y = 0; y <= G - mh && !spot; y++) for (let x = 0; x <= G - mw && !spot; x++) { const c = { x, y, w: mw, h: mh }; if (!EDIT.layout.widgets.some(w => overlap(w, c))) spot = c; }
-  if (!spot && type === 'qr') { const m = EDIT.layout.widgets.find(w => w.type === 'media') || { x: 0, y: 0, w: G, h: G }; const off = cnt * mw; spot = { x: Math.max(0, m.x + m.w - mw - 1 - off), y: Math.max(0, m.y + m.h - mh - 1), w: mw, h: mh }; if (EDIT.layout.widgets.some(w => w.type === 'qr' && overlap(w, spot))) spot = null; else spot.float = true; }
+  if (!spot && (type === 'qr' || type === 'text')) {
+    const m = EDIT.layout.widgets.find(w => w.type === 'media') || { x: 0, y: 0, w: G, h: G };
+    const off = cnt * mw;
+    if (type === 'qr') {
+      spot = { x: Math.max(0, m.x + m.w - mw - 1 - off), y: Math.max(0, m.y + m.h - mh - 1), w: mw, h: mh };
+      if (EDIT.layout.widgets.some(w => w.type === 'qr' && overlap(w, spot))) spot = null; else spot.float = true;
+    } else {
+      spot = { x: Math.max(0, m.x + 1 + (cnt % 3) * (mw + 1)), y: Math.max(0, m.y + 1 + Math.floor(cnt / 3) * (mh + 1)), w: mw, h: mh };
+      if (EDIT.layout.widgets.some(w => w.type === 'text' && overlap(w, spot))) spot = null; else spot.float = true;
+    }
+  }
   snap();
   const pos = spot ? { x: spot.x, y: spot.y, w: spot.w, h: spot.h } : { x: 0, y: 0, w: mw, h: mh };
   EDIT.layout.widgets.push({ type, ...pos, ...(d.props ? { props: { ...clone(d.props), ...(type === 'qr' ? { size: 'box', look: 'card' } : {}) } } : {}) }); // yeni QR kartı kutuyu izler: sürükleyerek boyutlanır
   EDIT.sel = EDIT.layout.widgets.length - 1; drawCanvas(); drawProps(); drawPal();
   if (!spot) toast('Boş yer yok: kutu sol üste kondu, diğerlerini küçültüp yerleştirin', true);
-  else if (spot.float) toast('QR kartı medyanın üstüne kondu; sürükleyip istediğiniz yere taşıyın');
+  else if (spot.float) toast(type === 'qr' ? 'QR kartı medyanın üstüne kondu; sürükleyip istediğiniz yere taşıyın' : 'Yazı kutusu medyanın üstüne kondu; sürükleyip istediğiniz yere taşıyın');
 }
 // Ortak tasarımlar: süper yetkili işletmenin kaydettiği düzen + renk; herkes uygular
 function designsCard() {

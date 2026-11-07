@@ -926,6 +926,13 @@ body.glass #wclock b,body.glass .wclk b{background:linear-gradient(135deg,#fff3b
 #wtext h3{font-weight:800;line-height:1.15;color:var(--white)}
 #wtext p{color:var(--soft);line-height:1.35;white-space:pre-line}
 #wtext.al-left{text-align:left}#wtext.al-center{text-align:center}#wtext.al-right{text-align:right}
+.cell.txtcell{z-index:20;display:flex;overflow:hidden;transition:opacity .4s ease}
+.cell.txtcell .wbox.wtxt{display:flex;flex-direction:column;justify-content:center;gap:.6vh;padding:1.2vh 1.4vw;box-sizing:border-box;width:100%;height:100%;border-radius:var(--bx-rad);background:var(--bx-bg);border:max(1px,.1vh) solid var(--bx-bd);box-shadow:var(--bx-sh);overflow:hidden}
+.cell.txtcell .wtxt h3{font-weight:800;line-height:1.18;color:var(--white);margin:0;word-break:break-word}
+.cell.txtcell .wtxt p{color:var(--soft);line-height:1.35;white-space:pre-line;margin:0;word-break:break-word}
+.cell.txtcell .wtxt.al-left{text-align:left}
+.cell.txtcell .wtxt.al-center{text-align:center}
+.cell.txtcell .wtxt.al-right{text-align:right}
 #wimage{background:var(--bg)}
 #wimage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 #wimage.contain img{object-fit:contain}
@@ -3113,7 +3120,7 @@ function applyLayout(l) {
   app.style.gridTemplateRows = `repeat(${rows},minmax(0,1fr))`;
   app.style.gap = cols > 24 ? '.7vh .45vw' : ''; // ince ızgarada hücre aralığı yarıya iner (kutu boyutları aynı kalsın)
   const used = new Set(); WPROPS = {}; window.__rtProps = []; let rtn = 0;
-  app.querySelectorAll('.cell.qrcell,.cell.clkcell,.cell.rtcell').forEach(c => c.remove()); qrTile.cells = [];
+  app.querySelectorAll('.cell.qrcell,.cell.clkcell,.cell.rtcell,.cell.txtcell').forEach(c => c.remove()); qrTile.cells = [];
   for (const w of l.widgets) {
     if (w.type === 'qr') { // birden çok QR kutusu olabilir; her biri seçilen QR'ı (ya da hepsini sırayla) gösterir
       const c = document.createElement('div'); c.className = 'cell qrcell'; c.dataset.w = 'qr';
@@ -3135,13 +3142,19 @@ function applyLayout(l) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       boxProps(c, w.props); app.appendChild(c); window.__rtProps.push(w.props || {}); continue;
     }
-    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.qrcell)`);
+    if (w.type === 'text') { // birden çok duyuru/yazı kutusu olabilir; medyanın üstünde ya da ayrı kutuda durabilir
+      const c = document.createElement('div'); c.className = 'cell txtcell'; c.dataset.w = 'text';
+      c.innerHTML = '<div class="wbox wtxt"><h3></h3><p></p></div>';
+      c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+      boxProps(c, w.props); c._props = w.props || {}; app.appendChild(c); used.add('text'); WPROPS.text = w.props || {}; continue;
+    }
+    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.qrcell):not(.txtcell)`);
     if (!c || used.has(w.type)) continue;
     c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
     c.classList.toggle('edge-b', w.type === 'ticker' && w.y + w.h >= rows && w.x === 0 && w.w >= cols);
     boxProps(c, w.props); app.appendChild(c); used.add(w.type); WPROPS[w.type] = w.props || {};
   }
-  for (const c of [...app.querySelectorAll('.cell:not(.qrcell):not(.clkcell):not(.rtcell)')]) if (!used.has(c.dataset.w)) { c.style.gridArea = ''; park.appendChild(c); }
+  for (const c of [...app.querySelectorAll('.cell:not(.qrcell):not(.clkcell):not(.rtcell):not(.txtcell)')]) if (!used.has(c.dataset.w)) { c.style.gridArea = ''; park.appendChild(c); }
   const wasOn = MEDIA_ON; MEDIA_ON = used.has('media');
   if (!MEDIA_ON) els.forEach(v => v.pause());
   $id('tclock').style.display = WPROPS.ticker && WPROPS.ticker.clock === false ? 'none' : '';
@@ -3208,8 +3221,8 @@ function fillEmpty() {
   // Hücreleri özgün gridArea ve display durumlarına getir
   let rtSeen = 0;
   for (const w of l.widgets) {
-    if (w.type === 'clock' || w.type === 'qr' || (w.type === 'rates' && rtSeen++)) continue; // çoklu kutular kendi alanını applyLayout'ta aldı
-    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.qrcell)`);
+    if (w.type === 'clock' || w.type === 'qr' || w.type === 'text' || (w.type === 'rates' && rtSeen++)) continue; // çoklu kutular kendi alanını applyLayout'ta aldı
+    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.qrcell):not(.txtcell)`);
     if (c) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       c.style.display = '';
@@ -3320,9 +3333,20 @@ function fitWidgets() {
   });
   const lg = $id('logo');
   if (lg.classList.contains('txt') && lg.closest('#app')) lg.style.fontSize = Math.max(12, Math.min(lg.clientHeight * 0.42, lg.clientWidth / Math.max(4, BNAME.length * 0.62))) + 'px';
+  document.querySelectorAll('.cell.txtcell').forEach(c => {
+    const tx = c.querySelector('.wtxt');
+    if (!tx || !c.closest('#app')) return;
+    const p = c._props || {}, k = { xs: 0.6, s: 0.78, m: 1, l: 1.3, xl: 1.65 }[p.size] || 1;
+    const h = tx.clientHeight, w = tx.clientWidth;
+    const h3 = tx.querySelector('h3'), pEl = tx.querySelector('p');
+    const hasBody = !!(pEl && pEl.textContent.trim());
+    const hasTitle = !!(h3 && h3.textContent.trim());
+    if (h3) h3.style.fontSize = Math.max(12, Math.min(h * (hasBody ? 0.32 : 0.55), w / 7) * k) + 'px';
+    if (pEl) pEl.style.fontSize = Math.max(11, Math.min(h * (hasTitle ? 0.24 : 0.45), w / 14) * k) + 'px';
+  });
   const tx = $id('wtext');
-  if (tx.closest('#app')) {
-    const p = WPROPS.text || {}, k = { s: 0.75, m: 1, l: 1.3 }[p.size] || 1, h = tx.clientHeight, w = tx.clientWidth;
+  if (tx && tx.closest('#app')) {
+    const p = WPROPS.text || {}, k = { xs: 0.6, s: 0.75, m: 1, l: 1.3, xl: 1.65 }[p.size] || 1, h = tx.clientHeight, w = tx.clientWidth;
     tx.querySelector('h3').style.fontSize = Math.max(12, Math.min(h * (p.body ? 0.24 : 0.4), w / 9) * k) + 'px';
     tx.querySelector('p').style.fontSize = Math.max(11, Math.min(h * 0.12, w / 22) * k) + 'px';
   }
@@ -3338,12 +3362,29 @@ function applyLogoProps() {
   lg.style.boxSizing = 'border-box';
 }
 function renderText() {
-  const p = WPROPS.text || {}, el = $id('wtext');
-  el.className = 'wbox al-' + (['left', 'center', 'right'].includes(p.align) ? p.align : 'center');
-  const t = (p.i18n && p.i18n[LANG]) || {};
-  el.querySelector('h3').textContent = t.title || p.title || '';
-  el.querySelector('p').textContent = t.body || (t.title ? '' : p.body) || '';
-  el.dir = LANG === 'ar' ? 'rtl' : 'ltr'; el.lang = LANG;
+  document.querySelectorAll('.cell.txtcell').forEach(c => {
+    const p = c._props || {};
+    const el = c.querySelector('.wtxt');
+    if (!el) return;
+    el.className = 'wbox wtxt al-' + (['left', 'center', 'right'].includes(p.align) ? p.align : 'center');
+    const t = (p.i18n && p.i18n[LANG]) || {};
+    const title = t.title || p.title || '';
+    const body = t.body || (t.title ? '' : p.body) || '';
+    const h3 = el.querySelector('h3'), pEl = el.querySelector('p');
+    if (h3) { h3.textContent = title; h3.style.display = title ? '' : 'none'; }
+    if (pEl) { pEl.textContent = body; pEl.style.display = body ? '' : 'none'; }
+    el.dir = LANG === 'ar' ? 'rtl' : 'ltr'; el.lang = LANG;
+  });
+  const tx = $id('wtext');
+  if (tx && tx.closest('#app')) {
+    const p = WPROPS.text || {}, el = tx;
+    el.className = 'wbox al-' + (['left', 'center', 'right'].includes(p.align) ? p.align : 'center');
+    const t = (p.i18n && p.i18n[LANG]) || {};
+    const h3 = el.querySelector('h3'), pEl = el.querySelector('p');
+    if (h3) h3.textContent = t.title || p.title || '';
+    if (pEl) pEl.textContent = t.body || (t.title ? '' : p.body) || '';
+    el.dir = LANG === 'ar' ? 'rtl' : 'ltr'; el.lang = LANG;
+  }
 }
 function renderImage() {
   const p = WPROPS.image || {}, el = $id('wimage');
