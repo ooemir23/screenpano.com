@@ -62,7 +62,11 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
         return if (pick != null) listOf(pick) else all
     }
 
+    // Dikey hiza: kutu ekranın alt yarısındaysa kart kutunun altına, üst yarısındaysa üstüne yaslanır (kayan bant vb. ile aynı çizgide dursun)
+    private var bottomHalf = false
     override fun bind(w: WidgetSpec, s: TvState, vh: Float) {
+        bottomHalf = w.y + w.h / 2f > s.rows / 2f
+        (content.layoutParams as LayoutParams).gravity = Gravity.CENTER_HORIZONTAL or (if (bottomHalf) Gravity.BOTTOM else Gravity.TOP)
         val sig = s.raw.optJSONArray("qrs")?.toString()
         val newSel = w.props?.optString("qr") ?: ""
         val newStyle = (w.props?.optString("style") ?: "").let { if (it in setOf("right", "left", "plain")) it else "below" }
@@ -215,9 +219,9 @@ class QrWidget(context: Context) : FrameLayout(context), NativeWidget {
     /** Kutunun (ortası düştüğü widget ya da tüm ekran) dışına taşan içeriği içeri kaydırır. */
     fun nudge(hostL: Float, hostT: Float, hostR: Float, hostB: Float, pad: Float) {
         val lp = content.layoutParams as LayoutParams
-        val cx = width / 2f; val cy = height / 2f
+        val cx = width / 2f
         val myL = left.toFloat(); val myT = top.toFloat()
-        val L = myL + cx - lp.width / 2f; val T = myT + cy - lp.height / 2f
+        val L = myL + cx - lp.width / 2f; val T = if (bottomHalf) myT + height - lp.height else myT
         val R = L + lp.width; val B = T + lp.height
         val dx = if (L < hostL + pad) hostL + pad - L else if (R > hostR - pad) hostR - pad - R else 0f
         val dy = if (T < hostT + pad) hostT + pad - T else if (B > hostB - pad) hostB - pad - B else 0f

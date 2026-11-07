@@ -853,6 +853,8 @@ body.glass #wclock b,body.glass .wclk b{background:linear-gradient(135deg,#fff3b
 #wimage .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:2vh}
 .cell.qrcell{z-index:20;transition:opacity .4s ease} /* QR kutuları diğer widget'ların üstünde durabilir */
 .cell.qrcell.qpin{z-index:65} /* "Her zaman üstte": kayan haber bandı, kampanya vb. her şeyin üstünde kalır */
+.cell.qrcell[data-va=b]{justify-content:flex-end}.cell.qrcell[data-va=t]{justify-content:flex-start}
+.cell.qrcell[data-va=b] .wqr:not(.lk-card):not(.lk-soft){justify-content:flex-end}.cell.qrcell[data-va=t] .wqr:not(.lk-card):not(.lk-soft){justify-content:flex-start}
 .cell.qrcell.qhide{opacity:0;pointer-events:none}
 .cell.qrcell .wqr{background:none;border:none;border-radius:0;overflow:visible;gap:.8vh;padding:0;backdrop-filter:none;box-shadow:none}
 .wqr .code{flex:none}
@@ -2819,6 +2821,7 @@ function applyLayout(l) {
       const c = document.createElement('div'); c.className = 'cell qrcell'; c.dataset.w = 'qr';
       c.innerHTML = '<div class="wbox wqr"></div>';
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+      c.dataset.va = w.y + w.h / 2 > rows / 2 ? 'b' : 't'; // dikey hiza: alt yarıdaki kutuda kart alta, üst yarıdakinde üste yaslanır
       boxProps(c, w.props); app.appendChild(c); qrTile.cells.push({ el: c.firstChild, qr: (w.props && w.props.qr) || '', style: (w.props && w.props.style) || 'below', size: (w.props && w.props.size) || 'auto', look: (w.props && w.props.look) || 'classic', text: (w.props && w.props.text) || 'm', idx: 0 });
       used.add('qr'); WPROPS.qr = w.props || {}; continue;
     }
