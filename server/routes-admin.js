@@ -697,9 +697,12 @@ r.post('/videos', quota, upload.array('files'), (req, res) => {
 r.delete('/videos/:id', (req, res) => {
   const t = req.t, v = t.db.videos.find(x => x.id === req.params.id);
   if (v) {
+    media.cancel(t.id, v.id);
     if (v.file) rmUpload(t, v.file);
     if (v.image) rmUpload(t, v.image);
     if (v.design && v.design.photo) rmUpload(t, v.design.photo); // afiş stüdyosunun kaynak fotoğrafı
+    if (v.qrCode) { try { require('./qrtrack').unregister(v.qrCode); } catch (e) {} }
+    t.db.assets = (t.db.assets || []).filter(a => a.file !== v.file && a.file !== v.image);
   }
   t.db.videos = t.db.videos.filter(x => x.id !== req.params.id);
   changed(t); res.json({ ok: true });

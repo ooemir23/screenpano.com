@@ -70,7 +70,12 @@ async function optimizeItem(tid, id) {
   try {
     await runFfmpeg(args);
     const after = fs.statSync(out).size;
-    if (!t.db.videos.find(x => x.id === id)) { fs.rmSync(out, { force: true }); return; }
+    if (!t.db.videos.find(x => x.id === id)) {
+      fs.rmSync(out, { force: true });
+      fs.rmSync(src, { force: true });
+      require('./storage').remove(t, path.basename(src));
+      return;
+    }
     if (after >= before && v.reopt) { fs.rmSync(out, { force: true }); return done({ sizeBefore: before, sizeAfter: before }); }
     const dur = isImg ? null : await probeDur(out); // senkronlu çalma listesi için süre
     require('./storage').remove(t, v.file);
@@ -82,6 +87,7 @@ async function optimizeItem(tid, id) {
   }
 }
 function enqueue(tid, id) { if (!queue.some(q => q.tid === tid && q.id === id)) queue.push({ tid, id }); run(); }
+function cancel(tid, id) { const idx = queue.findIndex(q => q.tid === tid && q.id === id); if (idx >= 0) queue.splice(idx, 1); }
 async function run() {
   if (busy) return; busy = true;
   while (queue.length) { const { tid, id } = queue.shift(); try { await optimizeItem(tid, id); } catch (e) { console.error('Kuyruk hatası:', e.message); } }
@@ -92,4 +98,4 @@ function resumeAll() { for (const t of tenants.all()) for (const v of t.db.video
 // İşletmenin diskte kapladığı yer (kota kontrolü için)
 const usedBytes = t => require('./storage').usedBytes(t);
 
-module.exports = { probeDur, enqueue, resumeAll, backfillDurations, usedBytes, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };
+module.exports = { probeDur, enqueue, cancel, resumeAll, backfillDurations, usedBytes, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };

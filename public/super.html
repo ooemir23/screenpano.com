@@ -1032,7 +1032,8 @@ function adFormBasic(a, isNew) {
   <h4 style="margin-top:16px">${ic('calendar-clock')} ${T('Dönem ve fiyat')}</h4>
   <div class="row"><div><label>${T('Paket')}</label><select id="pa-pkg" onchange="adPick()"><option value="">${T('Özel (elle gir)')}</option>${pk.map(p => `<option value="${esc(p.id)}" ${a.packageId === p.id ? 'selected' : ''}>${esc(p.name)} · ${p.days} ${T('gün')} · ${tl(p.price)}</option>`).join('')}</select></div>${field(T('Fiyat (₺)'), 'pa-price', a.price || '', 'type="number" min="0" step="0.01"')}</div>
   <div class="row">${field(T('Başlangıç'), 'pa-start', a.start || (isNew ? today : ''), 'type="date"')}${field(T('Bitiş'), 'pa-end', a.end || '', 'type="date"')}</div>
-  <div class="row">${field(T('Sıklık: kaç içerikte bir'), 'pa-every', a.every || 4, 'type="number" min="1" max="20"')}<div><label>${T('Ödeme')}</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:8px"><input type="checkbox" id="pa-free" ${a.allowUnpaid ? 'checked' : ''}> ${T('Ödeme gelmeden de yayınla')}</label></div></div>`;
+  <div class="row">${field(T('Sıklık: kaç içerikte bir'), 'pa-every', a.every || 4, 'type="number" min="1" max="50"')}${field(T('Gösterim süresi (saniye)'), 'pa-dur', a.dur || 10, 'type="number" min="3" max="120"')}</div>
+  <div class="row"><div><label>${T('Ödeme')}</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:8px"><input type="checkbox" id="pa-free" ${a.allowUnpaid ? 'checked' : ''}> ${T('Ödeme gelmeden de yayınla')}</label></div></div>`;
 }
 function adPick() {
   const p = AD.d.packages.find(x => x.id === $('pa-pkg').value); if (!p) return;
@@ -1042,7 +1043,7 @@ function adPick() {
 function adRead() {
   const v = id => ($(id) || {}).value, o = {
     advertiser: v('pa-adv'), title: v('pa-title'), contact: v('pa-contact'), phone: v('pa-phone'), email: v('pa-email'), note: v('pa-note'), packageId: v('pa-pkg'),
-    price: v('pa-price'), start: v('pa-start'), end: v('pa-end'), every: v('pa-every'), allowUnpaid: !!($('pa-free') || {}).checked,
+    price: v('pa-price'), start: v('pa-start'), end: v('pa-end'), every: v('pa-every'), dur: v('pa-dur'), allowUnpaid: !!($('pa-free') || {}).checked,
   };
   if ($('pa-mode')) {
     const chk = sel => [...document.querySelectorAll(sel + ':checked')].map(x => x.value);
@@ -1079,7 +1080,7 @@ async function adOpen(id) {
       <div class="acts" style="margin-top:10px"><button class="btn" ${a.creatives.length ? '' : 'disabled'} onclick="adTrial('${a.id}')">${T('Deneme gönder')}</button></div>`}
     </div>
     <div class="d-card"><h4>${ic('image')} ${T('Görsel ve video')}</h4>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${a.creatives.map(c => `<div style="position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#000">${c.type === 'image' ? `<img src="/u/ads/${c.file}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">` : `<video src="/u/ads/${c.file}" muted preload="metadata" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block"></video>`}<button class="btn xs ghost" style="position:absolute;top:4px;right:4px" onclick="adMediaDel('${a.id}','${c.id}')" title="Sil">×</button><small style="display:block;padding:3px 6px;color:#ccc">${c.type === 'video' ? '▶ ' + (c.dur || '?') + ' sn' : T('Görsel')}</small></div>`).join('')}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${a.creatives.map(c => `<div style="position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#000">${c.type === 'image' ? `<img src="/u/ads/${c.file}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">` : `<video src="/u/ads/${c.file}" muted preload="metadata" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block"></video>`}<button class="btn xs ghost" style="position:absolute;top:4px;right:4px" onclick="adMediaDel('${a.id}','${c.id}')" title="Sil">×</button><small style="display:block;padding:3px 6px;color:#ccc">${c.type === 'video' ? '▶ ' + (c.dur || a.dur || '?') + ' sn' : (a.dur || 10) + ' sn'}</small></div>`).join('')}
       <label class="btn ghost" style="display:flex;align-items:center;justify-content:center;min-height:80px;cursor:pointer;border-style:dashed"><input type="file" multiple accept="image/*,video/*" hidden onchange="adUp('${a.id}',this.files)">＋ ${T('Ekle')}</label></div>
       <p class="hint" style="margin-top:8px">${T('Görseller 16:9 (1920×1080) önerilir. Videolar sessiz oynatılır ve otomatik küçültülür. En çok 12 dosya.')}</p>
     </div>
@@ -1123,7 +1124,10 @@ function adPreview(i) {
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;color:#fff;font-size:13px"><span>${esc(AD.cur.ad.advertiser)} · ${(((i % n) + n) % n) + 1}/${n}</span><span style="display:flex;gap:8px">${n > 1 ? `<button class="btn xs ghost" style="color:#fff" onclick="adPreview(${i - 1})">‹</button><button class="btn xs ghost" style="color:#fff" onclick="adPreview(${i + 1})">›</button>` : ''}<button class="btn xs" onclick="$('ad-pv').remove()">${T('Kapat')}</button></span></div></div>`;
   document.body.appendChild(el);
 }
-async function adMediaDel(id, cid) { try { await api('DELETE', `/pads/${id}/media/${cid}`); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
+async function adMediaDel(id, cid) {
+  if (!confirm(T('Bu görsel/video kalıcı olarak silinsin mi?'))) return;
+  try { await api('DELETE', `/pads/${id}/media/${cid}`); toast('Silindi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
+}
 async function adPause(id, v) { try { await api('PUT', '/pads/' + id, { paused: v }); toast(v ? 'Reklam durduruldu' : 'Reklam yeniden yayında'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
 async function adDel(id) { if (!confirm(T('Bu reklam ve görselleri silinsin mi? Bu işlem geri alınamaz.'))) return; try { await api('DELETE', '/pads/' + id); closeDrawer(); toast('Silindi'); await adLoad(); } catch (e) { toast(e.message, true); } }
 async function adCopy(id) { try { await navigator.clipboard.writeText(AD.cur.ad.url); toast('Bağlantı kopyalandı'); } catch (e) { prompt(T('Rapor bağlantısı'), AD.cur.ad.url); } }

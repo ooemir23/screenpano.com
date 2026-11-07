@@ -588,7 +588,7 @@ SECTIONS.media = {
     return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; saat simgesiyle gün ve saat verin.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']])
       + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV için otomatik küçültülür; hazır olunca ekrana girer.',
         `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div><div class="row mt" style="align-items:center"><span class="muted" style="flex:1;font-size:13px">Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın.</span><button class="btn g s" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
-      + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div id="mbulk" class="mbulk" hidden></div><div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile${MSEL.has(x.id) ? ' picked' : ''}${MDEL.has(x.id) ? ' gone' : ''}" draggable="true" data-id="${x.id}">
+      + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div id="mbulk" class="mbulk" hidden></div><div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile${MSEL.has(x.id) ? ' picked' : ''}" draggable="true" data-id="${x.id}">
           <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
           <div class="m"><span class="grip" title="Sürükleyerek sıralayın">${ic('grip-vertical')}</span><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g ib" onclick="openSched('video','${x.id}')" title="Zamanla">${ic('clock')}</button><button class="btn xs g ib" onclick="tileMenu(event,'${x.id}')" title="Diğer işlemler">${ic('ellipsis')}</button></div></div>`).join('')}</div>`
         : '<div class="empty">Henüz dosya yok. Yukarıdan ekleyin.</div>')
@@ -651,7 +651,7 @@ function tileMenu(ev, id) {
     ['Sil', 'trash-2', () => delMedia(id), 1]]);
 }
 // Çoklu seçim (A5): seçilenler için üstte işlem çubuğu
-const MSEL = new Set(), MDEL = new Set();
+const MSEL = new Set();
 function mPick(id, on) { on ? MSEL.add(id) : MSEL.delete(id); const t = document.querySelector(`.tile[data-id="${id}"]`); if (t) t.classList.toggle('picked', on); drawMBulk(); }
 function drawMBulk() {
   const b = $('mbulk'); if (!b) return; [...MSEL].forEach(id => { if (!S.db.videos.some(x => x.id === id)) MSEL.delete(id); });
@@ -664,18 +664,24 @@ async function mBulk(k) {
   try { await Promise.all(ids.map(id => req('PUT', '/videos/' + id, { hidden: k === 'hide' }))); toast(k === 'hide' ? 'Gizlendi; ekranda oynamaz' : 'Ekranda gösteriliyor'); } catch (e) { toast(e.message, true); }
   MSEL.clear(); refresh();
 }
-// Silme geri alınabilir (A3): kart hemen kaybolur, 6 sn içinde "Geri al"a basılmazsa sunucudan silinir
-let delTimer = null;
-function flushDel(keep) { clearTimeout(delTimer); delTimer = null; const ids = [...MDEL]; MDEL.clear(); if (!ids.length) return;
-  if (keep) ids.forEach(id => fetch('/api/admin/videos/' + id, { method: 'DELETE', keepalive: true }));
-  else Promise.all(ids.map(id => req('DELETE', '/videos/' + id).catch(e => toast(e.message, true)))).then(refresh); }
-function delMedia(ids) {
-  ids = [].concat(ids); const names = ids.map(id => (S.db.videos.find(x => x.id === id) || {}).name).filter(Boolean);
-  ids.forEach(id => { MDEL.add(id); const t = document.querySelector(`.tile[data-id="${id}"]`); if (t) t.classList.add('gone'); });
-  UI.undo(ids.length > 1 ? `${ids.length} dosya silindi` : `"${names[0] || ''}" silindi`, () => { ids.forEach(id => MDEL.delete(id)); document.querySelectorAll('.tile.gone').forEach(t => { if (!MDEL.has(t.dataset.id)) t.classList.remove('gone'); }); });
-  clearTimeout(delTimer); delTimer = setTimeout(() => flushDel(false), 6200);
+// Medya silme: Anında onay alınarak sunucudan ve tüm depolamadan kalıcı olarak silinir
+async function delMedia(ids) {
+  ids = [].concat(ids).filter(Boolean);
+  if (!ids.length) return;
+  const names = ids.map(id => (S.db.videos.find(x => x.id === id) || {}).name).filter(Boolean);
+  const msg = ids.length > 1
+    ? `${ids.length} dosya kalıcı olarak silinsin mi? Bu işlem geri alınamaz ve dosya depolamadan tamamen silinir.`
+    : `"${names[0] || 'Seçilen içerik'}" kalıcı olarak silinsin mi? Bu işlem geri alınamaz ve dosya sunucudan tamamen silinir.`;
+  const ok = await UI.ask(msg, { ok: 'Sil', danger: true });
+  if (!ok) return;
+  try {
+    await Promise.all(ids.map(id => req('DELETE', '/videos/' + id)));
+    toast(ids.length > 1 ? `${ids.length} dosya kalıcı olarak silindi` : 'Dosya kalıcı olarak silindi');
+    await refresh();
+  } catch (e) {
+    toast(e.message, true);
+  }
 }
-addEventListener('pagehide', () => flushDel(true));
 const togHide = id => { const v = S.db.videos.find(x => x.id === id); act('PUT', '/videos/' + id, { hidden: !v.hidden }, v.hidden ? 'Ekranda gösteriliyor' : 'Gizlendi; ekranda oynamaz'); };
 function pvMedia(i) { const v = S.db.videos[i], u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
 

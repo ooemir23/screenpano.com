@@ -24,11 +24,14 @@ function usedBytes(t) {
 }
 
 function remove(t, file) {
-  if (!safe(file)) return;
-  fs.rmSync(localPath(t, file), { force: true });
-  if (store.q.objGet.get(t.id, file)) {
-    store.q.objDel.run(t.id, file);
-    s3.del(keyFor(t.id, file)).catch(e => console.error('R2 silme hatası', file, e.message));
+  if (!file) return;
+  const f = path.basename(String(file).split('?')[0]);
+  if (!safe(f)) return;
+  fs.rmSync(localPath(t, f), { force: true });
+  fs.rmSync(localPath(t, f + '.part'), { force: true });
+  if (store.q.objGet.get(t.id, f)) {
+    store.q.objDel.run(t.id, f);
+    s3.del(keyFor(t.id, f)).catch(e => console.error('R2 silme hatası', f, e.message));
   }
 }
 async function removeTenant(tid) {

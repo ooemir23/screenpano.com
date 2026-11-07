@@ -66,7 +66,7 @@ const liveFor = t => load().filter(a => trialOn(a, t) || (status(a) === 'live' &
 // Medya döngüsüne reklam ekler: her reklam "every" içerikte bir, görselleri sırayla. Ekranda başka içerik yoksa yalnız reklamlar döner.
 function inject(t, list) {
   const ads = liveFor(t); if (!ads.length) return list;
-  const pools = ads.map(a => ({ items: a.creatives.map(c => ({ id: 'pad:' + c.id, name: a.title || a.advertiser, url: '/u/ads/' + c.file, type: c.type, dur: c.type === 'image' ? null : (c.dur || null), sch: null, ad: true })), k: 0, every: trialOn(a, t) ? 1 : Math.max(1, Math.min(20, Number(a.every) || 4)) }));
+  const pools = ads.map(a => ({ items: a.creatives.map(c => ({ id: 'pad:' + c.id, name: a.title || a.advertiser, url: '/u/ads/' + c.file, type: c.type, dur: c.type === 'video' ? (c.dur || a.dur || 15) : (a.dur || 10), sch: null, ad: true })), k: 0, every: trialOn(a, t) ? 1 : Math.max(1, Math.min(50, Number(a.every) || 4)) }));
   if (!list.length) return pools.flatMap(p => p.items);
   const out = [];
   list.forEach((v, i) => {
@@ -134,7 +134,8 @@ function clean(b, a) {
   if ('start' in b) a.start = ymd(b.start) || undefined;
   if ('end' in b) a.end = ymd(b.end) || undefined;
   if (a.start && a.end && a.end < a.start) a.end = a.start;
-  if ('every' in b) a.every = Math.max(1, Math.min(20, Math.round(Number(b.every)) || 4));
+  if ('every' in b) a.every = Math.max(1, Math.min(50, Math.round(Number(b.every)) || 4));
+  if ('dur' in b || 'sec' in b) a.dur = Math.max(3, Math.min(120, Math.round(Number(b.dur ?? b.sec)) || 10));
   if (typeof b.allowUnpaid === 'boolean') a.allowUnpaid = b.allowUnpaid || undefined;
   if (typeof b.paused === 'boolean') a.paused = b.paused || undefined;
   if (b.target && typeof b.target === 'object') a.target = cleanTarget(b.target, a.target);
@@ -145,7 +146,7 @@ const pushAll = () => { for (const t of tenants.all()) { try { hub.pushTenant(t.
 
 // Tarih geçişleri (başlangıç/bitiş günü, ödeme) için: yayındaki reklam kümesi değişince ekranlara bildir
 let lastSig = '';
-const sig = () => load().filter(a => status(a) === 'live' || trialOn(a)).map(a => a.id + ':' + a.creatives.length + ':' + (a.every || 4) + ':' + JSON.stringify(a.target || {})).join('|');
+const sig = () => load().filter(a => status(a) === 'live' || trialOn(a)).map(a => a.id + ':' + a.creatives.length + ':' + (a.every || 4) + ':' + (a.dur || 10) + ':' + JSON.stringify(a.target || {})).join('|');
 function watch() { lastSig = sig(); setInterval(() => { const n = sig(); if (n !== lastSig) { lastSig = n; pushAll(); } }, 5 * 60 * 1000).unref(); }
 
 // Eski sistem (işletme kendi reklam alanı): kaldırıldı; kalan reklam kayıtları ve görselleri bir kez temizlenir
@@ -187,7 +188,12 @@ async function prepare(file) {
     return { id, file: name, type: 'video', name: s(file.originalname, 80), dur: await media.probeDur(out) };
   } finally { fs.rmSync(src, { force: true }); }
 }
-const rm = c => { if (c && /^[\w.-]+$/.test(c.file)) fs.rmSync(path.join(DIR, c.file), { force: true }); };
+const rm = c => {
+  if (c && c.file) {
+    const f = path.basename(String(c.file).split('?')[0]);
+    if (/^[\w.-]+$/.test(f)) fs.rmSync(path.join(DIR, f), { force: true });
+  }
+};
 
 function routes(r) {
   const find = (req, res) => { const list = load(), a = list.find(x => x.id === req.params.id); if (!a) { res.status(404).json({ error: 'Reklam bulunamadı' }); return null; } return { list, a }; };
@@ -209,7 +215,7 @@ function routes(r) {
   r.post('/pads', (req, res) => {
     const list = load(); if (list.length >= 500) return res.status(400).json({ error: 'En fazla 500 reklam kaydı tutulur; eskileri silin' });
     const b = req.body || {}; if (!s(b.advertiser, 80)) return res.status(400).json({ error: 'Reklam veren (işletme) adı gerekli' });
-    const a = clean(b, { id: auth.uid(10), token: crypto.randomBytes(15).toString('base64url'), created: Date.now(), every: 4, creatives: [], payments: [], target: { mode: 'all', plans: [], cities: [], exclude: [] } });
+    const a = clean(b, { id: auth.uid(10), token: crypto.randomBytes(15).toString('base64url'), created: Date.now(), every: 4, dur: 10, creatives: [], payments: [], target: { mode: 'all', plans: [], cities: [], exclude: [] } });
     list.push(a); save(list); res.json({ ok: true, id: a.id });
   });
   r.put('/pads/:id', (req, res) => { const f = find(req, res); if (!f) return; clean(req.body || {}, f.a); save(f.list); pushAll(); res.json({ ok: true, ad: derive(f.a) }); });
