@@ -1071,6 +1071,13 @@ async function adOpen(id) {
       <div class="row"><div><label>${T('Yöntem')}</label><select id="pp-m">${Object.entries(AD_METHOD).map(([k, l]) => `<option value="${k}">${T(l)}</option>`).join('')}</select></div>${field(T('Not'), 'pp-note', '', 'maxlength="120"')}</div>
       <div class="acts" style="margin-top:10px"><button class="btn" onclick="adPay('${a.id}')">${T('Ödeme ekle')}</button><button class="btn ghost" disabled title="${T('Yakında')}">${T('Online ödeme linki (yakında)')}</button></div>
     </div>
+    <div class="d-card"><h4>${ic('eye')} ${T('Önizleme ve deneme')}</h4>
+      <p class="hint" style="margin:0 0 10px">${T('Önizleme reklamın TV ekranında nasıl duracağını gösterir. Deneme gönderimi ise reklamı yalnız seçtiğiniz işletmenin ekranında kısa süre gösterir; ödeme, dönem ve hedef şartı aranmaz.')}</p>
+      <div class="acts"><button class="btn ghost" ${a.creatives.length ? '' : 'disabled'} onclick="adPreview(0)">${T('Önizle')}</button></div>
+      ${a.trial ? `<p style="margin:12px 0 6px"><b>${esc(a.trial.name)}</b> ${T('ekranında deneme yayını sürüyor')} · ${new Date(a.trial.until).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} ${T('saatine kadar')}</p><button class="btn xs ghost" onclick="adTrialStop('${a.id}')">${T('Denemeyi bitir')}</button>` :
+      `<div class="row" style="margin-top:12px"><div><label>${T('Deneme gönderilecek işletme')}</label><select id="pt-t"><option value="">${T('Seçin…')}</option>${d.tenants.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></div><div><label>${T('Süre')}</label><select id="pt-m"><option value="5">5 ${T('dk')}</option><option value="10" selected>10 ${T('dk')}</option><option value="30">30 ${T('dk')}</option><option value="60">60 ${T('dk')}</option></select></div></div>
+      <div class="acts" style="margin-top:10px"><button class="btn" ${a.creatives.length ? '' : 'disabled'} onclick="adTrial('${a.id}')">${T('Deneme gönder')}</button></div>`}
+    </div>
     <div class="d-card"><h4>${ic('image')} ${T('Görsel ve video')}</h4>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${a.creatives.map(c => `<div style="position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#000">${c.type === 'image' ? `<img src="/u/ads/${c.file}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">` : `<video src="/u/ads/${c.file}" muted preload="metadata" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block"></video>`}<button class="btn xs ghost" style="position:absolute;top:4px;right:4px" onclick="adMediaDel('${a.id}','${c.id}')" title="Sil">×</button><small style="display:block;padding:3px 6px;color:#ccc">${c.type === 'video' ? '▶ ' + (c.dur || '?') + ' sn' : T('Görsel')}</small></div>`).join('')}
       <label class="btn ghost" style="display:flex;align-items:center;justify-content:center;min-height:80px;cursor:pointer;border-style:dashed"><input type="file" multiple accept="image/*,video/*" hidden onchange="adUp('${a.id}',this.files)">＋ ${T('Ekle')}</label></div>
@@ -1098,6 +1105,23 @@ async function adPayDel(id, pid) { if (!confirm(T('Bu ödeme kaydı silinsin mi?
 async function adUp(id, files) {
   if (!files || !files.length) return; const fd = new FormData(); for (const f of files) fd.append('files', f); toast('Yükleniyor…');
   try { const r = await fetch(`/api/super/pads/${id}/media`, { method: 'POST', body: fd }), j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); if (j.errors && j.errors.length) toast(j.errors[0], true); else toast('Yüklendi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
+}
+async function adTrial(id) {
+  const t = $('pt-t').value; if (!t) return toast('İşletme seçin', true);
+  try { await api('POST', `/pads/${id}/trial`, { tenantId: t, minutes: $('pt-m').value }); toast('Deneme gönderildi; ekranda birkaç saniye içinde görünür'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
+}
+async function adTrialStop(id) { try { await api('DELETE', `/pads/${id}/trial`); toast('Deneme bitirildi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
+// Önizleme: TV ekranındaki gibi 16:9 siyah zemin, içerik sığdırılır; birden çok içerik arasında gezilir
+function adPreview(i) {
+  const cs = AD.cur.ad.creatives, c = cs[((i % cs.length) + cs.length) % cs.length], n = cs.length;
+  const old = $('ad-pv'); if (old) old.remove();
+  const el = document.createElement('div'); el.id = 'ad-pv';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px';
+  el.onclick = e => { if (e.target === el) el.remove(); };
+  el.innerHTML = `<div style="width:min(960px,100%)"><div style="position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);border:6px solid #1c1c22">
+    ${c.type === 'image' ? `<img src="/u/ads/${c.file}" style="position:absolute;inset:.6%;width:98.8%;height:98.8%;object-fit:contain">` : `<video src="/u/ads/${c.file}" autoplay loop muted playsinline style="position:absolute;inset:.6%;width:98.8%;height:98.8%;object-fit:contain"></video>`}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;color:#fff;font-size:13px"><span>${esc(AD.cur.ad.advertiser)} · ${(((i % n) + n) % n) + 1}/${n}</span><span style="display:flex;gap:8px">${n > 1 ? `<button class="btn xs ghost" style="color:#fff" onclick="adPreview(${i - 1})">‹</button><button class="btn xs ghost" style="color:#fff" onclick="adPreview(${i + 1})">›</button>` : ''}<button class="btn xs" onclick="$('ad-pv').remove()">${T('Kapat')}</button></span></div></div>`;
+  document.body.appendChild(el);
 }
 async function adMediaDel(id, cid) { try { await api('DELETE', `/pads/${id}/media/${cid}`); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
 async function adPause(id, v) { try { await api('PUT', '/pads/' + id, { paused: v }); toast(v ? 'Reklam durduruldu' : 'Reklam yeniden yayında'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
