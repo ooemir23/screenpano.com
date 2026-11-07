@@ -203,16 +203,19 @@ position:absolute;top:.8vh;right:.8vw}
 #rqr .rq .code svg{width:100%;height:100%;display:block}
 #rqr .rq .lbl{flex:none;width:100%;box-sizing:border-box;height:calc(3.2*var(--rv));display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;background:rgba(10,8,6,.92);border:max(1px,calc(.15*var(--rv))) solid var(--al);border-radius:calc(2*var(--rv));color:#fff;font-size:calc(1.8*var(--rv));font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:0 .6vw;text-shadow:0 calc(.2*var(--rv)) calc(.4*var(--rv)) #000}
 #rqr .rq .lbl.pw{text-transform:none;letter-spacing:.03em;color:var(--al);font-size:calc(2*var(--rv))}
-#rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-#rrow div{min-width:0;overflow:hidden;text-align:center;border-right:max(1px,calc(.1*var(--rv))) solid var(--line)}
-#rrow div:last-child{border:0}
+#rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(.5*var(--rv));box-sizing:border-box}
 #rrow.swap{transition:opacity .4s}
 #rrow.swap.out{opacity:0}
-.chg{font-style:normal;font-weight:700;letter-spacing:0;margin-left:calc(.5*var(--rv));font-size:calc(1.9*var(--rv))}
-.chg.up{color:#3ecf4a}.chg.dn{color:#ff6b6b}.chg.fl{color:var(--mute)}
-#rrow small{display:block;white-space:nowrap;overflow:hidden;font-size:calc(1.9*var(--rv));letter-spacing:.1em;color:var(--accent2);font-weight:700;margin-bottom:calc(.3*var(--rv))}
-#rrow strong{display:block;font-size:calc(3.5*var(--rv));font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
-#rrow strong i{font-style:normal;font-size:calc(2.3*var(--rv));color:var(--soft);margin-left:calc(.3*var(--rv));font-weight:500}
+.rcard{min-width:0;background:rgba(255,255,255,.035);border:max(1px,calc(.1*var(--rv))) solid rgba(255,255,255,.07);border-radius:calc(.85*var(--rv));padding:calc(.55*var(--rv)) calc(.55*var(--rv));display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden;box-shadow:0 calc(.3*var(--rv)) calc(.8*var(--rv)) rgba(0,0,0,.18)}
+.rcard-head{display:flex;align-items:center;justify-content:space-between;gap:calc(.2*var(--rv));min-width:0;margin-bottom:calc(.25*var(--rv))}
+.rcard-sym,#rrow small{display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(1.1*var(--rv));letter-spacing:.03em;color:var(--accent2);font-weight:700;text-transform:uppercase}
+.chg{font-style:normal;font-size:calc(.95*var(--rv));font-weight:700;letter-spacing:0;display:inline-flex;align-items:center;padding:calc(.12*var(--rv)) calc(.35*var(--rv));border-radius:calc(.4*var(--rv));line-height:1.15;white-space:nowrap;flex-shrink:0}
+.chg.up{color:#34d399;background:rgba(16,185,129,.16);border:max(1px,calc(.08*var(--rv))) solid rgba(16,185,129,.28)}
+.chg.dn{color:#f87171;background:rgba(239,68,68,.16);border:max(1px,calc(.08*var(--rv))) solid rgba(239,68,68,.28)}
+.chg.fl{color:var(--mute);background:rgba(255,255,255,.06)}
+.rcard-val,#rrow strong{display:block;font-size:calc(1.9*var(--rv));font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.2}
+.rcard-val i,#rrow strong i{font-style:normal;font-size:calc(1.25*var(--rv));color:var(--mute);margin-left:calc(.15*var(--rv));font-weight:500}
+html.theme-glass .rcard{background:rgba(18,24,34,.58);border-color:rgba(255,255,255,.09);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -1025,6 +1028,23 @@ body.glass #wclock b,body.glass .wclk b{background:linear-gradient(135deg,#fff3b
 #music-unlock.on{display:inline-flex}
 @keyframes mpulse{from{transform:scale(1)}to{transform:scale(1.04)}}
 #music-hosts{position:fixed;left:8px;bottom:8px;width:240px;height:135px;overflow:hidden;opacity:.005;pointer-events:none;z-index:1}
+html.theme-glass:not(.lite) .m,
+html.theme-glass:not(.lite) #frame,
+html.theme-glass:not(.lite) #tlegend,
+html.theme-glass:not(.lite) .trw {
+  backdrop-filter: blur(1.5vh);
+  -webkit-backdrop-filter: blur(1.5vh);
+  box-shadow: 0 1vh 3vh rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+}
+html.theme-glass .pill.live {
+  background: rgba(16,185,129,.18) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16,185,129,.35);
+  box-shadow: 0 0 10px rgba(16,185,129,.25);
+}
+html.theme-glass .pill.live::before {
+  background: #34d399 !important;
+}
 </style></head><body>
 <div id="root">
 <div id="app"></div>
@@ -2069,7 +2089,15 @@ function startRateSwap() { // 8 sn'de bir USD/EUR/ALTIN ile BIST 100/BITCOIN/STE
   }, 8000);
 }
 // günlük değişim: ▲ yeşil, ▼ kırmızı
-const chg = v => (v == null || !isFinite(v)) ? '' : `<em class="chg ${v > 0.005 ? 'up' : v < -0.005 ? 'dn' : 'fl'}">${v > 0.005 ? '▲' : v < -0.005 ? '▼' : '•'}${Math.abs(v).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</em>`;
+const chg = v => (v == null || !isFinite(v)) ? '' : `<span class="chg ${v > 0.005 ? 'up' : v < -0.005 ? 'dn' : 'fl'}">${v > 0.005 ? '▲' : v < -0.005 ? '▼' : '•'} ${Math.abs(v).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</span>`;
+const rateCard = (sym, cVal, val, unit = '') => `
+  <div class="rcard">
+    <div class="rcard-head">
+      <small class="rcard-sym">${esc(sym)}</small>
+      ${chg(cVal)}
+    </div>
+    <strong class="rcard-val">${val}${unit ? `<i>${unit}</i>` : ''}</strong>
+  </div>`;
 function renderPanel() {
   const sig = JSON.stringify([lastRates, lastWeather, WPROPS.rates, CITY]);
   if (sig === window.__panelSig && document.getElementById('rrow')) return; // değişiklik yok
@@ -2085,8 +2113,8 @@ function renderPanel() {
       <div class="city">${esc(CITY)}<small>${Math.round(w.min)}° / ${Math.round(w.max)}°</small></div></div>`;
   }
   rateSets = [
-    `<div><small>USD</small><strong>${f(r.usd)}<i>₺</i></strong></div><div><small>EUR</small><strong>${f(r.eur)}<i>₺</i></strong></div><div><small>ALTIN${chg(r.goldCh)}</small><strong>${f(r.gold, 0)}<i>₺</i></strong></div>`,
-    `<div><small>BIST 100${chg(r.bistCh)}</small><strong>${f(r.bist, 0)}</strong></div><div><small>BITCOIN${chg(r.btcCh)}</small><strong>${r.btc ? '$' + f(r.btc, 0) : '--'}</strong></div><div><small>STERLİN</small><strong>${f(r.gbp)}<i>₺</i></strong></div>`,
+    rateCard('USD', null, f(r.usd), '₺') + rateCard('EUR', null, f(r.eur), '₺') + rateCard('ALTIN', r.goldCh, f(r.gold, 0), '₺'),
+    rateCard('BIST 100', r.bistCh, f(r.bist, 0)) + rateCard('BITCOIN', r.btcCh, r.btc ? '$' + f(r.btc, 0) : '--') + rateCard('STERLİN', null, f(r.gbp), '₺'),
   ];
   const rp = WPROPS.rates || {};
   const mk = p => (p.weather === false ? '' : wx) + (p.rates === false ? '' : `<div id="rrow" class="swap rrx">${rateSets[rateIdx % rateSets.length]}</div>`);
@@ -2965,6 +2993,15 @@ function applyTheme(th) {
   }
   r.setProperty('--font', `'${font}'`);
   $id('logo').classList.toggle('plate', !!th.plate);
+  const isGlass = !!th.glass || th.bg === '#07090d';
+  document.documentElement.classList.toggle('theme-glass', isGlass);
+  if (isGlass) {
+    r.setProperty('--card', 'rgba(18, 24, 34, 0.72)');
+    r.setProperty('--line', 'rgba(255, 255, 255, 0.08)');
+  } else {
+    r.removeProperty('--card');
+    r.removeProperty('--line');
+  }
   window.__panelSig = '';
 }
 

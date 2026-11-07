@@ -125,6 +125,7 @@ app.get('/h/:code/wifi.mobileconfig', require('./hubpage').profile);
 app.get('/r/:token', require('./ads').page);
 app.get('/login', page('login.html'));
 app.get('/tv', page('tv.html'));
+app.get(['/tv-lounge', '/lounge'], page('tv-lounge.html'));
 app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html')(req, res, next) : res.redirect('/login')));
 app.get('/music', (req, res, next) => (auth.sessionUser(req) ? page('panel.html', 'music')(req, res, next) : res.redirect('/login')));
 app.get('/super', (req, res, next) => { const u = auth.superUser(req); return u ? page('super.html')(req, res, next) : res.redirect('/login'); });
@@ -209,6 +210,8 @@ app.use(express.static(config.PUBLIC_DIR, {
     else if (/\.svg$/.test(file)) res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   },
 }));
+// Sağlık kontrolü (Dokploy/izleme)
+app.get('/health', (req, res) => res.json({ ok: true, up: Math.round(process.uptime()) }));
 app.use('/api', (req, res) => res.status(404).json({ error: 'bulunamadı' }));
 // Beklenmeyen hatalar (dosya boyutu, bozuk JSON vb.): süreç düşmez, anlaşılır yanıt döner
 app.use((err, req, res, next) => {
@@ -231,8 +234,6 @@ require('./stats').start();
 require('./weekly').start();
 require('./happy').start();
 require('./social').start();
-// Sağlık kontrolü (Dokploy/izleme)
-app.get('/health', (req, res) => res.json({ ok: true, up: Math.round(process.uptime()) }));
 process.on('unhandledRejection', e => console.error('Yakalanmamış söz:', e && e.message ? e.message : e));
 // Kapatma (deploy/docker stop): bekleyen kayıtlar diske yazılır, WAL birleştirilir, bağlantılar kapanır
 let closing = false;
