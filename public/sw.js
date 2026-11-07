@@ -67,7 +67,8 @@ self.addEventListener('fetch', e => {
   const u = new URL(req.url); if (u.origin !== location.origin) return;
   if (u.pathname.startsWith('/api/') || u.pathname === '/ws' || u.pathname === '/sw.js' || u.pathname === '/app.apk') return;
   if (u.pathname.startsWith('/u/')) return e.respondWith(media(req));
-  if (u.pathname === '/tv' || (req.mode === 'navigate' && u.pathname === '/')) return e.respondWith(tvInstant(req));
+  // Kök adres yalnız eski APK'ların WebView'ında TV sayfasıdır (sunucudaki "/" kuralıyla aynı); tarayıcıda tanıtım sitesi açılmalı
+  if (u.pathname === '/tv' || (req.mode === 'navigate' && u.pathname === '/' && /; wv\)/.test(self.navigator.userAgent))) return e.respondWith(tvInstant(req));
   if (u.pathname === '/posters.js' || u.pathname === '/panel.js' || u.pathname.startsWith('/i18n/')) return e.respondWith(networkFirst(req)); // poster/panel/çeviri güncellenince eski kopya bir reload geride kalmasın (internet yoksa önbellekten)
   if (/^\/(fonts|celebrate|logo)\//.test(u.pathname) || /\.(js|svg|png|jpe?g|webp|woff2)$/.test(u.pathname)) return e.respondWith(staleWhileRevalidate(req));
 });
