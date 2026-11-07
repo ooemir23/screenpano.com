@@ -47,7 +47,9 @@ function createWindow() {
   win.on('unresponsive', () => setTimeout(() => win && win.reload(), 5000));
   // dış bağlantılar (QR, fragman vb.) uygulamanın içinde açılmaz
   win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: 'deny' }; });
-  win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith(cfg.load().url)) e.preventDefault(); });
+  win.webContents.on('will-navigate', (e, url) => { // adres öneki değil kaynak (origin) karşılaştırılır: screenpano.com.baska.site geçmesin
+    try { if (new URL(url).origin !== new URL(cfg.load().url).origin) e.preventDefault(); } catch { e.preventDefault(); }
+  });
 
   // klavye: F11 tam ekran, Ctrl+R yenile, Ctrl+Shift+Q çıkış (Esc ve Menü tuşu TV menüsünü açar)
   win.webContents.on('before-input-event', (e, input) => {

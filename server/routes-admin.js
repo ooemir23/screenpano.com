@@ -256,9 +256,9 @@ r.put('/devices/:id', (req, res) => {
   if (typeof b.native === 'boolean' && store.q.devicesOf.all(req.t.id).some(d => d.id === req.params.id)) { store.q.deviceNative.run(b.native ? 1 : 0, req.params.id, req.t.id); hub.setNative(req.params.id, b.native); }
   res.json({ ok: true });
 });
-r.delete('/devices/:id', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); res.json({ ok: true }); });
+r.delete('/devices/:id', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); require('./monitor').forgetDevice(req.params.id); res.json({ ok: true }); });
 // TV uygulamasından uzaktan çıkış: kutu oturumunu kapatıp giriş ekranına döner (token geçersiz olur)
-r.post('/devices/:id/logout', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); res.json({ ok: true }); });
+r.post('/devices/:id/logout', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); require('./monitor').forgetDevice(req.params.id); res.json({ ok: true }); });
 r.post('/devices/reload', (req, res) => { sendTo(req.t, { type: 'reload' }); res.json({ ok: true }); });
 
 // ================= FİYAT TARİFESİ =================
