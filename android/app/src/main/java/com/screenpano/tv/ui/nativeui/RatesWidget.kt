@@ -212,31 +212,18 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 val chgColor = if (c.change != null) (if (c.change > 0.005) Color.parseColor("#34d399") else if (c.change < -0.005) Color.parseColor("#f87171") else p.mute) else 0
 
                 val valView = if (showChange && chgStr != null) {
-                    TextView(context).apply {
-                        setSingleLine(true)
-                        gravity = Gravity.CENTER
-                        includeFontPadding = false
-                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                        setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * (if (isSolo) 2.2f else 1.9f))
-                        text = chgStr
-                        setTextColor(chgColor)
-                        background = GradientDrawable().apply {
-                            setColor(if (c.change > 0.005) Color.argb(38, 52, 211, 153) else if (c.change < -0.005) Color.argb(38, 248, 113, 113) else Color.argb(18, 255, 255, 255))
-                            cornerRadius = vh * 0.35f
-                        }
-                        setPadding((vh * 0.5f).toInt(), (vh * 0.1f).toInt(), (vh * 0.5f).toInt(), (vh * 0.1f).toInt())
-                    }
+                    AutoFitRateText(context, vh, p, chgStr, "", isSolo, chgColor)
                 } else {
                     AutoFitRateText(context, vh, p, c.value, c.unit, isSolo)
                 }
 
-                col.addView(valView, LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f).apply {
-                    topMargin = (vh * 0.2f).toInt()
+                col.addView(valView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
+                    topMargin = (vh * 0.25f).toInt()
                 })
 
-                row.addView(col, LayoutParams(0, LayoutParams.MATCH_PARENT, 1f))
+                row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             }
-            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT).apply { topMargin = if (wx != null && props?.optBoolean("weather", true) != false) gap else 0 })
+            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = if (wx != null && props?.optBoolean("weather", true) != false) gap else 0 })
         }
     }
 
@@ -319,7 +306,8 @@ internal class AutoFitRateText(
     private val p: Palette,
     private val valText: String,
     private val unitText: String,
-    private val isSolo: Boolean = false
+    private val isSolo: Boolean = false,
+    private val textColorOverride: Int? = null
 ) : TextView(context) {
     private var lastAvail = -1f
 
@@ -331,7 +319,7 @@ internal class AutoFitRateText(
     }
 
     private fun calcWidth(scale: Float): Float {
-        val baseSize = vh * (if (isSolo) 2.45f else 2.1f) * scale
+        val baseSize = vh * (if (isSolo) 2.25f else 2.0f) * scale
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { isFakeBoldText = true; textSize = baseSize }
         var total = tp.measureText(valText)
         if (unitText.isNotEmpty()) {
@@ -343,13 +331,14 @@ internal class AutoFitRateText(
     }
 
     private fun applyScale(scale: Float) {
-        val baseSize = vh * (if (isSolo) 2.45f else 2.1f) * scale
+        val baseSize = vh * (if (isSolo) 2.25f else 2.0f) * scale
+        val col = textColorOverride ?: p.white
         val s = SpannableStringBuilder(valText).apply {
-            setSpan(RunSpan(baseSize, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(RunSpan(baseSize, col, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             if (unitText.isNotEmpty()) {
                 val a = length
                 append(" $unitText")
-                setSpan(RunSpan(baseSize * 0.62f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(RunSpan(baseSize * 0.65f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         }
         text = s
