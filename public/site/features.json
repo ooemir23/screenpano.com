@@ -1104,6 +1104,26 @@
   ],
   "extras": [
     {
+      "icon": "▦",
+      "title": "İnce ızgara ile hassas hizalama",
+      "text": "Düzen düzenleyicisinde “İnce ızgara” düğmesiyle hiza çizgileri yarıya iner; widget'ları iki kat hassasiyetle yerleştirip boyutlandırırsınız. Kutular yerinde kalır, istediğiniz an normale dönebilirsiniz. Bilgi kutusundaki son kart da artık hep tam sığar.",
+      "added": "2026-11-07",
+      "i18n": {
+        "en": {
+          "title": "Fine grid for precise alignment",
+          "text": "In the layout editor, the “Fine grid” button halves the alignment lines so you can place and resize widgets with twice the precision. Boxes stay where they are, and you can switch back any time. The last card in the info box now always fits fully."
+        },
+        "de": {
+          "title": "Feines Raster für präzise Ausrichtung",
+          "text": "Im Layout-Editor halbiert die Schaltfläche „Feines Raster“ die Hilfslinien, sodass Sie Widgets mit doppelter Genauigkeit platzieren und skalieren. Die Boxen bleiben an Ort und Stelle, Sie können jederzeit zurückwechseln. Die letzte Karte in der Infobox passt jetzt immer vollständig."
+        },
+        "ar": {
+          "title": "شبكة دقيقة لمحاذاة أدق",
+          "text": "في محرر التخطيط، يقلّل زر «شبكة دقيقة» خطوط المحاذاة إلى النصف لتضع الودجات وتغيّر أحجامها بدقة مضاعفة. تبقى الصناديق في أماكنها ويمكنك العودة للوضع العادي في أي وقت. والبطاقة الأخيرة في صندوق المعلومات تظهر الآن كاملة دائمًا."
+        }
+      }
+    },
+    {
       "icon": "🎧",
       "title": "Spotify hesabı ve yeni müzik bölümü",
       "text": "Spotify hesabınızı bağlayın: listeleriniz ve şarkıları panelde görünür, TV kutusundaki Spotify uygulamasını panelden ya da telefondan çalıp durdurursunuz (Spotify Premium gerekir). Müzik bölümü YouTube Music düzeninde; YouTube ve Spotify kurulumu resimli adımlarla anlatılır.",

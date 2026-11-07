@@ -222,7 +222,7 @@ SECTIONS.home = {
 /* ================= TASARIM ================= */
 const EDIT = { layout: null, sel: -1, hist: [], dirty: false };
 // Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al + Kaydet görünür
-const layoutBar = () => `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
+const layoutBar = () => `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><button class="btn g s" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
 const lbarSync = () => { document.querySelectorAll('.lbar').forEach(b => b.classList.toggle('clean', !EDIT.dirty)); pushDraft(); };
 // Kaydedilmemiş düzeni önizleme çerçevesine ve (ayrı sekme için) localStorage'a ilet; değişiklik yoksa kaydedilmiş hâle döner
 function pushDraft() {
@@ -282,6 +282,7 @@ SECTIONS.design = {
     if ((SUB.design || 'layout') !== 'layout') return;
     if (!EDIT.layout || !EDIT.dirty) { EDIT.layout = clone(S.scr.layout); EDIT.hist = []; EDIT.sel = -1; }
     drawCanvas(); drawProps(); drawPal(); dragSetup();
+    document.querySelectorAll('#gridbtn').forEach(b => b.classList.toggle('on', (EDIT.layout.cols || 24) === 48));
   },
 };
 const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
@@ -289,8 +290,19 @@ const floats = (a, b) => (a.type === 'qr') !== (b.type === 'qr'); // QR kartı d
 const badSet = () => { const ws = EDIT.layout.widgets, bad = new Set(); ws.forEach((a, i) => ws.forEach((b, j) => { if (i < j && overlap(a, b) && !floats(a, b)) { bad.add(i); bad.add(j); } })); return bad; };
 function drawCanvas() {
   const c = $('cv'); if (!c) return;
-  const bad = badSet(); lbarSync();
-  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%">${ICON[w.type] || ''}${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small>${['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].map(h => `<i class="rz rz-${h}" data-h="${h}"></i>`).join('')}</div>`; }).join('');
+  const bad = badSet(), G = EDIT.layout.cols || 24; lbarSync();
+  c.style.backgroundSize = `calc(100% / ${G}) calc(100% / ${G})`;
+  c.innerHTML = EDIT.layout.widgets.map((w, i) => { const d = S.cat.widgets[w.type] || { name: w.type }; return `<div class="wb ${i === EDIT.sel ? 'sel' : ''} ${bad.has(i) ? 'bad' : ''}${w.type === 'qr' ? ' fl' : ''}" data-i="${i}" style="left:${w.x / G * 100}%;top:${w.y / G * 100}%;width:${w.w / G * 100}%;height:${w.h / G * 100}%">${ICON[w.type] || ''}${esc(d.name)}<small>${d.pro && !pro() ? '🔒 Pro' : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === (w.props || {}).qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h : w.w + '×' + w.h}</small>${['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].map(h => `<i class="rz rz-${h}" data-h="${h}"></i>`).join('')}</div>`; }).join('');
+}
+// Izgara inceliği: 24 (normal) ya da 48 (ince). Koordinatlar iki katına çıkar / yarıya iner; kutular yerinde kalır
+function gridSet(n, quiet) {
+  if (!EDIT.layout) return;
+  const L = EDIT.layout, cur = L.cols || 24; if (cur === n) return;
+  if (!quiet) snap();
+  const f = n / cur;
+  L.widgets.forEach(w => { const x = Math.round(w.x * f), y = Math.round(w.y * f); w.w = Math.max(1, Math.round((w.x + w.w) * f) - x); w.h = Math.max(1, Math.round((w.y + w.h) * f) - y); w.x = x; w.y = y; });
+  L.cols = L.rows = n;
+  if (!quiet) { EDIT.dirty = true; drawCanvas(); drawProps(); document.querySelectorAll('#gridbtn').forEach(b => b.classList.toggle('on', n === 48)); }
 }
 function drawPal() {
   const used = new Set(EDIT.layout.widgets.map(w => w.type));
@@ -360,9 +372,9 @@ function addW(type) {
   const cnt = EDIT.layout.widgets.filter(w => w.type === type).length;
   if (d.multi ? cnt >= d.multi : cnt) return toast(d.multi ? `En fazla ${d.multi} tane eklenebilir` : 'Bu widget düzende zaten var', true);
   if (d.pro && !pro()) toast('Bu widget Pro pakette; paketinizde ekranda görünmez', true);
-  const [mw, mh] = d.min || [4, 3]; let spot = null;
-  for (let y = 0; y <= 24 - mh && !spot; y++) for (let x = 0; x <= 24 - mw && !spot; x++) { const c = { x, y, w: mw, h: mh }; if (!EDIT.layout.widgets.some(w => overlap(w, c))) spot = c; }
-  if (!spot && type === 'qr') { const m = EDIT.layout.widgets.find(w => w.type === 'media') || { x: 0, y: 0, w: 24, h: 24 }; const off = cnt * mw; spot = { x: Math.max(0, m.x + m.w - mw - 1 - off), y: Math.max(0, m.y + m.h - mh - 1), w: mw, h: mh }; if (EDIT.layout.widgets.some(w => w.type === 'qr' && overlap(w, spot))) spot = null; else spot.float = true; }
+  const G = EDIT.layout.cols || 24, [mw, mh] = (d.min || [4, 3]).map(v => v * G / 24); let spot = null;
+  for (let y = 0; y <= G - mh && !spot; y++) for (let x = 0; x <= G - mw && !spot; x++) { const c = { x, y, w: mw, h: mh }; if (!EDIT.layout.widgets.some(w => overlap(w, c))) spot = c; }
+  if (!spot && type === 'qr') { const m = EDIT.layout.widgets.find(w => w.type === 'media') || { x: 0, y: 0, w: G, h: G }; const off = cnt * mw; spot = { x: Math.max(0, m.x + m.w - mw - 1 - off), y: Math.max(0, m.y + m.h - mh - 1), w: mw, h: mh }; if (EDIT.layout.widgets.some(w => w.type === 'qr' && overlap(w, spot))) spot = null; else spot.float = true; }
   snap();
   const pos = spot ? { x: spot.x, y: spot.y, w: spot.w, h: spot.h } : { x: 0, y: 0, w: mw, h: mh };
   EDIT.layout.widgets.push({ type, ...pos, ...(d.props ? { props: { ...clone(d.props), ...(type === 'qr' ? { size: 'box', look: 'card' } : {}) } } : {}) }); // yeni QR kartı kutuyu izler: sürükleyerek boyutlanır
@@ -398,19 +410,19 @@ function dragSetup() {
   };
   wrap.onpointermove = e => {
     if (!st) return;
-    const r = wrap.getBoundingClientRect(), dx = Math.round((e.clientX - st.x0) / r.width * 24), dy = Math.round((e.clientY - st.y0) / r.height * 24);
-    const w = EDIT.layout.widgets[st.i], o = st.w0, min = (S.cat.widgets[w.type] || {}).min || [2, 2];
-    if (!st.rz) { w.x = Math.max(0, Math.min(24 - o.w, o.x + dx)); w.y = Math.max(0, Math.min(24 - o.h, o.y + dy)); }
+    const G = EDIT.layout.cols || 24, r = wrap.getBoundingClientRect(), dx = Math.round((e.clientX - st.x0) / r.width * G), dy = Math.round((e.clientY - st.y0) / r.height * G);
+    const w = EDIT.layout.widgets[st.i], o = st.w0, k = G / 24, min = ((S.cat.widgets[w.type] || {}).min || [2, 2]).map(v => v * k);
+    if (!st.rz) { w.x = Math.max(0, Math.min(G - o.w, o.x + dx)); w.y = Math.max(0, Math.min(G - o.h, o.y + dy)); }
     else { // her kenar ve köşeden boyutlandırma: karşı kenar sabit kalır
       const d = st.rz, R = o.x + o.w, B = o.y + o.h;
-      if (d.includes('e')) w.w = Math.max(min[0], Math.min(24 - o.x, o.w + dx));
-      if (d.includes('s')) w.h = Math.max(min[1], Math.min(24 - o.y, o.h + dy));
+      if (d.includes('e')) w.w = Math.max(min[0], Math.min(G - o.x, o.w + dx));
+      if (d.includes('s')) w.h = Math.max(min[1], Math.min(G - o.y, o.h + dy));
       if (d.includes('w')) { w.x = Math.max(0, Math.min(R - min[0], o.x + dx)); w.w = R - w.x; }
       if (d.includes('n')) { w.y = Math.max(0, Math.min(B - min[1], o.y + dy)); w.h = B - w.y; }
     }
     st.moved = w.x !== o.x || w.y !== o.y || w.w !== o.w || w.h !== o.h;
     const el = $('cv').querySelector(`.wb[data-i="${st.i}"]`);
-    if (el) { el.style.left = w.x / 24 * 100 + '%'; el.style.top = w.y / 24 * 100 + '%'; el.style.width = w.w / 24 * 100 + '%'; el.style.height = w.h / 24 * 100 + '%'; el.querySelector('small').textContent = w.w + '×' + w.h; }
+    if (el) { el.style.left = w.x / G * 100 + '%'; el.style.top = w.y / G * 100 + '%'; el.style.width = w.w / G * 100 + '%'; el.style.height = w.h / G * 100 + '%'; el.querySelector('small').textContent = w.w + '×' + w.h; }
   };
   wrap.onpointerup = wrap.onpointercancel = () => {
     if (!st) return;

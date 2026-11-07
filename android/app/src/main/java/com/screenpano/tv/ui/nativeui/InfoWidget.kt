@@ -136,7 +136,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
             v.measure(MeasureSpec.makeMeasureSpec(bw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
             val h = v.measuredHeight
             val need = h + if (cur.isNotEmpty()) gap else 0
-            if (cur.isNotEmpty() && used + need > bh) { res.add(cur); cur = ArrayList(); used = 0 }
+            if (cur.isNotEmpty() && used + need > bh - (vh * 0.8f).toInt()) { res.add(cur); cur = ArrayList(); used = 0 }
             used += h + if (cur.isNotEmpty()) gap else 0
             cur.add(it)
         }
@@ -195,6 +195,16 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
                 }
                 if (pg.type == "empty") col.addView(emptyCard(), LayoutParams(-1, -2))
                 body.addView(col, FrameLayout.LayoutParams(-1, -1))
+                // ölçüden sonra son kart yine kesiliyorsa listeyi sığana dek küçült (web'deki fitList ile aynı)
+                col.post {
+                    val last = col.getChildAt(col.childCount - 1) ?: return@post
+                    val bh = body.height; val bottom = last.bottom
+                    if (bh > 0 && bottom > bh + 1) {
+                        val k = (bh.toFloat() / bottom * 0.985f).coerceAtLeast(0.55f)
+                        col.layoutParams = FrameLayout.LayoutParams((body.width / k).toInt(), -1)
+                        col.pivotX = 0f; col.pivotY = 0f; col.scaleX = k; col.scaleY = k
+                    }
+                }
             }
         }
     }

@@ -93,7 +93,7 @@ class NativeGridView(context: Context) : ViewGroup(context) {
         val sc = scale(s, W, H)
         // sayfadaki #app ızgarasıyla birebir: kenar boşluğu (1.2vw / 1.8vh) ve hücre aralığı (.9vw / 1.4vh) hesaba katılır
         val k = sc[2]
-        val padX = W * 0.012f; val padY = H * 0.018f; val gapX = W * 0.009f; val gapY = H * 0.014f
+        val padX = W * 0.012f; val padY = H * 0.018f; val fine = if (s.cols > 24) 0.5f else 1f; val gapX = W * 0.009f * fine; val gapY = H * 0.014f * fine
         val tw = (W - 2 * padX - (s.cols - 1) * gapX) / s.cols; val th = (H - 2 * padY - (s.rows - 1) * gapY) / s.rows
         val seen = HashMap<String, Int>()
         for (w in s.widgets) {

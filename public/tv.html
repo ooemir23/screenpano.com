@@ -1567,7 +1567,7 @@ function paginate(items, fn = card) {
   const out = []; let cur = [], used = 0;
   items.forEach((it, i) => {
     const need = hs[i] + (cur.length ? gap : 0);
-    if (cur.length && used + need > H) { out.push(cur); cur = []; used = 0; }
+    if (cur.length && used + need > H - innerHeight * 0.008) { out.push(cur); cur = []; used = 0; }
     used += hs[i] + (cur.length ? gap : 0);
     cur.push(it);
   });
@@ -1642,7 +1642,22 @@ function render() {
   else if (pg.type === 'breaking') list.innerHTML = pg.items.map(brkCard).join('');
   else if (pg.type === 'otd') list.innerHTML = pg.items.map(dayCard).join('');
   else if (pg.type === 'empty') list.innerHTML = '<div class="m"><div class="top"><span>Yakında maç yok</span></div></div>';
+  fitList(list, isTraffic);
   dots.innerHTML = pages.length > 6 ? `<span class="cnt">${page + 1} / ${pages.length}</span>` : pages.length > 1 ? pages.map((_, i) => `<i class="${i === page ? 'on' : ''}"></i>`).join('') : '';
+}
+// Kartlar ölçüldükten sonra yükseklik değişebilir (yazı tipi, görsel, satır kaydı): son kart kesiliyorsa kartları sığana dek küçült
+function fitList(list, off) {
+  [...list.children].forEach(c => { c.style.zoom = ''; });
+  if (off || list.children.length < 1) return;
+  for (let i = 0; i < 6; i++) {
+    const r = list.getBoundingClientRect(), last = list.lastElementChild.getBoundingClientRect();
+    const over = last.bottom - (r.top + r.height);
+    if (over <= 0.5) break;
+    const used = last.bottom - r.top, k = Math.max(0.55, (r.height / used) * 0.985);
+    const z = (parseFloat(list.firstElementChild.style.zoom) || 1) * k;
+    [...list.children].forEach(c => { c.style.zoom = z.toFixed(3); });
+    if (z <= 0.56) break;
+  }
 }
 function syncWidgetPage() {
   if (!pages.length) return { page: 0, msLeft: 12000 };
@@ -2796,6 +2811,7 @@ function applyLayout(l) {
   const app = $id('app'), park = $id('parking'), cols = l.cols || 24, rows = l.rows || 24;
   app.style.gridTemplateColumns = `repeat(${cols},minmax(0,1fr))`;
   app.style.gridTemplateRows = `repeat(${rows},minmax(0,1fr))`;
+  app.style.gap = cols > 24 ? '.7vh .45vw' : ''; // ince ızgarada hücre aralığı yarıya iner (kutu boyutları aynı kalsın)
   const used = new Set(); WPROPS = {}; window.__rtProps = []; let rtn = 0;
   app.querySelectorAll('.cell.qrcell,.cell.clkcell,.cell.rtcell').forEach(c => c.remove()); qrTile.cells = [];
   for (const w of l.widgets) {

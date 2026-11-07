@@ -64,13 +64,14 @@ const defaultLayout = (tpl = DEFAULT_TEMPLATE) => ({ cols: COLS, rows: ROWS, wid
 const HEX = /^#[0-9a-f]{6}$/i;
 const BOXES = ['accent', 'glass', 'dark', 'outline', 'none']; // kutu stili: tema geneli + widget başına
 function cleanLayout(l) {
+  const FC = l && Number(l.cols) === 48 ? 48 : COLS; // 48 = ince ızgara (koordinatlar iki katı hassas)
   const seen = new Set(), count = {}, out = [];
   for (const w of (l && Array.isArray(l.widgets) ? l.widgets : []).slice(0, 20)) {
     if (!w || !WIDGETS[w.type] || seen.has(w.type)) continue;
     if ((count[w.type] = (count[w.type] || 0) + 1) > (WIDGETS[w.type].multi || 1)) continue;
     const n = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
-    const x = n(w.x, 0, COLS - 1), y = n(w.y, 0, ROWS - 1);
-    const item = { type: w.type, x, y, w: n(w.w, 1, COLS - x), h: n(w.h, 1, ROWS - y) };
+    const x = n(w.x, 0, FC - 1), y = n(w.y, 0, FC - 1);
+    const item = { type: w.type, x, y, w: n(w.w, 1, FC - x), h: n(w.h, 1, FC - y) };
     const def = WIDGETS[w.type].props;
     if (def) {
       const p = w.props || {}; item.props = {};
@@ -99,7 +100,7 @@ function cleanLayout(l) {
     if (!WIDGETS[w.type].multi) seen.add(w.type);
     out.push(item);
   }
-  return { cols: COLS, rows: ROWS, widgets: out };
+  return { cols: FC, rows: FC, widgets: out };
 }
 function cleanTheme(t, cur = {}) {
   const o = { ...THEMES.kahve, ...cur };
