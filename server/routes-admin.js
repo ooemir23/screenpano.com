@@ -552,7 +552,7 @@ r.post('/backups/:name/restore', ownerOnly, (req, res) => {
 });
 
 // ---- resmî günler ----
-r.get('/celebrate', (req, res) => { const t = req.t; res.json({ enabled: t.db.showCelebrations !== false, holidays: F.HOLIDAYS.map(h => ({ id: h.id, md: h.md, title: h.title, mourn: !!h.mourn, mode: F.celebMode(t, h.id), photos: F.celebPhotos(t, h) })), active: (F.activeCelebration(t) || {}).id || null }); });
+r.get('/celebrate', (req, res) => { const t = req.t; res.json({ enabled: t.db.showCelebrations !== false, holidays: F.HOLIDAYS.map(h => ({ id: h.id, md: h.md, title: h.title, mourn: !!h.mourn, mode: F.celebMode(t, h.id), photos: F.celebPhotos(t, h) })), active: (F.activeCelebration(t) || {}).id || null, preview: t.db.celebPreview && t.db.celebPreviewUntil > Date.now() ? t.db.celebPreview : null }); });
 r.put('/celebrate/mode', (req, res) => {
   const t = req.t, { id, mode } = req.body || {};
   if (!F.HOLIDAYS.some(h => h.id === id) || !['auto', 'on', 'off'].includes(mode)) return res.status(400).json({ error: 'geçersiz istek' });
@@ -566,7 +566,7 @@ r.post('/celebrate/preview', (req, res) => {
   else if (F.HOLIDAYS.some(h => h.id === id)) { t.db.celebPreview = id; t.db.celebPreviewUntil = Date.now() + 3 * 60 * 1000; }
   else return res.status(400).json({ error: 'bilinmeyen gün' });
   changed(t); res.json({ ok: true });
-  setTimeout(() => hub.pushTenant(t.id), 3 * 60 * 1000 + 500);
+  if (id) setTimeout(() => hub.pushTenant(t.id), 3 * 60 * 1000 + 500);
 });
 r.post('/celebrate/photos', quota, upload.single('file'), (req, res) => {
   const t = req.t, f = req.file, day = req.body && req.body.day;

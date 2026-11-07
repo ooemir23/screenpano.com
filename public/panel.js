@@ -1192,11 +1192,13 @@ SECTIONS.celeb = {
       $('cdays').innerHTML = c.holidays.map(h => `<div class="it" style="flex-wrap:wrap"><div class="b" style="min-width:200px"><b>${esc(h.title)}${c.active === h.id ? ' <span class="pill ok">şu an açık</span>' : ''}</b><span>${h.md.split('-').reverse().join('.')} · ${h.photos.length} fotoğraf</span>
           <div class="thumbs">${h.photos.map(p => `<div class="t"><img src="${esc(p.url)}">${p.id ? `<button onclick="act('DELETE','/celebrate/photos/${p.id}',undefined,'Silindi')">✕</button>` : ''}</div>`).join('')}</div></div>
           <select style="width:auto" onchange="act('PUT','/celebrate/mode',{id:'${h.id}',mode:this.value},'Kaydedildi')">${[['auto', 'Tarihinde otomatik'], ['on', 'Hep açık'], ['off', 'Kapalı']].map(([v, l]) => `<option value="${v}" ${h.mode === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
-          <button class="btn xs g" onclick="act('POST','/celebrate/preview',{id:'${h.id}'},'3 dakika önizleme başladı',false)">Önizle</button>
+          ${c.preview === h.id ? `<button class="btn xs" onclick="celebPrevStop()">Önizlemeyi kapat</button>` : `<button class="btn xs g" onclick="celebPrev('${h.id}')">Önizle</button>`}
           <label class="btn xs g" style="cursor:pointer">＋ Fotoğraf<input type="file" accept="image/*" hidden onchange="upCeleb('${h.id}',this)"></label></div>`).join('');
     } catch (e) {}
   },
 };
+async function celebPrev(id) { if (await act('POST', '/celebrate/preview', { id }, 'Önizleme TV\'de 3 dakika gösterilecek', false)) render(true); }
+async function celebPrevStop() { if (await act('POST', '/celebrate/preview', {}, 'Önizleme kapatıldı', false)) render(true); }
 async function addBday() { if (!$('b-ok').checked) return toast('Kişinin adının ekranda gösterilmesine izin verdiğini onaylayın', true); if (await act('POST', '/birthdays', { name: $('b-n').value.trim(), text: $('b-t').value.trim() }, 'Kişi eklendi')) {} }
 async function saveTimes() { if (await act('PUT', '/schedule', { times: TIMES, duration: $('b-dur').value }, 'Saatler kaydedildi', false)) { S.db = await req('GET', '/db'); TIMES = null; render(true); } }
 async function upCeleb(day, inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const fd = new FormData(); fd.append('day', day); fd.append('file', f); try { await req('POST', '/celebrate/photos', fd); toast('Fotoğraf eklendi'); render(true); } catch (e) { toast(e.message, true); } }
