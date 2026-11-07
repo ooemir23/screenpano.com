@@ -42,10 +42,19 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
     private var props: JSONObject? = null
     private var rateIdx = 0
     private var viewIdx = 0
+    private var showChange = false
     private var sig = ""
     // zamanlayıcılar sunucu saatine hizalı: tüm ekranlar aynı anda aynı sayfayı/kur grubunu gösterir
     private fun aligned(period: Long): Long = period - NativeEnv.now() % period + 30L
-    private val rateTick = object : Runnable { override fun run() { rateIdx = (NativeEnv.now() / 8000L).toInt(); renderMain(); main.postDelayed(this, aligned(8000L)) } }
+    private val rateTick = object : Runnable {
+        override fun run() {
+            val now = NativeEnv.now()
+            rateIdx = (now / 8000L).toInt()
+            showChange = (now % 8000L) >= 4200L
+            renderMain()
+            main.postDelayed(this, if (showChange) (8000L - (now % 8000L) + 30L) else (4200L - (now % 8000L) + 30L))
+        }
+    }
     private val viewTick = object : Runnable { override fun run() { viewIdx = (NativeEnv.now() / 12000L).toInt(); renderViews(); main.postDelayed(this, aligned(12000L)) } }
     private var wifiRunnable: Runnable? = null
 
@@ -199,35 +208,30 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                     gravity = Gravity.CENTER
                 }, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
 
-                col.addView(AutoFitRateText(context, vh, p, c.value, c.unit, isSolo), LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f).apply {
-                    topMargin = (vh * 0.15f).toInt()
-                    bottomMargin = (vh * 0.15f).toInt()
-                })
-
                 val chgStr = c.change?.let { (if (it > 0.005) "+" else if (it < -0.005) "-" else "") + String.format(Locale("tr", "TR"), "%.1f", abs(it)) + "%" }
                 val chgColor = if (c.change != null) (if (c.change > 0.005) Color.parseColor("#34d399") else if (c.change < -0.005) Color.parseColor("#f87171") else p.mute) else 0
 
-                val badgeView = TextView(context).apply {
-                    setSingleLine(true)
-                    gravity = Gravity.CENTER
-                    includeFontPadding = false
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.05f)
-                    if (chgStr != null) {
+                val valView = if (showChange && chgStr != null) {
+                    TextView(context).apply {
+                        setSingleLine(true)
+                        gravity = Gravity.CENTER
+                        includeFontPadding = false
+                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                        setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * (if (isSolo) 2.2f else 1.9f))
                         text = chgStr
                         setTextColor(chgColor)
                         background = GradientDrawable().apply {
-                            setColor(if (c.change != null && c.change > 0.005) Color.argb(41, 52, 211, 153) else if (c.change != null && c.change < -0.005) Color.argb(41, 248, 113, 113) else Color.argb(15, 255, 255, 255))
+                            setColor(if (c.change > 0.005) Color.argb(38, 52, 211, 153) else if (c.change < -0.005) Color.argb(38, 248, 113, 113) else Color.argb(18, 255, 255, 255))
                             cornerRadius = vh * 0.35f
                         }
-                        setPadding((vh * 0.45f).toInt(), (vh * 0.08f).toInt(), (vh * 0.45f).toInt(), (vh * 0.08f).toInt())
-                    } else {
-                        text = ""
-                        visibility = View.INVISIBLE
+                        setPadding((vh * 0.5f).toInt(), (vh * 0.1f).toInt(), (vh * 0.5f).toInt(), (vh * 0.1f).toInt())
                     }
+                } else {
+                    AutoFitRateText(context, vh, p, c.value, c.unit, isSolo)
                 }
-                col.addView(badgeView, LayoutParams(LayoutParams.WRAP_CONTENT, (vh * 1.3f).toInt()).apply {
-                    gravity = Gravity.CENTER_HORIZONTAL
+
+                col.addView(valView, LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f).apply {
+                    topMargin = (vh * 0.2f).toInt()
                 })
 
                 row.addView(col, LayoutParams(0, LayoutParams.MATCH_PARENT, 1f))
@@ -327,11 +331,11 @@ internal class AutoFitRateText(
     }
 
     private fun calcWidth(scale: Float): Float {
-        val baseSize = vh * (if (isSolo) 2.9f else 2.3f) * scale
+        val baseSize = vh * (if (isSolo) 2.45f else 2.1f) * scale
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { isFakeBoldText = true; textSize = baseSize }
         var total = tp.measureText(valText)
         if (unitText.isNotEmpty()) {
-            tp.textSize = baseSize * 0.62f
+            tp.textSize = baseSize * 0.65f
             tp.isFakeBoldText = false
             total += tp.measureText(" $unitText")
         }
@@ -339,7 +343,7 @@ internal class AutoFitRateText(
     }
 
     private fun applyScale(scale: Float) {
-        val baseSize = vh * (if (isSolo) 2.9f else 2.3f) * scale
+        val baseSize = vh * (if (isSolo) 2.45f else 2.1f) * scale
         val s = SpannableStringBuilder(valText).apply {
             setSpan(RunSpan(baseSize, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             if (unitText.isNotEmpty()) {
