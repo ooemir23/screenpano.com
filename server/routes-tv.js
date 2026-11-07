@@ -65,9 +65,16 @@ r.get('/pair/:pid', (req, res) => {
   res.json({ status: 'done', deviceToken: p.token });
 });
 // panelden kod girilince: hata metni ya da null
+// Kod tahminini engelle: işletme başına 10 dakikada en çok 8 hatalı deneme
+const claimFails = new Map(); // tenantId -> { n, t }
 function claimPair(code, t, agent) {
+  const f = claimFails.get(t.id);
+  if (f && Date.now() - f.t < 10 * MIN && f.n >= 8) return 'Çok fazla hatalı kod denendi. 10 dakika sonra tekrar deneyin.';
   const pid = byCode.get(code), p = pid && pairs.get(pid);
-  if (!p || p.token || Date.now() - p.created > 15 * MIN) return 'Kod bulunamadı ya da süresi doldu. TV ekranındaki güncel kodu girin.';
+  if (!p || p.token || Date.now() - p.created > 15 * MIN) {
+    const g = claimFails.get(t.id); claimFails.set(t.id, g && Date.now() - g.t < 10 * MIN ? { n: g.n + 1, t: g.t } : { n: 1, t: Date.now() });
+    return 'Kod bulunamadı ya da süresi doldu. TV ekranındaki güncel kodu girin.';
+  }
   const err = limitError(t); if (err) return err;
   p.token = issueDevice(t, agent, 'TV kutusu');
   return null;
