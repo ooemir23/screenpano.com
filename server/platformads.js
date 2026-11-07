@@ -245,6 +245,14 @@ function routes(r) {
     }
     save(f.list); pushAll(); res.json({ ok: true, errors: errs, ad: derive(f.a) });
   });
+  // Görsel/video sırası: gönderilen kimlik listesine göre yeniden dizilir
+  r.put('/pads/:id/media-order', (req, res) => {
+    const f = find(req, res); if (!f) return;
+    const ids = (req.body || {}).order; if (!Array.isArray(ids)) return res.status(400).json({ error: 'Sıra geçersiz' });
+    const by = new Map(f.a.creatives.map(c => [c.id, c])), out = [];
+    for (const id of ids) if (by.has(id)) { out.push(by.get(id)); by.delete(id); }
+    f.a.creatives = [...out, ...by.values()]; save(f.list); pushAll(); res.json({ ok: true });
+  });
   r.delete('/pads/:id/media/:cid', (req, res) => {
     const f = find(req, res); if (!f) return; const c = f.a.creatives.find(x => x.id === req.params.cid);
     if (c) { rm(c); f.a.creatives = f.a.creatives.filter(x => x !== c); save(f.list); pushAll(); }

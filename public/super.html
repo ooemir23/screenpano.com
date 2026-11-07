@@ -1080,7 +1080,7 @@ async function adOpen(id) {
       <div class="acts" style="margin-top:10px"><button class="btn" ${a.creatives.length ? '' : 'disabled'} onclick="adTrial('${a.id}')">${T('Deneme gönder')}</button></div>`}
     </div>
     <div class="d-card"><h4>${ic('image')} ${T('Görsel ve video')}</h4>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${a.creatives.map(c => `<div style="position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#000">${c.type === 'image' ? `<img src="/u/ads/${c.file}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">` : `<video src="/u/ads/${c.file}" muted preload="metadata" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block"></video>`}<button class="btn xs ghost" style="position:absolute;top:4px;right:4px" onclick="adMediaDel('${a.id}','${c.id}')" title="Sil">×</button><small style="display:block;padding:3px 6px;color:#ccc">${c.type === 'video' ? '▶ ' + (c.dur || a.dur || '?') + ' sn' : (a.dur || 10) + ' sn'}</small></div>`).join('')}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">${a.creatives.map(c => `<div style="position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#000">${c.type === 'image' ? `<img src="/u/ads/${c.file}" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block">` : `<video src="/u/ads/${c.file}" muted preload="metadata" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block"></video>`}<small style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,.7);color:#fff;border-radius:10px;padding:1px 7px">${a.creatives.indexOf(c) + 1}</small><div style="display:flex;align-items:center;gap:4px;padding:4px 6px;background:#15151a"><small style="flex:1;color:#ccc">${c.type === 'video' ? '▶ ' + (c.dur || a.dur || '?') + ' sn' : (a.dur || 10) + ' sn'}</small><button class="btn xs ghost" ${a.creatives.indexOf(c) === 0 ? 'disabled' : ''} onclick="adMove('${a.id}','${c.id}',-1)" title="${T('Öne al')}">‹</button><button class="btn xs ghost" ${a.creatives.indexOf(c) === a.creatives.length - 1 ? 'disabled' : ''} onclick="adMove('${a.id}','${c.id}',1)" title="${T('Sona al')}">›</button><button class="btn xs ghost" style="color:var(--bad)" onclick="adMediaDel('${a.id}','${c.id}')" title="${T('Kaldır')}">🗑</button></div></div>`).join('')}
       <label class="btn ghost" style="display:flex;align-items:center;justify-content:center;min-height:80px;cursor:pointer;border-style:dashed"><input type="file" multiple accept="image/*,video/*" hidden onchange="adUp('${a.id}',this.files)">＋ ${T('Ekle')}</label></div>
       <p class="hint" style="margin-top:8px">${T('Görseller 16:9 (1920×1080) önerilir. Videolar sessiz oynatılır ve otomatik küçültülür. En çok 12 dosya.')}</p>
     </div>
@@ -1124,10 +1124,12 @@ function adPreview(i) {
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;color:#fff;font-size:13px"><span>${esc(AD.cur.ad.advertiser)} · ${(((i % n) + n) % n) + 1}/${n}</span><span style="display:flex;gap:8px">${n > 1 ? `<button class="btn xs ghost" style="color:#fff" onclick="adPreview(${i - 1})">‹</button><button class="btn xs ghost" style="color:#fff" onclick="adPreview(${i + 1})">›</button>` : ''}<button class="btn xs" onclick="$('ad-pv').remove()">${T('Kapat')}</button></span></div></div>`;
   document.body.appendChild(el);
 }
-async function adMediaDel(id, cid) {
-  if (!confirm(T('Bu görsel/video kalıcı olarak silinsin mi?'))) return;
-  try { await api('DELETE', `/pads/${id}/media/${cid}`); toast('Silindi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
+async function adMove(id, cid, d) {
+  const ids = AD.cur.ad.creatives.map(c => c.id), i = ids.indexOf(cid), j = i + d; if (i < 0 || j < 0 || j >= ids.length) return;
+  [ids[i], ids[j]] = [ids[j], ids[i]];
+  try { await api('PUT', `/pads/${id}/media-order`, { order: ids }); await adOpen(id); } catch (e) { toast(e.message, true); }
 }
+async function adMediaDel(id, cid) { if (!confirm(T('Bu görsel/video reklamdan kaldırılsın mı?'))) return; try { await api('DELETE', `/pads/${id}/media/${cid}`); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
 async function adPause(id, v) { try { await api('PUT', '/pads/' + id, { paused: v }); toast(v ? 'Reklam durduruldu' : 'Reklam yeniden yayında'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
 async function adDel(id) { if (!confirm(T('Bu reklam ve görselleri silinsin mi? Bu işlem geri alınamaz.'))) return; try { await api('DELETE', '/pads/' + id); closeDrawer(); toast('Silindi'); await adLoad(); } catch (e) { toast(e.message, true); } }
 async function adCopy(id) { try { await navigator.clipboard.writeText(AD.cur.ad.url); toast('Bağlantı kopyalandı'); } catch (e) { prompt(T('Rapor bağlantısı'), AD.cur.ad.url); } }
