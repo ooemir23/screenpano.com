@@ -53,8 +53,8 @@ class CampView(context: Context) : FrameLayout(context) {
         box.addView(iv, LayoutParams(-1, -1))
         val svg = c.optString("svg"); if (svg.isNotEmpty()) iv.load(ByteBuffer.wrap(svg.toByteArray())) { crossfade(false) }
         right.addView(box, LinearLayout.LayoutParams(qs, qs))
-        right.addView(tv(c.optString("qrLabel"), 2.2f, Color.WHITE, true).apply { gravity = Gravity.CENTER; maxWidth = (vh * 32f).toInt(); letterSpacing = 0.06f }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (vh * 1.6f).toInt() })
-        right.addView(tv("QR KODU TELEFONUNUZLA OKUTUN", 1.6f, p.al, false).apply { gravity = Gravity.CENTER; letterSpacing = 0.1f }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (vh * 0.5f).toInt() })
+        val ql = c.optString("qrLabel")
+        if (ql.isNotEmpty()) right.addView(tv(ql, 2.2f, Color.WHITE, true).apply { gravity = Gravity.CENTER; maxWidth = (vh * 32f).toInt(); letterSpacing = 0.06f }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (vh * 1.6f).toInt() })
         row.addView(right, LinearLayout.LayoutParams(-2, -2).also { it.leftMargin = (vw * 4f).toInt() })
         addView(row, LayoutParams(-1, -1))
     }

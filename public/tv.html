@@ -2456,7 +2456,7 @@ function campShow(c) {
   el.innerHTML = '<div class="cl"><svg class="cup" viewBox="0 0 120 100"><path class="st" d="M40 30c-8-8 8-14 0-24"/><path class="st" d="M60 30c-8-8 8-14 0-24"/><path class="st" d="M80 30c-8-8 8-14 0-24"/>'
     + '<path d="M22 42h76v22a30 30 0 0 1-30 30H52a30 30 0 0 1-30-30z" fill="#fff"/><path d="M98 48h6a12 12 0 0 1 0 24h-9" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><path d="M22 54h76" style="stroke:var(--accent2)" stroke-width="5"/></svg>'
     + '<h2>' + esc(c.headline) + '</h2><div class="stars">★★★★★</div><div class="sub">' + esc(c.sub) + '</div>' + (c.note ? '<div class="note">' + esc(c.note) + '</div>' : '') + '</div>'
-    + '<div class="cr"><div class="qb">' + c.svg + '</div><div class="ql">' + esc(c.qrLabel || '') + '<small>QR KODU TELEFONUNUZLA OKUTUN</small></div></div>';
+    + '<div class="cr"><div class="qb">' + c.svg + '</div>' + (c.qrLabel ? '<div class="ql">' + esc(c.qrLabel) + '</div>' : '') + '</div>';
   setTimeout(() => el.classList.add('on'), 60);
   setTimeout(() => { if (camp.after) { const f = camp.after; camp.after = null; f(); } el.classList.remove('on'); setTimeout(() => { camp.showing = false; }, 1500); }, (c.durSec || 15) * 1000);
 }
@@ -2508,14 +2508,13 @@ function bigDesign(el, m, cfg, design, o) {
     const venueTxt = m.venue ? `🏟 ${m.venue}` : '';
     const broadcastTxt = channelPill ? `📺 ${channelPill}` : '';
     const centerMeta = [venueTxt, broadcastTxt].filter(Boolean).join(' · ');
-    const pod = (role, photo, crestHtml, name, col, col2) => `
+    const pod = (photo, crestHtml, name, col, col2) => `
       <div class="pr-team-box" style="--tc:${esc(col)};--tc2:${esc(col2)}">
         <div class="pr-podium">
           <div class="pr-halo"></div>
           ${photo ? `<img class="pr-player" src="${esc(photo)}" alt="">` : `<div class="pr-crest-wrap">${crestHtml}</div>`}
         </div>
         <div class="pr-pedestal">
-          <div class="pr-role">${role}</div>
           <div class="pr-tname${String(name).length > 13 ? ' sm' : ''}"${lng(name)}>${esc(name)}</div>
         </div>
       </div>`;
@@ -2523,7 +2522,7 @@ function bigDesign(el, m, cfg, design, o) {
       + `<div class="pr-glow-l"></div><div class="pr-glow-r"></div><div class="pr-vignette"></div>`
       + `<div class="pr-wrap">`
       + `  <div class="pr-header"><div class="pr-comp"><img class="pr-comp-logo" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"><span class="pr-comp-title">${esc(league || kick)}</span><span class="pr-live-tag"><i></i>CANLI YAYIN</span></div>${LOGO ? `<div class="pr-brand">${brand}</div>` : `<div class="pr-brand-text">${esc(up(BNAME))}</div>`}</div>`
-      + `  <div class="pr-stage">${pod('EV SAHİBİ', m.hp, H, m.home, c1, c1b)}<div class="pr-center-hub"><div class="pr-vs-badge">VS</div><div class="pr-time-card"><div class="pr-time">${esc(o.tm)}</div><div class="pr-day">${esc(o.dayTxt)}</div></div>${centerMeta ? `<div class="pr-meta-pill">${esc(centerMeta)}</div>` : ''}</div>${pod('DEPLASMAN', m.ap, A, m.away, c2, c2b)}</div>`
+      + `  <div class="pr-stage">${pod(m.hp, H, m.home, c1, c1b)}<div class="pr-center-hub"><div class="pr-vs-badge">VS</div><div class="pr-time-card"><div class="pr-time">${esc(o.tm)}</div><div class="pr-day">${esc(o.dayTxt)}</div></div>${centerMeta ? `<div class="pr-meta-pill">${esc(centerMeta)}</div>` : ''}</div>${pod(m.ap, A, m.away, c2, c2b)}</div>`
       + `  <div class="pr-footer"><div class="pr-foot-note">${esc(footNote)}</div>${infos ? `<div class="pr-foot-infos">${infos}</div>` : ''}</div>`
       + `</div>`;
   }
@@ -2540,32 +2539,32 @@ function bigDesign(el, m, cfg, design, o) {
     + `<div class="ycdw"><div class="ycd" id="ycd"></div><div class="ywhen">${esc(o.dayName)} · ${esc(o.tm)}</div></div>${end}</div>`;
   else if (design === 'arena') {
     const emb = Array.from({ length: 28 }, () => `<i style="left:${(Math.random() * 100).toFixed(1)}%;--dx:calc(${(Math.random() * 16 - 8).toFixed(1)}*var(--u));animation-duration:${(5 + Math.random() * 6).toFixed(1)}s;animation-delay:${(-Math.random() * 10).toFixed(1)}s"></i>`).join('');
-    const pod = (role, photo, crestHtml, name, col, col2) => `<div class="ar-podium" style="--tc:${esc(col)};--tc2:${esc(col2)}">${photo ? `<img class="ar-pl" src="${esc(photo)}" alt="">` : `<div class="ar-orb"><div class="yaura"></div>${crestHtml}</div>`}<div class="ar-pedestal"><div class="ar-role">${role}</div><div class="ar-tname${String(name).length > 13 ? ' sm' : ''}"${lng(name)}>${esc(name)}</div></div></div>`;
+    const pod = (photo, crestHtml, name, col, col2) => `<div class="ar-podium" style="--tc:${esc(col)};--tc2:${esc(col2)}">${photo ? `<img class="ar-pl" src="${esc(photo)}" alt="">` : `<div class="ar-orb"><div class="yaura"></div>${crestHtml}</div>`}<div class="ar-pedestal"><div class="ar-tname${String(name).length > 13 ? ' sm' : ''}"${lng(name)}>${esc(name)}</div></div></div>`;
     const footNote = cfg.note || 'REZERVASYON YAPTIRMAYI UNUTMAYIN!';
     h = `<div class="ar-bg"></div><div class="ar-lea-sky"></div><div class="ar-tint-l"></div><div class="ar-tint-r"></div><div class="ar-vig"></div><div class="yemb">${emb}</div>`
       + `<div class="ar-wrap">`
       + `<div class="ar-header">${LOGO ? brand : ''}<div class="ar-crown"><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"><div class="ar-crown-txt"><div class="ar-crown-lea">${esc(league || kick)}</div><div class="ar-crown-sub">${esc(m.venue ? m.venue + ' · ' + o.dayTxt : o.dayTxt)}</div></div><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div></div>`
-      + `<div class="ar-stage">${pod('EV SAHİBİ', m.hp, H, m.home, c1, c1b)}<div class="ar-center"><div class="ar-core"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div><div class="ar-vs-pill">VS</div><div class="ar-time-box"><b>${esc(o.tm)}</b><span>${esc(o.dayTxt)}</span></div></div>${pod('DEPLASMAN', m.ap, A, m.away, c2, c2b)}</div>`
+      + `<div class="ar-stage">${pod(m.hp, H, m.home, c1, c1b)}<div class="ar-center"><div class="ar-core"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div><div class="ar-vs-pill">VS</div><div class="ar-time-box"><b>${esc(o.tm)}</b><span>${esc(o.dayTxt)}</span></div></div>${pod(m.ap, A, m.away, c2, c2b)}</div>`
       + `<div class="ar-footer"><div class="ar-f-note">${esc(footNote)}</div>${infos ? `<div class="ar-f-info">${infos}</div>` : ''}</div>`
       + `</div>`;
   }
   else if (design === 'matchday') {
     const czone = (photo, crestHtml, col, col2) => `<div class="md-crest-zone" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="md-crest-halo"></div>${photo ? `<img class="md-pl" src="${esc(photo)}" alt="">` : `<div class="md-crest-ring">${crestHtml}</div>`}</div>`;
-    const nbar = (role, name, col, col2, sub) => `<div class="md-team-banner-wrap" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="md-role">${role}</div><div class="md-name-bar"><div class="md-tname${String(name).length > 13 ? ' sm' : ''}"${lng(name)}>${esc(name)}</div></div>${sub ? `<div class="md-subvenue">${esc(sub)}</div>` : ''}</div>`;
+    const nbar = (name, col, col2, sub) => `<div class="md-team-banner-wrap" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="md-name-bar"><div class="md-tname${String(name).length > 13 ? ' sm' : ''}"${lng(name)}>${esc(name)}</div></div>${sub ? `<div class="md-subvenue">${esc(sub)}</div>` : ''}</div>`;
     const footNote = cfg.note || (o.info && o.info.filter(Boolean).join(' · ')) || 'REZERVASYON YAPTIRMAYI UNUTMAYIN!';
     h = `<div class="md-bg"></div><div class="md-tint-l"></div><div class="md-tint-r"></div><div class="md-center-glow"></div>`
       + `<div class="main-container">`
       + `<div class="md-header">${LOGO ? `<div class="md-brand">${brand}</div>` : ''}<div class="md-top-hud"><div class="md-top-wing"><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div><div class="md-top-mid"><div class="md-top-lea">${esc(league || kick)}</div><div class="md-top-time">${esc(o.dayTxt)} · ${esc(o.tm)}</div></div><div class="md-top-wing"><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div></div></div>`
       + `<div class="md-pitch-stage">${czone(m.hp, H, c1, c1b)}<div class="md-center-trophy"><img src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"></div>${czone(m.ap, A, c2, c2b)}</div>`
-      + `<div class="md-lower-grid">${nbar('EV SAHİBİ', m.home, c1, c1b, m.venue || '')}<div class="md-vs">VS</div>${nbar('DEPLASMAN', m.away, c2, c2b, m.venue || o.tm)}</div>`
+      + `<div class="md-lower-grid">${nbar(m.home, c1, c1b, m.venue || '')}<div class="md-vs">VS</div>${nbar(m.away, c2, c2b, m.venue || o.tm)}</div>`
       + `<div class="md-footer-hud"><div class="md-f-tag">${m.derby ? 'BÜYÜK DERBİ' : 'BÜYÜK MAÇ'}</div><div class="md-f-note">${esc(footNote)}</div></div>`
       + `</div>`;
   }
   else if (design === 'neonarena') {
-    const tcard = (sideCls, statusTxt, crestHtml, name, col, col2) => `<div class="team-card ${sideCls}" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="crest-wrapper"><div class="crest-bg-glow"></div><div class="crest-border"></div>${crestHtml}</div><div class="team-status">${statusTxt}</div><div class="team-name-panel"${lng(name)}>${esc(name)}</div></div>`;
+    const tcard = (sideCls, crestHtml, name, col, col2) => `<div class="team-card ${sideCls}" style="--tc:${esc(col)};--tc2:${esc(col2)}"><div class="crest-wrapper"><div class="crest-bg-glow"></div><div class="crest-border"></div>${crestHtml}</div><div class="team-name-panel"${lng(name)}>${esc(name)}</div></div>`;
     h = `<div class="bg-cyber"></div><div class="cyber-grid"></div>`
       + `<div class="main-container"><div class="header-bar">${LOGO ? `<div class="brand-logo-area">${brand}</div>` : ''}<div class="tournament-panel"><img class="ytlg" src="${esc(llogo)}" alt="" referrerpolicy="no-referrer"><div class="tournament-name">${esc(league || kick)}</div></div></div>`
-      + `<div class="match-arena">${tcard('home', 'EV SAHİBİ', H, m.home, c1, c1b)}<div class="vs-hub" style="display:flex;flex-direction:column;align-items:center;gap:calc(1.2*var(--u))"><div style="font-size:calc(5.8*var(--u));font-weight:900;color:#ffe28a;text-shadow:0 0 calc(2*var(--u)) rgba(255,210,100,.65)">${esc(o.tm)}</div><div class="yday">${esc(o.dayTxt)}</div>${m.venue ? `<div style="font-size:calc(2.1*var(--u));font-weight:800;color:#b8dcff">🏟 ${esc(m.venue)}</div>` : ''}</div>${tcard('away', 'DEPLASMAN', A, m.away, c2, c2b)}</div>`
+      + `<div class="match-arena">${tcard('home', H, m.home, c1, c1b)}<div class="vs-hub" style="display:flex;flex-direction:column;align-items:center;gap:calc(1.2*var(--u))"><div style="font-size:calc(5.8*var(--u));font-weight:900;color:#ffe28a;text-shadow:0 0 calc(2*var(--u)) rgba(255,210,100,.65)">${esc(o.tm)}</div><div class="yday">${esc(o.dayTxt)}</div>${m.venue ? `<div style="font-size:calc(2.1*var(--u));font-weight:800;color:#b8dcff">🏟 ${esc(m.venue)}</div>` : ''}</div>${tcard('away', A, m.away, c2, c2b)}</div>`
       + `${end}</div>`;
   }
   else if (design === 'duello' || design === 'turnuva') {

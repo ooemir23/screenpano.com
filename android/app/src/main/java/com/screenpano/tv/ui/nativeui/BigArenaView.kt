@@ -219,13 +219,13 @@ class BigArenaView(context: Context) : FrameLayout(context) {
                 val cut = 1.6f * u
                 background = Poly({ ww, hh -> floatArrayOf(cut, 0f, ww - cut, 0f, ww.toFloat(), hh.toFloat(), 0f, hh.toFloat()) }, mix(col, Color.argb(242, 12, 16, 30), 0.52f), Color.argb(250, 6, 9, 18), gold, 0.22f * u)
             }
-            ped.addView(tv(role, 1.45f * u, mix(col2, Color.WHITE, 0.25f)).apply { letterSpacing = 0.26f })
+            if (role.isNotEmpty()) ped.addView(tv(role, 1.45f * u, mix(col2, Color.WHITE, 0.25f)).apply { letterSpacing = 0.26f })
             val big = name.length <= 13
             val tname = tv(up(name), min(if (big) 5.2f * u else 4f * u, (if (big) 3.1f else 2.4f) * w), Color.WHITE).apply { setSingleLine(true); ellipsize = TextUtils.TruncateAt.END; letterSpacing = 0.04f; setShadowLayer(u * 0.5f, 0f, u * 0.4f, Color.BLACK) }
             ped.addView(tname, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.25f * u).toInt() })
             addView(ped, LinearLayout.LayoutParams(-1, -2).also { it.topMargin = (1.4f * u).toInt() })
         }
-        stage.addView(podium("EV SAHİBİ", m.str("home"), m.str("hl"), m.str("hp"), c1, c1b), LinearLayout.LayoutParams(0, -2, 1f).also { it.rightMargin = (2 * w).toInt() })
+        stage.addView(podium("", m.str("home"), m.str("hl"), m.str("hp"), c1, c1b), LinearLayout.LayoutParams(0, -2, 1f).also { it.rightMargin = (2 * w).toInt() })
         val center = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
         val coreSize = (26 * u).toInt()
         val core = FrameLayout(context).apply {
@@ -248,7 +248,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         tbox.addView(tv(up(dayTxt), 2f * u, lc2).apply { setSingleLine(true); letterSpacing = 0.1f }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.3f * u).toInt() })
         center.addView(tbox, LinearLayout.LayoutParams((coreSize * 1.15f).toInt(), -2).also { it.topMargin = (1.4f * u).toInt() })
         stage.addView(center, LinearLayout.LayoutParams(-2, -2))
-        stage.addView(podium("DEPLASMAN", m.str("away"), m.str("al"), m.str("ap"), c2, c2b), LinearLayout.LayoutParams(0, -2, 1f).also { it.leftMargin = (2 * w).toInt() })
+        stage.addView(podium("", m.str("away"), m.str("al"), m.str("ap"), c2, c2b), LinearLayout.LayoutParams(0, -2, 1f).also { it.leftMargin = (2 * w).toInt() })
         wrap.addView(stage, LinearLayout.LayoutParams(-1, 0, 1f))
 
         // alt şerit

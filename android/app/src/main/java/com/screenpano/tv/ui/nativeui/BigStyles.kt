@@ -380,16 +380,16 @@ internal fun buildMatchday(k: BigCtx) {
     val dark = Color.parseColor("#090d16")
     fun banner(role: String, n: String, col: Int, col2: Int, sub: String): LinearLayout = LinearLayout(k.ctx).apply {
         orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
-        addView(k.tv(role, 1.85f * u, Color.WHITE, spacing = 0.26f, shadow = true))
+        if (role.isNotEmpty()) addView(k.tv(role, 1.85f * u, Color.WHITE, spacing = 0.26f, shadow = true))
         addView(k.tv(k.up(n), if (n.length > 13) min(3.9f * u, 2.5f * w) else min(5.1f * u, 3.2f * w), Color.WHITE, spacing = 0.05f, shadow = true).apply {
             gravity = Gravity.CENTER; setSingleLine(true); ellipsize = TextUtils.TruncateAt.END; setPadding((2.2f * w).toInt(), (1.05f * u).toInt(), (2.2f * w).toInt(), (1.05f * u).toInt())
             background = PolyBg({ ww, hh -> floatArrayOf(ww * 0.04f, 0f, ww.toFloat(), 0f, ww * 0.96f, hh.toFloat(), 0f, hh.toFloat()) }, intArrayOf(BigColors.mix(col, dark, 0.18f), Color.argb(245, 14, 19, 30), BigColors.mix(col2, dark, 0.32f)), true, Color.argb(89, 255, 255, 255), 0.15f * u)
         }, k.lp(MATCH, WRAP).also { it.topMargin = (0.45f * u).toInt() })
         if (sub.isNotEmpty()) addView(k.tv(k.up(sub), 1.9f * u, Color.parseColor("#f3ead2"), spacing = 0.16f, shadow = true).apply { setSingleLine(true) }, k.lp(WRAP, WRAP).also { it.topMargin = (0.45f * u).toInt() })
     }
-    lower.addView(banner("EV SAHİBİ", k.home, k.c1, k.c1b, k.venue), k.lp(0, WRAP).also { it.weight = 1f })
+    lower.addView(banner("", k.home, k.c1, k.c1b, k.venue), k.lp(0, WRAP).also { it.weight = 1f })
     lower.addView(k.tv("VS", 5.2f * u, Color.parseColor("#f5bd42"), spacing = 0.06f, shadow = true), k.lp(WRAP, WRAP).also { it.leftMargin = (1.6f * w).toInt(); it.rightMargin = (1.6f * w).toInt() })
-    lower.addView(banner("DEPLASMAN", k.away, k.c2, k.c2b, k.venue.ifEmpty { k.tm }), k.lp(0, WRAP).also { it.weight = 1f })
+    lower.addView(banner("", k.away, k.c2, k.c2b, k.venue.ifEmpty { k.tm }), k.lp(0, WRAP).also { it.weight = 1f })
     root.addView(lower, k.lp(MATCH, WRAP).also { it.bottomMargin = (1 * u).toInt() })
     // en alt: büyük maç etiketi + not
     val foot = k.note.ifEmpty { k.infos.joinToString(" · ") { it.removePrefix("📍 ").removePrefix("🎮 ").removePrefix("💨 ") } }.ifEmpty { "REZERVASYON YAPTIRMAYI UNUTMAYIN!" }
@@ -442,20 +442,20 @@ internal fun buildNeon(k: BigCtx) {
         }, k.flp(cs, cs, Gravity.CENTER))
         wrap.addView(k.crest(url, n, col, cs, 0.8f), k.flp(cs, cs, Gravity.CENTER))
         addView(wrap, k.lp(cs, cs))
-        addView(k.tv(status, 1.6f * u, col2, spacing = 0.26f), k.lp(WRAP, WRAP).also { it.topMargin = (1.4f * u).toInt() })
+        if (status.isNotEmpty()) addView(k.tv(status, 1.6f * u, col2, spacing = 0.26f), k.lp(WRAP, WRAP).also { it.topMargin = (1.4f * u).toInt() })
         val nc = 12f
         addView(k.tv(k.up(n), if (n.length > 13) min(3.6f * u, 2.4f * w) else min(4.6f * u, 3f * w), Color.WHITE, shadow = true).apply {
             gravity = Gravity.CENTER; setSingleLine(true); ellipsize = TextUtils.TruncateAt.END; setPadding((2 * w).toInt(), (1.1f * u + 0.45f * u).toInt(), (2 * w).toInt(), (1.1f * u).toInt())
             background = PolyBg({ ww, hh -> floatArrayOf(nc, 0f, ww.toFloat(), 0f, ww - nc, hh.toFloat(), 0f, hh.toFloat()) }, intArrayOf(Color.argb(242, 14, 20, 36), Color.argb(242, 14, 20, 36)), false, Color.argb(38, 255, 255, 255), 0.22f * u)
         }, k.lp(MATCH, WRAP).also { it.topMargin = (0.5f * u).toInt() })
     }
-    arena.addView(card("EV SAHİBİ", k.c1, k.c1b, k.hl, k.home), k.lp(0, WRAP).also { it.weight = 1f })
+    arena.addView(card("", k.c1, k.c1b, k.hl, k.home), k.lp(0, WRAP).also { it.weight = 1f })
     val hub = LinearLayout(k.ctx).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
     hub.addView(k.tv(k.tm, 5.8f * u, Color.parseColor("#ffe28a"), shadow = true).apply { setSingleLine(true) })
     hub.addView(k.dayPill(), k.lp(WRAP, WRAP).also { it.topMargin = (1.2f * u).toInt() })
     if (k.venue.isNotEmpty()) hub.addView(k.tv("🏟 " + k.venue, 2.1f * u, Color.parseColor("#b8dcff")).apply { setSingleLine(true) }, k.lp(WRAP, WRAP).also { it.topMargin = (1.2f * u).toInt() })
     arena.addView(hub, k.lp(WRAP, WRAP).also { it.leftMargin = (2.5f * w).toInt(); it.rightMargin = (2.5f * w).toInt() })
-    arena.addView(card("DEPLASMAN", k.c2, k.c2b, k.al, k.away), k.lp(0, WRAP).also { it.weight = 1f })
+    arena.addView(card("", k.c2, k.c2b, k.al, k.away), k.lp(0, WRAP).also { it.weight = 1f })
     root.addView(arena, k.lp(MATCH, 0).also { it.weight = 1f })
     root.addView(k.end(), k.lp(MATCH, WRAP).also { it.leftMargin = (-5 * w).toInt(); it.rightMargin = (-5 * w).toInt() })
 }
