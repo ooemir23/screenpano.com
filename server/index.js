@@ -117,7 +117,8 @@ app.get('/q/:code', require('./qrtrack').handler);
 app.get('/h/:code', require('./hubpage').page);
 app.get('/h/:code/wifi.mobileconfig', require('./hubpage').profile);
 // Reklam verene gönderilen rapor (giriş istemez, adres tahmin edilemez)
-app.get('/r/:token', require('./ads').page);
+app.get('/ra/:token', require('./platformads').page); // reklam verene açık rapor (platform reklamları)
+app.get('/u/ads/:file', require('./platformads').serve);
 app.get('/login', page('login.html'));
 app.get('/tv', page('tv.html'));
 app.get(['/tv-lounge', '/lounge'], page('tv-lounge.html'));
@@ -229,6 +230,7 @@ require('./stats').start();
 require('./weekly').start();
 require('./happy').start();
 require('./social').start();
+require('./platformads').purgeLegacy(); require('./platformads').watch();
 process.on('unhandledRejection', e => console.error('Yakalanmamış söz:', e && e.message ? e.message : e));
 // Kapatma (deploy/docker stop): bekleyen kayıtlar diske yazılır, WAL birleştirilir, bağlantılar kapanır
 let closing = false;

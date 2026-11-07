@@ -15,13 +15,11 @@ function text(t) {
   L.push(`İçerik oynatıldı: ${nf(T.plays)} kez${pct(T.plays, j.prev.plays)}`);
   L.push(`QR okutuldu: ${nf(T.scans)} kez${pct(T.scans, j.prev.scans)}`);
   if (T.drops) L.push(`Kesinti: ${T.drops} kez, toplam ${Math.round(T.dropsec / 60)} dk`);
-  const camp = j.impact.filter(x => x.kind !== 'ad' && (x.scans || x.shown)).slice(0, 5);
+  const camp = j.impact.filter(x => (x.scans || x.shown)).slice(0, 5);
   if (camp.length) {
     L.push('', 'Kampanya etkisi (gösterim → QR okutma):');
     for (const x of camp) L.push(`• ${x.name}: ${nf(x.shown)} gösterim, ${nf(x.scans)} okutma${x.rate != null && x.shown ? ` (100 gösterimde ${String(x.rate).replace('.', ',')})` : ''}`);
   }
-  const ads = (t.db.ads || []).map(a => { const rows = j.impact.filter(x => x.kind === 'ad' && (t.db.videos.find(v => v.id === x.id) || {}).ad === a.id); return { a, shown: rows.reduce((s, x) => s + x.shown, 0), scans: rows.reduce((s, x) => s + x.scans, 0) }; }).filter(x => x.shown || x.scans);
-  if (ads.length) { L.push('', 'Reklamlar:'); for (const x of ads) L.push(`• ${x.a.name}: ${nf(x.shown)} gösterim${x.scans ? `, ${nf(x.scans)} QR okutma` : ''}`); }
   const best = j.impact.find(x => x.scans);
   if (best && best.peakHour >= 0) L.push('', `İpucu: "${best.name}" en çok ${String(best.peakHour).padStart(2, '0')}:00 civarında okutuluyor; bu saatlerde daha sık göstermeyi deneyebilirsiniz.`);
   L.push('', `Ayrıntılar: ${config.BASE_URL}/panel#stats`, 'Bu e-postayı Ayarlar → Bildirimler bölümünden kapatabilirsiniz.');

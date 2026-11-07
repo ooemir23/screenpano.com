@@ -75,7 +75,7 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 // Metin olan satır grup başlığıdır; null ayraçtır
 const NAV = [
   'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'],
-  'İçerikler', ['media', 'film', 'Medya'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'], ['ads', 'briefcase', 'Reklamlar', 1],
+  'İçerikler', ['media', 'film', 'Medya'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
   'Canlı veri', ['sport', 'trophy', 'Spor', 1], ['info', 'newspaper', 'Bilgi Bandı', 1],
   'Takip', ['stats', 'chart-column', 'İstatistik'],
   null, ['settings', 'settings', 'Ayarlar'],
@@ -583,7 +583,7 @@ const resetSafe = () => act('PUT', '/options', { safeL: 0, safeR: 0, safeT: 0, s
 let mediaPoll = null;
 SECTIONS.media = {
   html() {
-    const v = S.db.videos.filter(x => !x.ad); // reklam görselleri Reklamlar sayfasında
+    const v = S.db.videos;
     if (SUB.media === 'posters') return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']]) + postersHtml();
     return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; saat simgesiyle gün ve saat verin.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']])
       + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV için otomatik küçültülür; hazır olunca ekrana girer.',
@@ -640,7 +640,7 @@ const mvMedia = (id, dir) => act('POST', `/videos/${id}/move`, { dir });
 // Medya kartı: süre etiketi (video uzunluğu ya da fotoğraf süresi)
 const durTxt = x => x.type === 'video' ? (x.dur ? Math.floor(x.dur / 60) + ':' + String(Math.round(x.dur % 60)).padStart(2, '0') : '') : (S.db.imageSeconds || 10) + ' sn';
 // Başa / sona al: sıra istemciden hesaplanıp tek seferde gönderilir
-function mvEdge(id, first) { const ids = S.db.videos.filter(x => !x.ad).map(x => x.id).filter(x => x !== id); first ? ids.unshift(id) : ids.push(id); act('POST', '/videos/reorder', { ids }, 'Sıra kaydedildi'); }
+function mvEdge(id, first) { const ids = S.db.videos.map(x => x.id).filter(x => x !== id); first ? ids.unshift(id) : ids.push(id); act('POST', '/videos/reorder', { ids }, 'Sıra kaydedildi'); }
 // "⋯" menüsü: kartın ikincil işlemleri (sıralama, aç/kapat, sil)
 function tileMenu(ev, id) {
   ev.stopPropagation(); const v = S.db.videos.find(x => x.id === id); if (!v) return;
@@ -1548,7 +1548,7 @@ function drawThumbs() {
   });
 }
 function postersHtml() {
-  const mine = S.db.videos.filter(v => v.type === 'poster' || (v.design && !v.ad));
+  const mine = S.db.videos.filter(v => v.type === 'poster' || v.design);
   return card('Fotoğraftan afiş', '', `<div class="stu-hero"><p class="muted">Ürününüzün fotoğrafını seçin, adını ve fiyatını yazın: dört hazır tasarımdan birini seçip medyaya ekleyin. Renkler fotoğraftan alınır; isterseniz okutmaları sayılan bir QR kod da eklenir.</p><button class="btn" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
     + card('Şablonlar', 'Birini seçin, yazıları değiştirin. Renkler ekranınızın temasından gelir; Tasarım → Renk ve logo bölümünde renkleri değiştirince afişler de değişir.',
       `<div class="pgal">${Object.entries(SPPoster.TEMPLATES).filter(([, t]) => !t.hidden).map(([k, t]) => `<button class="pcard" onclick="editPoster(null,'${k}')"><div class="pmini" data-tpl="${k}" style="${themeVars()}"></div><b>${esc(t.name)}</b></button>`).join('')}</div>`)
@@ -1918,67 +1918,6 @@ function impactCard(j, nf) {
     + (avg != null ? `<p class="muted" style="font-size:12.5px;margin:10px 0 0">Ortalama: 100 gösterimde ${avg.toFixed(1).replace('.', ',')} okutma. Kampanya kartlarının gösterim sayımı bu sürümle başladı; eski günler için gösterim sıfır görünebilir.</p>` : '')
     : `<div class="empty">Henüz ölçülecek kampanya yok. <a href="#promo">Kampanya ve yorumlar</a> sayfasından kampanya kartını açın ya da <a href="#media/posters">Fotoğraftan afiş</a> ile QR'lı bir afiş hazırlayın; ekranda kaç kez göründüğü ve QR'ının kaç kez okutulduğu burada karşılaştırılır.</div>`;
   return card('Kampanya etkisi', 'Her kampanya ekranda kaç kez göründü ve müşteriler QR\'ını kaç kez okuttu. "100 gösterimde" sütunu kampanyaları birbiriyle karşılaştırmanın en adil yolu.', body);
-}
-
-/* ================= REKLAMLAR (ekran alanı satışı) ================= */
-let ADS = null;
-const AD_ST = { live: ['Yayında', 'on'], waiting: ['Başlamadı', ''], ended: ['Sona erdi', ''], paused: ['Durduruldu', ''], empty: ['Görsel bekleniyor', ''] };
-SECTIONS.ads = {
-  html() {
-    return head('Reklamlar', 'Ekranınızın bir kısmını başka işletmelere satın: reklamları belirlediğiniz gün, saat ve sıklıkta yayınlanır; reklam verene gösterim raporu bağlantısı gönderirsiniz.', owner() ? '<button class="btn" onclick="adEdit()">＋ Reklam ekle</button>' : '')
-      + lock('Reklam alanı')
-      + '<div id="adv"><div class="loading">Yükleniyor…</div></div>';
-  },
-  async after() {
-    try { ADS = (await req('GET', '/ads')).ads; } catch (e) { $('adv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
-    const nf = n => Number(n || 0).toLocaleString(I18N.locale);
-    const items = a => S.db.videos.filter(v => v.ad === a.id);
-    const tile = v => `<div class="adc"><div class="th" onclick="${v.design ? `openStudio('${v.id}')` : `pvMedia(${S.db.videos.indexOf(v)})`}">${v.type === 'video' ? `<video src="${S.me.upBase}${v.file}#t=0.5" preload="metadata" muted></video>` : `<img src="${S.me.upBase}${v.file}" loading="lazy" alt="">`}${v.status === 'processing' && !v.reopt ? '<span class="ty">Hazırlanıyor</span>' : ''}${v.qrCode ? '<span class="ty">QR</span>' : ''}</div><div class="m"><span title="${esc(v.name)}">${esc(v.name)}</span><button class="btn xs ${v.hidden ? 'd' : 'g'}" onclick="togHide('${v.id}')" title="Geçici olarak durdur">${v.hidden ? 'Kapalı' : 'Açık'}</button><button class="btn xs d" onclick="delMedia('${v.id}')">✕</button></div></div>`;
-    const adCard = a => {
-      const st = AD_ST[a.status] || ['', ''], its = items(a);
-      return `<div class="card"><div class="ch"><div><h3>${esc(a.name)} <span class="adst ${st[1]}">${st[0]}</span></h3><p>${esc(schText(a.sch))} · her ${a.every || 4} içerikte bir${a.fee ? ' · ' + esc(a.fee) : ''}${a.contact ? ' · ' + esc(a.contact) : ''}</p></div>
-        ${owner() ? `<div class="row"><button class="btn xs g" onclick="adEdit('${a.id}')">Düzenle</button><button class="btn xs g" onclick="adPause('${a.id}',${!a.paused})">${a.paused ? 'Devam ettir' : 'Durdur'}</button><button class="btn xs d" onclick="adDel('${a.id}')">Sil</button></div>` : ''}</div>
-        <div class="cb"><div class="grid g3" style="margin-bottom:14px"><div class="stat"><b>${nf(a.last30.shown)}</b><span>Son 30 günde gösterim</span></div><div class="stat"><b>${nf(a.last30.scans)}</b><span>QR okutma</span></div><div class="stat"><b>${its.length}</b><span>Görsel / video</span></div></div>
-        <div class="adg">${its.map(tile).join('')}
-          <label class="adc add"><input type="file" multiple accept="video/*,image/*" hidden onchange="adUp('${a.id}',this.files)"><b>＋ Dosya yükle</b><span class="muted">Görsel ya da video</span></label>
-          <button class="adc add" onclick="openStudio(null,{ad:'${a.id}',fields:{title:${esc(JSON.stringify(a.name))}}})"><b>📷 Fotoğraftan hazırla</b><span class="muted">QR'lı reklam görseli</span></button></div>
-        ${a.note ? `<p class="muted" style="font-size:13px;margin:12px 0 0">${esc(a.note)}</p>` : ''}
-        <div class="row mt" style="align-items:center;flex-wrap:wrap"><span class="muted" style="flex:1;min-width:220px;font-size:13px">Reklam verene bu bağlantıyı gönderin: gösterim sayısını ve QR okutmalarını giriş yapmadan görür.</span>
-          <button class="btn xs g" onclick="adCopy('${a.id}')">🔗 Rapor bağlantısını kopyala</button><a class="btn xs g" href="${esc(a.url)}" target="_blank" rel="noopener">Raporu aç</a>${owner() ? `<button class="btn xs g" title="Eski bağlantı çalışmaz olur" onclick="adToken('${a.id}')">Yeni bağlantı</button>` : ''}</div></div></div>`;
-    };
-    $('adv').innerHTML = (ADS.length ? ADS.map(adCard).join('') : card('Nasıl çalışır?', '', `<ol class="adhow"><li><b>Reklam ekleyin:</b> reklam verenin adı, anlaştığınız ücret, başlangıç ve bitiş günü, hangi saatlerde ve ne sıklıkla çıkacağı.</li><li><b>Görselini yükleyin</b> ya da fotoğrafından birkaç saniyede reklam görseli hazırlayın; isterseniz okutmaları sayılan bir QR ekleyin.</li><li><b>Rapor bağlantısını gönderin:</b> reklam veren kaç kez gösterildiğini ve QR okutmalarını kendisi takip eder. Bitiş günü gelince reklam kendiliğinden kalkar.</li></ol>
-        <p class="muted" style="font-size:13px">Kimlere satabilirsiniz? Yakındaki emlakçı, oto yıkama, kuaför, spor salonu, dershane, yerel etkinlikler… Spor barda maç saatleri en değerli zamandır; bu saatler için ayrı fiyat verebilirsiniz.</p>
-        ${owner() ? '<div class="row end"><button class="btn" onclick="adEdit()">＋ İlk reklamı ekle</button></div>' : ''}`));
-  },
-};
-function adEdit(id) {
-  const a = id ? ADS.find(x => x.id === id) : { every: 4 }, sc = a.sch || {}, d = new Set(sc.days || []);
-  openModal(`<h3 style="margin:0 0 12px">${id ? 'Reklamı düzenle' : 'Yeni reklam'}</h3>
-    <div class="f">${fl('Reklam veren', `<input type="text" id="ad-n" maxlength="60" value="${esc(a.name || '')}" placeholder="Örn. Güneş Emlak">`)}${fl('İletişim (isteğe bağlı)', `<input type="text" id="ad-c" maxlength="80" value="${esc(a.contact || '')}" placeholder="Telefon ya da e-posta">`)}</div>
-    <div class="f">${fl('Ücret (kendi notunuz)', `<input type="text" id="ad-fee" maxlength="40" value="${esc(a.fee || '')}" placeholder="Örn. Aylık 1.500 ₺">`)}${fl('Sıklık', `<select id="ad-ev">${[2, 3, 4, 5, 6, 8, 10, 15, 20].map(n => `<option value="${n}"${n === (a.every || 4) ? ' selected' : ''}>Her ${n} içerikte bir</option>`).join('')}</select>`)}</div>
-    <div class="f">${fl('İlk gün', `<input type="date" id="ad-s" value="${sc.start || ''}">`)}${fl('Son gün', `<input type="date" id="ad-e" value="${sc.end || ''}">`)}</div>
-    <div class="fl"><span>Günler</span><div class="chips" id="sc-days">${DAYS.map((n, i) => `<span class="chip ${d.has(i + 1) ? 'on' : ''}" data-d="${i + 1}" onclick="this.classList.toggle('on')">${n}</span>`).join('')}<span class="chip" onclick="schPick([1,2,3,4,5])">Hafta içi</span><span class="chip" onclick="schPick([6,7])">Hafta sonu</span></div></div>
-    <div class="f">${fl('Başlangıç saati', `<input type="time" id="ad-f" value="${sc.from || ''}">`)}${fl('Bitiş saati', `<input type="time" id="ad-t" value="${sc.to || ''}">`)}</div>
-    <p class="muted" style="font-size:12.5px;margin:0 0 10px">Boş bırakılan alanlar sınır koymaz. Son gün geçince reklam kendiliğinden kalkar.</p>
-    ${fl('Not (isteğe bağlı)', `<input type="text" id="ad-no" maxlength="200" value="${esc(a.note || '')}" placeholder="Örn. Ödeme ayın 1'inde">`)}
-    <div class="row mt end"><button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" onclick="adSave(${id ? `'${id}'` : ''})">${id ? 'Kaydet' : 'Reklamı ekle'}</button></div>`);
-}
-async function adSave(id) {
-  const name = $('ad-n').value.trim(); if (!name) return toast('Reklam verenin adını yazın', true);
-  const days = [...document.querySelectorAll('#sc-days [data-d].on')].map(x => +x.dataset.d), from = $('ad-f').value, to = $('ad-t').value, start = $('ad-s').value, end = $('ad-e').value;
-  if ((from && !to) || (!from && to)) return toast('Saat aralığı için başlangıç ve bitiş saatinin ikisini de girin', true);
-  if (start && end && end < start) return toast('Son gün ilk günden önce olamaz', true);
-  const sch = {}; if (days.length && days.length < 7) sch.days = days; if (from) { sch.from = from; sch.to = to; } if (start) sch.start = start; if (end) sch.end = end;
-  const body = { name, contact: $('ad-c').value, fee: $('ad-fee').value, every: +$('ad-ev').value, note: $('ad-no').value, sch: Object.keys(sch).length ? sch : null };
-  try { await req(id ? 'PUT' : 'POST', id ? '/ads/' + id : '/ads', body); toast(id ? 'Reklam kaydedildi' : 'Reklam eklendi; şimdi görselini yükleyin'); closeModal(); refresh(); } catch (e) { toast(e.message, true); }
-}
-const adPause = (id, v) => act('PUT', '/ads/' + id, { paused: v }, v ? 'Reklam durduruldu' : 'Reklam yeniden yayında');
-const adDel = async id => { const a = ADS.find(x => x.id === id); if (await UI.ask(`"${a.name}" reklamı ve görselleri silinsin mi?`, { ok: 'Sil', danger: true })) act('DELETE', '/ads/' + id, undefined, 'Reklam silindi'); };
-const adToken = async id => { if (await UI.ask('Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz.')) act('POST', `/ads/${id}/token`, undefined, 'Yeni bağlantı oluşturuldu'); };
-async function adCopy(id) { const a = ADS.find(x => x.id === id); try { await navigator.clipboard.writeText(a.url); toast('Bağlantı kopyalandı'); } catch (e) { prompt('Bağlantıyı kopyalayın:', a.url); } }
-async function adUp(id, files) {
-  if (!files || !files.length) return; const fd = new FormData(); for (const f of files) fd.append('files', f);
-  toast('Yükleniyor…'); try { await req('POST', `/ads/${id}/media`, fd); toast('Yüklendi; hazır olunca yayına girer'); refresh(); } catch (e) { toast(e.message, true); }
 }
 
 /* ================= MÜZİK — YouTube Music düzeninde (YouTube, YouTube Music, Spotify, radyo; telefondan uzaktan kumanda) =================
