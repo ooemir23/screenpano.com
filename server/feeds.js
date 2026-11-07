@@ -742,8 +742,18 @@ function reportTraffic({ all, asia, europe, ts, sig }) {
   if (!traffic || ts > traffic.at) { traffic = { all, asia, europe, source: 'ibb', at: ts, updated: new Date(ts).toISOString() }; hub.pushAll(); }
   return [200, 'ok'];
 }
-const isIstanbul = t => norm((t.db.location || {}).city).includes('istanbul');
-const wantsTraffic = t => t.db.showTraffic !== false && isIstanbul(t) && plan(t).pro;
+const isIstanbul = t => {
+  const city = norm((t.db.location || {}).city);
+  if (!city) return true; // varsayılan işletme konumu İstanbul'dur
+  if (city.includes('istanbul')) return true;
+  const districts = ['adalar','arnavutkoy','atasehir','avcilar','bagcilar','bahcelievler','bakirkoy','basaksehir','bayrampasa','besiktas','beykoz','beylikduzu','beyoglu','buyukcekmece','catalca','cekmekoy','esenler','esenyurt','eyupsultan','eyup','fatih','gaziosmanpasa','gungoren','kadikoy','kagithane','kartal','kucukcekmece','maltepe','pendik','sancaktepe','sariyer','silivri','sultanbeyli','sultangazi','sile','sisli','tuzla','umraniye','uskudar','zeytinburnu'];
+  return districts.some(d => city.includes(d));
+};
+const wantsTraffic = t => {
+  if (t.db.showTraffic === false) return false;
+  if (!plan(t).pro) return false;
+  return isIstanbul(t) || t.db.showTraffic === true;
+};
 
 const MAP_DIR = path.join(DATA_DIR, 'map'); fs.mkdirSync(MAP_DIR, { recursive: true });
 const MAP_FILE = path.join(MAP_DIR, 'traffic.jpg');
@@ -769,8 +779,21 @@ async function renderMap() {
   const ud = fs.mkdtempSync(path.join(require('os').tmpdir(), 'chr-'));
   try {
     fs.rmSync(raw, { force: true });
-    await runCmd(config.CHROMIUM, ['--headless', '--no-sandbox', '--disable-gpu', '--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage', '--hide-scrollbars', '--window-size=1000,1300', '--virtual-time-budget=60000', '--user-data-dir=' + ud, '--screenshot=' + raw, MAP_URL], 150000);
-    if (!fs.existsSync(raw) || fs.statSync(raw).size < 300000) throw new Error('harita çizilemedi (görüntü boş)');
+    let shotErr = null;
+    const baseArgs = ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--hide-scrollbars', '--window-size=1000,1300', '--virtual-time-budget=12000', '--user-data-dir=' + ud, '--screenshot=' + raw, MAP_URL];
+    // Modern Chrome/Chromium sürümlerinde virtual-time-budget için --headless=old gerekir; eski sürümlerde --headless
+    try {
+      await runCmd(config.CHROMIUM, ['--headless=old', ...baseArgs], 60000);
+    } catch (e) { shotErr = e; }
+    let sz = fs.existsSync(raw) ? fs.statSync(raw).size : 0;
+    if (sz < 50000) {
+      fs.rmSync(raw, { force: true });
+      try {
+        await runCmd(config.CHROMIUM, ['--headless', ...baseArgs], 60000);
+      } catch (e) { shotErr = e; }
+      sz = fs.existsSync(raw) ? fs.statSync(raw).size : 0;
+    }
+    if (sz < 50000) throw (shotErr || new Error('harita çizilemedi (görüntü boş)'));
     await runFfmpeg(['-y', '-i', raw, '-vf', 'crop=900:1030:30:55,negate,hue=h=180:s=1.15,eq=contrast=1.05:brightness=-0.03:saturation=1.1', '-frames:v', '1', '-q:v', '4', tmp], 60000);
     fs.renameSync(tmp, MAP_FILE);
     mapAt = Date.now(); mapErr = '';
@@ -783,7 +806,8 @@ function maybeRenderMap() { // haritayı isteyen bir ekran bağlı değilse boş
   const stale = !mapAt || Date.now() - mapAt > 9.5 * MIN;
   if (!stale) return;
   const ids = hub.connectedTenantIds();
-  if ([...ids].some(id => { const t = tenants.get(id); return t && wantsTraffic(t); })) renderMap();
+  const hasConnected = [...ids].some(id => { const t = tenants.get(id); return t && wantsTraffic(t); });
+  if (hasConnected || (!mapAt && tenants.all().some(t => wantsTraffic(t)))) renderMap();
 }
 
 // ================= TAKIM VE TURNUVA LOGOLARI (küçük sürüm, diskte önbellekli) =================
@@ -820,7 +844,7 @@ function start() {
   setTimeout(refreshBooks, 9000); setInterval(refreshBooks, 30 * MIN);
   setTimeout(() => downloadCovers().then(fillDescs), 12000); setInterval(() => downloadCovers().then(fillDescs), 30 * MIN);
   setTimeout(refreshMovies, 11000); setInterval(refreshMovies, 30 * MIN);
-  setTimeout(maybeRenderMap, 20000); setInterval(maybeRenderMap, 3 * MIN);
+  setTimeout(maybeRenderMap, 4000); setInterval(maybeRenderMap, 3 * MIN);
   // yeni işletme ya da lig seçimi değişince maç listesini beklemeden yenile
   let lastU = JSON.stringify(unionLeagues());
   setInterval(() => { const u = JSON.stringify(unionLeagues()); if (u !== lastU) { lastU = u; refreshMatches(); refreshStandings(); refreshBigMatches(); } }, 30 * 1000);

@@ -124,7 +124,7 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         add("movies", r.optJSONObject("movies"), r.optBoolean("showMovies", true)) { movieCard(it) }
         add("otd", r.optJSONObject("onThisDay"), r.optBoolean("showOnThisDay", true), date = r.optJSONObject("onThisDay")?.optString("date") ?: "") { dayCard(it) }
         if (out.none { it.type != "table" }) out.add(0, Pg("empty", emptyList()))
-        if (r.optInt("mapAt", 0) > 0) out.add(Pg("traffic", emptyList()))
+        if (r.optLong("mapAt", 0L) > 0L) out.add(Pg("traffic", emptyList()))
         pages = out
     }
 
@@ -429,8 +429,109 @@ class InfoWidget(context: Context) : LinearLayout(context), NativeWidget {
         fl.background = GradientDrawable().apply { setColor(Color.parseColor("#15181b")); cornerRadius = vh * 1.48f; setStroke(max(1, (vh * 0.1f).toInt()), (pal ?: Palette(s)).a((pal ?: Palette(s)).accent2, 0.55f)) }
         fl.clipToOutline = true
         val im = ImageView(context); im.scaleType = ImageView.ScaleType.CENTER_CROP
-        im.load(NativeEnv.url("/traffic-map.jpg?v=" + s.raw.optInt("mapAt", 0))) { crossfade(false) }
+        val mapAt = s.raw.optLong("mapAt", 0L)
+        im.load(NativeEnv.url("/traffic-map.jpg?v=$mapAt")) { crossfade(false) }
         fl.addView(im, FrameLayout.LayoutParams(-1, -1))
+
+        // Canlı Trafik etiketi (sağ üst)
+        val chip = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            val padH = (vw * 0.7f).toInt(); val padV = (vh * 0.35f).toInt()
+            setPadding(padH, padV, padH, padV)
+            background = GradientDrawable().apply {
+                setColor(Color.argb(190, 20, 22, 24))
+                cornerRadius = vh * 3f
+                setStroke(max(1, (vh * 0.1f).toInt()), Color.argb(40, 255, 255, 255))
+            }
+            val dot = View(context).apply {
+                val dotSz = (vh * 0.65f).toInt()
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(Color.parseColor("#EE3B2F"))
+                }
+                layoutParams = LinearLayout.LayoutParams(dotSz, dotSz).apply { rightMargin = (vw * 0.35f).toInt() }
+            }
+            addView(dot)
+            val lbl = tv("CANLI TRAFİK", 1.0f, (pal ?: Palette(s)).soft, true).apply {
+                letterSpacing = 0.14f
+            }
+            addView(lbl)
+        }
+        fl.addView(chip, FrameLayout.LayoutParams(-2, -2).apply {
+            gravity = Gravity.TOP or Gravity.END
+            topMargin = (vh * 1f).toInt()
+            rightMargin = (vw * 0.9f).toInt()
+        })
+
+        // Trafik yoğunluk endeksi (varsa)
+        val tr = s.raw.optJSONObject("traffic")
+        if (tr != null && tr.has("all")) {
+            val all = tr.optInt("all", 0)
+            val europe = tr.optInt("europe", 0)
+            val asia = tr.optInt("asia", 0)
+            val idxBox = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                val padH = (vw * 1.0f).toInt(); val padV = (vh * 0.5f).toInt()
+                setPadding(padH, padV, padH, padV)
+                background = GradientDrawable().apply {
+                    setColor(Color.argb(205, 20, 22, 24))
+                    cornerRadius = vh * 3f
+                    setStroke(max(1, (vh * 0.1f).toInt()), Color.argb(40, 255, 255, 255))
+                }
+                val tcol = when {
+                    all <= 20 -> Color.parseColor("#3ECF4A")
+                    all <= 40 -> Color.parseColor("#E6C229")
+                    all <= 60 -> Color.parseColor("#F08A24")
+                    else -> Color.parseColor("#EE3B2F")
+                }
+                addView(tv("%$all", 2.2f, tcol, true).apply { layoutParams = LinearLayout.LayoutParams(-2, -2).apply { rightMargin = (vw * 0.8f).toInt() } })
+                if (europe > 0) addView(tv("Avrupa %$europe", 1.4f, (pal ?: Palette(s)).mute, false).apply { layoutParams = LinearLayout.LayoutParams(-2, -2).apply { rightMargin = (vw * 0.6f).toInt() } })
+                if (asia > 0) addView(tv("Anadolu %$asia", 1.4f, (pal ?: Palette(s)).mute, false))
+            }
+            fl.addView(idxBox, FrameLayout.LayoutParams(-1, -2).apply {
+                gravity = Gravity.BOTTOM
+                leftMargin = (vw * 1f).toInt()
+                rightMargin = (vw * 1f).toInt()
+                bottomMargin = (vh * 5.0f).toInt()
+            })
+        }
+
+        // Renk cetveli (Akıcı - Yoğun)
+        val legend = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            val padH = (vw * 1.0f).toInt(); val padV = (vh * 0.65f).toInt()
+            setPadding(padH, padV, padH, padV)
+            background = GradientDrawable().apply {
+                setColor(Color.argb(205, 20, 22, 24))
+                cornerRadius = vh * 3f
+                setStroke(max(1, (vh * 0.1f).toInt()), Color.argb(35, 255, 255, 255))
+            }
+            addView(tv("AKICI", 1.2f, (pal ?: Palette(s)).soft, true))
+            val bar = View(context).apply {
+                background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(
+                    Color.parseColor("#3ECF4A"),
+                    Color.parseColor("#F2C230"),
+                    Color.parseColor("#EE3B2F"),
+                    Color.parseColor("#8B1A14")
+                )).apply { cornerRadius = vh * 0.5f }
+                layoutParams = LinearLayout.LayoutParams(0, (vh * 0.7f).toInt(), 1f).apply {
+                    leftMargin = (vw * 0.7f).toInt()
+                    rightMargin = (vw * 0.7f).toInt()
+                }
+            }
+            addView(bar)
+            addView(tv("YOĞUN", 1.2f, (pal ?: Palette(s)).soft, true))
+        }
+        fl.addView(legend, FrameLayout.LayoutParams(-1, -2).apply {
+            gravity = Gravity.BOTTOM
+            leftMargin = (vw * 1f).toInt()
+            rightMargin = (vw * 1f).toInt()
+            bottomMargin = (vh * 1.0f).toInt()
+        })
+
         return fl
     }
 }

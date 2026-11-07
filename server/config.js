@@ -25,6 +25,14 @@ module.exports = {
   // Oturum imzası için gizli anahtar; verilmezse veritabanında üretilip saklanır
   SESSION_SECRET: process.env.SESSION_SECRET || '',
   FFMPEG: process.env.FFMPEG_PATH || 'ffmpeg',
-  CHROMIUM: process.env.CHROMIUM_PATH || 'chromium',
+  CHROMIUM: process.env.CHROMIUM_PATH || (() => {
+    for (const name of ['chromium', 'chromium-browser', 'google-chrome-stable', 'google-chrome']) {
+      try {
+        const p = require('child_process').execSync('which ' + name, { stdio: ['pipe', 'pipe', 'ignore'], encoding: 'utf8' }).trim();
+        if (p) return p;
+      } catch {}
+    }
+    return 'chromium';
+  })(),
   PHARM_BASE: process.env.PHARMACY_BASE || 'https://api.collectapi.com',
 };

@@ -1735,10 +1735,13 @@ function buildPages() {
 }
 let mapAt = null, mapShown = null;
 function loadTraffic() { // harita sunucuda çizilmiş resimdir; yalnızca yenisi çıkınca indirilir
-  if (!mapAt || mapAt === mapShown) return;
-  const im = new Image(), at = mapAt;
-  im.onload = () => { document.querySelector('#traffic img').src = im.src; mapShown = at; };
-  im.src = '/traffic-map.jpg?v=' + at;
+  if (!mapAt) return;
+  const im = document.querySelector('#traffic img');
+  if (!im) return;
+  const src = '/traffic-map.jpg?v=' + mapAt;
+  if (im.src && im.src.includes('traffic-map.jpg?v=' + mapAt) && mapShown === mapAt) return;
+  im.onload = () => { mapShown = mapAt; };
+  im.src = src;
 }
 function render() {
   const list = document.getElementById('list'), tr = document.getElementById('traffic'), dots = document.getElementById('dots');
@@ -1748,6 +1751,10 @@ function render() {
   const pg = pages[page];
   const isTraffic = pg.type === 'traffic';
   tr.classList.toggle('off', !isTraffic);
+  if (isTraffic) {
+    tr.classList.remove('out');
+    loadTraffic();
+  }
   list.style.display = isTraffic ? 'none' : 'flex';
   document.getElementById('mtitle').innerHTML = isTraffic ? 'Canlı Trafik' : pg.type === 'empty' ? 'Maçlar' : pg.type === 'movies' ? `Vizyona Giriyor<em>BU HAFTA${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'books' ? `Yeni Çıkan Kitaplar<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'D&R'}</em>` : pg.type === 'breaking' ? `Son Dakika<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'CANLI'}</em>` : pg.type === 'news' ? `Gündem<em>TÜRKİYE${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'pharm' ? `Nöbetçi Eczaneler<em>${esc((pharmData.districts || []).join(' · ').toLocaleUpperCase('tr-TR'))}${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'otd' ? `Tarihte Bugün<em>${pg.date ? esc(Number(pg.date.split('-')[2]) + ' ' + MONTHS[Number(pg.date.split('-')[1]) - 1].toLocaleUpperCase('tr-TR')) : ''}${pg.parts > 1 ? ` · ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'table' ? `${esc(pg.league)}<em>PUAN DURUMU${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : esc(pg.league);
   document.getElementById('mtitle').lang = /lang="tr"/.test(lng(pg.league)) || !pg.league ? 'tr' : 'en';
@@ -1796,13 +1803,12 @@ function tick() {
     const sp = syncWidgetPage();
     page = sp.page;
     render();
-    if (el) {
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          el.classList.remove('out');
-        });
+        document.getElementById('traffic')?.classList.remove('out');
+        document.getElementById('list')?.classList.remove('out');
       });
-    }
+    });
     schedule();
   }, 400);
 }
