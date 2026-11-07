@@ -322,14 +322,14 @@ function drawProps() {
   const box = $('props'), w = EDIT.layout.widgets[EDIT.sel];
   if (!w) { box.innerHTML = `<h4>Widget ayarları</h4><p class="muted">Ayarlarını görmek için bir kutuya tıklayın.</p>${badSet().size ? '<p class="muted mt" style="color:var(--bad)">Kırmızı kutular üst üste biniyor; kaydetmeden önce düzeltin.</p>' : ''}${EDIT.dirty ? '<p class="muted mt" style="color:var(--warn)">Kaydedilmemiş değişiklikler var.</p>' : ''}`; return; }
   const d = S.cat.widgets[w.type] || {}, p = w.props || {};
-  const tg = (k, label, def = true) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(p[k] === undefined ? def : p[k], `setP('${k}',this.checked)${k === 'qr' ? ';drawProps()' : ''}`)}</div>`;
+  const tg = (k, label, def = true) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(p[k] === undefined ? def : p[k], `setP('${k}',this.checked)${k === 'qr' || k === 'rates' ? ';drawProps()' : ''}`)}</div>`;
   let f = '';
   if (w.type === 'clock') {
     const sh = p.show || 'both', swc = (k, label, on) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(on, `setClk('${k}',this.checked)`)}</div>`;
     f = `<p class="muted" style="margin:6px 0 0">Saati bir kutuya, tarihi başka bir kutuya koymak için iki ayrı Saat ve tarih kutusu ekleyip birinde tarihi, diğerinde saati gizleyin.</p>` + swc('time', 'Saati göster', sh !== 'date') + swc('date', 'Tarihi göster', sh !== 'time') + (sh === 'date' ? '' : tg('seconds', 'Saniyeyi göster', false));
   }
   if (w.type === 'rates') {
-    f = `<p class="muted" style="margin:6px 0 0">Havayı bir kutuya, piyasaları başka bir kutuya koymak için iki ayrı Hava ve piyasalar kutusu ekleyip birinde piyasaları, diğerinde havayı kapatın.</p>` + tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa') + tg('qr', 'QR kodlar', false);
+    f = `<p class="muted" style="margin:6px 0 0">Havayı bir kutuya, piyasaları başka bir kutuya koymak için iki ayrı Hava ve piyasalar kutusu ekleyip birinde piyasaları, diğerinde havayı kapatın.</p>` + tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa') + (p.rates !== false ? fl('Tutar ve değişim boyutu', `<select onchange="setP('valSize',this.value)">${[['s', 'Küçük'], ['m', 'Normal (varsayılan)'], ['l', 'Büyük'], ['xl', 'Çok büyük']].map(([v, l]) => `<option value="${v}" ${(p.valSize || 'm') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : '') + tg('qr', 'QR kodlar', false);
     if (p.qr) {
       const qs = S.db.qrs || [], sel = String(p.qrs || '').split(',').filter(Boolean);
       f += qs.length ? `<div class="fl mt"><span>Gösterilecek QR'lar (seçmezseniz hepsi)</span><div class="chips">${qs.map(q => `<span class="chip ${sel.includes(q.id) ? 'on' : ''}" onclick="rQrPick('${q.id}')">${esc(q.label)}</span>`).join('')}</div></div><p class="muted mt">1-2 QR yan yana gösterilir; 3 ve fazlası tek tek, geçişli olarak sırayla değişir.</p>` : '<p class="muted mt">Önce <a href="#qr">QR Kodlar</a> sayfasından QR ekleyin.</p>';

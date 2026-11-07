@@ -211,10 +211,17 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 val chgStr = c.change?.let { (if (it > 0.005) "+" else if (it < -0.005) "-" else "") + String.format(Locale("tr", "TR"), "%.1f", abs(it)) + "%" }
                 val chgColor = if (c.change != null) (if (c.change > 0.005) Color.parseColor("#34d399") else if (c.change < -0.005) Color.parseColor("#f87171") else p.mute) else 0
 
+                val valScale = when (props?.optString("valSize", "m")) {
+                    "s" -> 0.85f
+                    "l" -> 1.18f
+                    "xl" -> 1.35f
+                    else -> 1.0f
+                }
+
                 val valView = if (showChange && chgStr != null) {
-                    AutoFitRateText(context, vh, p, chgStr, "", isSolo, chgColor)
+                    AutoFitRateText(context, vh, p, chgStr, "", isSolo, chgColor, valScale)
                 } else {
-                    AutoFitRateText(context, vh, p, c.value, c.unit, isSolo)
+                    AutoFitRateText(context, vh, p, c.value, c.unit, isSolo, null, valScale)
                 }
 
                 col.addView(valView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
@@ -307,7 +314,8 @@ internal class AutoFitRateText(
     private val valText: String,
     private val unitText: String,
     private val isSolo: Boolean = false,
-    private val textColorOverride: Int? = null
+    private val textColorOverride: Int? = null,
+    private val valScale: Float = 1.0f
 ) : TextView(context) {
     private var lastAvail = -1f
 
@@ -319,7 +327,7 @@ internal class AutoFitRateText(
     }
 
     private fun calcWidth(scale: Float): Float {
-        val baseSize = vh * (if (isSolo) 2.25f else 2.0f) * scale
+        val baseSize = vh * (if (isSolo) 2.25f else 2.0f) * valScale * scale
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { isFakeBoldText = true; textSize = baseSize }
         var total = tp.measureText(valText)
         if (unitText.isNotEmpty()) {
@@ -331,7 +339,7 @@ internal class AutoFitRateText(
     }
 
     private fun applyScale(scale: Float) {
-        val baseSize = vh * (if (isSolo) 2.25f else 2.0f) * scale
+        val baseSize = vh * (if (isSolo) 2.25f else 2.0f) * valScale * scale
         val col = textColorOverride ?: p.white
         val s = SpannableStringBuilder(valText).apply {
             setSpan(RunSpan(baseSize, col, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)

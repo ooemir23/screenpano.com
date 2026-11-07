@@ -214,7 +214,7 @@ position:absolute;top:.8vh;right:.8vw}
 .r-sym{flex:none;display:flex;align-items:center;justify-content:center;font-size:calc(1.35*var(--rv));font-weight:700;letter-spacing:.06em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;margin-bottom:calc(.3*var(--rv))}
 .r-sym span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.r-val{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:calc(2.25*var(--rv));font-weight:800;color:var(--white);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;transition:opacity .22s ease,transform .22s ease}
+.r-val{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:calc(2.25*var(--rv)*var(--vscale,1));font-weight:800;color:var(--white);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;transition:opacity .22s ease,transform .22s ease}
 .r-val .r-num{white-space:nowrap;flex-shrink:0}
 .r-val i{font-style:normal;font-size:.65em;color:var(--mute);margin-left:calc(.15*var(--rv));font-weight:400}
 .r-val.up{color:#34d399}
@@ -224,7 +224,7 @@ position:absolute;top:.8vh;right:.8vw}
 
 #rates.rates-solo, .rtx.rates-solo, #rates:not(:has(#wx)), .rtx:not(:has(#wx)){padding:calc(1.1*var(--rv)) calc(1.5*var(--rv))}
 #rates.rates-solo #rrow, .rtx.rates-solo #rrow, #rates:not(:has(#wx)) #rrow, .rtx:not(:has(#wx)) #rrow{height:100%}
-#rates.rates-solo .r-val, .rtx.rates-solo .r-val, #rates:not(:has(#wx)) .r-val, .rtx:not(:has(#wx)) .r-val{font-size:calc(2.35*var(--rv))}
+#rates.rates-solo .r-val, .rtx.rates-solo .r-val, #rates:not(:has(#wx)) .r-val, .rtx:not(:has(#wx)) .r-val{font-size:calc(2.35*var(--rv)*var(--vscale,1))}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -2309,8 +2309,14 @@ function ratesQr() {
 // T6: hava/piyasa kutusu yazıları kutu boyutuna göre küçülür (native RatesWidget.fitScale ile aynı taban: 17×42 vh)
 // Hava ve piyasa kutusu: yazı ölçeği (--rv) kutuya göre ölçülerek bulunur; içerik kutudan taşmaz, küçük kutuda sıkışmaz, büyük kutuda büyür
 function fitRates() {
+  const getScale = p => ({ s: 0.85, m: 1.0, l: 1.18, xl: 1.35 }[(p && p.valSize) || 'm'] || 1.0);
+  const rtxList = Array.from(document.querySelectorAll('.rtx'));
   document.querySelectorAll('#rates, .rtx').forEach(el => {
     if (!el.clientWidth || !el.clientHeight) return;
+    const isFirst = el.id === 'rates' && !el.classList.contains('rtx');
+    const p = isFirst ? (WPROPS.rates || {}) : ((window.__rtProps || [])[rtxList.indexOf(el)] || WPROPS.rates || {});
+    const valScale = getScale(p);
+    el.style.setProperty('--vscale', valScale);
     const hasWx = !!el.querySelector('#wx');
     el.classList.toggle('rates-solo', !hasWx);
     const vh = innerHeight / 100, cs = getComputedStyle(el);
@@ -2342,7 +2348,7 @@ function fitRates() {
           v.style.fontSize = '';
           if (v.scrollWidth > maxW) {
             const s = Math.max(0.68, maxW / v.scrollWidth);
-            v.style.fontSize = `calc(${hasWx ? '2.1' : '2.45'} * var(--rv) * ${s.toFixed(3)})`;
+            v.style.fontSize = `calc(${hasWx ? '2.1' : '2.35'} * var(--rv) * var(--vscale, 1) * ${s.toFixed(3)})`;
           }
         });
         const s = col.querySelector('.r-sym');
