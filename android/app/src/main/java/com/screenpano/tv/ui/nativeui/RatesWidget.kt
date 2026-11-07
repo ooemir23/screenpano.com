@@ -170,9 +170,9 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             for (c in sets[rateIdx % sets.size]) {
                 val col = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER_HORIZONTAL; setPadding((vh * 0.3f).toInt(), 0, (vh * 0.3f).toInt(), 0) }
                 val head = SpannableStringBuilder(c.name).apply { setSpan(RunSpan(vh * 1.9f, p.accent2, true, 0.06f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); append(c.extra) }
-                col.addView(TextView(context).apply { text = head; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER })
+                col.addView(FitSpanText(context).apply { text = head; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER })
                 val vtxt = SpannableStringBuilder(c.value).apply { setSpan(RunSpan(vh * 3.5f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); if (c.unit.isNotEmpty()) { val a = length; append(" " + c.unit); setSpan(RunSpan(vh * 2.3f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) } }
-                col.addView(TextView(context).apply { text = vtxt; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
+                col.addView(FitSpanText(context).apply { text = vtxt; includeFontPadding = false; setSingleLine(true); gravity = Gravity.CENTER }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
                 row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             }
             content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = gap; })
@@ -246,5 +246,21 @@ internal class ShrinkText(context: Context, private val capPx: Float) : TextView
         super.onMeasure(w, h)
         val need = (paint.measureText(t) + letterSpacing * size * t.length + paddingLeft + paddingRight + 2).toInt()
         if (measuredWidth < need) setMeasuredDimension(need, measuredHeight)
+    }
+}
+
+
+/** Tek satır, biçimli (span'lı) yazı: sütuna sığmazsa görsel olarak küçülür; komşu sütuna taşmaz, kesilmez. */
+internal class FitSpanText(context: Context) : TextView(context) {
+    override fun onMeasure(w: Int, h: Int) {
+        super.onMeasure(w, h)
+        val avail = MeasureSpec.getSize(w).toFloat() - paddingLeft - paddingRight
+        val t = text ?: ""
+        val need = android.text.Layout.getDesiredWidth(t, paint)
+        if (MeasureSpec.getMode(w) != MeasureSpec.UNSPECIFIED && avail > 0f && need > avail) {
+            val k = (avail / need * 0.97f).coerceAtLeast(0.4f)
+            setMeasuredDimension((need + paddingLeft + paddingRight + 2).toInt(), measuredHeight)
+            pivotX = measuredWidth / 2f; pivotY = measuredHeight / 2f; scaleX = k; scaleY = k
+        } else { scaleX = 1f; scaleY = 1f }
     }
 }
