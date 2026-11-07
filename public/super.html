@@ -1129,7 +1129,10 @@ async function adMove(id, cid, d) {
   [ids[i], ids[j]] = [ids[j], ids[i]];
   try { await api('PUT', `/pads/${id}/media-order`, { order: ids }); await adOpen(id); } catch (e) { toast(e.message, true); }
 }
-async function adMediaDel(id, cid) { if (!confirm(T('Bu görsel/video reklamdan kaldırılsın mı?'))) return; try { await api('DELETE', `/pads/${id}/media/${cid}`); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
+async function adMediaDel(id, cid) {
+  if (!confirm(T('Bu görsel/video kalıcı olarak silinsin mi?'))) return;
+  try { await api('DELETE', `/pads/${id}/media/${cid}`); toast('Silindi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
+}
 async function adPause(id, v) { try { await api('PUT', '/pads/' + id, { paused: v }); toast(v ? 'Reklam durduruldu' : 'Reklam yeniden yayında'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
 async function adDel(id) { if (!confirm(T('Bu reklam ve görselleri silinsin mi? Bu işlem geri alınamaz.'))) return; try { await api('DELETE', '/pads/' + id); closeDrawer(); toast('Silindi'); await adLoad(); } catch (e) { toast(e.message, true); } }
 async function adCopy(id) { try { await navigator.clipboard.writeText(AD.cur.ad.url); toast('Bağlantı kopyalandı'); } catch (e) { prompt(T('Rapor bağlantısı'), AD.cur.ad.url); } }
