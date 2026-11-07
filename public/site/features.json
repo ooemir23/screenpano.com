@@ -1104,6 +1104,26 @@
   ],
   "extras": [
     {
+      "icon": "★",
+      "title": "Ortak tasarımlar",
+      "text": "Süper yönetim yetkisi olan işletme hazırladığı düzen ve renkleri kalıcı olarak kaydedebilir; kayıtlı tasarımlar diğer işletmelerin panelinde görünür ve tek tıkla uygulanır. Medya, logo ve fiyat listesi değişmez.",
+      "added": "2026-11-07",
+      "i18n": {
+        "en": {
+          "title": "Shared designs",
+          "text": "A business with super-admin access can save its layout and colors permanently; saved designs appear in other businesses' panels and apply in one click. Media, logo and price list stay unchanged."
+        },
+        "de": {
+          "title": "Gemeinsame Designs",
+          "text": "Ein Betrieb mit Super-Admin-Zugriff kann Layout und Farben dauerhaft speichern; gespeicherte Designs erscheinen im Panel anderer Betriebe und lassen sich mit einem Klick anwenden. Medien, Logo und Preisliste bleiben unverändert."
+        },
+        "ar": {
+          "title": "تصاميم مشتركة",
+          "text": "يمكن للعمل الذي لديه صلاحية الإدارة العليا حفظ التخطيط والألوان بشكل دائم؛ تظهر التصاميم المحفوظة في لوحات الأعمال الأخرى وتُطبَّق بنقرة واحدة. تبقى الوسائط والشعار وقائمة الأسعار دون تغيير."
+        }
+      }
+    },
+    {
       "icon": "▦",
       "title": "İnce ızgara ile hassas hizalama",
       "text": "Düzen düzenleyicisinde “İnce ızgara” düğmesiyle hiza çizgileri yarıya iner; widget'ları iki kat hassasiyetle yerleştirip boyutlandırırsınız. Kutular yerinde kalır, istediğiniz an normale dönebilirsiniz. Bilgi kutusundaki son kart da artık hep tam sığar.",

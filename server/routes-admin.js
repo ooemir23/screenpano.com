@@ -138,7 +138,42 @@ r.delete('/users/:id', ownerOnly, (req, res) => {
 });
 
 // ================= GÖRÜNÜM: tema, logo, katalog =================
-r.get('/catalog', (req, res) => res.json({ cols: W.COLS, rows: W.ROWS, widgets: W.WIDGETS, templates: W.TEMPLATES, themes: W.THEMES, fonts: W.FONTS, starters: require('./starters').list(), pro: plan(req.t).pro }));
+r.get('/catalog', (req, res) => res.json({ cols: W.COLS, rows: W.ROWS, widgets: W.WIDGETS, templates: W.TEMPLATES, themes: W.THEMES, fonts: W.FONTS, starters: require('./starters').list(), pro: plan(req.t).pro, designs: designList(), canDesigns: designCan(req) }));
+// Ortak tasarımlar: süper yönetim yetkisi olan işletme düzen + renk tasarımını kalıcı kaydeder, tüm işletmeler uygular.
+// İşletmeye özel içerik (QR seçimi, görsel adresi, metinler) kaydedilmez; medya, logo ve fiyat listesi hiç dokunulmaz.
+const designAll = () => { try { return JSON.parse(store.setting('sharedDesigns', '[]')) || []; } catch { return []; } };
+const designList = () => designAll().map(({ id, name, desc, by, at, layout, theme }) => ({ id, name, desc, by, at, layout, theme }));
+const designCan = req => auth.superOk(req.user);
+const designStrip = l => {
+  const out = W.cleanLayout(l);
+  for (const w of out.widgets) if (w.props) for (const k of ['qr', 'qrs', 'url', 'i18n', 'body', 'title']) delete w.props[k];
+  return W.cleanLayout(out);
+};
+r.post('/designs', (req, res) => {
+  if (!designCan(req)) return res.status(403).json({ error: 'Bu işlem için süper yönetim yetkisi gerekir' });
+  const t = req.t, b = req.body || {}, name = String(b.name || '').trim().slice(0, 40);
+  if (!name) return res.status(400).json({ error: 'Tasarıma bir ad verin' });
+  const sc = tenants.mainScreen(t), cur = store.J(sc.layout);
+  if (!cur || !Array.isArray(cur.widgets)) return res.status(400).json({ error: 'Kaydedilmiş düzen yok' });
+  const all = designAll();
+  if (all.length >= 40) return res.status(400).json({ error: 'En çok 40 ortak tasarım kaydedilebilir; birini silin' });
+  const { name: _n, ...th } = t.db.theme || {};
+  all.push({ id: 'd' + Date.now().toString(36), name, desc: String(b.desc || '').trim().slice(0, 140), by: t.name, at: Date.now(), layout: designStrip(cur), theme: W.cleanTheme(th, {}) });
+  store.setSetting('sharedDesigns', JSON.stringify(all)); res.json({ ok: true, designs: designList() });
+});
+r.delete('/designs/:id', (req, res) => {
+  if (!designCan(req)) return res.status(403).json({ error: 'Bu işlem için süper yönetim yetkisi gerekir' });
+  store.setSetting('sharedDesigns', JSON.stringify(designAll().filter(d => d.id !== req.params.id))); res.json({ ok: true, designs: designList() });
+});
+r.post('/designs/:id/apply', ownerOnly, (req, res) => {
+  const t = req.t, d = designAll().find(x => x.id === req.params.id);
+  if (!d) return res.status(404).json({ error: 'Tasarım bulunamadı' });
+  const pro = plan(t).pro, l = W.cleanLayout(d.layout);
+  if (!pro) l.widgets = l.widgets.filter(w => !(W.WIDGETS[w.type] || {}).pro);
+  store.updateScreen(tenants.mainScreen(t).id, t.id, { layout: JSON.stringify(W.cleanLayout(l)) });
+  t.db.theme = W.cleanTheme({ ...t.db.theme, ...d.theme }, t.db.theme);
+  changed(t); res.json({ ok: true });
+});
 // Başlangıç paketleri: düzen + renk + (isteğe bağlı) örnek fiyat listesi. Medya, logo ve diğer içerikler korunur.
 r.get('/starters', (req, res) => res.json({ list: require('./starters').list(), hasMenu: (req.t.db.menu.categories || []).length > 0 }));
 r.post('/starter', (req, res) => {

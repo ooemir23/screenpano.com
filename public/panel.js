@@ -49,7 +49,7 @@ async function act(method, path, body, ok, reload = true) {
 }
 let LASTERR = '';
 // ekrana gitmeyen işlemler (kayıt sonrası "ekrana gönderildi" notu yazılmaz)
-const NOTV = /^\/(users|profile|password|notify|privacy|backups|branches|google\/(search|connect)|instagram\/connect|ads\/[^/]+\/token|devices|pair)/;
+const NOTV = /^\/(designs(\/[^/]+)?$|users|profile|password|notify|privacy|backups|branches|google\/(search|connect)|instagram\/connect|ads\/[^/]+\/token|devices|pair)/;
 const opt = (key, val, msg) => { S.db[key] = val; return act('PUT', '/options', { [key]: val }, msg || 'Kaydedildi', false); };
 const reoptAll = async () => { if (await UI.ask('Mevcut videolar seçtiğiniz kaliteyle yeniden küçültülsün mü? Orijinaller silindiği için kalite yalnızca düşebilir (küçük dosya, daha akıcı oynatım); işlem kuyrukta sırayla yapılır.')) act('POST', '/media/optimize-all', { force: true }, 'Yeniden küçültme başladı', false); };
 const brkSrc = (k, on) => { const cur = new Set((S.db.breaking || {}).sources || ['trt']); on ? cur.add(k) : cur.delete(k); const arr = [...cur].filter(x => x !== 'mix'); act('PUT', '/breaking', { sources: arr.length ? arr : ['trt'] }, 'Kaydedildi', false).then(refresh); };
@@ -247,6 +247,7 @@ SECTIONS.design = {
       const fresh = !S.me.tenant.logo && !S.db.videos.length;
       h += `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
         + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin.', `<div class="tpls">${Object.entries(T).map(([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`, layoutBar())
+        + designsCard()
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır.',
           `<div class="editor"><div id="cw"><div id="cv"></div></div><div id="props"></div></div>
            <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`, layoutBar())
@@ -381,6 +382,33 @@ function addW(type) {
   EDIT.sel = EDIT.layout.widgets.length - 1; drawCanvas(); drawProps(); drawPal();
   if (!spot) toast('Boş yer yok: kutu sol üste kondu, diğerlerini küçültüp yerleştirin', true);
   else if (spot.float) toast('QR kartı medyanın üstüne kondu; sürükleyip istediğiniz yere taşıyın');
+}
+// Ortak tasarımlar: süper yetkili işletmenin kaydettiği düzen + renk; herkes uygular
+function designsCard() {
+  const ds = S.cat.designs || [], can = !!S.cat.canDesigns;
+  if (!ds.length && !can) return '';
+  const tiles = ds.map(v => { const G = (v.layout && v.layout.cols) || 24, th = v.theme || {};
+    return `<div class="tpl" style="position:relative"><button class="tpl" style="all:unset;cursor:pointer;display:block;width:100%" onclick="applyDesign('${v.id}')"><div class="mini" style="background:${esc(th.bg || '#111')}">${v.layout.widgets.map(w => `<i style="left:${w.x / G * 100}%;top:${w.y / G * 100}%;width:${w.w / G * 100}%;height:${w.h / G * 100}%;background:${esc(th.accent || '#555')}"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc || '')}</span></button>${can ? `<button class="btn xs g" style="position:absolute;top:6px;right:6px" title="Sil" onclick="delDesign('${v.id}')">✕</button>` : ''}</div>`; }).join('');
+  return card('Ortak tasarımlar', can ? 'Kaydettiğiniz tasarımlar tüm işletmelerin panelinde görünür; onlar tek tıkla uygular (yalnız düzen ve renkler; medya, logo ve fiyat listesi değişmez).' : 'Ekran düzeni ve renkleri hazır tasarımlar. Birini seçince düzeniniz ve renkleriniz değişir (medya, logo ve fiyat listeniz korunur).',
+    (ds.length ? `<div class="tpls">${tiles}</div>` : '<div class="empty">Henüz kayıtlı tasarım yok</div>'),
+    can ? '<button class="btn s" onclick="saveDesign()">★ Mevcut tasarımı ortak kaydet</button>' : '');
+}
+async function saveDesign() {
+  if (EDIT.dirty) return toast('Önce "Düzeni kaydet"e basın; kaydedilmiş düzen ve renkler ortak tasarım olur', true);
+  const name = prompt('Tasarımın adı (örn. Lüks lounge 2):'); if (!name || !name.trim()) return;
+  const desc = prompt('Kısa açıklama (isteğe bağlı):') || '';
+  const r = await act('POST', '/designs', { name: name.trim(), desc: desc.trim() }, 'Ortak tasarım kaydedildi', false);
+  if (r) { S.cat = await req('GET', '/catalog'); render(true); }
+}
+async function delDesign(id) {
+  if (!await UI.ask('Bu ortak tasarım silinsin mi? Daha önce uygulayan işletmelerin ekranı değişmez.', { ok: 'Sil', danger: true })) return;
+  if (await act('DELETE', '/designs/' + id, undefined, 'Silindi', false)) { S.cat = await req('GET', '/catalog'); render(true); }
+}
+async function applyDesign(id) {
+  const v = (S.cat.designs || []).find(x => x.id === id); if (!v) return;
+  if (!await UI.ask(`"${v.name}" tasarımı uygulansın mı? Ekran düzeniniz ve renkleriniz değişir (medya, logo ve fiyat listesi korunur).`)) return;
+  EDIT.dirty = false; EDIT.layout = null;
+  if (await act('POST', '/designs/' + id + '/apply', {}, 'Tasarım uygulandı', false)) { S.me = await req('GET', '/me'); S.scr = await req('GET', '/screen'); drawBrand(); render(true); }
 }
 async function applyStarter(k) {
   const v = (S.cat.starters || []).find(x => x.key === k); if (!v) return;
