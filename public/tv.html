@@ -181,7 +181,7 @@ position:absolute;top:.8vh;right:.8vw}
 .mid .sc{font-size:3.6vh;font-weight:800;letter-spacing:.04em;white-space:nowrap}
 .mid .sc i{font-style:normal;color:var(--mute);margin:0 .25vw;font-weight:400}
 .mid .sc.fin{color:var(--accent2)}
-#rates{--rv:1vh;flex:1;min-height:0;min-width:0;overflow:hidden;box-sizing:border-box;background:var(--bx-bg);border:max(1px,calc(.1*var(--rv))) solid var(--bx-bd);border-radius:var(--bx-rad);box-shadow:var(--bx-sh);padding:.3vh .5vw;display:flex;flex-direction:column;justify-content:center}
+#rates{--rv:1vh;flex:1;min-height:0;min-width:0;overflow:hidden;box-sizing:border-box;justify-content:center;background:var(--bx-bg);border:max(1px,calc(.1*var(--rv))) solid var(--bx-bd);border-radius:var(--bx-rad);box-shadow:var(--bx-sh);padding:calc(1.1*var(--rv)) calc(1.5*var(--rv));display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
 #wx{display:flex;align-items:center;gap:.9vw}
 #wx .wi{font-size:calc(4.6*var(--rv));line-height:1}
 #wx .wt{font-size:calc(4*var(--rv));font-weight:600;line-height:1}
@@ -203,40 +203,28 @@ position:absolute;top:.8vh;right:.8vw}
 #rqr .rq .code svg{width:100%;height:100%;display:block}
 #rqr .rq .lbl{flex:none;width:100%;box-sizing:border-box;height:calc(3.2*var(--rv));display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;background:rgba(10,8,6,.92);border:max(1px,calc(.15*var(--rv))) solid var(--al);border-radius:calc(2*var(--rv));color:#fff;font-size:calc(1.8*var(--rv));font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:0 .6vw;text-shadow:0 calc(.2*var(--rv)) calc(.4*var(--rv)) #000}
 #rqr .rq .lbl.pw{text-transform:none;letter-spacing:.03em;color:var(--al);font-size:calc(2*var(--rv))}
-#rrow{display:flex;align-items:stretch;justify-content:space-between;width:100%;height:100%;box-sizing:border-box}
+#rrow{display:flex;align-items:center;justify-content:space-between;width:100%;height:100%;box-sizing:border-box}
 #rrow.swap{transition:opacity .35s ease}
 #rrow.swap.out{opacity:0}
-#wx+#rrow{border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.4*var(--rv));margin-top:calc(.3*var(--rv))}
+#wx+#rrow{border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.8*var(--rv));margin-top:calc(.4*var(--rv))}
 
-.r-col{flex:1 1 0;min-width:0;height:100%;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:calc(.1*var(--rv)) calc(.2*var(--rv));box-sizing:border-box;position:relative}
-.r-col:not(:last-child)::after{content:"";position:absolute;right:0;top:12%;bottom:12%;width:1px;background:var(--line);opacity:.35}
+.r-col{flex:1 1 0;min-width:0;height:100%;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 calc(.25*var(--rv));box-sizing:border-box;position:relative}
+.r-col:not(:last-child)::after{content:"";position:absolute;right:0;top:15%;bottom:15%;width:1px;background:var(--line);opacity:.35}
 
-.r-sym{flex:none;display:flex;align-items:center;justify-content:center;font-size:calc(1.3*var(--rv));font-weight:700;letter-spacing:.08em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;margin-bottom:calc(.3*var(--rv))}
+.r-sym{flex:none;display:flex;align-items:center;justify-content:center;font-size:calc(1.35*var(--rv));font-weight:700;letter-spacing:.06em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;margin-bottom:calc(.3*var(--rv))}
 .r-sym span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.r-val-box{flex:1;width:100%;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.r-val-box .r-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:calc(2.35*var(--rv));font-weight:800;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;transition:transform .42s cubic-bezier(.2,.9,.3,1),opacity .35s ease}
+.r-val{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:calc(2.25*var(--rv));font-weight:800;color:var(--white);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;transition:opacity .22s ease,transform .22s ease}
+.r-val .r-num{white-space:nowrap;flex-shrink:0}
+.r-val i{font-style:normal;font-size:.65em;color:var(--mute);margin-left:calc(.15*var(--rv));font-weight:400}
+.r-val.up{color:#34d399}
+.r-val.dn{color:#f87171}
+.r-val.fl{color:var(--mute)}
+.r-val.out{opacity:0;transform:translateY(-3px)}
 
-.r-val-p{color:var(--white);transform:translateY(0);opacity:1}
-.r-val-p .r-num{white-space:nowrap;flex-shrink:0}
-.r-val-p i{font-style:normal;font-size:.65em;color:var(--mute);margin-left:calc(.12*var(--rv));font-weight:400}
-
-.r-val-c{transform:translateY(115%);opacity:0}
-.r-val-c.up{color:#34d399}
-.r-val-c.dn{color:#f87171}
-.r-val-c.fl{color:var(--mute)}
-.r-cbadge{display:inline-flex;align-items:center;justify-content:center;font-size:calc(2.15*var(--rv));font-weight:800;letter-spacing:.01em;padding:calc(.15*var(--rv)) calc(.5*var(--rv));border-radius:calc(.35*var(--rv))}
-.r-val-c.up .r-cbadge{background:rgba(52,211,153,.15)}
-.r-val-c.dn .r-cbadge{background:rgba(248,113,113,.15)}
-.r-val-c.fl .r-cbadge{background:rgba(255,255,255,.07)}
-
-.show-chg .r-val-p{transform:translateY(-115%);opacity:0}
-.show-chg .r-val-c{transform:translateY(0);opacity:1}
-
-#rates.rates-solo, .rtx.rates-solo, #rates:not(:has(#wx)), .rtx:not(:has(#wx)){padding:.35vh .6vw}
+#rates.rates-solo, .rtx.rates-solo, #rates:not(:has(#wx)), .rtx:not(:has(#wx)){padding:calc(1.1*var(--rv)) calc(1.5*var(--rv))}
 #rates.rates-solo #rrow, .rtx.rates-solo #rrow, #rates:not(:has(#wx)) #rrow, .rtx:not(:has(#wx)) #rrow{height:100%}
-#rates.rates-solo .r-val-box .r-val, .rtx.rates-solo .r-val-box .r-val, #rates:not(:has(#wx)) .r-val-box .r-val, .rtx:not(:has(#wx)) .r-val-box .r-val{font-size:calc(2.45*var(--rv))}
-#rates.rates-solo .r-cbadge, .rtx.rates-solo .r-cbadge, #rates:not(:has(#wx)) .r-cbadge, .rtx:not(:has(#wx)) .r-cbadge{font-size:calc(2.2*var(--rv))}
+#rates.rates-solo .r-val, .rtx.rates-solo .r-val, #rates:not(:has(#wx)) .r-val, .rtx:not(:has(#wx)) .r-val{font-size:calc(2.35*var(--rv))}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -2220,48 +2208,56 @@ let lastRates = {}, lastWeather = null;
 const WMO = c => c === 0 ? ['Açık', '☀️', '🌙'] : c <= 2 ? ['Parçalı bulutlu', '⛅', '☁️'] : c === 3 ? ['Kapalı', '☁️', '☁️']
   : c <= 48 ? ['Sisli', '🌫️', '🌫️'] : c <= 57 ? ['Çisenti', '🌦️', '🌦️'] : c <= 67 ? ['Yağmurlu', '🌧️', '🌧️']
   : c <= 77 ? ['Karlı', '❄️', '❄️'] : c <= 82 ? ['Sağanak', '🌧️', '🌧️'] : c <= 86 ? ['Kar sağanağı', '❄️', '❄️'] : ['Gök gürültülü', '⛈️', '⛈️'];
-let rateSets = [], rateIdx = 0, rateSwapTimer = null, rateFlipTimer = null;
+let rateSets = [], rateIdx = 0, rateMode = 'price', rateSwapTimer = null, rateFlipTimer = null;
+function updateRatesHtml() {
+  document.querySelectorAll('.rrx').forEach(r2 => {
+    r2.innerHTML = rateSets[rateIdx % rateSets.length](rateMode);
+  });
+  fitRates();
+}
 function startRateSwap() { // 4.2 sn fiyat -> 3.5 sn değişim yüzdesi, ardından sonraki kur grubuna geçiş
   if (rateSwapTimer) return;
   const scheduleFlip = () => {
     clearTimeout(rateFlipTimer);
     rateFlipTimer = setTimeout(() => {
-      document.querySelectorAll('#rates, .rtx').forEach(el => el.classList.add('show-chg'));
+      const vals = document.querySelectorAll('.rrx .r-val');
+      vals.forEach(v => v.classList.add('out'));
+      setTimeout(() => {
+        rateMode = 'chg';
+        updateRatesHtml();
+        document.querySelectorAll('.rrx .r-val').forEach(v => v.classList.remove('out'));
+      }, 220);
     }, 4200);
   };
   scheduleFlip();
   rateSwapTimer = setInterval(() => {
     const row = document.querySelector('.rrx');
     if (!row) return;
-    if (rateSets.length > 1) {
-      document.querySelectorAll('.rrx').forEach(r2 => r2.classList.add('out'));
-      setTimeout(() => {
-        rateIdx++;
-        document.querySelectorAll('#rates, .rtx').forEach(el => el.classList.remove('show-chg'));
-        document.querySelectorAll('.rrx').forEach(r2 => {
-          r2.innerHTML = rateSets[rateIdx % rateSets.length];
-          r2.classList.remove('out');
-        });
-        fitRates();
-        scheduleFlip();
-      }, 400);
-    } else {
-      document.querySelectorAll('#rates, .rtx').forEach(el => el.classList.remove('show-chg'));
+    document.querySelectorAll('.rrx').forEach(r2 => r2.classList.add('out'));
+    setTimeout(() => {
+      if (rateSets.length > 1) rateIdx++;
+      rateMode = 'price';
+      updateRatesHtml();
+      document.querySelectorAll('.rrx').forEach(r2 => r2.classList.remove('out'));
       scheduleFlip();
-    }
+    }, 380);
   }, 8000);
 }
 // günlük değişim formatı: + yeşil, - kırmızı
 const chgTxt = v => (v == null || !isFinite(v)) ? '--' : `${v > 0.005 ? '+' : v < -0.005 ? '-' : ''}${Math.abs(v).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 const chgCls = v => (v == null || !isFinite(v)) ? 'fl' : (v > 0.005 ? 'up' : (v < -0.005 ? 'dn' : 'fl'));
-const rateCol = (sym, cVal, val, unit = '') => `
-  <div class="r-col">
-    <div class="r-sym"><span>${esc(sym)}</span></div>
-    <div class="r-val-box">
-      <div class="r-val r-val-p"><span class="r-num">${val}</span>${unit ? `<i>${unit}</i>` : ''}</div>
-      <div class="r-val r-val-c ${chgCls(cVal)}"><span class="r-cbadge">${chgTxt(cVal)}</span></div>
-    </div>
-  </div>`;
+const rateCol = (sym, cVal, val, unit, mode) => {
+  const isChg = mode === 'chg';
+  const valHtml = isChg
+    ? `<span class="r-num">${chgTxt(cVal)}</span>`
+    : `<span class="r-num">${val}</span>${unit ? `<i>${unit}</i>` : ''}`;
+  const cls = isChg ? chgCls(cVal) : '';
+  return `
+    <div class="r-col">
+      <div class="r-sym"><span>${esc(sym)}</span></div>
+      <div class="r-val ${cls}">${valHtml}</div>
+    </div>`;
+};
 function renderPanel() {
   const sig = JSON.stringify([lastRates, lastWeather, WPROPS.rates, CITY]);
   if (sig === window.__panelSig && document.getElementById('rrow')) return; // değişiklik yok
@@ -2277,11 +2273,11 @@ function renderPanel() {
       <div class="city">${esc(CITY)}<small>${Math.round(w.min)}° / ${Math.round(w.max)}°</small></div></div>`;
   }
   rateSets = [
-    rateCol('USD', r.usdCh, f(r.usd), '₺') + rateCol('EUR', r.eurCh, f(r.eur), '₺') + rateCol('ALTIN', r.goldCh, f(r.gold, 0), '₺'),
-    rateCol('BIST 100', r.bistCh, f(r.bist, 0)) + rateCol('BITCOIN', r.btcCh, r.btc ? '$' + f(r.btc, 0) : '--') + rateCol('STERLİN', r.gbpCh, f(r.gbp), '₺'),
+    mode => rateCol('USD', r.usdCh, f(r.usd), '₺', mode) + rateCol('EUR', r.eurCh, f(r.eur), '₺', mode) + rateCol('ALTIN', r.goldCh, f(r.gold, 0), '₺', mode),
+    mode => rateCol('BIST 100', r.bistCh, f(r.bist, 0), '', mode) + rateCol('BITCOIN', r.btcCh, r.btc ? '$' + f(r.btc, 0) : '--', '', mode) + rateCol('STERLİN', r.gbpCh, f(r.gbp), '₺', mode),
   ];
   const rp = WPROPS.rates || {};
-  const mk = p => (p.weather === false ? '' : wx) + (p.rates === false ? '' : `<div id="rrow" class="swap rrx">${rateSets[rateIdx % rateSets.length]}</div>`);
+  const mk = p => (p.weather === false ? '' : wx) + (p.rates === false ? '' : `<div id="rrow" class="swap rrx">${rateSets[rateIdx % rateSets.length](rateMode)}</div>`);
   const main = mk(rp);
   document.getElementById('rates').innerHTML = rp.qr ? `<div id="rmain">${main}</div><div id="rqr"></div>` : main; // QR açıksa hava/piyasa bir sayfa, QR'lar sonraki sayfa(lar)
   // ek hava/piyasa kutuları (aynı düzende birden çok): yalnız hava ve/veya piyasa, QR yok
