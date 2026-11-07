@@ -215,9 +215,6 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             }
             content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = if (wx != null && props?.optBoolean("weather", true) != false) gap else 0 })
         }
-            }
-            content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = gap })
-        }
     }
 
     private fun renderQr(v: Int) {
