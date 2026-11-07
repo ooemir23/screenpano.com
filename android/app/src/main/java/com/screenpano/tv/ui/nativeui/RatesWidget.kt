@@ -211,11 +211,12 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 val chgStr = c.change?.let { (if (it > 0.005) "+" else if (it < -0.005) "-" else "") + String.format(Locale("tr", "TR"), "%.1f", abs(it)) + "%" }
                 val chgColor = if (c.change != null) (if (c.change > 0.005) Color.parseColor("#34d399") else if (c.change < -0.005) Color.parseColor("#f87171") else p.mute) else 0
 
-                val valScale = when (props?.optString("valSize", "m")) {
-                    "s" -> 0.85f
-                    "l" -> 1.18f
-                    "xl" -> 1.35f
-                    else -> 1.0f
+                val valScale = when (props?.optString("valSize", "xl")) {
+                    "s" -> 0.68f
+                    "m" -> 0.78f
+                    "l" -> 0.88f
+                    "xl" -> 1.00f
+                    else -> 1.00f
                 }
 
                 val valView = if (showChange && chgStr != null) {

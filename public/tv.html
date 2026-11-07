@@ -2309,7 +2309,7 @@ function ratesQr() {
 // T6: hava/piyasa kutusu yazıları kutu boyutuna göre küçülür (native RatesWidget.fitScale ile aynı taban: 17×42 vh)
 // Hava ve piyasa kutusu: yazı ölçeği (--rv) kutuya göre ölçülerek bulunur; içerik kutudan taşmaz, küçük kutuda sıkışmaz, büyük kutuda büyür
 function fitRates() {
-  const getScale = p => ({ s: 0.85, m: 1.0, l: 1.18, xl: 1.35 }[(p && p.valSize) || 'm'] || 1.0);
+  const getScale = p => ({ s: 0.68, m: 0.78, l: 0.88, xl: 1.0 }[(p && p.valSize) || 'xl'] || 1.0);
   const rtxList = Array.from(document.querySelectorAll('.rtx'));
   document.querySelectorAll('#rates, .rtx').forEach(el => {
     if (!el.clientWidth || !el.clientHeight) return;
