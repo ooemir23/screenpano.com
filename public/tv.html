@@ -207,15 +207,15 @@ position:absolute;top:.8vh;right:.8vw}
 #rrow.swap{transition:opacity .35s ease}
 #rrow.swap.out{opacity:0}
 #wx+#rrow{border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.8*var(--rv));margin-top:calc(.4*var(--rv))}
-.r-col{flex:1 1 0;min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 calc(.3*var(--rv));box-sizing:border-box}
-.r-sym{display:flex;align-items:center;justify-content:center;font-size:calc(1.35*var(--rv));font-weight:700;letter-spacing:.05em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2}
-.r-sym span{white-space:nowrap}
-.chg{font-style:normal;font-size:calc(1.3*var(--rv));font-weight:700;letter-spacing:0;line-height:1;white-space:nowrap;margin-left:calc(.25*var(--rv))}
+.r-col{flex:1 1 0;min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 calc(.35*var(--rv));box-sizing:border-box;overflow:hidden}
+.r-sym{display:flex;align-items:center;justify-content:center;font-size:calc(1.35*var(--rv));font-weight:700;letter-spacing:.05em;color:var(--accent2);text-transform:uppercase;white-space:nowrap;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.r-sym span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chg{font-style:normal;font-size:.56em;font-weight:700;letter-spacing:0;line-height:1;white-space:nowrap;margin-left:calc(.2*var(--rv))}
 .chg.up{color:#34d399}
 .chg.dn{color:#f87171}
 .chg.fl{color:var(--mute)}
-.r-val{display:flex;align-items:baseline;justify-content:center;font-size:calc(2.2*var(--rv));font-weight:700;color:var(--white);line-height:1.15;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:calc(.2*var(--rv))}
-.r-val i{font-style:normal;font-size:calc(1.4*var(--rv));color:var(--mute);margin-left:calc(.15*var(--rv));font-weight:400}
+.r-val{display:flex;align-items:baseline;justify-content:center;font-size:calc(2.1*var(--rv));font-weight:700;color:var(--white);line-height:1.15;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:calc(.2*var(--rv));max-width:100%}
+.r-val i{font-style:normal;font-size:.65em;color:var(--mute);margin-left:calc(.15*var(--rv));font-weight:400}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -2085,7 +2085,7 @@ function startRateSwap() { // 8 sn'de bir USD/EUR/ALTIN ile BIST 100/BITCOIN/STE
     const row = document.querySelector('.rrx');
     if (!row || rateSets.length < 2) return;
     document.querySelectorAll('.rrx').forEach(r2 => r2.classList.add('out'));
-    setTimeout(() => { rateIdx++; document.querySelectorAll('.rrx').forEach(r2 => { r2.innerHTML = rateSets[rateIdx % rateSets.length]; r2.classList.remove('out'); }); }, 420);
+    setTimeout(() => { rateIdx++; document.querySelectorAll('.rrx').forEach(r2 => { r2.innerHTML = rateSets[rateIdx % rateSets.length]; r2.classList.remove('out'); }); fitRates(); }, 420);
   }, 8000);
 }
 // günlük değişim: + yeşil, - kırmızı (oksuz)
@@ -2156,11 +2156,33 @@ function fitRates() {
       for (const c of el.children) { if (!c.offsetHeight) continue; const r = c.getBoundingClientRect(); top = Math.min(top, r.top); bot = Math.max(bot, r.bottom); }
       if (isFinite(top) && bot - top > el.clientHeight - padV + 1) return false;
       if (el.scrollWidth > el.clientWidth + 1) return false;
-      return ![...el.querySelectorAll('#rrow, #wx, .r-sym, .r-val')].some(d => d.scrollWidth > d.clientWidth + 1);
+      return ![...el.querySelectorAll('#rrow, #wx')].some(d => d.scrollWidth > d.clientWidth + 1);
     };
     let lo = .2, hi = 2.4;
     for (let n = 0; n < 9; n++) { const mid = (lo + hi) / 2; set(mid); if (fits()) lo = mid; else hi = mid; }
     set(lo);
+
+    // Sütun içi otomatik font küçültme: fiyat veya yüzde sığmazsa komşuya taşmadan orantılı küçülür
+    el.querySelectorAll('.r-col').forEach(col => {
+      const v = col.querySelector('.r-val');
+      if (v) {
+        v.style.fontSize = '';
+        const maxW = col.clientWidth - 6;
+        if (maxW > 0 && v.scrollWidth > maxW) {
+          const s = Math.max(0.55, maxW / v.scrollWidth);
+          v.style.fontSize = `calc(2.1 * var(--rv) * ${s.toFixed(3)})`;
+        }
+      }
+      const s = col.querySelector('.r-sym');
+      if (s) {
+        s.style.fontSize = '';
+        const maxW = col.clientWidth - 4;
+        if (maxW > 0 && s.scrollWidth > maxW) {
+          const sc = Math.max(0.65, maxW / s.scrollWidth);
+          s.style.fontSize = `calc(1.35 * var(--rv) * ${sc.toFixed(3)})`;
+        }
+      }
+    });
   });
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitRates());

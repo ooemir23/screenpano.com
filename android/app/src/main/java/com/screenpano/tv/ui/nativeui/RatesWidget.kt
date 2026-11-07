@@ -2,12 +2,14 @@ package com.screenpano.tv.ui.nativeui
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.TextPaint
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -155,14 +157,6 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         }
         if (props?.optBoolean("rates", true) != false) {
             val r = s.raw.optJSONObject("rates") ?: JSONObject()
-            fun chg(v: Double?): SpannableStringBuilder? {
-                if (v == null) return null
-                val up = v > 0.005; val dn = v < -0.005
-                val str = (if (up) "+" else if (dn) "-" else "") + String.format(Locale("tr", "TR"), "%.1f", abs(v)) + "%"
-                return SpannableStringBuilder(str).apply {
-                    setSpan(RunSpan(vh * 1.3f, if (up) Color.parseColor("#34d399") else if (dn) Color.parseColor("#f87171") else p.mute, true, 0f), 0, str.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
             data class Cell(val name: String, val change: Double?, val value: String, val unit: String)
             val sets = listOf(
                 listOf(Cell("USD", null, f(r.num("usd")), "₺"), Cell("EUR", null, f(r.num("eur")), "₺"), Cell("ALTIN", r.num("goldCh"), f(r.num("gold"), 0), "₺")),
@@ -171,6 +165,8 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             val row = LinearLayout(context).apply {
                 orientation = HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                clipChildren = true
+                clipToPadding = true
             }
             val line = LinearLayout(context).apply { setBackgroundColor(Color.argb(23, 255, 255, 255)) }
             if (wx != null && props?.optBoolean("weather", true) != false) content.addView(line, LayoutParams(LayoutParams.MATCH_PARENT, max(1, (vh * 0.1f).toInt())).apply { topMargin = gap })
@@ -179,37 +175,25 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                 val col = LinearLayout(context).apply {
                     orientation = VERTICAL
                     gravity = Gravity.CENTER_HORIZONTAL
-                    setPadding((vh * 0.35f).toInt(), 0, (vh * 0.35f).toInt(), 0)
+                    clipChildren = true
+                    clipToPadding = true
+                    setPadding((vh * 0.4f).toInt(), 0, (vh * 0.4f).toInt(), 0)
                 }
-                val head = SpannableStringBuilder(c.name).apply {
-                    setSpan(RunSpan(vh * 1.35f, p.accent2, true, 0.05f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-                col.addView(FitSpanText(context).apply {
-                    text = head
+                col.addView(ShrinkText(context, vh * 20f).apply {
+                    text = c.name
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, vh * 1.35f)
+                    setTextColor(p.accent2)
                     includeFontPadding = false
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    letterSpacing = 0.04f
                     setSingleLine(true)
                     gravity = Gravity.CENTER
-                })
+                }, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
 
-                val vtxt = SpannableStringBuilder(c.value).apply {
-                    setSpan(RunSpan(vh * 2.2f, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    if (c.unit.isNotEmpty()) {
-                        val a = length
-                        append(" " + c.unit)
-                        setSpan(RunSpan(vh * 1.4f, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    }
-                    val cSpan = chg(c.change)
-                    if (cSpan != null) {
-                        append(" ")
-                        append(cSpan)
-                    }
-                }
-                col.addView(FitSpanText(context).apply {
-                    text = vtxt
-                    includeFontPadding = false
-                    setSingleLine(true)
-                    gravity = Gravity.CENTER
-                }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.25f).toInt() })
+                val chgStr = c.change?.let { (if (it > 0.005) "+" else if (it < -0.005) "-" else "") + String.format(Locale("tr", "TR"), "%.1f", abs(it)) + "%" }
+                val chgColor = if (c.change != null) (if (c.change > 0.005) Color.parseColor("#34d399") else if (c.change < -0.005) Color.parseColor("#f87171") else p.mute) else 0
+
+                col.addView(AutoFitRateText(context, vh, p, c.value, c.unit, chgStr, chgColor), LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.25f).toInt() })
 
                 row.addView(col, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             }
@@ -267,7 +251,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
 }
 
 
-/** Tek satır yazı: verilen en büyük genişliğe sığana kadar boyutu küçültür (harf aralığı dahil), asla kesmez. */
+/** Tek satır yazı: verilen en büyük genişliğe sığana kadar boyutu küçültür (harf aralığı dahil), asla kesmez ve taşmaz. */
 internal class ShrinkText(context: Context, private val capPx: Float) : TextView(context) {
     private var base = 0f
     override fun onMeasure(w: Int, h: Int) {
@@ -282,23 +266,80 @@ internal class ShrinkText(context: Context, private val capPx: Float) : TextView
         }
         setTextSize(TypedValue.COMPLEX_UNIT_PX, size)
         super.onMeasure(w, h)
-        val need = (paint.measureText(t) + letterSpacing * size * t.length + paddingLeft + paddingRight + 2).toInt()
-        if (measuredWidth < need) setMeasuredDimension(need, measuredHeight)
+        if (MeasureSpec.getMode(w) != MeasureSpec.UNSPECIFIED && measuredWidth > MeasureSpec.getSize(w)) {
+            setMeasuredDimension(MeasureSpec.getSize(w), measuredHeight)
+        }
     }
 }
 
 
-/** Tek satır, biçimli (span'lı) yazı: sütuna sığmazsa görsel olarak küçülür; komşu sütuna taşmaz, kesilmez. */
-internal class FitSpanText(context: Context) : TextView(context) {
-    override fun onMeasure(w: Int, h: Int) {
-        super.onMeasure(w, h)
-        val avail = MeasureSpec.getSize(w).toFloat() - paddingLeft - paddingRight
-        val t = text ?: ""
-        val need = android.text.Layout.getDesiredWidth(t, paint)
-        if (MeasureSpec.getMode(w) != MeasureSpec.UNSPECIFIED && avail > 0f && need > avail) {
-            val k = (avail / need * 0.97f).coerceAtLeast(0.4f)
-            setMeasuredDimension((need + paddingLeft + paddingRight + 2).toInt(), measuredHeight)
-            pivotX = measuredWidth / 2f; pivotY = measuredHeight / 2f; scaleX = k; scaleY = k
-        } else { scaleX = 1f; scaleY = 1f }
+/** Tek satır kur/fiyat yazısı: fiyat, birim ve yüzde sütuna sığmazsa font boyutu orantılı küçülür; komşu sütuna taşmaz, kesilmez. */
+internal class AutoFitRateText(
+    context: Context,
+    private val vh: Float,
+    private val p: Palette,
+    private val valText: String,
+    private val unitText: String,
+    private val chgText: String?,
+    private val chgColor: Int
+) : TextView(context) {
+    private var lastAvail = -1f
+
+    init {
+        includeFontPadding = false
+        setSingleLine(true)
+        gravity = Gravity.CENTER
+        applyScale(1.0f)
+    }
+
+    private fun calcWidth(scale: Float): Float {
+        val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { isFakeBoldText = true; textSize = vh * 2.1f * scale }
+        var total = tp.measureText(valText)
+        if (unitText.isNotEmpty()) {
+            tp.textSize = vh * 1.35f * scale
+            tp.isFakeBoldText = false
+            total += tp.measureText(" $unitText")
+        }
+        if (chgText != null) {
+            tp.textSize = vh * 1.15f * scale
+            tp.isFakeBoldText = true
+            total += tp.measureText(" $chgText")
+        }
+        return total
+    }
+
+    private fun applyScale(scale: Float) {
+        val s = SpannableStringBuilder(valText).apply {
+            setSpan(RunSpan(vh * 2.1f * scale, p.white, true, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (unitText.isNotEmpty()) {
+                val a = length
+                append(" $unitText")
+                setSpan(RunSpan(vh * 1.35f * scale, p.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            if (chgText != null) {
+                val a = length
+                append(" $chgText")
+                setSpan(RunSpan(vh * 1.15f * scale, chgColor, true, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
+        text = s
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val mode = MeasureSpec.getMode(widthMeasureSpec)
+        val size = MeasureSpec.getSize(widthMeasureSpec)
+        if (mode != MeasureSpec.UNSPECIFIED && size > 0) {
+            val avail = (size - paddingLeft - paddingRight - (vh * 0.4f)).coerceAtLeast(10f)
+            if (abs(avail - lastAvail) > 1f) {
+                lastAvail = avail
+                val fullW = calcWidth(1.0f)
+                val scale = if (fullW > avail) (avail / fullW).coerceIn(0.52f, 1.0f) else 1.0f
+                applyScale(scale)
+            }
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        if (mode != MeasureSpec.UNSPECIFIED && measuredWidth > size) {
+            setMeasuredDimension(size, measuredHeight)
+        }
     }
 }
