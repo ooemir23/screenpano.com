@@ -1017,11 +1017,11 @@ function adDraw() {
 // Yeni reklam: temel bilgiler, sonra düzenleme çekmecesi (görsel, ödeme, hedefleme)
 function adNew() {
   openDrawer(`<div class="m-head"><div><h2 style="margin:0 0 2px;font-size:18px;font-weight:700">${T('Yeni reklam')}</h2><p class="hint" style="margin:0;font-size:12.5px">${T('Reklam veren ve dönem bilgilerini girin; görsel ve ödemeyi sonraki adımda eklersiniz.')}</p></div><button class="modal-x" onclick="closeDrawer()" aria-label="Kapat">×</button></div>
-  <div class="m-body" style="grid-template-columns:1fr"><div class="d-card">${adFormBasic({ every: 4 }, true)}</div></div>
+  <div class="m-body" style="grid-template-columns:1fr"><div class="d-card">${adFormBasic({ every: 4 }, true)}<h4 style="margin-top:16px">${T('Müşterinin verdiği görsel / video')}</h4><input type="file" id="pa-files" multiple accept="image/*,video/*"><p class="hint" style="font-size:12px;margin:6px 0 0">${T('İsterseniz şimdi seçin; sonradan da ekleyebilirsiniz.')}</p></div></div>
   <div class="m-foot"><button class="btn ghost" onclick="closeDrawer()">${T('Vazgeç')}</button><button class="btn" onclick="adCreate()">${T('Oluştur ve devam et')}</button></div>`);
 }
 async function adCreate() {
-  try { const j = await api('POST', '/pads', adRead()); await adLoad(); adOpen(j.id); toast('Reklam oluşturuldu'); } catch (e) { toast(e.message, true); }
+  try { const fl = $('pa-files') ? [...$('pa-files').files] : []; const j = await api('POST', '/pads', adRead()); if (fl.length) await adUp(j.id, fl); await adLoad(); adOpen(j.id); toast('Reklam oluşturuldu'); } catch (e) { toast(e.message, true); }
 }
 const adToday = () => new Date().toLocaleDateString('sv-SE');
 function adFormBasic(a, isNew) {
