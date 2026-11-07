@@ -890,6 +890,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        /** Fotoğraflı kampanya yerel çizilebiliyor (sayfa bunu görünce yerel kartı kullanır). */
+        @JavascriptInterface
+        fun campPhoto(): Boolean = true
+
         @JavascriptInterface
         fun campHide() { handler.post { campView?.let { it.animate().cancel(); it.visibility = View.GONE } } }
 

@@ -596,6 +596,9 @@ r.put('/campaigns/:id', async (req, res) => {
     ]) {
       if (typeof b[k] === 'string') c[k] = str(b[k], n);
     }
+    for (const [k, lo, hi, def] of [['qrX', 0, 100, 85], ['qrY', 0, 100, 75], ['qrSize', 10, 50, 26]]) {
+      if (b[k] !== undefined && b[k] !== '') { const n = Number(b[k]); c[k] = Math.round(Math.max(lo, Math.min(hi, Number.isFinite(n) ? n : def)) * 10) / 10; }
+    }
     if (b.image !== undefined) c.image = typeof b.image === 'string' && b.image ? b.image : null;
     if (b.everyMin !== undefined) c.everyMin = Math.max(1, Math.min(60, Math.round(Number(b.everyMin)) || 3));
     if (b.durSec !== undefined) c.durSec = Math.max(8, Math.min(60, Math.round(Number(b.durSec)) || 15));
@@ -606,6 +609,7 @@ r.put('/campaigns/:id', async (req, res) => {
     }
     if (typeof b.enabled === 'boolean') {
       if (b.enabled && !c.url) throw new Error('Önce kampanyanın bağlantısını (örn. Google yorum linki) girin');
+      if (b.enabled && !c.image) throw new Error('Önce kampanya fotoğrafını yükleyin');
       c.enabled = b.enabled;
     }
     if (c.enabled && !c.svg && c.url) Object.assign(c, await require('./qrtrack').build(req.t.id, c.id, 'camp', c.url, c.code));

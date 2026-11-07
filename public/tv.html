@@ -408,6 +408,11 @@ html.menu-open #brk,html.menu-open #updot{display:none!important}
 #a-branches{display:grid;gap:1.2vh;margin-top:1vh}#a-branches button{font-size:2.2vh}
 #camp{position:absolute;inset:.6vh;z-index:7;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .8s ease-in-out;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 70% 70% at 30% 40%,var(--ad) 0%,#2a1b0f 60%,#1a110a 100%)}
 #camp.on{opacity:1}
+#camp.photo{background:#000}
+#camp .cph{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#camp .cpq{position:absolute;transform:translate(-50%,-50%);aspect-ratio:1;background:#fff;border-radius:8%;box-shadow:0 1.2vh 4vh rgba(0,0,0,.55)}
+#camp .cpq .qi{position:absolute;inset:6%}
+#camp .cpq svg{width:100%;height:100%;display:block}
 #camp.style-dark{background:radial-gradient(ellipse 80% 80% at 50% 50%,#1c2029 0%,#0a0b0e 100%)}
 #camp.style-accent{background:radial-gradient(ellipse 80% 80% at 40% 40%,var(--ad) 0%,#0d1117 100%)}
 #camp.style-sunset{background:radial-gradient(ellipse 80% 80% at 40% 40%,#7c2d12 0%,#3b110b 60%,#140504 100%)}
@@ -2527,7 +2532,7 @@ const camp = { list: [], last: {}, showing: false, due: null, after: null, start
 function campShow(c) {
   if (camp.showing || !c) return;
   camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp', id: c.id });
-  if (NMED() && window.__N.campShow && c.svg) { // APK 3.13+: kart yerel çizilir; sayfa yalnız zamanlar
+  if (NMED() && window.__N.campShow && c.svg && (!c.photo || window.__N.campPhoto)) { // APK 3.13+: kart yerel çizilir; sayfa yalnız zamanlar
     exoStop(true); window.__nativeCampOn = true; window.__N.campShow(JSON.stringify(c)); exoShow(true);
     setTimeout(() => { window.__N.campHide(); window.__nativeCampOn = false; if (camp.after) { const f = camp.after; camp.after = null; f(); } setTimeout(() => { camp.showing = false; }, 1500); }, (c.durSec || 15) * 1000);
     return;
@@ -2536,6 +2541,13 @@ function campShow(c) {
   let el = document.getElementById('camp');
   if (!el) { el = document.createElement('div'); el.id = 'camp'; document.getElementById('frame').appendChild(el); }
   const esc = t => String(t || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  if (c.photo && c.svg) { // fotoğraflı kampanya: tam ekran fotoğraf, QR seçilen yerde
+    el.className = 'photo'; el.style.fontFamily = '';
+    el.innerHTML = `<img class="cph" src="${esc(c.image)}" alt=""><div class="cpq" style="left:${+c.qrX}%;top:${+c.qrY}%;height:${+c.qrSize}%"><div class="qi">${c.svg}</div></div>`;
+    setTimeout(() => el.classList.add('on'), 60);
+    setTimeout(() => { if (camp.after) { const f = camp.after; camp.after = null; f(); } el.classList.remove('on'); setTimeout(() => { camp.showing = false; }, 1500); }, (c.durSec || 15) * 1000);
+    return;
+  }
   if (c.font) ensureFont(c.font);
   el.className = 'style-' + (c.style || 'coffee');
   el.style.fontFamily = c.font ? `'${c.font}', sans-serif` : '';
