@@ -20,12 +20,8 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1); // önde tek vekil (Traefik); istemci IP'si için auth.clientIp kullanılır
 // www.screenpano.com -> screenpano.com (tek adres; arama motorları için kalıcı yönlendirme)
 app.use((req, res, next) => {
-  const host = String(req.headers.host || '');
-  // www.* her zaman tanıtım sitesini açar (oturum olsa bile panele atmaz); diğer yollar tek adrese yönlenir
-  if (/^www\./i.test(host)) {
-    if (req.path === '/' || /^\/(en|de|ar)\/?$/.test(req.path)) { req.isWww = true; return next(); }
-    return res.redirect(301, `https://${host.slice(4)}${req.originalUrl}`);
-  }
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '');
+  if (/^www\./i.test(host)) req.isWww = true;
   next();
 });
 // Alt alan adları: admin.* panel, tv.* TV ekranı, music.* yalnız müzik sayfası, sadmin.* süper yönetim. Ana adres (ve eski yollar) olduğu gibi çalışır;
@@ -33,7 +29,8 @@ app.use((req, res, next) => {
 const SUBS = { admin: 1, panel: 1, tv: 1, music: 1, sadmin: 1 };
 const baseHost = (() => { try { return new URL(config.BASE_URL).hostname.toLowerCase(); } catch (e) { return 'screenpano.com'; } })();
 function subOf(req) {
-  const h = String(req.headers.host || '').split(':')[0].toLowerCase();
+  const h = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(':')[0].toLowerCase();
+  if (h.startsWith('www.')) return ''; // www her zaman tanıtım sitesidir
   if (!h.endsWith('.' + baseHost)) return '';
   const l = h.slice(0, -baseHost.length - 1);
   return SUBS[l] ? l : '';
@@ -87,8 +84,6 @@ app.get('/', (req, res, next) => {
 app.get('/', (req, res) => {
   // eski APK'lar kök adresi açar: Android WebView'dan gelen istek TV sayfasına gider
   if (/; wv\)/.test(String(req.headers['user-agent'] || ''))) return res.redirect('/tv');
-  const u = auth.sessionUser(req);
-  if (u && !req.isWww && req.query.site === undefined) return res.redirect(u.role === 'super' && !u.imp ? auth.homeFor(req, u) : auth.homeFor(req, { ...u, role: 'owner' }));
   res.setHeader('Cache-Control', 'no-cache'); res.type('html').send(sitePage('tr'));
 });
 // diğer diller: /en, /de, /ar (giriş yapmış kullanıcı da siteyi görür)

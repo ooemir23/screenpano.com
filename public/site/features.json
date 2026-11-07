@@ -1053,6 +1053,11 @@
       "plan": "all",
       "compare": "Tek QR ile menü, Wi-Fi ve bağlantı sayfası",
       "added": "2026-11-07",
+      "visual": {
+        "type": "win",
+        "img": "p-duzen",
+        "phone": "m-ozet"
+      },
       "i18n": {
         "en": {
           "title": "One QR for menu, Wi-Fi and links: QR card with new layouts",

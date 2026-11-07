@@ -45,6 +45,7 @@ function dict(lang) {
 const loc = (f, lang) => (lang === 'tr' || !f.i18n || !f.i18n[lang] ? f : { ...f, ...f.i18n[lang] });
 
 function img(name, alt, cls = 'zoom') {
+  if (!name || typeof name !== 'string') return '';
   const [w, h] = name === 'tv-eslestir' ? [1200, 675] : name.startsWith('tv-') ? [1600, 900] : name.startsWith('m-') ? [780, 1688] : [1440, 900];
   return `<img class="${cls}" src="/site/${e(name)}.webp" width="${w}" height="${h}" alt="${e(alt)}" loading="lazy" decoding="async">`;
 }
@@ -52,8 +53,9 @@ function img(name, alt, cls = 'zoom') {
 const SCHED_POS = [[3, 7, ''], [6, 9, ''], [11, 13, 'c2'], [15, 18, 'c3'], [12, 18, 'c2'], [0, 18, 'c4']];
 function visual(f, t) {
   const v = f.visual || {}, title = f.title;
+  if (!v.type && !v.img && !v.phone) return '';
   const phone = v.phone ? `<div class="phone side">${img(v.phone, `${title} (${t('s.onPhone')})`)}</div>` : '';
-  const tv = inner => `<div class="tvf flat"><div class="bezel"><div class="scr${inner ? ' poster' : ''}"${inner ? ' data-poster dir="auto"' : ''}>${inner ? '' : img(v.img, title)}</div></div></div>`;
+  const tv = inner => `<div class="tvf flat"><div class="bezel"><div class="scr${inner ? ' poster' : ''}"${inner ? ' data-poster dir="auto"' : ''}>${inner ? '' : (v.img ? img(v.img, title) : '')}</div></div></div>`;
   if (v.type === 'poster') return `<div class="fx-v has-phone">${tv(true)}${phone}</div>`;
   if (v.type === 'schedule') {
     const rows = t('s.sched');
