@@ -581,7 +581,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   // ================= KVKK: verilerim, hesap silme =================
   r.get('/privacy/export', ownerOnly, (req, res) => {
     const t = req.t, { trafficSecret, ytAuth, oauthApps, ...db } = t.db;
-    if (db.music && db.music.spotify) db.music = { ...db.music, spotify: { ...db.music.spotify, refreshToken: undefined } };
+    if (db.music && db.music.spotify) db.music = { ...db.music, spotify: { ...db.music.spotify, refreshToken: undefined, accessToken: undefined } };
     if (db.instagram) db.instagram = { ...db.instagram, token: db.instagram.token ? '(gizli)' : '' };
     const out = {
       exportedAt: new Date().toISOString(), product: config.BRAND,

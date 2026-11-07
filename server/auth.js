@@ -129,4 +129,5 @@ setInterval(() => { const t = Date.now(); for (const [k, r] of fails) if (t - r.
 // Traefik/Dokploy gerçek istemci IP'sini X-Forwarded-For'un SONUNA ekler; baştaki değer istemci tarafından uydurulabilir
 const clientIp = req => { const x = String(req.headers['x-forwarded-for'] || '').split(',').map(v => v.trim()).filter(Boolean); return x.length ? x[x.length - 1] : String(req.socket.remoteAddress || ''); };
 
-module.exports = { superOk, superUser, uid, hashPassword, checkPassword, checkPasswordAsync, sign, verify, setSession, clearSession, sessionUser, newDeviceToken, hashToken, tooMany, noteFail, clearFails, clientIp, parseCookies };
+const secretFor = label => crypto.createHash('sha256').update(label + ':' + SECRET).digest('hex'); // başka amaçlar için türetilmiş sır
+module.exports = { secretFor, superOk, superUser, uid, hashPassword, checkPassword, checkPasswordAsync, sign, verify, setSession, clearSession, sessionUser, newDeviceToken, hashToken, tooMany, noteFail, clearFails, clientIp, parseCookies };

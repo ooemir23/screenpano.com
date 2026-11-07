@@ -21,7 +21,7 @@ const safeName = f => typeof f === 'string' && /^[\w.-]+$/.test(f);
 // Dokümandan dış hizmet bağlantılarını ayıkla (test sunucusu canlı hesaplara dokunmasın)
 function sanitize(doc) {
   const d = JSON.parse(JSON.stringify(doc || {}));
-  for (const k of ['oauthApps', 'ytAuth', 'instagram', 'google', 'notify', 'alerts', 'deletion', 'consent']) delete d[k];
+  for (const k of ['oauthApps', 'ytAuth', 'instagram', 'google', 'notify', 'alerts', 'deletion', 'consent', 'trafficSecret']) delete d[k];
   if (d.music && typeof d.music === 'object') {
     delete d.music.spotify; delete d.music.youtube; delete d.music.yt; delete d.music.ytAuth;
   }

@@ -59,7 +59,7 @@ const upload = multer({
     destination: (req, f, cb) => cb(null, req.t.dirs.uploads),
     filename: (_, f, cb) => cb(null, auth.uid(16) + path.extname(f.originalname).toLowerCase().slice(0, 6)),
   }),
-  limits: { fileSize: 2 * 1024 * 1024 * 1024 },
+  limits: { fileSize: 2 * 1024 * 1024 * 1024, files: 50 },
 });
 const quota = (req, res, next) => {
   const lim = plan(req.t).storageMB * 1024 * 1024, used = media.usedBytes(req.t);
@@ -289,7 +289,7 @@ r.put('/menu', (req, res) => {
 
 // ================= DURUM (önizleme ve genel bakış için) =================
 r.get('/state', (req, res) => res.json(publicState(req.t)));
-r.get('/vidlen', (req, res) => res.json(require('./vidlen').dump())); // video süresi ölçümleri (tanılama)
+r.get('/vidlen', (req, res) => res.json(typeof require('./vidlen').dump === 'function' ? require('./vidlen').dump() : {})); // video süresi ölçümleri (tanılama)
 
 // ======================================================================
 // Aşağısı eski tek-kafe sürümünün yönetim uçları; davranış aynı, veri işletmeye ait.
@@ -532,7 +532,7 @@ function autoBackupAll() {
 }
 r.get('/backups', (req, res) => res.json(listBackups(req.t)));
 r.post('/backups', (req, res) => { try { res.json({ ok: true, name: backupNow(req.t, 'manuel') }); } catch (e) { res.status(500).json({ error: e.message }); } });
-r.get('/backups/:name/download', (req, res) => {
+r.get('/backups/:name/download', ownerOnly, (req, res) => { // ham işletme yedeği OAuth sırlarını içerir: yalnız sahip
   if (!BACKUP_NAME.test(req.params.name)) return res.status(400).send('geçersiz ad');
   res.download(path.join(req.t.dirs.backups, req.params.name));
 });
