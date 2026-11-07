@@ -215,6 +215,7 @@ position:absolute;top:.8vh;right:.8vw}
 .r-sym span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 .r-val{flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:calc(2.25*var(--rv)*var(--vscale,1));font-weight:800;color:var(--white);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%;transition:opacity .22s ease,transform .22s ease}
+.r-val.r-val-sm{font-size:calc(1.98*var(--rv)*var(--vscale,1))}
 .r-val .r-num{white-space:nowrap;flex-shrink:0}
 .r-val i{font-style:normal;font-size:.65em;color:var(--mute);margin-left:calc(.15*var(--rv));font-weight:400}
 .r-val.up{color:#34d399}
@@ -225,6 +226,7 @@ position:absolute;top:.8vh;right:.8vw}
 #rates.rates-solo, .rtx.rates-solo, #rates:not(:has(#wx)), .rtx:not(:has(#wx)){padding:calc(1.1*var(--rv)) calc(1.5*var(--rv))}
 #rates.rates-solo #rrow, .rtx.rates-solo #rrow, #rates:not(:has(#wx)) #rrow, .rtx:not(:has(#wx)) #rrow{height:100%}
 #rates.rates-solo .r-val, .rtx.rates-solo .r-val, #rates:not(:has(#wx)) .r-val, .rtx:not(:has(#wx)) .r-val{font-size:calc(2.35*var(--rv)*var(--vscale,1))}
+#rates.rates-solo .r-val.r-val-sm, .rtx.rates-solo .r-val.r-val-sm, #rates:not(:has(#wx)) .r-val.r-val-sm, .rtx:not(:has(#wx)) .r-val.r-val-sm{font-size:calc(2.06*var(--rv)*var(--vscale,1))}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -2252,10 +2254,11 @@ const rateCol = (sym, cVal, val, unit, mode) => {
     ? `<span class="r-num">${chgTxt(cVal)}</span>`
     : `<span class="r-num">${val}</span>${unit ? `<i>${unit}</i>` : ''}`;
   const cls = isChg ? chgCls(cVal) : '';
+  const isSm = ['BIST 100', 'BITCOIN', 'STERLİN'].includes(sym);
   return `
     <div class="r-col">
       <div class="r-sym"><span>${esc(sym)}</span></div>
-      <div class="r-val ${cls}">${valHtml}</div>
+      <div class="r-val ${cls}${isSm ? ' r-val-sm' : ''}">${valHtml}</div>
     </div>`;
 };
 function renderPanel() {
@@ -2346,9 +2349,11 @@ function fitRates() {
       if (maxW > 0) {
         col.querySelectorAll('.r-val').forEach(v => {
           v.style.fontSize = '';
+          const isSm = v.classList.contains('r-val-sm');
+          const baseRatio = hasWx ? (isSm ? 1.85 : 2.1) : (isSm ? 2.06 : 2.35);
           if (v.scrollWidth > maxW) {
-            const s = Math.max(0.68, maxW / v.scrollWidth);
-            v.style.fontSize = `calc(${hasWx ? '2.1' : '2.35'} * var(--rv) * var(--vscale, 1) * ${s.toFixed(3)})`;
+            const s = Math.max(0.65, maxW / v.scrollWidth);
+            v.style.fontSize = `calc(${baseRatio} * var(--rv) * var(--vscale, 1) * ${s.toFixed(3)})`;
           }
         });
         const s = col.querySelector('.r-sym');

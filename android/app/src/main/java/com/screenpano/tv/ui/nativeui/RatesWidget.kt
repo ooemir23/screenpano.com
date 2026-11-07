@@ -218,11 +218,13 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
                     "xl" -> 1.00f
                     else -> 1.00f
                 }
+                val isCompact = listOf("BIST 100", "BITCOIN", "STERLİN").contains(c.name)
+                val finalScale = valScale * (if (isCompact) 0.88f else 1.0f)
 
                 val valView = if (showChange && chgStr != null) {
-                    AutoFitRateText(context, vh, p, chgStr, "", isSolo, chgColor, valScale)
+                    AutoFitRateText(context, vh, p, chgStr, "", isSolo, chgColor, finalScale)
                 } else {
-                    AutoFitRateText(context, vh, p, c.value, c.unit, isSolo, null, valScale)
+                    AutoFitRateText(context, vh, p, c.value, c.unit, isSolo, null, finalScale)
                 }
 
                 col.addView(valView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply {
