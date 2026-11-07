@@ -28,7 +28,15 @@ const appVersion = () => {
 };
 
 const CAMP_QR = url => QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
-const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch }) => ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch: sch || null });
+const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch, image, emoji, textAlign, font, style, pos }) => ({
+  id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch: sch || null,
+  image: image || null,
+  emoji: emoji !== undefined ? emoji : '☕',
+  textAlign: textAlign || 'left',
+  font: font || 'Montserrat',
+  style: style || 'coffee',
+  pos: pos || 'qr-right',
+});
 
 function wifiMarquee(db, text) {
   if (db.wifiText) return db.wifiText;

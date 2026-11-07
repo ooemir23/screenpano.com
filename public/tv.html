@@ -399,22 +399,44 @@ html.menu-open #brk,html.menu-open #updot{display:none!important}
 #poster{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .8s ease-in-out;pointer-events:none}#poster.on{opacity:1}
 #langchip{position:absolute;top:.8vh;right:.8vw;font:700 1.2vh/1 var(--font),sans-serif;letter-spacing:.08em;padding:.45vh .6vw;border-radius:.6vh;background:var(--accent);color:var(--white);opacity:.85}
 #a-branches{display:grid;gap:1.2vh;margin-top:1vh}#a-branches button{font-size:2.2vh}
-#camp{position:absolute;inset:.6vh;z-index:7;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .8s ease-in-out;display:flex;align-items:center;justify-content:center;gap:4vw;padding:3vh 3vw;background:radial-gradient(ellipse 70% 70% at 30% 40%,var(--ad) 0%,#2a1b0f 60%,#1a110a 100%)}
+#camp{position:absolute;inset:.6vh;z-index:7;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .8s ease-in-out;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 70% 70% at 30% 40%,var(--ad) 0%,#2a1b0f 60%,#1a110a 100%)}
 #camp.on{opacity:1}
-#camp .cl{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2vh}
-#camp .cup{height:15vh;width:auto;overflow:visible}
+#camp.style-dark{background:radial-gradient(ellipse 80% 80% at 50% 50%,#1c2029 0%,#0a0b0e 100%)}
+#camp.style-accent{background:radial-gradient(ellipse 80% 80% at 40% 40%,var(--ad) 0%,#0d1117 100%)}
+#camp.style-sunset{background:radial-gradient(ellipse 80% 80% at 40% 40%,#7c2d12 0%,#3b110b 60%,#140504 100%)}
+#camp.style-emerald{background:radial-gradient(ellipse 80% 80% at 40% 40%,#064e3b 0%,#022c22 60%,#03130e 100%)}
+#camp.style-navy{background:radial-gradient(ellipse 80% 80% at 40% 40%,#1e3a8a 0%,#0f172a 60%,#030712 100%)}
+#camp .cbg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:1;filter:brightness(.65) saturate(1.1);pointer-events:none}
+#camp .cov{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 85% 85% at 35% 45%,rgba(15,12,10,.78) 0%,rgba(8,6,5,.92) 100%)}
+#camp.style-dark .cov{background:radial-gradient(ellipse 80% 80% at 50% 50%,rgba(28,32,41,.8) 0%,rgba(10,11,14,.95) 100%)}
+#camp.style-accent .cov{background:radial-gradient(ellipse 80% 80% at 40% 40%,rgba(var(--a1),.6) 0%,rgba(13,17,23,.95) 100%)}
+#camp.style-sunset .cov{background:radial-gradient(ellipse 80% 80% at 40% 40%,rgba(124,45,18,.7) 0%,rgba(20,5,4,.95) 100%)}
+#camp.style-emerald .cov{background:radial-gradient(ellipse 80% 80% at 40% 40%,rgba(6,78,59,.75) 0%,rgba(3,19,14,.95) 100%)}
+#camp.style-navy .cov{background:radial-gradient(ellipse 80% 80% at 40% 40%,rgba(30,58,138,.75) 0%,rgba(3,7,18,.95) 100%)}
+#camp .c-wrap{position:relative;z-index:3;width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:4vw;padding:3vh 3vw;box-sizing:border-box}
+#camp .c-wrap.pos-qr-left{flex-direction:row-reverse}
+#camp .c-wrap.pos-center-stack{flex-direction:column;gap:2.2vh;padding:2vh 3vw;text-align:center}
+#camp .cl{flex:1;min-width:0;display:flex;flex-direction:column;gap:1.8vh}
+#camp .cl.align-left{align-items:flex-start;text-align:left}
+#camp .cl.align-center{align-items:center;text-align:center}
+#camp .cl.align-right{align-items:flex-end;text-align:right}
+#camp .c-emoji{font-size:9.5vh;line-height:1;filter:drop-shadow(0 1vh 2vh rgba(0,0,0,.5))}
+#camp .cup{height:14vh;width:auto;overflow:visible}
 #camp .cup .st{fill:none;stroke:rgba(255,255,255,.75);stroke-width:3;stroke-linecap:round;animation:steam 2.6s ease-in-out infinite}
 #camp .cup .st:nth-child(2){animation-delay:.5s}#camp .cup .st:nth-child(3){animation-delay:1s}
 @keyframes steam{0%{opacity:0;transform:translateY(8px)}40%{opacity:.9}100%{opacity:0;transform:translateY(-14px)}}
 html.lite #camp .cup .st{animation:none;opacity:.7}
-#camp h2{font-size:4.6vh;font-weight:800;line-height:1.15;color:#fff}
-#camp .sub{font-size:3.1vh;font-weight:600;line-height:1.3;color:var(--al)}
-#camp .stars{font-size:4vh;letter-spacing:.5vh;color:#ffc53d}
-#camp .note{font-size:2vh;font-weight:500;line-height:1.35;color:#e5d6c3;background:rgba(255,255,255,.08);border:max(1px,.1vh) dashed rgba(243,207,158,.6);border-radius:1.2vh;padding:1.2vh 1.4vw}
-#camp .cr{flex:none;display:flex;flex-direction:column;align-items:center;gap:1.6vh}
-#camp .qb{width:30vh;height:30vh;background:#fff;border-radius:2.4vh;padding:1.2vh;border:.5vh solid var(--accent2);box-shadow:0 2vh 6vh rgba(0,0,0,.55)}
+#camp h2{font-size:4.6vh;font-weight:800;line-height:1.15;color:#fff;text-shadow:0 .4vh 1.2vh rgba(0,0,0,.6)}
+#camp .c-wrap.pos-center-stack h2{font-size:3.8vh}
+#camp .sub{font-size:3.1vh;font-weight:600;line-height:1.3;color:var(--al);text-shadow:0 .3vh .8vh rgba(0,0,0,.6)}
+#camp .c-wrap.pos-center-stack .sub{font-size:2.4vh}
+#camp .stars{font-size:3.8vh;letter-spacing:.5vh;color:#ffc53d;text-shadow:0 .3vh 1vh rgba(0,0,0,.6)}
+#camp .note{font-size:2vh;font-weight:500;line-height:1.35;color:#e5d6c3;background:rgba(20,20,24,.75);backdrop-filter:blur(.6vh);border:max(1px,.1vh) dashed rgba(243,207,158,.6);border-radius:1.2vh;padding:1.1vh 1.4vw}
+#camp .cr{flex:none;display:flex;flex-direction:column;align-items:center;gap:1.4vh}
+#camp .qb{width:29vh;height:29vh;background:#fff;border-radius:2.2vh;padding:1.1vh;border:.45vh solid var(--accent2);box-shadow:0 2vh 6vh rgba(0,0,0,.65)}
+#camp .c-wrap.pos-center-stack .qb{width:22vh;height:22vh;border-radius:1.8vh}
 #camp .qb svg{width:100%;height:100%;display:block}
-#camp .ql{font-size:2.2vh;font-weight:700;letter-spacing:.06em;color:#fff;text-align:center;max-width:32vh}
+#camp .ql{font-size:2.2vh;font-weight:700;letter-spacing:.06em;color:#fff;text-align:center;max-width:32vh;text-shadow:0 .2vh .6vh rgba(0,0,0,.7)}
 #camp .ql small{display:block;margin-top:.5vh;font-size:2vh;font-weight:500;color:var(--al);letter-spacing:.1em}
 #big{position:absolute;inset:.6vh;z-index:7;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .8s ease-in-out;background:#0a0a0c;color:#fff}
 #big.on{opacity:1}
@@ -2459,10 +2481,33 @@ function campShow(c) {
   let el = document.getElementById('camp');
   if (!el) { el = document.createElement('div'); el.id = 'camp'; document.getElementById('frame').appendChild(el); }
   const esc = t => String(t || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-  el.innerHTML = '<div class="cl"><svg class="cup" viewBox="0 0 120 100"><path class="st" d="M40 30c-8-8 8-14 0-24"/><path class="st" d="M60 30c-8-8 8-14 0-24"/><path class="st" d="M80 30c-8-8 8-14 0-24"/>'
-    + '<path d="M22 42h76v22a30 30 0 0 1-30 30H52a30 30 0 0 1-30-30z" fill="#fff"/><path d="M98 48h6a12 12 0 0 1 0 24h-9" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><path d="M22 54h76" style="stroke:var(--accent2)" stroke-width="5"/></svg>'
-    + '<h2>' + esc(c.headline) + '</h2><div class="stars">★★★★★</div><div class="sub">' + esc(c.sub) + '</div>' + (c.note ? '<div class="note">' + esc(c.note) + '</div>' : '') + '</div>'
-    + '<div class="cr"><div class="qb">' + c.svg + '</div>' + (c.qrLabel ? '<div class="ql">' + esc(c.qrLabel) + '</div>' : '') + '</div>';
+  if (c.font) ensureFont(c.font);
+  el.className = 'style-' + (c.style || 'coffee');
+  el.style.fontFamily = c.font ? `'${c.font}', sans-serif` : '';
+
+  const bgHtml = c.image ? `<div class="cbg" style="background-image:url('${esc(c.image)}')"></div><div class="cov"></div>` : `<div class="cov"></div>`;
+  const emoji = c.emoji !== undefined ? c.emoji : '☕';
+  let iconHtml = '';
+  if (emoji === 'cup' || (emoji === '☕' && !c.image)) {
+    iconHtml = '<svg class="cup" viewBox="0 0 120 100"><path class="st" d="M40 30c-8-8 8-14 0-24"/><path class="st" d="M60 30c-8-8 8-14 0-24"/><path class="st" d="M80 30c-8-8 8-14 0-24"/><path d="M22 42h76v22a30 30 0 0 1-30 30H52a30 30 0 0 1-30-30z" fill="#fff"/><path d="M98 48h6a12 12 0 0 1 0 24h-9" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/><path d="M22 54h76" style="stroke:var(--accent2)" stroke-width="5"/></svg>';
+  } else if (emoji && emoji !== 'none') {
+    iconHtml = `<div class="c-emoji">${esc(emoji)}</div>`;
+  }
+  const pos = c.pos || 'qr-right';
+  const align = c.textAlign || 'left';
+
+  el.innerHTML = bgHtml
+    + `<div class="c-wrap pos-${pos}">`
+    + `<div class="cl align-${align}">`
+    + iconHtml
+    + '<h2>' + esc(c.headline) + '</h2>'
+    + '<div class="stars">★★★★★</div>'
+    + '<div class="sub">' + esc(c.sub) + '</div>'
+    + (c.note ? '<div class="note">' + esc(c.note) + '</div>' : '')
+    + '</div>'
+    + '<div class="cr"><div class="qb">' + c.svg + '</div>' + (c.qrLabel ? '<div class="ql">' + esc(c.qrLabel) + '</div>' : '') + '</div>'
+    + '</div>';
+
   setTimeout(() => el.classList.add('on'), 60);
   setTimeout(() => { if (camp.after) { const f = camp.after; camp.after = null; f(); } el.classList.remove('on'); setTimeout(() => { camp.showing = false; }, 1500); }, (c.durSec || 15) * 1000);
 }
@@ -3128,6 +3173,13 @@ const hexRgb = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); const n = m 
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgb = c => `rgb(${c.join(',')})`;
 const loadedFonts = new Set(['Montserrat']);
+function ensureFont(font) {
+  if (!font || loadedFonts.has(font)) return;
+  loadedFonts.add(font);
+  const l = document.createElement('link'); l.rel = 'stylesheet';
+  l.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(font).replace(/%20/g, '+') + ':wght@400;500;600;700;800;900&display=swap';
+  document.head.appendChild(l);
+}
 function applyTheme(th) {
   th = th || {};
   const sig = JSON.stringify(th); if (sig === themeSig) return; themeSig = sig;
@@ -3142,13 +3194,7 @@ function applyTheme(th) {
   r.setProperty('--al', rgb(mix(a2, W, 0.55))); r.setProperty('--ad', rgb(mix(a1, K, 0.5)));
   r.setProperty('--white', rgb(tx)); r.setProperty('--soft', rgb(mix(tx, bg, 0.1))); r.setProperty('--mute', rgb(mix(tx, bg, 0.42)));
   const font = th.font || 'Montserrat';
-  if (!loadedFonts.has(font)) {
-    loadedFonts.add(font);
-    const l = document.createElement('link'); l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(font).replace(/%20/g, '+') + ':wght@400;500;600;700;800&display=swap';
-    l.onload = () => { window.fitted = false; pagesDirty = true; try { render(); } catch (e) {} };
-    document.head.appendChild(l);
-  }
+  ensureFont(font);
   r.setProperty('--font', `'${font}'`);
   $id('logo').classList.toggle('plate', !!th.plate);
   const isGlass = !!th.glass || th.bg === '#07090d';

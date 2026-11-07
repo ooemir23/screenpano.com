@@ -590,7 +590,13 @@ r.put('/campaigns/:id', async (req, res) => {
     const t = req.t, c = (t.db.campaigns || []).find(x => x.id === req.params.id);
     if (!c) return res.status(404).json({ error: 'bulunamadı' });
     const b = req.body || {}, str = (v, n) => String(v).trim().slice(0, n);
-    for (const [k, n] of [['headline', 90], ['sub', 140], ['note', 160], ['qrLabel', 60]]) if (typeof b[k] === 'string') c[k] = str(b[k], n);
+    for (const [k, n] of [
+      ['headline', 120], ['sub', 180], ['note', 220], ['qrLabel', 80],
+      ['emoji', 16], ['font', 40], ['textAlign', 20], ['style', 30], ['pos', 30]
+    ]) {
+      if (typeof b[k] === 'string') c[k] = str(b[k], n);
+    }
+    if (b.image !== undefined) c.image = typeof b.image === 'string' && b.image ? b.image : null;
     if (b.everyMin !== undefined) c.everyMin = Math.max(1, Math.min(60, Math.round(Number(b.everyMin)) || 3));
     if (b.durSec !== undefined) c.durSec = Math.max(8, Math.min(60, Math.round(Number(b.durSec)) || 15));
     if (typeof b.url === 'string' && b.url.trim() !== c.url) {
@@ -606,6 +612,36 @@ r.put('/campaigns/:id', async (req, res) => {
     changed(t); res.json({ ok: true });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
+
+r.post('/campaigns/:id/image', quota, upload.single('file'), async (req, res) => {
+  const f = req.file, t = req.t;
+  try {
+    const c = (t.db.campaigns || []).find(x => x.id === req.params.id);
+    if (!c) { if (f) rmUpload(t, f.filename); return res.status(404).json({ error: 'Kampanya bulunamadı' }); }
+    if (!f) return res.status(400).json({ error: 'Görsel dosyası seçilmedi' });
+    if (!/\.(png|jpe?g|webp|gif|svg)$/i.test(f.originalname) || f.size > 15 * 1024 * 1024) {
+      rmUpload(t, f.filename); return res.status(400).json({ error: 'Görsel PNG/JPG/WEBP ve en çok 15 MB olmalı' });
+    }
+    const file = await svgToPng(t, f);
+    if (!file) return res.status(400).json({ error: 'Görsel yüklenemedi' });
+    if (c.imageFile) rmUpload(t, c.imageFile);
+    c.imageFile = file;
+    c.image = t.upBase + file;
+    changed(t);
+    res.json({ ok: true, url: c.image });
+  } catch (e) { res.status(500).json({ error: 'Görsel yüklenemedi: ' + e.message }); }
+});
+
+r.delete('/campaigns/:id/image', (req, res) => {
+  const t = req.t, c = (t.db.campaigns || []).find(x => x.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'Kampanya bulunamadı' });
+  if (c.imageFile) rmUpload(t, c.imageFile);
+  c.imageFile = null;
+  c.image = null;
+  changed(t);
+  res.json({ ok: true });
+});
+
 r.post('/campaigns/:id/test', (req, res) => {
   const c = (req.t.db.campaigns || []).find(x => x.id === req.params.id && x.svg);
   if (!c) return res.status(404).json({ error: 'Önce bağlantıyı kaydedin' });

@@ -907,16 +907,11 @@ async function upBigPhoto(inp) { const f = inp.files[0]; inp.value = ''; if (!f)
 
 /* ================= DUYURULAR ================= */
 SECTIONS.promo = {
-  after() { if ($('ig-st')) drawInsta(); },
+  after() { if ($('ig-st')) drawInsta(); (S.db.campaigns || []).forEach(c => updateCampPrev(c.id)); },
   html() {
     const db = S.db;
     return head('Kampanya ve yorumlar', 'Kampanya kartı, Google ve Instagram yorumları, elle eklenen yorumlar.')
-      + (db.campaigns || []).map(c => card('🎁 Kampanya kartı', 'Belirli aralıklarla medya yerine tam sayfa, QR kodlu bir kart çıkar. Örnek: Google yorumu karşılığı ikram.',
-        `<div class="f">${fl('Bağlantı (QR kodu buraya gider)', `<input type="text" id="c-url-${c.id}" value="${esc(c.url)}" placeholder="https://g.page/r/.../review">`)}${fl('Başlık', `<input type="text" id="c-h-${c.id}" maxlength="90" value="${esc(c.headline)}">`)}</div>
-         <div class="f mt">${fl('Alt yazı', `<input type="text" id="c-s-${c.id}" maxlength="140" value="${esc(c.sub)}">`)}${fl('Not', `<input type="text" id="c-n-${c.id}" maxlength="160" value="${esc(c.note || '')}">`)}${fl('QR altındaki yazı', `<input type="text" id="c-q-${c.id}" maxlength="60" value="${esc(c.qrLabel || '')}">`)}</div>
-         <div class="f mt">${fl('Kaç dakikada bir', `<input type="number" id="c-e-${c.id}" min="1" max="60" value="${c.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="c-d-${c.id}" min="8" max="60" value="${c.durSec}">`)}</div>
-         <div class="row end mt"><button class="btn g s" onclick="openSched('camp','${c.id}')">⏱ ${c.sch ? esc(schShort(c.sch)) : 'Zamanla'}</button><button class="btn g s" onclick="act('POST','/campaigns/${c.id}/test',undefined,'Kart TV\\'de gösteriliyor',false)">Şimdi göster</button><button class="btn" data-save onclick="saveCamp('${c.id}')">Kaydet</button></div>`,
-        sw(c.enabled, `campToggle('${c.id}',this)`))).join('')
+      + (db.campaigns || []).map(campCard).join('')
       + lock('Google yorumları ve Instagram')
       + googleCard() + instaCard()
       + card('★ Elle eklenen yorumlar', 'Medyanın altındaki şeritte döner (düzende "Google yorumları" widget\'ı olmalı). Yalnız 4 ve 5 yıldız.',
@@ -925,6 +920,133 @@ SECTIONS.promo = {
          ${fl('Yorum (Google\'dan kopyalayıp yapıştırın)', '<textarea id="r-t" maxlength="400" rows="3"></textarea>')}<div class="row end mt"><button class="btn" onclick="addReview()">Yorum ekle</button></div>`);
   },
 };
+function campCard(c) {
+  const emoji = c.emoji !== undefined ? c.emoji : '☕';
+  const emojis = [
+    ['☕', 'Kahve'], ['🍵', 'Çay'], ['🧋', 'İçecek'], ['🍰', 'Pasta/Tatlı'],
+    ['🥐', 'Kruvasan'], ['🍔', 'Burger'], ['🍕', 'Pizza'], ['🥪', 'Tost'],
+    ['🎁', 'İkram'], ['⭐', 'Puan'], ['🏷️', 'İndirim'], ['🎉', 'Kutlama'],
+    ['none', 'Simge Yok']
+  ];
+  const fonts = [
+    ['Montserrat', 'Montserrat (Modern)'],
+    ['Playfair Display', 'Playfair (Zarif & Lüks)'],
+    ['Oswald', 'Oswald (Güçlü & Vurgulu)'],
+    ['Caveat', 'Caveat (Samimi / El Yazısı)'],
+    ['Poppins', 'Poppins (Yuvarlak & Sıcak)'],
+    ['Bebas Neue', 'Bebas Neue (Poster / Büyük)']
+  ];
+  const styles = [
+    ['coffee', '☕ Sıcak Kafe (Kahve Tonları)'],
+    ['dark', '🌙 Koyu Gece (Siyah/Asil)'],
+    ['accent', '✨ Tema Vurgusu (İşletme Rengi)'],
+    ['sunset', '🌅 Gün Batımı (Kızıl & Sıcak)'],
+    ['emerald', '🌿 Zümrüt (Yeşil & Taze)'],
+    ['navy', '🌊 Derin Gece (Lacivert)']
+  ];
+  const curAlign = c.textAlign || 'left';
+  const curPos = c.pos || 'qr-right';
+  const curFont = c.font || 'Montserrat';
+  const curStyle = c.style || 'coffee';
+
+  return card('🎁 Kampanya kartı', 'Belirli aralıklarla medya yerine tam sayfa, QR kodlu bir kart çıkar. Örnek: Google yorumu karşılığı ikram veya indirim.',
+    `<div class="camp-grid">
+      <div class="camp-form">
+        <div class="f">${fl('Bağlantı (QR kodu buraya gider)', `<input type="text" id="c-url-${c.id}" value="${esc(c.url)}" placeholder="https://g.page/r/.../review" oninput="updateCampPrev('${c.id}')">`)}${fl('Başlık', `<input type="text" id="c-h-${c.id}" maxlength="120" value="${esc(c.headline)}" oninput="updateCampPrev('${c.id}')">`)}</div>
+        <div class="f mt">${fl('Alt yazı', `<input type="text" id="c-s-${c.id}" maxlength="180" value="${esc(c.sub)}" oninput="updateCampPrev('${c.id}')">`)}${fl('Bilgi Notu (Kutu içinde)', `<input type="text" id="c-n-${c.id}" maxlength="220" value="${esc(c.note || '')}" placeholder="örn. Yorum sonrası yetkiliye gösterin" oninput="updateCampPrev('${c.id}')">`)}</div>
+        <div class="f mt">${fl('QR altındaki yazı', `<input type="text" id="c-q-${c.id}" maxlength="80" value="${esc(c.qrLabel || '')}" placeholder="örn. Google'da bizi değerlendirin" oninput="updateCampPrev('${c.id}')">`)}</div>
+
+        <!-- Görsel / Fotoğraf Ekleme -->
+        <div class="mt">
+          <label class="lbl"><b>Arka Plan / Ürün Görseli</b> <span class="muted">(İsteğe bağlı, kartın zemininde şık karartmayla gösterilir)</span></label>
+          <div class="camp-img-box">
+            ${c.image ? `<img src="${esc(c.image)}" class="camp-img-thumb" alt=""><div style="flex:1;min-width:0"><b style="font-size:13px;display:block">Yüklü Görsel</b><span class="muted" style="font-size:12px">Önizlemede ve TV'de gösteriliyor</span></div><button class="btn s d" type="button" onclick="removeCampImg('${c.id}')">Görseli kaldır</button>` : `<div style="flex:1"><span class="muted" style="font-size:13px">Henüz görsel yüklenmedi (PNG, JPG veya WEBP)</span></div>`}
+            <label class="btn s g" style="margin:0;cursor:pointer">
+              <span>${c.image ? 'Değiştir' : 'Fotoğraf seç'}</span>
+              <input type="file" accept="image/*" style="display:none" onchange="uploadCampImg('${c.id}',this)">
+            </label>
+          </div>
+        </div>
+
+        <!-- Emoji / Simge Seçici -->
+        <div class="mt">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <label class="lbl"><b>Simge / Emoji Logosu</b></label>
+            <input type="text" id="c-emoji-${c.id}" value="${esc(emoji)}" maxlength="10" style="width:70px;text-align:center;font-size:16px;padding:3px 6px" placeholder="☕" oninput="updateCampPrev('${c.id}')">
+          </div>
+          <div class="camp-emojis">
+            ${emojis.map(([e, label]) => `<button type="button" class="camp-emoji-btn c-emo-btn-${c.id} ${emoji === e ? 'on' : ''}" data-emo="${e}" onclick="setCampEmoji('${c.id}','${e}')"><span>${e === 'none' ? '❌' : e}</span> <em>${label}</em></button>`).join('')}
+          </div>
+        </div>
+
+        <!-- Yazı Konumu & Düzeni (Hizalama) -->
+        <div class="f mt">
+          <div style="flex:1">
+            <label class="lbl" style="margin-bottom:6px;display:block"><b>Metin Hizası</b></label>
+            <div class="btn-grp">
+              <button type="button" class="c-al-btn-${c.id} ${curAlign === 'left' ? 'on' : ''}" data-al="left" onclick="setCampAlign('${c.id}','left')">⬅ Sola</button>
+              <button type="button" class="c-al-btn-${c.id} ${curAlign === 'center' ? 'on' : ''}" data-al="center" onclick="setCampAlign('${c.id}','center')">↔ Ortalı</button>
+              <button type="button" class="c-al-btn-${c.id} ${curAlign === 'right' ? 'on' : ''}" data-al="right" onclick="setCampAlign('${c.id}','right')">➡ Sağa</button>
+            </div>
+            <input type="hidden" id="c-align-${c.id}" value="${esc(curAlign)}">
+          </div>
+          <div style="flex:1">
+            <label class="lbl" style="margin-bottom:6px;display:block"><b>QR ve Kart Düzeni</b></label>
+            <div class="btn-grp">
+              <button type="button" class="c-pos-btn-${c.id} ${curPos === 'qr-right' ? 'on' : ''}" data-pos="qr-right" onclick="setCampPos('${c.id}','qr-right')">QR Sağda</button>
+              <button type="button" class="c-pos-btn-${c.id} ${curPos === 'qr-left' ? 'on' : ''}" data-pos="qr-left" onclick="setCampPos('${c.id}','qr-left')">QR Solda</button>
+              <button type="button" class="c-pos-btn-${c.id} ${curPos === 'center-stack' ? 'on' : ''}" data-pos="center-stack" onclick="setCampPos('${c.id}','center-stack')">Ortalanmış</button>
+            </div>
+            <input type="hidden" id="c-pos-${c.id}" value="${esc(curPos)}">
+          </div>
+        </div>
+
+        <!-- Yazı Tipi & Tema -->
+        <div class="f mt">
+          ${fl('Yazı Tipi (Font)', `<select id="c-font-${c.id}" onchange="updateCampPrev('${c.id}')">${fonts.map(([v, l]) => `<option value="${v}" ${curFont === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
+          ${fl('Arka Plan Teması', `<select id="c-style-${c.id}" onchange="updateCampPrev('${c.id}')">${styles.map(([v, l]) => `<option value="${v}" ${curStyle === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
+        </div>
+
+        <!-- Gösterim Aralıkları -->
+        <div class="f mt">${fl('Kaç dakikada bir', `<input type="number" id="c-e-${c.id}" min="1" max="60" value="${c.everyMin}">`)}${fl('Kaç saniye kalsın', `<input type="number" id="c-d-${c.id}" min="8" max="60" value="${c.durSec}">`)}</div>
+
+        <div class="row end mt" style="gap:8px">
+          <button class="btn g s" type="button" onclick="openSched('camp','${c.id}')">⏱ ${c.sch ? esc(schShort(c.sch)) : 'Zamanla'}</button>
+          <button class="btn g s" type="button" onclick="act('POST','/campaigns/${c.id}/test',undefined,'Kart TV\\'de gösteriliyor',false)">📺 TV'de test et</button>
+          <button class="btn" data-save type="button" onclick="saveCamp('${c.id}')">Kaydet</button>
+        </div>
+      </div>
+
+      <!-- Canlı TV Önizleme Alanı -->
+      <div class="camp-prev-wrap">
+        <div class="camp-prev-head">
+          <span>CANLI ÖNİZLEME</span>
+          <span style="color:var(--accent2);font-weight:800">16:9 TV</span>
+        </div>
+        <div class="camp-prev-screen st-${curStyle} pos-${curPos}" id="camp-prev-${c.id}" style="font-family:'${curFont}',sans-serif">
+          <div class="cp-bg" style="${c.image ? `background-image:url('${esc(c.image)}');display:block;` : 'display:none;'}"></div>
+          <div class="cp-cov"></div>
+          <div class="cp-content">
+            <div class="cp-left al-${curAlign}">
+              <div class="cp-emoji" style="${emoji && emoji !== 'none' ? '' : 'display:none'}">${emoji === 'none' ? '' : esc(emoji)}</div>
+              <div class="cp-headline">${esc(c.headline || 'Kampanya Başlığı')}</div>
+              <div class="cp-stars">★★★★★</div>
+              <div class="cp-sub">${esc(c.sub || 'Kampanya alt yazısı ve ikram detayı')}</div>
+              <div class="cp-note" style="${c.note ? '' : 'display:none'}">${esc(c.note || '')}</div>
+            </div>
+            <div class="cp-right">
+              <div class="cp-qr">${c.svg || '<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#eee"/><text x="50" y="55" font-size="14" text-anchor="middle" fill="#888">QR KOD</text></svg>'}</div>
+              <div class="cp-ql" style="${c.qrLabel ? '' : 'display:none'}">${esc(c.qrLabel || '')}</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--mute);line-height:1.4;text-align:center">
+          Yaptığınız tüm değişiklikler anında bu kutuda ve TV ekranında birebir görünür.
+        </div>
+      </div>
+    </div>`,
+    sw(c.enabled, `campToggle('${c.id}',this)`));
+}
 // "Her zaman üstte" kapalıyken QR'ın gizlenebileceği içerikler (TV'de qrCtx ile aynı anahtarlar)
 const QR_HIDE = [['video', 'Videolar'], ['image', 'Fotoğraflar'], ['poster', 'Afişler / kitaplar'], ['trailer', 'Film fragmanı'], ['camp', 'Kampanya kartı'], ['big', 'Büyük maç kartı'], ['goal', 'Gol bildirimi']];
 let qrEditId = null;
@@ -988,9 +1110,137 @@ function qrEdit(id) {
   qrPrev(); $('q-mode').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('q-label').focus();
 }
 const qrCancel = () => { qrEditId = null; render(true); };
+function updateCampPrev(id) {
+  const c = (S.db.campaigns || []).find(x => x.id === id);
+  if (!c) return;
+  const g = k => { const el = $('c-' + k + '-' + id); return el ? el.value : (c[k] || ''); };
+  const h = g('h') || 'Kampanya Başlığı';
+  const s = g('s') || 'Kampanya alt yazısı ve ikram detayı';
+  const n = g('n');
+  const q = g('q');
+  const emoji = $('c-emoji-' + id) ? $('c-emoji-' + id).value : (c.emoji !== undefined ? c.emoji : '☕');
+  const font = $('c-font-' + id) ? $('c-font-' + id).value : (c.font || 'Montserrat');
+  const align = $('c-align-' + id) ? $('c-align-' + id).value : (c.textAlign || 'left');
+  const style = $('c-style-' + id) ? $('c-style-' + id).value : (c.style || 'coffee');
+  const pos = $('c-pos-' + id) ? $('c-pos-' + id).value : (c.pos || 'qr-right');
+
+  const prev = $('camp-prev-' + id);
+  if (!prev) return;
+  prev.className = `camp-prev-screen st-${style} pos-${pos}`;
+  prev.style.fontFamily = `'${font}', sans-serif`;
+
+  const bgEl = prev.querySelector('.cp-bg');
+  if (bgEl) {
+    if (c.image) {
+      bgEl.style.backgroundImage = `url('${c.image}')`;
+      bgEl.style.display = 'block';
+    } else {
+      bgEl.style.display = 'none';
+    }
+  }
+
+  const left = prev.querySelector('.cp-left');
+  if (left) left.className = `cp-left al-${align}`;
+
+  const emEl = prev.querySelector('.cp-emoji');
+  if (emEl) {
+    if (emoji && emoji !== 'none') {
+      emEl.textContent = emoji;
+      emEl.style.display = 'inline-flex';
+    } else {
+      emEl.style.display = 'none';
+    }
+  }
+
+  const hEl = prev.querySelector('.cp-headline');
+  if (hEl) hEl.textContent = h;
+
+  const sEl = prev.querySelector('.cp-sub');
+  if (sEl) sEl.textContent = s;
+
+  const nEl = prev.querySelector('.cp-note');
+  if (nEl) {
+    if (n) { nEl.textContent = n; nEl.style.display = 'block'; }
+    else nEl.style.display = 'none';
+  }
+
+  const qlEl = prev.querySelector('.cp-ql');
+  if (qlEl) {
+    if (q) { qlEl.textContent = q; qlEl.style.display = 'block'; }
+    else qlEl.style.display = 'none';
+  }
+}
+function setCampEmoji(id, emo) {
+  const inp = $('c-emoji-' + id);
+  if (inp) inp.value = emo === 'none' ? 'none' : emo;
+  const c = (S.db.campaigns || []).find(x => x.id === id);
+  if (c) c.emoji = emo === 'none' ? 'none' : emo;
+  document.querySelectorAll(`.c-emo-btn-${id}`).forEach(b => {
+    b.classList.toggle('on', b.dataset.emo === emo);
+  });
+  updateCampPrev(id);
+}
+function setCampAlign(id, al) {
+  const inp = $('c-align-' + id);
+  if (inp) inp.value = al;
+  const c = (S.db.campaigns || []).find(x => x.id === id);
+  if (c) c.textAlign = al;
+  document.querySelectorAll(`.c-al-btn-${id}`).forEach(b => {
+    b.classList.toggle('on', b.dataset.al === al);
+  });
+  updateCampPrev(id);
+}
+function setCampPos(id, pos) {
+  const inp = $('c-pos-' + id);
+  if (inp) inp.value = pos;
+  const c = (S.db.campaigns || []).find(x => x.id === id);
+  if (c) c.pos = pos;
+  document.querySelectorAll(`.c-pos-btn-${id}`).forEach(b => {
+    b.classList.toggle('on', b.dataset.pos === pos);
+  });
+  updateCampPrev(id);
+}
+async function uploadCampImg(id, input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await fetch('/api/admin/campaigns/' + id + '/image', { credentials: 'same-origin', method: 'POST', body: fd });
+    const j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'Yüklenemedi');
+    const c = (S.db.campaigns || []).find(x => x.id === id);
+    if (c) c.image = j.url;
+    toast('Görsel yüklendi');
+    render(true);
+  } catch (e) { toast(e.message, true); }
+}
+async function removeCampImg(id) {
+  if (!await UI.ask('Kampanya görseli kaldırılsın mı?')) return;
+  try {
+    await req('DELETE', '/campaigns/' + id + '/image');
+    const c = (S.db.campaigns || []).find(x => x.id === id);
+    if (c) c.image = null;
+    toast('Görsel kaldırıldı');
+    render(true);
+  } catch (e) { toast(e.message, true); }
+}
 const saveCamp = id => {
   const g = k => { const el = $('c-' + k + '-' + id) || $('c-' + k); return el ? el.value : ''; };
-  return act('PUT', '/campaigns/' + id, { url: g('url'), headline: g('h'), sub: g('s'), note: g('n'), qrLabel: g('q'), everyMin: g('e'), durSec: g('d') }, 'Kampanya kaydedildi');
+  return act('PUT', '/campaigns/' + id, {
+    url: g('url'),
+    headline: g('h'),
+    sub: g('s'),
+    note: g('n'),
+    qrLabel: g('q'),
+    everyMin: g('e'),
+    durSec: g('d'),
+    emoji: g('emoji'),
+    font: g('font'),
+    textAlign: g('align'),
+    style: g('style'),
+    pos: g('pos'),
+  }, 'Kampanya kaydedildi');
 };
 async function campToggle(id, el) {
   const urlEl = $('c-url-' + id) || $('c-url');
