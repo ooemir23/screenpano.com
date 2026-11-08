@@ -273,7 +273,7 @@ background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414
 #reviews .q{flex:1;min-width:0;font-size:2.3vh;font-weight:500;line-height:1.3;color:var(--white);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 #reviews .who{flex:none;max-width:16vw;text-align:right;font-size:2vh;font-weight:600;color:var(--accent2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* yerel (native) çizilen hücreler: APK ızgarası çizer, sayfa gizler */
-html.nat-ticker .cell[data-w=ticker],html.nat-clock .cell[data-w=clock],html.nat-logo .cell[data-w=logo],html.nat-text .cell[data-w=text],html.nat-image .cell[data-w=image],html.nat-rates .cell[data-w=rates],html.nat-reviews .cell[data-w=reviews],html.nat-menu .cell[data-w=menu],html.nat-info .cell[data-w=info],html.nat-worldclock .cell.wcell,html.nat-qr .cell.qrcell{visibility:hidden}
+html.nat-ticker .cell[data-w=ticker],html.nat-clock .cell[data-w=clock],html.nat-logo .cell[data-w=logo],html.nat-text .cell[data-w=text],html.nat-image .cell[data-w=image],html.nat-rates .cell[data-w=rates],html.nat-reviews .cell[data-w=reviews],html.nat-menu .cell[data-w=menu],html.nat-info .cell[data-w=info],html.nat-worldclock .cell.wcell,html.nat-prayer .cell[data-w=prayer],html.nat-converter .cell[data-w=converter],html.nat-qr .cell.qrcell{visibility:hidden}
 html.nat-info .cell[data-w=info] #goal{visibility:visible} /* gol duyurusu sayfada kalır */
 html.nat-ticker #ttrack{animation:none !important}
 #ticker{flex:1;min-height:0;display:flex;align-items:stretch;background:var(--edge);border-top:max(1px,.1vh) solid rgba(var(--a2),.55);overflow:hidden;position:relative}
@@ -932,6 +932,19 @@ body.glass #wclock b,body.glass .wclk b{background:linear-gradient(135deg,#fff3b
 #wclock,.wclk{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.6vh}
 #wclock b,.wclk b{font-weight:800;letter-spacing:.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--white)}
 #wclock small,.wclk small{font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2)}
+/* namaz vakitleri / güneş ve döviz çevirici */
+.wxw{display:flex;flex-direction:column;box-sizing:border-box;padding:1vh 1vw;gap:.8vh;justify-content:center}
+.xw-h{text-align:center;font-weight:700;color:var(--accent2);white-space:nowrap;overflow:hidden;line-height:1.1}
+.xw-g{display:grid;grid-template-columns:minmax(0,1fr);gap:.6vh;flex:1;min-height:0}
+.xw-c{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3vh;border-radius:.9vh;min-width:0;overflow:hidden;text-align:center;padding:0 .35vw}
+.xw-c small{color:var(--soft);font-weight:600;white-space:nowrap}
+.xw-c b{color:var(--white);font-weight:800;font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap}
+.xw-c.nx{background:rgba(var(--a2),.22);box-shadow:inset 0 0 0 max(1px,.12vh) rgba(var(--a2),.6)}
+.xw-c.nx small{color:var(--accent2)}
+.xw-r{display:flex;align-items:center;justify-content:space-between;gap:1vw;border-bottom:max(1px,.1vh) solid rgba(var(--a2),.25);flex:1;min-height:0;padding:0 .4vw}
+.xw-r:last-child{border:0}
+.xw-r small{color:var(--accent2);font-weight:700;white-space:nowrap}
+.xw-r b{color:var(--white);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 /* dünya saatleri: seçilen şehirler yan yana */
 .wwc{display:flex;align-items:stretch}
 .wz{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5vh;text-align:center;border-inline-start:max(1px,.1vh) solid rgba(var(--a2),.25);overflow:hidden}
@@ -2148,7 +2161,7 @@ function applyTicker(label, items, seg, shown, info) {
   if (key !== tickKey) { tickKey = key; track.style.animation = 'none'; void track.offsetWidth; track.style.animation = ''; }
   track.style.animationDuration = secs + 's';
 }
-window.__nativeCells = list => { window.__nativePoster = (list || []).includes('poster'); const c = document.documentElement.classList; ['ticker', 'clock', 'worldclock', 'logo', 'text', 'image', 'rates', 'reviews', 'menu', 'info', 'qr'].forEach(t => c.toggle('nat-' + t, (list || []).includes(t))); };
+window.__nativeCells = list => { window.__nativePoster = (list || []).includes('poster'); const c = document.documentElement.classList; ['ticker', 'clock', 'worldclock', 'prayer', 'converter', 'logo', 'text', 'image', 'rates', 'reviews', 'menu', 'info', 'qr'].forEach(t => c.toggle('nat-' + t, (list || []).includes(t))); };
 let safeNow = { L: 0, R: 0, T: 0, B: 0 }, guideOn = false;
 // Her kenar için ayrı pay (%): içerik oranı bozulmadan küçültülür ve görünen alanın ortasına kaydırılır
 function applySafe(safe, guide) {
@@ -2208,7 +2221,7 @@ function setState(s) {
   window.__vgap = Math.max(0, Math.min(30, Number(s.videoGapSec))) * 1000; if (!isFinite(window.__vgap)) window.__vgap = 3000; // videodan sonra son karede bekleme
   { const xf = Math.max(0.4, Math.min(4, Number(s.xfadeSec) || 1.2)); if (xf !== window.__xf) { window.__xf = xf; document.documentElement.style.setProperty('--xf', xf + 's'); } } // medya geçişinde yumuşak sönme/açılma süresi
   setMatches(s.matches, s.standings, s.showStandings);
-  lastRates = s.rates || lastRates; if (s.weather) lastWeather = s.weather; // bant çizilmeden önce kur ve hava hazır olsun
+  lastRates = s.rates || lastRates; lastPrayer = s.prayer || lastPrayer; if (s.weather) lastWeather = s.weather; // bant çizilmeden önce kur ve hava hazır olsun
   setRates(s.rates);
   if (s.weather) setWeather(s.weather);
   setTicker(s.matches);
@@ -3207,7 +3220,7 @@ function applyLayout(l) {
   app.style.gridTemplateRows = `repeat(${rows},minmax(0,1fr))`;
   app.style.gap = cols > 24 ? '.7vh .45vw' : ''; // ince ızgarada hücre aralığı yarıya iner (kutu boyutları aynı kalsın)
   const used = new Set(); WPROPS = {}; window.__rtProps = []; let rtn = 0;
-  app.querySelectorAll('.cell.qrcell,.cell.clkcell,.cell.wcell,.cell.rtcell,.cell.txtcell').forEach(c => c.remove()); qrTile.cells = [];
+  app.querySelectorAll('.cell.qrcell,.cell.clkcell,.cell.wcell,.cell.xcell,.cell.rtcell,.cell.txtcell').forEach(c => c.remove()); qrTile.cells = [];
   for (const w of l.widgets) {
     if (w.type === 'qr') { // birden çok QR kutusu olabilir; her biri seçilen QR'ı (ya da hepsini sırayla) gösterir
       const c = document.createElement('div'); c.className = 'cell qrcell'; c.dataset.w = 'qr';
@@ -3230,6 +3243,12 @@ function applyLayout(l) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       boxProps(c, w.props); app.appendChild(c); used.add('worldclock'); attachTap(c.firstChild, () => window.__menu()); continue;
     }
+    if (w.type === 'prayer' || w.type === 'converter') { // namaz vakitleri / güneş ve döviz çevirici: birden çok kutu olabilir
+      const c = document.createElement('div'); c.className = 'cell xcell'; c.dataset.w = w.type;
+      c.innerHTML = `<div class="wbox wxw" data-k="${w.type}" data-p="${esc(JSON.stringify(w.props || {}))}"></div>`;
+      c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+      boxProps(c, w.props); app.appendChild(c); used.add(w.type); attachTap(c.firstChild, () => window.__menu()); continue;
+    }
     if (w.type === 'rates' && rtn++) { // ikinci ve sonraki hava/piyasa kutuları: aynı biçim, kendi ayarlarıyla
       const c = document.createElement('div'); c.className = 'cell rtcell'; c.dataset.w = 'rates';
       c.innerHTML = '<div id="rates" class="rtx"></div>';
@@ -3242,7 +3261,7 @@ function applyLayout(l) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       boxProps(c, w.props); c._props = w.props || {}; app.appendChild(c); used.add('text'); WPROPS.text = w.props || {}; continue;
     }
-    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.wcell):not(.qrcell):not(.txtcell)`);
+    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.wcell):not(.xcell):not(.qrcell):not(.txtcell)`);
     if (!c || used.has(w.type)) continue;
     c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
     c.classList.toggle('edge-b', w.type === 'ticker' && w.y + w.h >= rows && w.x === 0 && w.w >= cols);
@@ -3315,8 +3334,8 @@ function fillEmpty() {
   // Hücreleri özgün gridArea ve display durumlarına getir
   let rtSeen = 0;
   for (const w of l.widgets) {
-    if (w.type === 'clock' || w.type === 'worldclock' || w.type === 'qr' || w.type === 'text' || (w.type === 'rates' && rtSeen++)) continue; // çoklu kutular kendi alanını applyLayout'ta aldı
-    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.wcell):not(.qrcell):not(.txtcell)`);
+    if (w.type === 'clock' || w.type === 'worldclock' || w.type === 'prayer' || w.type === 'converter' || w.type === 'qr' || w.type === 'text' || (w.type === 'rates' && rtSeen++)) continue; // çoklu kutular kendi alanını applyLayout'ta aldı
+    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.wcell):not(.xcell):not(.qrcell):not(.txtcell)`);
     if (c) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       c.style.display = '';
@@ -3532,6 +3551,77 @@ function fitWorld() {
 }
 { const _fw = fitWidgets; fitWidgets = function () { _fw(); fitWorld(); }; }
 { const _t = tickClock; tickClock = function () { _t(); tickWorld(); }; }
+
+// ---- namaz vakitleri / güneş ve döviz çevirici ----
+let lastPrayer = null;
+const XL = {
+  tr: { n: ['İmsak', 'Güneş', 'Öğle', 'İkindi', 'Akşam', 'Yatsı'], rise: 'Gün doğumu', set: 'Gün batımı', next: 'Sıradaki', len: 'Gün uzunluğu', h: 'sa', m: 'dk', gold: 'gr altın' },
+  en: { n: ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'], rise: 'Sunrise', set: 'Sunset', next: 'Next', len: 'Daylight', h: 'h', m: 'min', gold: 'g gold' },
+  de: { n: ['Fadschr', 'Sonnenaufgang', 'Dhuhr', 'Asr', 'Maghrib', 'Ischa'], rise: 'Sonnenaufgang', set: 'Sonnenuntergang', next: 'Nächstes', len: 'Tageslänge', h: 'Std', m: 'Min', gold: 'g Gold' },
+  ru: { n: ['Фаджр', 'Восход', 'Зухр', 'Аср', 'Магриб', 'Иша'], rise: 'Восход', set: 'Закат', next: 'Далее', len: 'Длина дня', h: 'ч', m: 'мин', gold: 'г золота' },
+  ar: { n: ['الفجر', 'الشروق', 'الظهر', 'العصر', 'المغرب', 'العشاء'], rise: 'الشروق', set: 'الغروب', next: 'التالي', len: 'مدة النهار', h: 'س', m: 'د', gold: 'غ ذهب' },
+};
+const xl = () => XL[LANG] || XL.en;
+const xDur = (ms, L) => { const m = Math.max(0, Math.round(ms / 60000)), h = Math.floor(m / 60); return (h ? h + ' ' + L.h + ' ' : '') + (m % 60) + ' ' + L.m; };
+function xPrayerHtml(p, now) {
+  const L = xl(), P = lastPrayer; if (!P || !P.days) return { h: '', cells: [] };
+  const key = now.toLocaleDateString('en-CA', { timeZone: P.tz }), i = P.days.findIndex(d => d.date === key); if (i < 0) return { h: '', cells: [] };
+  const d = P.days[i], tm = ms => new Date(ms).toLocaleTimeString('tr-TR', { timeZone: P.tz, hour: '2-digit', minute: '2-digit' });
+  if (p.mode === 'sun') {
+    return { head: `${L.len}: ${xDur(d.t.maghrib - d.t.sunrise, L)}`, cells: [[L.rise, tm(d.t.sunrise), false], [L.set, tm(d.t.maghrib), false]] };
+  }
+  const keys = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'], t = now.getTime();
+  let nx = keys.findIndex(k => d.t[k] > t), at = nx >= 0 ? d.t[keys[nx]] : (P.days[i + 1] ? P.days[i + 1].t.fajr : 0); if (nx < 0) nx = 0;
+  return { head: at ? `${L.next}: ${L.n[nx]} · ${xDur(at - t, L)}` : '', cells: keys.map((k, j) => [L.n[j], tm(d.t[k]), j === nx]) };
+}
+function xConvHtml(p) {
+  const r = lastRates || {}, L = xl(), amt = Number(p.amount) > 0 ? Number(p.amount) : 100, fmt = (v, dg) => v.toLocaleString('tr-TR', { minimumFractionDigits: dg, maximumFractionDigits: dg });
+  const rate = { USD: r.usd, EUR: r.eur, GBP: r.gbp, XAU: r.gold };
+  return String(p.currencies || 'USD,EUR,GBP').split(',').filter(c => c in rate).slice(0, 4).map(c => {
+    const v = Number(rate[c]), lbl = c === 'XAU' ? `${fmt(amt, amt % 1 ? 2 : 0)} ${L.gold}` : `${fmt(amt, amt % 1 ? 2 : 0)} ${c}`;
+    return [lbl, v > 0 ? fmt(amt * v, amt * v >= 1e6 ? 0 : 2) + ' ₺' : '—'];
+  });
+}
+function renderX() {
+  const now = new Date();
+  document.querySelectorAll('.wxw').forEach(box => {
+    let p = {}; try { p = JSON.parse(box.dataset.p); } catch (e) {}
+    let html;
+    if (box.dataset.k === 'prayer') {
+      const x = xPrayerHtml(p, now), sun = p.mode === 'sun';
+      html = (x.head ? `<div class="xw-h">${esc(x.head)}</div>` : '') + `<div class="xw-g" data-n="${x.cells.length}">` + x.cells.map(c => `<div class="xw-c${c[2] ? ' nx' : ''}"><small>${esc(c[0])}</small><b>${esc(c[1])}</b></div>`).join('') + '</div>';
+      box._sun = sun;
+    } else html = '<div class="xw-g" style="gap:0">' + xConvHtml(p).map(c => `<div class="xw-r"><small>${esc(c[0])}</small><b>${esc(c[1])}</b></div>`).join('') + '</div>';
+    if (box._h !== html) { box._h = html; box.innerHTML = html; fitX(box); }
+  });
+}
+function fitX(box) {
+  const w = box.clientWidth, h = box.clientHeight; if (!w || !h) return;
+  const g = box.querySelector('.xw-g'), hd = box.querySelector('.xw-h'); if (!g) return;
+  if (box.dataset.k === 'prayer') {
+    const n = +g.dataset.n || 6, asp = w / h, cols = n === 2 ? (asp > 1.6 ? 2 : 1) : (asp > 2.6 ? 6 : asp > 1.1 ? 3 : 2), rows = Math.ceil(n / cols);
+    g.style.gridTemplateColumns = `repeat(${cols},minmax(0,1fr))`; g.style.gridTemplateRows = `repeat(${rows},1fr)`;
+    if (hd) hd.style.fontSize = Math.max(7, Math.min(h * 0.11, w / (Math.max(8, hd.textContent.length) * 0.55))) + 'px';
+    const gh = h - (hd ? hd.offsetHeight : 0) - h * 0.1, cw = w / cols - w * 0.02, ch = gh / rows;
+    const nl = Math.max(4, ...[...g.querySelectorAll('small')].map(e => e.textContent.length));
+    let k = 1;
+    for (let i = 0; i < 14; i++) {
+      const t0 = Math.max(6, Math.min(ch * 0.4, cw / 4.2)) * k, l0 = Math.max(6, Math.min(ch * 0.2, cw / (nl * 0.6))) * k;
+      g.querySelectorAll('b').forEach(e => e.style.fontSize = t0 + 'px'); g.querySelectorAll('small').forEach(e => e.style.fontSize = l0 + 'px');
+      if ([...g.children].every(c => c.scrollWidth <= c.clientWidth + 1 && c.scrollHeight <= c.clientHeight + 1) || k < .3) break;
+      k *= .9;
+    }
+  } else {
+    const rows = [...g.children], rh = h / Math.max(1, rows.length) * 0.8; let k = 1;
+    for (let i = 0; i < 14; i++) {
+      rows.forEach(r => { r.querySelector('b').style.fontSize = Math.max(6, Math.min(rh * 0.5, w / 9) * k) + 'px'; r.querySelector('small').style.fontSize = Math.max(6, Math.min(rh * 0.3, w / 14) * k) + 'px'; });
+      if (rows.every(r => r.scrollWidth <= r.clientWidth + 1) || k < .3) break;
+      k *= .9;
+    }
+  }
+}
+{ const _fw = fitWidgets; fitWidgets = function () { _fw(); renderX(); document.querySelectorAll('.wxw').forEach(fitX); }; }
+{ const _t = tickClock; tickClock = function () { _t(); renderX(); }; }
 
 // ---- QR kart widget'ı ----
 const qrTile = { list: [], cells: [], timer: null, sig: '' };
@@ -3968,7 +4058,7 @@ function setLangs(list, sec) {
 function nextLang() { LANG_I = (LANG_I + 1) % LANGS.length; LANG = LANGS[LANG_I]; applyLang(); }
 function worldNames() { document.querySelectorAll('.wz[data-n]').forEach(z => { let n = {}; try { n = JSON.parse(z.dataset.n); } catch (e) {} const t = n[LANG] || n.tr; if (t) z.querySelector('small').textContent = t; }); fitWorld(); }
 function applyLang() {
-  renderText(); worldNames();
+  renderText(); worldNames(); renderX();
   if (NMED() && window.__N.mediaLang) window.__N.mediaLang(LANG);
   if (menuW.data) { const keep = menuW.idx; renderMenuW(false); menuW.idx = keep; }
   if (posterCur && window.__nativePoster && nativeShowing === 'photo' && window.__N && window.__N.showPoster) window.__N.showPoster(JSON.stringify(posterCur), LANG);

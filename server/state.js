@@ -245,6 +245,7 @@ function publicState(t) {
     music: tvMusic(db.music),
     rates: F.rates,
     weather: F.weatherFor(t),
+    prayer: require('./prayer').forTenant(t), // Namaz vakitleri / güneş widget'ı (dün-bugün-yarın, ms)
   };
 }
 

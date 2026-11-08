@@ -291,3 +291,32 @@ Kaldır: {} ¦ Remove: {} ¦ Entfernen: {} ¦ إزالة: {}
 En fazla {} şehir seçilebilir. ¦ You can choose up to {} cities. ¦ Es können bis zu {} Städte gewählt werden. ¦ يمكن اختيار {} مدن كحد أقصى.
 En az bir şehir kalmalı ¦ At least one city must remain ¦ Mindestens eine Stadt muss bleiben ¦ يجب أن تبقى مدينة واحدة على الأقل
 Saniyeyi göster ¦ Show seconds ¦ Sekunden anzeigen ¦ إظهار الثواني
+Namaz vakitleri / güneş ¦ Prayer times / sun ¦ Gebetszeiten / Sonne ¦ مواقيت الصلاة / الشمس
+Döviz çevirici ¦ Currency converter ¦ Währungsrechner ¦ محوّل العملات
+Vakitler Ayarlar sayfasındaki konumdan hesaplanır (Diyanet yöntemi); Diyanet'in cetvelinden 1-2 dakika sapabilir. Sıradaki vakit vurgulanır ve geri sayım yazılır. ¦ Times are calculated from the location in Settings (Diyanet method) and may differ from the official Diyanet table by 1-2 minutes. The next prayer is highlighted with a countdown. ¦ Die Zeiten werden aus dem Standort in den Einstellungen berechnet (Diyanet-Methode) und können um 1-2 Minuten von der offiziellen Diyanet-Tabelle abweichen. Das nächste Gebet wird hervorgehoben, mit Countdown. ¦ تُحسب المواقيت من الموقع في الإعدادات (طريقة ديانت) وقد تختلف دقيقة أو دقيقتين عن جدول ديانت الرسمي. يتم تمييز الصلاة التالية مع عدٍّ تنازلي.
+Gösterim ¦ Display ¦ Anzeige ¦ العرض
+Altı vakit (İmsak - Yatsı) ¦ Six prayers (Fajr - Isha) ¦ Sechs Gebete (Fadschr - Ischa) ¦ الصلوات الست (الفجر - العشاء)
+Gün doğumu ve batımı ¦ Sunrise and sunset ¦ Sonnenaufgang und -untergang ¦ الشروق والغروب
+Girdiğiniz tutarın güncel kurla Türk lirası karşılığını gösterir. Altın için tutar gramdır. ¦ Shows the Turkish lira value of the amount you enter at the current rate. For gold, the amount is in grams. ¦ Zeigt den Gegenwert des eingegebenen Betrags in türkischen Lira zum aktuellen Kurs. Bei Gold ist der Betrag in Gramm. ¦ يعرض قيمة المبلغ المُدخل بالليرة التركية حسب السعر الحالي. للذهب يكون المبلغ بالغرام.
+Tutar ¦ Amount ¦ Betrag ¦ المبلغ
+Dolar ¦ US dollar ¦ US-Dollar ¦ الدولار
+Euro ¦ Euro ¦ Euro ¦ اليورو
+Sterlin ¦ Pound sterling ¦ Pfund Sterling ¦ الجنيه الإسترليني
+Altın (gram) ¦ Gold (gram) ¦ Gold (Gramm) ¦ الذهب (غرام)
+En az bir para birimi kalmalı ¦ At least one currency must remain ¦ Mindestens eine Währung muss bleiben ¦ يجب أن تبقى عملة واحدة على الأقل
+Pastane / fırın ¦ Bakery / patisserie ¦ Bäckerei / Konditorei ¦ مخبز / حلويات
+Büyük ürün medyası, günün ürünü, yanda fiyat tarifesi (Pro), altta "sıcak çıktı" duyurusu ¦ Large product media, product of the day, price list on the side (Pro), "fresh out of the oven" notice below ¦ Großes Produktmedium, Produkt des Tages, seitlich die Preisliste (Pro), unten der Hinweis „frisch aus dem Ofen“ ¦ وسائط كبيرة للمنتج، منتج اليوم، قائمة الأسعار على الجانب (Pro)، وإعلان «خرج للتو من الفرن» في الأسفل
+Spa / güzellik salonu ¦ Spa / beauty salon ¦ Spa / Schönheitssalon ¦ سبا / صالون تجميل
+Sakin tanıtım medyası, saat ve hava, randevu QR kartı ve karşılama yazısı ¦ Calm promo media, clock and weather, appointment QR card and welcome text ¦ Ruhiges Werbemedium, Uhr und Wetter, Termin-QR-Karte und Begrüßungstext ¦ وسائط ترويجية هادئة، ساعة وطقس، بطاقة QR للمواعيد ونص ترحيبي
+Spor salonu ¦ Gym ¦ Fitnessstudio ¦ نادٍ رياضي
+Medya, ders programı, deneme dersi duyurusu, QR ve saat ¦ Media, class schedule, trial class notice, QR and clock ¦ Medien, Kursplan, Hinweis auf Probetraining, QR und Uhr ¦ وسائط، جدول الحصص، إعلان حصة تجريبية، QR وساعة
+Klinik / bekleme salonu ¦ Clinic / waiting room ¦ Klinik / Wartezimmer ¦ عيادة / صالة انتظار
+Bilgilendirme medyası, saat ve hava, karşılama yazısı ve randevu / Wi-Fi QR kartı ¦ Information media, clock and weather, welcome text and appointment / Wi-Fi QR card ¦ Informationsmedien, Uhr und Wetter, Begrüßungstext und Termin-/WLAN-QR-Karte ¦ وسائط معلوماتية، ساعة وطقس، نص ترحيبي وبطاقة QR للمواعيد / الواي فاي
+Mağaza vitrini ¦ Shop window ¦ Schaufenster ¦ واجهة المتجر
+Tam genişlikte kampanya medyası; altta logo, indirim duyurusu ve QR ¦ Full-width campaign media; logo, discount notice and QR below ¦ Kampagnenmedium in voller Breite; unten Logo, Rabatthinweis und QR ¦ وسائط الحملة بعرض كامل؛ في الأسفل الشعار وإعلان الخصم وQR
+Hızlı servis / sipariş panosu ¦ Fast food / order board ¦ Schnellrestaurant / Bestelltafel ¦ وجبات سريعة / لوحة الطلبات
+Solda büyük menü panosu (Pro), sağda ürün medyası, logo, menü fırsatı ve QR ¦ Large menu board on the left (Pro); product media, logo, menu deal and QR on the right ¦ Links große Menütafel (Pro); rechts Produktmedium, Logo, Menüangebot und QR ¦ لوحة قائمة كبيرة على اليسار (Pro)؛ على اليمين وسائط المنتج والشعار وعرض الوجبة وQR
+Kampüs / ofis ¦ Campus / office ¦ Campus / Büro ¦ حرم جامعي / مكتب
+Duyuru medyası, saat, dünya saatleri, hava, duyuru kutusu ve karşılama yazısı ¦ Announcement media, clock, world clocks, weather, notice box and welcome text ¦ Ankündigungsmedium, Uhr, Weltzeituhr, Wetter, Hinweisfeld und Begrüßungstext ¦ وسائط الإعلانات، ساعة، ساعات العالم، طقس، مربع إعلان ونص ترحيبي
+Etkinlik / düğün salonu ¦ Event / wedding hall ¦ Event / Hochzeitssaal ¦ فعاليات / قاعة أفراح
+Tam genişlikte fotoğraf döngüsü, karşılama yazısı ve Wi-Fi / fotoğraf QR kartı ¦ Full-width photo loop, welcome text and Wi-Fi / photo QR card ¦ Fotoschleife in voller Breite, Begrüßungstext und WLAN-/Foto-QR-Karte ¦ عرض صور متواصل بعرض كامل، نص ترحيبي وبطاقة QR للواي فاي / الصور

@@ -39,6 +39,8 @@ class NativeGridView(context: Context) : ViewGroup(context) {
         "ticker" -> if (NATIVE_TICKER) TickerWidget(context) else null
         "clock" -> ClockWidget(context)
         "worldclock" -> WorldClockWidget(context)
+        "prayer" -> PrayerWidget(context)
+        "converter" -> ConverterWidget(context)
         "logo" -> LogoWidget(context)
         "rates" -> RatesWidget(context)
         "reviews" -> ReviewsWidget(context)

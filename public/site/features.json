@@ -1631,6 +1631,66 @@
           "text": "يظهر توقيت الدول والمدن التي تختارها جنبًا إلى جنب (حتى 5)، ويمكنك إضافة عدة مربعات لوضع مدن مختلفة في أماكن مختلفة. وهو جاهز في تصميم الفندق / الردهة."
         }
       }
+    },
+    {
+      "icon": "🕌",
+      "title": "Namaz vakitleri / güneş widget'ı",
+      "text": "Bulunduğunuz konuma göre altı vakti gösterir; sıradaki vakit vurgulanır ve geri sayım yazılır. İsterseniz yalnız gün doğumu ve batımını, gün uzunluğuyla birlikte ayrı bir kutuda gösterebilirsiniz. Vakitler Diyanet yöntemiyle hesaplanır.",
+      "added": "2026-11-08",
+      "i18n": {
+        "en": {
+          "title": "Prayer times / sun widget",
+          "text": "Shows the six prayer times for your location, highlights the next one and counts down to it. You can also show just sunrise and sunset, with the length of the day, in a separate box. Times are calculated with the Diyanet method."
+        },
+        "de": {
+          "title": "Gebetszeiten-/Sonnen-Widget",
+          "text": "Zeigt die sechs Gebetszeiten für Ihren Standort, hebt das nächste hervor und zählt bis dahin herunter. Auf Wunsch zeigen Sie in einem eigenen Feld nur Sonnenaufgang und -untergang samt Tageslänge. Die Zeiten werden nach der Diyanet-Methode berechnet."
+        },
+        "ar": {
+          "title": "عنصر مواقيت الصلاة / الشمس",
+          "text": "يعرض أوقات الصلوات الست حسب موقعك، ويميّز الصلاة التالية ويعدّ تنازليًا حتى موعدها. ويمكنك أيضًا عرض الشروق والغروب فقط مع مدة النهار في مربع منفصل. تُحسب الأوقات بطريقة ديانت."
+        }
+      }
+    },
+    {
+      "icon": "💱",
+      "title": "Döviz çevirici widget'ı",
+      "text": "Belirlediğiniz tutarın dolar, euro, sterlin ve gram altın karşılığını güncel kurla Türk lirası olarak gösterir; turistlerin sık geldiği işletmeler için uygundur. Tutarı ve para birimlerini panelden seçersiniz.",
+      "added": "2026-11-08",
+      "i18n": {
+        "en": {
+          "title": "Currency converter widget",
+          "text": "Shows what an amount you set is worth in Turkish lira in US dollars, euros, pounds and grams of gold at the current rate; handy for places popular with tourists. You choose the amount and currencies in the panel."
+        },
+        "de": {
+          "title": "Währungsrechner-Widget",
+          "text": "Zeigt den Gegenwert eines festgelegten Betrags in US-Dollar, Euro, Pfund und Gramm Gold in türkischen Lira zum aktuellen Kurs; praktisch für Orte mit vielen Touristen. Betrag und Währungen wählen Sie im Panel."
+        },
+        "ar": {
+          "title": "عنصر محوّل العملات",
+          "text": "يعرض قيمة مبلغ تحدده بالليرة التركية مقابل الدولار واليورو والجنيه وغرام الذهب حسب السعر الحالي؛ مناسب للأماكن التي يرتادها السياح. تختار المبلغ والعملات من اللوحة."
+        }
+      }
+    },
+    {
+      "icon": "🗂️",
+      "title": "Sekiz yeni hazır düzen",
+      "text": "Pastane / fırın, spa / güzellik salonu, spor salonu, klinik / bekleme salonu, mağaza vitrini, hızlı servis / sipariş panosu, kampüs / ofis ve etkinlik / düğün salonu için hazır ekran düzenleri geldi. Birini seçin, yazıları kendi işletmenize göre değiştirin.",
+      "added": "2026-11-08",
+      "i18n": {
+        "en": {
+          "title": "Eight new ready-made layouts",
+          "text": "New ready-made screen layouts for a bakery / patisserie, spa / beauty salon, gym, clinic / waiting room, shop window, fast food / order board, campus / office and event / wedding hall. Pick one and change the texts for your business."
+        },
+        "de": {
+          "title": "Acht neue fertige Layouts",
+          "text": "Neue fertige Bildschirm-Layouts für Bäckerei / Konditorei, Spa / Schönheitssalon, Fitnessstudio, Klinik / Wartezimmer, Schaufenster, Schnellrestaurant / Bestelltafel, Campus / Büro und Event / Hochzeitssaal. Wählen Sie eines und passen Sie die Texte an Ihren Betrieb an."
+        },
+        "ar": {
+          "title": "ثمانية تصاميم جاهزة جديدة",
+          "text": "تصاميم شاشة جاهزة جديدة للمخبز / الحلويات، والسبا / صالون التجميل، والنادي الرياضي، والعيادة / صالة الانتظار، وواجهة المتجر، والوجبات السريعة / لوحة الطلبات، والحرم الجامعي / المكتب، والفعاليات / قاعة الأفراح. اختر واحدًا وعدّل النصوص لتناسب نشاطك."
+        }
+      }
     }
   ],
   "shots": {
