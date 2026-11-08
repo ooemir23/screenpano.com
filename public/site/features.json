@@ -1495,20 +1495,20 @@
     {
       "icon": "🍹",
       "title": "Saate göre menü ve indirim saati",
-      "text": "Kahvaltı, öğle, akşam kategorileri kendi saatinde görünür. Happy hour'da seçtiğiniz kategorilerde eski fiyat üstü çizili, yanında indirimli fiyat çıkar; saat bitince fiyatlar kendiliğinden döner.",
-      "added": "2026-11-06",
+      "text": "Kahvaltı, öğle, akşam kategorileri kendi saatinde görünür. Happy hour'da seçtiğiniz kategorilerde eski fiyat üstü çizili, yanında indirimli fiyat çıkar; saat bitince fiyatlar kendiliğinden döner. Gündüz ve gece için ayrı indirim saatleri, her biri kendi gün, saat, tarih aralığı, yüzde ve kategorileriyle eklenebilir.",
+      "added": "2026-11-08",
       "i18n": {
         "en": {
           "title": "Menus by time of day and happy hour",
-          "text": "Breakfast, lunch and evening categories appear at their own hours. During happy hour the selected categories show the old price crossed out next to the discounted one; prices go back automatically when it ends."
+          "text": "Breakfast, lunch and evening categories appear at their own hours. During happy hour the selected categories show the old price crossed out next to the discounted one; prices go back automatically when it ends. Add separate happy hours, for example daytime and late night, each with its own days, times, date range, percentage and categories."
         },
         "de": {
           "title": "Speisekarte nach Tageszeit und Happy Hour",
-          "text": "Frühstücks-, Mittags- und Abendkategorien erscheinen zu ihren Zeiten. In der Happy Hour zeigen ausgewählte Kategorien den alten Preis durchgestrichen neben dem reduzierten; danach kehren die Preise automatisch zurück."
+          "text": "Frühstücks-, Mittags- und Abendkategorien erscheinen zu ihren Zeiten. In der Happy Hour zeigen ausgewählte Kategorien den alten Preis durchgestrichen neben dem reduzierten; danach kehren die Preise automatisch zurück. Sie können mehrere Happy Hours anlegen, etwa tagsüber und spätabends, jeweils mit eigenen Tagen, Zeiten, Zeitraum, Prozentsatz und Kategorien."
         },
         "ar": {
           "title": "قائمة حسب الوقت وساعة الخصم",
-          "text": "تظهر فئات الفطور والغداء والمساء في أوقاتها. وفي ساعة الخصم تعرض الفئات المختارة السعر القديم مشطوبًا بجانب السعر المخفّض، وتعود الأسعار تلقائيًا عند انتهائها."
+          "text": "تظهر فئات الفطور والغداء والمساء في أوقاتها. وفي ساعة الخصم تعرض الفئات المختارة السعر القديم مشطوبًا بجانب السعر المخفّض، وتعود الأسعار تلقائيًا عند انتهائها. يمكنك إضافة ساعات خصم منفصلة، مثل النهار والليل، لكلٍّ منها أيامها وأوقاتها ونطاقها الزمني ونسبتها وفئاتها."
         }
       }
     },
