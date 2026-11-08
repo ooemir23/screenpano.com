@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const S = { me: null, db: null, cat: null, scr: null, lg: null };
 let TAB = 'home', PREV = null, SUB = {};
-const ICN = { media: 'film', logo: 'store', clock: 'clock', rates: 'cloud-sun', ticker: 'newspaper', text: 'type', image: 'image', qr: 'qr-code', info: 'trophy', reviews: 'star', menu: 'receipt-text', music: 'music' };
+const ICN = { media: 'film', logo: 'store', clock: 'clock', rates: 'cloud-sun', weather: 'cloud-sun', finance: 'trending-up', ticker: 'newspaper', text: 'type', image: 'image', qr: 'qr-code', info: 'trophy', reviews: 'star', menu: 'receipt-text', music: 'music' };
 const ICON = new Proxy({}, { get: (_, k) => ICN[k] ? `<svg class="ic" aria-hidden="true"><use href="/icons.svg#i-${ICN[k]}"></use></svg>` : '' });
 const fmtDate = ms => ms ? new Date(ms).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
 const ago = ms => { if (!ms) return 'hiç'; const m = Math.round((Date.now() - ms) / 60000); return m < 2 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.round(m / 60) + ' saat önce' : Math.round(m / 1440) + ' gün önce'; };
@@ -339,6 +339,8 @@ function drawProps() {
     const sh = p.show || 'both', swc = (k, label, on) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(on, `setClk('${k}',this.checked)`)}</div>`;
     f = `<p class="muted" style="margin:6px 0 0">Saati bir kutuya, tarihi başka bir kutuya koymak için iki ayrı Saat ve tarih kutusu ekleyip birinde tarihi, diğerinde saati gizleyin.</p>` + swc('time', 'Saati göster', sh !== 'date') + swc('date', 'Tarihi göster', sh !== 'time') + (sh === 'date' ? '' : tg('seconds', 'Saniyeyi göster', false));
   }
+  if (w.type === 'weather') f = `<p class="muted" style="margin:6px 0 0">Bu kutu yalnız hava durumunu gösterir. Şehir Ayarlar sayfasındaki konumdan gelir.</p>`;
+  if (w.type === 'finance') f = `<p class="muted" style="margin:6px 0 0">Bu kutu yalnız döviz, altın, borsa ve Bitcoin gösterir.</p>` + fl('Tutar ve değişim boyutu', `<select onchange="setP('valSize',this.value)">${[['s', 'Küçük'], ['m', 'Normal'], ['l', 'Büyük'], ['xl', 'Çok büyük']].map(([v, l]) => `<option value="${v}" ${(p.valSize || 'xl') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`);
   if (w.type === 'rates') {
     f = `<p class="muted" style="margin:6px 0 0">Havayı bir kutuya, piyasaları başka bir kutuya koymak için iki ayrı Hava ve piyasalar kutusu ekleyip birinde piyasaları, diğerinde havayı kapatın.</p>` + tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa') + (p.rates !== false ? fl('Tutar ve değişim boyutu', `<select onchange="setP('valSize',this.value)">${[['s', 'Küçük'], ['m', 'Normal'], ['l', 'Büyük'], ['xl', 'Çok büyük (şu anki)']].map(([v, l]) => `<option value="${v}" ${(p.valSize || 'xl') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : '') + tg('qr', 'QR kodlar', false);
     if (p.qr) {

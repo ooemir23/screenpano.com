@@ -2411,7 +2411,7 @@ function fitRates() {
       }
       return true;
     };
-    let lo = .5, hi = 2.4;
+    let lo = .5, hi = 1.1; // üst sınır: yazılar kutuyu doldurmak için aşırı büyümez
     for (let n = 0; n < 10; n++) { const mid = (lo + hi) / 2; set(mid); if (fits()) lo = mid; else hi = mid; }
     set(lo);
 

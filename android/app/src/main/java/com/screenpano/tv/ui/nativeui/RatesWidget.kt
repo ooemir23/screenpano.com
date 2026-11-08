@@ -78,7 +78,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
         val wx = props?.optBoolean("weather", true) != false; val rt = props?.optBoolean("rates", true) != false; val qr = props?.optBoolean("qr", false) == true
         val refH = if (qr || (wx && rt)) 18f else 10f
         val refW = if (qr || wx) 44f else 28f
-        return min(height / (refH * baseVh), width / (refW * baseVh)).coerceIn(0.35f, 3.2f)
+        return min(height / (refH * baseVh), width / (refW * baseVh)).coerceIn(0.35f, 1.1f) // büyük kutuda yazılar aşırı büyümez
     }
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
         super.onSizeChanged(w, h, ow, oh)

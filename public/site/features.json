@@ -1571,6 +1571,26 @@
           "text": "يُطبَّق نمط البطاقة الذي تختاره في التصميم ← الألوان (مسطح، زجاجي، داكن، إطار، بدون مربع) على كل مربعات الودجات بالتساوي. وفي محرر التخطيط يمكنك اختيار نمط ولون لكل مربع أو تركه 'مثل التصميم'."
         }
       }
+    },
+    {
+      "icon": "🌤️",
+      "title": "Hava durumu ve Finans ayrı widget",
+      "text": "Tasarım düzenleyicide Hava durumu ve Finans artık ayrı kutular; istediğiniz yere ayrı ayrı koyabilirsiniz. Yazılar büyük kutuda da aşırı büyümez.",
+      "added": "2026-11-08",
+      "i18n": {
+        "en": {
+          "title": "Weather and Finance as separate widgets",
+          "text": "In the layout editor, Weather and Finance are now separate boxes you can place anywhere on their own. Text no longer grows too large in big boxes."
+        },
+        "de": {
+          "title": "Wetter und Finanzen als getrennte Widgets",
+          "text": "Im Layout-Editor sind Wetter und Finanzen jetzt getrennte Felder, die Sie einzeln platzieren können. Die Schrift wird auch in großen Feldern nicht mehr übermäßig groß."
+        },
+        "ar": {
+          "title": "الطقس والمال كعنصرين منفصلين",
+          "text": "في محرر التصميم أصبح الطقس والمال مربعين منفصلين يمكن وضع كل منهما في أي مكان. ولم يعد النص يكبر أكثر من اللازم في المربعات الكبيرة."
+        }
+      }
     }
   ],
   "shots": {

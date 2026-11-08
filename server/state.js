@@ -53,7 +53,10 @@ function layoutFor(t, screen) {
   let l = screen && store.J(screen.layout);
   if (!l || !Array.isArray(l.widgets)) l = defaultLayout();
   const pro = plan(t).pro;
-  return { ...l, widgets: l.widgets.filter(w => WIDGETS[w.type] && (pro || !WIDGETS[w.type].pro)) };
+  // Hava durumu ve Finans ayrı widget; TV'ye (eski APK'lar dahil) ayarları kısılmış 'rates' kutusu olarak gider
+  const toRates = w => w.type === 'weather' ? { ...w, type: 'rates', props: { ...(w.props || {}), weather: true, rates: false, qr: false, qrs: '' } }
+    : w.type === 'finance' ? { ...w, type: 'rates', props: { valSize: 'xl', ...(w.props || {}), weather: false, rates: true, qr: false, qrs: '' } } : w;
+  return { ...l, widgets: l.widgets.filter(w => WIDGETS[w.type] && (pro || !WIDGETS[w.type].pro)).map(toRates) };
 }
 
 const SCH = require('./sched');
