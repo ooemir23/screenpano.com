@@ -646,6 +646,40 @@ r.delete('/campaigns/:id/image', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- Happy Hours kartı (fotoğraf + gizlenebilir ad/saat/rozet + gösterim süresi) ----
+const clampN = (v, lo, hi, d) => Math.max(lo, Math.min(hi, Math.round(Number(v)) || d));
+r.put('/happy-card', (req, res) => {
+  const b = req.body || {}, t = req.t, c = t.db.happyCard || (t.db.happyCard = {});
+  if (b.on !== undefined) c.on = !!b.on;
+  for (const k of ['showTitle', 'showTime', 'showPct']) if (b[k] !== undefined) c[k] = !!b[k];
+  if (b.durSec !== undefined) c.durSec = clampN(b.durSec, 5, 300, 15);
+  if (b.everyMin !== undefined) c.everyMin = clampN(b.everyMin, 1, 120, 4);
+  if (c.on && !c.image) { c.on = false; changed(t); return res.status(400).json({ error: 'Önce Happy Hours fotoğrafını yükleyin' }); }
+  if (c.on && !(t.db.menu && t.db.menu.happy)) { c.on = false; changed(t); return res.status(400).json({ error: 'Önce Fiyat Listesi\'nde indirim saatini seçin' }); }
+  changed(t); res.json({ ok: true });
+});
+r.post('/happy-card/image', quota, upload.single('file'), async (req, res) => {
+  const f = req.file, t = req.t;
+  try {
+    if (!f) return res.status(400).json({ error: 'Görsel dosyası seçilmedi' });
+    if (!/\.(png|jpe?g|webp|gif|svg)$/i.test(f.originalname) || f.size > 15 * 1024 * 1024) { rmUpload(t, f.filename); return res.status(400).json({ error: 'Görsel PNG/JPG/WEBP ve en çok 15 MB olmalı' }); }
+    const file = await svgToPng(t, f);
+    if (!file) return res.status(400).json({ error: 'Görsel yüklenemedi' });
+    const c = t.db.happyCard || (t.db.happyCard = {});
+    if (c.imageFile) rmUpload(t, c.imageFile);
+    c.imageFile = file; c.image = t.upBase + file; changed(t); res.json({ ok: true, url: c.image });
+  } catch (e) { res.status(500).json({ error: 'Görsel yüklenemedi: ' + e.message }); }
+});
+r.delete('/happy-card/image', (req, res) => {
+  const t = req.t, c = t.db.happyCard; if (!c) return res.json({ ok: true });
+  if (c.imageFile) rmUpload(t, c.imageFile); c.imageFile = null; c.image = null; c.on = false; changed(t); res.json({ ok: true });
+});
+r.post('/happy-card/test', (req, res) => {
+  const cs = require('./state').publicState(req.t).campaigns.filter(c => c.id === 'happy');
+  if (!cs.length) return res.status(400).json({ error: 'Önce fotoğrafı yükleyip kartı açın ve indirim saatini seçin' });
+  sendTo(req.t, { type: 'campaign', camp: cs[0] }); res.json({ ok: true });
+});
+
 r.post('/campaigns/:id/test', (req, res) => {
   const c = (req.t.db.campaigns || []).find(x => x.id === req.params.id && x.svg);
   if (!c) return res.status(404).json({ error: 'Önce bağlantıyı kaydedin' });

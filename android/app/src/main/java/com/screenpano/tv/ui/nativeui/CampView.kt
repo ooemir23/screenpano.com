@@ -42,13 +42,36 @@ class CampView(context: Context) : FrameLayout(context) {
         bgIv.load(NativeEnv.url(c.optString("image"))) { crossfade(false) }
         addView(bgIv, LayoutParams(-1, -1))
         qx = c.optDouble("qrX", 85.0).toFloat(); qy = c.optDouble("qrY", 75.0).toFloat(); qs = c.optDouble("qrSize", 26.0).toFloat()
-        val box = FrameLayout(context).apply { background = GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = vh * 1.6f } }
-        val iv = ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
-        box.addView(iv, LayoutParams(-1, -1))
-        box.post { val pd = (box.height * 0.06f).toInt(); box.setPadding(pd, pd, pd, pd) }
-        val svg = c.optString("svg"); if (svg.isNotEmpty()) iv.load(ByteBuffer.wrap(svg.toByteArray())) { crossfade(false) }
-        addView(box, LayoutParams(1, 1))
-        photoQr = box
+        val svg = c.optString("svg")
+        if (svg.isNotEmpty()) {
+            val box = FrameLayout(context).apply { background = GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = vh * 1.6f } }
+            val iv = ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER }
+            box.addView(iv, LayoutParams(-1, -1))
+            box.post { val pd = (box.height * 0.06f).toInt(); box.setPadding(pd, pd, pd, pd) }
+            iv.load(ByteBuffer.wrap(svg.toByteArray())) { crossfade(false) }
+            addView(box, LayoutParams(1, 1))
+            photoQr = box
+        }
+        // Happy Hours: isteğe bağlı ad / saat (altta) ve indirim rozeti (sol üst)
+        val ovT = c.optString("ovTitle"); val ovS = c.optString("ovSub"); val ovB = c.optString("ovBadge")
+        if (ovT.isNotEmpty() || ovS.isNotEmpty()) {
+            val col = android.widget.LinearLayout(context).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding((vh * 7.4f).toInt(), (vh * 9f).toInt(), (vh * 7.4f).toInt(), (vh * 4.2f).toInt())
+                background = GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, intArrayOf(0xCC000000.toInt(), 0x00000000))
+            }
+            if (ovT.isNotEmpty()) col.addView(android.widget.TextView(context).apply { text = ovT; setTextColor(Color.WHITE); setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 7f); typeface = android.graphics.Typeface.DEFAULT_BOLD })
+            if (ovS.isNotEmpty()) col.addView(android.widget.TextView(context).apply { text = ovS; setTextColor(0xFFFFE3BD.toInt()); setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 3.4f); typeface = android.graphics.Typeface.DEFAULT_BOLD; setPadding(0, (vh * 1f).toInt(), 0, 0) })
+            addView(col, LayoutParams(-1, -2, android.view.Gravity.BOTTOM))
+        }
+        if (ovB.isNotEmpty()) {
+            val badge = android.widget.TextView(context).apply {
+                text = ovB; setTextColor(Color.WHITE); setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, vh * 4.2f); typeface = android.graphics.Typeface.DEFAULT_BOLD
+                setPadding((vh * 2.2f).toInt(), (vh * 0.8f).toInt(), (vh * 2.2f).toInt(), (vh * 0.8f).toInt())
+                background = GradientDrawable().apply { setColor(0xFFE23B3B.toInt()); cornerRadius = vh * 1.4f }
+            }
+            addView(badge, LayoutParams(-2, -2, android.view.Gravity.TOP or android.view.Gravity.START).apply { setMargins((vh * 2.6f).toInt(), (vh * 2.6f).toInt(), 0, 0) })
+        }
     }
 
     fun bind(c: JSONObject, s: TvState) {

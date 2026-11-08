@@ -171,3 +171,35 @@ Geçerli bir YouTube bağlantısı girin ¦ Enter a valid YouTube link ¦ Geben 
 Önizlemeyi kapat ¦ Close preview ¦ Vorschau schließen ¦ إغلاق المعاينة
 Önizleme TV'de 3 dakika gösterilecek ¦ The preview will show on the TV for 3 minutes ¦ Die Vorschau läuft 3 Minuten auf dem Fernseher ¦ ستُعرض المعاينة على التلفزيون لمدة 3 دقائق
 Önizleme kapatıldı ¦ Preview closed ¦ Vorschau geschlossen ¦ تم إغلاق المعاينة
+Happy Hours ¦ Happy Hours ¦ Happy Hours ¦ ساعات التخفيض
+Belirli gün ve saatlerde indirim ve fotoğraflı ekran kartı. ¦ Discounts on set days and hours, with a photo card on screen. ¦ Rabatte an bestimmten Tagen und Zeiten mit Fotokarte auf dem Bildschirm. ¦ تخفيضات في أيام وساعات محددة مع بطاقة صورة على الشاشة.
+İndirim saati ve ekranda çıkan fotoğraflı kart. ¦ Discount hours and the photo card shown on screen. ¦ Rabattzeiten und die Fotokarte auf dem Bildschirm. ¦ ساعات التخفيض وبطاقة الصورة المعروضة على الشاشة.
+Örneğin hafta içi 17:00–19:00 arası kokteyllerde %30 indirim. Saat gelince fiyat listesinde fiyatlar düşer, istenirse ekranda fotoğraflı kart çıkar; bitince her şey eski hâline döner. ¦ For example 30% off cocktails on weekdays 17:00–19:00. When the time comes prices drop in the price list and, if you like, a photo card appears on screen; afterwards everything returns to normal. ¦ Zum Beispiel 30 % Rabatt auf Cocktails werktags 17:00–19:00. Zur Zeit sinken die Preise in der Preisliste und auf Wunsch erscheint eine Fotokarte; danach ist alles wieder wie vorher. ¦ مثلاً خصم 30% على الكوكتيلات في أيام الأسبوع من 17:00 إلى 19:00. عند حلول الوقت تنخفض الأسعار في قائمة الأسعار وتظهر بطاقة صورة على الشاشة إن رغبت، وبعدها يعود كل شيء كما كان.
+Happy Hours'u başlat ¦ Start Happy Hours ¦ Happy Hours starten ¦ ابدأ ساعات التخفيض
+Ne zaman, ne kadar? ¦ When and how much? ¦ Wann und wie viel? ¦ متى وكم؟
+Ad, indirim ve geçerli gün/saat. Fiyat listesinde bu saatlerde indirimli fiyat görünür. ¦ Name, discount and valid days/hours. The price list shows discounted prices at these times. ¦ Name, Rabatt und gültige Tage/Zeiten. Die Preisliste zeigt dann die Rabattpreise. ¦ الاسم والخصم والأيام/الساعات السارية. تعرض قائمة الأسعار الأسعار المخفضة في هذه الأوقات.
+Gün ve saat seçin ¦ Choose days and hours ¦ Tage und Zeiten wählen ¦ اختر الأيام والساعات
+Saat aralığı vermeden indirim ve kart görünmez. ¦ Without a time range the discount and card are not shown. ¦ Ohne Zeitraum werden Rabatt und Karte nicht angezeigt. ¦ بدون تحديد الوقت لا يظهر الخصم ولا البطاقة.
+Happy Hours kaldırılsın mı? İndirim ve kart silinir. ¦ Remove Happy Hours? The discount and card will be deleted. ¦ Happy Hours entfernen? Rabatt und Karte werden gelöscht. ¦ هل تريد إزالة ساعات التخفيض؟ سيتم حذف الخصم والبطاقة.
+Hangi kategoriler? ¦ Which categories? ¦ Welche Kategorien? ¦ أي الفئات؟
+İndirime dahil kategorileri seçin. Ürün bazında ayrı indirimli fiyat yazmak için Fiyat Listesi'ndeki ürünün yanındaki küçük kutuyu kullanın; boşsa yüzdeyle hesaplanır. ¦ Choose the categories included in the discount. To set a separate discounted price per item, use the small box next to the item in the price list; if empty it is calculated from the percentage. ¦ Wählen Sie die Kategorien mit Rabatt. Für einen eigenen Rabattpreis je Artikel nutzen Sie das kleine Feld neben dem Artikel in der Preisliste; leer wird er aus dem Prozentsatz berechnet. ¦ اختر الفئات المشمولة بالخصم. لتحديد سعر مخفض لكل منتج استخدم المربع الصغير بجانب المنتج في قائمة الأسعار؛ وإن كان فارغًا يُحسب بالنسبة المئوية.
+Önce Fiyat Listesi'nde kategori ekleyin. ¦ First add categories in the price list. ¦ Fügen Sie zuerst Kategorien in der Preisliste hinzu. ¦ أضف فئات في قائمة الأسعار أولاً.
+Ekranda çıkan fotoğraf ¦ Photo shown on screen ¦ Foto auf dem Bildschirm ¦ الصورة المعروضة على الشاشة
+Fotoğraflı kart indirim saatinde medyanın arasında belirli aralıkla tam ekran çıkar. Hazır tasarladığınız (üzerinde yazı olan) bir görseli sade göstermek için aşağıdaki yazıları kapatın. ¦ During the discount hours the photo card appears full screen between media at set intervals. To show a ready-made design (with its own text) plainly, turn off the texts below. ¦ In den Rabattzeiten erscheint die Fotokarte in festen Abständen im Vollbild zwischen den Medien. Um ein fertig gestaltetes Bild (mit eigenem Text) schlicht zu zeigen, schalten Sie die Texte unten aus. ¦ خلال ساعات التخفيض تظهر بطاقة الصورة بملء الشاشة بين الوسائط على فترات. لعرض تصميم جاهز (يحتوي نصًا) كما هو أوقف النصوص أدناه.
+Fotoğrafın üstünde görünsün ¦ Show over the photo ¦ Auf dem Foto anzeigen ¦ إظهار فوق الصورة
+Ad ¦ Name ¦ Name ¦ الاسم
+Saat ¦ Time ¦ Zeit ¦ الوقت
+İndirim rozeti ¦ Discount badge ¦ Rabatt-Badge ¦ شارة الخصم
+Üçü de kapalıyken yalnız fotoğrafınız gösterilir. ¦ With all three off, only your photo is shown. ¦ Sind alle drei aus, wird nur Ihr Foto gezeigt. ¦ عند إيقاف الثلاثة تُعرض صورتك فقط.
+Kaç saniye kalsın ¦ How many seconds ¦ Wie viele Sekunden ¦ كم ثانية تبقى
+Kaç dakikada bir ¦ Every how many minutes ¦ Alle wie viele Minuten ¦ كل كم دقيقة
+Kartı ekranda göster ¦ Show the card on screen ¦ Karte auf dem Bildschirm zeigen ¦ إظهار البطاقة على الشاشة
+Happy Hours kaydedildi ¦ Happy Hours saved ¦ Happy Hours gespeichert ¦ تم حفظ ساعات التخفيض
+Happy Hours fotoğrafı kaldırılsın mı? ¦ Remove the Happy Hours photo? ¦ Happy-Hours-Foto entfernen? ¦ هل تريد إزالة صورة ساعات التخفيض؟
+Önce indirim için gün/saat seçin ¦ First choose days/hours for the discount ¦ Wählen Sie zuerst Tage/Zeiten für den Rabatt ¦ اختر أيام/ساعات الخصم أولاً
+Fotoğraf yüklendi ¦ Photo uploaded ¦ Foto hochgeladen ¦ تم رفع الصورة
+Happy Hours sayfası ¦ Happy Hours page ¦ Happy-Hours-Seite ¦ صفحة ساعات التخفيض
+Artık ayrı bir sayfada: fotoğraf, ad/saat gizleme ve gösterim süresi de orada. ¦ Now on its own page: photo, hiding name/time and display duration are there too. ¦ Jetzt auf einer eigenen Seite: Foto, Name/Zeit ausblenden und Anzeigedauer ebenfalls dort. ¦ أصبحت الآن في صفحة منفصلة: الصورة وإخفاء الاسم/الوقت ومدة العرض أيضًا هناك.
+Önce Happy Hours fotoğrafını yükleyin ¦ Upload the Happy Hours photo first ¦ Laden Sie zuerst das Happy-Hours-Foto hoch ¦ ارفع صورة ساعات التخفيض أولاً
+Önce Fiyat Listesi'nde indirim saatini seçin ¦ First choose the discount time in the price list ¦ Wählen Sie zuerst die Rabattzeit in der Preisliste ¦ اختر وقت الخصم في قائمة الأسعار أولاً
+Önce fotoğrafı yükleyip kartı açın ve indirim saatini seçin ¦ First upload the photo, turn the card on and choose the discount time ¦ Laden Sie zuerst das Foto hoch, aktivieren Sie die Karte und wählen Sie die Rabattzeit ¦ ارفع الصورة أولاً وفعّل البطاقة واختر وقت الخصم

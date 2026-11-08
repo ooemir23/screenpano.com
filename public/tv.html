@@ -415,6 +415,10 @@ html.menu-open #brk,html.menu-open #updot{display:none!important}
 #camp .cph{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 #camp .cpq{position:absolute;transform:translate(-50%,-50%);aspect-ratio:1;background:#fff;border-radius:8%;box-shadow:0 1.2vh 4vh rgba(0,0,0,.55)}
 #camp .cpq .qi{position:absolute;inset:6%}
+#camp .cpo{position:absolute;left:0;right:0;bottom:0;padding:9vh 4vw 4.2vh;background:linear-gradient(0deg,rgba(0,0,0,.8),rgba(0,0,0,0));color:#fff}
+#camp .cpo b{display:block;font-size:7vh;font-weight:800;line-height:1.05;text-shadow:0 .4vh 1.4vh rgba(0,0,0,.6)}
+#camp .cpo span{display:block;margin-top:1vh;font-size:3.4vh;font-weight:700;color:#ffe3bd}
+#camp .cpb{position:absolute;left:2.6vh;top:2.6vh;background:#e23b3b;color:#fff;font-weight:800;font-size:4.2vh;padding:.8vh 2.2vh;border-radius:1.4vh;box-shadow:0 .8vh 2.4vh rgba(0,0,0,.5)}
 #camp .cpq svg{width:100%;height:100%;display:block}
 #camp.style-dark{background:radial-gradient(ellipse 80% 80% at 50% 50%,#1c2029 0%,#0a0b0e 100%)}
 #camp.style-accent{background:radial-gradient(ellipse 80% 80% at 40% 40%,var(--ad) 0%,#0d1117 100%)}
@@ -2605,7 +2609,7 @@ function campShow(c) {
   if (camp.showing || !c) return;
   hideYt();
   camp.showing = true; camp.last[c.id] = Date.now(); wsSend({ type: 'shown', kind: 'camp', id: c.id });
-  if (NMED() && window.__N.campShow && c.svg && (!c.photo || window.__N.campPhoto)) { // APK 3.13+: kart yerel çizilir; sayfa yalnız zamanlar
+  if (NMED() && window.__N.campShow && (c.svg || c.photo) && (!c.photo || window.__N.campPhoto)) { // APK 3.13+: kart yerel çizilir; sayfa yalnız zamanlar
     exoStop(true); window.__nativeCampOn = true; window.__N.campShow(JSON.stringify(c)); exoShow(true);
     setTimeout(() => { window.__N.campHide(); window.__nativeCampOn = false; if (camp.after) { const f = camp.after; camp.after = null; f(); } setTimeout(() => { camp.showing = false; }, 1500); }, (c.durSec || 15) * 1000);
     return;
@@ -2614,9 +2618,12 @@ function campShow(c) {
   let el = document.getElementById('camp');
   if (!el) { el = document.createElement('div'); el.id = 'camp'; document.getElementById('frame').appendChild(el); }
   const esc = t => String(t || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-  if (c.photo && c.svg) { // fotoğraflı kampanya: tam ekran fotoğraf, QR seçilen yerde
+  if (c.photo) { // fotoğraflı kart: tam ekran fotoğraf; QR (varsa) seçilen yerde; Happy Hours için isteğe bağlı ad / saat / indirim rozeti
     el.className = 'photo'; el.style.fontFamily = '';
-    el.innerHTML = `<img class="cph" src="${esc(c.image)}" alt=""><div class="cpq" style="left:${+c.qrX}%;top:${+c.qrY}%;height:${+c.qrSize}%"><div class="qi">${c.svg}</div></div>`;
+    el.innerHTML = `<img class="cph" src="${esc(c.image)}" alt="">`
+      + (c.svg ? `<div class="cpq" style="left:${+c.qrX}%;top:${+c.qrY}%;height:${+c.qrSize}%"><div class="qi">${c.svg}</div></div>` : '')
+      + (c.ovBadge ? `<div class="cpb">${esc(c.ovBadge)}</div>` : '')
+      + (c.ovTitle || c.ovSub ? `<div class="cpo">${c.ovTitle ? `<b>${esc(c.ovTitle)}</b>` : ''}${c.ovSub ? `<span>${esc(c.ovSub)}</span>` : ''}</div>` : '');
     setTimeout(() => el.classList.add('on'), 60);
     setTimeout(() => { if (camp.after) { const f = camp.after; camp.after = null; f(); } el.classList.remove('on'); setTimeout(() => { camp.showing = false; }, 1500); }, (c.durSec || 15) * 1000);
     return;

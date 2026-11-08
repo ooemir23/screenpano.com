@@ -28,7 +28,8 @@ const appVersion = () => {
 };
 
 const CAMP_QR = url => QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14100c', light: '#ffffff' } });
-const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch, image, emoji, textAlign, font, style, pos, qrX, qrY, qrSize }) => ({
+const pubCamp = ({ id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch, image, emoji, textAlign, font, style, pos, qrX, qrY, qrSize, ovTitle, ovSub, ovBadge }) => ({
+  ovTitle: ovTitle || undefined, ovSub: ovSub || undefined, ovBadge: ovBadge || undefined,
   id, headline, sub, note, qrLabel, svg, everyMin, durSec, sch: sch || null,
   image: image || null,
   // Fotoğraflı kampanya: tam ekran fotoğraf + sürüklenip yerleştirilen QR (konum/boyut yüzde)
@@ -125,6 +126,14 @@ function fixMusic(m) {
 // Hesap sunucuda yapılır: eski APK'lar da indirimli fiyatı gösterir; sınır anında happy.js ekranlara yeni durumu iter.
 const parsePrice = v => { const x = String(v || '').replace(/\s|₺|TL/gi, ''); if (!/^\d[\d.,]*$/.test(x)) return null; const n = Number(/,\d{1,2}$/.test(x) ? x.replace(/\./g, '').replace(',', '.') : x.replace(/[.,](?=\d{3}(\D|$))/g, '')); return isFinite(n) ? n : null; };
 const fmtNum = (n, dec) => dec ? n.toFixed(2).replace('.', ',') : String(Math.round(n));
+// Happy Hours kartı: fotoğraf tam ekran, istenirse üstünde ad / saat / indirim rozeti (hazır tasarım fotoğrafı için hepsi gizlenebilir); kampanya mekanizmasıyla (sıklık, süre, zamanlama) gösterilir
+const hhmm = sc => sc && sc.from ? `${sc.from} – ${sc.to}` : '';
+function happyCamp(db) {
+  const c = db.happyCard, h = db.menu && db.menu.happy;
+  if (!c || !c.on || !c.image || !h || !h.sch) return [];
+  return [pubCamp({ id: 'happy', headline: h.label || 'Happy Hour', svg: '', everyMin: c.everyMin || 4, durSec: c.durSec || 15, sch: h.sch, image: c.image,
+    ovTitle: c.showTitle !== false ? (h.label || 'Happy Hour') : '', ovSub: c.showTime !== false ? hhmm(h.sch) : '', ovBadge: c.showPct !== false && h.pct ? `%${h.pct} İNDİRİM` : '' })];
+}
 const happyOn = m => !!(m && m.happy && m.happy.sch && (m.categories || []).some(c => c.happy) && SCH.active(m.happy.sch));
 function menuView(m) {
   if (!m || !happyOn(m)) return m;
@@ -208,7 +217,7 @@ function publicState(t) {
     bigMatches: pro && F.bigCfg(t).enabled ? F.activeBig(t) : [],
     bigCfg: (({ note, info, everyMin, durSec, style }) => ({ note, info, everyMin, durSec, style }))(F.bigCfg(t)),
     celebration: F.activeCelebration(t),
-    campaigns: (db.campaigns || []).filter(c => c.enabled && c.svg).map(pubCamp),
+    campaigns: [...(db.campaigns || []).filter(c => c.enabled && c.svg).map(pubCamp), ...happyCamp(db)],
     safeInset: Math.max(0, Math.min(12, Number(db.safeInset) || 0)),
     safe: ['L', 'R', 'T', 'B'].reduce((o, k) => { const v = db['safe' + k]; o[k] = Math.max(0, Math.min(20, Number(v !== undefined && v !== null ? v : db.safeInset) || 0)); return o; }, {}),
     safeGuide: !!db.safeGuide,
