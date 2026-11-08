@@ -759,47 +759,84 @@ function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return
 
 
 /* ================= HAPPY HOURS ================= */
-let HC = null; // Happy Hours kartı ayarları (fotoğraf, gizleme, süre) — fiyat/indirim/saat MENU.happy'de
-const hE = fn => { fn(); MENU.__dirty = 1; render(true); };
+// Tek sayfa, üç adım: ne zaman → ne kadar → ekranda (isteğe bağlı fotoğraf). Taslak HD'de tutulur; Kaydet'te menüye yazılır.
+let HC = null; // fotoğraflı kart ayarları (fotoğraf, gizleme, süre)
+let HD = null; // indirim taslağı: açık/kapalı, ad, %, gün-saat, kategoriler
+function hdInit() {
+  if (!MENU || !MENU.__dirty) MENU = clone(S.db.menu || { title: 'Fiyat Listesi', currency: '₺', categories: [] });
+  if (!HC || !HC.__dirty) HC = Object.assign({ on: false, showTitle: true, showTime: true, showPct: true, durSec: 15, everyMin: 4 }, clone(S.db.happyCard || {}));
+  if (HD && HD.__dirty) return;
+  const h = MENU.happy, s = (h && h.sch) || {};
+  HD = { on: !!h, label: h ? (h.label || 'Happy Hour') : 'Happy Hour', pct: h ? (h.pct || 0) : 20,
+    days: s.days ? s.days.slice() : (h ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5]), from: s.from || '17:00', to: s.to || '19:00',
+    extra: { start: s.start || '', end: s.end || '' }, cats: MENU.categories.map(c => h ? !!c.happy : true) };
+}
+const hdSet = (fn, redraw = true) => { fn(); HD.__dirty = 1; redraw ? render(true) : hhPrev(); };
+const hdDays = d => hdSet(() => { HD.days = d.slice(); });
+const hdDay = n => hdSet(() => { HD.days = HD.days.includes(n) ? HD.days.filter(x => x !== n) : [...HD.days, n]; });
+const hdTime = (f, t) => hdSet(() => { HD.from = f; HD.to = t; });
+function hdSch() { const s = { from: HD.from, to: HD.to }; if (HD.days.length < 7) s.days = HD.days.slice().sort(); if (HD.extra.start) s.start = HD.extra.start; if (HD.extra.end) s.end = HD.extra.end; return s; }
+function hdSummary() {
+  if (!HD.on) return 'Kapalı: fiyatlar her zaman normal, ekranda kart çıkmaz.';
+  if (!HD.days.length || !HD.from || !HD.to) return 'Gün ve saat seçin.';
+  const s = hdSch(), now = schAt(s, new Date());
+  return (now ? '● Şu an indirim saatinde · ' : '') + schText(s);
+}
 SECTIONS.happy = {
   html() {
-    if (!MENU || !MENU.__dirty) MENU = clone(S.db.menu || { title: 'Fiyat Listesi', currency: '₺', categories: [] });
-    if (!HC || !HC.__dirty) HC = Object.assign({ on: false, showTitle: true, showTime: true, showPct: true, durSec: 15, everyMin: 4 }, clone(S.db.happyCard || {}));
-    const h = MENU.happy, c = HC;
-    const intro = `<div class="row"><span class="muted" style="flex:1">Örneğin hafta içi 17:00–19:00 arası kokteyllerde %30 indirim. Saat gelince fiyat listesinde fiyatlar düşer, istenirse ekranda fotoğraflı kart çıkar; bitince her şey eski hâline döner.</span><button class="btn" onclick="hE(()=>{MENU.happy={label:'Happy Hour',pct:20,sch:null}});openSched('happy')">Happy Hours'u başlat</button></div>`;
-    if (!h) return head('Happy Hours', 'Belirli gün ve saatlerde indirim ve fotoğraflı ekran kartı.') + lock('Happy Hours') + card('Happy Hours', '', intro);
-    const prevTxt = (t, sub) => `${c.showPct !== false && h.pct ? `<div class="hh-b">%${h.pct} İNDİRİM</div>` : ''}${(c.showTitle !== false && t) || (c.showTime !== false && sub) ? `<div class="hh-o">${c.showTitle !== false ? `<b>${esc(t)}</b>` : ''}${c.showTime !== false && sub ? `<span>${esc(sub)}</span>` : ''}</div>` : ''}`;
-    const when = h.sch ? (happyNowP() ? '<b style="color:var(--ok,#3fb27f)">● Şu an indirim saatinde</b>' : 'Şu an indirim saatinde değil') : 'Saat aralığı vermeden indirim ve kart görünmez.';
-    const catChips = MENU.categories.length ? MENU.categories.map((cat, ci) => `<button class="chip${cat.happy ? ' on' : ''}" onclick="hE(()=>{MENU.categories[${ci}].happy=!MENU.categories[${ci}].happy||undefined})">${esc(cat.name || 'Kategori')}</button>`).join('') : '<span class="muted">Önce Fiyat Listesi\'nde kategori ekleyin.</span>';
-    return head('Happy Hours', 'İndirim saati ve ekranda çıkan fotoğraflı kart.', `<button class="btn" data-save onclick="saveHappy()">Kaydet</button>`) + lock('Happy Hours')
-      + card('Ne zaman, ne kadar?', 'Ad, indirim ve geçerli gün/saat. Fiyat listesinde bu saatlerde indirimli fiyat görünür.',
-        `<div class="f">${fl('Ad', `<input type="text" maxlength="24" value="${esc(h.label || '')}" placeholder="Happy Hour" oninput="MENU.happy.label=this.value;MENU.__dirty=1;hhPrev()">`)}${fl('İndirim (%)', `<input type="number" min="0" max="90" value="${h.pct || 0}" oninput="MENU.happy.pct=+this.value||0;MENU.__dirty=1;hhPrev()">`)}</div>
-        <div class="row mt" style="align-items:center"><button class="btn g" onclick="openSched('happy')">⏱ ${h.sch ? esc(schText(h.sch)) : 'Gün ve saat seçin'}</button><span class="muted" style="flex:1;font-size:13px">${when}</span><button class="btn xs d" onclick="UI.ask('Happy Hours kaldırılsın mı? İndirim ve kart silinir.', { ok: 'Sil', danger: true }).then(ok=>{if(ok){hE(()=>{delete MENU.happy;MENU.categories.forEach(c=>{delete c.happy;c.items.forEach(i=>delete i.hp)})});saveHappy()}})">Kaldır</button></div>`)
-      + card('Hangi kategoriler?', 'İndirime dahil kategorileri seçin. Ürün bazında ayrı indirimli fiyat yazmak için Fiyat Listesi\'ndeki ürünün yanındaki küçük kutuyu kullanın; boşsa yüzdeyle hesaplanır.', `<div class="chips">${catChips}</div>`)
-      + card('Ekranda çıkan fotoğraf', 'Fotoğraflı kart indirim saatinde medyanın arasında belirli aralıkla tam ekran çıkar. Hazır tasarladığınız (üzerinde yazı olan) bir görseli sade göstermek için aşağıdaki yazıları kapatın.',
-        `<div class="camp-grid"><div class="camp-form">
-          <div class="camp-img-box">${c.image ? `<img src="${esc(c.image)}" class="camp-img-thumb" alt=""><div style="flex:1;min-width:0"><b style="font-size:13px;display:block">Yüklü fotoğraf</b><span class="muted" style="font-size:12px">Tam ekran gösterilir</span></div><button class="btn s d" type="button" onclick="removeHappyImg()">Kaldır</button>` : `<div style="flex:1"><span class="muted" style="font-size:12.5px">Henüz fotoğraf yok. 16:9 (1920×1080) önerilir.</span></div>`}
-            <label class="btn s g" style="margin:0;cursor:pointer"><span>${c.image ? 'Değiştir' : 'Fotoğraf seç'}</span><input type="file" accept="image/*" style="display:none" onchange="uploadHappyImg(this)"></label></div>
-          <div class="mt"><label class="lbl"><b>Fotoğrafın üstünde görünsün</b></label>
-            <div class="chips"><button class="chip${c.showTitle !== false ? ' on' : ''}" onclick="hcSet('showTitle')">Ad</button><button class="chip${c.showTime !== false ? ' on' : ''}" onclick="hcSet('showTime')">Saat</button><button class="chip${c.showPct !== false ? ' on' : ''}" onclick="hcSet('showPct')">İndirim rozeti</button></div>
-            <p class="muted" style="font-size:12px;margin:6px 0 0">Üçü de kapalıyken yalnız fotoğrafınız gösterilir.</p></div>
-          <div class="f mt">${fl('Kaç saniye kalsın', `<input type="number" min="5" max="300" value="${c.durSec || 15}" oninput="HC.durSec=+this.value;HC.__dirty=1">`)}${fl('Kaç dakikada bir', `<input type="number" min="1" max="120" value="${c.everyMin || 4}" oninput="HC.everyMin=+this.value;HC.__dirty=1">`)}</div>
-          <div class="row mt" style="align-items:center;gap:10px"><label class="row" style="gap:8px;cursor:pointer">${sw(c.on, "HC.on=this.checked;HC.__dirty=1")}<b>Kartı ekranda göster</b></label><span style="flex:1"></span><button class="btn g s" type="button" onclick="testHappy()">📺 TV'de test et</button></div>
-        </div>
-        <div class="camp-prev-wrap"><div class="camp-prev-head"><span>ÖNİZLEME</span></div>
-          <div class="camp-prev-screen" id="hh-prev" style="background:#000;position:relative">${c.image ? `<img src="${esc(c.image)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#889;font-size:13px">Önce fotoğraf yükleyin</div>`}<div id="hh-ov">${prevTxt(h.label || 'Happy Hour', h.sch && h.sch.from ? h.sch.from + ' – ' + h.sch.to : '')}</div></div></div></div>`);
+    hdInit();
+    const d = HD, c = HC, cats = MENU.categories;
+    const dayChips = DAYS.map((n, i) => `<button class="chip${d.days.includes(i + 1) ? ' on' : ''}" onclick="hdDay(${i + 1})">${n}</button>`).join('');
+    const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+    const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => `<button class="chip${same(d.days, v) ? ' on' : ''}" onclick="hdDays([${v}])">${n}</button>`).join('');
+    const timePre = [['17:00', '19:00'], ['16:00', '20:00'], ['14:00', '17:00']].map(([f, t]) => `<button class="chip${d.from === f && d.to === t ? ' on' : ''}" onclick="hdTime('${f}','${t}')">${f}–${t}</button>`).join('');
+    const pctPre = [10, 20, 30, 40, 50].map(p => `<button class="chip${d.pct === p ? ' on' : ''}" onclick="hdSet(()=>{HD.pct=${p}})">%${p}</button>`).join('');
+    const allCats = cats.length && d.cats.every(Boolean);
+    const catChips = cats.length ? `<button class="chip${allCats ? ' on' : ''}" onclick="hdSet(()=>{HD.cats=HD.cats.map(()=>${!allCats})})">Tüm menü</button>` + cats.map((cat, i) => `<button class="chip${d.cats[i] ? ' on' : ''}" onclick="hdSet(()=>{HD.cats[${i}]=!HD.cats[${i}]})">${esc(cat.name || 'Kategori')}</button>`).join('')
+      : `<span class="muted">İndirimin geçeceği ürünler için önce Fiyat Listesi'nde kategori ekleyin.</span> <a class="btn xs g" href="#menu">Fiyat Listesi'ne git</a>`;
+    const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h3>${t}</h3><p class="muted">${sub}</p>${body}</div></div>`;
+    const photo = `<div class="camp-img-box">${c.image ? `<img src="${esc(c.image)}" class="camp-img-thumb" alt=""><div style="flex:1;min-width:0"><b style="font-size:13px;display:block">Yüklü fotoğraf</b><span class="muted" style="font-size:12px">Tam ekran gösterilir</span></div><button class="btn s d" type="button" onclick="removeHappyImg()">Kaldır</button>` : `<div style="flex:1"><span class="muted" style="font-size:12.5px">Fotoğraf eklemezseniz yalnız fiyat listesindeki fiyatlar düşer.</span></div>`}
+      <label class="btn s g" style="margin:0;cursor:pointer"><span>${c.image ? 'Değiştir' : 'Fotoğraf seç'}</span><input type="file" accept="image/*" style="display:none" onchange="uploadHappyImg(this)"></label></div>`;
+    const cardOpts = c.image ? `<div class="row mt" style="align-items:center;gap:10px"><label class="row" style="gap:8px;cursor:pointer">${sw(c.on, 'HC.on=this.checked;HC.__dirty=1')}<b>Fotoğraflı kartı ekranda göster</b></label></div>
+      <div class="mt"><label class="lbl"><b>Fotoğrafın üstünde görünsün</b></label><div class="chips"><button class="chip${c.showTitle !== false ? ' on' : ''}" onclick="hcSet('showTitle')">Ad</button><button class="chip${c.showTime !== false ? ' on' : ''}" onclick="hcSet('showTime')">Saat</button><button class="chip${c.showPct !== false ? ' on' : ''}" onclick="hcSet('showPct')">İndirim rozeti</button></div></div>
+      <div class="f mt">${fl('Kartın ekranda kalma süresi (saniye)', `<input type="number" min="5" max="300" value="${c.durSec || 15}" oninput="HC.durSec=+this.value;HC.__dirty=1">`)}${fl('Kaç dakikada bir çıksın', `<input type="number" min="1" max="120" value="${c.everyMin || 4}" oninput="HC.everyMin=+this.value;HC.__dirty=1">`)}</div>` : '';
+    return head('Happy Hours', 'Belirli gün ve saatlerde indirim; isterseniz ekranda fotoğraflı kart.', `<button class="btn" data-save onclick="saveHappy()">Kaydet</button>`) + lock('Happy Hours')
+      + `<div class="card hh-top"><label class="row" style="gap:14px;cursor:pointer;align-items:center">${sw(d.on, 'hdSet(()=>{HD.on=this.checked})')}<span><b style="font-size:18px">${d.on ? 'Happy Hours açık' : 'Happy Hours kapalı'}</b><span class="muted" style="display:block;margin-top:2px" id="hh-sum">${hdSummary()}</span></span></label></div>`
+      + `<div class="hh-grid${d.on ? '' : ' off'}"><div class="hh-steps">`
+      + step(1, 'Hangi gün, saat kaçta?', 'Bu saatlerde fiyat listesinde fiyatlar düşer; saat bitince eski hâline döner.',
+        `<div class="chips">${dayChips}</div><div class="chips mt">${dayPre}</div>
+         <div class="f mt">${fl('Başlangıç', `<input type="time" value="${d.from}" oninput="hdSet(()=>{HD.from=this.value},false)">`)}${fl('Bitiş', `<input type="time" value="${d.to}" oninput="hdSet(()=>{HD.to=this.value},false)">`)}</div>
+         <div class="chips mt">${timePre}</div>`)
+      + step(2, 'İndirim ne kadar, nerede?', 'Seçtiğiniz kategorilerdeki tüm ürünlere uygulanır. Tek ürüne özel fiyat için Fiyat Listesi\'nde ürünün yanındaki küçük kutuyu kullanın.',
+        `<div class="f">${fl('İndirim (%)', `<input type="number" min="1" max="90" value="${d.pct || ''}" oninput="hdSet(()=>{HD.pct=+this.value||0},false)">`)}${fl('Ekranda görünecek ad', `<input type="text" maxlength="24" value="${esc(d.label)}" placeholder="Happy Hour" oninput="hdSet(()=>{HD.label=this.value},false)">`)}</div>
+         <div class="chips mt">${pctPre}</div><label class="lbl mt" style="display:block"><b>Hangi ürünlerde?</b></label><div class="chips">${catChips}</div>`)
+      + step(3, 'Ekranda fotoğraf çıksın mı?', 'İsteğe bağlı. İndirim saatinde medyanın arasında tam ekran çıkar.', photo + cardOpts)
+      + `<div class="row" style="justify-content:flex-end;gap:10px;margin-top:6px">${c.image ? `<button class="btn g" type="button" onclick="testHappy()">📺 TV'de dene</button>` : ''}<button class="btn" data-save onclick="saveHappy()">Kaydet</button></div>`
+      + `</div><div class="hh-side"><div class="camp-prev-wrap"><div class="camp-prev-head"><span>ÖNİZLEME</span></div>
+          <div class="camp-prev-screen" id="hh-prev" style="background:#000;position:relative">${c.image ? `<img src="${esc(c.image)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#889;font-size:13px;text-align:center;padding:0 10%">Fotoğraf eklerseniz ekranda böyle görünür</div>`}<div id="hh-ov"></div></div></div></div></div>`;
   },
+  after() { hhPrev(); },
 };
-function hhPrev() { // ad/indirim değişince önizleme yazıları güncellenir
-  const el = $('hh-ov'); if (!el || !MENU.happy || !HC) return; const h = MENU.happy, c = HC, t = h.label || 'Happy Hour', sub = h.sch && h.sch.from ? h.sch.from + ' – ' + h.sch.to : '';
-  el.innerHTML = `${c.showPct !== false && h.pct ? `<div class="hh-b">%${h.pct} İNDİRİM</div>` : ''}${(c.showTitle !== false && t) || (c.showTime !== false && sub) ? `<div class="hh-o">${c.showTitle !== false ? `<b>${esc(t)}</b>` : ''}${c.showTime !== false && sub ? `<span>${esc(sub)}</span>` : ''}</div>` : ''}`;
+function hhPrev() { // ad/indirim/saat değişince önizleme ve özet güncellenir
+  const sm = $('hh-sum'); if (sm && HD) sm.textContent = hdSummary();
+  const el = $('hh-ov'); if (!el || !HD || !HC) return; const t = HD.label || 'Happy Hour', sub = HD.from && HD.to ? HD.from + ' – ' + HD.to : '';
+  el.innerHTML = `${HC.showPct !== false && HD.pct ? `<div class="hh-b">%${HD.pct} İNDİRİM</div>` : ''}${(HC.showTitle !== false && t) || (HC.showTime !== false && sub) ? `<div class="hh-o">${HC.showTitle !== false ? `<b>${esc(t)}</b>` : ''}${HC.showTime !== false && sub ? `<span>${esc(sub)}</span>` : ''}</div>` : ''}`;
 }
 function hcSet(k) { HC[k] = HC[k] === false; HC.__dirty = 1; render(true); }
 async function saveHappy() {
-  if (MENU.happy && !MENU.happy.sch) return toast('Önce indirim için gün/saat seçin', true);
+  const d = HD;
+  if (d.on) {
+    if (!d.days.length) return toast('En az bir gün seçin', true);
+    if (!d.from || !d.to || d.from === d.to) return toast('Başlangıç ve bitiş saatini farklı girin', true);
+    if (!(d.pct > 0)) return toast('İndirim yüzdesini girin', true);
+    if (!d.cats.some(Boolean)) return toast('İndirimin geçeceği en az bir kategori seçin', true);
+    MENU.happy = { label: (d.label || '').trim() || 'Happy Hour', pct: Math.min(90, Math.round(d.pct)), sch: hdSch() };
+    MENU.categories.forEach((cat, i) => { cat.happy = d.cats[i] || undefined; });
+  } else if (MENU.happy) { delete MENU.happy; MENU.categories.forEach(cat => { delete cat.happy; }); }
+  MENU.__dirty = 1;
   await saveMenu();
-  const b = { showTitle: HC.showTitle !== false, showTime: HC.showTime !== false, showPct: HC.showPct !== false, durSec: HC.durSec || 15, everyMin: HC.everyMin || 4, on: !!HC.on && !!MENU.happy };
-  if (await act('PUT', '/happy-card', b, 'Happy Hours kaydedildi', false)) { HC.__dirty = 0; S.db = await req('GET', '/db'); render(true); }
+  const b = { showTitle: HC.showTitle !== false, showTime: HC.showTime !== false, showPct: HC.showPct !== false, durSec: HC.durSec || 15, everyMin: HC.everyMin || 4, on: !!HC.on && d.on };
+  if (await act('PUT', '/happy-card', b, 'Happy Hours kaydedildi', false)) { HC.__dirty = 0; HD.__dirty = 0; S.db = await req('GET', '/db'); render(true); }
 }
 async function uploadHappyImg(input) {
   const file = input.files && input.files[0]; if (!file) return;
@@ -807,12 +844,12 @@ async function uploadHappyImg(input) {
   try {
     const res = await fetch('/api/admin/happy-card/image', { credentials: 'same-origin', method: 'POST', body: fd }), j = await res.json();
     if (!res.ok) throw new Error(j.error || 'Yüklenemedi');
-    S.db = await req('GET', '/db'); HC = null; toast('Fotoğraf yüklendi'); render(true);
+    const had = !!HC.image; S.db = await req('GET', '/db'); const n = S.db.happyCard || {}; HC.image = n.image; HC.imageFile = n.imageFile; if (!had) HC.on = true; HC.__dirty = 1; toast('Fotoğraf yüklendi'); render(true);
   } catch (e) { toast(e.message, true); }
 }
 async function removeHappyImg() {
   if (!await UI.ask('Happy Hours fotoğrafı kaldırılsın mı?')) return;
-  try { await req('DELETE', '/happy-card/image'); S.db = await req('GET', '/db'); HC = null; render(true); } catch (e) { toast(e.message, true); }
+  try { await req('DELETE', '/happy-card/image'); S.db = await req('GET', '/db'); HC.image = ''; HC.imageFile = ''; HC.on = false; render(true); } catch (e) { toast(e.message, true); }
 }
 async function testHappy() { await act('POST', '/happy-card/test', undefined, 'Kart TV\'de gösteriliyor', false); }
 

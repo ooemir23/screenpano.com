@@ -209,3 +209,32 @@ Yalnız hava durumu (sıcaklık ve gün gün tahmin); piyasalardan ayrı bir kut
 Yalnız döviz, altın, borsa ve Bitcoin; hava durumundan ayrı bir kutuya konur ¦ Currency, gold, stock exchange and Bitcoin only; placed in its own box, separate from the weather ¦ Nur Devisen, Gold, Börse und Bitcoin; in einem eigenen Feld, getrennt vom Wetter ¦ العملات والذهب والبورصة والبيتكوين فقط؛ يوضع في مربع منفصل عن الطقس
 Bu kutu yalnız hava durumunu gösterir. Şehir Ayarlar sayfasındaki konumdan gelir. ¦ This box shows only the weather. The city comes from the location in Settings. ¦ Dieses Feld zeigt nur das Wetter. Die Stadt stammt aus dem Standort in den Einstellungen. ¦ يعرض هذا المربع الطقس فقط. تؤخذ المدينة من الموقع في الإعدادات.
 Bu kutu yalnız döviz, altın, borsa ve Bitcoin gösterir. ¦ This box shows only currency, gold, stock exchange and Bitcoin. ¦ Dieses Feld zeigt nur Devisen, Gold, Börse und Bitcoin. ¦ يعرض هذا المربع العملات والذهب والبورصة والبيتكوين فقط.
+Belirli gün ve saatlerde indirim; isterseniz ekranda fotoğraflı kart. ¦ Discounts on set days and times; optionally a photo card on screen. ¦ Rabatt an bestimmten Tagen und Uhrzeiten; auf Wunsch mit Fotokarte auf dem Bildschirm. ¦ خصم في أيام وأوقات محددة، وبطاقة صورة على الشاشة إن رغبت.
+Happy Hours açık ¦ Happy Hours on ¦ Happy Hours an ¦ Happy Hours مفعّل
+Happy Hours kapalı ¦ Happy Hours off ¦ Happy Hours aus ¦ Happy Hours متوقف
+Kapalı: fiyatlar her zaman normal, ekranda kart çıkmaz. ¦ Off: prices are always normal and no card appears on screen. ¦ Aus: Preise bleiben immer normal und keine Karte erscheint. ¦ متوقف: الأسعار عادية دائماً ولا تظهر بطاقة على الشاشة.
+Gün ve saat seçin. ¦ Choose days and times. ¦ Wählen Sie Tage und Uhrzeiten. ¦ اختر الأيام والأوقات.
+Hangi gün, saat kaçta? ¦ Which days, what time? ¦ An welchen Tagen, um wie viel Uhr? ¦ في أي أيام وأي ساعة؟
+Bu saatlerde fiyat listesinde fiyatlar düşer; saat bitince eski hâline döner. ¦ During these hours prices in the price list drop; when the time ends they return to normal. ¦ In diesen Stunden sinken die Preise in der Preisliste; danach gelten wieder die normalen Preise. ¦ في هذه الساعات تنخفض الأسعار في قائمة الأسعار، وتعود إلى حالتها عند انتهاء الوقت.
+Başlangıç ¦ Start ¦ Beginn ¦ البداية
+Bitiş ¦ End ¦ Ende ¦ النهاية
+İndirim ne kadar, nerede? ¦ How much discount, where? ¦ Wie viel Rabatt, wo? ¦ كم الخصم وأين؟
+Seçtiğiniz kategorilerdeki tüm ürünlere uygulanır. Tek ürüne özel fiyat için Fiyat Listesi'nde ürünün yanındaki küçük kutuyu kullanın. ¦ Applies to all products in the categories you choose. For a special price on a single product, use the small box next to the product in the Price List. ¦ Gilt für alle Produkte der gewählten Kategorien. Für einen Sonderpreis bei einem einzelnen Produkt nutzen Sie das kleine Feld neben dem Produkt in der Preisliste. ¦ يطبّق على كل منتجات الفئات التي تختارها. لسعر خاص لمنتج واحد استخدم المربع الصغير بجانبه في قائمة الأسعار.
+İndirim (%) ¦ Discount (%) ¦ Rabatt (%) ¦ الخصم (%)
+Ekranda görünecek ad ¦ Name shown on screen ¦ Auf dem Bildschirm angezeigter Name ¦ الاسم الظاهر على الشاشة
+Hangi ürünlerde? ¦ On which products? ¦ Auf welche Produkte? ¦ على أي منتجات؟
+Tüm menü ¦ Whole menu ¦ Gesamte Karte ¦ كل القائمة
+İndirimin geçeceği ürünler için önce Fiyat Listesi'nde kategori ekleyin. ¦ To choose products for the discount, first add categories in the Price List. ¦ Fügen Sie zuerst in der Preisliste Kategorien hinzu, auf die der Rabatt gelten soll. ¦ لاختيار منتجات الخصم أضف فئات أولاً في قائمة الأسعار.
+Fiyat Listesi'ne git ¦ Go to Price List ¦ Zur Preisliste ¦ اذهب إلى قائمة الأسعار
+Ekranda fotoğraf çıksın mı? ¦ Show a photo on screen? ¦ Foto auf dem Bildschirm zeigen? ¦ هل تظهر صورة على الشاشة؟
+İsteğe bağlı. İndirim saatinde medyanın arasında tam ekran çıkar. ¦ Optional. During the discount time it appears full screen between the media. ¦ Optional. Erscheint in der Rabattzeit im Vollbild zwischen den Medien. ¦ اختياري. تظهر بملء الشاشة بين الوسائط في وقت الخصم.
+Fotoğraf eklemezseniz yalnız fiyat listesindeki fiyatlar düşer. ¦ Without a photo, only the prices in the price list drop. ¦ Ohne Foto sinken nur die Preise in der Preisliste. ¦ بدون صورة تنخفض أسعار قائمة الأسعار فقط.
+Fotoğraflı kartı ekranda göster ¦ Show the photo card on screen ¦ Fotokarte auf dem Bildschirm zeigen ¦ إظهار بطاقة الصورة على الشاشة
+Kartın ekranda kalma süresi (saniye) ¦ How long the card stays on screen (seconds) ¦ Wie lange die Karte angezeigt wird (Sekunden) ¦ مدة بقاء البطاقة على الشاشة (بالثواني)
+Kaç dakikada bir çıksın ¦ How often it appears (minutes) ¦ Wie oft sie erscheint (Minuten) ¦ كم دقيقة بين كل ظهور
+📺 TV'de dene ¦ 📺 Try on TV ¦ 📺 Auf dem TV testen ¦ 📺 جرّب على التلفاز
+Fotoğraf eklerseniz ekranda böyle görünür ¦ This is how it will look on screen if you add a photo ¦ So sieht es auf dem Bildschirm aus, wenn Sie ein Foto hinzufügen ¦ هكذا سيبدو على الشاشة إذا أضفت صورة
+En az bir gün seçin ¦ Choose at least one day ¦ Wählen Sie mindestens einen Tag ¦ اختر يوماً واحداً على الأقل
+Başlangıç ve bitiş saatini farklı girin ¦ Enter different start and end times ¦ Geben Sie unterschiedliche Start- und Endzeiten ein ¦ أدخل وقتَي بداية ونهاية مختلفين
+İndirim yüzdesini girin ¦ Enter the discount percentage ¦ Geben Sie den Rabatt in Prozent ein ¦ أدخل نسبة الخصم
+İndirimin geçeceği en az bir kategori seçin ¦ Choose at least one category for the discount ¦ Wählen Sie mindestens eine Kategorie für den Rabatt ¦ اختر فئة واحدة على الأقل للخصم

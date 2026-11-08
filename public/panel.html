@@ -719,6 +719,15 @@ body.sp-on .ytm-bar{background:#000}body.sp-on .ytm-prog{background:var(--sp)}
 .btn-grp button:last-child{border-right:0}
 .btn-grp button:hover{background:rgba(255,255,255,.06);color:#fff}
 .btn-grp button.on{background:rgba(var(--a2),.25);color:var(--accent2);font-weight:700}
+.hh-top{padding:18px 22px;margin-bottom:16px}
+.hh-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+.hh-grid.off .hh-steps{opacity:.45;pointer-events:none}
+.hh-steps{display:flex;flex-direction:column;gap:14px}
+.hh-side{position:sticky;top:16px}
+.hhs{display:flex;gap:16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px}
+.hhs-n{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent2);color:#1a1208;font-weight:800;display:flex;align-items:center;justify-content:center}
+.hhs-b{flex:1;min-width:0}.hhs-b h3{margin:4px 0 2px;font-size:17px}.hhs-b>p{margin:0 0 14px;font-size:13.5px}
+@media(max-width:900px){.hh-grid{grid-template-columns:1fr}.hh-side{position:static;order:-1}.hhs{padding:16px}}
 #hh-ov .hh-b{position:absolute;left:3%;top:4%;background:#e23b3b;color:#fff;font-weight:800;font-size:clamp(9px,1.8vw,16px);padding:.3em .8em;border-radius:6px}
 #hh-ov .hh-o{position:absolute;left:0;right:0;bottom:0;padding:14% 4% 3.5%;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent);color:#fff}
 #hh-ov .hh-o b{display:block;font-size:clamp(13px,2.6vw,26px);font-weight:800}#hh-ov .hh-o span{display:block;font-size:clamp(9px,1.4vw,13px);color:#ffe3bd;font-weight:700;margin-top:3px}
