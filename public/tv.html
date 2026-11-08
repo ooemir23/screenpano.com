@@ -4,6 +4,7 @@
 <link rel="preload" href="/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/montserrat-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
 <title>TV</title>
+<script>fetch('/api/auth/config').then(function(r){return r.json()}).then(function(c){if(c.env!=='test')return;window.__envInfo=window.__envInfo||{env:'test'};if(!/^\[TEST\]/.test(document.title))document.title='[TEST] '+document.title}).catch(function(){})</script>
 <script>
 /* APK içinde ya da ?lite=1 ile hafif mod: ağır efektler kapanır */
 // APK 2.4–3.0 sayfa yüklenince kendi kancasını enjekte eder (çift konum gönderme, ayrı CSS); sayfa hepsini kendisi yaptığı için kapatılır
@@ -2172,7 +2173,7 @@ function preloadLogos(s) { // tüm sayfalardaki logoları arka planda indir: say
   if (fresh.length) setTimeout(step, 1500);
 }
 function setState(s) {
-  window.__envInfo = { env: s.env || 'live', canTest: !!s.canTest };
+  window.__envInfo = { env: s.env || 'live', canTest: !!s.canTest }; markTest();
   { const mw = ((s.layout && s.layout.widgets) || []).find(w => w.type === 'media'); window.__mfit = (mw && mw.props && mw.props.fit) || 'auto'; try { if (window.__N && window.__N.mediaFit) window.__N.mediaFit(window.__mfit); } catch (e) {} }
   applyState0(s);
   if (s.blocked) return;
@@ -3378,7 +3379,7 @@ function applyBrand(b, scr) {
   $id('badge').textContent = b.product || ''; $id('badge').classList.toggle('on', !!b.badge);
   $id('mbrand').textContent = BNAME ? `${BNAME} · ${b.product || ''}` : (b.product || 'TV');
   $id('b-brand').textContent = b.product || ''; $id('a-brand').innerHTML = brandHtml(b.product || 'TV');
-  document.title = (BNAME || b.product || 'TV') + ' · TV';
+  document.title = (isTestEnv() ? '[TEST] ' : '') + (BNAME || b.product || 'TV') + ' · TV';
   updateStandby(!videos.length);
 }
 
@@ -3936,6 +3937,17 @@ function fullMedia(on) {
   document.documentElement.classList.toggle('full-media', on);
   try { window.__N && window.__N.overlay && window.__N.overlay(on); } catch (e) {}
   setTimeout(syncExoBounds, 80); setTimeout(syncExoBounds, 600);
+}
+// Test ortamı: sekme başlığı [TEST] ile başlar; panel önizlemesinde (iframe) köşede TEST şeridi görünür
+const isTestEnv = () => !!(window.__envInfo && window.__envInfo.env === 'test');
+function markTest() {
+  if (!isTestEnv()) return;
+  if (!/^\[TEST\]/.test(document.title)) document.title = '[TEST] ' + document.title;
+  if (window.self !== window.top && !document.getElementById('testrib')) {
+    const d = document.createElement('div'); d.id = 'testrib'; d.textContent = 'TEST';
+    d.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#d6262a;color:#fff;font:700 1.1vh/1 sans-serif;letter-spacing:.12em;padding:.5vh 1.2vh;border-radius:0 0 .8vh 0;pointer-events:none';
+    document.body.appendChild(d);
+  }
 }
 function notePlay(it) {
   if (it) fullMedia(it.full);

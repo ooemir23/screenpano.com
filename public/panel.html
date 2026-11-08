@@ -768,5 +768,5 @@ body.sp-on .ytm-bar{background:#000}body.sp-on .ytm-prog{background:var(--sp)}
 <script src="/posters.js"></script>
 <script src="/panel.js"></script>
 <script src="/studio.js"></script>
-<script>fetch('/api/auth/config').then(r=>r.json()).then(c=>{if(c.env!=='test')return;document.title='[TEST] '+document.title;var d=document.createElement('div');d.textContent='TEST';d.style.cssText='position:fixed;top:0;left:0;z-index:99999;background:#d6262a;color:#fff;font:700 11px/1 sans-serif;letter-spacing:.12em;padding:5px 12px;border-radius:0 0 8px 0;pointer-events:none';document.body.appendChild(d)}).catch(function(){})</script>
+<script>fetch('/api/auth/config').then(r=>r.json()).then(c=>{if(c.env!=='test')return;var f=function(){if(document.title.indexOf('[TEST]')!==0)document.title='[TEST] '+document.title};f();new MutationObserver(f).observe(document.querySelector('title'),{childList:true});var d=document.createElement('div');d.textContent='TEST';d.style.cssText='position:fixed;top:0;left:0;z-index:99999;background:#d6262a;color:#fff;font:700 11px/1 sans-serif;letter-spacing:.12em;padding:5px 12px;border-radius:0 0 8px 0;pointer-events:none';document.body.appendChild(d)}).catch(function(){})</script>
 </body></html>
