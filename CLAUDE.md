@@ -10,3 +10,10 @@
 - **Yeni büyük maç stili / duyuru tasarımı eklenirse yerel (Kotlin) olarak yaz:** `android/.../ui/nativeui/BigArenaView.kt` (stil başına bir `build…` işlevi, `supports()` listesine ekle); sayfadaki web tasarımı yalnız eski APK'lar için yedek kalır. Yerel arayüz profesyonel görünmeli: web tasarımıyla yan yana karşılaştır (ekran görüntüsü), yazı boyutları/hizalar/gölgeler/renkler tutmalı. Animasyon ekleme (WebView üstünde sürekli animasyon Box R'da fps düşürür). UI hatalarını kullanıcıya sormadan düzelt.
 
 - **Yayın akışı (test → canlı):** Kod değişiklikleri önce `staging` dalına gider (test sunucusu: test.screenpano.com, `APP_ENV=test`); `main` dalı canlıdır ve müşterilere gider. Kullanıcı "canlıya al" derse GitHub'daki **Canlıya al** iş akışını çalıştır (gh GraphQL kapalı: `gh api -X POST repos/ooemir23/screenpano.com/actions/workflows/promote.yml/dispatches -f ref=staging -f 'inputs[onay]=canliya-al'`). Önce staging'deki Android CI'nin (APK commit'i) bittiğini bekle. İş akışı bitince **canlının gerçekten güncellendiğini doğrula** (`curl https://screenpano.com/apk-version.json`, değişiklik APK'sızsa ilgili dosya/davranış); ~3 dk içinde güncellenmediyse Dokploy'da (http://46.225.94.54:3000, canlı uygulama `screenpano`) **Deploy**'a bas. Otomatik dağıtım GitHub webhook'larıyla çalışır (canlı → `deploy.screenpano.com/api/deploy/…`, test → staging push'unda); Dokploy'un kendi adresi `deploy.screenpano.com`, `panel.screenpano.com` işletme paneli (ScreenPano) içindir, ikisini karıştırma. Acil canlı düzeltmesi dışında `main`'e doğrudan push yapma. Ayrıntı: `TEST-ORTAMI.md`.
+
+# Çıktı ve verimlilik kuralları
+
+1. **Zekâdan ödün verme:** İstenmedikçe algoritmayı basitleştirme, uç durumları atlama, eksik mantık teslim etme. Üretime hazır, sağlam kod yaz.
+2. **Laf kalabalığı yok:** Selam, kapanış cümleleri ve soruyu yeniden anlatma yok; doğrudan çözüme geç.
+3. **Cerrahi değişiklik:** Var olan dosyayı güncellerken yalnız değişen işlev/bloğu, net çevre bağlamıyla göster; dokunulmamış satırları yeniden yazma.
+4. **Çıktı süzme:** Terminal çıktısı ve günlüklerde yüzlerce ham satır akıtma; `grep`, `head`, `tail`, `jq` ile süz.
