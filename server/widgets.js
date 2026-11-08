@@ -40,6 +40,17 @@ const TEMPLATES = {
     name: 'Lüks lounge (cam)', desc: 'Üstte logo ve saat, solda geniş medya, sağda maçlar ile hava/kurlar ve QR, altta kayan bant',
     widgets: [W('logo', 0, 0, 8, 3), W('clock', 17, 0, 7, 3), W('media', 0, 3, 16, 19), W('info', 16, 3, 8, 9), W('rates', 16, 12, 8, 6), W('qr', 16, 18, 8, 4), W('ticker', 0, 22, 24, 2)],
   },
+  otel: {
+    name: 'Otel / lobi', desc: 'Solda geniş tanıtım medyası; sağda logo, saat, hava, Wi-Fi QR; altta karşılama, kahvaltı ve resepsiyon bilgisi, kayan bant',
+    widgets: [
+      W('media', 0, 0, 16, 18), W('logo', 16, 0, 8, 3), W('clock', 16, 3, 8, 4, { seconds: false, show: 'both' }),
+      W('rates', 16, 7, 8, 5, { weather: true, rates: false, qr: false, qrs: '', valSize: 'xl' }),
+      W('qr', 16, 12, 8, 10, { qr: '', style: 'below', size: 'auto', text: 'm', look: 'card' }),
+      W('text', 0, 18, 8, 4, { title: 'Hoş geldiniz', body: 'Keyifli bir konaklama dileriz', align: 'center', size: 's', i18n: { en: { title: 'Welcome', body: 'We wish you a pleasant stay' }, de: { title: 'Willkommen', body: 'Wir wünschen Ihnen einen angenehmen Aufenthalt' }, ru: { title: 'Добро пожаловать', body: 'Желаем вам приятного отдыха' }, ar: { title: 'أهلاً وسهلاً', body: 'نتمنى لكم إقامة ممتعة' } } }),
+      W('text', 8, 18, 8, 4, { title: 'Kahvaltı 07:00 – 10:30', body: 'Restoran · Zemin kat', align: 'center', size: 's', i18n: { en: { title: 'Breakfast 07:00 – 10:30', body: 'Restaurant · Ground floor' }, de: { title: 'Frühstück 07:00 – 10:30', body: 'Restaurant · Erdgeschoss' }, ru: { title: 'Завтрак 07:00 – 10:30', body: 'Ресторан · 1 этаж' }, ar: { title: 'الإفطار 07:00 – 10:30', body: 'المطعم · الطابق الأرضي' } } }),
+      W('ticker', 0, 22, 24, 2, { clock: false }), // saat sağdaki kutuda zaten var
+    ],
+  },
   sade: {
     name: 'Sade', desc: 'Tam ekran medya ve altta kayan bant',
     widgets: [W('media', 0, 0, 24, 22), W('ticker', 0, 22, 24, 2)],
