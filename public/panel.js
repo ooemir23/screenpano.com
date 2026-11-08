@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const S = { me: null, db: null, cat: null, scr: null, lg: null };
 let TAB = 'home', PREV = null, SUB = {};
-const ICN = { media: 'film', logo: 'store', clock: 'clock', rates: 'cloud-sun', weather: 'cloud-sun', finance: 'trending-up', ticker: 'newspaper', text: 'type', image: 'image', qr: 'qr-code', info: 'trophy', reviews: 'star', menu: 'receipt-text', music: 'music' };
+const ICN = { media: 'film', logo: 'store', clock: 'clock', rates: 'cloud-sun', weather: 'cloud-sun', finance: 'coins', ticker: 'newspaper', text: 'type', image: 'image', qr: 'qr-code', info: 'trophy', reviews: 'star', menu: 'receipt-text', music: 'music' };
 const ICON = new Proxy({}, { get: (_, k) => ICN[k] ? `<svg class="ic" aria-hidden="true"><use href="/icons.svg#i-${ICN[k]}"></use></svg>` : '' });
 const fmtDate = ms => ms ? new Date(ms).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
 const ago = ms => { if (!ms) return 'hiç'; const m = Math.round((Date.now() - ms) / 60000); return m < 2 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.round(m / 60) + ' saat önce' : Math.round(m / 1440) + ' gün önce'; };
@@ -1350,7 +1350,7 @@ SECTIONS.settings = {
       + tabs('settings', [['business', 'İşletme'], ['devices', 'Cihazlar'], ['branches', 'Şubeler'], ['users', 'Kullanıcılar'], ['plan', 'Paket'], ['backup', 'Yedekler'], ['privacy', 'Verilerim']]);
     if (sub === 'business') {
       const loc = S.db.location || {};
-      h += card('İşletme bilgileri', '', `<div class="f">${fl('İşletme adı', `<input type="text" id="s-name" maxlength="80" value="${esc(t.name)}">`)}${fl('Şehir / ilçe (hava durumu için)', `<input type="text" id="s-city" placeholder="örn. Kadıköy" autocomplete="off" oninput="geoSearch()"><button type="button" class="btn ghost sm" id="geo-me" style="margin-top:6px" onclick="geoLocate()">📍 Konumumu otomatik bul</button>`)}</div>
+      h += card('İşletme bilgileri', '', `<div class="f" style="align-items:start">${fl('İşletme adı', `<input type="text" id="s-name" maxlength="80" value="${esc(t.name)}">`)}${fl('Şehir / ilçe (hava durumu için)', `<input type="text" id="s-city" placeholder="örn. Kadıköy" autocomplete="off" oninput="geoSearch()"><button type="button" class="btn ghost sm" id="geo-me" style="margin-top:6px" onclick="geoLocate()">📍 Konumumu otomatik bul</button>`)}</div>
         <div class="geo" id="geo"></div><p class="muted mt">Şu anki konum: <b style="color:var(--text)">${esc(loc.city || '-')}</b>${loc.custom ? '' : ' (varsayılan)'}</p>
         <div class="row end mt"><button class="btn" data-save onclick="saveProfile()">Kaydet</button></div>`);
     } else if (sub === 'devices') {
