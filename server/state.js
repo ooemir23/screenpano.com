@@ -126,30 +126,42 @@ function fixMusic(m) {
   for (const x of m.playlists) if (x.spotifyId === '37i9dQZF1DX4Wsb4d7NKfP') Object.assign(x, { spotifyId: '7uGniGmKxD4fmxGJWPqZAl', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', thumb: '' });
   return m;
 }
-// İndirim saati (happy hour): menu.happy = { label, pct, sch }. Saat içindeyse "İndirim saatine dahil" kategorilerdeki
-// ürünlerin fiyatı indirimli fiyata (ürünün kendi indirimli fiyatı ya da %pct) çevrilir, eski fiyat "was" olarak gider.
+// İndirim saatleri (happy hour): menu.happies = [{ id, label, pct, sch }]; kategori hangilerine dahilse c.hh = [id]. Eski kayıt: menu.happy + c.happy (tek saat, id 'h1').
+// Saat içindeyse dahil kategorilerdeki ürünlerin fiyatı indirimli fiyata (ürünün kendi indirimli fiyatı ya da %pct) çevrilir, eski fiyat "was" olarak gider.
+// Birden çok indirim saati aynı anda geçerliyse bir kategoride en yüksek indirim uygulanır.
 // Hesap sunucuda yapılır: eski APK'lar da indirimli fiyatı gösterir; sınır anında happy.js ekranlara yeni durumu iter.
 const parsePrice = v => { const x = String(v || '').replace(/\s|₺|TL/gi, ''); if (!/^\d[\d.,]*$/.test(x)) return null; const n = Number(/,\d{1,2}$/.test(x) ? x.replace(/\./g, '').replace(',', '.') : x.replace(/[.,](?=\d{3}(\D|$))/g, '')); return isFinite(n) ? n : null; };
 const fmtNum = (n, dec) => dec ? n.toFixed(2).replace('.', ',') : String(Math.round(n));
-// Happy Hours kartı: fotoğraf tam ekran, istenirse üstünde ad / saat / indirim rozeti (hazır tasarım fotoğrafı için hepsi gizlenebilir); kampanya mekanizmasıyla (sıklık, süre, zamanlama) gösterilir
+const hoursOf = m => !m ? [] : Array.isArray(m.happies) ? m.happies.filter(h => h && h.id && h.sch) : (m.happy && m.happy.sch ? [{ id: 'h1', label: m.happy.label, pct: m.happy.pct, sch: m.happy.sch }] : []);
+const catIn = (c, h) => Array.isArray(c.hh) ? c.hh.includes(h.id) : !!c.happy && h.id === 'h1';
+// Şu an geçerli ve en az bir kategoriyi kapsayan indirim saatleri
+const activeHours = (m, d = new Date()) => hoursOf(m).filter(h => SCH.active(h.sch, d) && (m.categories || []).some(c => catIn(c, h)));
+const happyOn = m => activeHours(m).length > 0;
+const happySig = m => activeHours(m).map(h => h.id).sort().join(',');
+// Happy Hours kartı: fotoğraf tam ekran, istenirse üstünde ad / saat / indirim rozeti (hazır tasarım fotoğrafı için hepsi gizlenebilir); kampanya mekanizmasıyla (sıklık, süre, zamanlama) gösterilir.
+// Kart tek: happyCard.hid ile hangi indirim saatini duyurduğu seçilir (yoksa ilki).
 const hhmm = sc => sc && sc.from ? `${sc.from} – ${sc.to}` : '';
 function happyCamp(db) {
-  const c = db.happyCard, h = db.menu && db.menu.happy;
-  if (!c || !c.on || !c.image || !h || !h.sch) return [];
+  const c = db.happyCard, hs = hoursOf(db.menu), h = hs.find(x => x.id === (c && c.hid)) || hs[0];
+  if (!c || !c.on || !c.image || !h) return [];
   return [pubCamp({ id: 'happy', headline: h.label || 'Happy Hour', svg: '', everyMin: c.everyMin || 4, durSec: c.durSec || 15, sch: h.sch, image: c.image,
     ovTitle: c.showTitle !== false ? (h.label || 'Happy Hour') : '', ovSub: c.showTime !== false ? hhmm(h.sch) : '', ovBadge: c.showPct !== false && h.pct ? `%${h.pct} İNDİRİM` : '' })];
 }
-const happyOn = m => !!(m && m.happy && m.happy.sch && (m.categories || []).some(c => c.happy) && SCH.active(m.happy.sch));
 function menuView(m) {
-  if (!m || !happyOn(m)) return m;
-  const h = m.happy, pct = Math.max(0, Math.min(90, Number(h.pct) || 0));
-  const out = { ...m, happyNow: h.label || 'Happy Hour', title: `${m.title || 'Fiyat Listesi'} · ${h.label || 'Happy Hour'}` };
-  out.categories = m.categories.map(c => !c.happy ? c : { ...c, items: (c.items || []).map(i => {
-    if (i.off) return i;
-    let np = i.hp ? String(i.hp) : null;
-    if (!np && pct) { const n = parsePrice(i.price); if (n != null) np = fmtNum(n * (1 - pct / 100), /,\d{1,2}$/.test(String(i.price)) && n % 1 !== 0); }
-    return np && np !== i.price ? { ...i, was: i.price, price: np } : i;
-  }) });
+  const act = m ? activeHours(m) : [];
+  if (!act.length) return m;
+  const labels = [...new Set(act.map(h => h.label || 'Happy Hour'))].join(' · ');
+  const out = { ...m, happyNow: labels, title: `${m.title || 'Fiyat Listesi'} · ${labels}` };
+  out.categories = m.categories.map(c => {
+    const hs = act.filter(h => catIn(c, h)); if (!hs.length) return c;
+    const pct = Math.max(0, Math.min(90, Math.max(...hs.map(h => Number(h.pct) || 0))));
+    return { ...c, items: (c.items || []).map(i => {
+      if (i.off) return i;
+      let np = i.hp ? String(i.hp) : null;
+      if (!np && pct) { const n = parsePrice(i.price); if (n != null) np = fmtNum(n * (1 - pct / 100), /,\d{1,2}$/.test(String(i.price)) && n % 1 !== 0); }
+      return np && np !== i.price ? { ...i, was: i.price, price: np } : i;
+    }) };
+  });
   return out;
 }
 // TV'ye giden müzik: uzun ömürlü Spotify refreshToken kutulara (fiziksel erişime açık) gitmez
@@ -249,4 +261,4 @@ function publicState(t) {
   };
 }
 
-module.exports = { activeSpecial, happyOn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };
+module.exports = { activeSpecial, happyOn, happySig, hoursOf, catIn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };

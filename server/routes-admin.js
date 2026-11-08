@@ -275,16 +275,23 @@ r.put('/menu', (req, res) => {
   const b = req.body || {}, s = (v, n) => String(v ?? '').trim().slice(0, n), SCH = require('./sched'), LANGS = require('./state').LANGS;
   // çeviriler: { en: 'Hot drinks' } ya da { en: { name, desc } }
   const tr = (o, fn) => { const out = {}; if (o && typeof o === 'object') for (const l of LANGS) if (l !== 'tr' && o[l] != null) { const v = fn(o[l]); if (v) out[l] = v; } return Object.keys(out).length ? out : undefined; };
+  // indirim saatleri: saat aralığı olmadan kaydedilmez; eski istemci tek `happy` + `c.happy` gönderirse 'h1' olarak çevrilir
+  const rawHours = Array.isArray(b.happies) ? b.happies : (b.happy ? [{ ...b.happy, id: 'h1' }] : []), seen = new Set();
+  const happies = rawHours.slice(0, 6).map(h => {
+    const sch = h && SCH.clean(h.sch); if (!sch) return null;
+    let id = String(h.id || '').replace(/[^a-z0-9]/gi, '').slice(0, 10); if (!id || seen.has(id)) id = 'h' + Math.random().toString(36).slice(2, 8); seen.add(id);
+    return { id, label: s(h.label, 24) || 'Happy Hour', pct: Math.max(0, Math.min(90, Math.round(Number(h.pct) || 0))), sch };
+  }).filter(Boolean);
+  const hhOf = c => Array.isArray(c.hh) ? [...new Set(c.hh.map(String))].filter(x => seen.has(x)) : (c.happy === true && !Array.isArray(b.happies) && seen.has('h1') ? ['h1'] : []);
   const cats = (Array.isArray(b.categories) ? b.categories : []).slice(0, 20).map(c => ({
-    name: s(c.name, 40), sch: SCH.clean(c.sch) || undefined, t: tr(c.t, v => s(v, 40)), happy: c.happy === true || undefined,
+    name: s(c.name, 40), sch: SCH.clean(c.sch) || undefined, t: tr(c.t, v => s(v, 40)), hh: hhOf(c).length ? hhOf(c) : undefined,
     items: (Array.isArray(c.items) ? c.items : []).slice(0, 60).map(i => ({
       name: s(i.name, 60), price: s(i.price, 16), hp: s(i.hp, 16) || undefined, desc: s(i.desc, 90), off: i.off === true || undefined, kcal: s(i.kcal, 14) || undefined,
       t: tr(i.t, v => { const n = s(v && v.name, 60), d = s(v && v.desc, 90); return n || d ? { name: n, desc: d } : null; }),
     })).filter(i => i.name),
   })).filter(c => c.name || c.items.length);
-  const hs = b.happy && SCH.clean(b.happy.sch); // indirim saati: saat aralığı olmadan kaydedilmez
-  const happy = b.happy && hs ? { label: s(b.happy.label, 24) || 'Happy Hour', pct: Math.max(0, Math.min(90, Math.round(Number(b.happy.pct) || 0))), sch: hs } : undefined;
-  req.t.db.menu = { title: s(b.title, 40) || 'Fiyat Listesi', currency: s(b.currency, 4) || '₺', categories: cats, t: tr(b.t, v => s(v, 40)), happy };
+  req.t.db.menu = { title: s(b.title, 40) || 'Fiyat Listesi', currency: s(b.currency, 4) || '₺', categories: cats, t: tr(b.t, v => s(v, 40)), happies: happies.length ? happies : undefined };
+  const hc = req.t.db.happyCard; if (hc) { if (!happies.length) hc.on = false; if (hc.hid && !seen.has(hc.hid)) hc.hid = undefined; }
   changed(req.t); res.json({ ok: true });
 });
 
@@ -693,7 +700,8 @@ r.put('/happy-card', (req, res) => {
   if (b.durSec !== undefined) c.durSec = clampN(b.durSec, 5, 300, 15);
   if (b.everyMin !== undefined) c.everyMin = clampN(b.everyMin, 1, 120, 4);
   if (c.on && !c.image) { c.on = false; changed(t); return res.status(400).json({ error: 'Önce Happy Hours fotoğrafını yükleyin' }); }
-  if (c.on && !(t.db.menu && t.db.menu.happy)) { c.on = false; changed(t); return res.status(400).json({ error: 'Önce Fiyat Listesi\'nde indirim saatini seçin' }); }
+  if (b.hid !== undefined) { const ok = require('./state').hoursOf(t.db.menu).some(h => h.id === String(b.hid)); c.hid = ok ? String(b.hid) : undefined; }
+  if (c.on && !require('./state').hoursOf(t.db.menu).length) { c.on = false; changed(t); return res.status(400).json({ error: 'Önce Fiyat Listesi\'nde indirim saatini seçin' }); }
   changed(t); res.json({ ok: true });
 });
 r.post('/happy-card/image', quota, upload.single('file'), async (req, res) => {

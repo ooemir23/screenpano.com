@@ -175,3 +175,11 @@ Ekran kartı ¦ Screen card ¦ Bildschirmkarte ¦ بطاقة الشاشة
 İsteğe bağlı ¦ Optional ¦ Optional ¦ اختياري
 Fiyatlar fiyat listenizden hesaplanır. ¦ Prices are calculated from your price list. ¦ Die Preise werden aus Ihrer Preisliste berechnet. ¦ تُحسب الأسعار من قائمة أسعارك.
 %{} İNDİRİM ¦ {}% OFF ¦ {} % RABATT ¦ خصم {}%
+Bu indirim saati kaldırılsın mı? ¦ Remove this happy hour? ¦ Diese Happy Hour entfernen? ¦ هل تريد إزالة ساعة التخفيض هذه؟
+＋ Happy Hour ekle ¦ ＋ Add happy hour ¦ ＋ Happy Hour hinzufügen ¦ ＋ إضافة ساعة تخفيض
+İndirim saatleri ¦ Happy hours ¦ Happy Hours ¦ ساعات التخفيض
+Bu saat başka bir indirim saatiyle çakışıyor; ortak kategorilerde daha yüksek indirim uygulanır. ¦ This overlaps another happy hour; the higher discount applies to shared categories. ¦ Diese Zeit überschneidet sich mit einer anderen Happy Hour; in gemeinsamen Kategorien gilt der höhere Rabatt. ¦ يتداخل هذا الوقت مع ساعة تخفيض أخرى؛ يُطبَّق التخفيض الأعلى على الفئات المشتركة.
+Henüz indirim saati yok. Örneğin hafta içi 17:00–19:00 arası kategorilerde %20 indirim ekleyin; saat gelince fiyatlar kendiliğinden düşer, bitince eski hâline döner. ¦ No happy hours yet. For example, add 20% off selected categories on weekdays 17:00–19:00; prices drop automatically when the time comes and return to normal afterwards. ¦ Noch keine Happy Hour. Fügen Sie z. B. werktags 17:00–19:00 Uhr 20 % Rabatt auf ausgewählte Kategorien hinzu; die Preise sinken automatisch und gehen danach wieder auf normal. ¦ لا توجد ساعات تخفيض بعد. أضف مثلًا تخفيض 20% على فئات محددة في أيام الأسبوع من 17:00 إلى 19:00؛ تنخفض الأسعار تلقائيًا في الوقت المحدد وتعود إلى طبيعتها بعده.
+Hangi indirim saatini duyursun? ¦ Which happy hour should it announce? ¦ Welche Happy Hour soll sie ankündigen? ¦ أي ساعة تخفيض ستعلن عنها؟
+Seçili indirim saati geçerliyken görünüm. Fiyatlar fiyat listenizden hesaplanır. ¦ How it looks while the selected happy hour is active. Prices are calculated from your price list. ¦ So sieht es aus, während die gewählte Happy Hour läuft. Die Preise werden aus Ihrer Preisliste berechnet. ¦ المظهر أثناء سريان ساعة التخفيض المحددة. تُحسب الأسعار من قائمة أسعارك.
+İndirim saatlerini Happy Hours sayfasında seçin ¦ Choose happy hours on the Happy Hours page ¦ Happy Hours auf der Seite „Happy Hours“ wählen ¦ اختر ساعات التخفيض من صفحة ساعات التخفيض
