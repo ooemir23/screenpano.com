@@ -28,6 +28,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const b = req.body || {};
     if ('sch' in b) { const c = SCH.clean(b.sch); if (c) v.sch = c; else delete v.sch; }
     if (typeof b.hidden === 'boolean') v.hidden = b.hidden || undefined;
+    if (typeof b.full === 'boolean') v.full = b.full || undefined;
     if (b.dur !== undefined) v.dur = b.dur ? Math.max(3, Math.min(v.type === 'youtube' ? 3600 : 120, Math.round(Number(b.dur)) || 10)) : undefined;
     if (typeof b.name === 'string' && b.name.trim()) v.name = s(b.name, 80);
     changed(req.t); res.json({ ok: true });

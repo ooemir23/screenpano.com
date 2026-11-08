@@ -360,6 +360,8 @@ html.lite #big .yemb{display:none!important}
 #menu{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 70% at 50% 30%,#14181d 0%,#07080a 100%);touch-action:manipulation;cursor:pointer}
 #menu.on{display:flex}
 html.menu-open #brk,html.menu-open #updot{display:none!important}
+html.full-media #app>.cell:not([data-w=media]){visibility:hidden}
+html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .mx{width:86vw;max-width:1560px;max-height:94vh;display:flex;flex-direction:column;gap:2vh;color:#fff;font-size:2vh;line-height:1.4;cursor:default;position:relative}
 #menu .mh2{display:flex;align-items:center;gap:1.6vw}
 #menu .mh2 .mt{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -1576,7 +1578,7 @@ window.__mediaBoundary = () => {
   return hold ? 'hold' : 'go';
 };
 // yerel motor o an hangi içeriği gösteriyor: durum raporu ve istatistik doğru olsun
-window.__setCur = id => { current = id; const k = videos.findIndex(v => v.id === id); if (k >= 0) idx = k; };
+window.__setCur = id => { current = id; const k = videos.findIndex(v => v.id === id); if (k >= 0) { idx = k; fullMedia(videos[k].full); } };
 function play() {
   if (NMED()) return;
   clearTimeout(timer); fadeTok++;
@@ -2945,7 +2947,7 @@ function menuOpen() {
 }
 // menü işlem yapılmazsa kapanır; güncelleme sürerken kapanmaz
 function menuIdle(ms) { clearTimeout(upd.timer); upd.timer = setTimeout(() => { if (upd.busy) return menuIdle(60000); menuClose(); }, ms); }
-function menuClose() { clearTimeout(upd.timer); clearInterval(upd.live); upd.busy = false; document.documentElement.classList.remove('menu-open'); $m('menu').classList.remove('on'); try { window.__N && window.__N.overlay && window.__N.overlay(false); } catch (e) {} }
+function menuClose() { clearTimeout(upd.timer); clearInterval(upd.live); upd.busy = false; document.documentElement.classList.remove('menu-open'); $m('menu').classList.remove('on'); try { window.__N && window.__N.overlay && window.__N.overlay(false); } catch (e) {}  if (fullOn) { try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} } }
 window.__menu = () => {
   const now = Date.now();
   if (now - lastMenuToggle < 300) return;
@@ -3855,7 +3857,7 @@ function applyVideos() {
   const curOld = videos.find(x => x.id === current), curNew = list.find(x => x.id === current);
   vSig = sig; videos = list;
   if (!videos.length) {
-    clearTimeout(timer); current = null;
+    clearTimeout(timer); current = null; fullMedia(false);
     els.forEach(v => v.pause());
     hidePoster();
     if (window.__nativePoster) exoStop(true); // yerel afiş kalmasın, bekleme ekranı görünsün
@@ -3927,7 +3929,16 @@ function applyLang() {
 
 // ---- kullanım istatistiği: biten içerik sunucuya bildirilir ----
 let playRec = null;
+// Tam ekran içerik: öğe oynarken kenar kutular gizlenir, medya tüm ekranı kaplar (yerel kutularda TVNative.overlay yerel widget'ları saklar)
+let fullOn = false;
+function fullMedia(on) {
+  on = !!on; if (on === fullOn) return; fullOn = on;
+  document.documentElement.classList.toggle('full-media', on);
+  try { window.__N && window.__N.overlay && window.__N.overlay(on); } catch (e) {}
+  setTimeout(syncExoBounds, 80); setTimeout(syncExoBounds, 600);
+}
 function notePlay(it) {
+  if (it) fullMedia(it.full);
   if (playRec) wsSend({ type: 'play', id: playRec.id, sec: Math.round((Date.now() - playRec.at) / 1000) });
   playRec = it ? { id: it.id, at: Date.now() } : null;
 }

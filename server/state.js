@@ -65,7 +65,8 @@ const langList = db => ['tr', ...(((db.lang || {}).list) || []).filter(l => l !=
 
 // Medya döngüsü: videolar, fotoğraflar, hazır afişler (+ Instagram paylaşımları araya serpiştirilir)
 // Medya kaydı -> ekrana giden öğe (reklam görselleri de aynı biçimle gider)
-function mediaItem(t, v) {
+function mediaItem(t, v) { const it = mediaItem0(t, v); return v.full ? { ...it, full: true } : it; } // full: bu içerik oynarken tam ekran (kenar kutular gizli)
+function mediaItem0(t, v) {
   // YouTube bağlantısı: TV gömülü oynatıcıyla gösterir; url eski uygulamalar için kapak görseli (süre boyunca fotoğraf gibi görünür)
   if (v.type === 'youtube') return { id: v.id, name: v.name, type: 'youtube', yt: v.yt, url: require('./ytlink').thumb(v.yt), dur: v.dur || 30, sch: v.sch || null };
   if (v.type === 'poster') return { id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null };
@@ -163,7 +164,7 @@ function tvMusic(m) {
 // Seçilen içerik gizli ya da kendi zamanlaması dışında olsa da bu saatlerde oynar. Seçili içerik kalmadıysa kural yok sayılır (ekran boş kalmaz).
 function activeSpecial(t) {
   for (const r of (t.db.special || [])) {
-    if (!r.on || !r.sch || !SCH.active(r.sch)) continue;
+    if (!r.on || !r.sch || !SCH.active(r.sch) || (r.stopUntil && Date.now() < r.stopUntil)) continue; // stopUntil: "şimdi durdur" ile bu yayın dilimi bitene dek susturuldu
     const items = (r.items || []).map(id => (t.db.videos || []).find(v => v.id === id)).filter(v => v && !(v.status === 'processing' && !v.reopt)).map(v => ({ ...mediaItem(t, v), sch: null }));
     if (items.length) return { rule: r, items };
   }

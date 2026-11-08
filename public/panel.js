@@ -656,7 +656,7 @@ SECTIONS.media = {
       + card('YouTube bağlantısı ekle', 'Bir YouTube videosunun bağlantısını yapıştırın; ekranda sırası gelince belirttiğiniz süre boyunca oynar (video kısaysa baştan döner). Ses kapalı oynar.',
         `<div class="row" style="align-items:center;gap:8px"><input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><input type="number" id="yt-dur" min="5" max="3600" value="30" style="width:90px" title="Süre (saniye)"><span class="muted">saniye</span><button class="btn" onclick="addYt()">Ekle</button></div>`)
       + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div id="mbulk" class="mbulk" hidden></div><div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile${MSEL.has(x.id) ? ' picked' : ''}" draggable="true" data-id="${x.id}">
-          <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
+          <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}${x.full ? '<span class="fbadge">Tam ekran</span>' : ''}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
           <div class="m"><span class="grip" title="Sürükleyerek sıralayın">${ic('grip-vertical')}</span><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g ib" onclick="openSched('video','${x.id}')" title="Zamanla">${ic('clock')}</button><button class="btn xs g ib" onclick="tileMenu(event,'${x.id}')" title="Diğer işlemler">${ic('ellipsis')}</button></div></div>`).join('')}</div>`
         : '<div class="empty">Henüz dosya yok. Yukarıdan ekleyin.</div>')
       + `<div class="grid g2">` + card('Fotoğraf süresi', 'Her fotoğraf ekranda kaç saniye kalsın.', `<div class="row"><input type="number" id="imgsec" min="3" max="120" value="${S.db.imageSeconds}" style="max-width:120px"><span class="muted">saniye</span><span style="flex:1"></span><button class="btn" data-save onclick="act('PUT','/settings',{imageSeconds:+$('imgsec').value},'Kaydedildi')">Kaydet</button></div>`)
@@ -714,6 +714,7 @@ function tileMenu(ev, id) {
   popMenu(ev.currentTarget, [
     ['Başa al', 'arrow-up-to-line', () => mvEdge(id, true)], ['Bir öne al', 'chevron-left', () => mvMedia(id, 'up')],
     ['Bir arkaya al', 'chevron-right', () => mvMedia(id, 'down')], ['Sona al', 'arrow-down-to-line', () => mvEdge(id, false)], null,
+    [v.full ? 'Tam ekranı kapat' : 'Tam ekran göster', 'monitor', () => togFull(id)],
     [v.hidden ? 'Ekranda göster' : 'Ekrandan kaldır (gizle)', v.hidden ? 'eye' : 'eye-off', () => togHide(id)], null,
     ['Sil', 'trash-2', () => delMedia(id), 1]]);
 }
@@ -749,6 +750,7 @@ async function delMedia(ids) {
     toast(e.message, true);
   }
 }
+const togFull = id => { const v = S.db.videos.find(x => x.id === id); act('PUT', '/videos/' + id, { full: !v.full }, v.full ? 'Tam ekran kapatıldı' : 'Bu içerik oynarken ekran tam ekran olacak'); };
 const togHide = id => { const v = S.db.videos.find(x => x.id === id); act('PUT', '/videos/' + id, { hidden: !v.hidden }, v.hidden ? 'Ekranda gösteriliyor' : 'Gizlendi; ekranda oynamaz'); };
 async function addYt() {
   const url = $('yt-url').value.trim(); if (!url) return toast('Bağlantıyı yapıştırın', true);
@@ -776,14 +778,14 @@ SECTIONS.special = {
     const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
     const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h3>${t}</h3><p class="muted">${sub}</p>${body}</div></div>`;
     const ruleHtml = (r, i) => {
-      const s = r.sch || {}, d = spDays(r), live = r.on && s.from && s.to && schAt(s, new Date());
+      const s = r.sch || {}, d = spDays(r), stopped = !!(r.stopUntil && r.stopUntil > Date.now()), live = !stopped && r.on && s.from && s.to && schAt(s, new Date());
       const dayChips = DAYS.map((n, k) => `<button class="chip${d.includes(k + 1) ? ' on' : ''}" onclick="spDay(${i},${k + 1})">${n}</button>`).join('');
       const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => `<button class="chip${same(d, v) ? ' on' : ''}" onclick="spDayPre(${i},[${v}])">${n}</button>`).join('');
       const tiles = vids.length ? vids.map(x => { const k = r.items.indexOf(x.id); return `<div class="spx-t${k >= 0 ? ' on' : ''}" onclick="spItem(${i},'${x.id}')"><div class="th">${thumb(x)}</div>${k >= 0 ? `<b class="spx-n">${k + 1}</b>` : ''}<span class="spx-m" title="${esc(x.name)}">${esc(x.name)}</span></div>`; }).join('') : '<span class="muted">Henüz içerik yok. Aşağıdan yeni dosya yükleyin.</span>';
       return `<div class="spx${r.on ? '' : ' off'}"><div class="card hh-top"><div class="row" style="gap:14px;align-items:center;flex-wrap:wrap">
-          <label class="row" style="gap:12px;cursor:pointer;align-items:center">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}<span><b style="font-size:17px">${r.on ? 'Açık' : 'Kapalı'}</b><span class="muted" style="display:block;margin-top:2px">${live ? '● Şu an yayında · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></span></label>
+          <label class="row" style="gap:12px;cursor:pointer;align-items:center">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}<span><b style="font-size:17px">${r.on ? 'Açık' : 'Kapalı'}</b><span class="muted" style="display:block;margin-top:2px">${stopped ? 'Durduruldu; sonraki yayında kendiliğinden devam eder · ' : live ? '● Şu an yayında · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></span></label>
           <input type="text" maxlength="40" value="${esc(r.name)}" placeholder="Özel yayın adı" style="flex:1;min-width:160px;max-width:320px" oninput="SP.rules[${i}].name=this.value;SP.dirty=1">
-          <button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`
+          ${r.id && r.on ? (r.stopUntil && r.stopUntil > Date.now() ? `<button class="btn s" onclick="spStop(${i},true)">Yeniden başlat</button>` : live ? `<button class="btn s d" onclick="spStop(${i},false)">Şimdi durdur</button>` : '') : ''}<button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`
         + step(1, 'Hangi gün, saat kaçta?', 'Bu saatlerde yalnız aşağıda seçtiğiniz içerikler oynar; saat bitince ekran her zamanki hâline döner.',
           `<div class="chips">${dayChips}</div><div class="chips mt">${dayPre}</div><div class="f mt">${fl('Başlangıç', `<input type="time" value="${s.from || ''}" oninput="SP.rules[${i}].sch.from=this.value;SP.dirty=1">`)}${fl('Bitiş', `<input type="time" value="${s.to || ''}" oninput="SP.rules[${i}].sch.to=this.value;SP.dirty=1">`)}</div>`)
         + step(2, 'Ne oynasın?', 'Oynatmak istediklerinize dokunun; numara oynatma sırasını gösterir. Normalde gizli içerikler de seçilebilir.',
@@ -797,6 +799,11 @@ SECTIONS.special = {
   },
   after() { drawThumbs(); },
 };
+async function spStop(i, resume) {
+  const r = SP.rules[i]; if (!r.id) return;
+  if (!resume && !await UI.ask('Özel yayın şimdi durdurulsun mu? Ekran hemen normale döner; sonraki yayın saatinde kendiliğinden devam eder.', { ok: 'Durdur' })) return;
+  try { const j = await req('POST', `/special/${r.id}/stop`, resume ? { resume: true } : {}); r.stopUntil = j.stopUntil || undefined; toast(resume ? 'Özel yayın yeniden başlatıldı' : 'Özel yayın durduruldu'); render(true); } catch (e) { toast(e.message, true); }
+}
 async function saveSpecial() {
   for (const r of SP.rules) {
     const s = r.sch || {};

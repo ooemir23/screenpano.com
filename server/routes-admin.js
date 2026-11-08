@@ -648,6 +648,13 @@ r.delete('/campaigns/:id/image', (req, res) => {
 
 // ---- Özel yayın: seçili gün/saatlerde yalnız seçilen içerikler oynar ----
 r.get('/special', (req, res) => { const { activeSpecial } = require('./state'), sp = activeSpecial(req.t); res.json({ rules: req.t.db.special || [], activeId: sp ? sp.rule.id : null }); });
+// Şimdi durdur: yayın dilimi bitene dek (en çok 2 gün) bu kural susturulur; sonraki dilimde kendiliğinden devam eder. resume: yeniden başlat
+r.post('/special/:id/stop', (req, res) => {
+  const t = req.t, r0 = (t.db.special || []).find(x => x.id === req.params.id); if (!r0) return res.status(404).json({ error: 'bulunamadı' });
+  if (req.body && req.body.resume) delete r0.stopUntil;
+  else { const SCH = require('./sched'); let k = 1; while (k < 2880 && SCH.active(r0.sch, new Date(Date.now() + k * 60000))) k++; r0.stopUntil = Math.floor(Date.now() / 60000) * 60000 + k * 60000; }
+  changed(t); res.json({ ok: true, stopUntil: r0.stopUntil || null });
+});
 r.put('/special', (req, res) => {
   const t = req.t, src = Array.isArray((req.body || {}).rules) ? req.body.rules.slice(0, 10) : [], vids = new Set((t.db.videos || []).map(v => v.id)), out = [];
   for (const x of src) {
@@ -655,7 +662,8 @@ r.put('/special', (req, res) => {
     if (!sch || (!sch.from && !sch.days && !sch.start && !sch.end)) return res.status(400).json({ error: 'Her özel yayın için gün ya da saat seçin' });
     const items = [...new Set((Array.isArray(x.items) ? x.items : []).map(String).filter(id => vids.has(id)))].slice(0, 60);
     if (x.on && !items.length) return res.status(400).json({ error: 'Açık bir özel yayında en az bir içerik seçili olmalı' });
-    out.push({ id: /^[a-z0-9]{4,16}$/i.test(x.id || '') ? x.id : Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: String(x.name || '').trim().slice(0, 40) || 'Özel yayın', on: !!x.on, sch, items, full: x.full !== false });
+    const old = (t.db.special || []).find(o => o.id === x.id);
+    out.push({ id: /^[a-z0-9]{4,16}$/i.test(x.id || '') ? x.id : Date.now().toString(36) + Math.random().toString(36).slice(2, 5), ...(old && old.stopUntil && JSON.stringify(old.sch) === JSON.stringify(sch) ? { stopUntil: old.stopUntil } : {}), name: String(x.name || '').trim().slice(0, 40) || 'Özel yayın', on: !!x.on, sch, items, full: x.full !== false });
   }
   t.db.special = out; changed(t); res.json({ ok: true });
 });
