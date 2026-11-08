@@ -763,35 +763,48 @@ function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return
 /* ================= ÖZEL YAYIN ================= */
 // Seçili gün/saatlerde ekranda yalnız seçilen içerikler oynar; kampanya, kutlama, maç, reklam çıkmaz. Kenar kutular gizlenebilir ya da kalabilir.
 let SP = null;
-function spInit() { if (SP && SP.dirty) return; SP = { dirty: 0, rules: clone(S.db.special || []) }; }
+function spInit() { if (SP && SP.dirty) return; const o = SP ? SP.open : -1, y = SP ? SP.yt : -1; SP = { dirty: 0, open: o, yt: y, rules: clone(S.db.special || []) }; } // open: düzenlenen kural, yt: YouTube alanı açık kural
 const spSet = (fn, redraw = true) => { fn(); SP.dirty = 1; if (redraw) render(true); };
-const spNew = () => spSet(() => { SP.rules.push({ id: '', name: 'Özel yayın', on: true, sch: { days: [1, 2, 3, 4, 5], from: '09:00', to: '12:00' }, items: [], full: true }); });
+const spNew = () => spSet(() => { SP.open = SP.rules.length; SP.rules.push({ id: '', name: 'Özel yayın', on: true, sch: { days: [1, 2, 3, 4, 5], from: '09:00', to: '12:00' }, items: [], full: true }); });
 const spDays = r => (r.sch && r.sch.days) || [1, 2, 3, 4, 5, 6, 7];
 function spDay(i, n) { const r = SP.rules[i], d = spDays(r); const nd = d.includes(n) ? d.filter(x => x !== n) : [...d, n]; if (!nd.length) return; spSet(() => { nd.length === 7 ? delete r.sch.days : r.sch.days = nd.sort(); }); }
 function spDayPre(i, v) { const r = SP.rules[i]; spSet(() => { v.length === 7 ? delete r.sch.days : r.sch.days = v.slice(); }); }
 function spItem(i, id) { const r = SP.rules[i]; spSet(() => { r.items = r.items.includes(id) ? r.items.filter(x => x !== id) : [...r.items, id]; }); }
-function spDel(i) { UI.ask('Bu özel yayın silinsin mi?', { ok: 'Sil', danger: true }).then(ok => { if (ok) spSet(() => { SP.rules.splice(i, 1); }); }); }
+function spDel(i) { UI.ask('Bu özel yayın silinsin mi?', { ok: 'Sil', danger: true }).then(ok => { if (ok) spSet(() => { SP.rules.splice(i, 1); SP.open = -1; SP.yt = -1; }); }); }
+const spOpen = i => { SP.open = SP.open === i ? -1 : i; SP.yt = -1; render(true); };
+const spYtTog = i => { SP.yt = SP.yt === i ? -1 : i; render(true); if (SP.yt === i) setTimeout(() => { const e = $('sp-yt-' + i); e && e.focus(); }, 0); };
+const spKey = (e, fn) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
 SECTIONS.special = {
   html() {
     spInit();
     const vids = S.db.videos || [];
     const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
-    const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h3>${t}</h3><p class="muted">${sub}</p>${body}</div></div>`;
+    const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h2>${t}</h2><p class="muted">${sub}</p>${body}</div></div>`;
     const ruleHtml = (r, i) => {
       const s = r.sch || {}, d = spDays(r), stopped = !!(r.stopUntil && r.stopUntil > Date.now()), live = !stopped && r.on && s.from && s.to && schAt(s, new Date());
-      const dayChips = DAYS.map((n, k) => `<button class="chip${d.includes(k + 1) ? ' on' : ''}" onclick="spDay(${i},${k + 1})">${n}</button>`).join('');
-      const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => `<button class="chip${same(d, v) ? ' on' : ''}" onclick="spDayPre(${i},[${v}])">${n}</button>`).join('');
-      const tiles = vids.length ? vids.map(x => { const k = r.items.indexOf(x.id); return `<div class="spx-t${k >= 0 ? ' on' : ''}" onclick="spItem(${i},'${x.id}')"><div class="th">${thumb(x)}</div>${k >= 0 ? `<b class="spx-n">${k + 1}</b>` : ''}<span class="spx-m" title="${esc(x.name)}">${esc(x.name)}</span></div>`; }).join('') : '<span class="muted">Henüz içerik yok. Aşağıdan yeni dosya yükleyin.</span>';
+      const dayChips = DAYS.map((n, k) => `<button class="chip${d.includes(k + 1) ? ' on' : ''}" aria-pressed="${d.includes(k + 1)}" onclick="spDay(${i},${k + 1})">${n}</button>`).join('');
+      const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => `<button class="chip${same(d, v) ? ' on' : ''}" aria-pressed="${same(d, v)}" onclick="spDayPre(${i},[${v}])">${n}</button>`).join('');
+      const tiles = vids.length ? vids.map(x => { const k = r.items.indexOf(x.id); return `<div class="spx-t${k >= 0 ? ' on' : ''}" role="checkbox" aria-checked="${k >= 0}" aria-label="${esc(x.name)}" tabindex="0" onclick="spItem(${i},'${x.id}')" onkeydown="spKey(event,()=>spItem(${i},'${x.id}'))"><div class="th">${thumb(x)}</div>${k >= 0 ? `<b class="spx-n">${k + 1}</b>` : ''}<span class="spx-m" title="${esc(x.name)}">${esc(x.name)}</span></div>`; }).join('') : '<span class="muted">Henüz içerik yok. Aşağıdaki düğmeyle yeni dosya yükleyin.</span>';
+      if (SP.open !== i) {
+        const its = r.items.map(id => vids.find(v => v.id === id)).filter(Boolean), st = stopped ? 'Durduruldu; sonraki yayında kendiliğinden devam eder' : live ? '● Şu an yayında' : '';
+        return `<div class="card spr${r.on ? '' : ' off'}"><label class="spr-sw" aria-label="${esc(r.name)}">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}</label>
+          <div class="spr-t"><b>${esc(r.name || 'Özel yayın')}</b><span class="muted">${st ? st + ' · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></div>
+          <div class="spr-th">${its.slice(0, 3).map(x => `<div class="th">${thumb(x)}</div>`).join('')}<span class="muted">${its.length} içerik</span></div>
+          <div class="row" style="gap:8px">${r.id && r.on ? (stopped ? `<button class="btn s" onclick="spStop(${i},true)">Yeniden başlat</button>` : live ? `<button class="btn s d" onclick="spStop(${i},false)">Şimdi durdur</button>` : '') : ''}<button class="btn s" onclick="spOpen(${i})">Düzenle</button><button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`;
+      }
       return `<div class="spx${r.on ? '' : ' off'}"><div class="card hh-top"><div class="row" style="gap:14px;align-items:center;flex-wrap:wrap">
           <label class="row" style="gap:12px;cursor:pointer;align-items:center">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}<span><b style="font-size:17px">${r.on ? 'Açık' : 'Kapalı'}</b><span class="muted" style="display:block;margin-top:2px">${stopped ? 'Durduruldu; sonraki yayında kendiliğinden devam eder · ' : live ? '● Şu an yayında · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></span></label>
-          <input type="text" maxlength="40" value="${esc(r.name)}" placeholder="Özel yayın adı" style="flex:1;min-width:160px;max-width:320px" oninput="SP.rules[${i}].name=this.value;SP.dirty=1">
-          ${r.id && r.on ? (r.stopUntil && r.stopUntil > Date.now() ? `<button class="btn s" onclick="spStop(${i},true)">Yeniden başlat</button>` : live ? `<button class="btn s d" onclick="spStop(${i},false)">Şimdi durdur</button>` : '') : ''}<button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`
+          <input type="text" maxlength="40" value="${esc(r.name)}" placeholder="Özel yayın adı" aria-label="Özel yayın adı" style="flex:1;min-width:160px;max-width:320px" oninput="SP.rules[${i}].name=this.value;SP.dirty=1">
+          ${r.id && r.on ? (r.stopUntil && r.stopUntil > Date.now() ? `<button class="btn s" onclick="spStop(${i},true)">Yeniden başlat</button>` : live ? `<button class="btn s d" onclick="spStop(${i},false)">Şimdi durdur</button>` : '') : ''}<button class="btn s" onclick="spOpen(${i})">Tamam</button><button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`
         + step(1, 'Hangi gün, saat kaçta?', 'Bu saatlerde yalnız aşağıda seçtiğiniz içerikler oynar; saat bitince ekran her zamanki hâline döner.',
           `<div class="chips">${dayChips}</div><div class="chips mt">${dayPre}</div><div class="f mt">${fl('Başlangıç', `<input type="time" value="${s.from || ''}" oninput="SP.rules[${i}].sch.from=this.value;SP.dirty=1">`)}${fl('Bitiş', `<input type="time" value="${s.to || ''}" oninput="SP.rules[${i}].sch.to=this.value;SP.dirty=1">`)}</div>`)
         + step(2, 'Ne oynasın?', 'Oynatmak istediklerinize dokunun; numara oynatma sırasını gösterir. Normalde gizli içerikler de seçilebilir.',
-          `<div class="spx-grid">${tiles}</div><div class="spx-drop" ondragover="event.preventDefault();this.classList.add('hot')" ondragleave="this.classList.remove('hot')" ondrop="event.preventDefault();this.classList.remove('hot');spUp(${i},event.dataTransfer.files)" onclick="this.querySelector('input').click()"><b>Yeni fotoğraf veya video ekle</b><span class="muted">Dosyaları buraya bırakın ya da tıklayın</span><input type="file" multiple accept="video/*,image/*" hidden onclick="event.stopPropagation()" onchange="spUp(${i},this.files)"></div><div id="sp-up-${i}"></div><div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><input type="text" id="sp-yt-${i}" placeholder="YouTube bağlantısı" style="flex:1;min-width:180px"><button class="btn s g" onclick="spYt(${i})">Ekle</button></div><p class="muted" style="font-size:12.5px;margin:8px 0 0">Buradan eklediğiniz yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez.</p>`)
+          `<div class="spx-grid" ondragover="event.preventDefault();this.classList.add('hot')" ondragleave="this.classList.remove('hot')" ondrop="event.preventDefault();this.classList.remove('hot');spUp(${i},event.dataTransfer.files)">${tiles}</div>
+            <div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><button class="btn s g" onclick="$('sp-f-${i}').click()">+ Fotoğraf / video yükle</button><button class="btn s" aria-expanded="${SP.yt === i}" onclick="spYtTog(${i})">+ YouTube bağlantısı</button><input type="file" id="sp-f-${i}" multiple accept="video/*,image/*" hidden aria-label="Fotoğraf veya video seç" onchange="spUp(${i},this.files)"></div>
+            ${SP.yt === i ? `<div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><input type="text" id="sp-yt-${i}" placeholder="YouTube bağlantısı" aria-label="YouTube bağlantısı" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')spYt(${i})"><button class="btn s g" onclick="spYt(${i})">Ekle</button></div>` : ''}
+            <div id="sp-up-${i}"></div><p class="muted" style="font-size:12.5px;margin:8px 0 0">Yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez. Dosyaları kutuların üzerine de bırakabilirsiniz.</p>`)
         + step(3, 'Kenar kutular', 'Saat, hava, finans, QR, kayan bant ve logo gibi kutular özel yayında ne olsun?',
-          `<div class="chips"><button class="chip${r.full !== false ? ' on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=true})">Hepsi gizlensin, tam ekran</button><button class="chip${r.full === false ? ' on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=false})">Kenar kutular kalsın</button></div>`)
+          `<div class="btn-grp" role="radiogroup" aria-label="Kenar kutular"><button role="radio" aria-checked="${r.full !== false}" class="${r.full !== false ? 'on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=true})">Hepsi gizlensin, tam ekran</button><button role="radio" aria-checked="${r.full === false}" class="${r.full === false ? 'on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=false})">Kenar kutular kalsın</button></div>`)
         + `</div>`;
     };
     return head('Özel yayın', 'Seçtiğiniz gün ve saatlerde ekranda yalnız seçtiğiniz içerikler oynar.', `<button class="btn g" onclick="spNew()">+ Yeni özel yayın</button><button class="btn" data-save onclick="saveSpecial()">Kaydet</button>`)
@@ -868,7 +881,7 @@ SECTIONS.happy = {
     const allCats = cats.length && d.cats.every(Boolean);
     const catChips = cats.length ? `<button class="chip${allCats ? ' on' : ''}" onclick="hdSet(()=>{HD.cats=HD.cats.map(()=>${!allCats})})">Tüm menü</button>` + cats.map((cat, i) => `<button class="chip${d.cats[i] ? ' on' : ''}" onclick="hdSet(()=>{HD.cats[${i}]=!HD.cats[${i}]})">${esc(cat.name || 'Kategori')}</button>`).join('')
       : `<span class="muted">İndirimin geçeceği ürünler için önce Fiyat Listesi'nde kategori ekleyin.</span> <a class="btn xs g" href="#menu">Fiyat Listesi'ne git</a>`;
-    const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h3>${t}</h3><p class="muted">${sub}</p>${body}</div></div>`;
+    const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h2>${t}</h2><p class="muted">${sub}</p>${body}</div></div>`;
     const photo = `<div class="camp-img-box">${c.image ? `<img src="${esc(c.image)}" class="camp-img-thumb" alt=""><div style="flex:1;min-width:0"><b style="font-size:13px;display:block">Yüklü fotoğraf</b><span class="muted" style="font-size:12px">Tam ekran gösterilir</span></div><button class="btn s d" type="button" onclick="removeHappyImg()">Kaldır</button>` : `<div style="flex:1"><span class="muted" style="font-size:12.5px">Fotoğraf eklemezseniz yalnız fiyat listesindeki fiyatlar düşer.</span></div>`}
       <label class="btn s g" style="margin:0;cursor:pointer"><span>${c.image ? 'Değiştir' : 'Fotoğraf seç'}</span><input type="file" accept="image/*" style="display:none" onchange="uploadHappyImg(this)"></label></div>`;
     const cardOpts = c.image ? `<div class="row mt" style="align-items:center;gap:10px"><label class="row" style="gap:8px;cursor:pointer">${sw(c.on, 'HC.on=this.checked;HC.__dirty=1')}<b>Fotoğraflı kartı ekranda göster</b></label></div>
