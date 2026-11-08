@@ -787,7 +787,7 @@ SECTIONS.special = {
         + step(1, 'Hangi gün, saat kaçta?', 'Bu saatlerde yalnız aşağıda seçtiğiniz içerikler oynar; saat bitince ekran her zamanki hâline döner.',
           `<div class="chips">${dayChips}</div><div class="chips mt">${dayPre}</div><div class="f mt">${fl('Başlangıç', `<input type="time" value="${s.from || ''}" oninput="SP.rules[${i}].sch.from=this.value;SP.dirty=1">`)}${fl('Bitiş', `<input type="time" value="${s.to || ''}" oninput="SP.rules[${i}].sch.to=this.value;SP.dirty=1">`)}</div>`)
         + step(2, 'Ne oynasın?', 'Oynatmak istediklerinize dokunun; numara oynatma sırasını gösterir. Normalde gizli içerikler de seçilebilir.',
-          `<div class="spx-grid">${tiles}</div><div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><label class="btn s g" style="margin:0;cursor:pointer">Yeni dosya yükle<input type="file" multiple accept="video/*,image/*" hidden onchange="spUp(${i},this.files)"></label><input type="text" id="sp-yt-${i}" placeholder="YouTube bağlantısı" style="flex:1;min-width:180px"><button class="btn s g" onclick="spYt(${i})">Ekle</button></div><p class="muted" style="font-size:12.5px;margin:8px 0 0">Buradan eklediğiniz yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez.</p>`)
+          `<div class="spx-grid">${tiles}</div><div class="spx-drop" ondragover="event.preventDefault();this.classList.add('hot')" ondragleave="this.classList.remove('hot')" ondrop="event.preventDefault();this.classList.remove('hot');spUp(${i},event.dataTransfer.files)" onclick="this.querySelector('input').click()"><b>Yeni fotoğraf veya video ekle</b><span class="muted">Dosyaları buraya bırakın ya da tıklayın</span><input type="file" multiple accept="video/*,image/*" hidden onclick="event.stopPropagation()" onchange="spUp(${i},this.files)"></div><div id="sp-up-${i}"></div><div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><input type="text" id="sp-yt-${i}" placeholder="YouTube bağlantısı" style="flex:1;min-width:180px"><button class="btn s g" onclick="spYt(${i})">Ekle</button></div><p class="muted" style="font-size:12.5px;margin:8px 0 0">Buradan eklediğiniz yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez.</p>`)
         + step(3, 'Kenar kutular', 'Saat, hava, finans, QR, kayan bant ve logo gibi kutular özel yayında ne olsun?',
           `<div class="chips"><button class="chip${r.full !== false ? ' on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=true})">Hepsi gizlensin, tam ekran</button><button class="chip${r.full === false ? ' on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=false})">Kenar kutular kalsın</button></div>`)
         + `</div>`;
@@ -805,15 +805,20 @@ async function saveSpecial() {
   }
   if (await act('PUT', '/special', { rules: SP.rules }, 'Özel yayın kaydedildi', false)) { SP.dirty = 0; S.db = await req('GET', '/db'); SP = null; render(true); }
 }
-async function spUp(i, files) {
+function spUp(i, files) {
   if (!files || !files.length) return; const r = SP.rules[i];
-  const fd = new FormData(); for (const f of files) fd.append('files', f);
-  try {
-    toast('Yükleniyor…');
-    const res = await fetch('/api/admin/videos?only=1', { credentials: 'same-origin', method: 'POST', body: fd }), j = await res.json();
-    if (!res.ok) throw new Error(j.error || 'Yüklenemedi');
+  const fd = new FormData(); let size = 0; for (const f of files) { fd.append('files', f); size += f.size; }
+  const box = $('sp-up-' + i), el = document.createElement('div'); el.className = 'up';
+  el.innerHTML = `<span>${files.length} dosya yükleniyor (${fmtSize(size)})…</span><div class="bar"><i></i></div>`; box.appendChild(el);
+  const x = new XMLHttpRequest(); x.open('POST', '/api/admin/videos?only=1');
+  x.upload.onprogress = e => { if (e.lengthComputable) el.querySelector('i').style.width = (e.loaded / e.total * 100) + '%'; };
+  x.onload = async () => {
+    let j = {}; try { j = JSON.parse(x.responseText); } catch {}
+    if (x.status !== 200) { el.querySelector('span').textContent = 'Yüklenemedi: ' + (j.error || x.status); return; }
     S.db = await req('GET', '/db'); r.items.push(...(j.ids || [])); SP.dirty = 1; toast('Yüklendi; hazırlanınca özel yayında oynar'); render(true);
-  } catch (e) { toast(e.message, true); }
+  };
+  x.onerror = () => { el.querySelector('span').textContent = 'Bağlantı hatası'; };
+  x.send(fd);
 }
 async function spYt(i) {
   const el = $('sp-yt-' + i), url = el && el.value.trim(); if (!url) return toast('YouTube bağlantısını yapıştırın', true);
