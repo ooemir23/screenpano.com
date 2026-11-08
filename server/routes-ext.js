@@ -50,7 +50,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     if ('i18n' in b) p.i18n = cleanI18n(b.i18n);
     if ('sch' in b) { const c = SCH.clean(b.sch); if (c) p.sch = c; else delete p.sch; }
     if (b.dur !== undefined) p.dur = b.dur ? Math.max(3, Math.min(120, Math.round(Number(b.dur)) || 10)) : undefined;
-    if (typeof b.image === 'string' || b.image === null) { if (p.image && p.image !== b.image) rmUpload(t, p.image); p.image = b.image && /^[\w.-]+$/.test(b.image) ? b.image : undefined; }
+    if (b.image === null || b.image === '') { if (p.image) rmUpload(t, p.image); p.image = undefined; }
+    else if (typeof b.image === 'string' && b.image !== p.image && claimLoose(t, b.image)) { if (p.image) rmUpload(t, p.image); p.image = b.image; } // yalnız yeni yüklenmiş fotoğraf
     p.name = s(b.name, 80) || (p.fields && p.fields.title) || 'Hazır içerik';
   }
   r.post('/posters', (req, res) => {
@@ -65,9 +66,29 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     applyPoster(p, req.body || {}, req.t);
     changed(req.t); res.json({ ok: true });
   });
+  // Afiş / stüdyo fotoğrafı önce yüklenir, sonra afiş kaydında adıyla anılır. Kayıt yalnız bu yolla yüklenmiş ve henüz
+  // bir afişe bağlanmamış dosyayı kabul eder: aksi hâlde başka bir dosyanın (medya, logo) adı verilip afişten
+  // kaldırılınca o dosya silinirdi. 24 saat içinde hiçbir afişe bağlanmayan yükleme silinir.
+  const LOOSE_TTL = 24 * 3600 * 1000;
+  function pruneLoose(t) {
+    const now = Date.now(), keep = [];
+    for (const x of t.db.looseUp || []) { if (now - x.at > LOOSE_TTL) rmUpload(t, x.f); else keep.push(x); }
+    if (keep.length) t.db.looseUp = keep.slice(-30); else delete t.db.looseUp;
+  }
+  // Afişe yeni bir dosya bağlanıyor: yalnız bekleyen yüklemelerden biriyse kabul edilir (ve bekleyenlerden çıkar)
+  function claimLoose(t, f) {
+    if (typeof f !== 'string' || !/^[\w.-]+$/.test(f)) return false;
+    const list = t.db.looseUp || [], i = list.findIndex(x => x.f === f);
+    if (i < 0) return false;
+    list.splice(i, 1); if (!list.length) delete t.db.looseUp;
+    return true;
+  }
   r.post('/posters/image', quota, upload.single('file'), (req, res) => {
     const f = req.file; if (!f) return res.status(400).json({ error: 'dosya yok' });
-    if (!/^image\//.test(f.mimetype)) { rmUpload(req.t, f.filename); return res.status(400).json({ error: 'Yalnız fotoğraf yüklenebilir' }); }
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(f.mimetype) || !/\.(jpe?g|png|webp|gif)$/i.test(f.filename)) { rmUpload(req.t, f.filename); return res.status(400).json({ error: 'Yalnız JPG, PNG, WEBP ya da GIF fotoğraf yüklenebilir' }); }
+    pruneLoose(req.t);
+    (req.t.db.looseUp || (req.t.db.looseUp = [])).push({ f: f.filename, at: Date.now() });
+    tenants.save(req.t);
     res.json({ ok: true, file: f.filename, url: req.t.upBase + f.filename });
   });
 
@@ -96,6 +117,9 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const hexc = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : undefined;
     const design = { layout: LAYOUTS.includes(d.layout) ? d.layout : 'tam', fields, colors: d.colors && { bg: hexc(d.colors.bg), accent: hexc(d.colors.accent), text: hexc(d.colors.text) }, palette: d.palette === 'theme' ? 'theme' : 'photo', photo: /^[\w.-]+$/.test(d.photo || '') ? d.photo : undefined, qrUrl: QRT.isUrl(d.qrUrl) ? s(d.qrUrl, 300) : undefined };
     let v = m.id && t.db.videos.find(x => x.id === m.id && x.design);
+    // kaynak fotoğraf: aynı afişin mevcut fotoğrafı ya da yeni yüklenmiş (bekleyen) bir fotoğraf; başka dosya adı kabul edilmez
+    const oldPhoto = v && v.design && v.design.photo;
+    if (design.photo && design.photo !== oldPhoto && !claimLoose(t, design.photo)) design.photo = oldPhoto || undefined;
     if (v) {
       if (v.file) rmUpload(t, v.file);
       if (v.design.photo && v.design.photo !== design.photo) rmUpload(t, v.design.photo);
@@ -174,7 +198,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   r.get('/stats', (req, res) => res.json(stats.summary(req.t, [7, 30, 90].includes(Number(req.query.days)) ? Number(req.query.days) : 30)));
 
   // ================= ŞUBELER =================
-  const homeOf = u => tenants.get(u.role === 'super' ? u.imp : u.tenant_id);
+  const homeOf = u => tenants.get(auth.impOf(u) || u.tenant_id);
   function orgList(t) { return t.org_id ? store.q.orgTenants.all(t.org_id) : [{ id: t.id, name: t.name }]; }
   r.get('/branches', (req, res) => {
     const home = homeOf(req.user), online = hub.onlineDeviceIds();
@@ -184,6 +208,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   r.post('/branches', ownerOnly, (req, res) => {
     const home = homeOf(req.user); if (!home) return res.status(400).json({ error: 'işletme bulunamadı' });
     const name = s((req.body || {}).name, 80); if (name.length < 2) return res.status(400).json({ error: 'Şube adı gerekli' });
+    // askıdaki ya da süresi dolmuş hesap şube açamaz (şube ayrı bir işletme olarak ekran yayınına başlardı)
+    const acc = access(home); if (!acc.ok) return res.status(403).json({ error: acc.reason === 'suspended' ? 'Hesabınız askıda; şube açılamaz' : 'Aboneliğiniz sona erdi; şube açmak için paketinizi yenileyin' });
     const lim = plan(home).branches || 1, cur = orgList(home).length;
     if (cur >= lim) return res.status(400).json({ error: lim <= 1 ? 'Şube açmak Pro pakette. Paketinizi yükseltin.' : `Paketinizde en çok ${lim} şube olabilir` });
     const org = home.org_id || home.id;
@@ -191,7 +217,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const id = auth.uid(), now = Date.now(), W = require('./widgets');
     const doc = { ...tenants.defaultDoc(), location: home.db.location, theme: home.db.theme };
     store.sql.transaction(() => {
-      store.q.tenantIns.run({ id, name, plan: home.plan, status: home.status === 'suspended' ? 'trial' : home.status, trial_until: home.trial_until, paid_until: home.paid_until, phone: home.phone || '', created: now, data: JSON.stringify(doc) });
+      store.q.tenantIns.run({ id, name, plan: home.plan, status: home.status, trial_until: home.trial_until, paid_until: home.paid_until, phone: home.phone || '', created: now, data: JSON.stringify(doc) });
       store.updateTenant(id, { org_id: org, note: `Şube: ${home.name}` });
       store.q.screenIns.run({ id: auth.uid(), tenant_id: id, name: 'Ana Ekran', layout: store.q.screensOf.all(home.id)[0] ? store.q.screensOf.all(home.id)[0].layout : JSON.stringify(W.cleanLayout(W.defaultLayout())), sort: 0, created: now });
     })();
@@ -202,7 +228,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   r.post('/branches/switch', (req, res) => {
     const id = String((req.body || {}).id || ''), list = orgList(homeOf(req.user) || req.t);
     if (!list.some(b => b.id === id)) return res.status(404).json({ error: 'Şube bulunamadı' });
-    if (req.user.role === 'super') auth.setSession(req, res, req.user, { imp: id });
+    if (auth.impOf(req.user)) auth.setSession(req, res, req.user, { imp: id }); // işletme olarak girilmişse o zincirin şubesine geçer
     else if (req.user.role === 'owner') auth.setSession(req, res, req.user, { br: id === req.user.tenant_id ? undefined : id });
     else return res.status(403).json({ error: 'Şube değiştirmek için işletme sahibi yetkisi gerekir' });
     res.json({ ok: true });
@@ -233,16 +259,26 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
         if (parts.includes('lang')) t.db.lang = JSON.parse(JSON.stringify(src.db.lang || {}));
         if (parts.includes('promo')) { t.db.campaigns = JSON.parse(JSON.stringify(src.db.campaigns || [])); t.db.qrs = JSON.parse(JSON.stringify(src.db.qrs || [])); await require('./qrtrack').ensure(t); } // kopyalanan QR'lar yeni sayaç kodu alır
         if (parts.includes('media')) {
-          if (mode === 'replace') { for (const v of t.db.videos) { if (v.file) rmUpload(t, v.file); if (v.image) rmUpload(t, v.image); } t.db.videos = []; }
-          for (const v of src.db.videos) {
-            if (v.status === 'processing') continue;
-            const c = JSON.parse(JSON.stringify(v)); c.id = auth.uid();
-            for (const k of ['file', 'image']) if (c[k]) {
-              if (storage.usedBytes(t) > lim) throw new Error(`${t.name}: depolama kotası doldu`);
-              const f = auth.uid(16) + path.extname(c[k]); await storage.copy(src, c[k], t, f); c[k] = f; copiedFiles++;
+          // Önce kopyalanır, sonra (değiştir modunda) eskiler silinir: kopyalama ortada kesilirse şube içeriksiz kalmaz.
+          // Kota, kopyalanacak dosyaların toplamıyla baştan denetlenir (değiştir modunda boşalacak yer de hesaba katılır).
+          const sizeOf = (tt, f) => { try { return fs.statSync(storage.localPath(tt, f)).size; } catch { const o = store.q.objGet.get(tt.id, f); return o ? o.size : 0; } };
+          const filesOf = v => [v.file, v.image, v.design && v.design.photo].filter(Boolean);
+          const items = src.db.videos.filter(v => v.status !== 'processing');
+          const need = items.reduce((a, v) => a + filesOf(v).reduce((b, f) => b + sizeOf(src, f), 0), 0);
+          const freed = mode === 'replace' ? t.db.videos.reduce((a, v) => a + filesOf(v).reduce((b, f) => b + sizeOf(t, f), 0), 0) : 0;
+          if (storage.usedBytes(t) - freed + need > lim) throw new Error(`${t.name}: depolama kotası yetmiyor`);
+          const fresh = [], made = [];
+          try {
+            for (const v of items) {
+              const c = JSON.parse(JSON.stringify(v)); c.id = auth.uid();
+              for (const k of ['file', 'image']) if (c[k]) { const f = auth.uid(16) + path.extname(c[k]); await storage.copy(src, c[k], t, f); made.push(f); c[k] = f; copiedFiles++; }
+              if (c.design && c.design.photo) { const f = auth.uid(16) + path.extname(c.design.photo); try { await storage.copy(src, c.design.photo, t, f); made.push(f); c.design.photo = f; } catch (e) { delete c.design.photo; } }
+              fresh.push(c);
             }
-            t.db.videos.push(c);
-          }
+          } catch (e) { for (const f of made) rmUpload(t, f); throw e; } // yarım kopya bırakma
+          if (mode === 'replace') { for (const v of t.db.videos) { for (const f of filesOf(v)) rmUpload(t, f); } t.db.videos = fresh; }
+          else t.db.videos.push(...fresh);
+          await require('./qrtrack').ensure(t); // QR'lı afişin kısa kodu kaynağınkiyle çakışmasın (okutmalar yanlış işletmeye yazılmasın)
         }
         tenants.save(t); hub.pushTenant(t.id);
       }
@@ -604,12 +640,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   // 30 günü dolan silme talepleri: işletme, kullanıcılar, cihazlar, medya ve yedekler kalıcı olarak silinir
   setInterval(() => {
     for (const t of tenants.all()) if (t.db.deletion && t.db.deletion.executeAt < Date.now()) {
-      for (const d of store.q.devicesOf.all(t.id)) hub.kickDevice(d.id);
       console.log('KVKK silme talebi uygulandı:', t.id, t.name);
-      // ana işletme silinirse zincirin tüm şubeleri de gider (şubelerin ayrı kullanıcısı yoktur)
-      const isHome = store.q.usersOf.all(t.id).some(u => u.role === 'owner');
-      const ids = isHome && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
-      for (const id of ids) { for (const d of store.q.devicesOf.all(id)) hub.kickDevice(d.id); tenants.remove(id); }
+      require('./accounts').deleteTenant(t.id); // ana işletmeyse zincirin tüm şubeleri de gider
     }
   }, 3600000);
 };

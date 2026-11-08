@@ -128,8 +128,8 @@ r.post('/unimpersonate', (req, res) => { auth.setSession(req, res, req.user); re
 r.delete('/tenants/:id', (req, res) => {
   const t = tenants.get(req.params.id); if (!t) return res.status(404).json({ error: 'bulunamadı' });
   if (String((req.body || {}).confirm || '') !== t.name) return res.status(400).json({ error: 'Silmek için işletme adını aynen yazın' });
-  for (const d of store.q.devicesOf.all(t.id)) hub.kickDevice(d.id);
-  tenants.remove(t.id); res.json({ ok: true });
+  const ids = require('./accounts').deleteTenant(t.id); // ana işletmeyse şubeleri de silinir
+  res.json({ ok: true, count: ids.length });
 });
 r.put('/settings', (req, res) => {
   const b = req.body || {};

@@ -27,7 +27,14 @@ function text(t) {
 }
 
 // Pazartesi 09:00'dan sonra haftada bir kez (sunucu yeniden başlasa da aynı hafta ikinci kez gitmez)
+const fails = new Map(); // işletme|gün -> başarısız gönderim sayısı
+let running = false;
 async function tick() {
+  if (running) return; // önceki tur (yavaş SMTP) bitmeden ikinci tur başlamasın: aynı özet iki kez gitmesin
+  running = true;
+  try { await tickInner(); } finally { running = false; }
+}
+async function tickInner() {
   const n = SCH.parts();
   if (n.dow !== 1 || n.hm < '09:00') return;
   const monitor = require('./monitor');
@@ -36,8 +43,12 @@ async function tick() {
     const no = t.db.notify || {};
     if (!no.email || !no.weekly || no.weeklyAt === n.ymd) continue;
     if (!require('./plans').access(t).ok) continue;
-    no.weeklyAt = n.ymd; tenants.save(t);
-    try { await monitor.sendMail(no.email, `${config.BRAND}: haftalık özet · ${t.name}`, text(t)); } catch (e) { console.error('Haftalık özet:', e.message); }
+    // gönderilemezse o hafta kaybolmasın: işaret geri alınır, sonraki turda (10 dk) yeniden denenir; günde en çok 3 deneme
+    const key = t.id + '|' + n.ymd, tries = (fails.get(key) || 0); if (tries >= 3) continue;
+    const prev = no.weeklyAt; no.weeklyAt = n.ymd; tenants.save(t);
+    let ok = false;
+    try { ok = await monitor.sendMail(no.email, `${config.BRAND}: haftalık özet · ${t.name}`, text(t)); } catch (e) { console.error('Haftalık özet:', e.message); }
+    if (!ok) { fails.set(key, tries + 1); no.weeklyAt = prev; tenants.save(t); }
   }
 }
 function start() { setInterval(() => tick().catch(e => console.error('Haftalık özet:', e.message)), 10 * 60000); setTimeout(() => tick().catch(() => {}), 90000); }

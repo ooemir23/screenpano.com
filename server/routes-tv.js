@@ -25,8 +25,11 @@ r.post('/login', async (req, res) => {
   const ip = auth.clientIp(req);
   const { username, password } = req.body || {};
   if (auth.tooMany(ip, username)) return res.status(429).json({ error: 'Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin.' });
+  const release = auth.begin(ip, username); // paralel denemeler de sınıra sayılır
   const u = store.q.userByName.get(String(username || '').trim());
-  if (!u || !u.tenant_id || !(await auth.checkPasswordAsync(password, u.pass))) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
+  const pwOk = !!u && !!u.tenant_id && await auth.checkPasswordAsync(password, u.pass).finally(release);
+  release();
+  if (!pwOk) { auth.noteFail(ip, username); return res.status(401).json({ error: 'Kullanıcı adı ya da şifre yanlış' }); }
   auth.clearFails(ip, username);
   let t = tenants.get(u.tenant_id);
   if (!t) return res.status(404).json({ error: 'İşletme bulunamadı' });
@@ -43,14 +46,14 @@ r.post('/login', async (req, res) => {
 });
 
 // Telefonla eşleştirme: TV kod ister, işletme panelde kodu girer, TV sorarak token'ı alır
-const pairs = new Map(); // pid -> { code, created, token, screen }
+const pairs = new Map(); // pid -> { code, created, tid, agent }
 const byCode = new Map(); // code -> pid
 setInterval(() => { for (const [pid, p] of pairs) if (Date.now() - p.created > 15 * MIN) { pairs.delete(pid); byCode.delete(p.code); } }, MIN);
 r.post('/pair/start', async (req, res) => {
   if (pairs.size > 5000) return res.status(503).json({ error: 'meşgul' });
   let code; do { code = String(require('crypto').randomInt(100000, 1000000)); } while (byCode.has(code));
   const pid = auth.uid(24);
-  pairs.set(pid, { code, created: Date.now(), token: null });
+  pairs.set(pid, { code, created: Date.now(), tid: null });
   byCode.set(code, pid);
   // telefonla okutulunca panelin eşleştirme ekranı kod dolu açılır
   const url = `${req.protocol}://${req.get('host')}/panel#pair=${code}`;
@@ -60,9 +63,13 @@ r.post('/pair/start', async (req, res) => {
 r.get('/pair/:pid', (req, res) => {
   const p = pairs.get(req.params.pid);
   if (!p) return res.status(404).json({ status: 'expired' });
-  if (!p.token) return res.json({ status: 'waiting' });
+  if (!p.tid) return res.json({ status: 'waiting' });
   pairs.delete(req.params.pid); byCode.delete(p.code);
-  res.json({ status: 'done', deviceToken: p.token });
+  // cihaz kaydı TV jetonu aldığı anda açılır: panelden kod girilip TV hiç sormazsa yetim cihaz kalmaz, kota dolmaz
+  const t = tenants.get(p.tid);
+  const err = t ? limitError(t) : 'İşletme bulunamadı';
+  if (err) return res.status(409).json({ status: 'expired', error: err });
+  res.json({ status: 'done', deviceToken: issueDevice(t, req.headers['user-agent'] || p.agent, 'TV kutusu') });
 });
 // panelden kod girilince: hata metni ya da null
 // Kod tahminini engelle: işletme başına 10 dakikada en çok 8 hatalı deneme
@@ -71,12 +78,12 @@ function claimPair(code, t, agent) {
   const f = claimFails.get(t.id);
   if (f && Date.now() - f.t < 10 * MIN && f.n >= 8) return 'Çok fazla hatalı kod denendi. 10 dakika sonra tekrar deneyin.';
   const pid = byCode.get(code), p = pid && pairs.get(pid);
-  if (!p || p.token || Date.now() - p.created > 15 * MIN) {
+  if (!p || p.tid || Date.now() - p.created > 15 * MIN) {
     const g = claimFails.get(t.id); claimFails.set(t.id, g && Date.now() - g.t < 10 * MIN ? { n: g.n + 1, t: g.t } : { n: 1, t: Date.now() });
     return 'Kod bulunamadı ya da süresi doldu. TV ekranındaki güncel kodu girin.';
   }
   const err = limitError(t); if (err) return err;
-  p.token = issueDevice(t, agent, 'TV kutusu');
+  p.tid = t.id; p.agent = String(agent || '').slice(0, 160); // TV sorunca cihaz bu işletmeye açılır
   return null;
 }
 // Cihaz kendini çıkarır (TV menüsündeki "Bu ekrandan çık")

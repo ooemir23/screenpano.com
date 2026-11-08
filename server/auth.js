@@ -101,6 +101,9 @@ function superOk(u) {
   const t = require('./tenants').get(u.tenant_id);
   return !!(t && t.db && t.db.superAccess);
 }
+// "İşletme olarak gir" ile açılan işletme: süper yönetici ya da süper yetkisi hâlâ açık işletme sahibi için geçerlidir
+// (yetki kaldırılınca çerezdeki imp yok sayılır, kişi kendi işletmesine döner)
+function impOf(u) { return u && u.imp && (u.role === 'super' || superOk(u)) ? u.imp : null; }
 function superUser(req) { const u = sessionUser(req); return superOk(u) ? { ...u, role: 'super' } : null; }
 
 // Cihaz token'ı: TV'de saklanır, veritabanında yalnızca özeti tutulur
@@ -113,9 +116,18 @@ const fails = new Map();
 const LIMIT_ON = process.env.LOGIN_LIMIT !== 'off';
 const MAX_FAILS = Number(process.env.LOGIN_MAX_FAILS) || 8, WINDOW = 10 * 60 * 1000;
 const keys = (ip, user) => [ip && 'ip:' + ip, user && 'u:' + String(user).trim().toLowerCase()].filter(Boolean);
+// Sürmekte olan denemeler de sayılır: şifre kontrolü (scrypt) beklerken gelen paralel istekler sınırı aşamasın
+const inflight = new Map(); // anahtar -> sonucu henüz belli olmayan deneme sayısı
 function tooMany(ip, user) {
   if (!LIMIT_ON) return false;
-  return keys(ip, user).some(k => { const r = fails.get(k); return r && r.n >= MAX_FAILS && Date.now() - r.at < WINDOW; });
+  return keys(ip, user).some(k => { const r = fails.get(k), n = r && Date.now() - r.at < WINDOW ? r.n : 0; return n + (inflight.get(k) || 0) >= MAX_FAILS; });
+}
+// Denemeyi başlat: tooMany ile aynı anda (araya await girmeden) çağrılır; dönen işlev deneme bitince çağrılır
+function begin(ip, user) {
+  if (!LIMIT_ON) return () => {};
+  const ks = keys(ip, user); for (const k of ks) inflight.set(k, (inflight.get(k) || 0) + 1);
+  let done = false;
+  return () => { if (done) return; done = true; for (const k of ks) { const n = (inflight.get(k) || 1) - 1; if (n > 0) inflight.set(k, n); else inflight.delete(k); } };
 }
 function noteFail(ip, user) {
   if (!LIMIT_ON) return;
@@ -130,4 +142,4 @@ setInterval(() => { const t = Date.now(); for (const [k, r] of fails) if (t - r.
 const clientIp = req => { const x = String(req.headers['x-forwarded-for'] || '').split(',').map(v => v.trim()).filter(Boolean); return x.length ? x[x.length - 1] : String(req.socket.remoteAddress || ''); };
 
 const secretFor = label => crypto.createHash('sha256').update(label + ':' + SECRET).digest('hex'); // başka amaçlar için türetilmiş sır
-module.exports = { secretFor, superOk, superUser, uid, hashPassword, checkPassword, checkPasswordAsync, sign, verify, setSession, clearSession, sessionUser, newDeviceToken, hashToken, tooMany, noteFail, clearFails, clientIp, parseCookies };
+module.exports = { secretFor, superOk, impOf, superUser, uid, hashPassword, checkPassword, checkPasswordAsync, sign, verify, setSession, clearSession, sessionUser, newDeviceToken, hashToken, tooMany, begin, noteFail, clearFails, clientIp, parseCookies };

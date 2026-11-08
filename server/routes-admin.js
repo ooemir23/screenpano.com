@@ -21,6 +21,7 @@ const HOUR = F.HOUR;
 // Çoklu şube: işletme sahibi aynı zincirdeki (org_id) başka bir şubeye geçmiş olabilir
 function activeTenantId(u) {
   if (u.role === 'super') return u.imp;
+  const imp = auth.impOf(u); if (imp) return imp; // süper yetkili işletme sahibi başka işletmeye girmiş
   if (u.br && u.br !== u.tenant_id && u.role === 'owner') {
     const home = tenants.get(u.tenant_id), br = tenants.get(u.br);
     if (home && br && home.org_id && br.org_id === home.org_id) return br.id;
@@ -74,7 +75,7 @@ const rmUpload = (t, file) => require('./storage').remove(t, file);
 r.get('/me', (req, res) => {
   const t = req.t, p = plan(t), acc = access(t);
   res.json({
-    user: { id: req.user.id, username: req.user.username, role: req.user.role, name: req.user.name, impersonating: req.user.role === 'super' },
+    user: { id: req.user.id, username: req.user.username, role: req.user.role, name: req.user.name, impersonating: !!auth.impOf(req.user) },
     tenant: { id: t.id, name: t.name, plan: p, status: t.status, access: acc, trialUntil: t.trial_until, paidUntil: t.paid_until, location: t.db.location, menuCount: ((t.db.menu || {}).categories || []).length, logo: t.db.logo ? t.upBase + t.db.logo : null, theme: t.db.theme },
     upBase: t.upBase, brand: config.BRAND, plans: PLANS,
     usage: { devices: store.q.devicesOf.all(t.id).length, storageBytes: media.usedBytes(t), users: store.q.usersOf.all(t.id).length },
@@ -176,7 +177,7 @@ r.post('/designs/:id/apply', ownerOnly, (req, res) => {
 });
 // Başlangıç paketleri: düzen + renk + (isteğe bağlı) örnek fiyat listesi. Medya, logo ve diğer içerikler korunur.
 r.get('/starters', (req, res) => res.json({ list: require('./starters').list(), hasMenu: (req.t.db.menu.categories || []).length > 0 }));
-r.post('/starter', (req, res) => {
+r.post('/starter', ownerOnly, (req, res) => { // düzeni ve (istenirse) fiyat listesini ezer: ortak tasarım uygulama gibi yalnız sahip
   const t = req.t, b = req.body || {}, st = require('./starters').build(String(b.key || ''), plan(t).pro);
   if (!st) return res.status(400).json({ error: 'Geçersiz paket' });
   store.updateScreen(tenants.mainScreen(t).id, t.id, { layout: JSON.stringify(st.layout) });
@@ -186,7 +187,7 @@ r.post('/starter', (req, res) => {
   changed(t); res.json({ ok: true, menuReplaced: !!(st.doc.menu && (!hadMenu || b.replaceMenu === true)) });
 });
 // Tasarımı varsayılana döndür: layout (düzen), colors (renk/tema; logo kalır), tv (kenar payı, efekt), all
-r.post('/design/reset', (req, res) => {
+r.post('/design/reset', ownerOnly, (req, res) => {
   const t = req.t, scope = String((req.body || {}).scope || 'all'), all = scope === 'all';
   if (!['layout', 'colors', 'tv', 'all'].includes(scope)) return res.status(400).json({ error: 'Geçersiz kapsam' });
   if (all || scope === 'layout') {
@@ -517,10 +518,19 @@ const BACKUP_NAME = /^db-[A-Za-z0-9_.-]+\.json$/;
 function listBackups(t) {
   return fs.readdirSync(t.dirs.backups).filter(n => BACKUP_NAME.test(n)).map(n => { const st = fs.statSync(path.join(t.dirs.backups, n)); return { name: n, size: st.size, time: st.mtimeMs }; }).sort((a, b) => b.time - a.time);
 }
+// Yedeğin türü (adın sonundaki etiket): oto, manuel, geri-yukleme-oncesi, silme-talebi
+const backupTag = n => n.replace(/\.json$/, '').replace(/^db-\d{4}-?\d{2}-?\d{2}_\d{4,6}(-[0-9a-f]{4})?-/, ''); // ek: auth.uid(4) onaltılık
+// Otomatik günlük yedekler ayrı tutulur: elle alınan (ya da geri yükleme öncesi) yedekler onları sırayla silemesin
+const KEEP_AUTO = 14, KEEP_OTHER = 16;
 function backupNow(t, tag) {
-  const now = new Date(), name = `db-${F.ymd(now)}_${F.hm(now).replace(':', '')}-${tag}.json`;
-  fs.writeFileSync(path.join(t.dirs.backups, name), JSON.stringify(t.db, null, 2));
-  for (const old of listBackups(t).slice(30)) fs.rmSync(path.join(t.dirs.backups, old.name), { force: true });
+  const now = new Date(), ss = String(now.getSeconds()).padStart(2, '0');
+  // saniye + kısa rastgele ek: aynı dakikada alınan yedekler birbirinin üstüne yazılmaz
+  const name = `db-${F.ymd(now)}_${F.hm(now).replace(':', '')}${ss}-${auth.uid(4)}-${tag}.json`;
+  // ekran düzeni veritabanında ayrı tutulur (screens): geri yüklemede içerikle birlikte dönsün diye yedeğe eklenir
+  const sc = store.q.screensOf.all(t.id)[0];
+  fs.writeFileSync(path.join(t.dirs.backups, name), JSON.stringify({ ...t.db, _screenLayout: sc ? store.J(sc.layout) : undefined }, null, 2));
+  const all = listBackups(t), auto = all.filter(b => backupTag(b.name) === 'oto'), other = all.filter(b => backupTag(b.name) !== 'oto');
+  for (const old of [...auto.slice(KEEP_AUTO), ...other.slice(KEEP_OTHER)]) fs.rmSync(path.join(t.dirs.backups, old.name), { force: true });
   return name;
 }
 function autoBackupAll() {
@@ -531,7 +541,11 @@ function autoBackupAll() {
   }
 }
 r.get('/backups', (req, res) => res.json(listBackups(req.t)));
-r.post('/backups', (req, res) => { try { res.json({ ok: true, name: backupNow(req.t, 'manuel') }); } catch (e) { res.status(500).json({ error: e.message }); } });
+const manualAt = new Map(); // işletme -> son elle yedek zamanı
+r.post('/backups', (req, res) => {
+  if (Date.now() - (manualAt.get(req.t.id) || 0) < 60000) return res.status(429).json({ error: 'Az önce yedek alındı; bir dakika sonra tekrar deneyin' });
+  manualAt.set(req.t.id, Date.now());
+  try { res.json({ ok: true, name: backupNow(req.t, 'manuel') }); } catch (e) { res.status(500).json({ error: e.message }); } });
 r.get('/backups/:name/download', ownerOnly, (req, res) => { // ham işletme yedeği OAuth sırlarını içerir: yalnız sahip
   if (!BACKUP_NAME.test(req.params.name)) return res.status(400).send('geçersiz ad');
   res.download(path.join(req.t.dirs.backups, req.params.name));
@@ -545,7 +559,10 @@ r.post('/backups/:name/restore', ownerOnly, (req, res) => {
     backupNow(t, 'geri-yukleme-oncesi');
     const keep = {}; for (const k of ['superAccess', 'unlimited', 'canTest', 'deletion', 'consent']) { if (t.db[k] !== undefined) keep[k] = t.db[k]; }
     for (const k of ['superAccess', 'unlimited', 'canTest']) delete parsed[k]; // yetki alanları yedekten geri gelmez
+    const lay = parsed._screenLayout; delete parsed._screenLayout;
     t.db = { ...t.db, ...parsed, ...keep };
+    // düzen de yedekteyse (yeni yedekler) geri gelir; eski yedeklerde mevcut düzen korunur
+    if (lay && Array.isArray(lay.widgets)) store.updateScreen(tenants.mainScreen(t).id, t.id, { layout: JSON.stringify(W.cleanLayout(lay)) });
     const missing = t.db.videos.filter(v => (v.file || v.image) && !require('./storage').exists(t, v.file || v.image)).length;
     changed(t); res.json({ ok: true, missingFiles: missing });
   } catch (e) { res.status(400).json({ error: e.message }); }
@@ -786,16 +803,10 @@ r.post('/videos/:id/move', (req, res) => {
   if (i >= 0 && j >= 0 && j < v.length) [v[i], v[j]] = [v[j], v[i]];
   changed(req.t); res.json({ ok: true });
 });
-r.put('/settings', (req, res) => { req.t.db.imageSeconds = Math.max(3, Number(req.body.imageSeconds) || 10); changed(req.t); res.json({ ok: true }); });
+// görsel süresi: üst sınır içerik süresiyle aynı (120 sn)
+r.put('/settings', (req, res) => { req.t.db.imageSeconds = Math.max(3, Math.min(120, Number((req.body || {}).imageSeconds) || 10)); changed(req.t); res.json({ ok: true }); });
 
-// ---- yorumlar, elle maçlar, doğum günleri ----
-r.post('/reviews', (req, res) => {
-  const { author, rating, text } = req.body, n = Number(rating);
-  if (!author || !text || ![4, 5].includes(n)) return res.status(400).json({ error: 'isim, metin ve 4 veya 5 yıldız gerekli' });
-  req.t.db.reviews.push({ id: auth.uid(), author: String(author).slice(0, 60), rating: n, text: String(text).slice(0, 400) });
-  changed(req.t); res.json({ ok: true });
-});
-r.delete('/reviews/:id', (req, res) => { req.t.db.reviews = req.t.db.reviews.filter(x => x.id !== req.params.id); changed(req.t); res.json({ ok: true }); });
+// ---- doğum günleri (elle yorum uçları kaldırıldı: TV yalnız Google yorumlarını gösterir) ----
 r.post('/birthdays', (req, res) => {
   if (!req.body.name) return res.status(400).json({ error: 'isim gerekli' });
   const text = String(req.body.text || '').trim().slice(0, 200);

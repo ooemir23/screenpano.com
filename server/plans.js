@@ -14,9 +14,23 @@ const plan = t => {
 };
 
 // Ekran çalışıyor mu? Askıya alınmış, denemesi ya da ödemesi bitmiş işletmenin ekranı kapanır.
+// Zincirin ana işletmesi (sahibi olan) askıya alınırsa şubeleri de durur: şubelerin ayrı sahibi yoktur.
+// org_id başına ana işletme kimliği 60 sn önbellekte tutulur (access sık çağrılır).
+const homeCache = new Map(); // org_id -> { id, at }
+function orgHome(t) {
+  if (!t || !t.org_id) return null;
+  const c = homeCache.get(t.org_id);
+  if (c && Date.now() - c.at < 60000) return c.id ? require('./tenants').get(c.id) : null;
+  const store = require('./store');
+  const home = store.q.orgTenants.all(t.org_id).find(x => store.q.usersOf.all(x.id).some(u => u.role === 'owner'));
+  homeCache.set(t.org_id, { id: home ? home.id : null, at: Date.now() });
+  return home ? require('./tenants').get(home.id) : null;
+}
 function access(t) {
   const now = Date.now();
   if (t.status === 'suspended') return { ok: false, reason: 'suspended' };
+  const home = orgHome(t);
+  if (home && home.id !== t.id && home.status === 'suspended') return { ok: false, reason: 'suspended' };
   if (isUnlimited(t)) return { ok: true, until: null, kind: 'unlimited' };
   if (t.paid_until && t.paid_until > now) return { ok: true, until: t.paid_until, kind: 'paid' };
   if (t.trial_until && t.trial_until > now) return { ok: true, until: t.trial_until, kind: 'trial' };

@@ -32,6 +32,7 @@ function newCode() {
   }
 }
 const register = (code, tid, id, kind) => idx.set(code, { tid, id, kind });
+const unregister = code => { if (code) idx.delete(code); }; // silinen afişin kısa kodu dizinden çıkar
 function find(code) {
   if (!idx.has(code) && Date.now() - idxAt > 10000) rebuild();
   return idx.get(code);
@@ -103,4 +104,4 @@ function handler(req, res) {
   res.redirect(302, target);
 }
 
-module.exports = { build, buildHub, find, ensure, migrate, handler, isUrl, trackUrl, newCode, register };
+module.exports = { build, buildHub, find, ensure, migrate, handler, isUrl, trackUrl, newCode, register, unregister };

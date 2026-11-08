@@ -34,4 +34,17 @@ function ensureSuper() {
   store.q.userIns.run({ id: auth.uid(), tenant_id: null, username: config.SUPER_USER.toLowerCase(), pass: auth.hashPassword(pass), role: 'super', name: 'Süper yönetici', created: Date.now() });
 }
 
-module.exports = { createTenant, ensureSuper, USERNAME, DAY };
+// Zincirin ana işletmesi: sahibi (owner kullanıcısı) olan işletme. Şubelerin ayrı kullanıcısı yoktur.
+const isHome = t => store.q.usersOf.all(t.id).some(u => u.role === 'owner');
+// Bir işletmeyi siler; ana işletmeyse zincirin bütün şubeleri de gider (sahipsiz kalan şube ekranları yayına devam etmesin).
+// Süper yönetimden silme ve KVKK silme talebi aynı yolu kullanır. Silinen işletme kimliklerini döndürür.
+function deleteTenant(id) {
+  const t = tenants.get(id); if (!t) return [];
+  const ids = isHome(t) && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
+  if (!ids.includes(t.id)) ids.push(t.id);
+  const hub = require('./hub');
+  for (const x of ids) { for (const d of store.q.devicesOf.all(x)) { try { hub.kickDevice(d.id); } catch (e) { /* bağlı değil */ } } tenants.remove(x); }
+  return ids;
+}
+
+module.exports = { createTenant, ensureSuper, USERNAME, DAY, isHome, deleteTenant };

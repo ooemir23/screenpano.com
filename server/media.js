@@ -46,15 +46,19 @@ const VIDEO_MAX = { 1080: [1920, 1080], 720: [1280, 720], 480: [854, 480] };
 async function optimizeItem(tid, id) {
   const t = tenants.get(tid); if (!t) return;
   const v = t.db.videos.find(x => x.id === id); if (!v) return;
-  let src = path.join(t.dirs.uploads, v.file);
-  if (!fs.existsSync(src)) { try { src = await require('./storage').ensureLocal(t, v.file); } catch (e) {} }
-  const done = patch => { const c = t.db.videos.find(x => x.id === id); if (c) { Object.assign(c, { status: 'ready', reopt: false, optimized: true }, patch); tenants.save(t); hub.pushTenant(tid); } };
+  // İş başladığındaki dosya: küçültme sürerken içerik yeniden kaydedilirse (afiş stüdyosu) kayıt yeni dosyayı gösterir.
+  // Bu durumda eski iş sonucunu atar, hiçbir dosyayı silmez ve kayda dokunmaz; yeni dosya için kuyrukta ayrı iş vardır.
+  const srcFile = v.file, cur = () => t.db.videos.find(x => x.id === id);
+  const stale = () => { const c = cur(); return !c || c.file !== srcFile; };
+  let src = path.join(t.dirs.uploads, srcFile);
+  if (!fs.existsSync(src)) { try { src = await require('./storage').ensureLocal(t, srcFile); } catch (e) {} }
+  const done = patch => { const c = cur(); if (c && c.file === srcFile) { Object.assign(c, { status: 'ready', reopt: false, optimized: true }, patch); tenants.save(t); hub.pushTenant(tid); } };
   if (!fs.existsSync(src)) return done({ optError: 'dosya bulunamadı' });
   if (!ffmpegOk) return done({ optimized: false, optError: 'ffmpeg yok' });
   const isImg = v.type === 'image';
-  if (isImg && /\.(gif|svg)$/i.test(v.file)) return done({});
+  if (isImg && /\.(gif|svg)$/i.test(srcFile)) return done({});
   // PNG/WebP girdilerde alfa kanalı korunur (şeffaf logo/grafik siyah zeminli JPG'ye dönmesin)
-  const keepAlpha = isImg && /\.(png|webp)$/i.test(v.file);
+  const keepAlpha = isImg && /\.(png|webp)$/i.test(srcFile);
   const outName = uid(16) + (isImg ? (keepAlpha ? '.png' : '.jpg') : '.mp4'), out = path.join(t.dirs.uploads, outName);
   const [mw, mh] = VIDEO_MAX[Number(t.db.videoMaxH)] || VIDEO_MAX[1080];
   // zayıf TV kutuları 1080p60'ı çözse de WebView'in üstünde birleştirirken kare düşürür: 1080p'de 30 fps tavanı,
@@ -70,15 +74,17 @@ async function optimizeItem(tid, id) {
   try {
     await runFfmpeg(args);
     const after = fs.statSync(out).size;
-    if (!t.db.videos.find(x => x.id === id)) {
+    if (!cur()) { // küçültülürken silindi
       fs.rmSync(out, { force: true });
       fs.rmSync(src, { force: true });
-      require('./storage').remove(t, path.basename(src));
+      require('./storage').remove(t, srcFile);
       return;
     }
-    if (after >= before && v.reopt) { fs.rmSync(out, { force: true }); return done({ sizeBefore: before, sizeAfter: before }); }
+    if (stale()) { fs.rmSync(out, { force: true }); return; } // küçültülürken yeniden kaydedildi: eski dosyayı kaydeden taraf sildi
+    if (after >= before && cur().reopt) { fs.rmSync(out, { force: true }); return done({ sizeBefore: before, sizeAfter: before }); }
     const dur = isImg ? null : await probeDur(out); // senkronlu çalma listesi için süre
-    require('./storage').remove(t, v.file);
+    if (stale()) { fs.rmSync(out, { force: true }); if (!cur()) require('./storage').remove(t, srcFile); return; }
+    require('./storage').remove(t, srcFile);
     done({ file: outName, sizeBefore: before, sizeAfter: after, optError: '', ...(dur ? { dur } : {}) });
   } catch (e) {
     fs.rmSync(out, { force: true });
