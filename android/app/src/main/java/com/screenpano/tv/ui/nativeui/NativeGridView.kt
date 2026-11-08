@@ -38,6 +38,7 @@ class NativeGridView(context: Context) : ViewGroup(context) {
         // sonra açılacak; o zamana kadar sayfa çizer
         "ticker" -> if (NATIVE_TICKER) TickerWidget(context) else null
         "clock" -> ClockWidget(context)
+        "worldclock" -> WorldClockWidget(context)
         "logo" -> LogoWidget(context)
         "rates" -> RatesWidget(context)
         "reviews" -> ReviewsWidget(context)

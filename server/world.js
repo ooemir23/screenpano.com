@@ -1,0 +1,58 @@
+// Dünya saatleri widget'ı: seçilebilir şehirler (anahtar = IANA saat dilimi). Ad ve ülke dillere göre; TV'ye şehir adları gider.
+const L = (tz, tr, en, de, ar, ru, ctr, cen) => ({ tz, n: { tr, en, de, ar, ru }, c: { tr: ctr, en: cen } });
+const CITIES = [
+  L('Europe/Istanbul', 'İstanbul', 'Istanbul', 'Istanbul', 'إسطنبول', 'Стамбул', 'Türkiye', 'Türkiye'),
+  L('Europe/London', 'Londra', 'London', 'London', 'لندن', 'Лондон', 'Birleşik Krallık', 'United Kingdom'),
+  L('Europe/Dublin', 'Dublin', 'Dublin', 'Dublin', 'دبلن', 'Дублин', 'İrlanda', 'Ireland'),
+  L('Europe/Lisbon', 'Lizbon', 'Lisbon', 'Lissabon', 'لشبونة', 'Лиссабон', 'Portekiz', 'Portugal'),
+  L('Europe/Madrid', 'Madrid', 'Madrid', 'Madrid', 'مدريد', 'Мадрид', 'İspanya', 'Spain'),
+  L('Europe/Paris', 'Paris', 'Paris', 'Paris', 'باريس', 'Париж', 'Fransa', 'France'),
+  L('Europe/Amsterdam', 'Amsterdam', 'Amsterdam', 'Amsterdam', 'أمستردام', 'Амстердам', 'Hollanda', 'Netherlands'),
+  L('Europe/Berlin', 'Berlin', 'Berlin', 'Berlin', 'برلين', 'Берлин', 'Almanya', 'Germany'),
+  L('Europe/Zurich', 'Zürih', 'Zurich', 'Zürich', 'زيورخ', 'Цюрих', 'İsviçre', 'Switzerland'),
+  L('Europe/Vienna', 'Viyana', 'Vienna', 'Wien', 'فيينا', 'Вена', 'Avusturya', 'Austria'),
+  L('Europe/Rome', 'Roma', 'Rome', 'Rom', 'روما', 'Рим', 'İtalya', 'Italy'),
+  L('Europe/Prague', 'Prag', 'Prague', 'Prag', 'براغ', 'Прага', 'Çekya', 'Czechia'),
+  L('Europe/Warsaw', 'Varşova', 'Warsaw', 'Warschau', 'وارسو', 'Варшава', 'Polonya', 'Poland'),
+  L('Europe/Stockholm', 'Stockholm', 'Stockholm', 'Stockholm', 'ستوكهولم', 'Стокгольм', 'İsveç', 'Sweden'),
+  L('Europe/Athens', 'Atina', 'Athens', 'Athen', 'أثينا', 'Афины', 'Yunanistan', 'Greece'),
+  L('Europe/Kyiv', 'Kiev', 'Kyiv', 'Kiew', 'كييف', 'Киев', 'Ukrayna', 'Ukraine'),
+  L('Europe/Moscow', 'Moskova', 'Moscow', 'Moskau', 'موسكو', 'Москва', 'Rusya', 'Russia'),
+  L('Asia/Baku', 'Bakü', 'Baku', 'Baku', 'باكو', 'Баку', 'Azerbaycan', 'Azerbaijan'),
+  L('Asia/Tbilisi', 'Tiflis', 'Tbilisi', 'Tiflis', 'تبليسي', 'Тбилиси', 'Gürcistan', 'Georgia'),
+  L('Asia/Tehran', 'Tahran', 'Tehran', 'Teheran', 'طهران', 'Тегеран', 'İran', 'Iran'),
+  L('Asia/Dubai', 'Dubai', 'Dubai', 'Dubai', 'دبي', 'Дубай', 'Birleşik Arap Emirlikleri', 'United Arab Emirates'),
+  L('Asia/Riyadh', 'Riyad', 'Riyadh', 'Riad', 'الرياض', 'Эр-Рияд', 'Suudi Arabistan', 'Saudi Arabia'),
+  L('Africa/Cairo', 'Kahire', 'Cairo', 'Kairo', 'القاهرة', 'Каир', 'Mısır', 'Egypt'),
+  L('Africa/Casablanca', 'Kazablanka', 'Casablanca', 'Casablanca', 'الدار البيضاء', 'Касабланка', 'Fas', 'Morocco'),
+  L('Africa/Lagos', 'Lagos', 'Lagos', 'Lagos', 'لاغوس', 'Лагос', 'Nijerya', 'Nigeria'),
+  L('Africa/Johannesburg', 'Johannesburg', 'Johannesburg', 'Johannesburg', 'جوهانسبرغ', 'Йоханнесбург', 'Güney Afrika', 'South Africa'),
+  L('Asia/Karachi', 'Karaçi', 'Karachi', 'Karatschi', 'كراتشي', 'Карачи', 'Pakistan', 'Pakistan'),
+  L('Asia/Tashkent', 'Taşkent', 'Tashkent', 'Taschkent', 'طشقند', 'Ташкент', 'Özbekistan', 'Uzbekistan'),
+  L('Asia/Almaty', 'Almatı', 'Almaty', 'Almaty', 'ألماتي', 'Алматы', 'Kazakistan', 'Kazakhstan'),
+  L('Asia/Kolkata', 'Yeni Delhi', 'New Delhi', 'Neu-Delhi', 'نيودلهي', 'Дели', 'Hindistan', 'India'),
+  L('Asia/Bangkok', 'Bangkok', 'Bangkok', 'Bangkok', 'بانكوك', 'Бангкок', 'Tayland', 'Thailand'),
+  L('Asia/Singapore', 'Singapur', 'Singapore', 'Singapur', 'سنغافورة', 'Сингапур', 'Singapur', 'Singapore'),
+  L('Asia/Shanghai', 'Şanghay', 'Shanghai', 'Shanghai', 'شنغهاي', 'Шанхай', 'Çin', 'China'),
+  L('Asia/Hong_Kong', 'Hong Kong', 'Hong Kong', 'Hongkong', 'هونغ كونغ', 'Гонконг', 'Hong Kong', 'Hong Kong'),
+  L('Asia/Seoul', 'Seul', 'Seoul', 'Seoul', 'سيول', 'Сеул', 'Güney Kore', 'South Korea'),
+  L('Asia/Tokyo', 'Tokyo', 'Tokyo', 'Tokio', 'طوكيو', 'Токио', 'Japonya', 'Japan'),
+  L('Australia/Sydney', 'Sidney', 'Sydney', 'Sydney', 'سيدني', 'Сидней', 'Avustralya', 'Australia'),
+  L('Pacific/Auckland', 'Auckland', 'Auckland', 'Auckland', 'أوكلاند', 'Окленд', 'Yeni Zelanda', 'New Zealand'),
+  L('Pacific/Honolulu', 'Honolulu', 'Honolulu', 'Honolulu', 'هونولولو', 'Гонолулу', 'ABD (Hawaii)', 'USA (Hawaii)'),
+  L('America/Los_Angeles', 'Los Angeles', 'Los Angeles', 'Los Angeles', 'لوس أنجلوس', 'Лос-Анджелес', 'ABD', 'USA'),
+  L('America/Denver', 'Denver', 'Denver', 'Denver', 'دنفر', 'Денвер', 'ABD', 'USA'),
+  L('America/Chicago', 'Chicago', 'Chicago', 'Chicago', 'شيكاغو', 'Чикаго', 'ABD', 'USA'),
+  L('America/New_York', 'New York', 'New York', 'New York', 'نيويورك', 'Нью-Йорк', 'ABD', 'USA'),
+  L('America/Toronto', 'Toronto', 'Toronto', 'Toronto', 'تورنتو', 'Торонто', 'Kanada', 'Canada'),
+  L('America/Mexico_City', 'Meksiko', 'Mexico City', 'Mexiko-Stadt', 'مدينة مكسيكو', 'Мехико', 'Meksika', 'Mexico'),
+  L('America/Bogota', 'Bogota', 'Bogotá', 'Bogotá', 'بوغوتا', 'Богота', 'Kolombiya', 'Colombia'),
+  L('America/Sao_Paulo', 'São Paulo', 'São Paulo', 'São Paulo', 'ساو باولو', 'Сан-Паулу', 'Brezilya', 'Brazil'),
+  L('America/Argentina/Buenos_Aires', 'Buenos Aires', 'Buenos Aires', 'Buenos Aires', 'بوينس آيرس', 'Буэнос-Айрес', 'Arjantin', 'Argentina'),
+];
+const BY = new Map(CITIES.map(c => [c.tz, c]));
+const MAX = 5;
+// "tz1,tz2,..." -> listede olan, tekrarsız, en çok 5 saat dilimi
+const clean = s => [...new Set(String(s || '').split(',').map(x => x.trim()).filter(x => BY.has(x)))].slice(0, MAX).join(',');
+const cities = s => clean(s).split(',').filter(Boolean).map(z => ({ tz: z, n: BY.get(z).n }));
+module.exports = { CITIES, MAX, clean, cities };

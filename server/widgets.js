@@ -6,6 +6,7 @@ const WIDGETS = {
   media:   { name: 'Medya oynatıcı', desc: 'Video ve fotoğraf döngüsü; kampanya, büyük maç ve fragmanlar da burada çıkar', pro: false, required: true, min: [8, 8], props: { fit: 'auto' } },
   logo:    { name: 'Logo', desc: 'İşletme logosu; kutuya sığdırma, hizalama ve iç boşluk ayarlanır', pro: false, min: [3, 2], props: { fit: 'contain', align: 'center', pad: 'none' }, enums: { fit: ['contain', 'cover', 'fill'], align: ['left', 'center', 'right'], pad: ['none', 'sm', 'lg'] } },
   clock:   { name: 'Saat ve tarih', desc: 'Saat, tarih ya da ikisi birden; her kutuda ayrı gösterim seçilir (birden çok eklenebilir)', pro: false, min: [2, 1], multi: 4, props: { seconds: false, show: 'both' }, enums: { show: ['both', 'time', 'date'] } },
+  worldclock: { name: 'Dünya saatleri', desc: 'Seçtiğiniz ülke ve şehirlerin saati yan yana (en çok 5); istenirse birden çok kutu eklenir', pro: false, min: [6, 2], multi: 4, props: { zones: 'Europe/London,America/New_York,Asia/Tokyo', seconds: false } },
   rates:   { name: 'Hava ve piyasalar', desc: 'Hava durumu, döviz, altın, BIST, Bitcoin ve istenirse QR kodlar; hava ve piyasa ayrı kutulara konabilir (birden çok eklenebilir)', pro: false, min: [3, 2], multi: 3, props: { weather: true, rates: true, qr: false, qrs: '', valSize: 'xl' }, enums: { valSize: ['s', 'm', 'l', 'xl'] } },
   weather: { name: 'Hava durumu', desc: 'Yalnız hava durumu (sıcaklık ve gün gün tahmin); piyasalardan ayrı bir kutuya konur', pro: false, min: [3, 2], multi: 2, props: {} },
   finance: { name: 'Finans', desc: 'Yalnız döviz, altın, borsa ve Bitcoin; hava durumundan ayrı bir kutuya konur', pro: false, min: [3, 2], multi: 2, props: { valSize: 'xl' }, enums: { valSize: ['s', 'm', 'l', 'xl'] } },
@@ -45,7 +46,8 @@ const TEMPLATES = {
   otel: {
     name: 'Otel / lobi', desc: 'Solda geniş tanıtım medyası; sağda logo, saat, hava, Wi-Fi QR; altta karşılama, kahvaltı ve resepsiyon bilgisi, kayan bant',
     widgets: [
-      W('media', 0, 0, 16, 18), W('logo', 16, 0, 8, 3), W('clock', 16, 3, 8, 4, { seconds: false, show: 'both' }),
+      W('media', 0, 0, 16, 15), W('worldclock', 0, 15, 16, 3, { zones: 'Europe/London,Europe/Moscow,Asia/Dubai,America/New_York,Asia/Tokyo', seconds: false }),
+      W('logo', 16, 0, 8, 3), W('clock', 16, 3, 8, 4, { seconds: false, show: 'both' }),
       W('rates', 16, 7, 8, 5, { weather: true, rates: false, qr: false, qrs: '', valSize: 'xl' }),
       W('qr', 16, 12, 8, 10, { qr: '', style: 'below', size: 'auto', text: 'm', look: 'card' }),
       W('text', 0, 18, 8, 4, { title: 'Hoş geldiniz', body: 'Keyifli bir konaklama dileriz', align: 'center', size: 's', i18n: { en: { title: 'Welcome', body: 'We wish you a pleasant stay' }, de: { title: 'Willkommen', body: 'Wir wünschen Ihnen einen angenehmen Aufenthalt' }, ru: { title: 'Добро пожаловать', body: 'Желаем вам приятного отдыха' }, ar: { title: 'أهلاً وسهلاً', body: 'نتمنى لكم إقامة ممتعة' } } }),
@@ -95,6 +97,7 @@ function cleanLayout(l) {
           item.props[k] = typeof p[k] === 'string' && (!en || en.includes(p[k])) ? p[k].slice(0, k === 'body' ? 400 : 200) : dv;
         }
       }
+      if (w.type === 'worldclock') item.props.zones = require('./world').clean(item.props.zones) || WIDGETS.worldclock.props.zones;
       // çeviriler: { en: { title, body } }
       if (p.i18n && typeof p.i18n === 'object') {
         const tr = {};

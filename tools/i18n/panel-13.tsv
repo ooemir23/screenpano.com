@@ -282,3 +282,12 @@ Fotoğraf veya video seç ¦ Choose photo or video ¦ Foto oder Video auswählen
 {} içerik ¦ {} items ¦ {} Inhalte ¦ {} محتوى
 Henüz içerik yok. Aşağıdaki düğmeyle yeni dosya yükleyin. ¦ No content yet. Upload a new file with the button below. ¦ Noch keine Inhalte. Laden Sie mit der Schaltfläche unten eine neue Datei hoch. ¦ لا يوجد محتوى بعد. ارفع ملفًا جديدًا بالزر أدناه.
 Yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez. Dosyaları kutuların üzerine de bırakabilirsiniz. ¦ New content plays only during the special broadcast and does not appear in the normal loop. You can also drop files onto the tiles. ¦ Neue Inhalte laufen nur in der Sonderübertragung und erscheinen nicht im normalen Ablauf. Sie können Dateien auch auf die Kacheln ziehen. ¦ المحتوى الجديد يُعرض في البث الخاص فقط ولا يظهر في الدورة العادية. يمكنك أيضًا إسقاط الملفات على المربعات.
+Dünya saatleri ¦ World clocks ¦ Weltzeituhr ¦ ساعات العالم
+Seçtiğiniz ülke ve şehirlerin saati yan yana (en çok 5); istenirse birden çok kutu eklenir ¦ The time in the countries and cities you choose, side by side (up to 5); add several boxes if you like ¦ Die Uhrzeit der gewählten Länder und Städte nebeneinander (bis zu 5); bei Bedarf mehrere Felder ¦ توقيت الدول والمدن التي تختارها جنبًا إلى جنب (حتى 5)، ويمكنك إضافة عدة مربعات
+Seçtiğiniz ülke ve şehirlerin saati yan yana görünür (en çok {}). Başka şehirleri ayrı bir kutuda göstermek için bir Dünya saatleri kutusu daha ekleyin. ¦ The time in the countries and cities you choose appears side by side (up to {}). To show other cities in a separate box, add another World clocks box. ¦ Die Uhrzeit der gewählten Länder und Städte erscheint nebeneinander (bis zu {}). Für weitere Städte in einem eigenen Feld fügen Sie eine weitere Weltzeituhr hinzu. ¦ يظهر توقيت الدول والمدن التي تختارها جنبًا إلى جنب (حتى {}). لعرض مدن أخرى في مربع منفصل، أضف مربع ساعات العالم آخر.
+Şehir ekle ¦ Add city ¦ Stadt hinzufügen ¦ إضافة مدينة
+Ülke / şehir seçin… ¦ Choose country / city… ¦ Land / Stadt wählen… ¦ اختر الدولة / المدينة…
+Kaldır: {} ¦ Remove: {} ¦ Entfernen: {} ¦ إزالة: {}
+En fazla {} şehir seçilebilir. ¦ You can choose up to {} cities. ¦ Es können bis zu {} Städte gewählt werden. ¦ يمكن اختيار {} مدن كحد أقصى.
+En az bir şehir kalmalı ¦ At least one city must remain ¦ Mindestens eine Stadt muss bleiben ¦ يجب أن تبقى مدينة واحدة على الأقل
+Saniyeyi göster ¦ Show seconds ¦ Sekunden anzeigen ¦ إظهار الثواني

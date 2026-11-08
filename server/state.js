@@ -56,7 +56,8 @@ function layoutFor(t, screen) {
   // Hava durumu ve Finans ayrı widget; TV'ye (eski APK'lar dahil) ayarları kısılmış 'rates' kutusu olarak gider
   const toRates = w => w.type === 'weather' ? { ...w, type: 'rates', props: { ...(w.props || {}), weather: true, rates: false, qr: false, qrs: '' } }
     : w.type === 'finance' ? { ...w, type: 'rates', props: { valSize: 'xl', ...(w.props || {}), weather: false, rates: true, qr: false, qrs: '' } } : w;
-  return { ...l, widgets: l.widgets.filter(w => WIDGETS[w.type] && (pro || !WIDGETS[w.type].pro)).map(toRates) };
+  const toWorld = w => w.type === 'worldclock' ? { ...w, props: { ...(w.props || {}), cities: require('./world').cities((w.props || {}).zones) } } : w; // TV şehir adlarını dillere göre alır
+  return { ...l, widgets: l.widgets.filter(w => WIDGETS[w.type] && (pro || !WIDGETS[w.type].pro)).map(toRates).map(toWorld) };
 }
 
 const SCH = require('./sched');

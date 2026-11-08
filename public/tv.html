@@ -273,7 +273,7 @@ background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414
 #reviews .q{flex:1;min-width:0;font-size:2.3vh;font-weight:500;line-height:1.3;color:var(--white);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 #reviews .who{flex:none;max-width:16vw;text-align:right;font-size:2vh;font-weight:600;color:var(--accent2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* yerel (native) çizilen hücreler: APK ızgarası çizer, sayfa gizler */
-html.nat-ticker .cell[data-w=ticker],html.nat-clock .cell[data-w=clock],html.nat-logo .cell[data-w=logo],html.nat-text .cell[data-w=text],html.nat-image .cell[data-w=image],html.nat-rates .cell[data-w=rates],html.nat-reviews .cell[data-w=reviews],html.nat-menu .cell[data-w=menu],html.nat-info .cell[data-w=info],html.nat-qr .cell.qrcell{visibility:hidden}
+html.nat-ticker .cell[data-w=ticker],html.nat-clock .cell[data-w=clock],html.nat-logo .cell[data-w=logo],html.nat-text .cell[data-w=text],html.nat-image .cell[data-w=image],html.nat-rates .cell[data-w=rates],html.nat-reviews .cell[data-w=reviews],html.nat-menu .cell[data-w=menu],html.nat-info .cell[data-w=info],html.nat-worldclock .cell.wcell,html.nat-qr .cell.qrcell{visibility:hidden}
 html.nat-info .cell[data-w=info] #goal{visibility:visible} /* gol duyurusu sayfada kalır */
 html.nat-ticker #ttrack{animation:none !important}
 #ticker{flex:1;min-height:0;display:flex;align-items:stretch;background:var(--edge);border-top:max(1px,.1vh) solid rgba(var(--a2),.55);overflow:hidden;position:relative}
@@ -932,6 +932,14 @@ body.glass #wclock b,body.glass .wclk b{background:linear-gradient(135deg,#fff3b
 #wclock,.wclk{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:.6vh}
 #wclock b,.wclk b{font-weight:800;letter-spacing:.03em;line-height:1;font-variant-numeric:tabular-nums;color:var(--white)}
 #wclock small,.wclk small{font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2)}
+/* dünya saatleri: seçilen şehirler yan yana */
+.wwc{display:flex;align-items:stretch}
+.wz{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5vh;text-align:center;border-inline-start:max(1px,.1vh) solid rgba(var(--a2),.25);overflow:hidden}
+.wz:first-child{border:0}
+.wz small{font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);white-space:nowrap}
+.wz b{font-weight:800;letter-spacing:.02em;line-height:1;font-variant-numeric:tabular-nums;color:var(--white);white-space:nowrap}
+.wz i{font-style:normal;font-weight:600;color:var(--soft);white-space:nowrap}
+body.glass .wz b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%,var(--accent) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 #wtext{display:flex;flex-direction:column;justify-content:center;gap:1vh;padding:1.6vh 1.2vw}
 #wtext h3{font-weight:800;line-height:1.15;color:var(--white)}
 #wtext p{color:var(--soft);line-height:1.35;white-space:pre-line}
@@ -2140,7 +2148,7 @@ function applyTicker(label, items, seg, shown, info) {
   if (key !== tickKey) { tickKey = key; track.style.animation = 'none'; void track.offsetWidth; track.style.animation = ''; }
   track.style.animationDuration = secs + 's';
 }
-window.__nativeCells = list => { window.__nativePoster = (list || []).includes('poster'); const c = document.documentElement.classList; ['ticker', 'clock', 'logo', 'text', 'image', 'rates', 'reviews', 'menu', 'info', 'qr'].forEach(t => c.toggle('nat-' + t, (list || []).includes(t))); };
+window.__nativeCells = list => { window.__nativePoster = (list || []).includes('poster'); const c = document.documentElement.classList; ['ticker', 'clock', 'worldclock', 'logo', 'text', 'image', 'rates', 'reviews', 'menu', 'info', 'qr'].forEach(t => c.toggle('nat-' + t, (list || []).includes(t))); };
 let safeNow = { L: 0, R: 0, T: 0, B: 0 }, guideOn = false;
 // Her kenar için ayrı pay (%): içerik oranı bozulmadan küçültülür ve görünen alanın ortasına kaydırılır
 function applySafe(safe, guide) {
@@ -3199,7 +3207,7 @@ function applyLayout(l) {
   app.style.gridTemplateRows = `repeat(${rows},minmax(0,1fr))`;
   app.style.gap = cols > 24 ? '.7vh .45vw' : ''; // ince ızgarada hücre aralığı yarıya iner (kutu boyutları aynı kalsın)
   const used = new Set(); WPROPS = {}; window.__rtProps = []; let rtn = 0;
-  app.querySelectorAll('.cell.qrcell,.cell.clkcell,.cell.rtcell,.cell.txtcell').forEach(c => c.remove()); qrTile.cells = [];
+  app.querySelectorAll('.cell.qrcell,.cell.clkcell,.cell.wcell,.cell.rtcell,.cell.txtcell').forEach(c => c.remove()); qrTile.cells = [];
   for (const w of l.widgets) {
     if (w.type === 'qr') { // birden çok QR kutusu olabilir; her biri seçilen QR'ı (ya da hepsini sırayla) gösterir
       const c = document.createElement('div'); c.className = 'cell qrcell'; c.dataset.w = 'qr';
@@ -3215,6 +3223,13 @@ function applyLayout(l) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       boxProps(c, w.props); app.appendChild(c); used.add('clock'); WPROPS.clock = w.props || {}; attachTap(c.firstChild, () => window.__menu()); continue;
     }
+    if (w.type === 'worldclock') { // dünya saatleri: seçilen şehirler yan yana (en çok 5); birden çok kutu olabilir
+      const zs = ((w.props && w.props.cities) || []).slice(0, 5);
+      const c = document.createElement('div'); c.className = 'cell wcell'; c.dataset.w = 'worldclock';
+      c.innerHTML = '<div class="wbox wwc"' + (w.props && w.props.seconds ? ' data-sec="1"' : '') + '>' + zs.map(z => `<div class="wz" data-tz="${esc(z.tz)}" data-n="${esc(JSON.stringify(z.n || {}))}"><small>${esc((z.n && (z.n[LANG] || z.n.tr)) || z.tz)}</small><b></b><i></i></div>`).join('') + '</div>';
+      c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+      boxProps(c, w.props); app.appendChild(c); used.add('worldclock'); attachTap(c.firstChild, () => window.__menu()); continue;
+    }
     if (w.type === 'rates' && rtn++) { // ikinci ve sonraki hava/piyasa kutuları: aynı biçim, kendi ayarlarıyla
       const c = document.createElement('div'); c.className = 'cell rtcell'; c.dataset.w = 'rates';
       c.innerHTML = '<div id="rates" class="rtx"></div>';
@@ -3227,13 +3242,13 @@ function applyLayout(l) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       boxProps(c, w.props); c._props = w.props || {}; app.appendChild(c); used.add('text'); WPROPS.text = w.props || {}; continue;
     }
-    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.qrcell):not(.txtcell)`);
+    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.wcell):not(.qrcell):not(.txtcell)`);
     if (!c || used.has(w.type)) continue;
     c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
     c.classList.toggle('edge-b', w.type === 'ticker' && w.y + w.h >= rows && w.x === 0 && w.w >= cols);
     boxProps(c, w.props); app.appendChild(c); used.add(w.type); WPROPS[w.type] = w.props || {};
   }
-  for (const c of [...app.querySelectorAll('.cell:not(.qrcell):not(.clkcell):not(.rtcell):not(.txtcell)')]) if (!used.has(c.dataset.w)) { c.style.gridArea = ''; park.appendChild(c); }
+  for (const c of [...app.querySelectorAll('.cell:not(.qrcell):not(.clkcell):not(.wcell):not(.rtcell):not(.txtcell)')]) if (!used.has(c.dataset.w)) { c.style.gridArea = ''; park.appendChild(c); }
   const wasOn = MEDIA_ON; MEDIA_ON = used.has('media');
   if (!MEDIA_ON) els.forEach(v => v.pause());
   $id('tclock').style.display = WPROPS.ticker && WPROPS.ticker.clock === false ? 'none' : '';
@@ -3300,8 +3315,8 @@ function fillEmpty() {
   // Hücreleri özgün gridArea ve display durumlarına getir
   let rtSeen = 0;
   for (const w of l.widgets) {
-    if (w.type === 'clock' || w.type === 'qr' || w.type === 'text' || (w.type === 'rates' && rtSeen++)) continue; // çoklu kutular kendi alanını applyLayout'ta aldı
-    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.qrcell):not(.txtcell)`);
+    if (w.type === 'clock' || w.type === 'worldclock' || w.type === 'qr' || w.type === 'text' || (w.type === 'rates' && rtSeen++)) continue; // çoklu kutular kendi alanını applyLayout'ta aldı
+    const c = document.querySelector(`.cell[data-w="${w.type}"]:not(.rtcell):not(.clkcell):not(.wcell):not(.qrcell):not(.txtcell)`);
     if (c) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       c.style.display = '';
@@ -3483,6 +3498,40 @@ tickClock = function () {
   if (fit) fitWidgets();
 };
 setInterval(tickClock, 1000);
+
+// ---- dünya saatleri ----
+const _dayKey = (d, tz) => d.toLocaleDateString('en-CA', { timeZone: tz });
+function tickWorld() {
+  const d = new Date(), home = _dayKey(d, 'Europe/Istanbul'); let fit = false;
+  let rtf = null; try { rtf = new Intl.RelativeTimeFormat(LANG, { numeric: 'auto' }); } catch (e) {}
+  document.querySelectorAll('.wwc').forEach(box => {
+    const sec = !!box.dataset.sec;
+    box.querySelectorAll('.wz').forEach(z => {
+      const tz = z.dataset.tz, b = z.querySelector('b'), i = z.querySelector('i');
+      const tt = d.toLocaleTimeString('tr-TR', { timeZone: tz, hour: '2-digit', minute: '2-digit', ...(sec ? { second: '2-digit' } : {}) });
+      const diff = Math.round((Date.parse(_dayKey(d, tz)) - Date.parse(home)) / 864e5);
+      const dl = rtf ? rtf.format(diff, 'day') : '';
+      if (b.textContent !== tt || i.textContent !== dl) { b.textContent = tt; i.textContent = dl; fit = true; }
+    });
+  });
+  if (fit) fitWorld();
+}
+function fitWorld() {
+  document.querySelectorAll('.wwc').forEach(box => {
+    const w = box.clientWidth, h = box.clientHeight, zs = [...box.querySelectorAll('.wz')]; if (!zs.length || !w || !h) return;
+    const zw = w / zs.length, sec = !!box.dataset.sec, ar = LANG === 'ar';
+    const nl = Math.max(6, ...zs.map(z => z.querySelector('small').textContent.length));
+    const t0 = Math.max(6, Math.min(h * 0.4, zw / (sec ? 4.9 : 3.5))), n0 = Math.max(6, Math.min(h * 0.15, zw / (nl * (ar ? 0.62 : 0.78)))), d0 = n0 * 0.9;
+    let k = 1;
+    for (let q = 0; q < 16; q++) {
+      zs.forEach(z => { const s = z.querySelector('small'), b = z.querySelector('b'), i = z.querySelector('i'); s.style.fontSize = Math.max(6, n0 * k) + 'px'; b.style.fontSize = Math.max(6, t0 * k) + 'px'; i.style.fontSize = Math.max(6, d0 * k) + 'px'; s.style.letterSpacing = ar ? '0' : ''; z.style.padding = '0 ' + (zw * 0.04) + 'px'; });
+      if (zs.every(z => z.scrollWidth <= z.clientWidth + 1 && z.scrollHeight <= z.clientHeight + 1) || k < .25) break;
+      k *= .9;
+    }
+  });
+}
+{ const _fw = fitWidgets; fitWidgets = function () { _fw(); fitWorld(); }; }
+{ const _t = tickClock; tickClock = function () { _t(); tickWorld(); }; }
 
 // ---- QR kart widget'ı ----
 const qrTile = { list: [], cells: [], timer: null, sig: '' };
@@ -3917,8 +3966,9 @@ function setLangs(list, sec) {
   applyLang();
 }
 function nextLang() { LANG_I = (LANG_I + 1) % LANGS.length; LANG = LANGS[LANG_I]; applyLang(); }
+function worldNames() { document.querySelectorAll('.wz[data-n]').forEach(z => { let n = {}; try { n = JSON.parse(z.dataset.n); } catch (e) {} const t = n[LANG] || n.tr; if (t) z.querySelector('small').textContent = t; }); fitWorld(); }
 function applyLang() {
-  renderText();
+  renderText(); worldNames();
   if (NMED() && window.__N.mediaLang) window.__N.mediaLang(LANG);
   if (menuW.data) { const keep = menuW.idx; renderMenuW(false); menuW.idx = keep; }
   if (posterCur && window.__nativePoster && nativeShowing === 'photo' && window.__N && window.__N.showPoster) window.__N.showPoster(JSON.stringify(posterCur), LANG);

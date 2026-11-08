@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const S = { me: null, db: null, cat: null, scr: null, lg: null };
 let TAB = 'home', PREV = null, SUB = {};
-const ICN = { media: 'film', logo: 'store', clock: 'clock', rates: 'cloud-sun', weather: 'cloud-sun', finance: 'coins', ticker: 'newspaper', text: 'type', image: 'image', qr: 'qr-code', info: 'trophy', reviews: 'star', menu: 'receipt-text', music: 'music' };
+const ICN = { media: 'film', logo: 'store', clock: 'clock', worldclock: 'globe', rates: 'cloud-sun', weather: 'cloud-sun', finance: 'coins', ticker: 'newspaper', text: 'type', image: 'image', qr: 'qr-code', info: 'trophy', reviews: 'star', menu: 'receipt-text', music: 'music' };
 const ICON = new Proxy({}, { get: (_, k) => ICN[k] ? `<svg class="ic" aria-hidden="true"><use href="/icons.svg#i-${ICN[k]}"></use></svg>` : '' });
 const fmtDate = ms => ms ? new Date(ms).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
 const ago = ms => { if (!ms) return 'hiç'; const m = Math.round((Date.now() - ms) / 60000); return m < 2 ? 'az önce' : m < 60 ? m + ' dk önce' : m < 1440 ? Math.round(m / 60) + ' saat önce' : Math.round(m / 1440) + ' gün önce'; };
@@ -339,6 +339,14 @@ function drawProps() {
     const sh = p.show || 'both', swc = (k, label, on) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(on, `setClk('${k}',this.checked)`)}</div>`;
     f = `<p class="muted" style="margin:6px 0 0">Saati bir kutuya, tarihi başka bir kutuya koymak için iki ayrı Saat ve tarih kutusu ekleyip birinde tarihi, diğerinde saati gizleyin.</p>` + swc('time', 'Saati göster', sh !== 'date') + swc('date', 'Tarihi göster', sh !== 'time') + (sh === 'date' ? '' : tg('seconds', 'Saniyeyi göster', false));
   }
+  if (w.type === 'worldclock') {
+    const zs = String(p.zones || '').split(',').filter(Boolean), W = S.cat.world || [], mx = S.cat.worldMax || 5, L = I18N.lang, nm = c => (c.n[L] || c.n.en || c.n.tr), cn = c => (c.c[L] || c.c.en || c.c.tr);
+    const by = Object.fromEntries(W.map(c => [c.tz, c])), rest = W.filter(c => !zs.includes(c.tz)).sort((a, b) => nm(a).localeCompare(nm(b), L));
+    f = `<p class="muted" style="margin:6px 0 0">Seçtiğiniz ülke ve şehirlerin saati yan yana görünür (en çok ${mx}). Başka şehirleri ayrı bir kutuda göstermek için bir Dünya saatleri kutusu daha ekleyin.</p>`
+      + `<div class="chips mt">${zs.map((z, k) => by[z] ? `<span class="chip on" style="display:inline-flex;align-items:center;gap:6px">${esc(nm(by[z]))}<button type="button" class="btn xs" style="padding:0 6px;min-height:22px" aria-label="Kaldır: ${esc(nm(by[z]))}" onclick="wzDel(${k})">×</button></span>` : '').join('')}</div>`
+      + (zs.length < mx ? fl('Şehir ekle', `<select onchange="wzAdd(this.value)"><option value="">Ülke / şehir seçin…</option>${rest.map(c => `<option value="${c.tz}">${esc(nm(c))} · ${esc(cn(c))}</option>`).join('')}</select>`) : `<p class="muted mt">En fazla ${mx} şehir seçilebilir.</p>`)
+      + tg('seconds', 'Saniyeyi göster', false);
+  }
   if (w.type === 'weather') f = `<p class="muted" style="margin:6px 0 0">Bu kutu yalnız hava durumunu gösterir. Şehir Ayarlar sayfasındaki konumdan gelir.</p>`;
   if (w.type === 'finance') f = `<p class="muted" style="margin:6px 0 0">Bu kutu yalnız döviz, altın, borsa ve Bitcoin gösterir.</p>` + fl('Tutar ve değişim boyutu', `<select onchange="setP('valSize',this.value)">${[['s', 'Küçük'], ['m', 'Normal'], ['l', 'Büyük'], ['xl', 'Çok büyük']].map(([v, l]) => `<option value="${v}" ${(p.valSize || 'xl') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`);
   if (w.type === 'rates') {
@@ -400,6 +408,8 @@ function setClk(k, on) {
   if (!t && !d) { toast('Saat ve tarihten en az biri açık olmalı', true); return drawProps(); }
   setP('show', t && d ? 'both' : t ? 'time' : 'date'); drawProps();
 }
+function wzAdd(tz) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w || !tz) return; const z = String((w.props || {}).zones || '').split(',').filter(Boolean); if (z.length >= (S.cat.worldMax || 5) || z.includes(tz)) return; setP('zones', [...z, tz].join(',')); drawProps(); }
+function wzDel(k) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; const z = String((w.props || {}).zones || '').split(',').filter(Boolean); z.splice(k, 1); if (!z.length) return toast('En az bir şehir kalmalı', true); setP('zones', z.join(',')); drawProps(); }
 function setP(k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); w.props = { ...(w.props || {}), [k]: v }; }
 function rmW(i) { snap(); EDIT.layout.widgets.splice(i, 1); EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
 window.__txtFocus = 'title';

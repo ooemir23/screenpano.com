@@ -138,7 +138,7 @@ r.delete('/users/:id', ownerOnly, (req, res) => {
 });
 
 // ================= GÖRÜNÜM: tema, logo, katalog =================
-r.get('/catalog', (req, res) => res.json({ cols: W.COLS, rows: W.ROWS, widgets: W.WIDGETS, templates: W.TEMPLATES, themes: W.THEMES, fonts: W.FONTS, starters: require('./starters').list(), pro: plan(req.t).pro, designs: designList(), canDesigns: designCan(req) }));
+r.get('/catalog', (req, res) => res.json({ world: require('./world').CITIES, worldMax: require('./world').MAX, cols: W.COLS, rows: W.ROWS, widgets: W.WIDGETS, templates: W.TEMPLATES, themes: W.THEMES, fonts: W.FONTS, starters: require('./starters').list(), pro: plan(req.t).pro, designs: designList(), canDesigns: designCan(req) }));
 // Ortak tasarımlar: süper yönetim yetkisi olan işletme düzen + renk tasarımını kalıcı kaydeder, tüm işletmeler uygular.
 // İşletmeye özel içerik (QR seçimi, görsel adresi, metinler) kaydedilmez; medya, logo ve fiyat listesi hiç dokunulmaz.
 const designAll = () => { try { return JSON.parse(store.setting('sharedDesigns', '[]')) || []; } catch { return []; } };

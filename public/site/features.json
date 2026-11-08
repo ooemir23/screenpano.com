@@ -1611,6 +1611,26 @@
           "text": "حدّد الأيام والساعات واختر ما يُعرض، أو أضف ملفاً جديداً أو رابط يوتيوب. في هذه الأوقات لا تظهر حملة أو احتفال أو مباراة أو شريط أخبار أو إعلان؛ ويمكنك إخفاء المربعات الجانبية والعرض بملء الشاشة."
         }
       }
+    },
+    {
+      "icon": "🌍",
+      "title": "Dünya saatleri widget'ı",
+      "text": "Seçtiğiniz ülke ve şehirlerin saati yan yana görünür (en çok 5); isterseniz birkaç ayrı kutu ekleyip farklı şehirleri ayrı yerlere koyabilirsiniz. Otel / lobi düzeninde hazır gelir.",
+      "added": "2026-11-08",
+      "i18n": {
+        "en": {
+          "title": "World clocks widget",
+          "text": "The time in the countries and cities you choose appears side by side (up to 5); add several boxes to place different cities in different spots. It comes ready in the Hotel / lobby layout."
+        },
+        "de": {
+          "title": "Weltzeituhr-Widget",
+          "text": "Die Uhrzeit der gewählten Länder und Städte erscheint nebeneinander (bis zu 5); mit mehreren Feldern lassen sich verschiedene Städte an verschiedenen Stellen platzieren. Im Layout Hotel / Lobby ist es bereits enthalten."
+        },
+        "ar": {
+          "title": "عنصر ساعات العالم",
+          "text": "يظهر توقيت الدول والمدن التي تختارها جنبًا إلى جنب (حتى 5)، ويمكنك إضافة عدة مربعات لوضع مدن مختلفة في أماكن مختلفة. وهو جاهز في تصميم الفندق / الردهة."
+        }
+      }
     }
   ],
   "shots": {
