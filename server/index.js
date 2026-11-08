@@ -229,6 +229,7 @@ require('./monitor').start();
 require('./stats').start();
 require('./weekly').start();
 require('./happy').start();
+require('./special').start();
 require('./social').start();
 require('./platformads').purgeLegacy(); require('./platformads').watch();
 process.on('unhandledRejection', e => console.error('Yakalanmamış söz:', e && e.message ? e.message : e));

@@ -238,3 +238,28 @@ En az bir gün seçin ¦ Choose at least one day ¦ Wählen Sie mindestens einen
 Başlangıç ve bitiş saatini farklı girin ¦ Enter different start and end times ¦ Geben Sie unterschiedliche Start- und Endzeiten ein ¦ أدخل وقتَي بداية ونهاية مختلفين
 İndirim yüzdesini girin ¦ Enter the discount percentage ¦ Geben Sie den Rabatt in Prozent ein ¦ أدخل نسبة الخصم
 İndirimin geçeceği en az bir kategori seçin ¦ Choose at least one category for the discount ¦ Wählen Sie mindestens eine Kategorie für den Rabatt ¦ اختر فئة واحدة على الأقل للخصم
+Özel yayın ¦ Special broadcast ¦ Sonderübertragung ¦ بث خاص
+Seçtiğiniz gün ve saatlerde ekranda yalnız seçtiğiniz içerikler oynar. ¦ On the days and times you choose, only the content you select plays on screen. ¦ An den gewählten Tagen und Uhrzeiten läuft auf dem Bildschirm nur der ausgewählte Inhalt. ¦ في الأيام والأوقات التي تختارها يُعرض على الشاشة المحتوى الذي تحدده فقط.
++ Yeni özel yayın ¦ + New special broadcast ¦ + Neue Sonderübertragung ¦ + بث خاص جديد
++ Özel yayın ekle ¦ + Add special broadcast ¦ + Sonderübertragung hinzufügen ¦ + إضافة بث خاص
+Henüz özel yayın yok. Örneğin cumartesi 10:00–12:00 arası yalnız kahvaltı tanıtımı oynasın; kampanya, maç, kutlama ve reklam çıkmasın. ¦ No special broadcasts yet. For example, on Saturday 10:00–12:00 only the breakfast promo plays, with no campaign, match, celebration or ad. ¦ Noch keine Sonderübertragung. Zum Beispiel samstags 10:00–12:00 nur der Frühstücks-Spot, ohne Kampagne, Spiel, Feier oder Werbung. ¦ لا يوجد بث خاص بعد. مثلاً يوم السبت 10:00–12:00 يُعرض إعلان الإفطار فقط دون حملة أو مباراة أو احتفال أو إعلان.
+Açık ¦ On ¦ An ¦ مفعّل
+Özel yayın adı ¦ Special broadcast name ¦ Name der Sonderübertragung ¦ اسم البث الخاص
+Bu saatlerde yalnız aşağıda seçtiğiniz içerikler oynar; saat bitince ekran her zamanki hâline döner. ¦ During these hours only the content you select below plays; when the time ends the screen returns to normal. ¦ In diesen Stunden läuft nur der unten gewählte Inhalt; danach kehrt der Bildschirm zum Normalbetrieb zurück. ¦ في هذه الساعات يُعرض المحتوى الذي تختاره أدناه فقط، وتعود الشاشة إلى وضعها المعتاد عند انتهاء الوقت.
+Ne oynasın? ¦ What should play? ¦ Was soll laufen? ¦ ماذا يُعرض؟
+Oynatmak istediklerinize dokunun; numara oynatma sırasını gösterir. Normalde gizli içerikler de seçilebilir. ¦ Tap what you want to play; the number shows the play order. Content that is normally hidden can also be chosen. ¦ Tippen Sie auf den Inhalt, der laufen soll; die Nummer zeigt die Reihenfolge. Normalerweise ausgeblendete Inhalte sind ebenfalls wählbar. ¦ المس ما تريد عرضه؛ الرقم يبيّن ترتيب العرض. يمكن أيضاً اختيار المحتوى المخفي عادةً.
+Yeni dosya yükle ¦ Upload a new file ¦ Neue Datei hochladen ¦ رفع ملف جديد
+YouTube bağlantısı ¦ YouTube link ¦ YouTube-Link ¦ رابط يوتيوب
+Ekle ¦ Add ¦ Hinzufügen ¦ إضافة
+Buradan eklediğiniz yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez. ¦ New content added here plays only in the special broadcast and does not appear in the normal loop. ¦ Hier hinzugefügte neue Inhalte laufen nur in der Sonderübertragung und erscheinen nicht in der normalen Schleife. ¦ المحتوى الجديد المضاف هنا يُعرض في البث الخاص فقط ولا يظهر في الدورة العادية.
+Henüz içerik yok. Aşağıdan yeni dosya yükleyin. ¦ No content yet. Upload a new file below. ¦ Noch kein Inhalt. Laden Sie unten eine neue Datei hoch. ¦ لا يوجد محتوى بعد. ارفع ملفاً جديداً أدناه.
+Kenar kutular ¦ Side boxes ¦ Seitenfelder ¦ المربعات الجانبية
+Saat, hava, finans, QR, kayan bant ve logo gibi kutular özel yayında ne olsun? ¦ What should happen to boxes such as clock, weather, finance, QR, ticker and logo during the special broadcast? ¦ Was soll mit Feldern wie Uhr, Wetter, Finanzen, QR, Laufband und Logo in der Sonderübertragung geschehen? ¦ ماذا يحدث للمربعات مثل الساعة والطقس والمال ورمز QR والشريط المتحرك والشعار أثناء البث الخاص؟
+Hepsi gizlensin, tam ekran ¦ Hide all, full screen ¦ Alle ausblenden, Vollbild ¦ إخفاء الكل، ملء الشاشة
+Kenar kutular kalsın ¦ Keep the side boxes ¦ Seitenfelder beibehalten ¦ إبقاء المربعات الجانبية
+Bu özel yayın silinsin mi? ¦ Delete this special broadcast? ¦ Diese Sonderübertragung löschen? ¦ هل تريد حذف هذا البث الخاص؟
+Açık bir özel yayında en az bir içerik seçin ¦ Select at least one content item in an active special broadcast ¦ Wählen Sie in einer aktiven Sonderübertragung mindestens einen Inhalt ¦ اختر عنصر محتوى واحداً على الأقل في البث الخاص المفعّل
+Özel yayın kaydedildi ¦ Special broadcast saved ¦ Sonderübertragung gespeichert ¦ تم حفظ البث الخاص
+Yükleniyor… ¦ Uploading… ¦ Wird hochgeladen… ¦ جارٍ الرفع…
+Yüklendi; hazırlanınca özel yayında oynar ¦ Uploaded; it will play in the special broadcast once ready ¦ Hochgeladen; läuft in der Sonderübertragung, sobald es bereit ist ¦ تم الرفع؛ سيُعرض في البث الخاص عند جاهزيته
+YouTube bağlantısını yapıştırın ¦ Paste the YouTube link ¦ Fügen Sie den YouTube-Link ein ¦ الصق رابط يوتيوب

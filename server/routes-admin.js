@@ -646,6 +646,19 @@ r.delete('/campaigns/:id/image', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- Özel yayın: seçili gün/saatlerde yalnız seçilen içerikler oynar ----
+r.get('/special', (req, res) => { const { activeSpecial } = require('./state'), sp = activeSpecial(req.t); res.json({ rules: req.t.db.special || [], activeId: sp ? sp.rule.id : null }); });
+r.put('/special', (req, res) => {
+  const t = req.t, src = Array.isArray((req.body || {}).rules) ? req.body.rules.slice(0, 10) : [], vids = new Set((t.db.videos || []).map(v => v.id)), out = [];
+  for (const x of src) {
+    const sch = require('./sched').clean(x.sch);
+    if (!sch || (!sch.from && !sch.days && !sch.start && !sch.end)) return res.status(400).json({ error: 'Her özel yayın için gün ya da saat seçin' });
+    const items = [...new Set((Array.isArray(x.items) ? x.items : []).map(String).filter(id => vids.has(id)))].slice(0, 60);
+    if (x.on && !items.length) return res.status(400).json({ error: 'Açık bir özel yayında en az bir içerik seçili olmalı' });
+    out.push({ id: /^[a-z0-9]{4,16}$/i.test(x.id || '') ? x.id : Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: String(x.name || '').trim().slice(0, 40) || 'Özel yayın', on: !!x.on, sch, items, full: x.full !== false });
+  }
+  t.db.special = out; changed(t); res.json({ ok: true });
+});
 // ---- Happy Hours kartı (fotoğraf + gizlenebilir ad/saat/rozet + gösterim süresi) ----
 const clampN = (v, lo, hi, d) => Math.max(lo, Math.min(hi, Math.round(Number(v)) || d));
 r.put('/happy-card', (req, res) => {
@@ -719,14 +732,15 @@ r.put('/leagues', (req, res) => {
 
 // ---- medya ----
 r.post('/videos', quota, upload.array('files'), (req, res) => {
-  const t = req.t;
+  const t = req.t, ids = [], only = req.query.only === '1'; // only: yalnız özel yayında oynasın (normal döngüde gizli)
   for (const f of req.files || []) {
     if (!/^(video|image)\//.test(f.mimetype)) { rmUpload(t, f.filename); continue; }
     const rec = { id: auth.uid(), file: f.filename, name: f.originalname, type: f.mimetype.startsWith('image/') ? 'image' : 'video', status: 'processing' };
-    t.db.videos.push(rec);
+    if (only) rec.hidden = true;
+    t.db.videos.push(rec); ids.push(rec.id);
     media.enqueue(t.id, rec.id);
   }
-  changed(t); res.json({ ok: true });
+  changed(t); res.json({ ok: true, ids });
 });
 // YouTube bağlantısı: dosya yok; TV'de gömülü oynatıcıyla belirtilen süre boyunca (döngülü) oynar
 r.post('/videos/youtube', async (req, res) => {
@@ -734,8 +748,10 @@ r.post('/videos/youtube', async (req, res) => {
   if (!id) return res.status(400).json({ error: 'Geçerli bir YouTube bağlantısı girin (örn. https://www.youtube.com/watch?v=...)' });
   if (req.t.db.videos.length >= 300) return res.status(400).json({ error: 'En fazla 300 içerik eklenebilir' });
   const name = (await yt.title(id)) || 'YouTube videosu';
-  req.t.db.videos.push({ id: auth.uid(), type: 'youtube', yt: id, name, dur: yt.clampDur((req.body || {}).dur), status: 'ready', optimized: true });
-  changed(req.t); res.json({ ok: true });
+  const rec = { id: auth.uid(), type: 'youtube', yt: id, name, dur: yt.clampDur((req.body || {}).dur), status: 'ready', optimized: true };
+  if ((req.body || {}).only) rec.hidden = true;
+  req.t.db.videos.push(rec);
+  changed(req.t); res.json({ ok: true, ids: [rec.id] });
 });
 r.delete('/videos/:id', (req, res) => {
   const t = req.t, v = t.db.videos.find(x => x.id === req.params.id);

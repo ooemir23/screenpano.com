@@ -1591,6 +1591,26 @@
           "text": "في محرر التصميم أصبح الطقس والمال مربعين منفصلين يمكن وضع كل منهما في أي مكان. ولم يعد النص يكبر أكثر من اللازم في المربعات الكبيرة."
         }
       }
+    },
+    {
+      "icon": "📡",
+      "title": "Özel yayın: seçtiğiniz saatlerde yalnız seçtiğiniz içerikler",
+      "text": "Gün ve saat aralığı belirleyin, oynatılacak içerikleri seçin ya da yeni dosya/YouTube bağlantısı ekleyin. O saatlerde kampanya, kutlama, maç, haber bandı, fragman ve reklam çıkmaz; kenar kutuları gizleyip tam ekran da oynatabilirsiniz.",
+      "added": "2026-11-08",
+      "i18n": {
+        "en": {
+          "title": "Special broadcast: only the content you pick, at the times you pick",
+          "text": "Set a day and time range and choose what plays, or add a new file or YouTube link. During those hours no campaign, celebration, match, news ticker, trailer or ad appears; you can also hide the side boxes and play full screen."
+        },
+        "de": {
+          "title": "Sonderübertragung: nur der gewählte Inhalt zu den gewählten Zeiten",
+          "text": "Legen Sie Tage und Uhrzeiten fest und wählen Sie, was läuft, oder fügen Sie eine neue Datei bzw. einen YouTube-Link hinzu. In dieser Zeit erscheinen keine Kampagne, Feier, Spielanzeige, Nachrichtenband, kein Trailer und keine Werbung; auf Wunsch werden auch die Seitenfelder ausgeblendet und im Vollbild gespielt."
+        },
+        "ar": {
+          "title": "بث خاص: المحتوى الذي تختاره فقط في الأوقات التي تختارها",
+          "text": "حدّد الأيام والساعات واختر ما يُعرض، أو أضف ملفاً جديداً أو رابط يوتيوب. في هذه الأوقات لا تظهر حملة أو احتفال أو مباراة أو شريط أخبار أو إعلان؛ ويمكنك إخفاء المربعات الجانبية والعرض بملء الشاشة."
+        }
+      }
     }
   ],
   "shots": {

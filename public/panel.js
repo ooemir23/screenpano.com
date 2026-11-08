@@ -75,7 +75,7 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 // Metin olan satır grup başlığıdır; null ayraçtır
 const NAV = [
   'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'],
-  'İçerikler', ['media', 'film', 'Medya'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi', 1], ['happy', 'sparkles', 'Happy Hours', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
+  'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi', 1], ['happy', 'sparkles', 'Happy Hours', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
   'Canlı veri', ['sport', 'trophy', 'Spor', 1], ['info', 'newspaper', 'Bilgi Bandı', 1],
   'Takip', ['stats', 'chart-column', 'İstatistik'],
   null, ['settings', 'settings', 'Ayarlar'],
@@ -757,6 +757,68 @@ async function addYt() {
 }
 function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return openModal(`<iframe src="https://www.youtube.com/embed/${esc(v.yt)}?rel=0" style="width:100%;aspect-ratio:16/9;border:0" allow="encrypted-media"></iframe><div class="muted">${i + 1}. ${esc(v.name)}</div>`); const u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
 
+
+/* ================= ÖZEL YAYIN ================= */
+// Seçili gün/saatlerde ekranda yalnız seçilen içerikler oynar; kampanya, kutlama, maç, reklam çıkmaz. Kenar kutular gizlenebilir ya da kalabilir.
+let SP = null;
+function spInit() { if (SP && SP.dirty) return; SP = { dirty: 0, rules: clone(S.db.special || []) }; }
+const spSet = (fn, redraw = true) => { fn(); SP.dirty = 1; if (redraw) render(true); };
+const spNew = () => spSet(() => { SP.rules.push({ id: '', name: 'Özel yayın', on: true, sch: { days: [1, 2, 3, 4, 5], from: '09:00', to: '12:00' }, items: [], full: true }); });
+const spDays = r => (r.sch && r.sch.days) || [1, 2, 3, 4, 5, 6, 7];
+function spDay(i, n) { const r = SP.rules[i], d = spDays(r); const nd = d.includes(n) ? d.filter(x => x !== n) : [...d, n]; if (!nd.length) return; spSet(() => { nd.length === 7 ? delete r.sch.days : r.sch.days = nd.sort(); }); }
+function spDayPre(i, v) { const r = SP.rules[i]; spSet(() => { v.length === 7 ? delete r.sch.days : r.sch.days = v.slice(); }); }
+function spItem(i, id) { const r = SP.rules[i]; spSet(() => { r.items = r.items.includes(id) ? r.items.filter(x => x !== id) : [...r.items, id]; }); }
+function spDel(i) { UI.ask('Bu özel yayın silinsin mi?', { ok: 'Sil', danger: true }).then(ok => { if (ok) spSet(() => { SP.rules.splice(i, 1); }); }); }
+SECTIONS.special = {
+  html() {
+    spInit();
+    const vids = S.db.videos || [];
+    const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+    const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h3>${t}</h3><p class="muted">${sub}</p>${body}</div></div>`;
+    const ruleHtml = (r, i) => {
+      const s = r.sch || {}, d = spDays(r), live = r.on && s.from && s.to && schAt(s, new Date());
+      const dayChips = DAYS.map((n, k) => `<button class="chip${d.includes(k + 1) ? ' on' : ''}" onclick="spDay(${i},${k + 1})">${n}</button>`).join('');
+      const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => `<button class="chip${same(d, v) ? ' on' : ''}" onclick="spDayPre(${i},[${v}])">${n}</button>`).join('');
+      const tiles = vids.length ? vids.map(x => { const k = r.items.indexOf(x.id); return `<div class="spx-t${k >= 0 ? ' on' : ''}" onclick="spItem(${i},'${x.id}')"><div class="th">${thumb(x)}</div>${k >= 0 ? `<b class="spx-n">${k + 1}</b>` : ''}<span class="spx-m" title="${esc(x.name)}">${esc(x.name)}</span></div>`; }).join('') : '<span class="muted">Henüz içerik yok. Aşağıdan yeni dosya yükleyin.</span>';
+      return `<div class="spx${r.on ? '' : ' off'}"><div class="card hh-top"><div class="row" style="gap:14px;align-items:center;flex-wrap:wrap">
+          <label class="row" style="gap:12px;cursor:pointer;align-items:center">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}<span><b style="font-size:17px">${r.on ? 'Açık' : 'Kapalı'}</b><span class="muted" style="display:block;margin-top:2px">${live ? '● Şu an yayında · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></span></label>
+          <input type="text" maxlength="40" value="${esc(r.name)}" placeholder="Özel yayın adı" style="flex:1;min-width:160px;max-width:320px" oninput="SP.rules[${i}].name=this.value;SP.dirty=1">
+          <button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`
+        + step(1, 'Hangi gün, saat kaçta?', 'Bu saatlerde yalnız aşağıda seçtiğiniz içerikler oynar; saat bitince ekran her zamanki hâline döner.',
+          `<div class="chips">${dayChips}</div><div class="chips mt">${dayPre}</div><div class="f mt">${fl('Başlangıç', `<input type="time" value="${s.from || ''}" oninput="SP.rules[${i}].sch.from=this.value;SP.dirty=1">`)}${fl('Bitiş', `<input type="time" value="${s.to || ''}" oninput="SP.rules[${i}].sch.to=this.value;SP.dirty=1">`)}</div>`)
+        + step(2, 'Ne oynasın?', 'Oynatmak istediklerinize dokunun; numara oynatma sırasını gösterir. Normalde gizli içerikler de seçilebilir.',
+          `<div class="spx-grid">${tiles}</div><div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><label class="btn s g" style="margin:0;cursor:pointer">Yeni dosya yükle<input type="file" multiple accept="video/*,image/*" hidden onchange="spUp(${i},this.files)"></label><input type="text" id="sp-yt-${i}" placeholder="YouTube bağlantısı" style="flex:1;min-width:180px"><button class="btn s g" onclick="spYt(${i})">Ekle</button></div><p class="muted" style="font-size:12.5px;margin:8px 0 0">Buradan eklediğiniz yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez.</p>`)
+        + step(3, 'Kenar kutular', 'Saat, hava, finans, QR, kayan bant ve logo gibi kutular özel yayında ne olsun?',
+          `<div class="chips"><button class="chip${r.full !== false ? ' on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=true})">Hepsi gizlensin, tam ekran</button><button class="chip${r.full === false ? ' on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=false})">Kenar kutular kalsın</button></div>`)
+        + `</div>`;
+    };
+    return head('Özel yayın', 'Seçtiğiniz gün ve saatlerde ekranda yalnız seçtiğiniz içerikler oynar.', `<button class="btn g" onclick="spNew()">+ Yeni özel yayın</button><button class="btn" data-save onclick="saveSpecial()">Kaydet</button>`)
+      + (SP.rules.length ? SP.rules.map(ruleHtml).join('') : `<div class="card"><div class="empty">Henüz özel yayın yok. Örneğin cumartesi 10:00–12:00 arası yalnız kahvaltı tanıtımı oynasın; kampanya, maç, kutlama ve reklam çıkmasın.</div><div class="row mt" style="justify-content:center"><button class="btn" onclick="spNew()">+ Özel yayın ekle</button></div></div>`);
+  },
+  after() { drawThumbs(); },
+};
+async function saveSpecial() {
+  for (const r of SP.rules) {
+    const s = r.sch || {};
+    if (!s.from || !s.to || s.from === s.to) return toast('Başlangıç ve bitiş saatini farklı girin', true);
+    if (r.on && !r.items.length) return toast('Açık bir özel yayında en az bir içerik seçin', true);
+  }
+  if (await act('PUT', '/special', { rules: SP.rules }, 'Özel yayın kaydedildi', false)) { SP.dirty = 0; S.db = await req('GET', '/db'); SP = null; render(true); }
+}
+async function spUp(i, files) {
+  if (!files || !files.length) return; const r = SP.rules[i];
+  const fd = new FormData(); for (const f of files) fd.append('files', f);
+  try {
+    toast('Yükleniyor…');
+    const res = await fetch('/api/admin/videos?only=1', { credentials: 'same-origin', method: 'POST', body: fd }), j = await res.json();
+    if (!res.ok) throw new Error(j.error || 'Yüklenemedi');
+    S.db = await req('GET', '/db'); r.items.push(...(j.ids || [])); SP.dirty = 1; toast('Yüklendi; hazırlanınca özel yayında oynar'); render(true);
+  } catch (e) { toast(e.message, true); }
+}
+async function spYt(i) {
+  const el = $('sp-yt-' + i), url = el && el.value.trim(); if (!url) return toast('YouTube bağlantısını yapıştırın', true);
+  try { const j = await req('POST', '/videos/youtube', { url, dur: 30, only: true }); S.db = await req('GET', '/db'); SP.rules[i].items.push(...(j.ids || [])); SP.dirty = 1; render(true); } catch (e) { toast(e.message, true); }
+}
 
 /* ================= HAPPY HOURS ================= */
 // Tek sayfa, üç adım: ne zaman → ne kadar → ekranda (isteğe bağlı fotoğraf). Taslak HD'de tutulur; Kaydet'te menüye yazılır.

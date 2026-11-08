@@ -159,10 +159,22 @@ function tvMusic(m) {
   sp.ext = !!(refreshToken && !sp.expired && sp.target && sp.target !== 'screenpano');
   return { ...x, spotify: sp };
 }
+// Özel yayın: seçili gün/saatlerde yalnız seçilen içerikler oynar; kampanya, kutlama, maç, fragman, haber bandı ve reklam çıkmaz.
+// Seçilen içerik gizli ya da kendi zamanlaması dışında olsa da bu saatlerde oynar. Seçili içerik kalmadıysa kural yok sayılır (ekran boş kalmaz).
+function activeSpecial(t) {
+  for (const r of (t.db.special || [])) {
+    if (!r.on || !r.sch || !SCH.active(r.sch)) continue;
+    const items = (r.items || []).map(id => (t.db.videos || []).find(v => v.id === id)).filter(v => v && !(v.status === 'processing' && !v.reopt)).map(v => ({ ...mediaItem(t, v), sch: null }));
+    if (items.length) return { rule: r, items };
+  }
+  return null;
+}
 function publicState(t) {
   const screen = require('./tenants').mainScreen(t);
   const db = t.db, p = plan(t), acc = access(t), pro = p.pro;
-  const layout = layoutFor(t, screen);
+  const sp = access(t).ok ? activeSpecial(t) : null;
+  let layout = layoutFor(t, screen);
+  if (sp && sp.rule.full) layout = { ...layout, widgets: [{ type: 'media', x: 0, y: 0, w: layout.cols || 24, h: layout.rows || 24 }] }; // tam ekran: kenar kutular gizli
   const has = type => layout.widgets.some(w => w.type === type);
   const base = {
     brand: { product: config.BRAND, name: t.name, logo: db.logo ? t.upBase + db.logo : null, badge: !!p.badge },
@@ -178,7 +190,7 @@ function publicState(t) {
   const ic = db.infoCfg || {}, imax = ic.max || {};
   // bilgi bandı: öğe sayısı sınırı (hem sayfalarda hem kayan bantta geçerli)
   const cap = (o, n) => o && n && Array.isArray(o.items) ? { ...o, items: o.items.slice(0, n) } : o;
-  const ml = mediaList(t);
+  const ml = sp ? sp.items : mediaList(t);
   const mediaAt = getTenantMediaAt(t, ml);
   return {
     ...base,
@@ -205,22 +217,23 @@ function publicState(t) {
     onThisDay: pro && F.onThisDay && F.onThisDay.date === F.ymd(new Date()) ? cap(F.onThisDay, imax.otd) : null,
     showNews: pro && (db.news || {}).enabled !== false,
     news: pro ? cap(F.newsFor(t), imax.news) : null,
-    showBreaking: pro && F.breakingOn(t),
-    breakingBanner: (db.breaking || {}).banner !== false,
+    showBreaking: !sp && pro && F.breakingOn(t),
+    breakingBanner: !sp && (db.breaking || {}).banner !== false,
     breaking: pro && F.breakingOn(t) ? cap(F.breakingFor(), imax.breaking) : null,
     showBooks: pro && db.showBooks !== false,
     books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.slice(0, imax.books || 999).map(b => ({ ...b, image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
     showMovies: pro && (db.movies || {}).enabled !== false,
-    showTrailers: pro && (db.movies || {}).trailers !== false,
+    showTrailers: !sp && pro && (db.movies || {}).trailers !== false,
     trailerEvery: (db.movies || {}).every || 4, trailerGapMin: (db.movies || {}).gapMin || 8, // fragman sıklığı: kaç içerikte bir / en az kaç dakika arayla
     movies: pro && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items.slice(0, imax.movies || 999) } : null,
     showPharmacy: pro && (db.pharmacy || {}).enabled !== false,
     pharmacies: pro ? cap(F.pharmFor(t), imax.pharm) : null,
     infoCfg: { pageSec: Math.max(5, Math.min(60, Number(ic.pageSec) || 12)), dur: ic.dur || {} }, // sayfa başına ekranda kalma süresi (sn)
-    bigMatches: pro && F.bigCfg(t).enabled ? F.activeBig(t) : [],
+    bigMatches: !sp && pro && F.bigCfg(t).enabled ? F.activeBig(t) : [],
     bigCfg: (({ note, info, everyMin, durSec, style }) => ({ note, info, everyMin, durSec, style }))(F.bigCfg(t)),
-    celebration: F.activeCelebration(t),
-    campaigns: [...(db.campaigns || []).filter(c => c.enabled && c.svg).map(pubCamp), ...happyCamp(db)],
+    celebration: sp ? null : F.activeCelebration(t),
+    campaigns: sp ? [] : [...(db.campaigns || []).filter(c => c.enabled && c.svg).map(pubCamp), ...happyCamp(db)],
+    special: sp ? { name: sp.rule.name || '', full: !!sp.rule.full } : null,
     safeInset: Math.max(0, Math.min(12, Number(db.safeInset) || 0)),
     safe: ['L', 'R', 'T', 'B'].reduce((o, k) => { const v = db['safe' + k]; o[k] = Math.max(0, Math.min(20, Number(v !== undefined && v !== null ? v : db.safeInset) || 0)); return o; }, {}),
     safeGuide: !!db.safeGuide,
@@ -233,4 +246,4 @@ function publicState(t) {
   };
 }
 
-module.exports = { happyOn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };
+module.exports = { activeSpecial, happyOn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };
