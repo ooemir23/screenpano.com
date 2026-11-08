@@ -157,3 +157,21 @@ Görsel oluşturulamadı: fotoğrafı yeniden seçin ¦ The image couldn't be cr
 Afiş silinsin mi? ¦ Delete the poster? ¦ Plakat löschen? ¦ هل تريد حذف الملصق؟
 ⚠ Kutu açılınca ekran kendiliğinden gelmez: kutuda Ayarlar → Uygulamalar → ScreenPano → "Diğer uygulamaların üzerinde göster" iznini açın ¦ ⚠ The screen won't start by itself when the box powers on: on the box, open Settings → Apps → ScreenPano and allow "Display over other apps" ¦ ⚠ Der Bildschirm startet beim Einschalten der Box nicht von selbst: auf der Box Einstellungen → Apps → ScreenPano öffnen und „Über anderen Apps einblenden“ erlauben ¦ ⚠ لن تبدأ الشاشة تلقائيًا عند تشغيل الجهاز: على الجهاز افتح الإعدادات ← التطبيقات ← ScreenPano واسمح بـ "الظهور فوق التطبيقات الأخرى"
 SVG dosyası okunamadı; PNG olarak yükleyin ¦ The SVG file couldn't be read; upload it as PNG ¦ Die SVG-Datei konnte nicht gelesen werden; bitte als PNG hochladen ¦ تعذّرت قراءة ملف SVG؛ ارفعه بصيغة PNG
+Şu an indirim saatinde ¦ Discount active now ¦ Rabatt läuft gerade ¦ التخفيض ساري الآن
+Sıradaki ¦ Next ¦ Als Nächstes ¦ التالي
+Bugün ¦ Today ¦ Heute ¦ اليوم
+Yarın ¦ Tomorrow ¦ Morgen ¦ غدًا
+Bitiş tarihi geçti; indirim artık çalışmıyor. ¦ The end date has passed; the discount no longer runs. ¦ Das Enddatum ist vorbei; der Rabatt läuft nicht mehr. ¦ انتهى تاريخ الانتهاء؛ لم يعد التخفيض يعمل.
+Yaklaşan indirim saati yok. ¦ No upcoming discount hours. ¦ Keine bevorstehenden Rabattzeiten. ¦ لا توجد ساعات تخفيض قادمة.
+Geçerlilik ¦ Validity ¦ Gültigkeit ¦ مدة السريان
+Tarih aralığı ¦ Date range ¦ Zeitraum ¦ نطاق زمني
+Tarih aralığı için en az bir tarih girin ¦ Enter at least one date for the date range ¦ Geben Sie für den Zeitraum mindestens ein Datum ein ¦ أدخل تاريخًا واحدًا على الأقل لنطاق التاريخ
+Ürün: {} ¦ Items: {} ¦ Artikel: {} ¦ المنتجات: {}
+Fiyatsız: {} ¦ No price: {} ¦ Ohne Preis: {} ¦ بلا سعر: {}
+Fiyatı olmayan ürüne indirim uygulanmaz ¦ Items without a price get no discount ¦ Artikel ohne Preis erhalten keinen Rabatt ¦ لا يُطبَّق التخفيض على منتج بلا سعر
+Fiyat girilmemiş ¦ No price set ¦ Kein Preis hinterlegt ¦ لم يُحدَّد السعر
++{} daha ¦ +{} more ¦ +{} weitere ¦ +{} أخرى
+Ekran kartı ¦ Screen card ¦ Bildschirmkarte ¦ بطاقة الشاشة
+İsteğe bağlı ¦ Optional ¦ Optional ¦ اختياري
+Fiyatlar fiyat listenizden hesaplanır. ¦ Prices are calculated from your price list. ¦ Die Preise werden aus Ihrer Preisliste berechnet. ¦ تُحسب الأسعار من قائمة أسعارك.
+%{} İNDİRİM ¦ {}% OFF ¦ {} % RABATT ¦ خصم {}%

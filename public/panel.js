@@ -868,9 +868,13 @@ async function spYt(i) {
 }
 
 /* ================= HAPPY HOURS ================= */
-// Tek sayfa, üç adım: ne zaman → ne kadar → ekranda (isteğe bağlı fotoğraf). Taslak HD'de tutulur; Kaydet'te menüye yazılır.
+// Tek sayfa: ne zaman → ne kadar → hangi ürünler → (isteğe bağlı) ekran kartı. Sağda, gerçek fiyat listesinden canlı önizleme.
+// Taslak HD'de tutulur; Kaydet'te menüye yazılır. Kaydedilmemiş değişiklikte ortak kayıt çubuğu (savebar) çıkar.
 let HC = null; // fotoğraflı kart ayarları (fotoğraf, gizleme, süre)
-let HD = null; // indirim taslağı: açık/kapalı, ad, %, gün-saat, kategoriler
+let HD = null; // indirim taslağı: açık/kapalı, ad, %, gün-saat, tarih aralığı, kategoriler
+let HP_TAB = 'menu'; // önizleme sekmesi: 'menu' (fiyat listesi) | 'card' (ekran kartı)
+let HP_OPEN = null; // fotoğraflı kart bölümü açık mı (null: fotoğraf varsa açık)
+const ymdOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 function hdInit() {
   if (!MENU || !MENU.__dirty) MENU = clone(S.db.menu || { title: 'Fiyat Listesi', currency: '₺', categories: [] });
   if (!HC || !HC.__dirty) HC = Object.assign({ on: false, showTitle: true, showTime: true, showPct: true, durSec: 15, everyMin: 4 }, clone(S.db.happyCard || {}));
@@ -878,58 +882,126 @@ function hdInit() {
   const h = MENU.happy, s = (h && h.sch) || {};
   HD = { on: !!h, label: h ? (h.label || 'Happy Hour') : 'Happy Hour', pct: h ? (h.pct || 0) : 20,
     days: s.days ? s.days.slice() : (h ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5]), from: s.from || '17:00', to: s.to || '19:00',
-    extra: { start: s.start || '', end: s.end || '' }, cats: MENU.categories.map(c => h ? !!c.happy : true) };
+    range: !!(s.start || s.end), extra: { start: s.start || '', end: s.end || '' }, cats: MENU.categories.map(c => h ? !!c.happy : true) };
 }
 const hdSet = (fn, redraw = true) => { fn(); HD.__dirty = 1; redraw ? render(true) : hhPrev(); };
 const hdDays = d => hdSet(() => { HD.days = d.slice(); });
 const hdDay = n => hdSet(() => { HD.days = HD.days.includes(n) ? HD.days.filter(x => x !== n) : [...HD.days, n]; });
 const hdTime = (f, t) => hdSet(() => { HD.from = f; HD.to = t; });
-function hdSch() { const s = { from: HD.from, to: HD.to }; if (HD.days.length < 7) s.days = HD.days.slice().sort(); if (HD.extra.start) s.start = HD.extra.start; if (HD.extra.end) s.end = HD.extra.end; return s; }
-function hdSummary() {
-  if (!HD.on) return 'Kapalı: fiyatlar her zaman normal, ekranda kart çıkmaz.';
-  if (!HD.days.length || !HD.from || !HD.to) return 'Gün ve saat seçin.';
-  const s = hdSch(), now = schAt(s, new Date());
-  return (now ? '● Şu an indirim saatinde · ' : '') + schText(s);
+const hdRange = on => hdSet(() => { HD.range = on; });
+// Tarih aralığı yalnız "Tarih aralığı" seçiliyken kaydedilir; "Süresiz" önceki sınırı temizler.
+function hdSch() {
+  const s = { from: HD.from, to: HD.to };
+  if (HD.days.length < 7) s.days = HD.days.slice().sort();
+  if (HD.range) { if (HD.extra.start) s.start = HD.extra.start; if (HD.extra.end) s.end = HD.extra.end; }
+  return s;
 }
+// Taslaktaki yüzdeyle (ürüne özel fiyat varsa o) indirimli fiyat; hesaplanamazsa ''
+function hdPrice(it) {
+  if (it.hp && String(it.hp).trim()) return String(it.hp).trim();
+  const n = pnum(it.price); if (n == null || !(HD.pct > 0)) return '';
+  const v = n * (1 - Math.min(90, HD.pct) / 100);
+  return /,\d{1,2}$/.test(String(it.price)) && n % 1 ? v.toFixed(2).replace('.', ',') : String(Math.round(v));
+}
+const hdNoPrice = it => pnum(it.price) == null && !(it.hp && String(it.hp).trim());
+// Bir sonraki indirim saatinin başlangıcı (en geç 400 gün sonrasına bakar; tarih aralığı gelecekte başlıyorsa onu da yakalar)
+function hdNext(s) {
+  if (!s.from) return null;
+  const now = new Date(), [fh, fm] = s.from.split(':').map(Number);
+  for (let i = 0; i < 400; i++) { const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, fh, fm); if (d > now && schAt(s, d)) return d; }
+  return null;
+}
+// Durum satırı: çevrilebilsin diye cümle birleştirmez, ayrı parçalar üretir (Türkçe ek içermez)
+function hdState() {
+  const d = HD;
+  if (!d.on) return { k: 'off', html: 'Kapalı: fiyatlar her zaman normal, ekranda kart çıkmaz.' };
+  if (!d.days.length || !d.from || !d.to) return { k: 'warn', html: 'Gün ve saat seçin.' };
+  const s = hdSch(), now = new Date();
+  if (s.end && s.end < ymdOf(now)) return { k: 'warn', html: 'Bitiş tarihi geçti; indirim artık çalışmıyor.' };
+  const days = daysText(s.days) || 'Her gün', when = `<span>${days}</span><span>${s.from} – ${s.to}</span>`
+    + (s.start || s.end ? `<span>${s.start ? fmtD(s.start) : ''} – ${s.end ? fmtD(s.end) : ''}</span>` : '');
+  if (schAt(s, now)) return { k: 'live', html: `<span>Şu an indirim saatinde</span>${when}` };
+  const n = hdNext(s);
+  if (!n) return { k: 'warn', html: 'Yaklaşan indirim saati yok.' };
+  const diff = Math.round((new Date(n.getFullYear(), n.getMonth(), n.getDate()) - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+  const day = diff === 0 ? 'Bugün' : diff === 1 ? 'Yarın' : diff < 7 ? DAYS[(n.getDay() + 6) % 7] : fmtD(ymdOf(n));
+  return { k: 'next', html: `<span>Sıradaki</span><b>${day}</b><b>${s.from}</b>${when}` };
+}
+const hchip = (on, js, label, cls = '') => `<button type="button" class="chip${on ? ' on' : ''}${cls}" aria-pressed="${!!on}" onclick="${js}">${label}</button>`;
+const hsec = (t, sub, body) => `<section class="hhs"><div class="hhs-b"><h2>${t}</h2>${sub ? `<p class="muted">${sub}</p>` : ''}${body}</div></section>`;
+function hdCatRows() {
+  const cats = MENU.categories;
+  if (!cats.length) return `<span class="muted">İndirimin geçeceği ürünler için önce Fiyat Listesi'nde kategori ekleyin.</span> <a class="btn xs g" href="#menu">Fiyat Listesi'ne git</a>`;
+  const all = HD.cats.every(Boolean);
+  return `<div class="chips" role="group" aria-label="Hangi ürünlerde?">${hchip(all, `hdSet(()=>{HD.cats=HD.cats.map(()=>${!all})})`, 'Tüm menü')}</div>
+    <div class="hh-cats mt">${cats.map((c, i) => {
+      const on = !!HD.cats[i], np = c.items.filter(hdNoPrice).length;
+      return `<button type="button" class="hh-cat${on ? ' on' : ''}" aria-pressed="${on}" onclick="hdSet(()=>{HD.cats[${i}]=!HD.cats[${i}]})"><i class="hh-ck" aria-hidden="true"></i><b>${esc(c.name || 'Kategori')}</b><span class="m">Ürün: ${c.items.length}</span>${on && np ? `<span class="w" title="Fiyatı olmayan ürüne indirim uygulanmaz">Fiyatsız: ${np}</span>` : ''}</button>`;
+    }).join('')}</div>`;
+}
+// Önizleme 1: gerçek fiyat listesi — indirimli kategorilerde eski fiyat üstü çizili, yanında yeni fiyat
+function hhPvMenu() {
+  const cur = esc(MENU.currency || '₺'), cats = MENU.categories.map((c, i) => ({ c, i })).filter(x => x.c.items.some(it => it.name));
+  const head = `<div class="pv-h"><b>${esc(MENU.title || 'Fiyat Listesi')}</b>${HD.on && HD.pct ? `<span class="pv-badge"><span>%${HD.pct}</span><span>${esc(HD.label || 'Happy Hour')}</span></span>` : ''}</div>`;
+  if (!cats.length) return `<div class="pv-list">${head}<p class="muted" style="margin:8px 0 0">İndirimin geçeceği ürünler için önce Fiyat Listesi'nde kategori ekleyin.</p></div>`;
+  let left = 8, hidden = 0, out = '';
+  for (const { c, i } of cats) {
+    const live = HD.on && !!HD.cats[i], rows = c.items.filter(it => it.name);
+    const shown = rows.slice(0, Math.max(0, left)); left -= shown.length; hidden += rows.length - shown.length;
+    if (!shown.length) continue;
+    out += `<div class="pv-cat">${esc(c.name || 'Kategori')}${live ? '<i class="pv-pct" aria-hidden="true">%</i>' : ''}</div>` + shown.map(it => {
+      const now = live ? hdPrice(it) : '', was = String(it.price || '').trim();
+      const p = live && now && now !== was ? `<s>${esc(was)}</s><b>${esc(now)} ${cur}</b>` : live && hdNoPrice(it) ? '<em>Fiyat girilmemiş</em>' : was ? `${esc(was)} ${cur}` : '–';
+      return `<div class="pv-row"><span>${esc(it.name)}</span><span class="pv-p">${p}</span></div>`;
+    }).join('');
+  }
+  return `<div class="pv-list">${head}${out}${hidden ? `<div class="pv-more muted">+${hidden} daha</div>` : ''}</div>`;
+}
+// Önizleme 2: isteğe bağlı fotoğraflı kart (TV'deki yerleşimle aynı)
+function hhPvCard() {
+  const c = HC, t = HD.label || 'Happy Hour', sub = HD.from && HD.to ? HD.from + ' – ' + HD.to : '';
+  const ov = `${c.showPct !== false && HD.pct ? `<div class="hh-b">%${HD.pct} İNDİRİM</div>` : ''}${(c.showTitle !== false && t) || (c.showTime !== false && sub) ? `<div class="hh-o">${c.showTitle !== false ? `<b>${esc(t)}</b>` : ''}${c.showTime !== false && sub ? `<span>${esc(sub)}</span>` : ''}</div>` : ''}`;
+  return `<div class="camp-prev-screen" id="hh-prev" style="background:#000;position:relative">${c.image ? `<img src="${esc(c.image)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#a3a9b3;font-size:13px;text-align:center;padding:0 10%">Fotoğraf eklerseniz ekranda böyle görünür</div>`}<div id="hh-ov">${ov}</div></div>`;
+}
+const hhPvBody = () => HP_TAB === 'card' ? hhPvCard() : hhPvMenu();
 SECTIONS.happy = {
   html() {
     hdInit();
-    const d = HD, c = HC, cats = MENU.categories;
-    const dayChips = DAYS.map((n, i) => `<button class="chip${d.days.includes(i + 1) ? ' on' : ''}" onclick="hdDay(${i + 1})">${n}</button>`).join('');
+    const d = HD, c = HC, st = hdState();
     const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
-    const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => `<button class="chip${same(d.days, v) ? ' on' : ''}" onclick="hdDays([${v}])">${n}</button>`).join('');
-    const timePre = [['17:00', '19:00'], ['16:00', '20:00'], ['14:00', '17:00']].map(([f, t]) => `<button class="chip${d.from === f && d.to === t ? ' on' : ''}" onclick="hdTime('${f}','${t}')">${f}–${t}</button>`).join('');
-    const pctPre = [10, 20, 30, 40, 50].map(p => `<button class="chip${d.pct === p ? ' on' : ''}" onclick="hdSet(()=>{HD.pct=${p}})">%${p}</button>`).join('');
-    const allCats = cats.length && d.cats.every(Boolean);
-    const catChips = cats.length ? `<button class="chip${allCats ? ' on' : ''}" onclick="hdSet(()=>{HD.cats=HD.cats.map(()=>${!allCats})})">Tüm menü</button>` + cats.map((cat, i) => `<button class="chip${d.cats[i] ? ' on' : ''}" onclick="hdSet(()=>{HD.cats[${i}]=!HD.cats[${i}]})">${esc(cat.name || 'Kategori')}</button>`).join('')
-      : `<span class="muted">İndirimin geçeceği ürünler için önce Fiyat Listesi'nde kategori ekleyin.</span> <a class="btn xs g" href="#menu">Fiyat Listesi'ne git</a>`;
-    const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h2>${t}</h2><p class="muted">${sub}</p>${body}</div></div>`;
+    const dayChips = DAYS.map((n, i) => hchip(d.days.includes(i + 1), `hdDay(${i + 1})`, n)).join('');
+    const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => hchip(same(d.days, v), `hdDays([${v}])`, n)).join('');
+    const timePre = [['17:00', '19:00'], ['16:00', '20:00'], ['14:00', '17:00']].map(([f, t]) => hchip(d.from === f && d.to === t, `hdTime('${f}','${t}')`, `${f}–${t}`)).join('');
+    const pctPre = [10, 20, 30, 40, 50].map(p => hchip(d.pct === p, `hdSet(()=>{HD.pct=${p}})`, `%${p}`)).join('');
+    const when = `<div class="chips" role="group" aria-label="Günler">${dayChips}</div><div class="chips mt">${dayPre}</div>
+      <div class="f mt">${fl('Başlangıç', `<input type="time" value="${d.from}" oninput="hdSet(()=>{HD.from=this.value},false)">`)}${fl('Bitiş', `<input type="time" value="${d.to}" oninput="hdSet(()=>{HD.to=this.value},false)">`)}</div>
+      <div class="chips mt">${timePre}</div>
+      <div class="hh-sub"><b>Geçerlilik</b><div class="chips mt" role="group" aria-label="Geçerlilik">${hchip(!d.range, 'hdRange(false)', 'Süresiz')}${hchip(d.range, 'hdRange(true)', 'Tarih aralığı')}</div>
+      ${d.range ? `<div class="f mt">${fl('İlk gün', `<input type="date" value="${esc(d.extra.start)}" oninput="hdSet(()=>{HD.extra.start=this.value},false)">`)}${fl('Son gün', `<input type="date" value="${esc(d.extra.end)}" oninput="hdSet(()=>{HD.extra.end=this.value},false)">`)}</div>` : ''}</div>`;
+    const howMuch = `<div class="f">${fl('İndirim (%)', `<input type="number" min="1" max="90" inputmode="numeric" value="${d.pct || ''}" oninput="hdSet(()=>{HD.pct=+this.value||0},false)">`)}${fl('Ekranda görünecek ad', `<input type="text" maxlength="24" value="${esc(d.label)}" placeholder="Happy Hour" oninput="hdSet(()=>{HD.label=this.value},false)">`)}</div>
+      <div class="chips mt" role="group" aria-label="İndirim (%)">${pctPre}</div>`;
     const photo = `<div class="camp-img-box">${c.image ? `<img src="${esc(c.image)}" class="camp-img-thumb" alt=""><div style="flex:1;min-width:0"><b style="font-size:13px;display:block">Yüklü fotoğraf</b><span class="muted" style="font-size:12px">Tam ekran gösterilir</span></div><button class="btn s d" type="button" onclick="removeHappyImg()">Kaldır</button>` : `<div style="flex:1"><span class="muted" style="font-size:12.5px">Fotoğraf eklemezseniz yalnız fiyat listesindeki fiyatlar düşer.</span></div>`}
       <label class="btn s g" style="margin:0;cursor:pointer"><span>${c.image ? 'Değiştir' : 'Fotoğraf seç'}</span><input type="file" accept="image/*" style="display:none" onchange="uploadHappyImg(this)"></label></div>`;
     const cardOpts = c.image ? `<div class="row mt" style="align-items:center;gap:10px"><label class="row" style="gap:8px;cursor:pointer">${sw(c.on, 'HC.on=this.checked;HC.__dirty=1')}<b>Fotoğraflı kartı ekranda göster</b></label></div>
-      <div class="mt"><label class="lbl"><b>Fotoğrafın üstünde görünsün</b></label><div class="chips"><button class="chip${c.showTitle !== false ? ' on' : ''}" onclick="hcSet('showTitle')">Ad</button><button class="chip${c.showTime !== false ? ' on' : ''}" onclick="hcSet('showTime')">Saat</button><button class="chip${c.showPct !== false ? ' on' : ''}" onclick="hcSet('showPct')">İndirim rozeti</button></div></div>
-      <div class="f mt">${fl('Kartın ekranda kalma süresi (saniye)', `<input type="number" min="5" max="300" value="${c.durSec || 15}" oninput="HC.durSec=+this.value;HC.__dirty=1">`)}${fl('Kaç dakikada bir çıksın', `<input type="number" min="1" max="120" value="${c.everyMin || 4}" oninput="HC.everyMin=+this.value;HC.__dirty=1">`)}</div>` : '';
+      <div class="mt"><b class="lbl">Fotoğrafın üstünde görünsün</b><div class="chips" role="group">${hchip(c.showTitle !== false, "hcSet('showTitle')", 'Ad')}${hchip(c.showTime !== false, "hcSet('showTime')", 'Saat')}${hchip(c.showPct !== false, "hcSet('showPct')", 'İndirim rozeti')}</div></div>
+      <div class="f mt">${fl('Kartın ekranda kalma süresi (saniye)', `<input type="number" min="5" max="300" value="${c.durSec || 15}" oninput="HC.durSec=+this.value;HC.__dirty=1">`)}${fl('Kaç dakikada bir çıksın', `<input type="number" min="1" max="120" value="${c.everyMin || 4}" oninput="HC.everyMin=+this.value;HC.__dirty=1">`)}</div>
+      <div class="row mt" style="justify-content:flex-end"><button class="btn g" type="button" onclick="testHappy()">📺 TV'de dene</button></div>` : '';
+    const open = HP_OPEN === null ? !!c.image : HP_OPEN;
+    const tabs = [['menu', 'Fiyat listesi'], ['card', 'Ekran kartı']].map(([k, n]) => `<button type="button" role="tab" id="hhtab-${k}" aria-selected="${HP_TAB === k}" class="${HP_TAB === k ? 'on' : ''}" onclick="HP_TAB='${k}';render(true)">${n}</button>`).join('');
     return head('Happy Hours', 'Belirli gün ve saatlerde indirim; isterseniz ekranda fotoğraflı kart.', `<button class="btn" data-save onclick="saveHappy()">Kaydet</button>`) + lock('Happy Hours')
-      + `<div class="card hh-top"><label class="row" style="gap:14px;cursor:pointer;align-items:center">${sw(d.on, 'hdSet(()=>{HD.on=this.checked})')}<span><b style="font-size:18px">${d.on ? 'Happy Hours açık' : 'Happy Hours kapalı'}</b><span class="muted" style="display:block;margin-top:2px" id="hh-sum">${hdSummary()}</span></span></label></div>`
-      + `<div class="hh-grid${d.on ? '' : ' off'}"><div class="hh-steps">`
-      + step(1, 'Hangi gün, saat kaçta?', 'Bu saatlerde fiyat listesinde fiyatlar düşer; saat bitince eski hâline döner.',
-        `<div class="chips">${dayChips}</div><div class="chips mt">${dayPre}</div>
-         <div class="f mt">${fl('Başlangıç', `<input type="time" value="${d.from}" oninput="hdSet(()=>{HD.from=this.value},false)">`)}${fl('Bitiş', `<input type="time" value="${d.to}" oninput="hdSet(()=>{HD.to=this.value},false)">`)}</div>
-         <div class="chips mt">${timePre}</div>`)
-      + step(2, 'İndirim ne kadar, nerede?', 'Seçtiğiniz kategorilerdeki tüm ürünlere uygulanır. Tek ürüne özel fiyat için Fiyat Listesi\'nde ürünün yanındaki küçük kutuyu kullanın.',
-        `<div class="f">${fl('İndirim (%)', `<input type="number" min="1" max="90" value="${d.pct || ''}" oninput="hdSet(()=>{HD.pct=+this.value||0},false)">`)}${fl('Ekranda görünecek ad', `<input type="text" maxlength="24" value="${esc(d.label)}" placeholder="Happy Hour" oninput="hdSet(()=>{HD.label=this.value},false)">`)}</div>
-         <div class="chips mt">${pctPre}</div><label class="lbl mt" style="display:block"><b>Hangi ürünlerde?</b></label><div class="chips">${catChips}</div>`)
-      + step(3, 'Ekranda fotoğraf çıksın mı?', 'İsteğe bağlı. İndirim saatinde medyanın arasında tam ekran çıkar.', photo + cardOpts)
-      + `<div class="row" style="justify-content:flex-end;gap:10px;margin-top:6px">${c.image ? `<button class="btn g" type="button" onclick="testHappy()">📺 TV'de dene</button>` : ''}<button class="btn" data-save onclick="saveHappy()">Kaydet</button></div>`
-      + `</div><div class="hh-side"><div class="camp-prev-wrap"><div class="camp-prev-head"><span>ÖNİZLEME</span></div>
-          <div class="camp-prev-screen" id="hh-prev" style="background:#000;position:relative">${c.image ? `<img src="${esc(c.image)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#889;font-size:13px;text-align:center;padding:0 10%">Fotoğraf eklerseniz ekranda böyle görünür</div>`}<div id="hh-ov"></div></div></div></div></div>`;
+      + `<div class="card hh-top"><div class="row" style="gap:14px;align-items:center">${sw(d.on, 'hdSet(()=>{HD.on=this.checked})', 'aria-label="Happy Hours"')}<div style="min-width:0"><b class="hh-t">${d.on ? 'Happy Hours açık' : 'Happy Hours kapalı'}</b><div class="hh-st ${st.k}" id="hh-sum" aria-live="polite">${st.html}</div></div></div></div>`
+      + `<div class="hh-grid${d.on ? '' : ' off'}"><div class="hh-steps hh-form"${d.on ? '' : ' inert'}>`
+      + hsec('Hangi gün, saat kaçta?', 'Bu saatlerde fiyat listesinde fiyatlar düşer; saat bitince eski hâline döner.', when)
+      + hsec('İndirim ne kadar, nerede?', 'Seçtiğiniz kategorilerdeki tüm ürünlere uygulanır. Tek ürüne özel fiyat için Fiyat Listesi\'nde ürünün yanındaki küçük kutuyu kullanın.', howMuch)
+      + hsec('Hangi ürünlerde?', '', hdCatRows())
+      + `<details class="hhs hh-photo"${open ? ' open' : ''} ontoggle="HP_OPEN=this.open"><summary><h2>Ekranda fotoğraf çıksın mı?</h2><span class="hh-opt">İsteğe bağlı</span></summary><div class="hhs-b"><p class="muted">İsteğe bağlı. İndirim saatinde medyanın arasında tam ekran çıkar.</p>${photo}${cardOpts}</div></details>`
+      + `</div><aside class="hh-side" aria-label="Önizleme"><div class="camp-prev-wrap"><div class="camp-prev-head"><span>ÖNİZLEME</span></div><div class="hh-tabs" role="tablist">${tabs}</div><div id="hh-pv" role="tabpanel" aria-labelledby="hhtab-${HP_TAB}">${hhPvBody()}</div><p class="muted" style="margin:0;font-size:12.5px">Fiyatlar fiyat listenizden hesaplanır.</p></div></aside></div>`;
   },
-  after() { hhPrev(); },
 };
-function hhPrev() { // ad/indirim/saat değişince önizleme ve özet güncellenir
-  const sm = $('hh-sum'); if (sm && HD) sm.textContent = hdSummary();
-  const el = $('hh-ov'); if (!el || !HD || !HC) return; const t = HD.label || 'Happy Hour', sub = HD.from && HD.to ? HD.from + ' – ' + HD.to : '';
-  el.innerHTML = `${HC.showPct !== false && HD.pct ? `<div class="hh-b">%${HD.pct} İNDİRİM</div>` : ''}${(HC.showTitle !== false && t) || (HC.showTime !== false && sub) ? `<div class="hh-o">${HC.showTitle !== false ? `<b>${esc(t)}</b>` : ''}${HC.showTime !== false && sub ? `<span>${esc(sub)}</span>` : ''}</div>` : ''}`;
+function hhPrev() { // alanlar değişince durum satırı ve önizleme güncellenir
+  if (!HD || !HC) return;
+  const sm = $('hh-sum'); if (sm) { const st = hdState(); sm.className = 'hh-st ' + st.k; sm.innerHTML = st.html; }
+  const pv = $('hh-pv'); if (pv) pv.innerHTML = hhPvBody();
 }
 function hcSet(k) { HC[k] = HC[k] === false; HC.__dirty = 1; render(true); }
 async function saveHappy() {
@@ -939,6 +1011,8 @@ async function saveHappy() {
     if (!d.from || !d.to || d.from === d.to) return toast('Başlangıç ve bitiş saatini farklı girin', true);
     if (!(d.pct > 0)) return toast('İndirim yüzdesini girin', true);
     if (!d.cats.some(Boolean)) return toast('İndirimin geçeceği en az bir kategori seçin', true);
+    if (d.range && !d.extra.start && !d.extra.end) return toast('Tarih aralığı için en az bir tarih girin', true);
+    if (d.range && d.extra.start && d.extra.end && d.extra.end < d.extra.start) return toast('Son gün ilk günden önce olamaz', true);
     MENU.happy = { label: (d.label || '').trim() || 'Happy Hour', pct: Math.min(90, Math.round(d.pct)), sch: hdSch() };
     MENU.categories.forEach((cat, i) => { cat.happy = d.cats[i] || undefined; });
   } else if (MENU.happy) { delete MENU.happy; MENU.categories.forEach(cat => { delete cat.happy; }); }
@@ -1591,7 +1665,8 @@ async function changePw() { if (await act('PUT', '/password', { current: $('pw-c
 const restore = async n => { if (await UI.ask('Bu yedek geri yüklensin mi? Mevcut ayarlar önce yedeklenir.')) act('POST', `/backups/${encodeURIComponent(n)}/restore`, undefined, 'Yedek geri yüklendi'); };
 
 /* ================= ZAMANLAMA ================= */
-const DAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+// Kısa gün adları panel diline göre (Pzt/Sal… yalnız Türkçede; sözlükte karşılığı yok, Intl 2024-01-01 Pazartesi'den üretir)
+const DAYS = [0, 1, 2, 3, 4, 5, 6].map(i => new Date(2024, 0, 1 + i).toLocaleDateString(I18N.locale, { weekday: 'short' }));
 const TYPE_NAMES = { video: 'Video', image: 'Fotoğraf', poster: 'Afiş' };
 const fmtD = d => d ? new Date(d + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'short' }) : '';
 function daysText(d) {
@@ -2755,12 +2830,13 @@ function drawBrand() {
   drawBrand(); drawBanner(); route(); drawBranchSwitch();
   setInterval(async () => { if (document.hidden) return; try { S.scr = await req('GET', '/screen'); } catch (e) {} }, 30000);
 })();
-addEventListener('beforeunload', e => { if (EDIT.dirty || (MENU && MENU.__dirty) || document.querySelector('#view .card.dirty')) { e.preventDefault(); e.returnValue = ''; } });
+addEventListener('beforeunload', e => { if (EDIT.dirty || (MENU && MENU.__dirty) || (HD && HD.__dirty) || (HC && HC.__dirty) || document.querySelector('#view .card.dirty')) { e.preventDefault(); e.returnValue = ''; } });
 /* A2: ortak kayıt çubuğu. Kaydedilmemiş değişiklik olunca altta çıkar; "Kaydet" ilgili bölümü kaydeder, "Vazgeç" son kaydı geri getirir. */
 function savebar() {
   const b = $('savebar'); if (!b) return;
   let n = 0, save = null, cancel = () => render(true);
   if (TAB === 'design' && EDIT.dirty) { n = 1; save = saveL; cancel = () => { EDIT.dirty = false; EDIT.layout = null; render(true); }; }
+  else if (TAB === 'happy' && ((HD && HD.__dirty) || (HC && HC.__dirty))) { n = 1; save = saveHappy; cancel = () => { HD = null; HC = null; MENU = null; render(true); }; }
   else if (TAB === 'menu' && MENU && MENU.__dirty) { n = 1; save = saveMenu; cancel = () => { MENU.__dirty = 0; MENU = null; render(true); }; }
   else { const d = [...document.querySelectorAll('#view .card.dirty')]; n = d.length; save = () => { d.forEach(c => { const x = c.querySelector('[data-save]'); c.classList.remove('dirty'); if (x) x.click(); }); }; }
   const was = b.classList.contains('on'); b.classList.toggle('on', n > 0); document.body.classList.toggle('sbon', n > 0);
