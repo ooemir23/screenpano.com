@@ -17,9 +17,10 @@
 <meta property="og:description" content="{{t:og.desc}}">
 <meta property="og:image" content="https://screenpano.com/site/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="preload" href="/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/barlow-cond-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/hanken-latin.woff2" as="font" type="font/woff2" crossorigin>
 {{FONT_PRELOAD}}
-<link rel="stylesheet" href="/site.css?v=6">
+<link rel="stylesheet" href="/site2.css?v=2">
 <script type="application/ld+json">{{LDJSON}}</script>
 </head><body>
 <a class="skip" href="#ana">{{t:skip}}</a>
@@ -59,8 +60,8 @@
         <div class="stand"></div>
       </div>
       <div class="phone hero-phone" aria-hidden="true"><img src="/site/m-ozet.webp" width="780" height="1688" alt=""></div>
-      <div class="chips" role="tablist" aria-label="{{t:chips.aria}}">
-        <button role="tab" aria-selected="true" data-i="0">☕ {{t:chip.kafe}}</button><button role="tab" aria-selected="false" data-i="1">⚽ {{t:chip.spor}}</button><button role="tab" aria-selected="false" data-i="2">🍰 {{t:chip.vitrin}}</button>
+      <div class="chips board" id="board" role="tablist" aria-label="{{t:chips.aria}}">
+        <button role="tab" aria-selected="true" data-i="0">{{t:chip.kafe}}</button><button role="tab" aria-selected="false" data-i="1">{{t:chip.spor}}</button><button role="tab" aria-selected="false" data-i="2">{{t:chip.vitrin}}</button>
       </div>
       <div class="tag"><i></i>{{t:hero.tag}}</div>
     </div>
@@ -78,7 +79,6 @@
 <!-- ============ NASIL ÇALIŞIR ============ -->
 <section id="nasil" class="sec">
   <div class="wrap">
-    <p class="eyebrow">{{t:how.eyebrow}}</p>
     <h2>{{t:how.h2}}</h2>
     <p class="intro">{{t:how.intro}}</p>
 
@@ -120,7 +120,6 @@
 <!-- ============ EKRAN / TASARIM ============ -->
 <section id="ekran" class="sec dark">
   <div class="wrap">
-    <p class="eyebrow">{{t:scr.eyebrow}}</p>
     <h2>{{t:scr.h2}}</h2>
     <p class="intro">{{t:scr.intro}}</p>
 
@@ -161,7 +160,6 @@
 <!-- ============ ÖZELLİKLER (public/site/features.json'dan çizilir) ============ -->
 <section id="ozellikler" class="sec">
   <div class="wrap">
-    <p class="eyebrow">{{t:feat.eyebrow}}</p>
     <h2>{{t:feat.h2}}</h2>
     <p class="intro">{{t:feat.intro}}</p>
     {{FEATURES}}
@@ -173,7 +171,6 @@
 <!-- ============ PANEL ============ -->
 <section id="panel" class="sec dark">
   <div class="wrap">
-    <p class="eyebrow">{{t:panel.eyebrow}}</p>
     <h2>{{t:panel.h2}}</h2>
     <p class="intro">{{t:panel.intro}}</p>
     <div class="phones">
@@ -190,7 +187,6 @@
 <!-- ============ PAKETLER ============ -->
 <section id="paketler" class="sec">
   <div class="wrap">
-    <p class="eyebrow">{{t:plans.eyebrow}}</p>
     <h2>{{t:plans.h2}}</h2>
     <p class="intro">{{t:plans.intro}}</p>
     <div class="plans">
@@ -216,7 +212,6 @@
 <section id="sss" class="sec">
   <div class="wrap faq-g">
     <div>
-      <p class="eyebrow">{{t:faq.eyebrow}}</p>
       <h2>{{t:faq.h2}}</h2>
       <p class="intro">{{t:faq.intro}}</p>
     </div>
@@ -279,14 +274,18 @@
   const onScroll = () => top.classList.toggle('sc', scrollY > 8); onScroll(); addEventListener('scroll', onScroll, { passive: true });
 
   // slayt + sekme grubu
-  function slider(box, tabs, ms) {
+  function slider(box, tabs, ms, onShow) {
     const imgs = [...box.children]; let i = 0, t = null;
-    const show = n => { i = n; imgs.forEach((im, k) => im.classList.toggle('on', k === n)); tabs.forEach((b, k) => b.setAttribute('aria-selected', k === n)); };
+    const show = n => { i = n; imgs.forEach((im, k) => im.classList.toggle('on', k === n)); tabs.forEach((b, k) => b.setAttribute('aria-selected', k === n)); if (onShow) onShow(n); };
     const run = () => { clearInterval(t); if (ms && !reduce) t = setInterval(() => show((i + 1) % imgs.length), ms); };
     tabs.forEach((b, k) => b.addEventListener('click', () => { show(k); run(); }));
     run();
   }
-  slider($('heroSlides'), [...document.querySelectorAll('.hero .chips button')], 5000);
+  // çevirmeli pano: sekme adı harf karolarına bölünür, seçilince harfler sırayla çevrilir (Arapçada harfler birbirine bağlandığı için bölünmez)
+  const board = $('board'), split = root.lang !== 'ar';
+  const flap = b => { if (!split || reduce) return; b.querySelectorAll('.ch').forEach((c, k) => setTimeout(() => { c.classList.remove('f'); void c.offsetWidth; c.classList.add('f'); }, k * 55)); };
+  if (board && split) board.querySelectorAll('button').forEach(b => { const t = b.textContent.trim(); b.setAttribute('aria-label', t); b.innerHTML = [...t].map(ch => ch === ' ' ? '<span class="ch" aria-hidden="true">&nbsp;</span>' : `<span class="ch" aria-hidden="true">${ch}</span>`).join(''); });
+  const hero = slider($('heroSlides'), [...document.querySelectorAll('.hero .chips button')], 5000, i => flap(board.children[i]));
   slider($('galSlides'), [...document.querySelectorAll('#gal .gal-tabs button')], 0);
 
   // özellik gezgini: sekmeler, önceki/sonraki, kaydırma
@@ -329,14 +328,14 @@
       clearInterval(ptm);
       const el = panels[cur].querySelector('[data-poster]');
       if (!el || !window.SPPoster || !demo.length) return;
-      const show = () => { el.innerHTML = SPPoster.html(demo[pi++ % demo.length]); SPPoster.fit(el.firstChild); };
+      const show = () => { el.innerHTML = SPPoster.html(demo[pi++ % demo.length]); el.querySelectorAll('h1,h2,h3').forEach(h => h.setAttribute('role', 'presentation')); SPPoster.fit(el.firstChild); };
       show(); if (!reduce) ptm = setInterval(show, 3500);
     }
     poster();
     addEventListener('resize', () => { const el = fx.querySelector('.fx-p.on [data-poster]'); if (el && el.firstChild && window.SPPoster) SPPoster.fit(el.firstChild); });
   }
-  // geniş ekranda karşılaştırma tablosu açık gelir
-  if (matchMedia('(min-width: 961px)').matches && $('cmp')) $('cmp').open = true;
+  // 
+  // karşılaştırma tablosu kapalı gelir (sayfa kısa kalsın)
 
   // görsel büyütme
   const lb = $('lb'), lbi = lb.querySelector('img');
