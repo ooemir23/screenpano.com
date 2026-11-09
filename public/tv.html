@@ -1246,6 +1246,11 @@ html.theme-glass .pill.live::before {
 <div id="guide"><i></i><i></i><i></i><i></i><b id="gtxt"></b></div>
 <script src="/posters.js"></script>
 <script>
+const $id = id => document.getElementById(id);
+const Q = new URLSearchParams(location.search);
+const PREVIEW = Q.get('preview');
+const IN_IFRAME = window.top !== window.self; // Panel içi iframe'de filigran ve müzik kısıtlanır, /tv?preview=1 sekmesinde tam çalışır
+const isTestEnv = () => !!(window.__envInfo && window.__envInfo.env === 'test');
 const els = [document.getElementById('v'), document.getElementById('v2')], imgs = [document.getElementById('img'), document.getElementById('img2')];
 let ci = 0, imgi = 0;
 const curV = () => els[ci], idleV = () => els[1 - ci];
@@ -3262,9 +3267,6 @@ document.addEventListener('keydown', e => {
 // =====================================================================
 // Çok işletmeli sürüm: düzen (widget ızgarası), tema, marka, yeni widget'lar, giriş ve eşleştirme
 // =====================================================================
-const $id = id => document.getElementById(id);
-const Q = new URLSearchParams(location.search);
-const PREVIEW = Q.get('preview');
 const BIGDEMO = PREVIEW && BIG_STYLES.includes(Q.get('bigdemo')) ? Q.get('bigdemo') : '';
 let CITY = '', LOGO = null, BNAME = '', MEDIA_ON = true, WPROPS = {}, layoutSig = '', themeSig = '', brandSig = '';
 
@@ -3742,7 +3744,9 @@ function keepInside(el) {
   el.style.transform = '';
   const cell = el.parentNode;
   if (!cell) return;
-  const cr = cell.getBoundingClientRect(), cx = (cr.left + cr.right) / 2, cy = (cr.top + cr.bottom) / 2;
+  const cr = cell.getBoundingClientRect();
+  if (!cr.width || !cr.height) return;
+  const cx = (cr.left + cr.right) / 2, cy = (cr.top + cr.bottom) / 2;
   // sınır: QR kartının ortasının düştüğü widget (ör. medya) — yoksa QR'ın kendi hücresi; böylece alt bandın ya da komşu kutuların dışına taşmaz
   const host = [...$id('app').querySelectorAll('.cell:not(.qrcell)')].map(c => c.getBoundingClientRect()).find(r => r.width && cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom);
   const bounds = host || cr, pad = innerHeight * 0.008;
@@ -3857,13 +3861,13 @@ function applyState0(s) {
 // Önizleme: panelde henüz kaydedilmemiş düzen (taslak) gelirse kaydedilmiş düzenin yerine gösterilir
 function setDraft(l) {
   window.__draft = l && Array.isArray(l.widgets) ? l : null;
-  const use = window.__draft || window.__savedLayout; if (use) applyLayout(use);
+  const use = window.__draft || window.__savedLayout; if (use) { try { applyLayout(use); } catch (e) { console.error('setDraft error:', e); } }
 }
 if (PREVIEW) {
   addEventListener('message', e => { if (e.origin === location.origin && e.data && 'screenpanoDraft' in e.data) setDraft(e.data.screenpanoDraft); });
   const rd = () => { try { setDraft(JSON.parse(localStorage.getItem('sp.draft') || 'null')); } catch (e) {} };
   window.__draft = (() => { try { const d = JSON.parse(localStorage.getItem('sp.draft') || 'null'); return d && Array.isArray(d.widgets) ? d : null; } catch (e) { return null; } })();
-  if (window.__draft) applyLayout(window.__draft);
+  if (window.__draft) { try { applyLayout(window.__draft); } catch (e) { console.error('initial draft apply error:', e); } }
   addEventListener('storage', ev => { if (ev.key === 'sp.draft') rd(); });
 }
 
@@ -4165,7 +4169,6 @@ function fullMedia(on) {
   setTimeout(syncExoBounds, 80); setTimeout(syncExoBounds, 600);
 }
 // Test ortamı: sekme başlığı [TEST] ile başlar; panel önizlemesinde (iframe) köşede TEST şeridi görünür
-const isTestEnv = () => !!(window.__envInfo && window.__envInfo.env === 'test');
 function markTest() {
   if (!isTestEnv()) return;
   if (!/^\[TEST\]/.test(document.title)) document.title = '[TEST] ' + document.title;
@@ -4291,7 +4294,6 @@ if (!PREVIEW && 'serviceWorker' in navigator && (location.protocol === 'https:' 
 // =====================================================================
 // Arka Plan Müzik Motoru: Spotify Connect (Web Playback SDK + Embed) + YouTube Music / YouTube + Radyo
 // =====================================================================
-const IN_IFRAME = window.top !== window.self; // Yalnızca panelin içindeki küçük önizleme kutusunda sesi kapat; /tv?preview=1 sekmesinde ses ÇALSIN!
 const MUS = {
   cfg: null, curId: '', provider: '', playing: false, vol: 75,
   ytApiReady: false, ytLoading: false, ytPlayer: null, ytReady: false, ytPending: null,
