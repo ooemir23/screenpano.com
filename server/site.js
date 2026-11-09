@@ -73,16 +73,23 @@ const ico = em => { const k = String(em || '').replace(/\uFE0F/g, ''); return EM
 const isNew = f => f.added && (Date.now() - Date.parse(f.added)) / 864e5 < NEW_DAYS;
 const badges = (f, t) => (isNew(f) ? `<span class="nb">${e(t('s.new'))}</span>` : '') + (f.plan === 'pro' ? '<span class="pb">PRO</span>' : '');
 
+// özellikler: kart ortada, sekmeler sol/sağ kolonlara eşit bölünür (alt satır yok)
 function features(data, lang, t) {
   const list = data.features.filter(f => !f.hidden && f.title).map(f => loc(f, lang));
-  const nav = list.map((f, i) => `<button role="tab" id="fxt-${e(f.id)}" aria-controls="fx-${e(f.id)}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><span class="i" aria-hidden="true">${f.icon ? ico(f.icon) : '•'}</span><span class="n">${e(f.short || f.title)}</span>${badges(f, t)}</button>`).join('');
+  const chip = (f, i) => `<button role="tab" id="fxt-${e(f.id)}" aria-controls="fx-${e(f.id)}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><span class="i" aria-hidden="true">${f.icon ? ico(f.icon) : '•'}</span><span class="n">${e(f.short || f.title)}</span>${badges(f, t)}</button>`;
+  const half = Math.max(1, Math.ceil(list.length / 2));
+  const groups = [list.slice(0, half), list.slice(half)].map(g => g.map(f => chip(f, list.indexOf(f))).join(''));
   const panels = list.map((f, i) => `<article class="fx-p${i === 0 ? ' on' : ''}" role="tabpanel" id="fx-${e(f.id)}" aria-labelledby="fxt-${e(f.id)}">
   <div class="fx-t"><h3><span class="ic" aria-hidden="true">${ico(f.icon)}</span>${e(f.title)} ${badges(f, t)}</h3><p>${e(f.text)}</p>${
     f.points ? `<ul class="pts">${f.points.map(p => `<li>${e(p)}</li>`).join('')}</ul>` : ''}${
     f.tags ? `<ul class="tags">${f.tags.map(p => `<li>${e(p)}</li>`).join('')}</ul>` : ''}</div>
   ${visual(f, t)}</article>`).join('\n');
-  return `<div class="fx" id="fx"><div class="fx-nav" role="tablist" aria-label="${e(t('s.featuresAria'))}">${nav}</div><div class="fx-panels">${panels}</div>
-  <div class="fx-step"><button class="fx-prev" aria-label="${e(t('s.prev'))}"><span>‹</span></button><span class="fx-c" aria-live="polite">1 / ${list.length}</span><button class="fx-next" aria-label="${e(t('s.next'))}"><span>›</span></button></div></div>`;
+  const navAria = e(t('s.featuresAria'));
+  return `<div class="fx" id="fx">
+  <div class="fx-nav fx-n2" role="tablist" aria-label="${navAria}">${groups[0]}</div>
+  <div class="fx-panels">${panels}</div>
+  <div class="fx-nav fx-n3" role="tablist" aria-label="${navAria}">${groups[1]}</div>
+  <div class="fx-step" hidden><button class="fx-prev" aria-label="${e(t('s.prev'))}"><span>‹</span></button><span class="fx-c" aria-live="polite">1 / ${list.length}</span><button class="fx-next" aria-label="${e(t('s.next'))}"><span>›</span></button></div></div>`;
 }
 
 const extras = (data, lang, t) => (data.extras || []).map(x0 => { const x = loc(x0, lang); return `<li><b>${ico(x.icon)} ${e(x.title)}${isNew(x) ? ` <span class="nb">${e(t('s.new'))}</span>` : ''}</b>${e(x.text)}</li>`; }).join('');
