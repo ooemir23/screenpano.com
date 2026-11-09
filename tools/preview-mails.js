@@ -76,11 +76,11 @@ const pwHtml = mailtpl.html({
   preheader: 'yonetici hesabı için yeni şifre belirleme bağlantısı.',
   body: mailtpl.p('Merhaba <b>Bomera Lounge</b>,') +
     mailtpl.p('ScreenPano yönetim panelinde <b>yonetici</b> (işletme yöneticisi) için yeni şifre talebinde bulunuldu. Aşağıdaki tek kullanımlık güvenli bağlantıya tıklayarak yeni şifrenizi belirleyebilirsiniz.') +
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 18px">
-      ${mailtpl.kv('Kullanıcı Hesabı', 'yonetici · İşletme Yöneticisi')}
-      ${mailtpl.kv('Talep Zamanı', '10 Kasım 2026, 01:45')}
-      ${mailtpl.kv('Geçerlilik Süresi', '30 Dakika · Tek Kullanımlık')}
-    </table>` +
+    mailtpl.panelTable([
+      ['Kullanıcı Hesabı', 'yonetici · İşletme Yöneticisi'],
+      ['Talep Zamanı', '10 Kasım 2026, 01:45'],
+      ['Geçerlilik Süresi', '30 Dakika · Tek Kullanımlık'],
+    ]) +
     mailtpl.callout('<b>Güvenlik Hatırlatması:</b> Bu şifre sıfırlama talebini siz veya yetkili personeliniz başlatmadıysa bu iletiyi dikkate almayın. Bağlantı kullanılmadığı takdirde mevcut şifreniz değişmez ve hesabınız güvende kalır.', 'warning'),
   cta: 'https://screenpano.com/login#reset=ornek-token',
   ctaLabel: 'Yeni Şifre Belirle',
@@ -95,11 +95,11 @@ const verifyHtml = mailtpl.html({
   preheader: 'ScreenPano bildirimleri ve hesap güvenliği için e-postanızı doğrulayın.',
   body: mailtpl.p('Merhaba <b>Bomera Lounge</b>,') +
     mailtpl.p('ScreenPano dijital ekran yönetim sistemine hoş geldiniz. Ekranınız çevrimdışı kaldığında anında uyarı alabilmek, haftalık performans raporlarınıza erişebilmek ve hesap güvenliğinizi sağlamak için lütfen e-posta adresinizi onaylayın.') +
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 18px">
-      ${mailtpl.kv('İşletme Adı', 'Bomera Lounge')}
-      ${mailtpl.kv('Doğrulanacak E-posta', 'bildirim@bomera.com')}
-      ${mailtpl.kv('Bağlantı Geçerliliği', '7 Gün')}
-    </table>`,
+    mailtpl.panelTable([
+      ['İşletme Adı', 'Bomera Lounge'],
+      ['Doğrulanacak E-posta', 'bildirim@bomera.com'],
+      ['Bağlantı Geçerliliği', '7 Gün'],
+    ]),
   cta: 'https://screenpano.com/api/auth/verify-email?token=ornek',
   ctaLabel: 'E-posta Adresimi Doğrula',
   small: 'Bu kaydı siz veya işletmeniz oluşturmadıysa bu e-postayı dikkate almayın; bağlantı tıklanmadığı sürece hiçbir işlem yapılmaz.',

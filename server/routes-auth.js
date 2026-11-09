@@ -33,7 +33,11 @@ function sendVerifyEmail(req, t, email) {
         preheader: 'ScreenPano bildirimleri ve hesap güvenliği için e-postanızı doğrulayın.',
         body: tpl.p(`Merhaba <b>${tpl.e(t.name)}</b>,`) +
           tpl.p('ScreenPano dijital ekran yönetim sistemine hoş geldiniz. Ekranınız çevrimdışı kaldığında anında uyarı alabilmek, haftalık performans raporlarınıza erişebilmek ve hesap güvenliğinizi sağlamak için lütfen e-posta adresinizi onaylayın.') +
-          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 18px">${tpl.kv('İşletme Adı', tpl.e(t.name))}${tpl.kv('Doğrulanacak E-posta', tpl.e(email))}${tpl.kv('Bağlantı Geçerliliği', '7 Gün')}</table>`,
+          tpl.panelTable([
+            ['İşletme Adı', tpl.e(t.name)],
+            ['Doğrulanacak E-posta', tpl.e(email)],
+            ['Bağlantı Geçerliliği', '7 Gün'],
+          ]),
         cta: link, ctaLabel: 'E-posta Adresimi Doğrula',
         small: 'Bu kaydı siz veya işletmeniz oluşturmadıysa bu e-postayı dikkate almayın; bağlantı tıklanmadığı sürece hiçbir işlem yapılmaz.',
       }),
@@ -169,11 +173,11 @@ r.post('/forgot', async (req, res) => {
           preheader: `${u.username} hesabı için yeni şifre belirleme bağlantısı.`,
           body: tpl.p(`Merhaba <b>${tpl.e((t && t.name) || u.username)}</b>,`) +
             tpl.p(`ScreenPano yönetim panelinde <b>${tpl.e(u.username)}</b> (${isStaff ? 'personel hesabı' : 'işletme yöneticisi'}) için yeni şifre talebinde bulunuldu. Aşağıdaki tek kullanımlık güvenli bağlantıya tıklayarak yeni şifrenizi belirleyebilirsiniz.`) +
-            `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 18px">
-              ${tpl.kv('Kullanıcı Hesabı', tpl.e(u.username) + (isStaff ? ' · Personel' : ' · İşletme Yöneticisi'))}
-              ${tpl.kv('Talep Zamanı', tpl.e(talepZamanı))}
-              ${tpl.kv('Geçerlilik Süresi', '30 Dakika · Tek Kullanımlık')}
-            </table>` +
+            tpl.panelTable([
+              ['Kullanıcı Hesabı', tpl.e(u.username) + (isStaff ? ' · Personel' : ' · İşletme Yöneticisi')],
+              ['Talep Zamanı', tpl.e(talepZamanı)],
+              ['Geçerlilik Süresi', '30 Dakika · Tek Kullanımlık'],
+            ]) +
             tpl.callout('<b>Güvenlik Hatırlatması:</b> Bu şifre sıfırlama talebini siz veya yetkili personeliniz başlatmadıysa bu iletiyi dikkate almayın. Bağlantı kullanılmadığı takdirde mevcut şifreniz değişmez ve hesabınız güvende kalır.', 'warning'),
           cta: resetUrl, ctaLabel: 'Yeni Şifre Belirle',
           small: 'Bu bağlantı tek kullanımlıktır ve 30 dakika sonra kendiliğinden geçersiz hale gelir.',

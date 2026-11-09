@@ -84,20 +84,20 @@ function html(t) {
   const camp = j.impact.filter(x => (x.scans || x.shown)).slice(0, 5);
   if (camp.length) {
     const campRows = camp.map((x, i) => `<tr>
-      <td style="padding:10px 14px;border-bottom:${i === camp.length - 1 ? 'none' : '1px solid ' + tpl.LINE};font:600 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.INK}">${tpl.e(x.name)}</td>
-      <td align="right" style="padding:10px 14px;border-bottom:${i === camp.length - 1 ? 'none' : '1px solid ' + tpl.LINE};font:500 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.SOFT}">${nf(x.shown)}</td>
-      <td align="right" style="padding:10px 14px;border-bottom:${i === camp.length - 1 ? 'none' : '1px solid ' + tpl.LINE};font:700 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.GOLD}">${nf(x.scans)}</td>
-      <td align="right" style="padding:10px 14px;border-bottom:${i === camp.length - 1 ? 'none' : '1px solid ' + tpl.LINE};font:600 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.INK}">${x.rate != null && x.shown ? `%${String(x.rate).replace('.', ',')}` : '—'}</td>
+      <td style="padding:11px 16px;border-bottom:${i === camp.length - 1 ? 'none' : '1px solid ' + tpl.LINE_PANEL};font:600 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.TEXT_HEAD}">${tpl.e(x.name)}</td>
+      <td align="right" style="padding:11px 16px;border-bottom:${i === camp.length - 1 ? 'none' : '1px solid ' + tpl.LINE_PANEL};font:500 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.TEXT_SOFT}">${nf(x.shown)}</td>
+      <td align="right" style="padding:11px 16px;border-bottom:${i === camp.length - 1 ? 'none' : '1px solid ' + tpl.LINE_PANEL};font:700 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.GOLD_LIGHT}">${nf(x.scans)}</td>
+      <td align="right" style="padding:11px 16px;border-bottom:${i === camp.length - 1 ? 'none' : '1px solid ' + tpl.LINE_PANEL};font:600 13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.TEXT_HEAD}">${x.rate != null && x.shown ? `%${String(x.rate).replace('.', ',')}` : '—'}</td>
     </tr>`).join('');
 
     body += `<div style="margin:22px 0 16px">
-      <div style="font:700 14px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:${tpl.INK};margin-bottom:8px">Öne Çıkan Kampanyalar ve Menü Etkileşimi</div>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${tpl.LINE};border-radius:10px;overflow:hidden">
-        <tr style="background:#f8fafc">
-          <th align="left" style="padding:9px 14px;font:600 11px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.SOFT};border-bottom:1px solid ${tpl.LINE};text-transform:uppercase;letter-spacing:0.04em">İçerik / Kampanya</th>
-          <th align="right" style="padding:9px 14px;font:600 11px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.SOFT};border-bottom:1px solid ${tpl.LINE};text-transform:uppercase;letter-spacing:0.04em">Gösterim</th>
-          <th align="right" style="padding:9px 14px;font:600 11px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.SOFT};border-bottom:1px solid ${tpl.LINE};text-transform:uppercase;letter-spacing:0.04em">QR Okutma</th>
-          <th align="right" style="padding:9px 14px;font:600 11px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.SOFT};border-bottom:1px solid ${tpl.LINE};text-transform:uppercase;letter-spacing:0.04em">Dönüşüm</th>
+      <div style="font:700 14px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:${tpl.TEXT_HEAD};margin-bottom:8px">Öne Çıkan Kampanyalar ve Menü Etkileşimi</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${tpl.BG_PANEL};border:1px solid ${tpl.LINE_PANEL};border-radius:12px;overflow:hidden">
+        <tr style="background-color:#121415">
+          <th align="left" style="padding:10px 16px;font:600 11px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.TEXT_SOFT};border-bottom:1px solid ${tpl.LINE_PANEL};text-transform:uppercase;letter-spacing:0.04em">İçerik / Kampanya</th>
+          <th align="right" style="padding:10px 16px;font:600 11px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.TEXT_SOFT};border-bottom:1px solid ${tpl.LINE_PANEL};text-transform:uppercase;letter-spacing:0.04em">Gösterim</th>
+          <th align="right" style="padding:10px 16px;font:600 11px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.TEXT_SOFT};border-bottom:1px solid ${tpl.LINE_PANEL};text-transform:uppercase;letter-spacing:0.04em">QR Okutma</th>
+          <th align="right" style="padding:10px 16px;font:600 11px/1.3 -apple-system,BlinkMacSystemFont,sans-serif;color:${tpl.TEXT_SOFT};border-bottom:1px solid ${tpl.LINE_PANEL};text-transform:uppercase;letter-spacing:0.04em">Dönüşüm</th>
         </tr>
         ${campRows}
       </table>
