@@ -260,7 +260,7 @@ function attention(db, t, devs) {
     out.push({ lv: 'bad', t: esc(d.name || 'TV kutusu'), s: `<span>Çevrimdışı, son görülme</span>: <span>${ago(d.last_seen)}</span>`, href: '#settings/devices' });
   if (acc.ok && acc.until && acc.until - now <= (acc.kind === 'trial' ? 3 : 7) * day)
     out.push({ lv: 'warn', t: acc.kind === 'trial' ? 'Deneme süreniz bitiyor' : 'Aboneliğiniz bitiyor', s: `<span>Bitiş tarihi</span>: ${fmtDate(acc.until)}`, href: '#settings/plan' });
-  if (!(db.notify || {}).email) out.push({ lv: 'warn', t: 'E-posta adresi eklenmemiş', s: 'Ekran durumu uyarıları (çevrimdışı, yeniden bağlandı) için bir e-posta ekleyin', href: '#settings/devices' });
+  if (!(db.notify || {}).email) out.push({ lv: 'warn', t: 'E-posta adresi eklenmemiş', s: 'Ekran durumu uyarıları (çevrimdışı, yeniden bağlandı) için bir e-posta ekleyin', href: '#settings/notify' });
   const oldM = db.videos.filter(v => !v.hidden && v.sch && v.sch.end && v.sch.end < today);
   if (oldM.length) out.push({ lv: 'warn', t: 'Süresi geçmiş medya var', s: `${oldM.length} <span>içeriğin gösterim tarihi bitti, ekranda görünmüyor</span>`, href: '#media' });
   const oldC = (db.campaigns || []).filter(c => c.enabled && c.sch && c.sch.end && c.sch.end < today);
@@ -1991,8 +1991,8 @@ let GEO = null;
 SECTIONS.settings = {
   html() {
     const sub = SUB.settings || 'business', t = S.me.tenant;
-    let h = head('Ayarlar', 'İşletme bilgileri, TV kutusu, kullanıcılar, paket ve yedekler.')
-      + tabs('settings', [['business', 'İşletme'], ['devices', 'Cihazlar'], ['branches', 'Şubeler'], ['users', 'Kullanıcılar'], ['plan', 'Paket'], ['backup', 'Yedekler'], ['privacy', 'Verilerim']]);
+    let h = head('Ayarlar', 'İşletme bilgileri, TV kutusu, bildirimler, kullanıcılar, paket ve yedekler.')
+      + tabs('settings', [['business', 'İşletme'], ['devices', 'Cihazlar'], ['notify', 'Bildirimler'], ['branches', 'Şubeler'], ['users', 'Kullanıcılar'], ['plan', 'Paket'], ['backup', 'Yedekler'], ['privacy', 'Verilerim']]);
     if (sub === 'business') {
       const loc = S.db.location || {};
       h += card('İşletme bilgileri', '', `<div class="f" style="align-items:start">${fl('İşletme adı', `<input type="text" id="s-name" maxlength="80" value="${esc(t.name)}">`)}${fl('Şehir / ilçe (hava durumu için)', `<input type="text" id="s-city" placeholder="örn. Kadıköy" autocomplete="off" oninput="geoSearch()"><button type="button" class="btn ghost sm" id="geo-me" style="margin-top:6px" onclick="geoLocate()">📍 Konumumu otomatik bul</button>`)}</div>
@@ -2001,6 +2001,8 @@ SECTIONS.settings = {
     } else if (sub === 'devices') {
       h += devicesPage();
       window.__pair = null;
+    } else if (sub === 'notify') {
+      h += notifyPageHtml();
     } else if (sub === 'users') {
       h += `<div class="grid g2">` + (owner() ? card('Kullanıcılar', 'Personel hesapları içerik ekleyebilir (medya, duyuru, doğum günü); yedek geri yükleme ve kullanıcı yönetimi yapamaz.', `<div id="ulist" class="list"><div class="muted">Yükleniyor…</div></div>
           <hr class="sep2"><div class="f">${fl('Kullanıcı adı', '<input type="text" id="u-n" autocomplete="off">')}${fl('Şifre (en az 8)', '<input type="password" id="u-p" autocomplete="new-password">')}</div><div class="row end mt"><button class="btn" onclick="addUser()">Ekle</button></div>`) : '')
@@ -2032,6 +2034,7 @@ SECTIONS.settings = {
       $('blist').innerHTML = bs.length ? bs.map(b => `<div class="it"><div class="b"><b>${new Date(b.time).toLocaleString(I18N.locale, { dateStyle: 'medium', timeStyle: 'short' })}</b><span>${esc(b.name.replace(/^db-|\.json$/g, '').split('-').pop())} · ${fmtSize(b.size)}</span></div><a class="btn xs g" href="/api/admin/backups/${encodeURIComponent(b.name)}/download">İndir</a>${owner() ? `<button class="btn xs g" onclick="restore('${b.name}')">Geri yükle</button>` : ''}</div>`).join('') : '<div class="empty">Henüz yedek yok</div>';
     }
     if (sub === 'devices') { drawDevStatus(); const pc = $('pcode'); if (pc && pc.value) pc.focus(); }
+    if (sub === 'notify') drawNotifySettings();
     if (sub === 'branches') drawBranches();
   },
 };
@@ -2432,13 +2435,76 @@ function devMoreHtml() {
 }
 function notifyCard(j) {
   const n = j.notify || {}, om = n.offlineMin || j.offlineMin;
-  return card('Uyarılar', `Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.`,
-      `${owner() ? `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" data-save onclick="saveNotify()">Kaydet</button>${n.email && j.mail ? '<button class="btn g" onclick="act(\'POST\',\'/notify/test\',undefined,\'Deneme e-postası gönderildi\',false)">Dene</button>' : ''}</div>
-       <div class="row mt" style="align-items:center"><span style="flex:1">Kutunun uyarılmadan bağlantısız kalabileceği süre:</span><select id="nt-offmin" style="width:130px">${[5, 10, 15, 30, 60, 120, 360, 720, 1440].map(m => `<option value="${m}"${m === om ? ' selected' : ''}>${omLbl(m)}</option>`).join('')}</select></div>
-       <div class="swr mt"><div class="b"><b>Ekran kapanınca</b></div>${sw(n.offline !== false, '', 'id="nt-off"')}</div><div class="swr"><div class="b"><b>Ekran geri açılınca</b></div>${sw(n.online !== false, '', 'id="nt-on"')}</div>
-       <div class="swr"><div class="b"><b>Haftalık özet</b><span>Her pazartesi sabah: ekran süresi, kampanya okutmaları, reklam gösterimleri</span></div>${sw(!!n.weekly, '', 'id="nt-wk"')}</div>${n.email && j.mail ? `<div class="row end"><button class="btn xs g" onclick="act('POST','/notify/weekly-test',undefined,'Haftalık özet örneği gönderildi',false)">Özet örneğini şimdi gönder</button></div>` : ''}
+  return card('Uyarılar', `<a href="#settings/notify" class="btn xs g" style="float:right">${ic('bell')}Bildirim Ayarları</a><span>Kutu ${omLbl(j.offlineMin)} boyunca bağlantı vermezse burada ve e-postanızda uyarı görürsünüz.</span>`,
+      `${owner() ? `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" data-save onclick="saveNotify()">${ic('check')}Kaydet</button>${n.email && j.mail ? `<button class="btn g" onclick="act('POST','/notify/test',undefined,'Deneme e-postası gönderildi',false)">${ic('send')}Dene</button>` : ''}</div>
+       <div class="row mt" style="align-items:center"><span style="flex:1">Kutunun uyarılmadan bağlantısız kalabileceği süre:</span><select id="nt-offmin" style="width:130px" onchange="saveNotify()">${[5, 10, 15, 30, 60, 120, 360, 720, 1440].map(m => `<option value="${m}"${m === om ? ' selected' : ''}>${omLbl(m)}</option>`).join('')}</select></div>
+       <div class="swr mt"><div class="b"><b>Ekran kapanınca</b></div>${sw(n.offline !== false, 'saveNotify()', 'id="nt-off"')}</div><div class="swr"><div class="b"><b>Ekran geri açılınca</b></div>${sw(n.online !== false, 'saveNotify()', 'id="nt-on"')}</div>
+       <div class="swr"><div class="b"><b>Haftalık özet</b><span>Her pazartesi sabah: ekran süresi, kampanya okutmaları, reklam gösterimleri</span></div>${sw(!!n.weekly, 'saveNotify()', 'id="nt-wk"')}</div>${n.email && j.mail ? `<div class="row end"><button class="btn xs g" onclick="act('POST','/notify/weekly-test',undefined,'Haftalık özet örneği gönderildi',false)">${ic('mail')}Özet örneğini şimdi gönder</button></div>` : ''}
        ${j.mail ? '' : '<p class="muted" style="font-size:12.5px">Sunucuda e-posta gönderimi henüz ayarlı değil; uyarılar şimdilik yalnız burada görünür.</p>'}` : ''}
        <div class="list mt">${(j.alerts || []).length ? j.alerts.slice(0, 12).map(a => `<div class="it"><span class="dot ${a.kind === 'online' ? 'on' : ''}"></span><div class="b"><b>${esc(a.text)}</b><span>${new Date(a.at).toLocaleString(I18N.locale, { dateStyle: 'short', timeStyle: 'short' })}</span></div></div>`).join('') + `<div class="row end"><button class="btn xs g" onclick="act('DELETE','/alerts',undefined,'Temizlendi',false).then(drawDevStatus)">Temizle</button></div>` : '<div class="muted">Uyarı yok.</div>'}</div>`);
+}
+function notifyPageHtml() {
+  const j = DEVST;
+  const n = (j && j.notify) || (S.db && S.db.notify) || {};
+  const om = n.offlineMin || (j && j.offlineMin) || 5;
+  const hasMail = j ? j.mail : true;
+  const isOwner = owner();
+
+  return `<div class="grid g2" id="ntpage">
+    ${card('E-posta Bildirim Tercihleri', 'Ekran kesintileri ve haftalık performans karneniz için bildirim kurallarını belirleyin.', `
+      ${isOwner ? `
+        <div class="f">
+          ${fl('Bildirim e-posta adresi', `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" data-save onclick="saveNotify()">${ic('check')}Kaydet</button>${n.email && hasMail ? `<button class="btn g" onclick="act('POST','/notify/test',undefined,'Deneme e-postası gönderildi',false)">${ic('send')}Dene</button>` : ''}</div>`)}
+        </div>
+        ${hasMail ? `<div class="okline" style="margin:4px 0 16px">${ic('circle-check')} Sunucuda e-posta servisi aktif</div>` : `<div class="warnline" style="margin:4px 0 16px">${ic('triangle-alert')} Sunucuda SMTP e-posta servisi henüz ayarlanmamış; bildirimler şimdilik yalnız panelde görünür.</div>`}
+
+        <h4 style="margin:20px 0 10px;font-size:15px;font-weight:700">Bildirim Türleri</h4>
+        <div class="swr">
+          <div class="b">
+            <b>Ekran bağlantısı kesilince bildir</b>
+            <span>TV kutusu veya ekran kapandığında / internet kesildiğinde anında e-posta uyarısı gönder</span>
+          </div>
+          ${sw(n.offline !== false, 'saveNotify()', 'id="nt-off"')}
+        </div>
+        <div class="swr">
+          <div class="b">
+            <b>Ekran yeniden yayına başlayınca bildir</b>
+            <span>Cihaz tekrar internete bağlanıp yayına devam ettiğinde bilgilendirme e-postası gönder</span>
+          </div>
+          ${sw(n.online !== false, 'saveNotify()', 'id="nt-on"')}
+        </div>
+        <div class="swr">
+          <div class="b">
+            <b>Haftalık performans özeti</b>
+            <span>Her Pazartesi sabahı son 7 günün ekran süresi, oynatılan medya ve QR menü etkileşim karnesini e-posta olarak ilet</span>
+          </div>
+          ${sw(!!n.weekly, 'saveNotify()', 'id="nt-wk"')}
+        </div>
+        ${n.email && hasMail ? `<div class="row end mt" style="margin-bottom:12px"><button class="btn xs g" onclick="act('POST','/notify/weekly-test',undefined,'Haftalık özet örneği gönderildi',false)">${ic('mail')}Haftalık özet örneğini şimdi gönder</button></div>` : ''}
+
+        <h4 style="margin:20px 0 8px;font-size:15px;font-weight:700">Bağlantı Kesintisi Eşiği</h4>
+        <div class="row" style="align-items:center;gap:12px">
+          <span style="flex:1;font-size:13.5px;color:var(--soft)">Kutunun uyarılmadan bağlantısız kalabileceği süre:</span>
+          <select id="nt-offmin" style="width:140px" onchange="saveNotify()">${[5, 10, 15, 30, 60, 120, 360, 720, 1440].map(m => `<option value="${m}"${m === om ? ' selected' : ''}>${omLbl(m)}</option>`).join('')}</select>
+        </div>
+        <div class="row end mt"><button class="btn" onclick="saveNotify()">${ic('check')}Ayarları Kaydet</button></div>
+      ` : '<div class="muted">Bildirim ayarlarını yalnızca işletme sahibi değiştirebilir.</div>'}
+    `)}
+
+    ${card('Son Sistem Uyarıları', 'Cihazlarınızın son bağlantı kesintisi ve yeniden bağlanma kayıtları.', `
+      <div id="nt-alerts-list" class="list">
+        ${(j && j.alerts && j.alerts.length) ? j.alerts.slice(0, 15).map(a => `<div class="it"><span class="dot ${a.kind === 'online' ? 'on' : ''}"></span><div class="b"><b>${esc(a.text)}</b><span>${new Date(a.at).toLocaleString(I18N.locale, { dateStyle: 'short', timeStyle: 'short' })}</span></div></div>`).join('') + `<div class="row end mt"><button class="btn xs g" onclick="act('DELETE','/alerts',undefined,'Geçmiş temizlendi',false).then(drawNotifySettings)">Geçmişi Temizle</button></div>` : '<div class="muted">Henüz kayıtlı bir uyarı yok.</div>'}
+      </div>
+    `)}
+  </div>`;
+}
+async function drawNotifySettings() {
+  try {
+    const j = await req('GET', '/devices/status');
+    DEVST = j;
+    const p = $('ntpage');
+    if (p) p.outerHTML = notifyPageHtml();
+  } catch (e) {}
 }
 // açık cihaz menüsü dışarı tıklanınca kapanır
 document.addEventListener('click', e => { document.querySelectorAll('.dv-menu[open]').forEach(d => { if (!d.contains(e.target)) d.removeAttribute('open'); }); });
@@ -2449,7 +2515,20 @@ async function drawDevStatus() {
   if (DRW) devDrawInfo();
   const m = $('dvmore'); if (m) m.innerHTML = devMoreHtml();
 }
-const saveNotify = () => act('PUT', '/notify', { email: $('nt-mail').value.trim(), offline: $('nt-off').checked, online: $('nt-on').checked, offlineMin: $('nt-offmin') ? +$('nt-offmin').value : undefined, weekly: $('nt-wk') ? $('nt-wk').checked : undefined }, 'Uyarı ayarları kaydedildi', false);
+const saveNotify = () => {
+  const m = $('nt-mail'), off = $('nt-off'), on = $('nt-on'), om = $('nt-offmin'), wk = $('nt-wk');
+  if (!m) return;
+  return act('PUT', '/notify', {
+    email: m.value.trim(),
+    offline: off ? off.checked : true,
+    online: on ? on.checked : true,
+    offlineMin: om ? +om.value : undefined,
+    weekly: wk ? wk.checked : false,
+  }, 'Uyarı ayarları kaydedildi', false).then(() => {
+    if (SUB.settings === 'notify') drawNotifySettings();
+    else if (SUB.settings === 'devices') drawDevStatus();
+  });
+};
 async function snapDev(id) {
   const box = $('snap-' + id); if (!box) return; box.innerHTML = '<p class="muted">Ekran görüntüsü isteniyor…</p>';
   try { await req('POST', `/devices/${id}/snapshot`); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
