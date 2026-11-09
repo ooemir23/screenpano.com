@@ -76,7 +76,7 @@ r.get('/me', (req, res) => {
   const t = req.t, p = plan(t), acc = access(t);
   res.json({
     user: { id: req.user.id, username: req.user.username, role: req.user.role, name: req.user.name, impersonating: !!auth.impOf(req.user) },
-    tenant: { id: t.id, name: t.name, plan: p, status: t.status, access: acc, trialUntil: t.trial_until, paidUntil: t.paid_until, location: t.db.location, menuCount: ((t.db.menu || {}).categories || []).length, logo: t.db.logo ? t.upBase + t.db.logo : null, theme: t.db.theme },
+    tenant: { id: t.id, name: t.name, plan: p, status: t.status, access: acc, trialUntil: t.trial_until, paidUntil: t.paid_until, location: t.db.location, menuCount: ((t.db.menu || {}).categories || []).length, logo: t.db.logo ? t.upBase + t.db.logo : null, theme: t.db.theme, notifyEmail: (t.db.notify && t.db.notify.email) || '', emailVerified: !!(t.db.notify && t.db.notify.verified) },
     upBase: t.upBase, brand: config.BRAND, plans: PLANS,
     usage: { devices: store.q.devicesOf.all(t.id).length, storageBytes: media.usedBytes(t), users: store.q.usersOf.all(t.id).length },
   });
@@ -248,15 +248,52 @@ r.post('/assets', quota, upload.single('file'), async (req, res) => {
 });
 
 // ================= EKRAN VE CİHAZLAR =================
-// İşletme başına tek ekran: mekândaki kutu HDMI ile tüm TV'lere aynı görüntüyü verir.
+// Çoklu TV / bağımsız ekran: varsayılan "Ana Ekran" dışında ek ekranlar (ör. Menü Ekranı, Salon 2) oluşturulup kutulara atanabilir.
 r.get('/screen', (req, res) => {
-  const t = req.t, s = tenants.mainScreen(t), online = hub.onlineDeviceIds();
-  res.json({ layout: store.J(s.layout) || W.defaultLayout(), devices: store.q.devicesOf.all(t.id).map(d => ({ ...d, online: online.has(d.id) })), limit: plan(t).devices, offlineMin: require('./monitor').offlineMin(t) });
+  const t = req.t, m0 = tenants.mainScreen(t), online = hub.onlineDeviceIds();
+  const rows = store.q.screensOf.all(t.id);
+  const screens = rows.map(x => ({ id: x.id, name: x.name, layout: store.J(x.layout) || W.defaultLayout(), sort: x.sort }));
+  const qid = String(req.query.screenId || '').trim();
+  const active = (qid && screens.find(x => x.id === qid)) || screens[0] || { id: m0.id, name: m0.name, layout: store.J(m0.layout) || W.defaultLayout() };
+  res.json({
+    layout: active.layout,
+    activeScreenId: active.id,
+    screens,
+    devices: store.q.devicesOf.all(t.id).map(d => ({ ...d, online: online.has(d.id) })),
+    limit: plan(t).devices,
+    offlineMin: require('./monitor').offlineMin(t),
+  });
 });
 r.put('/screen', (req, res) => {
-  const t = req.t, s = tenants.mainScreen(t), l = W.cleanLayout((req.body || {}).layout);
+  const t = req.t, b = req.body || {}, l = W.cleanLayout(b.layout);
   if (!l.widgets.some(w => w.type === 'media' || w.type === 'menu')) return res.status(400).json({ error: 'Düzende en az bir Medya oynatıcı ya da Fiyat listesi olmalı' });
-  store.updateScreen(s.id, t.id, { layout: JSON.stringify(l) }); hub.pushTenant(t.id); res.json({ ok: true });
+  const rows = store.q.screensOf.all(t.id);
+  const target = (b.screenId && rows.find(x => x.id === b.screenId)) || tenants.mainScreen(t);
+  store.updateScreen(target.id, t.id, { layout: JSON.stringify(l) }); hub.pushTenant(t.id); res.json({ ok: true, screenId: target.id });
+});
+r.post('/screens', (req, res) => {
+  const t = req.t, b = req.body || {}, name = String(b.name || '').trim().slice(0, 40) || 'Yeni Ekran';
+  const rows = store.q.screensOf.all(t.id);
+  if (rows.length >= 10) return res.status(400).json({ error: 'En çok 10 ayrı ekran profili oluşturulabilir' });
+  const baseSc = (b.fromId && rows.find(x => x.id === b.fromId)) || rows[0] || tenants.mainScreen(t);
+  const layout = b.template ? JSON.stringify(W.cleanLayout(W.defaultLayout(b.template))) : baseSc.layout;
+  const row = { id: auth.uid(12), tenant_id: t.id, name, layout, sort: rows.length, created: Date.now() };
+  store.q.screenIns.run(row);
+  res.json({ ok: true, screen: { id: row.id, name: row.name, layout: store.J(row.layout) || W.defaultLayout(), sort: row.sort } });
+});
+r.put('/screens/:id', (req, res) => {
+  const t = req.t, name = String((req.body || {}).name || '').trim().slice(0, 40);
+  if (!name) return res.status(400).json({ error: 'Ekran adı boş olamaz' });
+  store.updateScreen(req.params.id, t.id, { name });
+  hub.pushTenant(t.id);
+  res.json({ ok: true });
+});
+r.delete('/screens/:id', (req, res) => {
+  const t = req.t, rows = store.q.screensOf.all(t.id);
+  if (rows.length <= 1) return res.status(400).json({ error: 'En az bir ekran kalmalıdır' });
+  store.q.screenDel.run(req.params.id, t.id);
+  hub.pushTenant(t.id);
+  res.json({ ok: true });
 });
 // TV'de görünen 6 haneli kodla cihazı bağla
 r.post('/pair', (req, res) => {
@@ -269,6 +306,11 @@ r.put('/devices/:id', (req, res) => {
   const b = req.body || {};
   if (typeof b.name === 'string') store.q.deviceRename.run(b.name.trim().slice(0, 40), req.params.id, req.t.id);
   if (typeof b.native === 'boolean' && store.q.devicesOf.all(req.t.id).some(d => d.id === req.params.id)) { store.q.deviceNative.run(b.native ? 1 : 0, req.params.id, req.t.id); hub.setNative(req.params.id, b.native); }
+  if (b.screen_id !== undefined && store.q.devicesOf.all(req.t.id).some(d => d.id === req.params.id)) {
+    const sid = b.screen_id && store.q.screensOf.all(req.t.id).some(s => s.id === b.screen_id) ? String(b.screen_id) : null;
+    store.q.deviceMove.run(sid, req.params.id, req.t.id);
+    if (hub.setScreen) hub.setScreen(req.params.id, sid);
+  }
   res.json({ ok: true });
 });
 r.delete('/devices/:id', (req, res) => { store.q.deviceDel.run(req.params.id, req.t.id); hub.kickDevice(req.params.id); require('./monitor').forgetDevice(req.params.id); res.json({ ok: true }); });
@@ -301,6 +343,7 @@ r.put('/menu', (req, res) => {
     name: s(c.name, 40), sch: SCH.clean(c.sch) || undefined, t: tr(c.t, v => s(v, 40)), hh: hhOf(c).length ? hhOf(c) : undefined,
     items: (Array.isArray(c.items) ? c.items : []).slice(0, 60).map(i => ({
       name: s(i.name, 60), price: s(i.price, 16), hp: s(i.hp, 16) || undefined, desc: s(i.desc, 90), off: i.off === true || undefined, kcal: s(i.kcal, 14) || undefined,
+      img: s(i.img, 180) || undefined,
       t: tr(i.t, v => { const n = s(v && v.name, 60), d = s(v && v.desc, 90); return n || d ? { name: n, desc: d } : null; }),
     })).filter(i => i.name),
   })).filter(c => c.name || c.items.length);
@@ -310,7 +353,7 @@ r.put('/menu', (req, res) => {
 });
 
 // ================= DURUM (önizleme ve genel bakış için) =================
-r.get('/state', (req, res) => res.json(publicState(req.t)));
+r.get('/state', (req, res) => res.json(publicState(req.t, req.query.screen ? String(req.query.screen) : undefined)));
 r.get('/vidlen', (req, res) => res.json(typeof require('./vidlen').dump === 'function' ? require('./vidlen').dump() : {})); // video süresi ölçümleri (tanılama)
 
 // ======================================================================
@@ -321,6 +364,9 @@ r.get('/db', (req, res) => {
   if (instagram) { const { token, ...ig } = instagram; rest.instagram = { ...ig, connected: !!token }; }
   // müzik: panele yalnız TV'de çalması için gereken accessToken gider; uzun ömürlü refreshToken dışarı sızmaz
   if (music) rest.music = { ...music, spotify: { ...(music.spotify || {}), refreshToken: undefined } };
+  if (Array.isArray(rest.videos)) {
+    rest.videos = rest.videos.map(v => v.status === 'processing' ? { ...v, job: media.jobInfo ? media.jobInfo(v.id) : null } : v);
+  }
   res.json(rest);
 });
 r.get('/leagues', (req, res) => res.json({
@@ -816,7 +862,8 @@ r.post('/videos/youtube', async (req, res) => {
   if (!id) return res.status(400).json({ error: 'Geçerli bir YouTube bağlantısı girin (örn. https://www.youtube.com/watch?v=...)' });
   if (req.t.db.videos.length >= 300) return res.status(400).json({ error: 'En fazla 300 içerik eklenebilir' });
   const name = (await yt.title(id)) || 'YouTube videosu';
-  const rec = { id: auth.uid(), type: 'youtube', yt: id, name, dur: yt.clampDur((req.body || {}).dur), status: 'ready', optimized: true };
+  const rec = { id: auth.uid(), type: 'youtube', yt: id, name: String((req.body || {}).name || '').trim().slice(0, 80) || name, dur: yt.clampDur((req.body || {}).dur), status: 'ready', optimized: true };
+  if ((req.body || {}).sound === true) rec.sound = true;
   if ((req.body || {}).only) rec.hidden = true;
   req.t.db.videos.push(rec);
   changed(req.t); res.json({ ok: true, ids: [rec.id] });

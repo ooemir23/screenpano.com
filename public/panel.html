@@ -149,8 +149,8 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 .btn.d{background:transparent;border:1px solid rgba(239,91,79,.4);color:var(--bad)}
 .btn.dz{background:var(--bad);color:#fff}.btn.dz:hover{filter:brightness(1.1)}
 .btn .ic{width:16px;height:16px}
-.btn.s{padding:6px 12px;font-size:13px;border-radius:var(--r-s)}
-.btn.xs{padding:4px 9px;font-size:12px;border-radius:var(--r-s)}
+.btn.s{padding:7px 13px;font-size:13px;min-height:36px;border-radius:var(--r-s)}
+.btn.xs{padding:6px 11px;font-size:12.5px;min-height:34px;border-radius:var(--r-s)}
 .sw{position:relative;width:46px;height:26px;flex:none;display:inline-block}
 .sw input{position:absolute;opacity:0;width:0;height:0}
 .sw i{position:absolute;inset:0;background:rgba(255,255,255,.16);border-radius:var(--r-pill);transition:.18s;cursor:pointer}
@@ -185,6 +185,7 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 .pv.vert{aspect-ratio:9/16;max-width:360px;margin:0 auto}
 .pv.vert iframe{width:1080px;height:1920px}
 .pv iframe{position:absolute;left:0;top:0;width:1920px;height:1080px;border:0;transform-origin:0 0;pointer-events:none}
+.pv.interactive iframe{pointer-events:auto}
 /* ===== kurulum adımları ===== */
 .steps{display:flex;flex-direction:column;gap:8px}
 .step{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-m);background:var(--panel2);text-decoration:none;color:var(--text)}
@@ -260,7 +261,8 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 .wb .rz-ne,.wb .rz-nw,.wb .rz-se,.wb .rz-sw{width:14px;height:14px;background:var(--accent2)}
 .wb .rz-ne{top:0;right:0;cursor:nesw-resize;border-radius:0 0 0 8px}.wb .rz-nw{top:0;left:0;cursor:nwse-resize;border-radius:0 0 8px 0}
 .wb .rz-se{bottom:0;right:0;cursor:nwse-resize;border-radius:8px 0 0 0}.wb .rz-sw{bottom:0;left:0;cursor:nesw-resize;border-radius:0 8px 0 0}
-@media(hover:none){.wb .rz{opacity:1}}
+@media(hover:none){.wb.sel .rz{opacity:1}}
+#cw.locked .wb{cursor:pointer}#cw.locked .wb .rz{display:none}
 #props{background:var(--panel2);border-radius:var(--r-m);padding:16px;min-height:220px}
 #props h4{font-size:15px;margin-bottom:4px}
 #props .fl{margin-top:10px}
@@ -278,10 +280,13 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 /* ===== fiyat listesi ===== */
 .mcat{background:var(--panel2);border-radius:var(--r-m);padding:14px;margin-bottom:12px}
 .mcat .chd{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-.mrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,2fr) 110px auto;gap:8px;margin-bottom:6px;align-items:center}
+.mrow{display:grid;grid-template-columns:38px minmax(0,2fr) minmax(0,2fr) 110px auto;gap:8px;margin-bottom:6px;align-items:center}
 .mrow input{padding:8px 10px}
-.mrow.hp{grid-template-columns:minmax(0,2fr) minmax(0,2fr) 110px 96px auto}
+.mrow.hp{grid-template-columns:38px minmax(0,2fr) minmax(0,2fr) 110px 96px auto}
 .mrow .mhp{border-style:dashed;color:var(--accent2)}
+.mthumb{width:38px;height:38px;border-radius:var(--r-s);border:1px dashed var(--line2);background:var(--panel);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;padding:0;color:var(--mute);flex:none}
+.mthumb:hover{border-color:var(--accent2);color:var(--text)}
+.mthumb img{width:100%;height:100%;object-fit:cover;display:block}
 .flow{display:grid;gap:6px}.flow .fr{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center}
 .flow .fn{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .flow .ft{position:relative;display:grid;grid-template-columns:repeat(48,1fr);gap:1px;height:18px;border-radius:4px;overflow:hidden;background:rgba(127,127,127,.12)}
@@ -352,7 +357,7 @@ details.stx>.card{border:0;background:none;margin:0;padding:0 22px 20px}details.
   .g2,.g3{grid-template-columns:1fr}
   .head h1{font-size:23px}
   .card{padding:16px}
-  .mrow{grid-template-columns:1fr 90px auto}.mrow .md{display:none}.mrow.hp{grid-template-columns:1fr 80px 80px auto}.flow .fr{grid-template-columns:90px 1fr}
+  .mrow{grid-template-columns:38px 1fr 90px auto}.mrow .md{display:none}.mrow.hp{grid-template-columns:38px 1fr 80px 80px auto}.flow .fr{grid-template-columns:90px 1fr}
   .plans{grid-template-columns:1fr}
 }
 /* ===== yeni bölümler: afiş, zamanlama, istatistik, şube ===== */
@@ -388,10 +393,24 @@ details.stx>.card{border:0;background:none;margin:0;padding:0 22px 20px}details.
 .qst .mini{display:flex;align-items:flex-end;gap:2px;height:38px;width:34%;min-width:90px;flex:none}.qst .mini div{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}.qst .mini i{display:block;width:100%;background:var(--accent2);border-radius:2px 2px 0 0;min-height:2px}
 .qst .big{font-size:24px;font-weight:700;min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
 .heat{display:grid;grid-template-columns:38px repeat(24,1fr);gap:3px;align-items:center}.heat i{display:block;height:22px;border-radius:4px}.heat .hl{font-size:12px;color:var(--mute);text-align:center}.heat .dn{font-size:12px;color:var(--mute)}
+.bars-wrap{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:stretch}
+.bars-y{display:flex;flex-direction:column;justify-content:space-between;font-size:11.5px;color:var(--mute);text-align:right;padding:4px 0 6px;font-variant-numeric:tabular-nums}
 .bars{display:flex;align-items:flex-end;gap:3px;height:180px;padding:6px 0;border-bottom:1px solid var(--line2);margin-bottom:6px}
-.bars div{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0}
+.bars div{flex:1;height:100%;display:flex;align-items:flex-end;min-width:0;cursor:pointer}
 .bars i{display:block;width:100%;background:var(--accent2);border-radius:3px 3px 0 0;min-height:2px}
-.bars div:hover i{background:var(--text)}
+.bars div:hover i,.bars div.act i{background:var(--text)}
+.bar-tip{font-size:13px;color:var(--soft);min-height:20px;margin-bottom:6px;font-weight:600}
+body.simple-mode .adv-only{display:none!important}
+.ag-day{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);padding:12px 14px;margin-bottom:10px}
+.ag-day.today{border-color:var(--accent2);background:rgba(var(--a2),.07)}
+.ag-items{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ag-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--r-s);background:var(--panel);border:1px solid var(--line2);font-size:12.5px}
+details.faq{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);padding:12px 16px;margin-bottom:8px}
+details.faq summary{cursor:pointer;font-weight:600;font-size:14.5px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.faq summary::-webkit-details-marker{display:none}
+details.faq summary::after{content:"▾";color:var(--mute);transition:transform .15s}
+details.faq[open] summary::after{transform:rotate(180deg)}
+details.faq p{margin:10px 0 0;color:var(--soft);font-size:13.5px;line-height:1.6}
 .tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl th{text-align:left;font-weight:600;color:var(--mute);font-size:12.5px;padding:8px 10px;border-bottom:1px solid var(--line2)}
 .tbl td{padding:9px 10px;border-bottom:1px solid var(--line)}
@@ -786,6 +805,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <div id="brand"><b>…</b></div>
     <nav id="nav"></nav>
     <div id="sidefoot">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+        <button type="button" class="btn g s" id="mode-btn" onclick="toggleSimpleMode()" style="flex:1;justify-content:center" title="Basit ve gelişmiş görünüm arasında geçiş yap">Basit Mod</button>
+        <div data-langpick></div>
+      </div>
       <div class="acct"><button type="button" id="acctb" onclick="event.stopPropagation();this.parentNode.classList.toggle('on')"><svg class="ic"><use href="/icons.svg#i-user"></use></svg><span id="acctn">Hesap</span><svg class="ic"><use href="/icons.svg#i-chevron-up"></use></svg></button>
         <div class="acctm" onclick="event.stopPropagation()">
           <a href="/tv?preview=1" target="_blank"><svg class="ic"><use href="/icons.svg#i-tv"></use></svg>TV ekranını aç</a>

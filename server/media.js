@@ -13,7 +13,7 @@ const { runFfmpeg } = require('./feeds');
 let ffmpegOk = false;
 try { const p = spawn(config.FFMPEG, ['-version'], { stdio: 'ignore' }); p.on('error', () => {}); p.on('close', c => { ffmpegOk = c === 0; }); } catch (e) { /* yok */ }
 
-const queue = []; let busy = false;
+const queue = []; let busy = false, curJob = null;
 const SCALE = "scale='min(1920,iw)':'min(1920,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2";
 // video süresi (sn): ekranlar arası senkron için çalma listesinde kullanılır
 const probeDur = file => new Promise(res => {
@@ -69,7 +69,7 @@ async function optimizeItem(tid, id) {
     ? (keepAlpha
         ? ['-y', '-i', src, '-vf', SCALE + ',format=rgba', '-frames:v', '1', '-compression_level', '9', out]
         : ['-y', '-i', src, '-vf', SCALE, '-frames:v', '1', '-q:v', '3', out])
-    : ['-y', '-i', src, '-vf', vScale + `,fps=fps='min(source_fps,${fpsMax})',format=yuv420p`, '-c:v', 'libx264', '-profile:v', 'high', '-level', fpsMax > 30 ? '4.2' : '4.1', '-preset', 'veryfast', '-crf', '23', '-maxrate', '6M', '-bufsize', '12M', '-an', '-movflags', '+faststart', '-threads', '2', out];
+    : ['-y', '-i', src, '-vf', vScale + `,fps=fps='min(source_fps,${fpsMax})',format=yuv420p`, '-c:v', 'libx264', '-profile:v', 'high', '-level', fpsMax > 30 ? '4.2' : '4.1', '-preset', 'veryfast', '-crf', '23', '-maxrate', '6M', '-bufsize', '12M', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', '-threads', '2', out];
   const before = fs.statSync(src).size;
   try {
     await runFfmpeg(args);
@@ -92,16 +92,30 @@ async function optimizeItem(tid, id) {
     done({ optError: String(e.message).slice(0, 200), optimized: false });
   }
 }
-function enqueue(tid, id) { if (!queue.some(q => q.tid === tid && q.id === id)) queue.push({ tid, id }); run(); }
+function enqueue(tid, id) { if (!queue.some(q => q.tid === tid && q.id === id)) queue.push({ tid, id, addedAt: Date.now() }); run(); }
 function cancel(tid, id) { const idx = queue.findIndex(q => q.tid === tid && q.id === id); if (idx >= 0) queue.splice(idx, 1); }
 async function run() {
   if (busy) return; busy = true;
-  while (queue.length) { const { tid, id } = queue.shift(); try { await optimizeItem(tid, id); } catch (e) { console.error('Kuyruk hatası:', e.message); } }
+  while (queue.length) {
+    const job = queue.shift();
+    curJob = { ...job, startedAt: Date.now() };
+    try { await optimizeItem(job.tid, job.id); } catch (e) { console.error('Kuyruk hatası:', e.message); }
+  }
+  curJob = null;
   busy = false;
+}
+function jobInfo(id) {
+  if (curJob && curJob.id === id) {
+    const elapsed = Math.round((Date.now() - curJob.startedAt) / 1000);
+    return { pos: 0, elapsed, etaSec: Math.max(5, 25 - Math.min(20, elapsed)) };
+  }
+  const idx = queue.findIndex(q => q.id === id);
+  if (idx >= 0) return { pos: idx + 1, elapsed: 0, etaSec: (idx + 1) * 20 };
+  return null;
 }
 function resumeAll() { for (const t of tenants.all()) for (const v of t.db.videos) if (v.status === 'processing') enqueue(t.id, v.id); }
 
 // İşletmenin diskte kapladığı yer (kota kontrolü için)
 const usedBytes = t => require('./storage').usedBytes(t);
 
-module.exports = { probeDur, enqueue, cancel, resumeAll, backfillDurations, usedBytes, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };
+module.exports = { probeDur, enqueue, cancel, resumeAll, backfillDurations, usedBytes, jobInfo, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };

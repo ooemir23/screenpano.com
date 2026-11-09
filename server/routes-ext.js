@@ -22,13 +22,18 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   const err = (res, e, code = 400) => res.status(code).json({ error: e.message || String(e) });
 
   // ================= ZAMANLAMA =================
-  // medya/afiş: zamanlama, gizleme, süre, ad
+  // medya/afiş: zamanlama, gizleme, süre, ad, ses ve ekran seçimi
   r.put('/videos/:id', (req, res) => {
     const v = req.t.db.videos.find(x => x.id === req.params.id); if (!v) return res.status(404).json({ error: 'bulunamadı' });
     const b = req.body || {};
     if ('sch' in b) { const c = SCH.clean(b.sch); if (c) v.sch = c; else delete v.sch; }
     if (typeof b.hidden === 'boolean') v.hidden = b.hidden || undefined;
     if (typeof b.full === 'boolean') v.full = b.full || undefined;
+    if (typeof b.sound === 'boolean') v.sound = b.sound || undefined;
+    if (Array.isArray(b.screens)) {
+      const valid = b.screens.map(String).filter(Boolean).slice(0, 10);
+      if (valid.length) v.screens = valid; else delete v.screens;
+    }
     if (b.dur !== undefined) v.dur = b.dur ? Math.max(3, Math.min(v.type === 'youtube' ? 3600 : 120, Math.round(Number(b.dur)) || 10)) : undefined;
     if (typeof b.name === 'string' && b.name.trim()) v.name = s(b.name, 80);
     changed(req.t); res.json({ ok: true });
@@ -90,6 +95,31 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     (req.t.db.looseUp || (req.t.db.looseUp = [])).push({ f: f.filename, at: Date.now() });
     tenants.save(req.t);
     res.json({ ok: true, file: f.filename, url: req.t.upBase + f.filename });
+  });
+
+  // ================= TELİFSİZ HAZIR MEDYA HAVUZU =================
+  const STOCK_MEDIA = [
+    { key: 'coffee_pour', title: 'Taze Espresso & Kahve Hazırlığı (4K Video)', cat: 'Kafe & Kahve', type: 'youtube', yt: 'Nu8kIIL-CDA', dur: 45, thumb: 'https://i.ytimg.com/vi/Nu8kIIL-CDA/hqdefault.jpg' },
+    { key: 'cafe_ambience', title: 'Sıcak Kafe Atmosferi & Latte Art (4K Video)', cat: 'Kafe & Kahve', type: 'youtube', yt: 'CAvX_h3Ece8', dur: 60, thumb: 'https://i.ytimg.com/vi/CAvX_h3Ece8/hqdefault.jpg' },
+    { key: 'fireplace_4k', title: 'Şömine Ateşi (4K Kış & Lounge Atmosferi)', cat: 'Ambiyans', type: 'youtube', yt: 'L_LUpnjgPso', dur: 60, thumb: 'https://i.ytimg.com/vi/L_LUpnjgPso/hqdefault.jpg' },
+    { key: 'aquarium_4k', title: 'Mercan Resifi & Akvaryum (4K Rahatlatıcı)', cat: 'Ambiyans', type: 'youtube', yt: 'F3JBn7Z229k', dur: 60, thumb: 'https://i.ytimg.com/vi/F3JBn7Z229k/hqdefault.jpg' },
+    { key: 'nature_falls', title: 'Orman & Şelale Manzarası (4K Doğa)', cat: 'Doğa', type: 'youtube', yt: 'eKFTSSKCzWA', dur: 60, thumb: 'https://i.ytimg.com/vi/eKFTSSKCzWA/hqdefault.jpg' },
+    { key: 'aerial_istanbul', title: 'İstanbul Boğaz & Gün Batımı Havadan (4K)', cat: 'Şehir & Manzara', type: 'youtube', yt: 'IQbc2P2FEBM', dur: 60, thumb: 'https://i.ytimg.com/vi/IQbc2P2FEBM/hqdefault.jpg' },
+    { key: 'lounge_neon', title: 'Modern Lounge & Gece Ambiyansı (4K)', cat: 'Lounge & Bar', type: 'youtube', yt: '5qap5aO4i9A', dur: 60, thumb: 'https://i.ytimg.com/vi/lTRiuFIWV54/hqdefault.jpg' },
+    { key: 'bakery_fresh', title: 'Taze Kruvasan & Fırın Lezzetleri (Afiş)', cat: 'Fırın & Kahvaltı', type: 'poster', tpl: 'kahvalti', dur: 15, fields: { badge: 'FIRINDAN YENİ ÇIKTI', title: 'Sıcak Kruvasan & Kahvaltı Keyfi', sub: 'Her sabah taze demlenmiş çay ve filtre kahve eşliğinde', price: '', note: 'Mutlu Sabahlar Dileriz' } },
+  ];
+  r.get('/media/stock', (req, res) => res.json({ items: STOCK_MEDIA }));
+  r.post('/media/stock', (req, res) => {
+    const key = String((req.body || {}).key || '');
+    const st = STOCK_MEDIA.find(x => x.key === key);
+    if (!st) return res.status(404).json({ error: 'Hazır medya bulunamadı' });
+    if (req.t.db.videos.length >= 300) return res.status(400).json({ error: 'En fazla 300 içerik eklenebilir' });
+    const rec = st.type === 'poster'
+      ? { id: auth.uid(), type: 'poster', tpl: st.tpl, name: st.title, fields: { ...st.fields }, dur: st.dur || 15, status: 'ready', optimized: true, file: '' }
+      : { id: auth.uid(), type: 'youtube', yt: st.yt === '5qap5aO4i9A' ? 'lTRiuFIWV54' : st.yt, name: st.title, dur: st.dur || 45, status: 'ready', optimized: true };
+    req.t.db.videos.push(rec);
+    changed(req.t);
+    res.json({ ok: true, item: rec });
   });
 
   // ================= REKLAM ALANI =================
@@ -191,6 +221,15 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const d = store.q.devicesOf.all(req.t.id).find(x => x.id === req.params.id); const sn = d && monitor.snaps.get(d.id);
     if (!sn) return res.status(404).json({ error: 'henüz yok' });
     res.json({ at: sn.at, data: sn.data });
+  });
+  // Uzaktan kutu yönetimi komutları: restart (uygulamayı yeniden başlat), clear_cache (önbellek temizle), sleep (ekranı karart), wake (ekranı uyandır), sync_time (saati eşitle)
+  r.post('/devices/:id/cmd', (req, res) => {
+    const d = store.q.devicesOf.all(req.t.id).find(x => x.id === req.params.id);
+    if (!d) return res.status(404).json({ error: 'Cihaz bulunamadı' });
+    const cmd = String((req.body || {}).cmd || '');
+    if (!['restart', 'clear_cache', 'sleep', 'wake', 'sync_time'].includes(cmd)) return res.status(400).json({ error: 'Geçersiz komut' });
+    const n = hub.sendDevice(d.id, { type: 'device_cmd', cmd, serverTime: Date.now() });
+    n ? res.json({ ok: true, cmd }) : res.status(409).json({ error: 'Cihaz şu an çevrimdışı' });
   });
 
   // ================= İSTATİSTİK =================
@@ -317,6 +356,64 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const list = Array.isArray(b.list) ? [...new Set(b.list.filter(l => LANGS.includes(l) && l !== 'tr'))].slice(0, 3) : cur.list || [];
     req.t.db.lang = { list, sec: b.sec !== undefined ? Math.max(5, Math.min(60, Math.round(Number(b.sec)) || 12)) : cur.sec || 12 };
     changed(req.t); res.json({ ok: true });
+  });
+
+  // Otomatik çeviri önerisi: yerleşik gastronomi/menü sözlüğü + çevrimiçi çeviri yedekli
+  const MENU_DICT = {
+    'fiyat listesi': { en: 'Price List', de: 'Preisliste', ru: 'Прайс-лист', ar: 'قائمة الأسعار', fr: 'Liste des prix', es: 'Lista de precios' },
+    'menü': { en: 'Menu', de: 'Speisekarte', ru: 'Меню', ar: 'القائمة', fr: 'Menu', es: 'Menú' },
+    'sıcak içecekler': { en: 'Hot Drinks', de: 'Heißgetränke', ru: 'Горячие напитки', ar: 'مشروبات ساخنة', fr: 'Boissons chaudes', es: 'Bebidas calientes' },
+    'soğuk içecekler': { en: 'Cold Drinks', de: 'Kaltgetränke', ru: 'Холодные напитки', ar: 'مشروبات باردة', fr: 'Boissons froides', es: 'Bebidas frías' },
+    'kahveler': { en: 'Coffees', de: 'Kaffeespezialitäten', ru: 'Кофе', ar: 'القهوة', fr: 'Cafés', es: 'Cafés' },
+    'tatlılar': { en: 'Desserts', de: 'Desserts', ru: 'Десерты', ar: 'الحلويات', fr: 'Desserts', es: 'Postres' },
+    'kahvaltı': { en: 'Breakfast', de: 'Frühstück', ru: 'Завтрак', ar: 'الإفطار', fr: 'Petit-déjeuner', es: 'Desayuno' },
+    'ana yemekler': { en: 'Main Courses', de: 'Hauptgerichte', ru: 'Основные блюда', ar: 'الأطباق الرئيسية', fr: 'Plats principaux', es: 'Platos principales' },
+    'atıştırmalıklar': { en: 'Snacks', de: 'Snacks', ru: 'Закуски', ar: 'وجبات خفيفة', fr: 'Collations', es: 'Aperitivos' },
+    'salatalar': { en: 'Salads', de: 'Salate', ru: 'Салаты', ar: 'السلطات', fr: 'Salades', es: 'Ensaladas' },
+    'türk kahvesi': { en: 'Turkish Coffee', de: 'Türkischer Mokka', ru: 'Турецкий кофе', ar: 'قهوة تركية', fr: 'Café turc', es: 'Café turco' },
+    'filtre kahve': { en: 'Filter Coffee', de: 'Filterkaffee', ru: 'Фильтр-кофе', ar: 'قهوة مفلترة', fr: 'Café filtre', es: 'Café de filtro' },
+    'çay': { en: 'Black Tea', de: 'Schwarzer Tee', ru: 'Чай', ar: 'شاي', fr: 'Thé noir', es: 'Té negro' },
+    'bitki çayı': { en: 'Herbal Tea', de: 'Kräutertee', ru: 'Травяной чай', ar: 'شاي الأعشاب', fr: 'Tisane', es: 'Té de hierbas' },
+    'su': { en: 'Water', de: 'Wasser', ru: 'Вода', ar: 'ماء', fr: 'Eau', es: 'Agua' },
+    'maden suyu': { en: 'Sparkling Water', de: 'Mineralwasser', ru: 'Минеральная вода', ar: 'مياه معدنية', fr: 'Eau gazeuse', es: 'Agua con gas' },
+    'limonata': { en: 'Homemade Lemonade', de: 'Hausgemachte Limonade', ru: 'Домашний лимонад', ar: 'ليموناضة منزلية', fr: 'Limonade maison', es: 'Limonada casera' },
+    'taze sıkma portakal suyu': { en: 'Fresh Orange Juice', de: 'Frischer Orangensaft', ru: 'Свежевыжатый апельсиновый сок', ar: 'عصير برتقال طازج', fr: 'Jus d\'orange pressé', es: 'Zumo de naranja natural' },
+    'serpme kahvaltı': { en: 'Traditional Turkish Breakfast', de: 'Traditionelles Türkisches Frühstück', ru: 'Традиционный турецкий завтрак', ar: 'إفطار تركي تقليدي', fr: 'Petit-déjeuner turc traditionnel', es: 'Desayuno turco tradicional' },
+    'tost': { en: 'Grilled Toast', de: 'Toast', ru: 'Тост', ar: 'توست مشوي', fr: 'Croque-monsieur', es: 'Tostada' },
+    'cheesecake': { en: 'Cheesecake', de: 'Käsekuchen', ru: 'Чизкейк', ar: 'تشيز كيك', fr: 'Cheesecake', es: 'Tarta de queso' },
+    'tiramisu': { en: 'Tiramisu', de: 'Tiramisu', ru: 'Тирамису', ar: 'تيراميسو', fr: 'Tiramisu', es: 'Tiramisú' },
+    'brownie': { en: 'Chocolate Brownie', de: 'Schoko-Brownie', ru: 'Брауни', ar: 'براوني الشوكولاتة', fr: 'Brownie au chocolat', es: 'Brownie de chocolate' },
+  };
+  async function trText(text, lang) {
+    const raw = String(text || '').trim();
+    if (!raw) return '';
+    const low = raw.toLocaleLowerCase('tr-TR');
+    if (MENU_DICT[low] && MENU_DICT[low][lang]) return MENU_DICT[low][lang];
+    try {
+      const u = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=tr&tl=${encodeURIComponent(lang)}&dt=t&q=${encodeURIComponent(raw)}`;
+      const r2 = await fetch(u, { signal: AbortSignal.timeout(3500) });
+      if (r2.ok) {
+        const j = await r2.json();
+        if (Array.isArray(j) && Array.isArray(j[0])) {
+          const out = j[0].map(x => (Array.isArray(x) ? x[0] : '')).join('').trim();
+          if (out) return out;
+        }
+      }
+    } catch (e) {}
+    return raw;
+  }
+  r.post('/translate', async (req, res) => {
+    const b = req.body || {};
+    const texts = (Array.isArray(b.texts) ? b.texts : []).map(x => String(x || '').trim().slice(0, 200)).slice(0, 120);
+    const langs = (Array.isArray(b.langs) ? b.langs : (req.t.db.lang && req.t.db.lang.list) || ['en']).filter(l => LANGS.includes(l) && l !== 'tr').slice(0, 3);
+    if (!texts.length || !langs.length) return res.status(400).json({ error: 'Çevrilecek metin ve hedef dil seçin' });
+    const uniq = [...new Set(texts.filter(Boolean))];
+    const map = {};
+    for (const l of langs) {
+      map[l] = {};
+      await Promise.all(uniq.map(async txt => { map[l][txt] = await trText(txt, l); }));
+    }
+    res.json({ ok: true, translations: map });
   });
 
   // ================= MÜZİK (SPOTIFY & YOUTUBE MUSIC & UZAKTAN KUMANDA) =================

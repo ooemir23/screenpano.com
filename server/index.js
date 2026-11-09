@@ -121,7 +121,7 @@ app.get('/ra/:token', require('./platformads').page); // reklam verene açık ra
 app.get('/u/ads/:file', require('./platformads').serve);
 app.get('/login', page('login.html'));
 app.get('/tv', page('tv.html'));
-app.get(['/tv-lounge', '/lounge'], page('tv-lounge.html'));
+app.get(['/tv-lounge', '/lounge'], (req, res) => res.redirect(302, '/tv?preview=1'));
 app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html')(req, res, next) : res.redirect('/login')));
 app.get('/music', (req, res, next) => (auth.sessionUser(req) ? page('panel.html', 'music')(req, res, next) : res.redirect('/login')));
 app.get('/super', (req, res, next) => { const u = auth.superUser(req); return u ? page('super.html')(req, res, next) : res.redirect('/login'); });

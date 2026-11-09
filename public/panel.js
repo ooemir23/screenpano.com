@@ -24,7 +24,25 @@ function popMenu(anchor, items) {
 }
 
 /* ================= altyapı ================= */
-function toast(m, err, sub) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = m; if (sub) { const s = document.createElement('small'); s.textContent = sub; t.appendChild(s); } $('toasts').appendChild(t); setTimeout(() => t.remove(), sub ? 5200 : 3800); }
+function toast(m, err, sub) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (err ? ' err' : '');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;justify-content:space-between';
+  const txt = document.createElement('span');
+  txt.textContent = m;
+  const x = document.createElement('button');
+  x.type = 'button';
+  x.textContent = '×';
+  x.style.cssText = 'background:none;border:0;color:var(--mute);font-size:16px;line-height:1;cursor:pointer;padding:0 2px';
+  x.onclick = () => t.remove();
+  row.appendChild(txt);
+  row.appendChild(x);
+  t.appendChild(row);
+  if (sub) { const s = document.createElement('small'); s.textContent = sub; t.appendChild(s); }
+  $('toasts').appendChild(t);
+  setTimeout(() => t.remove(), sub || err ? 7500 : 5200);
+}
 // A11: kayıttan sonra değişikliğin kaç ekrana gönderildiği (bağlı kutular anında alır; kapalı olan açılınca alır)
 async function tvNote() {
   try { S.scr = await req('GET', '/screen'); } catch (e) { return ''; }
@@ -51,7 +69,7 @@ let LASTERR = '';
 // ekrana gitmeyen işlemler (kayıt sonrası "ekrana gönderildi" notu yazılmaz)
 const NOTV = /^\/(designs(\/[^/]+)?$|users|profile|password|notify|privacy|backups|branches|google\/(search|connect)|instagram\/connect|ads\/[^/]+\/token|devices|pair)/;
 const opt = (key, val, msg) => { S.db[key] = val; return act('PUT', '/options', { [key]: val }, msg || 'Kaydedildi', false); };
-const reoptAll = async () => { if (await UI.ask('Mevcut videolar seçtiğiniz kaliteyle yeniden küçültülsün mü? Orijinaller silindiği için kalite yalnızca düşebilir (küçük dosya, daha akıcı oynatım); işlem kuyrukta sırayla yapılır.')) act('POST', '/media/optimize-all', { force: true }, 'Yeniden küçültme başladı', false); };
+const reoptAll = async () => { if (await UI.ask('Mevcut videolar seçtiğiniz akıcılık ayarına göre yeniden hazırlansın mı? İşlem arka planda sırayla yapılır ve TV\'de takılmaları azaltır.')) act('POST', '/media/optimize-all', { force: true }, 'Videolar TV için yeniden hazırlanıyor', false); };
 const brkSrc = (k, on) => { const cur = new Set((S.db.breaking || {}).sources || ['trt']); on ? cur.add(k) : cur.delete(k); const arr = [...cur].filter(x => x !== 'mix'); act('PUT', '/breaking', { sources: arr.length ? arr : ['trt'] }, 'Kaydedildi', false).then(refresh); };
 async function refresh() { [S.db, S.scr] = await Promise.all([req('GET', '/db'), req('GET', '/screen')]); render(true); }
 const sw = (on, js, attrs = '') => `<label class="sw"><input type="checkbox" ${on ? 'checked' : ''} onchange="${js}" ${attrs}><i></i></label>`;
@@ -84,7 +102,13 @@ addEventListener('message', e => {
   const o = [90, 270].includes(Number(e.data.screenpanoOrient)) ? Number(e.data.screenpanoOrient) : 0;
   document.querySelectorAll('.pv').forEach(b => { if (b.querySelector('iframe') && b.querySelector('iframe').contentWindow === e.source) { b.classList.toggle('vert', o > 0); b.dataset.orient = o; scalePv(); } });
 });
-const pvFrame = (draft) => { const o = curOrient(draft); return `<div class="pv${o ? ' vert' : ''}" data-orient="${o}"><iframe src="/tv?preview=1" title="TV önizleme" loading="lazy" onload="scalePv()${draft ? ';pushDraft()' : ''}"></iframe></div>`; };
+const pvFrame = (draft) => { const o = curOrient(draft), sid = (S.scr && S.scr.activeScreenId) || 'main'; return `<div class="pv${o ? ' vert' : ''}" data-orient="${o}"><iframe src="/tv?preview=1&screen=${encodeURIComponent(sid)}" title="TV önizleme" loading="lazy" onload="scalePv()${draft ? ';pushDraft()' : ''}"></iframe></div>`; };
+function togglePvInteractive(btn) {
+  const pv = btn.closest('.card').querySelector('.pv');
+  if (!pv) return;
+  const on = pv.classList.toggle('interactive');
+  btn.textContent = on ? '🔒 Etkileşimi kapat' : '👆 Önizlemeye dokun / test et';
+}
 function openModal(html) { $('modalb').innerHTML = html; $('modal').classList.add('on'); }
 function closeModal() { $('modal').classList.remove('on'); $('modalb').innerHTML = ''; }
 function menu(open) { $('app').classList.toggle('menu', open); }
@@ -94,14 +118,32 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 /* ================= gezinme ================= */
 // Metin olan satır grup başlığıdır; null ayraçtır
 const NAV = [
-  'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'],
-  'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi', 1], ['happy', 'sparkles', 'Happy Hours', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
+  'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'], ['agenda', 'calendar-clock', 'Yayın Ajandası'],
+  'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi', 1], ['happy', 'sparkles', 'İndirim Saatleri', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
   'Canlı veri', ['sport', 'trophy', 'Spor', 1], ['info', 'newspaper', 'Bilgi Bandı', 1],
   'Takip', ['stats', 'chart-column', 'İstatistik'],
-  null, ['settings', 'settings', 'Ayarlar'],
+  null, ['settings', 'settings', 'Ayarlar'], ['help', 'circle-help', 'Yardım & SSS'],
 ];
+let SIMPLE_MODE = (() => { try { return localStorage.getItem('sp.simpleMode') === '1'; } catch (e) { return false; } })();
+const SIMPLE_ALLOW = new Set(['home', 'design', 'media', 'menu', 'qr', 'settings', 'help']);
+function toggleSimpleMode() {
+  SIMPLE_MODE = !SIMPLE_MODE;
+  try { localStorage.setItem('sp.simpleMode', SIMPLE_MODE ? '1' : '0'); } catch (e) {}
+  document.body.classList.toggle('simple-mode', SIMPLE_MODE);
+  const mb = $('mode-btn');
+  if (mb) mb.textContent = SIMPLE_MODE ? '⚙ Gelişmiş Mod' : 'Basit Mod';
+  drawNav();
+  toast(SIMPLE_MODE ? 'Basit moda geçildi: yalnız temel bölümler gösteriliyor' : 'Gelişmiş moda geçildi: tüm bölümler ve detaylı ayarlar açık');
+}
 function drawNav() {
-  const NV = window.__ONLY ? NAV.filter(n => Array.isArray(n) && n[0] === window.__ONLY) : NAV; // music.* adresi: yalnız Müzik bölümü
+  document.body.classList.toggle('simple-mode', SIMPLE_MODE);
+  const mb = $('mode-btn');
+  if (mb) mb.textContent = SIMPLE_MODE ? '⚙ Gelişmiş Mod' : 'Basit Mod';
+  const NV = window.__ONLY
+    ? NAV.filter(n => Array.isArray(n) && n[0] === window.__ONLY)
+    : SIMPLE_MODE
+      ? NAV.filter(n => !Array.isArray(n) ? (n !== 'Canlı veri' && n !== 'Takip') : SIMPLE_ALLOW.has(n[0]))
+      : NAV; // music.* adresi: yalnız Müzik bölümü
   if (window.__ONLY === 'music') { // music.* adresi: sol menüde iki kaynak; seçilen kaynak tüm sayfayı ve çalmayı değiştirir
     const v = typeof srcView === 'function' ? srcView() : 'yt';
     const it = (k, icn, name) => { const av = srcAvail(k); return `<a href="#music" class="${v === k ? 'on' : ''}${av ? '' : ' off'}" onclick="switchSrc('${k}');return false">${ic(icn)}${name}${av ? '' : '<span class="pro">Pasif</span>'}</a>`; };
@@ -129,10 +171,10 @@ function route() {
 }
 addEventListener('hashchange', route);
 // D1: bölüm metinlerinin başındaki emoji simgeleri tek tip çizgi ikona çevrilir (çeviri katmanı işini bitirdikten sonra)
-const EMO = { '📺': 'tv', '📷': 'camera', '📸': 'camera', '⏱': 'clock', '⚽': 'trophy', '🏟': 'trophy', '🎂': 'cake', '🎁': 'gift', '★': 'star', '📌': 'map-pin', '📍': 'map-pin', '🔒': 'lock', '✨': 'sparkles', '🔥': 'flame', '↶': 'undo-2', '⟲': 'rotate-ccw', '🌍': 'languages', '📱': 'smartphone', '💻': 'monitor', '🎵': 'music', '🎉': 'party-popper', '📰': 'newspaper', '📣': 'megaphone', '🧾': 'receipt-text', '💼': 'briefcase', '⚠': 'triangle-alert', '🔗': 'external-link', '🎬': 'film', '⚙': 'settings', '📊': 'chart-column' };
+const EMO = { '📺': 'tv', '📷': 'camera', '📸': 'camera', '⏱': 'clock', '⚽': 'trophy', '🏟': 'trophy', '🏆': 'trophy', '🎂': 'cake', '🎁': 'gift', '★': 'star', '📌': 'map-pin', '📍': 'map-pin', '🔒': 'lock', '✨': 'sparkles', '🔥': 'flame', '↶': 'undo-2', '⟲': 'rotate-ccw', '🌍': 'languages', '📱': 'smartphone', '💻': 'monitor', '🎵': 'music', '🎉': 'party-popper', '📰': 'newspaper', '📣': 'megaphone', '🧾': 'receipt-text', '💼': 'briefcase', '⚠': 'triangle-alert', '🔗': 'external-link', '🎬': 'film', '⚙': 'settings', '📊': 'chart-column', '▣': 'qr-code', '🚨': 'bell', '💊': 'pill', '📚': 'book-open', '📜': 'scroll', '🚗': 'car', '🇹🇷': 'flag', '🔊': 'volume-2', '🔇': 'volume-x', '📅': 'calendar', '❓': 'circle-help', '👆': 'hand' };
 const EMO_RE = new RegExp('^\\s*(' + Object.keys(EMO).join('|') + ')\\uFE0F?\\s*');
 function iconize(root) {
-  (root || $('view')).querySelectorAll('button, a.btn, h3, h4, .chip, summary b, .jump button').forEach(el => {
+  (root || $('view')).querySelectorAll('button, a.btn, h3, h4, .chip, summary b, .jump button, .ibi').forEach(el => {
     const t = [...el.childNodes].find(n => n.nodeType === 3 && n.nodeValue.trim()); if (!t || t !== [...el.childNodes].find(n => n.nodeType !== 8 && (n.nodeType !== 3 || n.nodeValue.trim()))) return;
     const m = EMO_RE.exec(t.nodeValue); if (!m) return;
     t.nodeValue = t.nodeValue.slice(m[0].length); el.insertAdjacentHTML('afterbegin', ic(EMO[m[1]]) + ' ');
@@ -183,7 +225,22 @@ function drawBanner() {
   const off = S.scr && S.scr.devices.filter(d => !d.online && d.last_seen && Date.now() - d.last_seen > (S.scr.offlineMin || 10) * 60000 && Date.now() - d.last_seen < 7 * 86400000);
   if (acc.ok && off && off.length) h += `<div class="bn trial"><span><b>${esc(off[0].name || 'TV kutusu')}</b> ${offSince(off[0].last_seen)} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin.</span><a class="btn s g" href="#settings/devices">Cihazlar</a></div>`;
   if (!acc.ok) {} else if (acc.kind === 'trial') h += `<div class="bn trial"><span>Deneme süreniz <b>${days} gün</b> sonra (${fmtDate(acc.until)}) bitiyor. Deneme boyunca tüm Pro özellikler açık.</span></div>`;
+  if (t.notifyEmail && !t.emailVerified) h += `<div class="bn trial"><span>E-posta adresiniz (<b>${esc(t.notifyEmail)}</b>) henüz doğrulanmadı. Ekran durumu uyarıları ve şifre sıfırlama için doğrulayın.</span><button class="btn s g" onclick="resendVerifyEmail(this)">Doğrulama e-postası gönder</button></div>`;
   $('banner').innerHTML = h;
+}
+async function resendVerifyEmail(btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch('/api/auth/resend-verify', { method: 'POST' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Gönderilemedi');
+    if (j.verifyUrl) {
+      openModal(`<h3>E-posta Doğrulama</h3><p class="muted">Sunucuda SMTP e-posta servisi ayarlı olmadığı için doğrulama bağlantısı aşağıda üretildi:</p><div class="row mt"><a class="btn" href="${esc(j.verifyUrl)}">E-postamı Şimdi Doğrula</a><button class="btn g" onclick="closeModal()">Kapat</button></div>`);
+    } else {
+      toast('Doğrulama bağlantısı e-posta adresinize gönderildi');
+    }
+  } catch (e) { toast(e.message, true); }
+  if (btn) btn.disabled = false;
 }
 
 /* ================= ÖZET ================= */
@@ -219,7 +276,7 @@ SECTIONS.home = {
     return head(esc(t.name), 'Ekranınızın durumu, kurulum adımları ve hızlı işlemler.', `<a class="btn g" href="/tv?preview=1" target="_blank">📺 TV ekranını aç</a>`)
       + (att.length ? card('İlgilenmeniz gerekenler', 'Kırmızılar acil, sarılar yakında ilgilenilecek işler.', att.map(a => `<a class="att ${a.lv}" href="${a.href}"><span class="b"><b>${a.t}</b><span>${a.s}</span></span><span>›</span></a>`).join(''), '', 'mb') : '')
       + `<div class="grid g2" style="margin-bottom:18px">`
-      + card('Canlı önizleme', 'TV\'lerinizde şu an görünen ekran.', pvFrame() + `<div class="row mt">${devs.length ? `<span class="pill ${online ? 'ok' : 'warn'}"><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Cihaz bağlı' : 'Cihaz şu an çevrimdışı'}</span>` : '<span class="pill bad">Henüz cihaz bağlanmadı</span>'}<span style="flex:1"></span><button class="btn s g" onclick="act('POST','/devices/reload',undefined,'TV\\'lere yenileme komutu gönderildi',false)">↻ TV\'yi yenile</button></div>`)
+      + card('Canlı önizleme', 'TV\'lerinizde şu an görünen ekran.', pvFrame() + `<div class="row mt" style="flex-wrap:wrap;gap:6px">${devs.length ? `<span class="pill ${online ? 'ok' : 'warn'}"><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Cihaz bağlı' : 'Cihaz şu an çevrimdışı'}</span>` : '<span class="pill bad">Henüz cihaz bağlanmadı</span>'}<span style="flex:1"></span><button class="btn s g" type="button" onclick="togglePvInteractive(this)">👆 Önizlemeye dokun / test et</button><button class="btn s g" onclick="act('POST','/devices/reload',undefined,'TV\\'lere yenileme komutu gönderildi',false)">↻ TV\'yi yenile</button></div>`)
       + (done === steps.length
         ? card('Ekranlarınız', `<span class="okline">${ic('circle-check')} Kurulum tamam · ${done}/${steps.length} adım</span>`, devs.length ? `<div class="list">${devs.map(d => `<a class="it devl" href="#settings/devices"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b"><b>${esc(d.name || 'TV kutusu')}</b><span>${d.online ? 'Bağlı · içerik güncel' : 'Çevrimdışı · son görülme ' + ago(d.last_seen || d.lastSeen)}</span></div>${ic('chevron-right')}</a>`).join('')}</div>` : '<div class="empty">Henüz cihaz bağlanmadı</div>')
         : card(`Kurulum adımları <span class="muted">· ${done}/${steps.length}</span>`, 'Sırayla tamamlayın; her adım ilgili sayfayı açar.',
@@ -240,7 +297,7 @@ SECTIONS.home = {
 };
 
 /* ================= TASARIM ================= */
-const EDIT = { layout: null, sel: -1, hist: [], dirty: false };
+const EDIT = { layout: null, sel: -1, hist: [], dirty: false, locked: false };
 window.__hideTpls = (() => { try { return localStorage.getItem('sp.hideTpls') === '1'; } catch (e) { return false; } })();
 function toggleTpls() {
   window.__hideTpls = !window.__hideTpls;
@@ -249,10 +306,61 @@ function toggleTpls() {
   if (b) b.style.display = window.__hideTpls ? 'none' : '';
   if (a) a.textContent = window.__hideTpls ? '▸ Göster' : '▾ Gizle';
 }
+function toggleEditLock() {
+  EDIT.locked = !EDIT.locked;
+  const cw = $('cw');
+  if (cw) cw.classList.toggle('locked', EDIT.locked);
+  document.querySelectorAll('#lockbtn').forEach(b => { b.classList.toggle('on', EDIT.locked); b.textContent = EDIT.locked ? '🔒 Taşıma Kilitli' : '🔓 Taşıma Açık'; });
+  toast(EDIT.locked ? 'Düzen kilitlendi: telefondan kaydırırken kutular yanlışlıkla oynamaz' : 'Düzen kilidi açıldı: kutuları sürükleyip boyutlandırabilirsiniz');
+}
+function screensBar() {
+  const scrs = (S.scr && S.scr.screens) || [{ id: 'main', name: 'Ana Ekran' }], cur = (S.scr && S.scr.activeScreenId) || 'main';
+  return card('📺 Ekran Profilleri (Çoklu TV)', 'Birden fazla TV kutunuz varsa her TV\'de farklı bir ekran düzeni ve farklı videolar oynatabilirsiniz (örn. Bir ekranda Menü, diğerinde Maç/Medya). Cihazlar sekmesinden hangi kutunun hangi ekranı göstereceğini seçin.',
+    `<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+      ${scrs.map(s => `<button type="button" class="chip ${s.id === cur ? 'on' : ''}" onclick="switchScreenProfile('${esc(s.id)}')">📺 ${esc(s.name)}</button>`).join('')}
+      <button type="button" class="btn xs g" onclick="addScreenProfile()">＋ Yeni ekran profili</button>
+      ${cur !== 'main' ? `<button type="button" class="btn xs g" onclick="renScreenProfile('${esc(cur)}')">Adlandır</button><button type="button" class="btn xs d" onclick="delScreenProfile('${esc(cur)}')">Sil</button>` : ''}
+    </div>`);
+}
+async function switchScreenProfile(id) {
+  if (EDIT.dirty && !await UI.ask('Kaydedilmemiş düzen değişiklikleri var. Yine de başka ekran profiline geçilsin mi?', { ok: 'Geç', danger: true })) return;
+  try {
+    S.scr = await req('GET', '/screen?screen=' + encodeURIComponent(id));
+    EDIT.dirty = false; EDIT.layout = clone(S.scr.layout); EDIT.sel = -1; EDIT.hist = [];
+    render(true);
+  } catch (e) { toast(e.message, true); }
+}
+async function addScreenProfile() {
+  const name = await UI.ask('Yeni ekran profilinin adı (örn. Giriş Menü Ekranı, Teras TV):', { title: 'Yeni Ekran Profili', input: '', ok: 'Oluştur' });
+  if (!name || !name.trim()) return;
+  try {
+    const j = await req('POST', '/screens', { name: name.trim() });
+    toast('Yeni ekran profili oluşturuldu');
+    await switchScreenProfile(j.screen.id);
+  } catch (e) { toast(e.message, true); }
+}
+async function renScreenProfile(id) {
+  const cur = ((S.scr && S.scr.screens) || []).find(s => s.id === id);
+  const name = await UI.ask('Ekran profili adı:', { title: 'Ekranı Adlandır', input: cur ? cur.name : '', ok: 'Kaydet' });
+  if (!name || !name.trim()) return;
+  try {
+    await req('PUT', '/screens/' + encodeURIComponent(id), { name: name.trim() });
+    S.scr = await req('GET', '/screen?screen=' + encodeURIComponent(id));
+    toast('Kaydedildi'); render(true);
+  } catch (e) { toast(e.message, true); }
+}
+async function delScreenProfile(id) {
+  if (!await UI.ask('Bu ekran profili silinsin mi? Bu ekrana bağlı TV kutuları Ana Ekran\'a döner.', { ok: 'Sil', danger: true })) return;
+  try {
+    await req('DELETE', '/screens/' + encodeURIComponent(id));
+    toast('Ekran profili silindi');
+    await switchScreenProfile('main');
+  } catch (e) { toast(e.message, true); }
+}
 // Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al + Kaydet görünür
 const layoutBar = () => {
   const o = curOrient(true);
-  return `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><select class="btn g s orsel" onchange="orientSet(+this.value)" title="Ekran yönü: yatay ya da dikey asılı TV"><option value="0" ${!o ? 'selected' : ''}>↔ Yatay (16:9)</option><option value="90" ${o === 90 ? 'selected' : ''}>↕ Dikey · Sağa 90° (9:16)</option><option value="270" ${o === 270 ? 'selected' : ''}>↕ Dikey · Sola 270° (9:16)</option></select><button class="btn g s" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
+  return `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><select class="btn g s orsel" onchange="orientSet(+this.value)" title="Ekran yönü: yatay ya da dikey asılı TV"><option value="0" ${!o ? 'selected' : ''}>↔ Yatay (16:9)</option><option value="90" ${o === 90 ? 'selected' : ''}>↕ Dikey · Sağa 90° (9:16)</option><option value="270" ${o === 270 ? 'selected' : ''}>↕ Dikey · Sola 270° (9:16)</option></select><button class="btn g s ${EDIT.locked ? 'on' : ''}" id="lockbtn" onclick="toggleEditLock()" title="Telefondan kullanırken kutuların yanlışlıkla kaymasını önler">${EDIT.locked ? '🔒 Taşıma Kilitli' : '🔓 Taşıma Açık'}</button><button class="btn g s" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
 };
 const lbarSync = () => { document.querySelectorAll('.lbar').forEach(b => b.classList.toggle('clean', !EDIT.dirty)); pushDraft(); };
 function orientSet(deg) {
@@ -318,32 +426,39 @@ SECTIONS.design = {
       const tplBody = o
         ? `<div class="tpl-sub">↕ Dikey TV düzenleri (9:16)</div><div class="tpls">${vTpls}</div><div class="tpl-sub">↔ Yatay ekran düzenleri (16:9)</div><div class="tpls">${hTpls}</div>`
         : `<div class="tpl-sub">↔ Yatay ekran düzenleri (16:9)</div><div class="tpls">${hTpls}</div><div class="tpl-sub">↕ Dikey TV düzenleri (9:16)</div><div class="tpls">${vTpls}</div>`;
-      h += `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
+      h += screensBar()
+        + `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
         + card(`<span onclick="toggleTpls()" style="cursor:pointer;user-select:none;display:inline-flex;align-items:center" title="Gizle / Göster">Hazır düzenler <span id="tpls-arrow" style="font-size:12px;font-weight:500;color:var(--mute);margin-left:8px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.06)">${window.__hideTpls ? '▸ Göster' : '▾ Gizle'}</span></span>`,
                `<span onclick="toggleTpls()" style="cursor:pointer;user-select:none">Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin. Dikey TV şablonları ekran yönünü otomatik olarak dikey yapar.</span>`,
                `<div id="tpls-body" style="${window.__hideTpls ? 'display:none;' : ''}">${tplBody}</div>`,
                layoutBar(), 'card-tpls')
         + designsCard()
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır.',
-          `<div class="editor"><div id="cw"${o ? ' class="vert"' : ''}><div id="cv"></div></div><div id="props"></div></div>
+          `<div class="editor"><div id="cw" class="${o ? 'vert ' : ''}${EDIT.locked ? 'locked' : ''}"><div id="cv"></div></div><div id="props"></div></div>
            <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`, layoutBar())
         + card('Önizleme', 'Yaptığınız değişiklikler (kaydetmeden önce) burada görünür; beğenince "Düzeni kaydet"e basın.', pvFrame(true), '<button class="btn g s" onclick="openDraft()">↗ Yeni sekmede aç</button>', 'pvcard');
     } else if (sub === 'colors') {
       const th = S.me.tenant.theme, logo = S.me.tenant.logo;
+      const clrIn = (id, val) => `<div class="row" style="gap:8px;align-items:center"><input type="color" id="${id}" value="${val}" oninput="this.nextElementSibling.textContent=this.value"><code style="font-size:12.5px;color:var(--soft)">${esc(val)}</code></div>`;
       h += (logo ? card('✨ Logonuzdan önerilen renkler', 'Logonuzdaki renklerden TV\'de okunaklı kalacak şekilde üretildi. Tıklayınca hemen uygulanır.', '<div class="swatches" id="lsug"><span class="muted">Logo inceleniyor…</span></div>') : '')
         + `<div class="grid g2">`
         + card('Hazır renkler', 'Tıklayınca hemen uygulanır.', `<div class="swatches">${Object.entries(S.cat.themes).map(([k, v]) => `<button class="swc ${v.bg === th.bg && v.accent2 === th.accent2 ? 'on' : ''}" onclick="pickTheme('${k}')"><div class="c"><i style="background:${v.bg}"></i><i style="background:${v.accent}"></i><i style="background:${v.accent2}"></i></div><b>${esc(v.name)}</b></button>`).join('')}</div>`)
-        + card('Logo', 'Arkası şeffaf PNG en iyisidir. Logo yoksa işletme adınız yazı olarak görünür.', `${logo ? `<div style="background:#0b0d0d;border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center"><img src="${esc(logo)}" style="max-width:100%;max-height:110px;object-fit:contain"></div>` : `<div class="empty">Logo yüklenmedi</div>`}
+        + card('Logo', 'Logonuzu yükleyin; beyaz arka plan varsa sistem otomatik temizler (şeffaf PNG veya SVG de yükleyebilirsiniz). Logo yoksa işletme adınız yazı olarak görünür.', `${logo ? `<div style="background:#0b0d0d;border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center"><img src="${esc(logo)}" style="max-width:100%;max-height:110px;object-fit:contain"></div>` : `<div class="empty">Logo yüklenmedi</div>`}
           <input type="file" id="logof" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onchange="upLogo(this)">
           <div class="row mt"><button class="btn" onclick="$('logof').click()">${logo ? 'Logoyu değiştir' : 'Logo yükle'}</button>${logo ? `<button class="btn g" onclick="delLogo()">Kaldır</button>` : ''}</div>`)
         + `</div>`
         + card('Kendi renkleriniz', 'Koyu arka planlar TV\'de daha iyi görünür.', `<div class="f">
-            ${fl('Arka plan', `<input type="color" id="th-bg" value="${th.bg}">`)}${fl('Ana renk', `<input type="color" id="th-accent" value="${th.accent}">`)}
-            ${fl('Vurgu rengi', `<input type="color" id="th-accent2" value="${th.accent2}">`)}${fl('Yazı rengi', `<input type="color" id="th-text" value="${th.text}">`)}
+            ${fl('Arka plan', clrIn('th-bg', th.bg))}${fl('Ana renk', clrIn('th-accent', th.accent))}
+            ${fl('Vurgu rengi', clrIn('th-accent2', th.accent2))}${fl('Yazı rengi', clrIn('th-text', th.text))}
             ${fl('Logo zemini', `<select id="th-plate"><option value="0" ${th.plate ? '' : 'selected'}>Şeffaf (açık renkli logolar)</option><option value="1" ${th.plate ? 'selected' : ''}>Beyaz zemin (koyu logolar)</option></select>`)}
             ${fl('Kart stili (tüm widget kutuları)', `<select id="th-box">${BOXES.map(([k, l]) => `<option value="${k}" ${(th.box || (th.glass ? 'glass' : 'accent')) === k ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}
-            ${fl('Yazı tipi', `<select id="th-font">${S.cat.fonts.map(f => `<option ${f === th.font ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>`)}
-          </div><div class="row end mt"><button class="btn" onclick="saveTheme()">Renkleri kaydet</button></div>`)
+            ${fl('Yazı tipi', `<select id="th-font" onchange="const p=$('font-pv');if(p)p.style.fontFamily=this.value">${S.cat.fonts.map(f => `<option ${f === th.font ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>`)}
+          </div>
+          <div id="font-pv" style="margin-top:12px;padding:12px 16px;border-radius:var(--r-m);background:${esc(th.bg)};color:${esc(th.text)};border:1px solid var(--line2);font-family:'${esc(th.font)}',sans-serif;display:flex;justify-content:space-between;align-items:center">
+            <span><b>${esc(S.me.tenant.name || 'Örnek Görünüm')}</b> · Türk Kahvesi &amp; Kruvasan</span>
+            <b style="color:${esc(th.accent2)};font-size:18px">145 ₺</b>
+          </div>
+          <div class="row end mt"><button class="btn" data-save onclick="saveTheme()">Renkleri kaydet</button></div>`)
         + card('Önizleme', '', pvFrame());
     } else {
       const db = S.db, sv = k => db['safe' + k] != null ? db['safe' + k] : (db.safeInset || 0), curOr = (S.scr && S.scr.layout && S.scr.layout.orient) || 0;
@@ -499,7 +614,25 @@ function drawProps() {
   // çoklu dil açıksa: başlık ve metnin çevirileri
   const LL = langList();
   if (LL.length && (w.type === 'text' || w.type === 'menu')) f += `<div class="mt"><b style="font-size:13px">Çeviriler</b>${LL.map(l => fl(LANG_NAMES[l] + ' başlık', `<input type="text" maxlength="200" value="${esc(((p.i18n || {})[l] || {}).title || '')}" onchange="setPI('${l}','title',this.value)">`) + (w.type === 'text' ? fl(LANG_NAMES[l] + ' metin', `<textarea maxlength="400" onchange="setPI('${l}','body',this.value)">${esc(((p.i18n || {})[l] || {}).body || '')}</textarea>`) : '')).join('')}</div>`;
-  box.innerHTML = `<h4>${ICON[w.type] || ''} ${esc(d.name)}</h4><p class="muted">${esc(d.desc || '')}${HINT[w.type] ? '<br><br>' + HINT[w.type] : ''}</p>${f}${w.type === 'media' ? '' : boxSection(w)}<div class="row mt"><button class="btn d s" onclick="rmW(${EDIT.sel})">Kaldır</button></div>`;
+  const G = EDIT.layout.cols || 24;
+  const posHtml = `<details class="mt"><summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--soft)">📐 Konum ve Boyut (${w.x}, ${w.y} · ${w.w}×${w.h})</summary>
+    <div class="f mt" style="grid-template-columns:repeat(2,1fr);gap:8px">
+      ${fl('Sol (X)', `<input type="number" min="0" max="${G - 1}" value="${w.x}" onchange="setWCoord('x',+this.value)">`)}
+      ${fl('Üst (Y)', `<input type="number" min="0" max="${G - 1}" value="${w.y}" onchange="setWCoord('y',+this.value)">`)}
+      ${fl('Genişlik', `<input type="number" min="1" max="${G}" value="${w.w}" onchange="setWCoord('w',+this.value)">`)}
+      ${fl('Yükseklik', `<input type="number" min="1" max="${G}" value="${w.h}" onchange="setWCoord('h',+this.value)">`)}
+    </div></details>`;
+  box.innerHTML = `<h4>${ICON[w.type] || ''} ${esc(d.name)}</h4><p class="muted">${esc(d.desc || '')}${HINT[w.type] ? '<br><br>' + HINT[w.type] : ''}</p>${f}${w.type === 'media' ? '' : boxSection(w)}${posHtml}<div class="row mt"><button class="btn d s" onclick="rmW(${EDIT.sel})">Kaldır</button></div>`;
+}
+function setWCoord(k, val) {
+  const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return;
+  const G = EDIT.layout.cols || 24, min = ((S.cat.widgets[w.type] || {}).min || [2, 2]).map(v => v * (G / 24));
+  snap();
+  if (k === 'x') w.x = Math.max(0, Math.min(G - w.w, Math.round(val) || 0));
+  if (k === 'y') w.y = Math.max(0, Math.min(G - w.h, Math.round(val) || 0));
+  if (k === 'w') w.w = Math.max(min[0], Math.min(G - w.x, Math.round(val) || min[0]));
+  if (k === 'h') w.h = Math.max(min[1], Math.min(G - w.y, Math.round(val) || min[1]));
+  drawCanvas(); drawProps();
 }
 function snap() { EDIT.hist.push(clone(EDIT.layout)); if (EDIT.hist.length > 40) EDIT.hist.shift(); EDIT.dirty = true; lbarSync(); }
 function undoL() { if (!EDIT.hist.length) return toast('Geri alınacak değişiklik yok'); EDIT.layout = EDIT.hist.pop(); if (!EDIT.hist.length) EDIT.dirty = false; EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
@@ -651,9 +784,11 @@ function designsCard() {
 }
 async function saveDesign() {
   if (EDIT.dirty) return toast('Önce "Düzeni kaydet"e basın; kaydedilmiş düzen ve renkler ortak tasarım olur', true);
-  const name = prompt('Tasarımın adı (örn. Lüks lounge 2):'); if (!name || !name.trim()) return;
-  const desc = prompt('Kısa açıklama (isteğe bağlı):') || '';
-  const r = await act('POST', '/designs', { name: name.trim(), desc: desc.trim() }, 'Ortak tasarım kaydedildi', false);
+  const name = await UI.ask('Tasarımın adı (örn. Lüks lounge 2):', { title: 'Ortak Tasarım Kaydet', input: '', ok: 'İleri' });
+  if (!name || !name.trim()) return;
+  const desc = await UI.ask('Kısa açıklama (isteğe bağlı):', { title: 'Tasarım Açıklaması', input: '', ok: 'Kaydet' });
+  if (desc === null) return;
+  const r = await act('POST', '/designs', { name: name.trim(), desc: (desc || '').trim() }, 'Ortak tasarım kaydedildi', false);
   if (r) { S.cat = await req('GET', '/catalog'); render(true); }
 }
 async function delDesign(id) {
@@ -682,14 +817,16 @@ async function applyTpl(k) {
 }
 async function saveL() {
   if (badSet().size) return toast('Bazı kutular üst üste biniyor (kırmızı). Önce düzeltin.', true);
-  const ok = await act('PUT', '/screen', { layout: EDIT.layout }, 'Düzen kaydedildi, TV güncellendi', false);
-  if (ok) { EDIT.dirty = false; lbarSync(); S.scr = await req('GET', '/screen'); render(true); }
+  const screenId = (S.scr && S.scr.activeScreenId) || 'main';
+  const ok = await act('PUT', '/screen', { layout: EDIT.layout, screenId }, 'Düzen kaydedildi, TV güncellendi', false);
+  if (ok) { EDIT.dirty = false; lbarSync(); S.scr = await req('GET', '/screen?screen=' + encodeURIComponent(screenId)); render(true); }
 }
 function dragSetup() {
   const wrap = $('cw'); let st = null;
   wrap.onpointerdown = e => {
     const el = e.target.closest('.wb'); if (!el) { EDIT.sel = -1; drawCanvas(); drawProps(); return; }
     const i = +el.dataset.i; EDIT.sel = i;
+    if (EDIT.locked) { drawCanvas(); drawProps(); return; }
     st = { i, x0: e.clientX, y0: e.clientY, w0: clone(EDIT.layout.widgets[i]), rz: e.target.classList.contains('rz') ? e.target.dataset.h : '', moved: false, before: clone(EDIT.layout) };
     wrap.setPointerCapture(e.pointerId); drawCanvas(); drawProps(); e.preventDefault();
   };
@@ -843,16 +980,16 @@ SECTIONS.media = {
     const v = S.db.videos;
     if (SUB.media === 'posters') return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']]) + postersHtml();
     return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; saat simgesiyle gün ve saat verin.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']])
-      + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV için otomatik küçültülür; hazır olunca ekrana girer.',
+      + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV\'de takılmadan oynayacak şekilde otomatik hazırlanır.',
         `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div><div class="row mt" style="align-items:center"><span class="muted" style="flex:1;font-size:13px">Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın.</span><button class="btn g s" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
-      + card('YouTube bağlantısı ekle', 'Bir YouTube videosunun bağlantısını yapıştırın; ekranda sırası gelince belirttiğiniz süre boyunca oynar (video kısaysa baştan döner). Ses kapalı oynar.',
-        `<div class="row" style="align-items:center;gap:8px"><input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><input type="number" id="yt-dur" min="5" max="3600" value="30" style="width:90px" title="Süre (saniye)"><span class="muted">saniye</span><button class="btn" onclick="addYt()">Ekle</button></div>`)
+      + card('YouTube bağlantısı ekle', 'Bir YouTube videosunun bağlantısını yapıştırın; ekranda sırası gelince belirttiğiniz süre boyunca oynar (video kısaysa baştan döner). İsterseniz sesli oynatabilirsiniz.',
+        `<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><input type="number" id="yt-dur" min="5" max="3600" value="30" style="width:90px" title="Süre (saniye)"><span class="muted">saniye</span><label class="ckl" style="font-size:13px"><input type="checkbox" id="yt-sound"> Sesli oynat</label><button class="btn" onclick="addYt()">Ekle</button></div>`)
       + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div id="mbulk" class="mbulk" hidden></div><div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile${MSEL.has(x.id) ? ' picked' : ''}" draggable="true" data-id="${x.id}">
-          <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}${x.full ? '<span class="fbadge">Tam ekran</span>' : ''}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? '<div class="proc">Hazırlanıyor…</div>' : ''}</div>
+          <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}${x.full ? '<span class="fbadge">Tam ekran</span>' : ''}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}${x.sound ? ' · 🔊' : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? `<div class="proc">Hazırlanıyor…${x.job ? `<br><small style="font-weight:400;font-size:11.5px">${x.job.pos > 1 ? 'Sıra #' + x.job.pos + ' · ' : ''}~${x.job.etaSec || 15} sn kaldı</small>` : ''}</div>` : ''}</div>
           <div class="m"><span class="grip" title="Sürükleyerek sıralayın">${ic('grip-vertical')}</span><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g ib" onclick="openSched('video','${x.id}')" title="Zamanla">${ic('clock')}</button><button class="btn xs g ib" onclick="tileMenu(event,'${x.id}')" title="Diğer işlemler">${ic('ellipsis')}</button></div></div>`).join('')}</div>`
         : '<div class="empty">Henüz dosya yok. Yukarıdan ekleyin.</div>')
       + `<div class="grid g2">` + card('Fotoğraf süresi', 'Her fotoğraf ekranda kaç saniye kalsın.', `<div class="row"><input type="number" id="imgsec" min="3" max="120" value="${S.db.imageSeconds}" style="max-width:120px"><span class="muted">saniye</span><span style="flex:1"></span><button class="btn" data-save onclick="act('PUT','/settings',{imageSeconds:+$('imgsec').value},'Kaydedildi')">Kaydet</button></div>`)
-      + card('Depolama', '', `<div id="stor" class="muted">Hesaplanıyor…</div>`) + `</div>`;
+      + card('Depolama ve Oynatma Akıcılığı', '', `<div id="stor" class="muted">Hesaplanıyor…</div>`) + `</div>`;
   },
   async after() {
     if (SUB.media === 'posters') return drawPosterGallery();
@@ -874,12 +1011,12 @@ SECTIONS.media = {
       const [st, sys] = await Promise.all([req('GET', '/storage'), req('GET', '/system')]);
       const pct = Math.min(100, st.uploadsBytes / st.limitBytes * 100), unopt = S.db.videos.filter(v => !v.optimized && v.status !== 'processing').length;
       $('stor').innerHTML = `<div class="row"><b style="color:var(--text)">${fmtSize(st.uploadsBytes)}</b><span>/ ${fmtSize(st.limitBytes)} kullanılıyor</span></div><div class="meter"><i style="width:${Math.max(2, pct)}%"></i></div>`
-        + (!sys.ffmpeg ? '<p class="mt">Sunucuda video küçültme aracı (ffmpeg) yok; dosyalar olduğu gibi kullanılır.</p>' :
+        + (!sys.ffmpeg ? '<p class="mt">Videolar yüklendiği haliyle doğrudan oynatılır.</p>' :
           `<div class="row mt" style="align-items:center"><span style="flex:1">Video bitince sonraki içeriğe geçmeden önce bekleme:</span><select style="width:auto;min-width:190px" onchange="opt('videoGapSec',+this.value)">${[[0, 'Hemen'], [2, '2 sn'], [3, '3 sn — önerilen'], [5, '5 sn'], [10, '10 sn'], [20, '20 sn']].map(([v, l]) => `<option value="${v}" ${(S.db.videoGapSec === undefined ? 3 : S.db.videoGapSec) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
         + `<div class="row mt" style="align-items:center"><span style="flex:1">İçerikler arası geçiş (yumuşak sönme):</span><select style="width:auto;min-width:190px" onchange="opt('xfadeSec',+this.value)">${[[0.4, 'Hızlı'], [1.2, 'Yumuşak — önerilen'], [2.2, 'Çok yumuşak'], [3.5, 'Yavaş']].map(([v, l]) => `<option value="${v}" ${(S.db.xfadeSec === undefined ? 1.2 : S.db.xfadeSec) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
-        + `<div class="row mt" style="align-items:center"><span style="flex:1">Video kalitesi — zayıf TV kutusunda takılma olursa 720p deneyin:</span><select style="width:auto;min-width:190px" onchange="opt('videoMaxH',+this.value).then(()=>toast('Yeni yüklemeler bu kalitede işlenecek; eskiler için yeniden küçültmeye basın'))">${[[1080, '1080p — önerilen'], [720, '720p — daha akıcı'], [480, '480p — en akıcı']].map(([v, l]) => `<option value="${v}"${(S.db.videoMaxH || 1080) === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`
-          + (unopt ? `<div class="row mt"><span>${unopt} dosya küçültülmemiş.</span><button class="btn s g" onclick="act('POST','/media/optimize-all',undefined,'Küçültme başladı')">Şimdi küçült</button></div>`
-            : (S.db.videos || []).some(v => v.type === 'video') ? `<div class="row mt"><span class="muted" style="flex:1">Mevcut videoları seçilen kaliteyle yeniden işlemek için:</span><button class="btn s" onclick="reoptAll()">Videoları yeniden küçült</button></div>` : ''));
+        + `<div class="row mt" style="align-items:center"><span style="flex:1">TV'de oynatma akıcılığı — yavaş TV kutusunda takılma olursa "Akıcı" seçin:</span><select style="width:auto;min-width:190px" onchange="opt('videoMaxH',+this.value).then(()=>toast('Yeni yüklemeler bu ayarla hazırlanacak; mevcut videolar için aşağıdaki düğmeye basın'))">${[[1080, 'Yüksek kalite (önerilen)'], [720, 'Akıcı (yavaş TV\'ler için)'], [480, 'En akıcı (eski kutular için)']].map(([v, l]) => `<option value="${v}"${(S.db.videoMaxH || 1080) === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`
+          + (unopt ? `<div class="row mt"><span>${unopt} video henüz TV akıcılığına uyarlanmamış.</span><button class="btn s g" onclick="act('POST','/media/optimize-all',undefined,'Videolar TV için hazırlanıyor')">Şimdi TV'ye uyarla</button></div>`
+            : (S.db.videos || []).some(v => v.type === 'video') ? `<div class="row mt"><span class="muted" style="flex:1">Mevcut videoları seçilen akıcılık ayarına göre yeniden hazırlamak için:</span><button class="btn s" onclick="reoptAll()">Videoları TV'ye uyarla</button></div>` : ''));
     } catch (e) {}
   },
 };
@@ -900,15 +1037,40 @@ const mvMedia = (id, dir) => act('POST', `/videos/${id}/move`, { dir });
 const durTxt = x => x.type === 'video' ? (x.dur ? Math.floor(x.dur / 60) + ':' + String(Math.round(x.dur % 60)).padStart(2, '0') : '') : (S.db.imageSeconds || 10) + ' sn';
 // Başa / sona al: sıra istemciden hesaplanıp tek seferde gönderilir
 function mvEdge(id, first) { const ids = S.db.videos.map(x => x.id).filter(x => x !== id); first ? ids.unshift(id) : ids.push(id); act('POST', '/videos/reorder', { ids }, 'Sıra kaydedildi'); }
-// "⋯" menüsü: kartın ikincil işlemleri (sıralama, aç/kapat, sil)
+// "⋯" menüsü: kartın ikincil işlemleri (sıralama, ses, ekran seçimi, aç/kapat, sil)
 function tileMenu(ev, id) {
   ev.stopPropagation(); const v = S.db.videos.find(x => x.id === id); if (!v) return;
-  popMenu(ev.currentTarget, [
+  const isVid = !v.type || v.type === 'video' || v.type === 'youtube';
+  const scrs = (S.scr && S.scr.screens) || [];
+  const items = [
     ['Başa al', 'arrow-up-to-line', () => mvEdge(id, true)], ['Bir öne al', 'chevron-left', () => mvMedia(id, 'up')],
     ['Bir arkaya al', 'chevron-right', () => mvMedia(id, 'down')], ['Sona al', 'arrow-down-to-line', () => mvEdge(id, false)], null,
     [v.full ? 'Tam ekranı kapat' : 'Tam ekran göster', 'monitor', () => togFull(id)],
-    [v.hidden ? 'Ekranda göster' : 'Ekrandan kaldır (gizle)', v.hidden ? 'eye' : 'eye-off', () => togHide(id)], null,
-    ['Sil', 'trash-2', () => delMedia(id), 1]]);
+  ];
+  if (isVid) items.push([v.sound ? 'Sesi kapat (sessiz oynat)' : 'Sesli oynat (müziği kısar)', v.sound ? 'volume-x' : 'volume-2', () => togSound(id)]);
+  if (scrs.length > 1) items.push(['Hangi ekranlarda oynasın?', 'tv', () => openVidScreens(id)]);
+  items.push([v.hidden ? 'Ekranda göster' : 'Ekrandan kaldır (gizle)', v.hidden ? 'eye' : 'eye-off', () => togHide(id)], null,
+    ['Sil', 'trash-2', () => delMedia(id), 1]);
+  popMenu(ev.currentTarget, items);
+}
+const togSound = id => {
+  const v = S.db.videos.find(x => x.id === id); if (!v) return;
+  act('PUT', '/videos/' + id, { sound: !v.sound }, v.sound ? 'Video sesi kapatıldı' : 'Bu video sesli oynayacak (arka plan müziği otomatik kısılır)');
+};
+function openVidScreens(id) {
+  const v = S.db.videos.find(x => x.id === id); if (!v) return;
+  const scrs = (S.scr && S.scr.screens) || [{ id: 'main', name: 'Ana Ekran' }];
+  const cur = new Set(Array.isArray(v.screens) ? v.screens : []);
+  openModal(`<h3 style="margin:0 0 6px">Hangi ekranlarda oynasın?</h3>
+    <p class="muted" style="margin:0 0 14px">Hiçbirini seçmezseniz veya tümünü seçerseniz bu içerik tüm ekranlarda oynar.</p>
+    <div class="chips" id="vs-chips">${scrs.map(s => `<span class="chip ${!cur.size || cur.has(s.id) ? 'on' : ''}" data-sid="${esc(s.id)}" onclick="this.classList.toggle('on')">${esc(s.name)}</span>`).join('')}</div>
+    <div class="row end mt"><button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" onclick="saveVidScreens('${id}')">Kaydet</button></div>`);
+}
+async function saveVidScreens(id) {
+  const scrs = (S.scr && S.scr.screens) || [];
+  const picked = [...document.querySelectorAll('#vs-chips .chip.on')].map(el => el.dataset.sid);
+  const screens = (!picked.length || picked.length === scrs.length) ? [] : picked;
+  if (await act('PUT', '/videos/' + id, { screens }, 'Ekran seçimi kaydedildi')) closeModal();
 }
 // Çoklu seçim (A5): seçilenler için üstte işlem çubuğu
 const MSEL = new Set();
@@ -946,7 +1108,8 @@ const togFull = id => { const v = S.db.videos.find(x => x.id === id); act('PUT',
 const togHide = id => { const v = S.db.videos.find(x => x.id === id); act('PUT', '/videos/' + id, { hidden: !v.hidden }, v.hidden ? 'Ekranda gösteriliyor' : 'Gizlendi; ekranda oynamaz'); };
 async function addYt() {
   const url = $('yt-url').value.trim(); if (!url) return toast('Bağlantıyı yapıştırın', true);
-  const ok = await act('POST', '/videos/youtube', { url, dur: $('yt-dur').value }, 'YouTube içeriği eklendi');
+  const sound = !!($('yt-sound') && $('yt-sound').checked);
+  const ok = await act('POST', '/videos/youtube', { url, dur: $('yt-dur').value, sound }, 'YouTube içeriği eklendi');
   if (ok) refresh();
 }
 function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return openModal(`<iframe src="https://www.youtube.com/embed/${esc(v.yt)}?rel=0" style="width:100%;aspect-ratio:16/9;border:0" allow="encrypted-media"></iframe><div class="muted">${i + 1}. ${esc(v.name)}</div>`); const u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
@@ -1143,7 +1306,7 @@ function hdCatRows(d) {
   return `<div class="chips" role="group" aria-label="Hangi ürünlerde?">${hchip(all, `hdSet(()=>{hdc().cats=hdc().cats.map(()=>${!all})})`, 'Tüm menü')}</div>
     <div class="hh-cats mt">${cats.map((c, i) => {
       const on = !!d.cats[i], np = c.items.filter(hdNoPrice).length;
-      return `<button type="button" class="hh-cat${on ? ' on' : ''}" aria-pressed="${on}" onclick="hdSet(()=>{hdc().cats[${i}]=!hdc().cats[${i}]})"><i class="hh-ck" aria-hidden="true"></i><b>${esc(c.name || 'Kategori')}</b><span class="m">Ürün: ${c.items.length}</span>${on && np ? `<span class="w" title="Fiyatı olmayan ürüne indirim uygulanmaz">Fiyatsız: ${np}</span>` : ''}</button>`;
+      return `<button type="button" class="hh-cat${on ? ' on' : ''}" aria-pressed="${on}" onclick="hdSet(()=>{hdc().cats[${i}]=!hdc().cats[${i}]})"><i class="hh-ck" aria-hidden="true"></i><b>${esc(c.name || 'Kategori')}</b><span class="m">Ürün: ${c.items.length}</span>${on && np ? `<span class="w" title="Fiyatı olmayan ürüne indirim uygulanmaz">Fiyat yazılmamış: ${np} ürün</span>` : ''}</button>`;
     }).join('')}</div>`;
 }
 // Önizleme 1: gerçek fiyat listesi — seçili indirim saati geçerliyken; indirimli kategorilerde eski fiyat üstü çizili, yanında yeni fiyat
@@ -1179,7 +1342,7 @@ SECTIONS.happy = {
     const top = `<div class="card hh-top"><div class="hh-tabs2" id="hh-tabs" role="group" aria-label="İndirim saatleri">${hdTabsHtml()}</div>`
       + (d ? `<div class="row hh-row"><div class="hh-st ${hdState(d).k}" id="hh-sum" aria-live="polite">${hdState(d).html}</div><button type="button" class="btn xs d" onclick="hdDel()">Kaldır</button></div>${hdClash(d) ? '<p class="hh-clash">Bu saat başka bir indirim saatiyle çakışıyor; ortak kategorilerde daha yüksek indirim uygulanır.</p>' : ''}`
         : `<p class="muted" style="margin:12px 0 0">Henüz indirim saati yok. Örneğin hafta içi 17:00–19:00 arası kategorilerde %20 indirim ekleyin; saat gelince fiyatlar kendiliğinden düşer, bitince eski hâline döner.</p>`) + `</div>`;
-    const base = head('Happy Hours', 'Belirli gün ve saatlerde indirim; isterseniz ekranda fotoğraflı kart.', `<button class="btn" data-save onclick="saveHappy()">Kaydet</button>`) + lock('Happy Hours') + top;
+    const base = head('İndirim Saatleri (Happy Hour)', 'Belirli gün ve saatlerde otomatik indirim; isterseniz ekranda fotoğraflı duyuru kartı.', `<button class="btn" data-save onclick="saveHappy()">Kaydet</button>`) + lock('İndirim Saatleri') + top;
     if (!d) return base;
     const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
     const dayChips = DAYS.map((n, i) => hchip(d.days.includes(i + 1), `hdDay(${i + 1})`, n)).join('');
@@ -1271,14 +1434,38 @@ SECTIONS.menu = {
 };
 function drawMenu() {
   const c = MENU.categories;
-  $('mcats').innerHTML = c.length ? c.map((cat, ci) => `<div class="mcat"><div class="chd"><input type="text" value="${esc(cat.name)}" placeholder="Kategori adı" maxlength="40" oninput="MENU.categories[${ci}].name=this.value;MENU.__dirty=1" style="font-weight:700">
-      <button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},1))">↓</button><button class="btn xs g" onclick="openSched('cat',${ci})" title="Bu kategori hangi gün ve saatlerde görünsün">⏱ ${cat.sch ? esc(schShort(cat.sch)) : 'Her zaman'}</button>${hhOf(MENU).length ? `<a class="btn xs ${catHH(cat).length ? '' : 'g'}" href="#happy" title="İndirim saatlerini Happy Hours sayfasında seçin">% ${catHH(cat).length ? esc(catHH(cat).map(h => h.label || 'Happy Hour').join(', ')) : 'İndirimsiz'}</a>` : ''}<button class="btn xs d" onclick="UI.ask('Kategori silinsin mi?', { ok: 'Sil', danger: true }).then(ok=>{if(ok)mE(()=>MENU.categories.splice(${ci},1))})">Sil</button></div>
+  $('mcats').innerHTML = (c.length ? c.map((cat, ci) => `<div class="mcat"><div class="chd"><input type="text" value="${esc(cat.name)}" placeholder="Kategori adı" maxlength="40" oninput="MENU.categories[${ci}].name=this.value;MENU.__dirty=1" style="font-weight:700">
+      <button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},1))">↓</button><button class="btn xs g" onclick="openSched('cat',${ci})" title="Bu kategori hangi gün ve saatlerde görünsün">⏱ ${cat.sch ? esc(schShort(cat.sch)) : 'Her zaman'}</button>${hhOf(MENU).length ? `<a class="btn xs ${catHH(cat).length ? '' : 'g'}" href="#happy" title="İndirim saatlerini İndirim Saatleri sayfasında seçin">% ${catHH(cat).length ? esc(catHH(cat).map(h => h.label || 'Happy Hour').join(', ')) : 'İndirimsiz'}</a>` : ''}<button class="btn xs d" onclick="UI.ask('Kategori silinsin mi?', { ok: 'Sil', danger: true }).then(ok=>{if(ok)mE(()=>MENU.categories.splice(${ci},1))})">Sil</button></div>
       ${langList().length ? `<div class="mtr">${langList().map(l => `<input type="text" placeholder="${LANG_NAMES[l]} kategori adı" maxlength="40" value="${esc((cat.t || {})[l] || '')}" oninput="mT(${ci},-1,'${l}','name',this.value)">`).join('')}</div>` : ''}
-      ${cat.items.map((it, ii) => `<div class="mrow${catHH(cat).length ? ' hp' : ''}"><input type="text" value="${esc(it.name)}" placeholder="Ürün" maxlength="60" oninput="MENU.categories[${ci}].items[${ii}].name=this.value;MENU.__dirty=1"><input class="md" type="text" value="${esc(it.desc || '')}" placeholder="Açıklama (isteğe bağlı)" maxlength="90" oninput="MENU.categories[${ci}].items[${ii}].desc=this.value;MENU.__dirty=1"><input type="text" value="${esc(it.price)}" placeholder="Fiyat" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].price=this.value;MENU.__dirty=1">${catHH(cat).length ? `<input type="text" class="mhp" value="${esc(it.hp || '')}" placeholder="${esc(happyPrice(it.price, cat) || 'İnd. fiyat')}" title="İndirim saatindeki fiyat (boşsa %${hhPct(cat)} indirimle hesaplanır)" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].hp=this.value;MENU.__dirty=1">` : ''}<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn xs g" title="${it.kcal ? 'Kaloriyi kaldır' : 'Ürün adından kalori bilgisini getir'}" onclick="kcalBtn(${ci},${ii})">${it.kcal ? '🔥 ' + esc(it.kcal) + ' ✕' : '🔥'}</button><button class="btn xs ${it.off ? 'd' : 'g'}" title="Tükendi olarak işaretle" onclick="mE(()=>{const x=MENU.categories[${ci}].items[${ii}];x.off=!x.off})">${it.off ? 'Tükendi' : 'Var'}</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories[${ci}].items,${ii},-1))">↑</button><button class="btn xs d" onclick="mE(()=>MENU.categories[${ci}].items.splice(${ii},1))">✕</button></span></div>
+      ${cat.items.map((it, ii) => `<div class="mrow${catHH(cat).length ? ' hp' : ''}"><button type="button" class="mthumb" title="${it.img ? 'Ürün fotoğrafını değiştir / kaldır' : 'Ürün fotoğrafı ekle'}" onclick="pickMenuItemImg(${ci},${ii})">${it.img ? `<img src="${esc(it.img)}" alt="">` : ic('camera')}</button><input type="text" value="${esc(it.name)}" placeholder="Ürün" maxlength="60" oninput="MENU.categories[${ci}].items[${ii}].name=this.value;MENU.__dirty=1"><input class="md" type="text" value="${esc(it.desc || '')}" placeholder="Açıklama (isteğe bağlı)" maxlength="90" oninput="MENU.categories[${ci}].items[${ii}].desc=this.value;MENU.__dirty=1"><input type="text" value="${esc(it.price)}" placeholder="Fiyat" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].price=this.value;MENU.__dirty=1">${catHH(cat).length ? `<input type="text" class="mhp" value="${esc(it.hp || '')}" placeholder="${esc(happyPrice(it.price, cat) || 'İnd. fiyat')}" title="İndirim saatindeki fiyat (boşsa %${hhPct(cat)} indirimle hesaplanır)" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].hp=this.value;MENU.__dirty=1">` : ''}<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn xs g" title="${it.kcal ? 'Kaloriyi kaldır' : 'Ürün adından kalori bilgisini getir'}" onclick="kcalBtn(${ci},${ii})">${it.kcal ? '🔥 ' + esc(it.kcal) + ' ✕' : '🔥'}</button><button class="btn xs ${it.off ? 'd' : 'g'}" title="Tükendi olarak işaretle" onclick="mE(()=>{const x=MENU.categories[${ci}].items[${ii}];x.off=!x.off})">${it.off ? 'Tükendi' : 'Var'}</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories[${ci}].items,${ii},-1))">↑</button><button class="btn xs d" onclick="mE(()=>MENU.categories[${ci}].items.splice(${ii},1))">✕</button></span></div>
       ${langList().length ? `<div class="mtr">${langList().map(l => `<input type="text" placeholder="${LANG_NAMES[l]}: ${esc(it.name || 'ürün adı')}" maxlength="60" value="${esc(((it.t || {})[l] || {}).name || '')}" oninput="mT(${ci},${ii},'${l}','name',this.value)"><input class="md" type="text" placeholder="${LANG_NAMES[l]} açıklama" maxlength="90" value="${esc(((it.t || {})[l] || {}).desc || '')}" oninput="mT(${ci},${ii},'${l}','desc',this.value)">`).join('')}</div>` : ''}`).join('')}
       <button class="btn xs g" onclick="mE(()=>MENU.categories[${ci}].items.push({name:'',price:'',desc:''}))">＋ Ürün</button></div>`).join('')
-    : '<div class="empty" style="margin-bottom:14px">Henüz kategori yok. "Kategori ekle" ile başlayın ya da aşağıdan toplu yapıştırın.</div>';
+    : '<div class="empty" style="margin-bottom:14px">Henüz kategori yok. "Kategori ekle" ile başlayın ya da aşağıdan toplu yapıştırın.</div>')
+    + `<input type="file" id="mitem-imgf" accept="image/*" hidden onchange="upMenuItemImg(this)">`;
   drawFlow();
+}
+let __mImgTarget = null;
+async function pickMenuItemImg(ci, ii) {
+  const it = (MENU.categories[ci] || {}).items && MENU.categories[ci].items[ii];
+  if (!it) return;
+  if (it.img) {
+    const keep = await UI.ask('Ürün fotoğrafını değiştirmek mi yoksa kaldırmak mı istersiniz?', { title: it.name || 'Ürün Fotoğrafı', ok: 'Yeni Fotoğraf Yükle', cancel: 'Fotoğrafı Kaldır' });
+    if (!keep) { mE(() => { delete it.img; }); toast('Ürün fotoğrafı kaldırıldı; Kaydet\'e basmayı unutmayın'); return; }
+  }
+  __mImgTarget = [ci, ii];
+  const f = $('mitem-imgf');
+  if (f) f.click();
+}
+async function upMenuItemImg(inp) {
+  const f = inp.files && inp.files[0]; inp.value = '';
+  if (!f || !__mImgTarget) return;
+  const [ci, ii] = __mImgTarget;
+  const fd = new FormData(); fd.append('file', f);
+  try {
+    const j = await req('POST', '/assets', fd);
+    mE(() => { MENU.categories[ci].items[ii].img = j.url; });
+    toast('Ürün fotoğrafı eklendi; Kaydet\'e basmayı unutmayın');
+  } catch (e) { toast(e.message, true); }
 }
 // ---- indirim saati (happy hour) ----
 const pnum = v => { const x = String(v || '').replace(/\s|₺|TL/gi, ''); if (!/^\d[\d.,]*$/.test(x)) return null; const n = Number(/,\d{1,2}$/.test(x) ? x.replace(/\./g, '').replace(',', '.') : x.replace(/[.,](?=\d{3}(\D|$))/g, '')); return isFinite(n) ? n : null; };
@@ -1396,8 +1583,8 @@ SECTIONS.sport = {
     const TABS = [['leagues', 'Maçlar ve ligler'], ['table', 'Puan durumu'], ['big', 'Büyük maç']];
     const body = { leagues: () => (''
       + card('Takip edilen ligler', 'Seçtiğiniz liglerin bugünkü maçları ve canlı skorları gösterilir; gol olunca ekranda animasyon çıkar.',
-        Object.entries(groups).map(([g, items]) => { const n = items.filter(l => L.enabled.includes(l.code)).length; return `<details class="lgrp" ${n ? 'open' : ''}><summary><b>${esc(g)}</b><span class="cnt" data-of="${items.length}">${n}/${items.length}</span></summary><div class="chips">${items.map(l => `<span class="chip ${L.enabled.includes(l.code) ? 'on' : ''}" data-code="${l.code}" onclick="this.classList.toggle('on');spCount()">${esc(l.label)}</span>`).join('')}</div></details>`; }).join('')
-        + `<div class="row end"><button class="btn" onclick="saveLeagues()">Ligleri kaydet</button></div>`)
+        Object.entries(groups).map(([g, items]) => { const n = items.filter(l => L.enabled.includes(l.code)).length; return `<details class="lgrp" ${n ? 'open' : ''}><summary><b>${esc(g)}</b><span class="cnt" data-of="${items.length}">${n}/${items.length}</span></summary><div class="chips">${items.map(l => `<span class="chip ${L.enabled.includes(l.code) ? 'on' : ''}" data-code="${l.code}" onclick="this.classList.toggle('on');spCount();this.closest('.card').classList.add('dirty');savebar()">${esc(l.label)}</span>`).join('')}</div></details>`; }).join('')
+        + `<div class="row end"><button class="btn" data-save onclick="saveLeagues()">Ligleri kaydet</button></div>`)
 ), table: () => (''
       + card('Puan durumu', 'Lig maçlarının ardından o ligin puan tablosu gösterilir.', `<div class="chips">${tbl.map(l => `<span class="chip ${(L.hideTables || []).includes(l.code) ? '' : 'on'}" onclick="togTable('${l.code}')">${esc(l.label)}</span>`).join('') || '<span class="muted">Puan tablosu olan bir lig seçin.</span>'}</div>`,
         sw(db.showStandings !== false, "opt('showStandings',this.checked).then(()=>render(true))"), db.showStandings === false ? 'off' : '')
@@ -1599,6 +1786,10 @@ function updateCampPrev(id) {
 async function uploadCampImg(id, input) {
   const file = input.files && input.files[0];
   if (!file) return;
+  try {
+    const dim = await new Promise(res => { const im = new Image(); im.onload = () => res({ w: im.naturalWidth, h: im.naturalHeight }); im.onerror = () => res(null); im.src = URL.createObjectURL(file); });
+    if (dim && dim.h > dim.w) toast('Dikey fotoğraf yüklediniz; yatay TV ekranında yanlarda boşluk kalmaması için yatay (16:9) görsel önerilir');
+  } catch (e) {}
   const fd = new FormData();
   fd.append('file', file);
   try {
@@ -1705,7 +1896,7 @@ SECTIONS.info = {
       + lock('Bilgi bandı')
       + card('Genel süre', 'Her sayfa ekranda bu kadar kalır. Aşağıda bir içerik için ayrı süre girerseniz o içerik için o geçerli olur. Tüm ekranlar sunucu saatine göre aynı sayfada kalır.',
         `<div class="ibg"><input type="range" id="ic-def" min="5" max="60" step="1" value="${defSec}" oninput="$('ic-defv').textContent=this.value+' sn'"><b id="ic-defv">${defSec} sn</b></div>
-         <div class="row end mt"><button class="btn" onclick="saveInfoCfg()">Süreleri kaydet</button></div>`)
+         <div class="row end mt"><button class="btn" data-save onclick="saveInfoCfg()">Süreleri kaydet</button></div>`)
       + `<div class="ibgrid">`
       + tile('⚽', 'Maç sayfaları', 'Seçili liglerin yaklaşan maçları', null, '', durIn('league') + `<p class="muted" style="font-size:12px;margin:0">Ligleri <a href="#sport">Spor</a> sayfasından seçin.</p>`)
       + tile('🏆', 'Puan durumu', 'Ligin puan tablosu (birden çok sayfa olabilir)', db.showStandings !== false, "opt('showStandings',this.checked)", durIn('table'))
@@ -1863,7 +2054,7 @@ async function pairTv() {
   if (code.length !== 6) return toast('TV ekranındaki 6 haneli kodu girin', true);
   if (await act('POST', '/pair', { code }, 'Cihaz bağlandı; birkaç saniye içinde ekran açılacak', false)) setTimeout(refresh, 2500);
 }
-const renDev = (id, cur) => { const n = prompt('Cihaz adı (örn. Salon kutusu):', cur); if (n !== null) act('PUT', '/devices/' + id, { name: n }, 'Kaydedildi'); };
+const renDev = async (id, cur) => { const n = await UI.ask('Cihaz adı (örn. Salon kutusu):', { title: 'Cihazı Adlandır', input: cur || '', ok: 'Kaydet' }); if (n !== null && n !== false) act('PUT', '/devices/' + id, { name: n }, 'Kaydedildi'); };
 const delDev = async id => { if (await UI.ask('Bu cihaz listeden kaldırılsın mı? Kutu bağlantısını kaybeder.', { ok: 'Sil', danger: true })) act('DELETE', '/devices/' + id, undefined, 'Cihaz kaldırıldı'); };
 const logoutDev = async id => { if (await UI.ask('TV kutusundaki uygulamadan çıkış yapılsın mı? Ekran giriş ekranına döner; yeniden bağlamak için kod ya da kullanıcı adı ve şifre gerekir.')) act('POST', '/devices/' + id + '/logout', undefined, 'Çıkış yapıldı; TV giriş ekranına döndü'); };
 async function addUser() { if (await act('POST', '/users', { username: $('u-n').value.trim(), password: $('u-p').value }, 'Kullanıcı eklendi', false)) { S.me = await req('GET', '/me'); render(true); } }
@@ -1945,11 +2136,23 @@ function postersHtml() {
     + card('Şablonlar', 'Birini seçin, yazıları değiştirin. Renkler ekranınızın temasından gelir; Tasarım → Renk ve logo bölümünde renkleri değiştirince afişler de değişir.',
       `<div class="pgal">${Object.entries(SPPoster.TEMPLATES).filter(([, t]) => !t.hidden).map(([k, t]) => `<button class="pcard" onclick="editPoster(null,'${k}')"><div class="pmini" data-tpl="${k}" style="${themeVars()}"></div><b>${esc(t.name)}</b></button>`).join('')}</div>`)
     + card(`Afişleriniz <span class="muted">· ${mine.length}</span>`, 'Medya sırasında yer alırlar; sırayı "Medya ve sıra" sekmesinden değiştirebilirsiniz.',
-      mine.length ? `<div class="pgal">${mine.map(x => `<button class="pcard" onclick="${x.design ? `openStudio('${x.id}')` : `editPoster('${x.id}')`}">${x.design ? `<div class="pmini"><img src="${S.me.upBase}${x.file}" loading="lazy" alt=""></div>` : `<div class="pmini" data-pid="${x.id}" style="${themeVars()}"></div>`}<b>${esc(x.name)}</b><span class="muted" style="font-size:12px">${x.sch ? '⏱ ' + esc(schShort(x.sch)) : 'Her zaman'}${x.hidden ? ' · gizli' : ''}</span></button>`).join('')}</div>` : '<div class="empty">Henüz afiş yok. Yukarıdan bir şablon seçin.</div>');
+      mine.length ? `<div class="pgal">${mine.map(x => `<button class="pcard" onclick="${x.design ? `openStudio('${x.id}')` : `editPoster('${x.id}')`}">${x.design ? `<div class="pmini"><img src="${S.me.upBase}${x.file}" loading="lazy" alt=""></div>` : `<div class="pmini" data-pid="${x.id}" style="${themeVars()}"></div>`}<b>${esc(x.name)}</b><span class="muted" style="font-size:12px">${x.sch ? '⏱ ' + esc(schShort(x.sch)) : 'Her zaman'}${x.hidden ? ' · gizli' : ''}</span></button>`).join('')}</div>` : '<div class="empty">Henüz afiş yok. Yukarıdan bir şablon seçin.</div>')
+    + card('🎬 Telifsiz Hazır Video ve Fotoğraf Havuzu', 'Kendi fotoğraf/videonuz yoksa mekânınızda hemen oynatabileceğiniz yüksek kaliteli telifsiz içerikler. Tek tıkla medya listenize eklenir.',
+      `<div id="stock-gal" class="pgal"><div class="muted">Yükleniyor…</div></div>`);
 }
-function drawPosterGallery() {
+async function drawPosterGallery() {
   drawThumbs();
   document.querySelectorAll('.pmini[data-tpl]').forEach(el => { el.innerHTML = SPPoster.html({ tpl: el.dataset.tpl, fields: {} }); SPPoster.fit(el.firstChild); });
+  const sg = $('stock-gal');
+  if (sg) {
+    try {
+      const items = await req('GET', '/media/stock');
+      sg.innerHTML = items.map(it => `<div class="pcard" style="cursor:default"><div class="pmini"><img src="${esc(it.thumb)}" loading="lazy" alt="${esc(it.name)}" style="width:100%;height:100%;object-fit:cover"></div><b>${esc(it.name)}</b><span class="muted" style="font-size:12px">${esc(it.cat)} · ${it.type === 'youtube' ? 'Video (' + it.dur + ' sn)' : 'Fotoğraf'}</span><button class="btn xs mt" onclick="addStockMedia('${esc(it.id)}')">+ Medyama ekle</button></div>`).join('');
+    } catch (e) { sg.innerHTML = `<div class="muted">${esc(e.message)}</div>`; }
+  }
+}
+async function addStockMedia(id) {
+  await act('POST', '/media/stock', { id }, 'Hazır içerik medya listenize eklendi');
 }
 let PED = null; // düzenlenen afiş
 function editPoster(id, tpl) {
@@ -1986,9 +2189,35 @@ const LANG_NAMES = { tr: 'Türkçe', en: 'İngilizce', de: 'Almanca', ru: 'Rusç
 const langList = () => ((S.db && S.db.lang) || {}).list || [];
 function langCard() {
   const L = S.db.lang || {}, list = L.list || [];
-  return card('🌍 Diller', 'Turist müşterileriniz için fiyat listesi, duyuru metni ve afişler seçtiğiniz dillerde sırayla döner. Türkçe her zaman ilk dildir; çevirileri aşağıdaki alanlara siz yazarsınız.',
+  return card('🌍 Diller', 'Turist müşterileriniz için fiyat listesi, duyuru metni ve afişler seçtiğiniz dillerde sırayla döner. Türkçe her zaman ilk dildir; çevirileri aşağıdaki alanlara yazabilir veya otomatik çevirebilirsiniz.',
     `<div class="chips">${Object.entries(LANG_NAMES).filter(([k]) => k !== 'tr').map(([k, n]) => `<span class="chip ${list.includes(k) ? 'on' : ''}" onclick="togLang('${k}')">${n}</span>`).join('')}</div>
-     <div class="row mt"><span class="muted">Dil değiştirme aralığı</span><input type="number" min="5" max="60" value="${L.sec || 12}" style="max-width:90px" onchange="act('PUT','/lang',{sec:+this.value},'Kaydedildi',false).then(()=>{S.db.lang={...(S.db.lang||{}),sec:+this.value}})"><span class="muted">saniye</span></div>`);
+     <div class="row mt" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><div class="row"><span class="muted">Dil değiştirme aralığı</span><input type="number" min="5" max="60" value="${L.sec || 12}" style="max-width:90px" onchange="act('PUT','/lang',{sec:+this.value},'Kaydedildi',false).then(()=>{S.db.lang={...(S.db.lang||{}),sec:+this.value}})"><span class="muted">saniye</span></div>
+     ${list.length ? `<button class="btn g s" onclick="autoTranslateMenu()">✨ Eksik çevirileri otomatik doldur</button>` : ''}</div>`);
+}
+async function autoTranslateMenu() {
+  const list = langList(); if (!list.length || !MENU) return;
+  let filled = 0;
+  toast('Çeviriler hazırlanıyor…');
+  for (const l of list) {
+    const texts = [], refs = [];
+    MENU.categories.forEach(c => {
+      c.t = c.t || {};
+      if (c.name && !c.t[l]) { texts.push(c.name); refs.push(v => { c.t[l] = v; }); }
+      (c.items || []).forEach(it => {
+        it.t = it.t || {}; it.t[l] = it.t[l] || {};
+        if (it.name && !it.t[l].name) { texts.push(it.name); refs.push(v => { it.t[l].name = v; }); }
+        if (it.desc && !it.t[l].desc) { texts.push(it.desc); refs.push(v => { it.t[l].desc = v; }); }
+      });
+    });
+    if (!texts.length) continue;
+    try {
+      const r = await req('POST', '/translate', { target: l, texts });
+      (r.translations || []).forEach((tr, i) => { if (tr && refs[i]) { refs[i](tr); filled++; } });
+    } catch (e) { return toast('Çeviri hatası: ' + e.message, true); }
+  }
+  if (!filled) return toast('Tüm alanların çevirisi zaten dolu');
+  MENU.__dirty = 1; drawMenu(); savebar();
+  toast(`${filled} metin otomatik çevrildi. Kontrol edip "Kaydet"e basın.`);
 }
 async function togLang(l) {
   const cur = langList(), list = cur.includes(l) ? cur.filter(x => x !== l) : [...cur, l];
@@ -2144,9 +2373,14 @@ function devDrawInfo() {
   $('dvd-info').innerHTML = (r.playing ? `<div class="dv-now">${ic('play-f')}<span>Şu an: ${esc(r.playing)}</span></div>` : '')
     + (flags.length ? `<section class="dvd-s"><h4>Uyarılar</h4>${flags.map(f => `<div class="dv-flag">${ic('triangle-alert')}<span>${esc(f)}</span></div>`).join('')}</section>` : '')
     + (devRes(r, on) ? `<section class="dvd-s">${devRes(r, on)}</section>` : '');
-  $('dvd-tools').innerHTML = on ? `<div class="dv-act"><button type="button" class="dv-b" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button><button type="button" class="dv-b" onclick="perfDev('${d.id}')">${ic('activity')}Takılma testi</button></div>` : `<div class="dv-off">${ic('wifi-off')}<span>Cihaz kapalı: araçlar yalnız çevrimiçi cihazda çalışır.</span></div>`;
-  $('dvd-more').innerHTML = `<section class="dvd-s"><h4>Bilgiler</h4>${rows.length ? `<dl class="dvd-dl">${rows.map(([k, v, raw]) => `<dt>${k}</dt><dd>${raw ? v : esc(String(v))}</dd>`).join('')}</dl>` : '<p class="muted">Henüz bilgi gelmedi.</p>'}</section>
+  const scrs = (S.scr && S.scr.screens) || [{ id: 'main', name: 'Ana Ekran' }];
+  $('dvd-tools').innerHTML = on ? `<div class="dv-act"><button type="button" class="dv-b" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button><button type="button" class="dv-b" onclick="perfDev('${d.id}')">${ic('activity')}Takılma testi</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','restart','Uygulama yeniden başlatılıyor')">${ic('refresh-cw')}Uygulamayı yeniden başlat</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','clear_cache','Önbellek temizlenip yenileniyor')">${ic('trash-2')}Önbelleği temizle</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','sync_time','Saat eşitlendi')">${ic('clock')}Saati eşitle</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','sleep','Ekran karartıldı')">${ic('eye-off')}Ekranı karart</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','wake','Ekran uyandırıldı')">${ic('sun')}Ekranı uyandır</button></div>` : `<div class="dv-off">${ic('wifi-off')}<span>Cihaz kapalı: araçlar yalnız çevrimiçi cihazda çalışır.</span></div>`;
+  $('dvd-more').innerHTML = `<section class="dvd-s"><h4>Gösterilecek ekran profili</h4><p class="muted" style="font-size:12.5px;margin:0 0 8px">Farklı TV'lerde farklı düzen veya videolar göstermek için Tasarım sekmesinden yeni ekran profili açıp buradan seçin.</p><select onchange="act('PUT','/devices/${d.id}',{screen_id:this.value},'Ekran profili atandı')">${scrs.map(s => `<option value="${esc(s.id)}" ${(d.screen_id || 'main') === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></section>
+    <section class="dvd-s"><h4>Bilgiler</h4>${rows.length ? `<dl class="dvd-dl">${rows.map(([k, v, raw]) => `<dt>${k}</dt><dd>${raw ? v : esc(String(v))}</dd>`).join('')}</dl>` : '<p class="muted">Henüz bilgi gelmedi.</p>'}</section>
     <section class="dvd-s"><div class="swr"><div class="b"><b>Yerel ekran (deneysel)</b><span>Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+)</span></div>${sw(!!d.native, `act('PUT','/devices/${d.id}',{native:this.checked},'Kaydedildi')`)}</div></section>`;
+}
+async function devCmd(id, cmd, msg) {
+  await act('POST', `/devices/${id}/cmd`, { cmd }, msg || 'Komut gönderildi', false);
 }
 addEventListener('keydown', e => { if (e.key === 'Escape' && DRW) devClose(); });
 addEventListener('hashchange', () => { if (DRW) devClose(); });
@@ -2281,10 +2515,10 @@ SECTIONS.stats = {
       + stat(pk.v ? `${wd(pk.d)} ${hh(pk.h)}` : '—', 'İçeriklerin en çok gösterildiği zaman')
       + `</div>`
       + impactCard(j, nf)
-      + card('Günlük ekran süresi', 'Saat cinsinden; bağlı tüm kutuların toplamı.', `<div class="bars" role="img" aria-label="Günlük ekran süresi grafiği">${j.daily.map(d => `<div title="${new Date(d.day + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' })}: ${hrs(d.online)} saat, ${d.plays} oynatma"><i style="height:${Math.round(d.online / max * 100)}%"></i></div>`).join('')}</div>
-        <div class="row" style="justify-content:space-between;font-size:12px" class="muted"><span class="muted">${fmtD(j.daily[0].day)}</span><span class="muted">${fmtD(j.daily[j.daily.length - 1].day)}</span></div>`)
+      + card('Günlük ekran süresi', 'Saat cinsinden; bağlı tüm kutuların toplamı. Telefondan bir güne dokunarak ayrıntısını görebilirsiniz.', `<div class="bars-wrap"><div class="bars-y"><span>${hrs(max)} sa</span><span>${hrs(max / 2)} sa</span><span>0 sa</span></div><div class="bars" role="img" aria-label="Günlük ekran süresi grafiği">${j.daily.map(d => { const tip = `${new Date(d.day + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' })}: ${hrs(d.online)} saat açık, ${d.plays} içerik oynatma`; return `<div title="${esc(tip)}" data-tip="${esc(tip)}" onclick="showBarTip(this)"><i style="height:${Math.round(d.online / max * 100)}%"></i></div>`; }).join('')}</div></div>
+        <div class="row" style="justify-content:space-between;font-size:12px;padding-left:44px" class="muted"><span class="muted">${fmtD(j.daily[0].day)}</span><span id="bar-tip" class="bar-tip">Bir çubuğa dokunun</span><span class="muted">${fmtD(j.daily[j.daily.length - 1].day)}</span></div>`)
       + card('QR okutmaları', 'Bağlantı QR\'ları ve kampanya QR\'ı kaç kez okutuldu. Aynı telefonun kısa sürede tekrar açması ve bot ziyaretleri sayılmaz; kişisel bilgi saklanmaz.', j.qr.length ? `<div class="list">${j.qr.map(qrRow).join('')}</div>` : '<div class="empty">Henüz QR kod yok. QR Kodlar sayfasından ekleyin.</div>')
-      + card('Saat bazında yoğunluk', 'İçeriklerin gün ve saate göre gösterilme yoğunluğu (koyu renk daha yoğun).', pk.v ? `<div class="heat"><div></div>${Array.from({ length: 24 }, (_, h) => `<span class="hl">${h % 3 === 0 ? h : ''}</span>`).join('')}${j.heat.map((row, d) => `<span class="dn">${wds(d)}</span>${row.map((v, h) => `<i title="${wd(d)} ${hh(h)}: ${v}" style="background:rgba(var(--a2),${v ? (0.12 + v / hmax * 0.88).toFixed(2) : 0.04})"></i>`).join('')}`).join('')}</div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>')
+      + card('Saat bazında yoğunluk', 'İçeriklerin gün ve saate göre gösterilme yoğunluğu (koyu renk daha yoğun). Kutucuğa dokunarak değeri okuyabilirsiniz.', pk.v ? `<div class="heat"><div></div>${Array.from({ length: 24 }, (_, h) => `<span class="hl">${h % 3 === 0 ? h : ''}</span>`).join('')}${j.heat.map((row, d) => `<span class="dn">${wds(d)}</span>${row.map((v, h) => { const tip = `${wd(d)} ${hh(h)} — ${v} gösterim`; return `<i title="${esc(tip)}" data-tip="${esc(tip)}" onclick="showHeatTip(this)" style="background:rgba(var(--a2),${v ? (0.12 + v / hmax * 0.88).toFixed(2) : 0.04});cursor:pointer"></i>`; }).join('')}`).join('')}</div><div id="heat-tip" class="bar-tip">Bir kutucuğa dokunun</div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>')
       + `<div class="grid g2">` + card('Kesintiler', 'Ekranın internet bağlantısı 2 dakikadan uzun koptuğunda sayılır.', j.totals.drops ? `<div class="scroll"><table class="tbl"><thead><tr><th>Gün</th><th>Kesinti</th><th>Toplam süre</th></tr></thead><tbody>${j.daily.filter(d => d.drops).reverse().slice(0, 14).map(d => `<tr><td>${fmtD(d.day)}</td><td>${d.drops}</td><td>${dur(d.dropsec)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Bu dönemde kesinti olmadı.</div>')
       + card('Özel kartlar', 'Ekranlarda kaç kez gösterildi.', `<div class="grid g3">${stat(nf(j.shown.camp), 'Kampanya kartı')}${stat(nf(j.shown.big), 'Büyük maç kartı')}${stat(nf(j.shown.goal), 'Gol bildirimi')}</div>`) + `</div>`
       + card('İçerikler', 'En çok oynayandan aza.', j.items.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>İçerik</th><th>Tür</th><th>Oynatma</th><th>Toplam süre</th><th>Son</th></tr></thead><tbody>${j.items.slice(0, 50).map(it => `<tr><td>${esc(it.name)}</td><td>${{ video: 'Video', image: 'Fotoğraf', poster: 'Afiş', instagram: 'Instagram', trailer: 'Fragman', gone: '—' }[it.type] || it.type}</td><td>${it.plays.toLocaleString(I18N.locale)}</td><td>${it.sec ? (it.sec >= 3600 ? hrs(it.sec / 60) + ' sa' : Math.round(it.sec / 60) + ' dk') : '—'}</td><td>${fmtD(it.last)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>');
@@ -2310,6 +2544,14 @@ function impactCard(j, nf) {
     + (avg != null ? `<p class="muted" style="font-size:12.5px;margin:10px 0 0">Ortalama: 100 gösterimde ${avg.toFixed(1).replace('.', ',')} okutma. Kampanya kartlarının gösterim sayımı bu sürümle başladı; eski günler için gösterim sıfır görünebilir.</p>` : '')
     : `<div class="empty">Henüz ölçülecek kampanya yok. <a href="#promo">Kampanya ve yorumlar</a> sayfasından kampanya kartını açın ya da <a href="#media/posters">Fotoğraftan afiş</a> ile QR'lı bir afiş hazırlayın; ekranda kaç kez göründüğü ve QR'ının kaç kez okutulduğu burada karşılaştırılır.</div>`;
   return card('Kampanya etkisi', 'Her kampanya ekranda kaç kez göründü ve müşteriler QR\'ını kaç kez okuttu. "100 gösterimde" sütunu kampanyaları birbiriyle karşılaştırmanın en adil yolu.', body);
+}
+function showBarTip(el) {
+  document.querySelectorAll('.bars > div.on').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+  const t = $('bar-tip'); if (t) t.textContent = el.dataset.tip || '';
+}
+function showHeatTip(el) {
+  const t = $('heat-tip'); if (t) t.textContent = el.dataset.tip || '';
 }
 
 /* ================= MÜZİK — YouTube Music düzeninde (YouTube, YouTube Music, Spotify, radyo; telefondan uzaktan kumanda) =================
@@ -2989,7 +3231,7 @@ async function drawBranches() {
 }
 async function switchBranch(id) { try { await req('POST', '/branches/switch', { id }); location.hash = '#home'; location.reload(); } catch (e) { toast(e.message, true); } }
 async function addBranch() { const name = $('br-n').value.trim(); if (name.length < 2) return toast('Şube adını yazın', true); try { const j = await req('POST', '/branches', { name }); toast('Şube açıldı'); if (await UI.ask('Yeni şubeye şimdi geçilsin mi?')) return switchBranch(j.id); drawBranches(); drawBranchSwitch(); } catch (e) { toast(e.message, true); } }
-const renBranch = (id, cur) => { const n = prompt('Şube adı:', cur); if (n && n.trim()) act('PUT', '/branches/' + id, { name: n.trim() }, 'Kaydedildi', false).then(() => { drawBranches(); drawBranchSwitch(); }); };
+const renBranch = async (id, cur) => { const n = await UI.ask('Şube adı:', { title: 'Şubeyi Adlandır', input: cur || '', ok: 'Kaydet' }); if (n && n.trim()) act('PUT', '/branches/' + id, { name: n.trim() }, 'Kaydedildi', false).then(() => { drawBranches(); drawBranchSwitch(); }); };
 async function copyBranches() {
   const targets = [...document.querySelectorAll('#cp-t .chip.on')].map(x => x.dataset.id), parts = [...document.querySelectorAll('#cp-p .chip.on')].map(x => x.dataset.k);
   if (!targets.length || !parts.length) return toast('Şube ve kopyalanacak içerik seçin', true);
@@ -3022,6 +3264,103 @@ async function reqDelete() {
   if (await act('POST', '/privacy/delete', { password: pw }, 'Silme talebi alındı', false)) { S.db = await req('GET', '/db'); render(true); drawBanner(); }
 }
 
+/* ================= YAYIN AJANDASI & YARDIM ================= */
+function schMatchesDay(sc, ymd, isoDay) {
+  if (!sc) return true;
+  if (sc.start && ymd < sc.start) return false;
+  if (sc.end && ymd > sc.end) return false;
+  if (Array.isArray(sc.days) && sc.days.length && !sc.days.includes(isoDay)) return false;
+  return true;
+}
+SECTIONS.agenda = {
+  html() {
+    const today = new Date();
+    const vids = (S.db.videos || []).filter(v => !v.hidden);
+    const cats = ((S.db.menu && S.db.menu.categories) || []);
+    const camps = (S.db.campaigns || []).filter(c => c.enabled !== false);
+    const hhs = hhOf(S.db.menu).filter(h => h.enabled !== false);
+    const sp = S.db.special || {};
+    const daysHtml = Array.from({ length: 7 }, (_, idx) => {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + idx, 12, 0, 0);
+      const ymd = d.toISOString().slice(0, 10);
+      const isoDay = d.getDay() || 7;
+      const dayTitle = idx === 0 ? 'Bugün' : idx === 1 ? 'Yarın' : d.toLocaleDateString(I18N.locale, { weekday: 'long' });
+      const dateStr = d.toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' });
+      const items = [];
+      if (idx === 0 && sp.enabled) {
+        items.push(`<span class="ag-pill sp">🚨 Özel Yayın aktif: <b>${esc(sp.title || 'Özel Yayın')}</b></span>`);
+      }
+      hhs.filter(h => schMatchesDay(h.sch, ymd, isoDay)).forEach(h => {
+        const tm = h.sch && h.sch.from ? `${h.sch.from}–${h.sch.to}` : 'Gün boyu';
+        items.push(`<a href="#happy" class="ag-pill hh">🏷 ${esc(tm)} · <b>${esc(h.title || 'İndirim Saati')}</b> (%${h.pct || 0})</a>`);
+      });
+      cats.filter(c => c.sch && schMatchesDay(c.sch, ymd, isoDay)).forEach(c => {
+        const tm = c.sch.from ? `${c.sch.from}–${c.sch.to}` : 'Gün boyu';
+        items.push(`<a href="#menu" class="ag-pill menu">🍽 ${esc(tm)} · <b>${esc(c.name)}</b> kategorisi</a>`);
+      });
+      vids.filter(v => v.sch && schMatchesDay(v.sch, ymd, isoDay)).forEach(v => {
+        const tm = v.sch.from ? `${v.sch.from}–${v.sch.to}` : 'Gün boyu';
+        items.push(`<a href="#media" class="ag-pill vid">🎬 ${esc(tm)} · <b>${esc(v.name || 'Medya')}</b></a>`);
+      });
+      camps.filter(c => c.sch && schMatchesDay(c.sch, ymd, isoDay)).forEach(c => {
+        const tm = c.sch.from ? `${c.sch.from}–${c.sch.to}` : 'Gün boyu';
+        items.push(`<a href="#promo" class="ag-pill camp">✨ ${esc(tm)} · <b>${esc(c.title || 'Kampanya')}</b></a>`);
+      });
+      const alwaysVids = vids.filter(v => !v.sch).length;
+      const alwaysCats = cats.filter(c => !c.sch).length;
+      return `<div class="ag-day"><h4><span>${esc(dayTitle)}</span><span class="muted" style="font-weight:400;font-size:13px">${esc(dateStr)}</span></h4>
+        <div class="ag-items">${items.length ? items.join('') : `<span class="muted" style="font-size:13px">Özel saatli içerik yok — gün boyu standart yayın (${alwaysVids} medya, ${alwaysCats} menü kategorisi) döner.</span>`}</div>
+        ${items.length ? `<div class="muted" style="font-size:12px;margin-top:8px">+ Gün boyu sürekli dönen ${alwaysVids} medya ve ${alwaysCats} menü kategorisi</div>` : ''}</div>`;
+    }).join('');
+    return head('Yayın Ajandası', 'Önümüzdeki 7 gün boyunca ekranınızda hangi saatte hangi indirim, menü, kampanya veya zamanlanmış medyanın çıkacağını tek bakışta görün.',
+      `<div class="row"><a class="btn xs g" href="#media">Medya zamanla</a><a class="btn xs g" href="#menu">Menü saati ayarla</a><a class="btn xs g" href="#happy">İndirim saati ekle</a></div>`)
+      + card('7 Günlük Yayın Akışı', 'Bir öğeye tıklayarak ilgili ayar sayfasına gidebilirsiniz.', daysHtml);
+  }
+};
+
+const FAQ_LIST = [
+  ['TV kutusunu ekrana nasıl bağlarım?', 'TV kutunuzu HDMI ile televizyona takın ve internete bağlayın. Kutuda ScreenPano uygulamasını açtığınızda ekranda 6 haneli bir kod belirir. Panelde <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasına gidip bu kodu yazarak saniyeler içinde eşleştirebilirsiniz.'],
+  ['İnternet kesilirse TV ekranı kararır mı?', 'Hayır. ScreenPano videolarınızı, fotoğraflarınızı ve fiyat listenizi TV kutusunun hafızasına kaydeder. İnternet kopsa bile ekranınız kesintisiz oynamaya devam eder; bağlantı geldiğinde yeni değişiklikleri otomatik alır.'],
+  ['Farklı televizyonlarda farklı içerik (birinde menü, diğerinde maç/video) gösterebilir miyim?', 'Evet! <a href="#design">Tasarım</a> sayfasının üstündeki <b>Ekran profili</b> çubuğundan "+ Yeni ekran" diyerek ikinci bir ekran tasarımı oluşturun. Ardından <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasında ilgili TV kutusunun "Ayrıntılar ve araçlar" penceresinden hangi ekran profilini göstereceğini seçin. Medya sekmesinde videoların üzerindeki "📺 Ekran" butonuyla hangi videonun hangi TV\'de döneceğini de seçebilirsiniz.'],
+  ['Yüklediğim videoların kendi sesi neden çıkmıyor veya müzikle çakışıyor mu?', '<a href="#media">Medya</a> sayfasında her videonun yanındaki <b>Sesli / Sessiz</b> butonuyla o videonun sesini açabilirsiniz. Sesli bir video başladığında arka planda çalan müzik otomatik olarak kısılır, video bitince müzik eski sesine döner.'],
+  ['Fiyat listesine ürün fotoğrafı ve yabancı dil nasıl eklerim?', '<a href="#menu">Fiyat Listesi</a> sayfasında her ürünün solundaki kamera kutucuğuna tıklayarak ürün fotoğrafı yükleyebilirsiniz. Üstteki "Diller" kartından İngilizce, Almanca, Rusça veya Arapça seçip <b>"✨ Eksik çevirileri otomatik doldur"</b> butonuna basarak tüm menünüzü tek tıkla çevirebilirsiniz.'],
+  ['Panel çok detaylı görünüyor, daha sade bir görünüm var mı?', 'Sol menünün en altındaki <b>"✨ Basit moda geç"</b> butonuna tıklayarak günlük kullanımda en çok ihtiyaç duyulan bölümler dışındaki gelişmiş ayarları gizleyebilirsiniz. İstediğiniz zaman tekrar "Tüm özellikler" moduna dönebilirsiniz.'],
+  ['TV ekranında takılma veya yavaşlık olursa ne yapmalıyım?', '<a href="#media">Medya</a> sayfasındaki "TV\'ye uygun hazırla" butonuyla yüksek çözünürlüklü videoları TV kutusuna uygun akıcı hale getirebilirsiniz. Ayrıca <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasından cihazın "Ayrıntılar ve araçlar" bölümündeki <b>Takılma testi</b>ni çalıştırabilir veya <b>Uygulamayı yeniden başlat / Önbelleği temizle</b> komutlarını uzaktan gönderebilirsiniz.'],
+];
+SECTIONS.help = {
+  html() {
+    return head('Yardım ve Sık Sorulan Sorular', 'ScreenPano kullanımıyla ilgili hızlı yanıtlar, ipuçları ve destek kanalları.')
+      + card('🔍 Sık Sorulan Sorular', 'Aradığınız konuyu aşağıya yazabilir veya başlığa tıklayarak cevabı açabilirsiniz.',
+        `<input type="search" id="faq-q" placeholder="Soru ara (örn. ses, internet, çoklu ekran, çeviri…)" oninput="filterFaq(this.value)" style="margin-bottom:14px">
+         <div id="faq-list">${FAQ_LIST.map(([q, a], i) => `<details class="faq" ${i === 0 ? 'open' : ''} data-q="${esc((q + ' ' + a).toLowerCase())}"><summary>${esc(q)}</summary><p>${a}</p></details>`).join('')}</div>`)
+      + `<div class="grid g2">`
+      + card('🚀 Hızlı Kısayollar', 'En sık kullanılan işlemler:',
+        `<div class="row" style="gap:8px;flex-wrap:wrap">
+          <a class="btn g s" href="#settings/devices">📺 TV Kutusu Bağla</a>
+          <a class="btn g s" href="#media/posters">📷 Fotoğraftan Afiş Yap</a>
+          <a class="btn g s" href="#agenda">📅 7 Günlük Yayın Ajandası</a>
+          <a class="btn g s" href="#menu">🍽 Fiyat Listesi & QR Menü</a>
+          <a class="btn g s" href="#music">🎵 Müzik Yayını</a>
+        </div>`)
+      + card('💬 Destek ve İletişim', 'Sorununuz devam ediyorsa teknik ekibimize doğrudan ulaşabilirsiniz.',
+        `<p class="muted" style="margin-top:0">Destek ekibimiz işletme kodunuzla ekranlarınızın durumunu uzaktan kontrol edebilir.</p>
+         <div class="it"><div class="b"><b>İşletme Kodunuz</b><span>Destek isterken bu kodu paylaşın: <code>${esc(S.me.tenant.slug)}</code></span></div></div>
+         <div class="row mt" style="gap:8px;flex-wrap:wrap">
+           <a class="btn s" href="mailto:destek@screenpano.com?subject=${encodeURIComponent('ScreenPano Destek — ' + S.me.tenant.name + ' (' + S.me.tenant.slug + ')')}">✉️ E-posta Gönder</a>
+           <a class="btn g s" href="https://wa.me/?text=${encodeURIComponent('Merhaba, ScreenPano destek talebi (' + S.me.tenant.slug + '): ')}" target="_blank" rel="noopener">💬 WhatsApp Destek</a>
+         </div>`)
+      + `</div>`;
+  }
+};
+function filterFaq(q) {
+  const s = (q || '').trim().toLowerCase();
+  document.querySelectorAll('#faq-list details.faq').forEach(el => {
+    const match = !s || (el.dataset.q || '').includes(s);
+    el.style.display = match ? '' : 'none';
+    if (s && match) el.open = true;
+  });
+}
+
 /* ================= açılış ================= */
 function drawBrand() {
   // D2: işletmenin tema rengi panel arayüzünü boyamaz (yalnız TV, önizleme ve afiş küçük resimleri themeVars() ile alır)
@@ -3033,6 +3372,11 @@ function drawBrand() {
   try { [S.me, S.db, S.cat, S.scr, S.lg] = await Promise.all([req('GET', '/me'), req('GET', '/db'), req('GET', '/catalog'), req('GET', '/screen'), req('GET', '/leagues')]); }
   catch (e) { $('view').innerHTML = `<div class="empty">Panel yüklenemedi: ${esc(e.message)}</div>`; return; }
   drawBrand(); drawBanner(); route(); drawBranchSwitch();
+  const uq = new URLSearchParams(location.search);
+  if (uq.get('verified') === '1') {
+    history.replaceState(null, '', location.pathname + location.hash);
+    setTimeout(() => toast('E-posta adresiniz başarıyla doğrulandı!'), 400);
+  }
   setInterval(async () => { if (document.hidden) return; try { S.scr = await req('GET', '/screen'); } catch (e) {} }, 30000);
 })();
 addEventListener('beforeunload', e => { if (EDIT.dirty || (MENU && MENU.__dirty) || (HD && HD.__dirty) || (HC && HC.__dirty) || document.querySelector('#view .card.dirty')) { e.preventDefault(); e.returnValue = ''; } });

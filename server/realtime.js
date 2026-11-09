@@ -20,12 +20,14 @@ computeBuild();
 const sendRaw = (ws, msg) => { if (ws.readyState === 1) ws.send(typeof msg === 'string' ? msg : JSON.stringify(msg)); };
 function sendState(ws, cache) {
   const t = tenants.get(ws.tid); if (!t) return;
-  // Toplu yayında kiracı başına durum bir kez hesaplanır ve iki biçimde (yerel/sayfa) bir kez metne çevrilir
-  const key = ws.tid + '|' + (ws.native ? 1 : 0);
+  const scId = ws.screenId || '';
+  // Toplu yayında kiracı ve ekran başına durum bir kez hesaplanır ve iki biçimde (yerel/sayfa) bir kez metne çevrilir
+  const key = ws.tid + '|' + scId + '|' + (ws.native ? 1 : 0);
   let s = cache && cache.get(key);
   if (!s) {
-    let base = cache && cache.get(ws.tid);
-    if (!base) { base = publicState(t); if (cache) cache.set(ws.tid, base); }
+    const bKey = ws.tid + '|' + scId;
+    let base = cache && cache.get(bKey);
+    if (!base) { base = publicState(t, scId || undefined); if (cache) cache.set(bKey, base); }
     // nativeWidgets: bu kutu ekranı yerel widget'larla çizsin mi (panelden kutu başına açılır; dikey ekranda WebView döndürerek çizer)
     s = JSON.stringify({ type: 'state', state: { ...base, nativeWidgets: !(base.layout && base.layout.orient) && !!ws.native } });
     if (cache) cache.set(key, s);
@@ -58,6 +60,7 @@ hub.connectedTenantIds = () => new Set([...clients].map(c => c.tid));
 hub.onlineDeviceIds = () => new Set([...clients].filter(c => c.deviceId).map(c => c.deviceId));
 hub.sendDevice = (id, msg) => { let n = 0; for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, msg); n++; } return n; };
 hub.setNative = (id, on) => { for (const ws of clients) if (ws.deviceId === id) { ws.native = !!on; sendState(ws); } };
+hub.setScreen = (id, screenId) => { for (const ws of clients) if (ws.deviceId === id) { ws.screenId = screenId || null; sendState(ws); } };
 hub.kickDevice = id => { for (const ws of clients) if (ws.deviceId === id) { sendRaw(ws, { type: 'auth', error: 'revoked' }); ws.close(); } };
 
 // Çoklu ekran senkronizasyonu: her işletme için sunucuda tek bir çalma listesi saati tutulur, ekranlar ona uyar.
@@ -151,11 +154,11 @@ function attach(server) {
   setInterval(() => { const seen = new Set(); for (const ws of clients) if (ws.deviceId && !seen.has(ws.deviceId)) { seen.add(ws.deviceId); try { require('./stats').online(ws.tid, ws.deviceId, 1); } catch (e) {} } }, 60000);
   wss.on('connection', (ws, req) => {
     const url = new URL(req.url, 'http://x');
-    const token = url.searchParams.get('device'), preview = url.searchParams.get('preview');
+    const token = url.searchParams.get('device'), preview = url.searchParams.get('preview'), screenParam = url.searchParams.get('screen');
     if (token) { // TV cihazı
       const d = store.q.deviceByHash.get(auth.hashToken(token));
       if (!d) { sendRaw(ws, { type: 'auth', error: 'invalid' }); return ws.close(); }
-      Object.assign(ws, { tid: d.tenant_id, deviceId: d.id, native: !!d.native, ip: auth.clientIp(req) });
+      Object.assign(ws, { tid: d.tenant_id, deviceId: d.id, screenId: d.screen_id || null, native: !!d.native, ip: auth.clientIp(req) });
       store.q.deviceSeen.run(Date.now(), d.id);
       const t0 = tenants.get(d.tenant_id); if (t0) require('./monitor').connected(t0, d);
       try { require('./stats').deviceUp(d.tenant_id, d.id); } catch (e) {}
@@ -164,7 +167,7 @@ function attach(server) {
       const u = auth.sessionUser(req);
       const tid = u && require('./routes-admin').activeTenantId(u);
       if (!tid || !tenants.get(tid)) { sendRaw(ws, { type: 'auth', error: 'preview' }); return ws.close(); }
-      Object.assign(ws, { tid, preview: true });
+      Object.assign(ws, { tid, preview: true, screenId: screenParam || null });
     } else { sendRaw(ws, { type: 'auth', error: 'missing' }); return ws.close(); }
     clients.add(ws);
     ws.isAlive = true;

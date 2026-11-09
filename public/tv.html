@@ -1022,6 +1022,7 @@ body.glass .wz b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%
 #wmenu .mcols.out{opacity:0}
 #wmenu .mc{font-size:2vh;letter-spacing:.24em;text-transform:uppercase;color:var(--accent2);font-weight:800;padding:1.4vh 0 .5vh}
 #wmenu .mi{display:flex;align-items:baseline;gap:.6vw;padding:.75vh 0}
+#wmenu .mi .mimg{width:4.8vh;height:4.8vh;border-radius:.8vh;object-fit:cover;flex:none;background:rgba(255,255,255,.08);border:max(1px,.1vh) solid rgba(255,255,255,.15);align-self:center;margin-right:.3vw}
 #wmenu .mi .n{font-size:2.5vh;font-weight:600;color:var(--white);min-width:0}
 #wmenu .mi .n small{display:block;font-size:1.8vh;font-weight:500;color:var(--mute);margin-top:.3vh}
 #wmenu .mi .dots{flex:1;min-width:2vw;border-bottom:max(1px,.2vh) dotted rgba(255,255,255,.28);transform:translateY(-.6vh)}
@@ -1370,7 +1371,8 @@ function showYt(it) {
   const el = document.getElementById('ytm'); if (!el || !it.yt) return;
   const pageOrigin = (location.origin && location.origin !== 'null') ? location.origin : 'https://screenpano.com';
   const k = encodeURIComponent(it.yt);
-  el.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/${k}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&loop=1&playlist=${k}&enablejsapi=1&origin=${encodeURIComponent(pageOrigin)}"></iframe>`;
+  const muteParam = it.sound ? 0 : 1;
+  el.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/${k}?autoplay=1&mute=${muteParam}&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&loop=1&playlist=${k}&enablejsapi=1&origin=${encodeURIComponent(pageOrigin)}"></iframe>`;
   el.classList.add('on'); ytOn = true;
   clearInterval(ytHs); let n = 0; // hata bildirimi için kısa süre el sıkışma: oynatılamayan video hata ekranı göstermesin
   ytHs = setInterval(() => {
@@ -1628,6 +1630,7 @@ function play() {
   const it = videos[idx];
   notePlay(it);
   current = it.id;
+  if (typeof syncVideoMute === 'function') syncVideoMute(it);
   playStartedAt = Date.now();
   const fullDurMs = (it.dur || imageSeconds || 10) * 1000;
   hideYt();
@@ -1700,6 +1703,7 @@ function syncToMedia(m) {
   clearTimeout(timer);
   idx = targetIdx;
   current = it.id;
+  if (typeof syncVideoMute === 'function') syncVideoMute(it);
   notePlay(it);
   playStartedAt = Date.now();
   hideYt();
@@ -3879,7 +3883,7 @@ function setQrTile(list) {
 // ---- fiyat tarifesi widget'ı: sayfalara bölünür, 12 sn'de bir döner ----
 const menuW = { data: null, pages: [], idx: 0, ncol: 1, timer: null, sig: '' };
 const fmtPrice = (p, cur) => /^\d+([.,]\d+)?$/.test(String(p || '').trim()) ? `${p} ${cur || '₺'}` : String(p || '');
-const menuRow = (r, cur) => r.c !== undefined ? `<div class="mc">${esc(r.c)}</div>` : `<div class="mi"><div class="n">${esc(r.name)}${r.desc || r.kcal ? `<small>${esc(r.desc || '')}${r.desc && r.kcal ? ' · ' : ''}${r.kcal ? '🔥 ' + esc(r.kcal) : ''}</small>` : ''}</div><i class="dots"></i><div class="p">${r.was ? `<s class="was">${esc(fmtPrice(r.was, cur))}</s>` : ''}${esc(fmtPrice(r.price, cur))}</div></div>`;
+const menuRow = (r, cur) => r.c !== undefined ? `<div class="mc">${esc(r.c)}</div>` : `<div class="mi">${r.img ? `<img class="mimg" src="${esc(r.img)}" alt="" decoding="async" onerror="this.remove()">` : ''}<div class="n">${esc(r.name)}${r.desc || r.kcal ? `<small>${esc(r.desc || '')}${r.desc && r.kcal ? ' · ' : ''}${r.kcal ? '🔥 ' + esc(r.kcal) : ''}</small>` : ''}</div><i class="dots"></i><div class="p">${r.was ? `<s class="was">${esc(fmtPrice(r.was, cur))}</s>` : ''}${esc(fmtPrice(r.price, cur))}</div></div>`;
 function setMenu(m) { const sig = JSON.stringify(m || null) + menuSchedSig(m); if (sig === menuW.sig) return; menuW.sig = sig; menuW.data = m; renderMenuW(true); }
 function renderMenuW(reset) {
   const box = $id('wmenu'), body = box.querySelector('.mb'), m = menuW.data;
@@ -3894,7 +3898,7 @@ function renderMenuW(reset) {
     if (!schedOk(c.sch)) continue;
     const cn = (c.t && c.t[LANG]) || c.name;
     if (cn) rows.push({ c: cn });
-    for (const i of c.items || []) { const t = (i.t && i.t[LANG]) || {}; rows.push({ name: t.name || i.name, desc: t.desc || (t.name ? '' : i.desc), price: i.off ? (LANG === 'tr' ? 'Tükendi' : 'Sold out') : i.price, was: i.off ? '' : i.was, off: i.off, kcal: i.kcal }); }
+    for (const i of c.items || []) { const t = (i.t && i.t[LANG]) || {}; rows.push({ name: t.name || i.name, desc: t.desc || (t.name ? '' : i.desc), price: i.off ? (LANG === 'tr' ? 'Tükendi' : 'Sold out') : i.price, was: i.off ? '' : i.was, off: i.off, kcal: i.kcal, img: i.img || '' }); }
   }
   if (!rows.length) { body.innerHTML = '<div class="mempty">Panelde Fiyat Listesi bölümünden ürün ekleyin.</div>'; box.querySelector('.pg').textContent = ''; return; }
   const aw = $id('app').clientWidth || innerWidth, W = body.clientWidth, H = body.clientHeight, gap = aw * 0.02;
@@ -4102,6 +4106,7 @@ function connect() {
     else if (m.type === 'snap') sendSnap();
     else if (m.type === 'perf') perfProbe(m.sec);
     else if (m.type === 'reload') location.reload();
+    else if (m.type === 'device_cmd') onDeviceCmd(m);
     else if (m.type === 'rates') setRates(m.rates);
     else if (m.type === 'weather') setWeather(m.weather);
     else if (m.type === 'traffic') setTraffic(m.traffic);
@@ -4801,10 +4806,48 @@ function playSpotifyItem(it, m) {
   // 2) Spotify Connect bağlı değilse başka bir yayın çalınmaz; ekranda nedeni yazar
   musicFail(MUS.spToken ? (MUS.spUnsupported || 'Spotify Connect bağlanıyor…') : 'Spotify listesi için panelden Spotify Connect bağlantısı gerekli');
 }
-function syncVideoMute() {
+function syncVideoMute(activeIt) {
   const m = MUS.cfg;
-  const shouldMute = !m || m.muteVideo !== false;
-  els.forEach(v => { v.muted = shouldMute; });
+  const it = activeIt !== undefined ? activeIt : videos.find(x => x.id === current);
+  const itemHasSound = !!(it && it.sound && (it.type === 'video' || it.type === 'youtube'));
+  const shouldMute = !itemHasSound && (!m || m.muteVideo !== false);
+  els.forEach(v => { v.muted = shouldMute; if (!shouldMute) v.volume = 1; });
+  // Sesli video / anons oynarken arka plan müziğinin sesini otomatik kıs (ducking), bitince eski ses düzeyine döndür
+  const effVol = itemHasSound ? Math.min(12, Math.round((MUS.vol || 75) * 0.15)) : (MUS.vol || 75);
+  try { if (MUS.ytPlayer && MUS.ytReady) MUS.ytPlayer.setVolume(effVol); } catch (e) {}
+  try { if (MUS.radioEl) MUS.radioEl.volume = Math.max(0, Math.min(1, effVol / 100)); } catch (e) {}
+  try { if (MUS.spPlayer) MUS.spPlayer.setVolume(Math.max(0.01, Math.min(1, effVol / 100))); } catch (e) {}
+}
+function onDeviceCmd(m) {
+  const cmd = m && m.cmd;
+  if (m && m.serverTime) window.__srvOff = m.serverTime - Date.now();
+  if (cmd === 'sync_time') {
+    try { tickClock(); if (typeof schedule === 'function' && pages.length) schedule(); } catch (e) {}
+    sendStatus();
+  } else if (cmd === 'clear_cache') {
+    try { localStorage.removeItem('lastState'); } catch (e) {}
+    if (window.caches && caches.keys) {
+      caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))).finally(() => location.reload());
+    } else location.reload();
+  } else if (cmd === 'restart') {
+    try { if (window.__N && window.__N.restartApp) { window.__N.restartApp(); return; } } catch (e) {}
+    location.reload();
+  } else if (cmd === 'sleep') {
+    let sl = document.getElementById('tv-sleep');
+    if (!sl) {
+      sl = document.createElement('div'); sl.id = 'tv-sleep';
+      sl.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#000;cursor:none';
+      document.body.appendChild(sl);
+    }
+    sl.style.display = 'block';
+    els.forEach(v => { try { v.pause(); } catch (e) {} });
+    stopAllMusicEngines('');
+  } else if (cmd === 'wake') {
+    const sl = document.getElementById('tv-sleep');
+    if (sl) sl.style.display = 'none';
+    if (MEDIA_ON && videos.length) play();
+    if (MUS.cfg && MUS.cfg.enabled) setMusic(MUS.cfg);
+  }
 }
 // ses muhafızı: müzik çalıyor görünürken motor sessiz kalmışsa (YT geçiş sonrası muted, radyo muted) kaldırır
 setInterval(() => {

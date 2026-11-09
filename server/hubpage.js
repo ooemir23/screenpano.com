@@ -31,7 +31,10 @@ function menuHtml(t) {
   const cats = (m && m.categories || []).filter(c => (c.items || []).length);
   if (!cats.length) return '';
   const cur = m.currency || '₺';
-  return cats.map(c => `<h3>${esc(c.name)}</h3>` + c.items.filter(i => !i.off).map(i => `<div class="it"><div class="b"><b>${esc(i.name)}</b>${i.desc ? `<span>${esc(i.desc)}</span>` : ''}</div><div class="pr">${i.was ? `<s>${esc(i.was)}</s> ` : ''}${esc(i.price)}${i.price ? ' ' + esc(cur) : ''}</div></div>`).join('')).join('');
+  return cats.map(c => `<h3>${esc(c.name)}</h3>` + c.items.filter(i => !i.off).map(i => {
+    const imUrl = i.img ? (i.img.startsWith('http') || i.img.startsWith('/') ? i.img : t.upBase + i.img) : '';
+    return `<div class="it">${imUrl ? `<img class="ith" src="${esc(imUrl)}" alt="" loading="lazy">` : ''}<div class="b"><b>${esc(i.name)}</b>${i.desc ? `<span>${esc(i.desc)}</span>` : ''}</div><div class="pr">${i.was ? `<s>${esc(i.was)}</s> ` : ''}${esc(i.price)}${i.price ? ' ' + esc(cur) : ''}</div></div>`;
+  }).join('')).join('');
 }
 
 function page(req, res) {
@@ -56,7 +59,7 @@ function page(req, res) {
 <style>:root{--bg:${bg};--a:${ac};--a2:${ac2};--tx:${tx}}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(120% 60% at 50% 0,${ac}55,transparent 70%),var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;justify-content:center}
 main{width:100%;max-width:460px;padding:28px 18px 40px;text-align:center}.logo{max-width:150px;max-height:90px;object-fit:contain;margin:6px auto 14px;display:block}h1{margin:0 0 4px;font-size:26px}.sub{opacity:.75;margin:0 0 24px}
 .btn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:0 0 12px;padding:17px 20px;border-radius:16px;border:1px solid ${ac2}66;background:linear-gradient(135deg,var(--a),${ac}aa);color:#fff;font:700 18px system-ui,sans-serif;text-decoration:none;cursor:pointer;text-align:left}.btn i{font-style:normal;opacity:.8;font-size:22px}.btn.sm{padding:13px 18px;font-size:16px;justify-content:center}
-h2{margin:6px 0 16px}h3{margin:22px 0 6px;text-align:left;color:var(--a2);text-transform:uppercase;letter-spacing:.08em;font-size:14px}.it{display:flex;gap:12px;justify-content:space-between;text-align:left;padding:10px 0;border-bottom:1px solid #ffffff1f}.it .b span{display:block;opacity:.65;font-size:13px}.pr{white-space:nowrap;font-weight:700;color:var(--a2)}.pr s{opacity:.5;font-weight:400}
+h2{margin:6px 0 16px}h3{margin:22px 0 6px;text-align:left;color:var(--a2);text-transform:uppercase;letter-spacing:.08em;font-size:14px}.it{display:flex;align-items:center;gap:12px;justify-content:space-between;text-align:left;padding:10px 0;border-bottom:1px solid #ffffff1f}.it .ith{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:#ffffff14}.it .b{flex:1;min-width:0}.it .b span{display:block;opacity:.65;font-size:13px}.pr{white-space:nowrap;font-weight:700;color:var(--a2)}.pr s{opacity:.5;font-weight:400}
 .back{background:none;border:0;color:var(--a2);font:600 16px system-ui;padding:6px 0;margin-bottom:6px;cursor:pointer;display:block}.kv{background:#ffffff14;border-radius:14px;padding:12px 16px;margin:0 0 12px;text-align:left}.kv small{display:block;opacity:.65}.kv b{font-size:20px;word-break:break-all;user-select:all}.note{opacity:.7;font-size:14px}
 </style></head><body><main>${logo ? `<img class="logo" src="${esc(logo)}" alt="">` : ''}<h1>${esc(hub.title || t.name)}</h1>${hub.title ? `<p class="sub">${esc(t.name)}</p>` : '<p class="sub"></p>'}
 <section id="s-home">${btns.join('')}</section>

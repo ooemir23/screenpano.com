@@ -50,49 +50,116 @@ input:focus,select:focus{border-color:var(--accent2)}
     <div class="tabs" id="tabs"><button class="on" data-t="login">Giriş yap</button><button data-t="signup" id="tsignup">Ücretsiz dene</button></div>
     <form id="f-login">
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required>
-      <label>Şifre</label><input name="password" type="password" autocomplete="current-password" required>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px"><label style="margin:0">Şifre</label><a href="#unuttum" id="go-forgot" style="font-size:12px;color:var(--accent2);text-decoration:none;font-weight:600">Şifremi unuttum</a></div>
+      <input name="password" type="password" autocomplete="current-password" required>
       <button class="btn">Giriş yap</button>
     </form>
+    <form id="f-forgot" hidden>
+      <p class="note" style="margin:0 0 12px;font-size:13px">Kullanıcı adınızı veya kayıtlı e-posta adresinizi girin. Şifre sıfırlama bağlantısını işletmenizin e-posta adresine gönderelim.</p>
+      <label>Kullanıcı adı veya E-posta</label><input name="identifier" autocomplete="username" autocapitalize="none" required placeholder="kullaniciadi veya ornek@isletme.com">
+      <button class="btn">Sıfırlama bağlantısı gönder</button>
+      <button type="button" id="back-login" style="width:100%;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:var(--r-m);background:none;color:var(--mute);font:600 13px Montserrat,sans-serif;cursor:pointer">← Giriş ekranına dön</button>
+    </form>
+    <form id="f-reset" hidden>
+      <p class="note" style="margin:0 0 12px;font-size:13px">Hesabınız için yeni bir şifre belirleyin (en az 8 karakter).</p>
+      <input type="hidden" name="token" id="r-token">
+      <label>Yeni şifre (en az 8 karakter)</label><input name="password" id="r-pass" type="password" autocomplete="new-password" minlength="8" required>
+      <label>Yeni şifre (tekrar)</label><input id="r-pass2" type="password" autocomplete="new-password" minlength="8" required>
+      <button class="btn">Şifreyi güncelle ve giriş yap</button>
+    </form>
     <form id="f-signup" hidden>
+      <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;pointer-events:none" aria-hidden="true">
       <label>İşletme adı</label><input name="business" maxlength="80" required placeholder="örn. Sahil Kafe">
       <label>İşletme türü <span style="opacity:.6;font-weight:400">(hazır ekran ve renkleri getirir)</span></label><select name="starter" id="starter"><option value="">Boş başlangıç</option></select>
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire">
       <label>Şifre (en az 8 karakter)</label><input name="password" type="password" autocomplete="new-password" minlength="8" required>
-      <label>E-posta <span style="opacity:.6;font-weight:400">(ekran durumu uyarıları bu adrese gelir)</span></label><input name="email" type="email" maxlength="120" autocomplete="email" required placeholder="ornek@isletme.com">
+      <label>E-posta <span style="opacity:.6;font-weight:400">(ekran durumu uyarıları ve doğrulama bu adrese gelir)</span></label><input name="email" type="email" maxlength="120" autocomplete="email" required placeholder="ornek@isletme.com">
       <label>Telefon (isteğe bağlı)</label><input name="phone" type="tel" maxlength="30">
+      <label>Güvenlik sorusu: <b id="cap-q" style="color:var(--accent2)">…</b> <button type="button" id="cap-ref" title="Soruyu yenile" style="background:none;border:0;color:var(--mute);cursor:pointer;font-size:12px">↻</button></label>
+      <input name="captchaAns" id="cap-ans" inputmode="numeric" autocomplete="off" required placeholder="İşlemin sonucunu yazın">
+      <input type="hidden" name="captchaToken" id="cap-tok">
       <label class="ck"><input type="checkbox" name="accept" required><span><a href="/kosullar" target="_blank">Kullanım Koşulları</a>'nı ve eki <a href="/veri-isleme" target="_blank">Veri İşleme Sözleşmesi</a>'ni okudum, kabul ediyorum; kişisel verilerimin <a href="/kvkk" target="_blank">KVKK Aydınlatma Metni</a> kapsamında işleneceğini biliyorum.</span></label>
       <label class="ck"><input type="checkbox" name="marketing"><span>Yeni özellik ve kampanyalardan haberdar olmak için <a href="/acik-riza" target="_blank">Açık Rıza Metni</a> kapsamında ileti almak istiyorum (isteğe bağlı).</span></label>
       <button class="btn">Hesabı oluştur</button>
       <p class="note" id="trialnote"></p>
     </form>
     <div class="err" id="err"></div>
+    <div class="note" id="okmsg" style="color:#4ade80;font-size:13px;display:none"></div>
     <div class="legal"><a href="/">screenpano.com</a><a href="/kosullar">Kullanım Koşulları</a><a href="/kvkk">KVKK</a><a href="/gizlilik">Gizlilik</a></div>
   </div>
 </div>
 <script>
 const $ = id => document.getElementById(id);
+function loadCaptcha() {
+  fetch('/api/auth/captcha').then(r => r.json()).then(c => {
+    if (c && c.question) { $('cap-q').textContent = c.question; $('cap-tok').value = c.token || ''; $('cap-ans').value = ''; }
+  }).catch(() => {});
+}
+loadCaptcha();
+$('cap-ref').onclick = loadCaptcha;
 fetch('/api/auth/config').then(r => r.json()).then(c => {
   $('brand').textContent = c.brand; document.title = c.brand + ' · Giriş';
   if (!c.signup) $('tsignup').style.display = 'none';
   $('starter').innerHTML = (c.starters || []).filter(x => x.key !== 'bos').map(x => `<option value="${x.key}">${x.name}</option>`).join('') + '<option value="bos">Boş başlangıç</option>';
   $('trialnote').textContent = `${c.trialDays} gün boyunca tüm özellikler ücretsiz. Kredi kartı gerekmez.`;
 });
+function showView(v) {
+  $('tabs').hidden = (v === 'forgot' || v === 'reset');
+  $('f-login').hidden = v !== 'login';
+  $('f-signup').hidden = v !== 'signup';
+  $('f-forgot').hidden = v !== 'forgot';
+  $('f-reset').hidden = v !== 'reset';
+  $('err').textContent = '';
+  $('okmsg').style.display = 'none';
+  if (v === 'signup' && !$('cap-tok').value) loadCaptcha();
+}
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
-  $('f-login').hidden = b.dataset.t !== 'login'; $('f-signup').hidden = b.dataset.t !== 'signup'; $('err').textContent = '';
+  showView(b.dataset.t);
 });
-if (location.hash === '#kayit' || location.hash === '#signup') document.querySelector('[data-t=signup]').click();
+$('go-forgot').onclick = e => { e.preventDefault(); showView('forgot'); };
+$('back-login').onclick = () => { showView('login'); };
+function checkHash() {
+  if (location.hash.startsWith('#reset=')) {
+    $('r-token').value = decodeURIComponent(location.hash.slice(7));
+    showView('reset');
+  } else if (location.hash === '#unuttum') {
+    showView('forgot');
+  } else if (location.hash === '#kayit' || location.hash === '#signup') {
+    document.querySelector('[data-t=signup]').click();
+  }
+}
+checkHash();
+addEventListener('hashchange', checkHash);
 async function submit(form, url) {
-  const btn = form.querySelector('button'); btn.disabled = true; $('err').textContent = '';
+  const btn = form.querySelector('button.btn'); btn.disabled = true; $('err').textContent = ''; $('okmsg').style.display = 'none';
   try {
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign(Object.fromEntries(new FormData(form)), { accept: !!(form.accept && form.accept.checked), marketing: !!(form.marketing && form.marketing.checked) })) });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error || 'Bir hata oluştu');
+    if (!r.ok) { if (form.id === 'f-signup') loadCaptcha(); throw new Error(j.error || 'Bir hata oluştu'); }
     location.href = j.next + (location.hash.startsWith('#pair=') ? location.hash : '');
   } catch (e) { $('err').textContent = e.message; btn.disabled = false; }
 }
 $('f-login').onsubmit = e => { e.preventDefault(); submit(e.target, '/api/auth/login'); };
 $('f-signup').onsubmit = e => { e.preventDefault(); submit(e.target, '/api/auth/signup'); };
+$('f-forgot').onsubmit = async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button.btn'); btn.disabled = true; $('err').textContent = ''; $('okmsg').style.display = 'none';
+  try {
+    const r = await fetch('/api/auth/forgot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'İşlem başarısız');
+    $('okmsg').textContent = j.message || 'Şifre sıfırlama bağlantısı gönderildi.';
+    $('okmsg').style.display = 'block';
+    if (j.resetUrl) setTimeout(() => { location.href = j.resetUrl; }, 900);
+  } catch (err) { $('err').textContent = err.message; }
+  btn.disabled = false;
+};
+$('f-reset').onsubmit = async e => {
+  e.preventDefault();
+  if ($('r-pass').value !== $('r-pass2').value) { $('err').textContent = 'Girilen şifreler birbiriyle eşleşmiyor'; return; }
+  submit(e.target, '/api/auth/reset');
+};
 </script>
 <script>fetch('/api/auth/config').then(r=>r.json()).then(c=>{if(c.env!=='test')return;var f=function(){if(document.title.indexOf('[TEST]')!==0)document.title='[TEST] '+document.title};f();new MutationObserver(f).observe(document.querySelector('title'),{childList:true});var d=document.createElement('div');d.textContent='TEST';d.style.cssText='position:fixed;top:0;left:0;z-index:99999;background:#d6262a;color:#fff;font:700 11px/1 sans-serif;letter-spacing:.12em;padding:5px 12px;border-radius:0 0 8px 0;pointer-events:none';document.body.appendChild(d)}).catch(function(){})</script>
 </body></html>

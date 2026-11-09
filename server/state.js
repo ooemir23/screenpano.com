@@ -85,17 +85,18 @@ const langList = db => ['tr', ...(((db.lang || {}).list) || []).filter(l => l !=
 function mediaItem(t, v) { const it = mediaItem0(t, v); return v.full ? { ...it, full: true } : it; } // full: bu içerik oynarken tam ekran (kenar kutular gizli)
 function mediaItem0(t, v) {
   // YouTube bağlantısı: TV gömülü oynatıcıyla gösterir; url eski uygulamalar için kapak görseli (süre boyunca fotoğraf gibi görünür)
-  if (v.type === 'youtube') return { id: v.id, name: v.name, type: 'youtube', yt: v.yt, url: require('./ytlink').thumb(v.yt), dur: v.dur || 30, sch: v.sch || null };
+  if (v.type === 'youtube') return { id: v.id, name: v.name, type: 'youtube', yt: v.yt, url: require('./ytlink').thumb(v.yt), dur: v.dur || 30, sch: v.sch || null, sound: !!v.sound };
   if (v.type === 'poster') return { id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null };
-  return { id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null };
+  return { id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null, sound: !!v.sound };
 }
 // Platform reklamları (server/platformads.js) son hâlin arasına serpiştirilir
-const mediaList = t => require('./platformads').inject(t, baseMediaList(t));
-function baseMediaList(t) {
+const mediaList = (t, screenId) => require('./platformads').inject(t, baseMediaList(t, screenId));
+function baseMediaList(t, screenId) {
   const db = t.db, out = [];
   for (const v of db.videos) {
     if (v.status === 'processing' && !v.reopt) continue;
     if (v.hidden || SCH.expired(v.sch)) continue;
+    if (screenId && Array.isArray(v.screens) && v.screens.length && !v.screens.includes(screenId)) continue;
     out.push(mediaItem(t, v));
   }
   const bk = F.booksView();
@@ -199,8 +200,9 @@ function activeSpecial(t) {
   }
   return null;
 }
-function publicState(t) {
-  const screen = require('./tenants').mainScreen(t);
+function publicState(t, screenId) {
+  const allScreens = store.q.screensOf.all(t.id);
+  const screen = (screenId && allScreens.find(s => s.id === screenId)) || allScreens[0] || require('./tenants').mainScreen(t);
   const db = t.db, p = plan(t), acc = access(t), pro = p.pro;
   const sp = access(t).ok ? activeSpecial(t) : null;
   let layout = layoutFor(t, screen);
@@ -208,7 +210,8 @@ function publicState(t) {
   const has = type => layout.widgets.some(w => w.type === type);
   const base = {
     brand: { product: config.BRAND, name: t.name, logo: db.logo ? t.upBase + db.logo : null, badge: !!p.badge },
-    theme: db.theme, layout, city: (db.location || {}).city || '',
+    theme: db.theme, layout, screenId: screen ? screen.id : null, screenName: screen ? screen.name : 'Ana Ekran',
+    city: (db.location || {}).city || '',
     blocked: acc.ok ? null : acc.reason,
     app: appVersion(),
   };
@@ -220,7 +223,7 @@ function publicState(t) {
   const ic = db.infoCfg || {}, imax = ic.max || {};
   // bilgi bandı: öğe sayısı sınırı (hem sayfalarda hem kayan bantta geçerli)
   const cap = (o, n) => o && n && Array.isArray(o.items) ? { ...o, items: o.items.slice(0, n) } : o;
-  const ml = sp ? sp.items : mediaList(t);
+  const ml = sp ? sp.items : mediaList(t, screen ? screen.id : null);
   const mediaAt = getTenantMediaAt(t, ml);
   return {
     ...base,
