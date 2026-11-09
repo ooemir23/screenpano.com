@@ -2697,9 +2697,9 @@ function celebFrame(ts) {
 }
 function celebPhoto(silence) {
   const c = window.__celeb; if (!celeb.on || !c || !c.photos.length) return;
-  if (!silence && !celeb.late && MEDIA_ON && !trailerOn && !big.showing && !camp.showing) { // oynayan video varsa o bitince çıkar
+  if (!silence && !celeb.late && MEDIA_ON && !trailerOn && !big.showing && !camp.showing) { // oynayan içerik varsa — video, fotoğraf ya da afiş — o bitince çıkar (next() sınırında gösterilir)
     const cur = videos.find(v => v.id === current);
-    if (cur && cur.type === 'video') { celeb.pd = true; holdForEnd(); return; }
+    if (cur) { celeb.pd = true; holdForEnd(); return; }
   }
   celeb.late = false;
   let ph = document.getElementById('cphoto');
