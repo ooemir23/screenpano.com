@@ -92,7 +92,18 @@
 .spp.t-insta .ig{display:flex;align-items:center;gap:.5em;font-size:1.5em;font-weight:700}
 .spp.t-insta .ig svg{width:1.3em;height:1.3em}
 .spp.t-insta .cap{font-size:1.45em;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:9;-webkit-box-orient:vertical;overflow:hidden;opacity:.92}
-.spp[dir=rtl] .in{text-align:right}`;
+.spp[dir=rtl] .in{text-align:right}
+/* dikey (portre) kutular: görsel üstte, yazı altta */
+.spp.vert.t-indirim{flex-direction:column}
+.spp.vert.t-indirim .big{flex:0 0 38%;width:100%;height:auto;font-size:9em}
+.spp.vert.has-img.t-kahvalti .ph,.spp.vert.has-img.t-yeni .ph{left:0;bottom:42%}
+.spp.vert.has-img.t-kahvalti .shade,.spp.vert.has-img.t-yeni .shade{background:linear-gradient(180deg,transparent 35%,var(--bg) 60%)}
+.spp.vert.has-img .in{max-width:100%;margin-top:auto;padding-top:46%}
+.spp.vert.t-insta .ph{width:100%;height:62%;bottom:auto}
+.spp.vert.t-insta .in{margin-left:0;margin-top:auto;height:38%;width:100%}
+.spp.vert.t-kitap:not(.multi) .ph{left:12%;right:12%;top:5%;bottom:50%;width:auto}
+.spp.vert.t-kitap:not(.multi) .in{margin-left:0;margin-top:auto;height:48%;width:100%;padding:5% 7%}
+.spp.vert.t-kitap.multi .gr{grid-template-columns:1fr}`;
   function ensureCss() { if (document.getElementById('spp-css')) return; const s = document.createElement('style'); s.id = 'spp-css'; s.textContent = css; document.head.appendChild(s); }
 
   // item: { tpl, fields, i18n:{en:{...}}, image:url }
@@ -123,7 +134,12 @@
     const wave = tpl === 'muzik' ? `<div class="wave">${[0.2, 0.6, 0.1, 0.9, 0.4, 0.7, 0.3].map(d => `<i style="height:${40 + Math.round(d * 60)}%;animation-delay:-${d}s"></i>`).join('')}</div>` : '';
     return `<div class="${cls}"${dir}>${img}${wave}<div class="in">${opt('badge', 'badge')}<h1>${f('title')}</h1>${opt('price', 'price')}${opt('sub', 'sub')}${opt('note', 'note')}</div></div>`;
   }
-  // yazı boyu kutuya göre: 1920x1080 tam ekranda 1em ≈ 30px
-  function fit(el) { const w = el.clientWidth || 1920, h = el.clientHeight || 1080; el.style.fontSize = Math.max(1.5, Math.min(w / 64, h / 34)) + 'px'; }
+  // yazı boyu kutuya göre: 1920x1080 tam ekranda 1em ≈ 30px; dikey kutularda üst-alt dizilim (.vert)
+  function fit(el) {
+    if (!el) return;
+    const w = el.clientWidth || 1920, h = el.clientHeight || 1080, vert = h > w * 1.1;
+    el.classList.toggle('vert', vert);
+    el.style.fontSize = Math.max(1.5, vert ? Math.min(w / 38, h / 56) : Math.min(w / 64, h / 34)) + 'px';
+  }
   window.SPPoster = { TEMPLATES: T, FIELD_LABELS, html, fit };
 })();

@@ -1691,6 +1691,26 @@
           "text": "تصاميم شاشة جاهزة جديدة للمخبز / الحلويات، والسبا / صالون التجميل، والنادي الرياضي، والعيادة / صالة الانتظار، وواجهة المتجر، والوجبات السريعة / لوحة الطلبات، والحرم الجامعي / المكتب، والفعاليات / قاعة الأفراح. اختر واحدًا وعدّل النصوص لتناسب نشاطك."
         }
       }
+    },
+    {
+      "icon": "↕️",
+      "title": "Dikey TV (9:16) desteği ve dikey hazır düzenler",
+      "text": "Televizyonunu duvara veya vitrine dik (portre) asan işletmeler için Tasarım bölümüne Dikey TV modu (90° sağa / 270° sola) ve 4 yeni dikey hazır düzen (Menü ve vitrin, Vitrin ve kampanya, Maç ve skor kulesi, Otel / lobi bilgi panosu) eklendi. Android TV kutusunda ek bir ayar yapmadan ekran dikey yerleşir; düzen editörü ve canlı önizleme de 9:16 dikey çalışır.",
+      "added": "2026-11-09",
+      "i18n": {
+        "en": {
+          "title": "Vertical TV (9:16) support and portrait layouts",
+          "text": "For businesses that mount their TV vertically (portrait) on a wall or shop window, Design now includes a Vertical TV mode (90° right / 270° left) and 4 ready-made portrait layouts (Menu & showcase, Showcase & campaign, Match & score tower, Hotel / lobby board). The screen rotates automatically without any Android TV box setting, and both the layout editor and live preview work in 9:16."
+        },
+        "de": {
+          "title": "Hochformat-TV (9:16) und fertige Porträt-Layouts",
+          "text": "Für Betriebe mit hochkant montiertem Fernseher an Wand oder Schaufenster gibt es unter Design jetzt den Hochformat-TV-Modus (90° rechts / 270° links) sowie 4 fertige Hochformat-Layouts (Speisekarte & Schaufenster, Schaufenster & Aktion, Spiel- & Ergebnisturm, Hotel- / Lobby-Tafel). Das Bild dreht sich automatisch ohne Einstellung an der TV-Box; Layout-Editor und Live-Vorschau arbeiten im 9:16-Format."
+        },
+        "ar": {
+          "title": "دعم التلفاز العمودي (9:16) وتخطيطات طولية جاهزة",
+          "text": "للأعمال التي تثبّت التلفاز عموديًا (طوليًا) على الحائط أو الواجهة، أُضيف وضع التلفاز العمودي (90° يمينًا / 270° يسارًا) في قسم التصميم مع 4 تخطيطات عمودية جاهزة (القائمة والواجهة، الواجهة والحملة، برج المباريات والنتائج، لوحة الفندق / الردهة). تدور الشاشة تلقائيًا دون إعداد إضافي في جهاز التلفاز، ويعمل محرر التخطيط والمعاينة المباشرة بنسبة 9:16."
+        }
+      }
     }
   ],
   "shots": {

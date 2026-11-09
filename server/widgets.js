@@ -143,6 +143,44 @@ const TEMPLATES = {
     name: 'Sade', desc: 'Tam ekran medya ve altta kayan bant',
     widgets: [W('media', 0, 0, 24, 22), W('ticker', 0, 22, 24, 2)],
   },
+  dikey_menu: {
+    name: 'Dikey menü panosu', desc: 'Dikey TV: üstte logo ve saat, ortada ürün medyası ve geniş fiyat listesi (Pro), altta kayan bant', orient: 90,
+    widgets: [
+      W('logo', 0, 0, 14, 2), W('clock', 14, 0, 10, 2, { seconds: false, show: 'both' }),
+      W('media', 0, 2, 24, 8), W('menu', 0, 10, 24, 12),
+      W('ticker', 0, 22, 24, 2, { clock: false }),
+    ],
+  },
+  dikey_vitrin: {
+    name: 'Dikey vitrin / Reels', desc: 'Dikey TV: üstte logo ve saat, ortada tam boy 9:16 dikey medya (Reels / afiş), altta duyuru, QR ve kayan bant', orient: 90,
+    widgets: [
+      W('logo', 0, 0, 14, 2), W('clock', 14, 0, 10, 2, { seconds: false, show: 'both' }),
+      W('media', 0, 2, 24, 16, { fit: 'cover' }),
+      TX(0, 18, 15, 4, ['Hoş geldiniz', 'Günün fırsatlarını kaçırmayın'], ['Welcome', 'Don’t miss today’s deals'], ['Willkommen', 'Verpassen Sie nicht die heutigen Angebote'], ['Добро пожаловать', 'Не пропустите сегодняшние предложения'], ['أهلاً وسهلاً', 'لا تفوتوا عروض اليوم'], { size: 's' }),
+      W('qr', 15, 18, 9, 4, { qr: '', style: 'right', size: 'box', text: 's', look: 'card' }),
+      W('ticker', 0, 22, 24, 2, { clock: false }),
+    ],
+  },
+  dikey_spor: {
+    name: 'Dikey spor / kafe', desc: 'Dikey TV: üstte logo ve saat, ortada canlı medya, altında maçlar, hava/kurlar ve QR, en altta kayan bant', orient: 90,
+    widgets: [
+      W('logo', 0, 0, 14, 2), W('clock', 14, 0, 10, 2, { seconds: false, show: 'both' }),
+      W('media', 0, 2, 24, 9), W('info', 0, 11, 24, 7),
+      W('rates', 0, 18, 15, 4), W('qr', 15, 18, 9, 4, QRC),
+      W('ticker', 0, 22, 24, 2, { clock: false }),
+    ],
+  },
+  dikey_lobi: {
+    name: 'Dikey lobi / karşılama totemi', desc: 'Dikey TV: üstte logo ve saat, ortada tanıtım medyası ve dünya saatleri, altta hava, karşılama ve Wi-Fi QR', orient: 90,
+    widgets: [
+      W('logo', 0, 0, 14, 2), W('clock', 14, 0, 10, 2, { seconds: false, show: 'both' }),
+      W('media', 0, 2, 24, 10),
+      W('worldclock', 0, 12, 24, 3, { zones: 'Europe/London,Europe/Moscow,Asia/Dubai,America/New_York', seconds: false }),
+      TX(0, 15, 14, 3, ['Hoş geldiniz', 'Keyifli bir gün dileriz'], ['Welcome', 'We wish you a pleasant day'], ['Willkommen', 'Wir wünschen Ihnen einen angenehmen Tag'], ['Добро пожаловать', 'Желаем вам приятного дня'], ['أهلاً وسهلاً', 'نتمنى لكم يومًا سعيدًا'], { size: 's' }),
+      W('weather', 0, 18, 14, 4), W('qr', 14, 15, 10, 7, QRC),
+      W('ticker', 0, 22, 24, 2, { clock: false }),
+    ],
+  },
 };
 
 const THEMES = {
@@ -157,13 +195,17 @@ const THEMES = {
 const FONTS = ['Montserrat', 'Plus Jakarta Sans', 'Poppins', 'Oswald', 'Nunito', 'Playfair Display', 'Roboto Condensed'];
 
 const DEFAULT_TEMPLATE = 'spor';
-const defaultLayout = (tpl = DEFAULT_TEMPLATE) => ({ cols: COLS, rows: ROWS, widgets: JSON.parse(JSON.stringify((TEMPLATES[tpl] || TEMPLATES[DEFAULT_TEMPLATE]).widgets)) });
+const defaultLayout = (tpl = DEFAULT_TEMPLATE) => {
+  const t = TEMPLATES[tpl] || TEMPLATES[DEFAULT_TEMPLATE];
+  return { cols: COLS, rows: ROWS, ...(t.orient ? { orient: t.orient } : {}), widgets: JSON.parse(JSON.stringify(t.widgets)) };
+};
 
 // Panelden gelen düzeni doğrula: bilinmeyen tür, taşan kutu, tekrar eden widget ayıklanır (QR kartı en çok 6 kez olabilir)
 const HEX = /^#[0-9a-f]{6}$/i;
 const BOXES = ['accent', 'glass', 'dark', 'outline', 'none']; // kutu stili: tema geneli + widget başına
 function cleanLayout(l) {
   const FC = l && Number(l.cols) === 48 ? 48 : COLS; // 48 = ince ızgara (koordinatlar iki katı hassas)
+  const orient = [90, 270].includes(Number(l && l.orient)) ? Number(l.orient) : 0; // ekran yönü: 0 (yatay), 90 (sağa dikey), 270 (sola dikey)
   const seen = new Set(), count = {}, out = [];
   for (const w of (l && Array.isArray(l.widgets) ? l.widgets : []).slice(0, 20)) {
     if (!w || !WIDGETS[w.type] || seen.has(w.type)) continue;
@@ -205,7 +247,7 @@ function cleanLayout(l) {
     if (!WIDGETS[w.type].multi) seen.add(w.type);
     out.push(item);
   }
-  return { cols: FC, rows: FC, widgets: out };
+  return { cols: FC, rows: FC, ...(orient ? { orient } : {}), widgets: out };
 }
 function cleanTheme(t, cur = {}) {
   const o = { ...THEMES.kahve, ...cur };

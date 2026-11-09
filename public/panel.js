@@ -62,9 +62,23 @@ const fl = (label, input) => `<label class="fl"><span>${label}</span>${input}</l
 const head = (t, d, right = '') => `<div class="head"><div><h1>${t}</h1>${d ? `<p>${d}</p>` : ''}</div><div class="row">${right}</div></div>`;
 const tabs = (key, items) => `<div class="tabs">${items.map(([k, l]) => `<button class="${(SUB[key] || items[0][0]) === k ? 'on' : ''}" onclick="SUB['${key}']='${k}';go('${TAB}/${k}')">${l}</button>`).join('')}</div>`;
 const lock = what => pro() ? '' : `<div class="bn lock">🔒 <span><b>${what}</b> Pro pakette. Ayarlarınızı şimdiden yapabilirsiniz; ekranda görünmesi için paketinizi yükseltin.</span><a class="btn s g" href="#settings/plan">Paketler</a></div>`;
-function scalePv() { document.querySelectorAll('.pv').forEach(b => { const f = b.querySelector('iframe'); if (f && b.clientWidth) f.style.transform = `scale(${b.clientWidth / 1920})`; }); }
+const curOrient = draft => { const l = draft && EDIT.dirty && EDIT.layout ? EDIT.layout : (S.scr && S.scr.layout); return l && [90, 270].includes(Number(l.orient)) ? Number(l.orient) : 0; };
+function scalePv() {
+  document.querySelectorAll('.pv').forEach(b => {
+    const f = b.querySelector('iframe'); if (!f || !b.clientWidth) return;
+    const o = Number(b.dataset.orient) || 0;
+    if (o === 90) f.style.transform = `translate(0px,${b.clientHeight}px) rotate(-90deg) scale(${b.clientWidth / 1080})`;
+    else if (o === 270) f.style.transform = `translate(${b.clientWidth}px,0px) rotate(90deg) scale(${b.clientWidth / 1080})`;
+    else f.style.transform = `scale(${b.clientWidth / 1920})`;
+  });
+}
 addEventListener('resize', scalePv);
-const pvFrame = (draft) => `<div class="pv"><iframe src="/tv?preview=1" title="TV önizleme" loading="lazy"${draft ? ' onload="pushDraft()"' : ''}></iframe></div>`;
+addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data || !('screenpanoOrient' in e.data)) return;
+  const o = [90, 270].includes(Number(e.data.screenpanoOrient)) ? Number(e.data.screenpanoOrient) : 0;
+  document.querySelectorAll('.pv').forEach(b => { if (b.querySelector('iframe') && b.querySelector('iframe').contentWindow === e.source) { b.classList.toggle('vert', o > 0); b.dataset.orient = o; scalePv(); } });
+});
+const pvFrame = (draft) => { const o = curOrient(draft); return `<div class="pv${o ? ' vert' : ''}" data-orient="${o}"><iframe src="/tv?preview=1" title="TV önizleme" loading="lazy" onload="scalePv()${draft ? ';pushDraft()' : ''}"></iframe></div>`; };
 function openModal(html) { $('modalb').innerHTML = html; $('modal').classList.add('on'); }
 function closeModal() { $('modal').classList.remove('on'); $('modalb').innerHTML = ''; }
 function menu(open) { $('app').classList.toggle('menu', open); }
@@ -222,8 +236,28 @@ SECTIONS.home = {
 /* ================= TASARIM ================= */
 const EDIT = { layout: null, sel: -1, hist: [], dirty: false };
 // Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al + Kaydet görünür
-const layoutBar = () => `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><button class="btn g s" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
+const layoutBar = () => {
+  const o = curOrient(true);
+  return `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><select class="btn g s orsel" onchange="orientSet(+this.value)" title="Ekran yönü: yatay ya da dikey asılı TV"><option value="0" ${!o ? 'selected' : ''}>↔ Yatay (16:9)</option><option value="90" ${o === 90 ? 'selected' : ''}>↕ Dikey · Sağa 90° (9:16)</option><option value="270" ${o === 270 ? 'selected' : ''}>↕ Dikey · Sola 270° (9:16)</option></select><button class="btn g s" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
+};
 const lbarSync = () => { document.querySelectorAll('.lbar').forEach(b => b.classList.toggle('clean', !EDIT.dirty)); pushDraft(); };
+function orientSet(deg) {
+  if (!EDIT.layout) return;
+  const o = [90, 270].includes(Number(deg)) ? Number(deg) : 0, cur = EDIT.layout.orient || 0;
+  if (o === cur) return;
+  snap();
+  if (o) EDIT.layout.orient = o; else delete EDIT.layout.orient;
+  drawCanvas(); drawProps();
+  toast(o ? 'Dikey ekran modu seçildi; dikey hazır düzenlerden birini seçebilir veya kutuları yerleştirebilirsiniz' : 'Yatay ekran modu seçildi');
+}
+async function saveOrient(deg) {
+  const o = [90, 270].includes(Number(deg)) ? Number(deg) : 0;
+  if (await act('PUT', '/options', { orient: o }, o ? 'Dikey ekran yönü kaydedildi, TV güncellendi' : 'Yatay ekran yönü kaydedildi, TV güncellendi', false)) {
+    S.scr = await req('GET', '/screen');
+    if (EDIT.layout && !EDIT.dirty) EDIT.layout = clone(S.scr.layout);
+    render(true);
+  }
+}
 // Kaydedilmemiş düzeni önizleme çerçevesine ve (ayrı sekme için) localStorage'a ilet; değişiklik yoksa kaydedilmiş hâle döner
 function pushDraft() {
   const L = EDIT.dirty && EDIT.layout ? EDIT.layout : null;
@@ -243,13 +277,19 @@ SECTIONS.design = {
       + `<button class="btn g" onclick="resetDesign('${sub}')">⟲ Varsayılana sıfırla</button>`)
       + tabs('design', [['layout', 'Düzen'], ['colors', 'Renk ve logo'], ['tv', 'TV ayarları']]);
     if (sub === 'layout') {
-      const T = S.cat.templates;
+      const T = S.cat.templates, o = curOrient(true);
       const fresh = !S.me.tenant.logo && !S.db.videos.length;
+      const tplBtn = ([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini${v.orient ? ' vert' : ''}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`;
+      const hTpls = Object.entries(T).filter(([, v]) => !v.orient).map(tplBtn).join('');
+      const vTpls = Object.entries(T).filter(([, v]) => v.orient).map(tplBtn).join('');
+      const tplBody = o
+        ? `<div class="tpl-sub">↕ Dikey TV düzenleri (9:16)</div><div class="tpls">${vTpls}</div><div class="tpl-sub">↔ Yatay ekran düzenleri (16:9)</div><div class="tpls">${hTpls}</div>`
+        : `<div class="tpl-sub">↔ Yatay ekran düzenleri (16:9)</div><div class="tpls">${hTpls}</div><div class="tpl-sub">↕ Dikey TV düzenleri (9:16)</div><div class="tpls">${vTpls}</div>`;
       h += `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
-        + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin.', `<div class="tpls">${Object.entries(T).map(([k, v]) => `<button class="tpl" onclick="applyTpl('${k}')"><div class="mini">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`, layoutBar())
+        + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin. Dikey TV şablonları ekran yönünü otomatik olarak dikey yapar.', tplBody, layoutBar())
         + designsCard()
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır.',
-          `<div class="editor"><div id="cw"><div id="cv"></div></div><div id="props"></div></div>
+          `<div class="editor"><div id="cw"${o ? ' class="vert"' : ''}><div id="cv"></div></div><div id="props"></div></div>
            <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`, layoutBar())
         + card('Önizleme', 'Yaptığınız değişiklikler (kaydetmeden önce) burada görünür; beğenince "Düzeni kaydet"e basın.', pvFrame(true), '<button class="btn g s" onclick="openDraft()">↗ Yeni sekmede aç</button>', 'pvcard');
     } else if (sub === 'colors') {
@@ -270,8 +310,14 @@ SECTIONS.design = {
           </div><div class="row end mt"><button class="btn" onclick="saveTheme()">Renkleri kaydet</button></div>`)
         + card('Önizleme', '', pvFrame());
     } else {
-      const db = S.db, sv = k => db['safe' + k] != null ? db['safe' + k] : (db.safeInset || 0);
-      h += card('Kenar payı (TV görüntüyü kırpıyorsa)', 'Bazı TV\'ler görüntünün kenarlarını keser. Önce TV\'nin görüntü ayarından "Tam ekran / Ekrana sığdır / Just Scan" seçeneğini deneyin; olmazsa buradan küçültün. Kutu tüm TV\'lere aynı görüntüyü verdiği için ayar hepsini etkiler.',
+      const db = S.db, sv = k => db['safe' + k] != null ? db['safe' + k] : (db.safeInset || 0), curOr = (S.scr && S.scr.layout && S.scr.layout.orient) || 0;
+      h += card('Ekran yönü (Yatay / Dikey TV)', 'Televizyonunuz duvara dikey (portre) asılıysa yönünü buradan seçin. Görüntü HDMI üzerinden otomatik olarak 90° veya 270° döndürülür; TV veya kutu ayarlarıyla uğraşmanız gerekmez.',
+        `<div class="grid g3">${[
+          [0, '↔ Yatay (16:9)', 'Standart yatay televizyon ekranı'],
+          [90, '↕ Dikey · Sağa 90° (9:16)', 'Saat yönünde 90° çevrilerek asılmış dikey TV'],
+          [270, '↕ Dikey · Sola 270° (9:16)', 'Saat yönünün tersine çevrilerek asılmış dikey TV'],
+        ].map(([deg, title, desc]) => `<button type="button" class="tpl" style="${curOr === deg ? 'border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2)' : ''}" onclick="saveOrient(${deg})"><b>${title}${curOr === deg ? ' ✓' : ''}</b><span>${desc}</span></button>`).join('')}</div>`)
+        + card('Kenar payı (TV görüntüyü kırpıyorsa)', 'Bazı TV\'ler görüntünün kenarlarını keser. Önce TV\'nin görüntü ayarından "Tam ekran / Ekrana sığdır / Just Scan" seçeneğini deneyin; olmazsa buradan küçültün. Kutu tüm TV\'lere aynı görüntüyü verdiği için ayar hepsini etkiler.',
         `<div class="swr"><div class="b"><b>Hizalama çerçevesini göster</b><span>TV\'de yeşil bir çerçeve çıkar; dört kenarı görünene kadar payları artırın, sonra kapatın.</span></div>${sw(db.safeGuide, "opt('safeGuide',this.checked)")}</div>
          <div class="f mt">${['L', 'R', 'T', 'B'].map(k => fl(`${{ L: 'Sol', R: 'Sağ', T: 'Üst', B: 'Alt' }[k]}: <b id="sv${k}">${sv(k)}</b>%`, `<input type="range" min="0" max="20" step="0.5" value="${sv(k)}" id="safe${k}" oninput="$('sv${k}').textContent=this.value" onchange="saveSafe()">`)).join('')}</div>
          <div class="row end mt"><button class="btn g s" onclick="resetSafe()">Sıfırla</button></div>`);
@@ -292,7 +338,12 @@ const floats = (a, b) => isFloat(a.type) !== isFloat(b.type); // QR ve yazı kut
 const badSet = () => { const ws = EDIT.layout.widgets, bad = new Set(); ws.forEach((a, i) => ws.forEach((b, j) => { if (i < j && overlap(a, b) && !floats(a, b)) { bad.add(i); bad.add(j); } })); return bad; };
 function drawCanvas() {
   const c = $('cv'); if (!c) return;
-  const bad = badSet(), G = EDIT.layout.cols || 24; lbarSync();
+  const bad = badSet(), G = EDIT.layout.cols || 24, o = [90, 270].includes(Number(EDIT.layout.orient)) ? Number(EDIT.layout.orient) : 0;
+  const cw = $('cw'); if (cw) cw.classList.toggle('vert', o > 0);
+  document.querySelectorAll('.orsel').forEach(s => { s.value = String(o); });
+  document.querySelectorAll('.pvcard .pv').forEach(p => { p.classList.toggle('vert', o > 0); p.dataset.orient = o; });
+  scalePv();
+  lbarSync();
   c.style.backgroundSize = `calc(100% / ${G}) calc(100% / ${G})`;
   c.innerHTML = EDIT.layout.widgets.map((w, i) => {
     const d = S.cat.widgets[w.type] || { name: w.type };
@@ -474,8 +525,8 @@ function addW(type) {
 function designsCard() {
   const ds = S.cat.designs || [], can = !!S.cat.canDesigns;
   if (!ds.length && !can) return '';
-  const tiles = ds.map(v => { const G = (v.layout && v.layout.cols) || 24, th = v.theme || {};
-    return `<div class="tpl" style="position:relative" onclick="applyDesign('${v.id}')"><div class="mini" style="background:${esc(th.bg || '#111')}">${v.layout.widgets.map(w => `<i style="left:${w.x / G * 100}%;top:${w.y / G * 100}%;width:${w.w / G * 100}%;height:${w.h / G * 100}%;background:${esc(th.accent || '#555')}"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc || '')}</span>${can ? `<button class="btn xs g" style="position:absolute;top:6px;right:6px" title="Sil" onclick="event.stopPropagation();delDesign('${v.id}')">✕</button>` : ''}</div>`; }).join('');
+  const tiles = ds.map(v => { const G = (v.layout && v.layout.cols) || 24, th = v.theme || {}, vert = !!(v.layout && v.layout.orient);
+    return `<div class="tpl" style="position:relative" onclick="applyDesign('${v.id}')"><div class="mini${vert ? ' vert' : ''}" style="background:${esc(th.bg || '#111')}">${v.layout.widgets.map(w => `<i style="left:${w.x / G * 100}%;top:${w.y / G * 100}%;width:${w.w / G * 100}%;height:${w.h / G * 100}%;background:${esc(th.accent || '#555')}"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc || '')}</span>${can ? `<button class="btn xs g" style="position:absolute;top:6px;right:6px" title="Sil" onclick="event.stopPropagation();delDesign('${v.id}')">✕</button>` : ''}</div>`; }).join('');
   return card('Ortak tasarımlar', can ? 'Kaydettiğiniz tasarımlar tüm işletmelerin panelinde görünür; onlar tek tıkla uygular (yalnız düzen ve renkler; medya, logo ve fiyat listesi değişmez).' : 'Ekran düzeni ve renkleri hazır tasarımlar. Birini seçince düzeniniz ve renkleriniz değişir (medya, logo ve fiyat listeniz korunur).',
     (ds.length ? `<div class="tpls">${tiles}</div>` : '<div class="empty">Henüz kayıtlı tasarım yok</div>'),
     can ? '<button class="btn s" onclick="saveDesign()">★ Mevcut tasarımı ortak kaydet</button>' : '');
@@ -506,7 +557,8 @@ async function applyStarter(k) {
 }
 async function applyTpl(k) {
   if (EDIT.dirty && !await UI.ask('Mevcut düzenin yerine bu şablon konsun mu?')) return;
-  snap(); EDIT.layout = { cols: 24, rows: 24, widgets: clone(S.cat.templates[k].widgets) }; EDIT.sel = -1;
+  const tpl = S.cat.templates[k], curOr = (EDIT.layout && EDIT.layout.orient) || 0, orient = tpl.orient ? (curOr === 270 ? 270 : 90) : 0;
+  snap(); EDIT.layout = { cols: 24, rows: 24, ...(orient ? { orient } : {}), widgets: clone(tpl.widgets) }; EDIT.sel = -1;
   drawCanvas(); drawProps(); drawPal(); toast('Şablon uygulandı; beğendiyseniz "Düzeni kaydet"e basın');
   $('cw').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }

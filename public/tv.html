@@ -42,6 +42,14 @@ try { if (window.__N && window.__N.nativeCellsPref) { const l = String(window.__
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;width:100%;background:var(--edge);color:var(--white);font-family:var(--font),Montserrat,system-ui,sans-serif;overflow:hidden;cursor:none}
 #app{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));grid-template-rows:repeat(24,minmax(0,1fr));gap:1.4vh .9vw;padding:1.8vh 1.2vw;height:100vh;height:100dvh;background:radial-gradient(ellipse 46% 46% at 40% 46%,var(--glow) 0%,transparent 100%),var(--edge)}
+/* Dikey TV (9:16): TV fiziksel olarak 90° veya 270° çevrildiğinde 1920×1080 sinyal içinde içerik 1080×1920 dikey yerleşir */
+html.vert #root,html.vert #app{width:100%;height:100%}
+html.vert #app{gap:1vh 1.2vh;padding:1.4vh 1.4vh}
+html.rot-90 body,html.rot-270 body{position:fixed;top:0;left:0;width:100vh;height:100vw;transform-origin:0 0}
+html.rot-90 body{transform:translate(100vw,0) rotate(90deg)}
+html.rot-270 body{transform:translate(0,100vh) rotate(-90deg)}
+html.rot-pv{display:flex;align-items:center;justify-content:center;background:#0a0b0d}
+html.rot-pv body{position:relative;width:calc(100vh * 9 / 16);height:100vh;max-width:100vw;box-shadow:0 0 6vh rgba(0,0,0,.85)}
 .cell{min-width:0;min-height:0;position:relative;display:flex;flex-direction:column}
 #parking{position:fixed;left:-300vw;top:0;width:60vw;height:60vh;visibility:hidden;pointer-events:none}
 #parking .cell{width:100%;height:100%}
@@ -1449,10 +1457,10 @@ if (window.ResizeObserver) { try { new ResizeObserver(() => syncExoBounds()).obs
 else setInterval(syncExoBounds, 3000); // çok eski WebView
 
 let playStartedAt = 0;
-// ---- yerel video katmanı (APK) yardımcıları ----
-function NX() { return !!(window.__N && (window.__N.playExoWithSeek || window.__N.playExo)); }
+// ---- yerel video katmanı (APK) yardımcıları (dikey ekranda CSS döndürme için web katmanı kullanılır) ----
+function NX() { return !window.__orient && !!(window.__N && (window.__N.playExoWithSeek || window.__N.playExo)); }
 // APK 3.2+: fotoğraflar da sayfanın arkasındaki yerel katmanda (hazır olunca haber verir)
-function NPHOTO() { return !!(window.__N && window.__N.showImage2 && window.__N.hasImageEvent); }
+function NPHOTO() { return !window.__orient && !!(window.__N && window.__N.showImage2 && window.__N.hasImageEvent); }
 var nativeShowing = null; // 'video' | 'photo' | null — yerel katmanda o an görünen
 var exoTok = 0; // var: betik başında çağrılırsa da tanımlı olsun
 function exoShow(on) { document.documentElement.classList.toggle('exo-on', !!on); }
@@ -1526,7 +1534,7 @@ function showImageWeb(it) {
 // Sıfır boşluklu video geçişi
 function showVideoSeamless(it, durMs, startMs) {
   playStartedAt = Date.now();
-  if (window.__N && (window.__N.playExoWithSeek || window.__N.playExo)) {
+  if (NX()) {
     releaseWebVideos();
     syncExoBounds();
     const tk = ++exoTok;
@@ -1589,7 +1597,7 @@ function showVideoSeamless(it, durMs, startMs) {
 }
 
 // APK 3.10+: medya sırası yerel motorda (MediaEngine); sayfa yalnız araya girenleri (kampanya, büyük maç, fragman) yönetir
-const NMED = () => !!(window.__nativeMedia && window.__N && window.__N.mediaResume);
+const NMED = () => !window.__orient && !!(window.__nativeMedia && window.__N && window.__N.mediaResume);
 // yerel motor içerik bitince sorar: araya girecek bir şey var mı? "hold" = var (sayfa bitince mediaResume çağırır), "go" = yok
 window.__nmN = 0;
 window.__mediaBoundary = () => {
@@ -1790,7 +1798,7 @@ function fit() {
   const list = document.getElementById('list');
   list.style.display = 'flex';
   list.innerHTML = card({home: 'x', away: 'x', hs: 0, as: 0, final: true, day: 'x', channel: matches.some(m => m.channel) ? 'x' : null});
-  const ch = list.firstElementChild.getBoundingClientRect().height + 2;
+  const ch = (list.firstElementChild.offsetHeight || list.firstElementChild.getBoundingClientRect().height) + 2;
   const gap = parseFloat(getComputedStyle(list).rowGap) || 0;
   PER_PAGE = Math.max(1, Math.floor((list.clientHeight + gap) / (ch + gap)));
   const vh = innerHeight / 100;
@@ -1802,7 +1810,7 @@ function measureCards(items, fn = card) {
   probe.style.cssText = `position:absolute;left:0;top:0;width:${mb.clientWidth}px;visibility:hidden;display:flex;flex-direction:column;gap:1vh;pointer-events:none`;
   probe.innerHTML = items.map(fn).join('');
   mb.appendChild(probe);
-  const hs = [...probe.children].map(c => c.getBoundingClientRect().height);
+  const hs = [...probe.children].map(c => c.offsetHeight || c.getBoundingClientRect().height);
   probe.remove();
   return hs;
 }
@@ -1901,10 +1909,12 @@ function fitList(list, off) {
   [...list.children].forEach(c => { c.style.zoom = ''; });
   if (off || list.children.length < 1) return;
   for (let i = 0; i < 6; i++) {
-    const r = list.getBoundingClientRect(), last = list.lastElementChild.getBoundingClientRect();
-    const over = last.bottom - (r.top + r.height);
+    const r = list.getBoundingClientRect(), last = list.lastElementChild.getBoundingClientRect(), rot = window.__effRot || 0;
+    const avail = rot ? r.width : r.height;
+    const used = rot === 90 ? (r.right - last.left) : rot === 270 ? (last.right - r.left) : (last.bottom - r.top);
+    const over = used - avail;
     if (over <= 0.5) break;
-    const used = last.bottom - r.top, k = Math.max(0.55, (r.height / used) * 0.985);
+    const k = Math.max(0.55, (avail / used) * 0.985);
     const z = (parseFloat(list.firstElementChild.style.zoom) || 1) * k;
     [...list.children].forEach(c => { c.style.zoom = z.toFixed(3); });
     if (z <= 0.56) break;
@@ -2161,13 +2171,54 @@ function applyTicker(label, items, seg, shown, info) {
   if (key !== tickKey) { tickKey = key; track.style.animation = 'none'; void track.offsetWidth; track.style.animation = ''; }
   track.style.animationDuration = secs + 's';
 }
-window.__nativeCells = list => { window.__nativePoster = (list || []).includes('poster'); const c = document.documentElement.classList; ['ticker', 'clock', 'worldclock', 'prayer', 'converter', 'logo', 'text', 'image', 'rates', 'reviews', 'menu', 'info', 'qr'].forEach(t => c.toggle('nat-' + t, (list || []).includes(t))); };
+window.__nativeCells = list => {
+  window.__lastNatCells = list || [];
+  if (window.__orient) {
+    window.__nativePoster = false;
+    const c = document.documentElement.classList;
+    ['ticker', 'clock', 'worldclock', 'prayer', 'converter', 'logo', 'text', 'image', 'rates', 'reviews', 'menu', 'info', 'qr'].forEach(t => c.remove('nat-' + t));
+    return;
+  }
+  window.__nativePoster = (list || []).includes('poster');
+  const c = document.documentElement.classList;
+  ['ticker', 'clock', 'worldclock', 'prayer', 'converter', 'logo', 'text', 'image', 'rates', 'reviews', 'menu', 'info', 'qr'].forEach(t => c.toggle('nat-' + t, (list || []).includes(t)));
+};
 let safeNow = { L: 0, R: 0, T: 0, B: 0 }, guideOn = false;
+// Dikey TV (9:16): 90° veya 270° döndürme; yerel SurfaceView dönmediği için dikeyde web katmanı devreye girer
+function applyOrient(deg) {
+  const o = deg === 90 || deg === 270 ? deg : 0;
+  const prev = window.__orient || 0;
+  window.__orient = o;
+  const root = document.documentElement;
+  const standalonePv = PREVIEW && !IN_IFRAME && o > 0;
+  const alreadyPortrait = o > 0 && innerHeight > innerWidth;
+  const effRot = (o > 0 && !standalonePv && !alreadyPortrait) ? o : 0;
+  window.__effRot = effRot;
+  root.classList.toggle('vert', o > 0);
+  root.classList.toggle('rot-90', effRot === 90);
+  root.classList.toggle('rot-270', effRot === 270);
+  root.classList.toggle('rot-pv', !!standalonePv);
+  if (IN_IFRAME && PREVIEW) {
+    try { window.parent.postMessage({ screenpanoOrient: o }, location.origin); } catch (e) {}
+  }
+  if ((prev > 0) !== (o > 0)) {
+    if (o > 0) {
+      exoStop(true);
+      try { if (window.__N && window.__N.overlay) window.__N.overlay(true); } catch (e) {}
+    } else {
+      try { if (window.__N && window.__N.overlay && !fullOn) window.__N.overlay(false); } catch (e) {}
+    }
+    if (window.__lastNatCells) window.__nativeCells(window.__lastNatCells);
+    if (MEDIA_ON && videos.length) { current = null; setTimeout(play, 60); }
+  }
+  applySafe(null, guideOn);
+}
 // Her kenar için ayrı pay (%): içerik oranı bozulmadan küçültülür ve görünen alanın ortasına kaydırılır
 function applySafe(safe, guide) {
   if (safe) safeNow = { L: Number(safe.L) || 0, R: Number(safe.R) || 0, T: Number(safe.T) || 0, B: Number(safe.B) || 0 };
   guideOn = !!guide;
-  const W = innerWidth, H = innerHeight, { L, R, T, B } = safeNow;
+  const rot = window.__effRot || 0;
+  const W = rot ? innerHeight : innerWidth, H = rot ? innerWidth : innerHeight, { L, R, T, B } = safeNow;
   const x0 = W * L / 100, y0 = H * T / 100, w = W * (1 - (L + R) / 100), h = H * (1 - (T + B) / 100);
   const root = document.getElementById('root'), g = document.getElementById('guide');
   if (L + R + T + B > 0) {
@@ -3092,11 +3143,12 @@ function menuNav(dir) {
   if (!btns.length) return;
   const cur = btns.indexOf(document.activeElement);
   if (cur < 0) { btns[0].focus(); return; }
-  const r0 = btns[cur].getBoundingClientRect(), cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2;
+  const r0 = btns[cur].getBoundingClientRect(), cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2, rot = window.__effRot || 0;
   let best = null, bs = 1e12;
   btns.forEach((b, i) => {
     if (i === cur) return;
-    const r = b.getBoundingClientRect(), x = r.left + r.width / 2 - cx, y = r.top + r.height / 2 - cy;
+    const r = b.getBoundingClientRect(), sx = r.left + r.width / 2 - cx, sy = r.top + r.height / 2 - cy;
+    const x = rot === 90 ? sy : rot === 270 ? -sy : sx, y = rot === 90 ? -sx : rot === 270 ? sx : sy;
     const along = dir === 'down' ? y : dir === 'up' ? -y : dir === 'right' ? x : -x, across = dir === 'down' || dir === 'up' ? x : y;
     if (along < 6) return;
     const sc = along + Math.abs(across) * 2.2; // yönde yakın ve hizalı olan kazanır
@@ -3215,6 +3267,7 @@ function applyLayout(l) {
   const sig = JSON.stringify(l);
   if (sig === layoutSig) return;
   layoutSig = sig; fillSig = '';
+  applyOrient(l.orient || 0);
   const app = $id('app'), park = $id('parking'), cols = l.cols || 24, rows = l.rows || 24;
   app.style.gridTemplateColumns = `repeat(${cols},minmax(0,1fr))`;
   app.style.gridTemplateRows = `repeat(${rows},minmax(0,1fr))`;
@@ -3282,7 +3335,7 @@ function applyLayout(l) {
     if (MEDIA_ON && !wasOn && videos.length) { current = null; play(); }
   });
 }
-addEventListener('resize', () => { fitWidgets(); renderMenuW(false); showQrTile(); });
+addEventListener('resize', () => { if (window.__orient) applyOrient(window.__orient); fitWidgets(); renderMenuW(false); showQrTile(); });
 
 function musicHasAudio() {
   if (typeof MUS === 'undefined' || !MUS) return false;
@@ -3438,8 +3491,9 @@ function fitWidgets() {
     let k = 1;
     for (let i = 0; i < 16; i++) {
       b.style.fontSize = Math.max(6, b0 * k) + 'px'; s.style.fontSize = Math.max(6, s0 * k) + 'px';
-      const vis = [b, s].filter(e => e.style.display !== 'none'), rs = vis.map(e => e.getBoundingClientRect());
-      const hh = Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)), ww = Math.max(...rs.map(r => r.width));
+      const vis = [b, s].filter(e => e.style.display !== 'none'), rs = vis.map(e => e.getBoundingClientRect()), rot = window.__effRot || 0;
+      const hh = rot ? (Math.max(...rs.map(r => r.right)) - Math.min(...rs.map(r => r.left))) : (Math.max(...rs.map(r => r.bottom)) - Math.min(...rs.map(r => r.top)));
+      const ww = rot ? Math.max(...rs.map(r => r.height)) : Math.max(...rs.map(r => r.width));
       if ((hh <= h + 1 && ww <= w + 1) || k < .25) break;
       k *= .9;
     }
@@ -3636,7 +3690,7 @@ function drawQrCell(c) {
   const look = ['card', 'soft'].includes(c.look) ? c.look : 'classic', side = st === 'right' || st === 'left';
   let qv = SZ[c.size] || 17, sc = 1;
   if (c.size === 'box' && el.parentNode) {
-    const r = el.parentNode.getBoundingClientRect(), v1 = innerHeight / 100;
+    const r = { width: el.parentNode.clientWidth, height: el.parentNode.clientHeight }, v1 = innerHeight / 100;
     if (look === 'classic') { // etiket ve yazı QR ile orantılı küçülür/büyür
       const k = 1 + .318 * qt, g = .8 * v1;
       sc = st === 'plain' ? Math.min(r.width, r.height) / (17 * v1) : side ? Math.min((r.width - g) / (17 * v1 * k), r.height / (17 * v1)) : Math.min(r.width / (17 * v1), (r.height - g) / (17 * v1 * k));
@@ -3666,7 +3720,9 @@ function keepInside(el) {
   if (!isFinite(L)) return;
   const dx = L < app.left + pad ? app.left + pad - L : R > app.right - pad ? app.right - pad - R : 0;
   const dy = T < app.top + pad ? app.top + pad - T : B > app.bottom - pad ? app.bottom - pad - B : 0;
-  if (dx || dy) el.style.transform = `translate(${Math.round(dx)}px,${Math.round(dy)}px)`;
+  const rot = window.__effRot || 0;
+  const tx = rot === 90 ? dy : rot === 270 ? -dy : dx, ty = rot === 90 ? -dx : rot === 270 ? dx : dy;
+  if (tx || ty) el.style.transform = `translate(${Math.round(tx)}px,${Math.round(ty)}px)`;
 }
 // Şu an ekranda ne var: gol / büyük maç / kampanya / fragman, yoksa oynayan medyanın türü (video, image, poster)
 function qrCtx() {
@@ -3725,13 +3781,13 @@ function renderMenuW(reset) {
     for (const i of c.items || []) { const t = (i.t && i.t[LANG]) || {}; rows.push({ name: t.name || i.name, desc: t.desc || (t.name ? '' : i.desc), price: i.off ? (LANG === 'tr' ? 'Tükendi' : 'Sold out') : i.price, was: i.off ? '' : i.was, off: i.off, kcal: i.kcal }); }
   }
   if (!rows.length) { body.innerHTML = '<div class="mempty">Panelde Fiyat Listesi bölümünden ürün ekleyin.</div>'; box.querySelector('.pg').textContent = ''; return; }
-  const W = body.clientWidth, H = body.clientHeight, gap = innerWidth * 0.02;
-  const ncol = W > innerWidth * 0.42 ? (W > innerWidth * 0.75 ? 3 : 2) : 1, colW = (W - gap * (ncol - 1)) / ncol;
+  const aw = $id('app').clientWidth || innerWidth, W = body.clientWidth, H = body.clientHeight, gap = aw * 0.02;
+  const ncol = W > aw * 0.42 ? (W > aw * 0.75 ? 3 : 2) : 1, colW = (W - gap * (ncol - 1)) / ncol;
   const probe = document.createElement('div');
   probe.style.cssText = `position:absolute;left:0;top:0;width:${colW}px;visibility:hidden`;
   probe.innerHTML = rows.map(r => menuRow(r, m.currency)).join('');
   body.appendChild(probe);
-  const hs = [...probe.children].map(e => e.getBoundingClientRect().height);
+  const hs = [...probe.children].map(e => e.offsetHeight || e.getBoundingClientRect().height);
   probe.remove();
   const pagesOut = []; let page = [[]], col = 0, used = 0;
   rows.forEach((r, i) => {

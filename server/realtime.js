@@ -26,8 +26,8 @@ function sendState(ws, cache) {
   if (!s) {
     let base = cache && cache.get(ws.tid);
     if (!base) { base = publicState(t); if (cache) cache.set(ws.tid, base); }
-    // nativeWidgets: bu kutu ekranı yerel widget'larla çizsin mi (panelden kutu başına açılır; yoksa sayfa çizer)
-    s = JSON.stringify({ type: 'state', state: { ...base, nativeWidgets: !!ws.native } });
+    // nativeWidgets: bu kutu ekranı yerel widget'larla çizsin mi (panelden kutu başına açılır; dikey ekranda WebView döndürerek çizer)
+    s = JSON.stringify({ type: 'state', state: { ...base, nativeWidgets: !(base.layout && base.layout.orient) && !!ws.native } });
     if (cache) cache.set(key, s);
   }
   sendRaw(ws, s);

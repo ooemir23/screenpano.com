@@ -191,13 +191,18 @@ r.post('/design/reset', ownerOnly, (req, res) => {
   const t = req.t, scope = String((req.body || {}).scope || 'all'), all = scope === 'all';
   if (!['layout', 'colors', 'tv', 'all'].includes(scope)) return res.status(400).json({ error: 'Geçersiz kapsam' });
   if (all || scope === 'layout') {
-    const l = W.cleanLayout(W.defaultLayout(plan(t).pro ? 'spor' : 'temel'));
-    store.updateScreen(tenants.mainScreen(t).id, t.id, { layout: JSON.stringify(l) });
+    const sc = tenants.mainScreen(t), cur = store.J(sc.layout) || {}, or = !all && [90, 270].includes(Number(cur.orient)) ? Number(cur.orient) : 0;
+    const l = W.cleanLayout({ ...W.defaultLayout(or ? (plan(t).pro ? 'dikey_menu' : 'dikey_vitrin') : (plan(t).pro ? 'spor' : 'temel')), ...(or ? { orient: or } : {}) });
+    store.updateScreen(sc.id, t.id, { layout: JSON.stringify(l) });
   }
   if (all || scope === 'colors') { const { name, ...th } = W.THEMES.kahve; t.db.theme = W.cleanTheme(th, {}); }
   if (all || scope === 'tv') {
     t.db.safeInset = 0; t.db.safeGuide = false; t.db.fxMode = 'auto';
     for (const k of ['L', 'R', 'T', 'B']) delete t.db['safe' + k];
+    if (scope === 'tv') {
+      const sc = tenants.mainScreen(t), cur = W.cleanLayout(store.J(sc.layout) || W.defaultLayout());
+      delete cur.orient; store.updateScreen(sc.id, t.id, { layout: JSON.stringify(cur) });
+    }
   }
   changed(t); res.json({ ok: true });
 });
@@ -754,6 +759,12 @@ r.put('/options', (req, res) => {
   if (b.safeInset !== undefined && isFinite(Number(b.safeInset))) db.safeInset = Math.max(0, Math.min(12, Math.round(Number(b.safeInset) * 2) / 2));
   for (const k of ['L', 'R', 'T', 'B']) { const v = b['safe' + k]; if (v !== undefined && isFinite(Number(v))) db['safe' + k] = Math.max(0, Math.min(20, Math.round(Number(v) * 2) / 2)); }
   if (typeof b.safeGuide === 'boolean') db.safeGuide = b.safeGuide;
+  if (b.orient !== undefined) {
+    const sc = tenants.mainScreen(req.t), cur = W.cleanLayout(store.J(sc.layout) || W.defaultLayout());
+    const o = [90, 270].includes(Number(b.orient)) ? Number(b.orient) : 0;
+    if (o) cur.orient = o; else delete cur.orient;
+    store.updateScreen(sc.id, req.t.id, { layout: JSON.stringify(cur) });
+  }
   changed(req.t); res.json({ ok: true });
 });
 r.put('/leagues', (req, res) => {
