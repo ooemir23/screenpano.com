@@ -5,6 +5,7 @@
 // Bazı sunucu sağlayıcıları (ör. Hetzner) 465'i engeller: bağlantı kurulamazsa diğer port denenir.
 // STARTTLS el sıkışması bozuksa (ve zorunlu tutulmadıysa) aynı port şifresiz denenir. İşe yarayan ayar hatırlanır.
 const nodemailer = require('nodemailer');
+const config = require('./config');
 const e = process.env;
 const enabled = () => !!e.SMTP_HOST;
 const auth = () => (e.SMTP_USER ? { user: e.SMTP_USER, pass: e.SMTP_PASS } : undefined);
@@ -33,7 +34,10 @@ function plan() {
 
 async function send(msg) {
   if (!enabled()) throw new Error('SMTP ayarlı değil');
-  const mail = { from: e.SMTP_FROM || e.SMTP_USER, ...msg };
+  const brand = config.BRAND || 'ScreenPano';
+  const rawFrom = (msg && msg.from) || e.SMTP_FROM || e.SMTP_USER || '';
+  const from = rawFrom && !rawFrom.includes('<') ? `"${brand}" <${rawFrom}>` : rawFrom;
+  const mail = { from, ...msg };
   const tries = working ? [working] : plan();
   let last;
   for (let i = 0; i < tries.length; i++) {

@@ -189,12 +189,28 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     if (!monitor.mailEnabled()) return res.status(400).json({ error: 'E-posta gönderimi sunucuda ayarlı değil (SMTP)' });
     if (!n.email) return res.status(400).json({ error: 'Önce e-posta adresinizi kaydedin' });
     const tpl = require('./mailtpl');
-    const ok = await monitor.sendMail(n.email, `${config.BRAND}: deneme bildirimi`, `${req.t.name} için uyarılar bu adrese gelecek.`,
+    const textMsg = `ScreenPano E-posta Bildirim Denemesi\n\nBu bir test iletisidir. ${req.t.name} işletmeniz için ekran ve haftalık performans bildirimleri bu adrese başarıyla ulaştırılacaktır.\n\nBildirim Adresi: ${n.email}\nPanel: ${config.BASE_URL}/panel#settings`;
+    const ok = await monitor.sendMail(n.email, `${config.BRAND || 'ScreenPano'} — E-posta Bildirim Denemesi`, textMsg,
       tpl.alert({
-        title: 'Deneme Bildirimi',
-        lead: `Bu bir deneme postasıdır. <b>${tpl.e(req.t.name)}</b> işletmesinin ekran ve haftalık özet bildirimleri bu adrese gelecek.`,
-        rows: [['İşletme', tpl.e(req.t.name)], ['Bildirim adresi', tpl.e(n.email)]],
-        cta: `${config.BASE_URL}/panel#settings`, ctaLabel: 'Bildirim Ayarları',
+        title: 'E-posta Bildirimleriniz Hazır',
+        badge: 'Bildirim Testi',
+        badgeColor: 'info',
+        preheader: `${req.t.name} işletmesi için e-posta bildirim sistemi hazır.`,
+        lead: `Bu bir test iletisidir. <b>${tpl.e(req.t.name)}</b> işletmeniz için e-posta uyarı ve bildirim sistemi başarıyla yapılandırılmıştır.`,
+        rows: [
+          ['İşletme Adı', tpl.e(req.t.name)],
+          ['Bildirim Adresi', tpl.e(n.email)],
+          ['Cihaz Uyarı Eşiği', `${monitor.offlineMin(req.t)} Dakika Kesinti`],
+          ['Sistem Durumu', '<span style="color:#15803d;font-weight:700">● Aktif ve Hazır</span>'],
+        ],
+        bulletTitle: 'Bu adrese iletilecek bildirimler:',
+        bullets: [
+          'Ekranlarınız çevrimdışı kaldığında (bağlantı kesintisi eşiğini aştığında) anlık e-posta uyarısı',
+          'Cihazlar yeniden internete bağlandığında ve yayına başladığında bilgilendirme iletisi',
+          'Açık olduğu takdirde her Pazartesi sabahı haftalık ekran performansı ve kampanya etkileşim karnesi',
+        ],
+        cta: `${config.BASE_URL}/panel#settings`,
+        ctaLabel: 'Bildirim Ayarlarını Yönet',
       }));
     ok ? res.json({ ok: true }) : res.status(502).json({ error: 'E-posta gönderilemedi' });
   });
@@ -204,10 +220,16 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     if (!monitor.mailEnabled()) return res.status(400).json({ error: 'E-posta gönderimi sunucuda ayarlı değil (SMTP)' });
     if (!n.email) return res.status(400).json({ error: 'Önce e-posta adresinizi kaydedin' });
     const weekly = require('./weekly');
-    const ok = await monitor.sendMail(n.email, `${config.BRAND}: haftalık özet · ${req.t.name}`, weekly.text(req.t), weekly.html(req.t));
+    const ok = await monitor.sendMail(n.email, `📊 ${config.BRAND || 'ScreenPano'} — Haftalık Ekran ve Performans Özeti · ${req.t.name}`, weekly.text(req.t), weekly.html(req.t));
     ok ? res.json({ ok: true }) : res.status(502).json({ error: 'E-posta gönderilemedi' });
   });
-  r.get('/notify/weekly-preview', (req, res) => res.type('text/plain; charset=utf-8').send(require('./weekly').text(req.t)));
+  r.get('/notify/weekly-preview', (req, res) => {
+    const weekly = require('./weekly');
+    if (req.query && req.query.format === 'html') {
+      return res.type('text/html; charset=utf-8').send(weekly.html(req.t));
+    }
+    res.type('text/plain; charset=utf-8').send(weekly.text(req.t));
+  });
   r.post('/devices/:id/snapshot', (req, res) => {
     const d = store.q.devicesOf.all(req.t.id).find(x => x.id === req.params.id); if (!d) return res.status(404).json({ error: 'bulunamadı' });
     const n = hub.sendDevice(d.id, { type: 'snap' });

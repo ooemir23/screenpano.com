@@ -184,7 +184,29 @@ r.post('/mail/test', async (req, res) => {
   const m = require('./monitor');
   if (!m.mailEnabled()) return res.status(400).json({ error: 'SMTP ayarlı değil (SMTP_HOST ortam değişkeni yok)' });
   try {
-    const o = await require('./mailer').send({ to, subject: 'ScreenPano deneme e-postası', text: 'Bu e-posta geldiyse ScreenPano uyarı e-postaları çalışıyor.' });
+    const tpl = require('./mailtpl');
+    const nowStr = new Date().toLocaleString('tr-TR', { timeZone: config.TZ });
+    const text = `ScreenPano SMTP Test İletisi\n\nBu e-posta geldiyse ScreenPano e-posta altyapısı ve bildirim sistemi sorunsuz çalışıyor.\n\nAlıcı: ${to}\nZaman: ${nowStr}\nPanel: ${config.BASE_URL}/super`;
+    const html = tpl.alert({
+      title: 'SMTP E-posta Testi Başarılı',
+      badge: 'Sistem Testi',
+      badgeColor: 'info',
+      preheader: 'ScreenPano SMTP e-posta sunucusu bağlantı testi başarılı.',
+      lead: 'Bu ileti, ScreenPano platformunun SMTP e-posta sunucusu bağlantısını ve gönderim yeteneğini doğrulamak amacıyla gönderilmiştir. Cihaz uyarıları, doğrulama kodları ve haftalık özet iletileri sorunsuz çalışmaktadır.',
+      rows: [
+        ['Alıcı E-posta', tpl.e(to)],
+        ['Test Zamanı', tpl.e(nowStr)],
+        ['Sistem Durumu', '<span style="color:#15803d;font-weight:700">● E-posta Altyapısı Aktif</span>'],
+      ],
+      cta: `${config.BASE_URL}/super`,
+      ctaLabel: 'Süper Yönetim Paneline Git',
+    });
+    const o = await require('./mailer').send({
+      to,
+      subject: `${config.BRAND || 'ScreenPano'} — SMTP Test İletisi`,
+      text,
+      html,
+    });
     res.json({ ok: true, port: o.port, mode: o.mode });
   } catch (e) {
     const msg = String(e.message || e).split('\n')[0];

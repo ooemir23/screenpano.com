@@ -68,14 +68,23 @@ function connected(t, d) {
     pushAlert(t, { kind: 'online', device: d.name || 'TV kutusu', text: `${d.name || 'TV kutusu'} yeniden bağlandı.` });
     const n = t.db.notify || {};
     if (n.email && n.online !== false) {
+      const devName = d.name || 'TV kutusu';
       const saat = new Date().toLocaleString('tr-TR', { timeZone: config.TZ });
-      sendMail(n.email, `${config.BRAND}: ekranınız yeniden açık`,
-        `${t.name} – ${d.name || 'TV kutusu'} yeniden bağlandı (${saat}).`,
+      sendMail(n.email, `✓ ${config.BRAND || 'ScreenPano'} — Ekran Yeniden Yayında: ${devName} (${t.name})`,
+        `${t.name} · ${devName} ekranı yeniden bağlandı (${saat}). Menü ve kampanyalarınız ekranda yayına devam ediyor.\n\nPanel: ${config.BASE_URL}/panel`,
         mailtpl.alert({
-          title: 'Ekranınız yeniden yayında',
-          lead: `<b>${mailtpl.e(d.name || 'TV kutusu')}</b> ekranı yeniden bağlandı ve yayına devam ediyor.`,
-          rows: [['İşletme', mailtpl.e(t.name)], ['Ekran', mailtpl.e(d.name || 'TV kutusu')], ['Bağlanma zamanı', mailtpl.e(saat)]],
-          cta: `${config.BASE_URL}/panel`, ctaLabel: 'Panele Git',
+          title: 'Ekranınız Yeniden Yayında',
+          badge: 'Yeniden Yayında',
+          badgeColor: 'success',
+          preheader: `${devName} ekranı yeniden bağlandı ve yayına devam ediyor.`,
+          lead: `<b>${mailtpl.e(t.name)}</b> bünyesindeki <b>${mailtpl.e(devName)}</b> ekranı sunucularımızla yeniden bağlantı kurdu. İçerikleriniz ve menüleriniz kesintisiz olarak yayınlanmaya devam ediyor.`,
+          rows: [
+            ['İşletme', mailtpl.e(t.name)],
+            ['Ekran / Cihaz', mailtpl.e(devName)],
+            ['Yeniden Bağlanma', mailtpl.e(saat)],
+            ['Yayın Durumu', '<span style="color:#15803d;font-weight:700">● Yayında (Aktif)</span>'],
+          ],
+          cta: `${config.BASE_URL}/panel`, ctaLabel: 'Ekranları Panelde Gör',
         }));
     }
   }
@@ -94,15 +103,30 @@ function tick() {
     const name = d.name || 'TV kutusu', since = new Date(d.last_seen).toLocaleString('tr-TR', { timeZone: config.TZ, dateStyle: 'short', timeStyle: 'short' });
     pushAlert(t, { kind: 'offline', device: name, text: `${name} ${since} saatinden beri çevrimdışı.` });
     const n = t.db.notify || {};
-    if (n.email && n.offline !== false) sendMail(n.email, `${config.BRAND}: ekranınız çevrimdışı`,
-      `${t.name} – ${name} ${since} saatinden beri bağlantı vermiyor.\n\nKontrol edin: kutunun elektriği, internet bağlantısı, uygulamanın açık olması.\n\nPanel: ${config.BASE_URL}/panel#settings/devices`,
+    if (n.email && n.offline !== false) sendMail(n.email, `⚠️ ${config.BRAND || 'ScreenPano'} — Ekran Çevrimdışı: ${name} (${t.name})`,
+      `⚠️ ${t.name} – ${name} ekranı ${since} saatinden beri sunucuya yanıt vermiyor.\n\nLütfen sırasıyla kontrol edin:\n1. TV ekranının ve TV kutusunun fişe takılı ve açık olduğunu kontrol edin.\n2. Kutunun Wi-Fi veya Ethernet internet bağlantısının çalıştığını doğrulayın.\n3. Ekranda ScreenPano uygulamasının açık olduğunu kontrol edin.\n\nİpucu: Sorun devam ederse TV kutusunu fişten çekip 10 saniye bekledikten sonra tekrar takarak yeniden başlatın.\n\nPanel: ${config.BASE_URL}/panel#settings/devices`,
       mailtpl.alert({
-        title: 'Ekranınız çevrimdışı',
-        lead: `<b>${mailtpl.e(name)}</b> ekranı <b>${mailtpl.e(since)}</b> saatinden beri bağlantı vermiyor.`,
-        rows: [['İşletme', mailtpl.e(t.name)], ['Ekran', mailtpl.e(name)], ['Son bağlantı', mailtpl.e(since)]],
-        bullets: ['Kutunun elektriğinin takılı olduğunu', 'İnternet bağlantısının çalıştığını', 'Ekranda ScreenPano uygulamasının açık olduğunu'],
-        cta: `${config.BASE_URL}/panel#settings/devices`, ctaLabel: 'Cihazları Gör',
-        small: 'Sorun sürerse kutuyu yeniden başlatın; uygulama açılmıyorsa pano üzerinden yeniden eşleştirin.',
+        title: 'Ekran Bağlantısı Kesildi',
+        badge: 'Cihaz Çevrimdışı',
+        badgeColor: 'danger',
+        preheader: `${name} ekranı ${since} saatinden beri çevrimdışı. Lütfen kontrol edin.`,
+        lead: `<b>${mailtpl.e(t.name)}</b> işletmenize ait <b>${mailtpl.e(name)}</b> ekranı <b>${mailtpl.e(since)}</b> tarihinden beri sunucuya yanıt vermiyor. Ekran yayınınız durmuş olabilir.`,
+        rows: [
+          ['İşletme', mailtpl.e(t.name)],
+          ['Cihaz Adı', mailtpl.e(name)],
+          ['Son Bağlantı', mailtpl.e(since)],
+          ['Durum', '<span style="color:#b91c1c;font-weight:700">● Bağlantı Kesildi (Çevrimdışı)</span>'],
+        ],
+        bulletTitle: 'Lütfen aşağıdaki adımları kontrol edin:',
+        bullets: [
+          'TV ekranının ve TV kutusunun elektriğe bağlı ve açık olduğunu kontrol edin.',
+          'Kutunun Wi-Fi veya Ethernet internet bağlantısının aktif olduğunu doğrulayın.',
+          'Ekranda ScreenPano uygulamasının çalıştığını kontrol edin (kapandıysa uygulamayı açın).',
+        ],
+        callout: '💡 <b>Hızlı Çözüm:</b> İnternet bağlantısı olmasına rağmen ekran yayına başlamıyorsa TV kutusunu fişten çekip 10 saniye bekledikten sonra tekrar takarak yeniden başlatın.',
+        calloutType: 'tip',
+        cta: `${config.BASE_URL}/panel#settings/devices`, ctaLabel: 'Cihaz Durumunu İncele',
+        small: 'Cihaz tekrar internete bağlanıp yayına başladığında sistem otomatik olarak bilgilendirme e-postası gönderecektir.',
       }));
     webhook(`⚠️ ${t.name}: ${name} ${since} saatinden beri çevrimdışı`);
   }

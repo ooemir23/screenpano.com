@@ -25,14 +25,17 @@ function sendVerifyEmail(req, t, email) {
     mailer.send({
       to: email,
       subject: `${config.BRAND || 'ScreenPano'} — E-posta Adresinizi Doğrulayın`,
-      text: `Merhaba ${t.name},\n\nEkran bildirimlerini ve şifre sıfırlama bağlantılarını sorunsuz alabilmek için aşağıdaki bağlantıya tıklayarak e-posta adresinizi doğrulayın:\n\n${link}\n\nBu bağlantı 7 gün geçerlidir.`,
+      text: `Merhaba ${t.name},\n\nScreenPano dijital ekran yönetim sistemine hoş geldiniz. Ekranınız çevrimdışı kaldığında anlık uyarı alabilmek, haftalık performans raporlarına erişebilmek ve hesap güvenliğinizi sağlamak için aşağıdaki bağlantıya tıklayarak e-posta adresinizi doğrulayın:\n\n${link}\n\nBu bağlantı 7 gün geçerlidir. Bu kaydı siz yapmadıysanız iletiyi dikkate almayın.`,
       html: tpl.html({
         title: 'E-posta Adresinizi Doğrulayın',
+        badge: 'E-posta Doğrulama',
+        badgeColor: 'brand',
+        preheader: 'ScreenPano bildirimleri ve hesap güvenliği için e-postanızı doğrulayın.',
         body: tpl.p(`Merhaba <b>${tpl.e(t.name)}</b>,`) +
-          tpl.p('ScreenPano hesabınızı açtınız. Ekran çevrimdışı uyarılarını, haftalık özetleri ve şifre sıfırlama bağlantılarını sorunsuz alabilmek için e-posta adresinizi doğrulayın.') +
-          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px">${tpl.kv('İşletme', tpl.e(t.name))}${tpl.kv('E-posta', tpl.e(email))}</table>`,
+          tpl.p('ScreenPano dijital ekran yönetim sistemine hoş geldiniz. Ekranınız çevrimdışı kaldığında anında uyarı alabilmek, haftalık performans raporlarınıza erişebilmek ve hesap güvenliğinizi sağlamak için lütfen e-posta adresinizi onaylayın.') +
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 18px">${tpl.kv('İşletme Adı', tpl.e(t.name))}${tpl.kv('Doğrulanacak E-posta', tpl.e(email))}${tpl.kv('Bağlantı Geçerliliği', '7 Gün')}</table>`,
         cta: link, ctaLabel: 'E-posta Adresimi Doğrula',
-        small: 'Bağlantı 7 gün geçerlidir. Bu kaydı siz yapmadıysanız bu e-postayı dikkate almayın.',
+        small: 'Bu kaydı siz veya işletmeniz oluşturmadıysa bu e-postayı dikkate almayın; bağlantı tıklanmadığı sürece hiçbir işlem yapılmaz.',
       }),
     }).catch(e => console.error('[VERIFY MAIL]', e && e.message));
   }
@@ -157,19 +160,23 @@ r.post('/forgot', async (req, res) => {
       const talepZamanı = new Date().toLocaleString('tr-TR', { timeZone: config.TZ, dateStyle: 'long', timeStyle: 'short' });
       await mailer.send({
         to: email,
-        subject: `${config.BRAND || 'ScreenPano'} — Şifre Sıfırlama Talebi (${u.username})`,
-        text: `Merhaba${t ? ' ' + t.name : ''},\n\n"${u.username}" (${isStaff ? 'Personel' : 'İşletme Sahibi'}) hesabı için şifre sıfırlama talebinde bulunuldu (${talepZamanı}).\n\nYeni şifre belirlemek için aşağıdaki bağlantıya tıklayın (30 dakika geçerlidir):\n${resetUrl}\n\nBu talebi siz yapmadıysanız bu e-postayı dikkate almayın; şifreniz değişmeden kalır.`,
+        subject: `🔒 ${config.BRAND || 'ScreenPano'} — Şifre Sıfırlama Talebi (${u.username})`,
+        text: `Merhaba${t ? ' ' + t.name : ''},\n\nScreenPano yönetim panelinde "${u.username}" (${isStaff ? 'Personel Hesabı' : 'İşletme Yöneticisi'}) için yeni şifre talebinde bulunuldu (${talepZamanı}).\n\nYeni şifrenizi belirlemek için aşağıdaki bağlantıya tıklayın (30 dakika geçerlidir):\n${resetUrl}\n\nBu talebi siz veya yetkili personeliniz başlatmadıysa bu iletiyi dikkate almayın; şifreniz değişmeden güvende kalır.`,
         html: tpl.html({
           title: 'Şifre Sıfırlama Talebi',
+          badge: 'Güvenlik Bildirimi',
+          badgeColor: 'warning',
+          preheader: `${u.username} hesabı için yeni şifre belirleme bağlantısı.`,
           body: tpl.p(`Merhaba <b>${tpl.e((t && t.name) || u.username)}</b>,`) +
-            tpl.p(`<b>${tpl.e(u.username)}</b> ${isStaff ? 'personel' : 'işletme'} hesabı için yeni şifre talebinde bulunuldu. Aşağıdaki düğme tek kullanımlık şifre belirleme ekranını açar.`) +
-            `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px">
-              ${tpl.kv('Hesap', tpl.e(u.username) + (isStaff ? ' · Personel' : ' · İşletme Sahibi'))}
-              ${tpl.kv('Talep zamanı', tpl.e(talepZamanı))}
-              ${tpl.kv('Geçerlilik', '30 dakika · tek kullanım')}
-            </table>`,
+            tpl.p(`ScreenPano yönetim panelinde <b>${tpl.e(u.username)}</b> (${isStaff ? 'personel hesabı' : 'işletme yöneticisi'}) için yeni şifre talebinde bulunuldu. Aşağıdaki tek kullanımlık güvenli bağlantıya tıklayarak yeni şifrenizi belirleyebilirsiniz.`) +
+            `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 18px">
+              ${tpl.kv('Kullanıcı Hesabı', tpl.e(u.username) + (isStaff ? ' · Personel' : ' · İşletme Yöneticisi'))}
+              ${tpl.kv('Talep Zamanı', tpl.e(talepZamanı))}
+              ${tpl.kv('Geçerlilik Süresi', '30 Dakika · Tek Kullanımlık')}
+            </table>` +
+            tpl.callout('<b>Güvenlik Hatırlatması:</b> Bu şifre sıfırlama talebini siz veya yetkili personeliniz başlatmadıysa bu iletiyi dikkate almayın. Bağlantı kullanılmadığı takdirde mevcut şifreniz değişmez ve hesabınız güvende kalır.', 'warning'),
           cta: resetUrl, ctaLabel: 'Yeni Şifre Belirle',
-          small: 'Bu talebi siz oluşturmadıysanız e-postayı dikkate almayın; bağlantı kullanılmadığı sürece şifreniz değişmez.',
+          small: 'Bu bağlantı tek kullanımlıktır ve 30 dakika sonra kendiliğinden geçersiz hale gelir.',
         }),
       });
       return res.json({ ok: true, sent: true, message: genericMsg });

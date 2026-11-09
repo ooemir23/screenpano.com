@@ -5,6 +5,7 @@
 // son paylaşımların görselleri işletmenin klasörüne indirilir (Instagram'ın görsel adresleri birkaç gün sonra geçersizleşir).
 const fs = require('fs');
 const path = require('path');
+const config = require('./config');
 const store = require('./store');
 const hub = require('./hub');
 
@@ -41,15 +42,25 @@ function gWarn(kind, u) {
   console.log('[Google]', text);
   const tpl = require('./mailtpl');
   const html = tpl.alert({
-    title: full ? 'Google Places sınırı doldu' : 'Google Places sınıra yaklaştı',
+    title: full ? 'Google Places Aylık Sınırı Doldu' : 'Google Places Sınıra Yaklaşıldı',
+    badge: 'Kota Uyarısı',
+    badgeColor: 'warning',
+    preheader: full ? 'Google Places aylık API çağrı sınırı doldu.' : 'Google Places çağrıları sınıra yaklaşıyor.',
     lead: full
-      ? 'Aylık Google Places çağrı sınırı doldu; ücret çıkmaması için ay sonuna kadar yeni çağrı yapılmayacak. Ekranlarda son alınan yorumlar gösterilmeye devam eder.'
-      : 'Google Places çağrıları bu ay sınıra yaklaştı. Sınır dolunca ay sonuna kadar yeni çağrı yapılmaz.',
-    rows: [['Bu ayki çağrı', `${u.calls} / ${u.cap}`], ['Durum', full ? 'Sınır doldu · çağrılar durduruldu' : 'Sınıra yaklaşılıyor']],
-    small: full ? 'Sınırı süper yönetimden (google_monthly_cap) artırabilirsiniz.' : '',
+      ? 'Aylık Google Places API çağrı sınırına ulaşıldı; işletmelerinize ek ücret çıkmaması için ay sonuna kadar yeni çağrı yapılmayacaktır. Ekranlarda son alınan yorumlar kesintisiz gösterilmeye devam eder.'
+      : 'Google Places API çağrıları bu ay belirlenen sınıra yaklaşmaktadır. Sınır dolduğunda ay sonuna kadar yeni çağrı yapılmayacaktır.',
+    rows: [
+      ['Bu Ayki Çağrı', `${u.calls} / ${u.cap}`],
+      ['Kota Durumu', full ? '<span style="color:#b91c1c;font-weight:700">● Sınır Doldu (Durduruldu)</span>' : '<span style="color:#b45309;font-weight:700">● Sınıra Yaklaşılıyor</span>'],
+    ],
+    callout: full ? '💡 Sınırı süper yönetim ekranından (<code>google_monthly_cap</code>) dilediğiniz zaman artırabilirsiniz.' : '',
+    calloutType: 'tip',
+    cta: `${config.BASE_URL}/super`,
+    ctaLabel: 'Süper Yönetim Paneli',
   });
   const mon = require('./monitor'); mon.webhook(text);
-  mon.sendMail(store.setting('site_email', '') || store.setting('legal_email', ''), full ? 'Google Places sınırı doldu' : 'Google Places sınıra yaklaştı', text, html);
+  const subject = `⚠️ ${config.BRAND || 'ScreenPano'} — Google Places Kotası: ${full ? 'Aylık Sınır Doldu' : 'Sınıra Yaklaşıldı'}`;
+  mon.sendMail(store.setting('site_email', '') || store.setting('legal_email', ''), subject, text, html);
 }
 
 // ---- Google ----
