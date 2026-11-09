@@ -67,9 +67,15 @@ function scalePv() {
   document.querySelectorAll('.pv').forEach(b => {
     const f = b.querySelector('iframe'); if (!f || !b.clientWidth) return;
     const o = Number(b.dataset.orient) || 0;
-    if (o === 90) f.style.transform = `translate(0px,${b.clientHeight}px) rotate(-90deg) scale(${b.clientWidth / 1080})`;
-    else if (o === 270) f.style.transform = `translate(${b.clientWidth}px,0px) rotate(90deg) scale(${b.clientWidth / 1080})`;
-    else f.style.transform = `scale(${b.clientWidth / 1920})`;
+    if (o > 0) {
+      f.style.width = '1080px';
+      f.style.height = '1920px';
+      f.style.transform = `scale(${(b.clientWidth / 1080).toFixed(4)})`;
+    } else {
+      f.style.width = '1920px';
+      f.style.height = '1080px';
+      f.style.transform = `scale(${(b.clientWidth / 1920).toFixed(4)})`;
+    }
   });
 }
 addEventListener('resize', scalePv);
@@ -246,15 +252,31 @@ function orientSet(deg) {
   const o = [90, 270].includes(Number(deg)) ? Number(deg) : 0, cur = EDIT.layout.orient || 0;
   if (o === cur) return;
   snap();
-  if (o) EDIT.layout.orient = o; else delete EDIT.layout.orient;
-  drawCanvas(); drawProps();
-  toast(o ? 'Dikey ekran modu seçildi; dikey hazır düzenlerden birini seçebilir veya kutuları yerleştirebilirsiniz' : 'Yatay ekran modu seçildi');
+  if (o) {
+    EDIT.layout.orient = o;
+    if (!cur) {
+      const tplKey = pro() ? 'dikey_menu' : 'dikey_vitrin';
+      const tpl = S.cat.templates && S.cat.templates[tplKey];
+      if (tpl && Array.isArray(tpl.widgets)) EDIT.layout.widgets = clone(tpl.widgets);
+    }
+  } else {
+    delete EDIT.layout.orient;
+    if (cur) {
+      const tplKey = pro() ? 'spor' : 'temel';
+      const tpl = S.cat.templates && S.cat.templates[tplKey];
+      if (tpl && Array.isArray(tpl.widgets)) EDIT.layout.widgets = clone(tpl.widgets);
+    }
+  }
+  EDIT.sel = -1;
+  drawCanvas(); drawProps(); drawPal();
+  toast(o ? 'Dikey TV düzenine geçildi; beğendiyseniz "Düzeni kaydet"e basın' : 'Yatay TV düzenine geçildi; beğendiyseniz "Düzeni kaydet"e basın');
 }
 async function saveOrient(deg) {
   const o = [90, 270].includes(Number(deg)) ? Number(deg) : 0;
   if (await act('PUT', '/options', { orient: o }, o ? 'Dikey ekran yönü kaydedildi, TV güncellendi' : 'Yatay ekran yönü kaydedildi, TV güncellendi', false)) {
     S.scr = await req('GET', '/screen');
-    if (EDIT.layout && !EDIT.dirty) EDIT.layout = clone(S.scr.layout);
+    EDIT.dirty = false;
+    EDIT.layout = clone(S.scr.layout);
     render(true);
   }
 }
@@ -262,7 +284,7 @@ async function saveOrient(deg) {
 function pushDraft() {
   const L = EDIT.dirty && EDIT.layout ? EDIT.layout : null;
   try { localStorage.setItem('sp.draft', JSON.stringify(L)); } catch (e) {}
-  document.querySelectorAll('.pvcard iframe').forEach(f => { try { f.contentWindow.postMessage({ screenpanoDraft: L }, location.origin); } catch (e) {} });
+  document.querySelectorAll('.pv iframe').forEach(f => { try { f.contentWindow.postMessage({ screenpanoDraft: L }, location.origin); } catch (e) {} });
 }
 function openDraft() { pushDraft(); window.open('/tv?preview=1&draft=1', '_blank'); }
 function gotoPv() {

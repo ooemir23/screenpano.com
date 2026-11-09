@@ -762,7 +762,22 @@ r.put('/options', (req, res) => {
   if (b.orient !== undefined) {
     const sc = tenants.mainScreen(req.t), cur = W.cleanLayout(store.J(sc.layout) || W.defaultLayout());
     const o = [90, 270].includes(Number(b.orient)) ? Number(b.orient) : 0;
-    if (o) cur.orient = o; else delete cur.orient;
+    const prevOr = cur.orient || 0;
+    if (o) {
+      cur.orient = o;
+      if (!prevOr) {
+        const tplKey = plan(req.t).pro ? 'dikey_menu' : 'dikey_vitrin';
+        const tpl = W.TEMPLATES[tplKey];
+        if (tpl && Array.isArray(tpl.widgets)) cur.widgets = JSON.parse(JSON.stringify(tpl.widgets));
+      }
+    } else {
+      delete cur.orient;
+      if (prevOr) {
+        const tplKey = plan(req.t).pro ? 'spor' : 'temel';
+        const tpl = W.TEMPLATES[tplKey];
+        if (tpl && Array.isArray(tpl.widgets)) cur.widgets = JSON.parse(JSON.stringify(tpl.widgets));
+      }
+    }
     store.updateScreen(sc.id, req.t.id, { layout: JSON.stringify(cur) });
   }
   changed(req.t); res.json({ ok: true });

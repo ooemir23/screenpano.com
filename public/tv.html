@@ -44,12 +44,12 @@ html,body{height:100%;width:100%;background:var(--edge);color:var(--white);font-
 #app{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));grid-template-rows:repeat(24,minmax(0,1fr));gap:1.4vh .9vw;padding:1.8vh 1.2vw;height:100vh;height:100dvh;background:radial-gradient(ellipse 46% 46% at 40% 46%,var(--glow) 0%,transparent 100%),var(--edge)}
 /* Dikey TV (9:16): TV fiziksel olarak 90° veya 270° çevrildiğinde 1920×1080 sinyal içinde içerik 1080×1920 dikey yerleşir */
 html.vert #root,html.vert #app{width:100%;height:100%}
-html.vert #app{gap:1vh 1.2vh;padding:1.4vh 1.4vh}
+html.vert #app{gap:0.8vh 0.6vh;padding:1vh 1vh}
 html.rot-90 body,html.rot-270 body{position:fixed;top:0;left:0;width:100vh;height:100vw;transform-origin:0 0}
 html.rot-90 body{transform:translate(100vw,0) rotate(90deg)}
 html.rot-270 body{transform:translate(0,100vh) rotate(-90deg)}
-html.rot-pv{display:flex;align-items:center;justify-content:center;background:#0a0b0d}
-html.rot-pv body{position:relative;width:calc(100vh * 9 / 16);height:100vh;max-width:100vw;box-shadow:0 0 6vh rgba(0,0,0,.85)}
+html.rot-pv{display:flex;align-items:center;justify-content:center;background:#0a0b0d;width:100vw;height:100vh}
+html.rot-pv body{position:relative;width:calc(100vh * 9 / 16);height:100vh;max-width:100vw;box-shadow:0 0 6vh rgba(0,0,0,.85);margin:0 auto}
 .cell{min-width:0;min-height:0;position:relative;display:flex;flex-direction:column}
 #parking{position:fixed;left:-300vw;top:0;width:60vw;height:60vh;visibility:hidden;pointer-events:none}
 #parking .cell{width:100%;height:100%}
@@ -2097,11 +2097,11 @@ const TICK_INFO_N = 3;
 // Canlı maç varken alt bant bölümlerle döner: lig1 → bilgiler → lig2 → bilgiler …; her bölüm şeritte bir kez kayar, bitince sıradakine geçilir
 function infoWindow(all) { const n = Math.min(TICK_INFO_N, all.length), s = tickInfoPos % all.length; return Array.from({ length: n }, (_, i) => all[(s + i) % all.length]); }
 function setTicker(list) {
-  const live = list.filter(m => m.live), fin = list.filter(m => m.final);
+  const live = list.filter(m => m.live), fin = list.filter(m => m.final), nextMatches = list.filter(m => !m.final && !m.live);
   liveLeagues = [...new Set(live.map(m => m.league))];
   const brk = showBrk && breakData ? breakData.items : [];
   const nw = showNews && newsData ? newsData.items : [];
-  let shown, label, info = [], seg = false, kind = null;
+  let shown = [], label = '', info = [], seg = false, kind = null;
   segIsInfo = false; segCount = 1;
   if (live.length) {
     const infoAll = infoItems(), segs = [];
@@ -2111,39 +2111,49 @@ function setTicker(list) {
     if (sg === null) { segIsInfo = true; shown = []; info = infoWindow(infoAll); label = 'Güncel Bilgiler'; }
     else { shown = live.filter(m => m.league === sg); label = liveLeagues.length > 1 || infoAll.length ? 'Canlı · ' + sg : 'Canlı Skorlar'; }
   } else {
-    // maç olmayan zamanlarda bant bölümlerle döner: sonuçlar → sıradaki maçlar → son dakika → haberler (her bölümün etiketi kendi içeriğini yazar)
+    // maç olmayan zamanlarda bant bölümlerle döner: sonuçlar → sıradaki maçlar → son dakika → haberler
+    // boş olan bölümler (ör. sıradaki maç yoksa) HİÇ eklenmez
     const segs = [];
-    if (fin.length) segs.push({ label: 'Günün Sonuçları', kind: 'fin' });
-    if (list.length) segs.push({ label: 'Sıradaki Maçlar', kind: 'next' });
-    if (brk.length) segs.push({ label: 'Son Dakika', kind: 'brk' });
-    if (nw.length) segs.push({ label: 'Haberler', kind: 'news' });
+    if (fin.length) segs.push({ label: 'Günün Sonuçları', kind: 'fin', items: fin });
+    if (nextMatches.length) segs.push({ label: 'Sıradaki Maçlar', kind: 'next', items: nextMatches.slice(0, 8) });
+    if (brk.length) segs.push({ label: 'Son Dakika', kind: 'brk', items: brk });
+    if (nw.length) segs.push({ label: 'Haberler', kind: 'news', items: nw });
     if (segs.length > 1) {
       segCount = segs.length; if (tickSeg >= segCount) tickSeg = 0;
       const s = segs[tickSeg];
       seg = true; kind = s.kind; label = s.label;
-      shown = s.kind === 'fin' ? fin : s.kind === 'next' ? list.filter(m => !m.final).slice(0, 8) : [];
-    } else if (segs.length === 1 && (segs[0].kind === 'brk' || segs[0].kind === 'news')) {
-      kind = segs[0].kind; label = segs[0].label; shown = [];
+      shown = (s.kind === 'fin' || s.kind === 'next') ? s.items : [];
+    } else if (segs.length === 1) {
+      const s = segs[0];
+      kind = s.kind; label = s.label;
+      shown = (s.kind === 'fin' || s.kind === 'next') ? s.items : [];
     } else {
-      shown = fin.length ? fin : list.slice(0, 8);
-      label = fin.length ? 'Günün Sonuçları' : 'Sıradaki Maçlar';
-      info = shown.length ? [] : infoItems();
-      if (!shown.length && info.length) label = 'Güncel Bilgiler';
+      info = infoItems();
+      label = 'Güncel Bilgiler';
+      shown = [];
     }
   }
   window.__tickerInfo = segIsInfo || (!live.length && !shown.length && !kind && info.length > 0);
   const brkHtml = n => `<span class="ti"><span class="lg brk">SON DAKİKA</span><span>${esc(n.title)} <span class="ft">${esc(n.source)}</span></span></span>`;
   const brkTi = !window.__tickerInfo && !seg && showBrk && breakData ? breakData.items.slice(0, 3).map(brkHtml).join('') : '';
-  let items;
+  let items = '';
   const brkPlain = n => `<span class="ti"><span>${esc(n.title)} <span class="ft">${esc(n.source)}</span></span></span>`; // sol kutu zaten "Son Dakika" yazıyor: öğede tekrar yok
   if (kind === 'brk') items = brk.slice(0, 6).map(brkPlain).join('');
   else if (kind === 'news') items = nw.slice(0, 6).map(n => `<span class="ti"><span>${esc(n.title)} <span class="ft">${esc(n.source)}</span></span></span>`).join('');
   else if (window.__tickerInfo) items = info.join('');
-  else items = brkTi + shown.map(m => {
+  else if (shown.length) items = brkTi + shown.map(m => {
     const mid = m.hs != null ? `<span class="sc">${esc(m.hs)} - ${esc(m.as)}</span>` : '<span class="ft">vs</span>';
     const tag = m.live ? `<span class="lv">● ${esc(m.clock || 'CANLI')}</span>` : m.final ? '<span class="ft">MS</span>' : `<span class="ft">${esc(m.time)}</span>`;
     return `<span class="ti"><span class="lg"${lng(m.league)}>${esc(m.league)}</span><span>${esc(m.home)}</span>${mid}<span>${esc(m.away)}</span>${tag}</span>`;
-  }).join('') || '<span class="ti"><span class="ft">Şu an gösterilecek maç yok</span></span>';
+  }).join('');
+  if (!items) {
+    const fallback = infoItems();
+    if (fallback.length) {
+      label = 'Güncel Bilgiler';
+      items = fallback.join('');
+    }
+  }
+  if (!items) return;
   if (window.__lastTick === label + '|' + items) return; // değişiklik yok: yeniden çizme
   const first = !window.__lastTick;
   window.__lastTick = label + '|' + items;
@@ -2190,14 +2200,16 @@ function applyOrient(deg) {
   const prev = window.__orient || 0;
   window.__orient = o;
   const root = document.documentElement;
-  const standalonePv = PREVIEW && !IN_IFRAME && o > 0;
-  const alreadyPortrait = o > 0 && innerHeight > innerWidth;
-  const effRot = (o > 0 && !standalonePv && !alreadyPortrait) ? o : 0;
+  const isPreview = !!(PREVIEW || IN_IFRAME);
+  // Fiziksel TV'de (önizleme değilken) 1920×1080 HDMI sinyali içinde ekran döndürülür (rot-90 / rot-270).
+  // Önizlemede (panel içi iframe veya ayrı sekme) ekran doğrudan 9:16 dikey (dik) gösterilir.
+  const alreadyPortrait = innerHeight > innerWidth;
+  const effRot = (!isPreview && o > 0 && !alreadyPortrait) ? o : 0;
   window.__effRot = effRot;
   root.classList.toggle('vert', o > 0);
   root.classList.toggle('rot-90', effRot === 90);
   root.classList.toggle('rot-270', effRot === 270);
-  root.classList.toggle('rot-pv', !!standalonePv);
+  root.classList.toggle('rot-pv', isPreview && o > 0 && !alreadyPortrait);
   if (IN_IFRAME && PREVIEW) {
     try { window.parent.postMessage({ screenpanoOrient: o }, location.origin); } catch (e) {}
   }
@@ -2218,7 +2230,10 @@ function applySafe(safe, guide) {
   if (safe) safeNow = { L: Number(safe.L) || 0, R: Number(safe.R) || 0, T: Number(safe.T) || 0, B: Number(safe.B) || 0 };
   guideOn = !!guide;
   const rot = window.__effRot || 0;
-  const W = rot ? innerHeight : innerWidth, H = rot ? innerWidth : innerHeight, { L, R, T, B } = safeNow;
+  const vertPv = !!((PREVIEW || IN_IFRAME) && window.__orient > 0);
+  const W = rot ? innerHeight : vertPv ? ((document.body && document.body.clientWidth) || innerWidth) : innerWidth;
+  const H = rot ? innerWidth : innerHeight;
+  const { L, R, T, B } = safeNow;
   const x0 = W * L / 100, y0 = H * T / 100, w = W * (1 - (L + R) / 100), h = H * (1 - (T + B) / 100);
   const root = document.getElementById('root'), g = document.getElementById('guide');
   if (L + R + T + B > 0) {
@@ -3830,11 +3845,9 @@ function setDraft(l) {
 }
 if (PREVIEW) {
   addEventListener('message', e => { if (e.origin === location.origin && e.data && 'screenpanoDraft' in e.data) setDraft(e.data.screenpanoDraft); });
-  if (Q.get('draft')) { // ayrı sekmede taslak önizleme: panel taslağı localStorage'a yazar, değiştikçe burası da güncellenir
-    const rd = () => { try { setDraft(JSON.parse(localStorage.getItem('sp.draft') || 'null')); } catch (e) {} };
-    window.__draft = (() => { try { const d = JSON.parse(localStorage.getItem('sp.draft') || 'null'); return d && Array.isArray(d.widgets) ? d : null; } catch (e) { return null; } })();
-    addEventListener('storage', ev => { if (ev.key === 'sp.draft') rd(); });
-  }
+  const rd = () => { try { setDraft(JSON.parse(localStorage.getItem('sp.draft') || 'null')); } catch (e) {} };
+  window.__draft = (() => { try { const d = JSON.parse(localStorage.getItem('sp.draft') || 'null'); return d && Array.isArray(d.widgets) ? d : null; } catch (e) { return null; } })();
+  addEventListener('storage', ev => { if (ev.key === 'sp.draft') rd(); });
 }
 
 // ---- cihaz token'ı: APK'da kalıcı depoda, tarayıcıda localStorage'da ----
