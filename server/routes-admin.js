@@ -252,9 +252,16 @@ r.post('/assets', quota, upload.single('file'), async (req, res) => {
 r.get('/screen', (req, res) => {
   const t = req.t, m0 = tenants.mainScreen(t), online = hub.onlineDeviceIds();
   const rows = store.q.screensOf.all(t.id);
-  const screens = rows.map(x => ({ id: x.id, name: x.name, layout: store.J(x.layout) || W.defaultLayout(), sort: x.sort }));
-  const qid = String(req.query.screenId || '').trim();
-  const active = (qid && screens.find(x => x.id === qid)) || screens[0] || { id: m0.id, name: m0.name, layout: store.J(m0.layout) || W.defaultLayout() };
+  const enrich = l => {
+    const out = l || W.defaultLayout();
+    if (Array.isArray(out.widgets)) {
+      out.widgets = out.widgets.map(w => w.type === 'worldclock' ? { ...w, props: { ...(w.props || {}), cities: require('./world').cities((w.props || {}).zones || W.WIDGETS.worldclock.props.zones) } } : w);
+    }
+    return out;
+  };
+  const screens = rows.map(x => ({ id: x.id, name: x.name, layout: enrich(store.J(x.layout)), sort: x.sort }));
+  const qid = String(req.query.screen || req.query.screenId || '').trim();
+  const active = (qid && screens.find(x => x.id === qid)) || screens[0] || { id: m0.id, name: m0.name, layout: enrich(store.J(m0.layout)) };
   res.json({
     layout: active.layout,
     activeScreenId: active.id,

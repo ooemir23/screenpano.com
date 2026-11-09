@@ -218,10 +218,16 @@ function cleanLayout(l) {
       const p = w.props || {}; item.props = {};
       for (const [k, dv] of Object.entries(def)) {
         if (typeof dv === 'boolean') item.props[k] = typeof p[k] === 'boolean' ? p[k] : dv;
-        else {
+        else if (k === 'lat' || k === 'lon') {
+          const nv = p[k] !== null && p[k] !== undefined && p[k] !== '' ? Number(p[k]) : NaN;
+          item.props[k] = isFinite(nv) ? nv : null;
+        } else {
           const en = WIDGETS[w.type].enums && WIDGETS[w.type].enums[k];
           item.props[k] = typeof p[k] === 'string' && (!en || en.includes(p[k])) ? p[k].slice(0, k === 'body' ? 400 : 200) : dv;
         }
+      }
+      if ((w.type === 'weather' || w.type === 'rates') && typeof p.country === 'string' && p.country.trim()) {
+        item.props.country = p.country.trim().slice(0, 80);
       }
       if (w.type === 'converter') {
         const a = String(item.props.amount || '').replace(',', '.'), n = Number(a);

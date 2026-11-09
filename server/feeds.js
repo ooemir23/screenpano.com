@@ -59,12 +59,12 @@ async function getWeather(lat, lon) {
     return weather.get(key) || null;
   }
 }
-function weatherForLoc(lat, lon) {
+function weatherForLoc(lat, lon, tid) {
   if (lat == null || lon == null || !isFinite(lat) || !isFinite(lon)) return null;
   const key = `${Number(lat).toFixed(2)},${Number(lon).toFixed(2)}`;
   const w = weather.get(key);
   if (!w || Date.now() - (weatherAt.get(key) || 0) >= 30 * MIN) {
-    getWeather(lat, lon).catch(() => {});
+    getWeather(lat, lon).then(d => { if (d && tid) try { hub.pushTenant(tid); } catch (e) {} }).catch(() => {});
   }
   return w || null;
 }
@@ -72,7 +72,8 @@ async function refreshWeather() {
   const keys = new Set(liveTenants().map(locKey));
   for (const t of liveTenants()) {
     try {
-      for (const scr of (t.screens || [])) {
+      const scrs = store.q && store.q.screensOf ? store.q.screensOf.all(t.id) : [];
+      for (const scr of scrs) {
         const l = scr && store.J(scr.layout);
         for (const w of ((l && l.widgets) || [])) {
           if ((w.type === 'weather' || w.type === 'rates') && w.props && w.props.lat && w.props.lon) {

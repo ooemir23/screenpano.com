@@ -93,4 +93,13 @@ r.post('/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+// TV veya önizleme ekranında özel konumlu hava durumu widget'ı için
+r.get('/weather', async (req, res) => {
+  const lat = Number(req.query.lat), lon = Number(req.query.lon);
+  if (!isFinite(lat) || !isFinite(lon)) return res.status(400).json({ error: 'Geçersiz koordinat' });
+  const F = require('./feeds');
+  const wx = await F.getWeather(lat, lon);
+  res.json(wx);
+});
+
 module.exports = { router: r, claimPair };

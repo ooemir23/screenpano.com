@@ -58,7 +58,7 @@ function layoutFor(t, screen) {
     if (w.type === 'weather') {
       const p = w.props || {};
       const lat = p.lat, lon = p.lon;
-      const wx = (lat && lon ? F.weatherForLoc(lat, lon) : null) || F.weatherFor(t);
+      const wx = (lat && lon ? F.weatherForLoc(lat, lon, t.id) : null) || F.weatherFor(t);
       return { ...w, type: 'rates', props: { ...p, weather: true, rates: false, qr: false, qrs: '', wx, city: p.city || (t.db.location || {}).city || 'İstanbul', details: !!p.details } };
     }
     if (w.type === 'finance') {
@@ -67,7 +67,7 @@ function layoutFor(t, screen) {
     if (w.type === 'rates') {
       const p = w.props || {};
       const lat = p.lat, lon = p.lon;
-      const wx = (lat && lon ? F.weatherForLoc(lat, lon) : null) || (p.weather !== false ? F.weatherFor(t) : null);
+      const wx = (lat && lon ? F.weatherForLoc(lat, lon, t.id) : null) || (p.weather !== false ? F.weatherFor(t) : null);
       return { ...w, props: { ...p, wx, city: p.city || (t.db.location || {}).city || 'İstanbul', details: !!p.details } };
     }
     return w;
@@ -230,7 +230,7 @@ function publicState(t, screenId) {
     videos: ml,
     mediaAt,
     imageSeconds: db.imageSeconds,
-    reviews: pro && has('reviews') ? reviewList(db) : [],
+    reviews: pro ? reviewList(db) : [],
     googleRating: pro && db.google && db.google.rating ? { rating: db.google.rating, count: db.google.count } : null,
     langs: langList(db), langSec: Math.max(5, Math.min(60, Number((db.lang || {}).sec) || 12)),
     tz: config.TZ,
@@ -272,7 +272,7 @@ function publicState(t, screenId) {
     safeGuide: !!db.safeGuide,
     qrSize: 17, // QR boyutu ayarı kaldırıldı: tüm QR'lar aynı boyutta
     qrs: (db.qrs || []).map(({ id, label, svg, kind, text, pin, hide }) => ({ id, label, svg, pin: pin !== false, hide: Array.isArray(hide) ? hide : [], marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
-    menu: pro && has('menu') ? menuView(db.menu) : null,
+    menu: pro ? menuView(db.menu) : null,
     music: tvMusic(db.music),
     rates: F.rates,
     weather: F.weatherFor(t),

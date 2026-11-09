@@ -199,9 +199,16 @@ function drawJump() {
   if (cards.length < 3) return;
   const bar = document.createElement('div'); bar.className = 'jump';
   cards.forEach((c, i) => {
-    c.id = 'kart-' + i;
+    if (!c.id) c.id = 'kart-' + i;
     const a = document.createElement('button'); a.type = 'button';
-    a.textContent = [...c.querySelector('.ch h3').childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim() || c.querySelector('.ch h3').textContent.trim(); // yalnız başlık metni (sayı, etiket ayrı çevrilir)
+    const h3 = c.querySelector('.ch h3');
+    let txt = [...h3.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+    if (!txt) {
+      const cl = h3.cloneNode(true);
+      cl.querySelectorAll('#tpls-arrow,.stp,.muted,small').forEach(el => el.remove());
+      txt = cl.textContent.trim();
+    }
+    a.textContent = txt || h3.textContent.trim(); // yalnız başlık metni (sayı, etiket ayrı çevrilir)
     a.onclick = () => jumpTo(c); bar.appendChild(a);
   });
   const h = v.querySelector('.head'); h ? h.after(bar) : v.prepend(bar);
@@ -399,13 +406,32 @@ async function saveOrient(deg) {
     render(true);
   }
 }
+function enrichDraftLayout(L) {
+  if (!L || !Array.isArray(L.widgets)) return L;
+  const world = (S.cat && S.cat.world) || [];
+  const byTz = new Map(world.map(c => [c.tz, c]));
+  const out = clone(L);
+  for (const w of out.widgets) {
+    if (w.type === 'worldclock') {
+      w.props = w.props || {};
+      const zs = String(w.props.zones || 'Europe/London,America/New_York,Asia/Tokyo').split(',').map(s => s.trim()).filter(Boolean).slice(0, (S.cat && S.cat.worldMax) || 5);
+      w.props.cities = zs.map(tz => byTz.get(tz) || { tz, n: { tr: tz.split('/').pop().replace(/_/g, ' ') } });
+    }
+  }
+  return out;
+}
 // Kaydedilmemiş düzeni önizleme çerçevesine ve (ayrı sekme için) localStorage'a ilet; değişiklik yoksa kaydedilmiş hâle döner
-function pushDraft() {
-  const L = EDIT.layout || (S.scr && S.scr.layout) || null;
+function pushDraft(forceStore) {
+  if (!EDIT.dirty && !forceStore) {
+    try { localStorage.removeItem('sp.draft'); } catch (e) {}
+    document.querySelectorAll('.pv iframe').forEach(f => { try { f.contentWindow.postMessage({ screenpanoDraft: null }, location.origin); } catch (e) {} });
+    return;
+  }
+  const L = enrichDraftLayout(EDIT.layout || (S.scr && S.scr.layout) || null);
   try { localStorage.setItem('sp.draft', JSON.stringify(L)); } catch (e) {}
   document.querySelectorAll('.pv iframe').forEach(f => { try { f.contentWindow.postMessage({ screenpanoDraft: L }, location.origin); } catch (e) {} });
 }
-function openDraft() { pushDraft(); window.open('/tv?preview=1&draft=1', '_blank'); }
+function openDraft() { pushDraft(true); window.open('/tv?preview=1&draft=1', '_blank'); }
 function gotoPv() {
   const c = document.querySelector('.pvcard'); if (!c) return;
     c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
@@ -636,7 +662,7 @@ function setWCoord(k, val) {
 }
 function snap() { EDIT.hist.push(clone(EDIT.layout)); if (EDIT.hist.length > 40) EDIT.hist.shift(); EDIT.dirty = true; lbarSync(); }
 function undoL() { if (!EDIT.hist.length) return toast('Geri alınacak değişiklik yok'); EDIT.layout = EDIT.hist.pop(); if (!EDIT.hist.length) EDIT.dirty = false; EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
-function setPI(l, k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); const i = clone((w.props || {}).i18n || {}); i[l] = { ...(i[l] || {}), [k]: v }; w.props = { ...(w.props || {}), i18n: i }; }
+function setPI(l, k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); const i = clone((w.props || {}).i18n || {}); i[l] = { ...(i[l] || {}), [k]: v }; w.props = { ...(w.props || {}), i18n: i }; EDIT.dirty = true; lbarSync(); }
 function rQrPick(id) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; const sel = new Set(String((w.props || {}).qrs || '').split(',').filter(Boolean)); sel.has(id) ? sel.delete(id) : sel.add(id); setP('qrs', [...sel].join(',')); drawProps(); }
 function setClk(k, on) {
   const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return;
@@ -745,6 +771,7 @@ function setTxtPreset(title, body) {
   const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return;
   snap();
   w.props = { ...(w.props || {}), title, ...(body !== undefined ? { body } : {}) };
+  EDIT.dirty = true; lbarSync();
   drawCanvas(); drawProps();
 }
 function addW(type) {
