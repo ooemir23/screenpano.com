@@ -269,6 +269,8 @@ function orientSet(deg) {
   }
   EDIT.sel = -1;
   drawCanvas(); drawProps(); drawPal();
+  lbarSync();
+  scalePv();
   toast(o ? 'Dikey TV düzenine geçildi; beğendiyseniz "Düzeni kaydet"e basın' : 'Yatay TV düzenine geçildi; beğendiyseniz "Düzeni kaydet"e basın');
 }
 async function saveOrient(deg) {
@@ -277,12 +279,13 @@ async function saveOrient(deg) {
     S.scr = await req('GET', '/screen');
     EDIT.dirty = false;
     EDIT.layout = clone(S.scr.layout);
+    pushDraft();
     render(true);
   }
 }
 // Kaydedilmemiş düzeni önizleme çerçevesine ve (ayrı sekme için) localStorage'a ilet; değişiklik yoksa kaydedilmiş hâle döner
 function pushDraft() {
-  const L = EDIT.dirty && EDIT.layout ? EDIT.layout : null;
+  const L = EDIT.layout || (S.scr && S.scr.layout) || null;
   try { localStorage.setItem('sp.draft', JSON.stringify(L)); } catch (e) {}
   document.querySelectorAll('.pv iframe').forEach(f => { try { f.contentWindow.postMessage({ screenpanoDraft: L }, location.origin); } catch (e) {} });
 }
@@ -581,7 +584,7 @@ async function applyTpl(k) {
   if (EDIT.dirty && !await UI.ask('Mevcut düzenin yerine bu şablon konsun mu?')) return;
   const tpl = S.cat.templates[k], curOr = (EDIT.layout && EDIT.layout.orient) || 0, orient = tpl.orient ? (curOr === 270 ? 270 : 90) : 0;
   snap(); EDIT.layout = { cols: 24, rows: 24, ...(orient ? { orient } : {}), widgets: clone(tpl.widgets) }; EDIT.sel = -1;
-  drawCanvas(); drawProps(); drawPal(); toast('Şablon uygulandı; beğendiyseniz "Düzeni kaydet"e basın');
+  drawCanvas(); drawProps(); drawPal(); lbarSync(); scalePv(); toast('Şablon uygulandı; beğendiyseniz "Düzeni kaydet"e basın');
   $('cw').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 async function saveL() {
