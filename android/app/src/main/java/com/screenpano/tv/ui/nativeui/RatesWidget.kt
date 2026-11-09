@@ -146,13 +146,8 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             val row = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
             val code = wx.optInt("code")
             val icon = when { code == 0 -> if (wx.optBoolean("day", true)) "☀️" else "🌙"; code <= 2 -> if (wx.optBoolean("day", true)) "⛅" else "☁️"; code == 3 -> "☁️"; code <= 48 -> "🌫️"; code <= 57 -> "🌦️"; code <= 67 -> "🌧️"; code <= 77 -> "❄️"; code <= 82 -> "🌧️"; code <= 86 -> "❄️"; else -> "⛈️" }
-            val label = when { code == 0 -> "Açık"; code <= 2 -> "Parçalı bulutlu"; code == 3 -> "Kapalı"; code <= 48 -> "Sisli"; code <= 57 -> "Çisenti"; code <= 67 -> "Yağmurlu"; code <= 77 -> "Karlı"; code <= 82 -> "Sağanak"; code <= 86 -> "Kar sağanağı"; else -> "Gök gürültülü" }
             row.addView(txt(icon, vh * 4.6f, p.white))
             row.addView(txt("${wx.optDouble("temp").roundToInt()}°", vh * 4f, p.white, true), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { leftMargin = (vh * 1.4f).toInt() })
-            val wd = LinearLayout(context).apply { orientation = VERTICAL }
-            wd.addView(txt(label, vh * 1.85f, p.white, true).apply { ellipsize = android.text.TextUtils.TruncateAt.END })
-            wd.addView(txt("His. ${wx.optDouble("feels").roundToInt()}° · ${wx.optDouble("wind").roundToInt()} km/s", vh * 1.8f, p.mute, false, 0.03f).apply { ellipsize = android.text.TextUtils.TruncateAt.END }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
-            row.addView(wd, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply { leftMargin = (vh * 1.4f).toInt() })
             val city = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.END }
             // uzun konum adı: pencereye sığana kadar yazı küçülür (en çok kutunun %38'i)
             val cityTv = ShrinkText(context, width * 0.38f).apply {
@@ -161,7 +156,7 @@ class RatesWidget(context: Context) : LinearLayout(context), NativeWidget {
             }
             city.addView(cityTv)
             city.addView(txt("${wx.optDouble("min").roundToInt()}° / ${wx.optDouble("max").roundToInt()}°", vh * 1.8f, p.mute, false, 0.03f), LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (vh * 0.3f).toInt() })
-            row.addView(city)
+            row.addView(city, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
             content.addView(row, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
         }
         if (props?.optBoolean("rates", true) != false) {

@@ -200,10 +200,7 @@ position:absolute;top:.8vh;right:.8vw}
 #wx{display:flex;align-items:center;gap:.9vw}
 #wx .wi{font-size:calc(4.6*var(--rv));line-height:1}
 #wx .wt{font-size:calc(4*var(--rv));font-weight:600;line-height:1}
-#wx .wd{flex:1;min-width:0}
-#wx .wd b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(1.85*var(--rv));font-weight:600;color:var(--white)}
-#wx .wd small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(1.8*var(--rv));color:var(--mute);margin-top:calc(.3*var(--rv));letter-spacing:.04em}
-#wx .city{font-size:calc(1.8*var(--rv));letter-spacing:.28em;color:var(--accent2);font-weight:600;text-transform:uppercase;text-align:right}
+#wx .city{margin-left:auto;font-size:calc(1.8*var(--rv));letter-spacing:.28em;color:var(--accent2);font-weight:600;text-transform:uppercase;text-align:right}
 #wx .city small{display:block;letter-spacing:.04em;color:var(--mute);font-weight:400;text-transform:none;margin-top:calc(.3*var(--rv));font-size:calc(1.8*var(--rv))}
 /* Hava ve piyasalar widget'ındaki QR bölümü: 2 QR yan yana, fazlası sırayla */
 #rmain{display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
@@ -2444,8 +2441,7 @@ function renderPanel() {
   let wx = '';
   if (w) {
     const [txt, dayIc, nightIc] = WMO(w.code);
-    wx = `<div id="wx"><span class="wi">${w.day ? dayIc : nightIc}</span><span class="wt">${Math.round(w.temp)}°</span>
-      <div class="wd"><b>${txt}</b><small>His. ${Math.round(w.feels)}° · ${Math.round(w.wind)} km/s</small></div>
+    wx = `<div id="wx" title="${esc(txt)}"><span class="wi">${w.day ? dayIc : nightIc}</span><span class="wt">${Math.round(w.temp)}°</span>
       <div class="city">${esc(CITY)}<small>${Math.round(w.min)}° / ${Math.round(w.max)}°</small></div></div>`;
   }
   rateSets = [
@@ -2499,11 +2495,12 @@ function fitRates() {
     const set = k => el.style.setProperty('--rv', (k * vh).toFixed(3) + 'px');
     const fits = () => {
       const padV = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-      const maxH = el.clientHeight - padV;
+      const padH = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      const maxH = el.clientHeight - padV, maxW = el.clientWidth - padH;
       if (el.scrollHeight > el.clientHeight + 1) return false;
       if (el.scrollWidth > el.clientWidth + 1) return false;
       const wx = el.querySelector('#wx');
-      if (wx && (wx.scrollHeight > maxH || wx.scrollWidth > el.clientWidth + 1)) return false;
+      if (wx && (wx.scrollHeight > maxH || wx.scrollWidth > maxW + 1)) return false;
       const cols = el.querySelectorAll('.r-col');
       for (const col of cols) {
         let h = 0;
