@@ -241,6 +241,14 @@ SECTIONS.home = {
 
 /* ================= TASARIM ================= */
 const EDIT = { layout: null, sel: -1, hist: [], dirty: false };
+window.__hideTpls = (() => { try { return localStorage.getItem('sp.hideTpls') === '1'; } catch (e) { return false; } })();
+function toggleTpls() {
+  window.__hideTpls = !window.__hideTpls;
+  try { localStorage.setItem('sp.hideTpls', window.__hideTpls ? '1' : '0'); } catch (e) {}
+  const b = $('tpls-body'), a = $('tpls-arrow');
+  if (b) b.style.display = window.__hideTpls ? 'none' : '';
+  if (a) a.textContent = window.__hideTpls ? '▸ Göster' : '▾ Gizle';
+}
 // Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al + Kaydet görünür
 const layoutBar = () => {
   const o = curOrient(true);
@@ -311,7 +319,10 @@ SECTIONS.design = {
         ? `<div class="tpl-sub">↕ Dikey TV düzenleri (9:16)</div><div class="tpls">${vTpls}</div><div class="tpl-sub">↔ Yatay ekran düzenleri (16:9)</div><div class="tpls">${hTpls}</div>`
         : `<div class="tpl-sub">↔ Yatay ekran düzenleri (16:9)</div><div class="tpls">${hTpls}</div><div class="tpl-sub">↕ Dikey TV düzenleri (9:16)</div><div class="tpls">${vTpls}</div>`;
       h += `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
-        + card('Hazır düzenler', 'Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin. Dikey TV şablonları ekran yönünü otomatik olarak dikey yapar.', tplBody, layoutBar())
+        + card(`<span onclick="toggleTpls()" style="cursor:pointer;user-select:none;display:inline-flex;align-items:center" title="Gizle / Göster">Hazır düzenler <span id="tpls-arrow" style="font-size:12px;font-weight:500;color:var(--mute);margin-left:8px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.06)">${window.__hideTpls ? '▸ Göster' : '▾ Gizle'}</span></span>`,
+               `<span onclick="toggleTpls()" style="cursor:pointer;user-select:none">Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin. Dikey TV şablonları ekran yönünü otomatik olarak dikey yapar.</span>`,
+               `<div id="tpls-body" style="${window.__hideTpls ? 'display:none;' : ''}">${tplBody}</div>`,
+               layoutBar(), 'card-tpls')
         + designsCard()
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır.',
           `<div class="editor"><div id="cw"${o ? ' class="vert"' : ''}><div id="cv"></div></div><div id="props"></div></div>
