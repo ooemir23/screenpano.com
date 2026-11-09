@@ -225,6 +225,8 @@ function publicState(t, screenId) {
   const cap = (o, n) => o && n && Array.isArray(o.items) ? { ...o, items: o.items.slice(0, n) } : o;
   const ml = sp ? sp.items : mediaList(t, screen ? screen.id : null);
   const mediaAt = getTenantMediaAt(t, ml);
+  // Namaz vakitleri tek başına ekranın tamamını düşürmesin: bağımlılık (adhan) eksikse ya da hesap hata verirse yalnız bu widget boş kalır.
+  let prayer = null; try { prayer = require('./prayer').forTenant(t); } catch (e) { console.error('Namaz vakitleri hesaplanamadı:', e.message); }
   return {
     ...base,
     videos: ml,
@@ -276,7 +278,7 @@ function publicState(t, screenId) {
     music: tvMusic(db.music),
     rates: F.rates,
     weather: F.weatherFor(t),
-    prayer: require('./prayer').forTenant(t), // Namaz vakitleri / güneş widget'ı (dün-bugün-yarın, ms)
+    prayer, // Namaz vakitleri / güneş widget'ı (dün-bugün-yarın, ms)
   };
 }
 
