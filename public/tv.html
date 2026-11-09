@@ -979,6 +979,8 @@ body.glass .wz b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%
 #wimage.contain img{object-fit:contain}
 #wimage .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:2vh}
 .cell.qrcell{z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease} /* QR kutuları diğer widget'ların üstünde durabilir */
+.cell.qrcell[data-va="b"]{justify-content:flex-end} /* dikey hiza (column flex): alt yarıdaki kutuda kart alta yaslanır — editördeki yerleşimle aynı */
+.cell.qrcell[data-va="t"]{justify-content:flex-start}
 .cell.qrcell.qpin{z-index:65} /* "Her zaman üstte": kayan haber bandı, kampanya vb. her şeyin üstünde kalır */
 .cell.qrcell.qhide{opacity:0;pointer-events:none}
 .cell.qrcell .wqr{display:flex;flex-direction:column;align-items:center;justify-content:center;background:none;border:none;border-radius:0;overflow:visible;gap:calc(var(--qrs)*.04);padding:0;backdrop-filter:none;box-shadow:none}
@@ -3905,6 +3907,8 @@ function keepInside(el) {
   let L = Infinity, T = Infinity, R = -Infinity, B = -Infinity;
   for (const k of el.children) { const r = k.getBoundingClientRect(); L = Math.min(L, r.left); T = Math.min(T, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom); }
   if (!isFinite(L)) return;
+  // blok sunulan sığınak widget'ına (ör. kayan bant) sığmıyorsa içeri zmak anlamsızdır: kart kendi hücresindeki hizasında kalsın
+  if (R - L > bounds.width - 2 * pad || B - T > bounds.height - 2 * pad) return;
   const dx = L < bounds.left + pad ? bounds.left + pad - L : R > bounds.right - pad ? bounds.right - pad - R : 0;
   const dy = T < bounds.top + pad ? bounds.top + pad - T : B > bounds.bottom - pad ? bounds.bottom - pad - B : 0;
   const rot = window.__effRot || 0;
