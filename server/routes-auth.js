@@ -18,6 +18,7 @@ function baseOrigin(req) {
 }
 
 function sendVerifyEmail(req, t, email) {
+  const tpl = require('./mailtpl');
   const tok = auth.sign({ kind: 'verify_email', tid: t.id, email, exp: Date.now() + 7 * 86400 * 1000 });
   const link = `${baseOrigin(req)}/api/auth/verify-email?token=${encodeURIComponent(tok)}`;
   if (mailer.enabled()) {
@@ -25,13 +26,14 @@ function sendVerifyEmail(req, t, email) {
       to: email,
       subject: `${config.BRAND || 'ScreenPano'} — E-posta Adresinizi Doğrulayın`,
       text: `Merhaba ${t.name},\n\nEkran bildirimlerini ve şifre sıfırlama bağlantılarını sorunsuz alabilmek için aşağıdaki bağlantıya tıklayarak e-posta adresinizi doğrulayın:\n\n${link}\n\nBu bağlantı 7 gün geçerlidir.`,
-      html: `<div style="font:15px/1.6 system-ui,sans-serif;color:#111;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
-        <h2 style="margin:0 0 12px;color:#111">${config.BRAND || 'ScreenPano'} E-posta Doğrulaması</h2>
-        <p>Merhaba <b>${String(t.name || '').replace(/[<>&]/g, '')}</b>,</p>
-        <p>Ekran çevrimdışı uyarılarını ve hesap bildirimlerini alabilmek için lütfen e-posta adresinizi doğrulayın:</p>
-        <p style="margin:22px 0"><a href="${link}" style="background:#c89a4b;color:#14110b;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;display:inline-block">E-posta Adresimi Doğrula</a></p>
-        <p style="font-size:12px;color:#666">Düğme açılmazsa bu bağlantıyı tarayıcınıza yapıştırın:<br>${link}</p>
-      </div>`,
+      html: tpl.html({
+        title: 'E-posta Adresinizi Doğrulayın',
+        body: tpl.p(`Merhaba <b>${tpl.e(t.name)}</b>,`) +
+          tpl.p('ScreenPano hesabınızı açtınız. Ekran çevrimdışı uyarılarını, haftalık özetleri ve şifre sıfırlama bağlantılarını sorunsuz alabilmek için e-posta adresinizi doğrulayın.') +
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px">${tpl.kv('İşletme', tpl.e(t.name))}${tpl.kv('E-posta', tpl.e(email))}</table>`,
+        cta: link, ctaLabel: 'E-posta Adresimi Doğrula',
+        small: 'Bağlantı 7 gün geçerlidir. Bu kaydı siz yapmadıysanız bu e-postayı dikkate almayın.',
+      }),
     }).catch(e => console.error('[VERIFY MAIL]', e && e.message));
   }
   return { tok, link };
@@ -151,17 +153,24 @@ r.post('/forgot', async (req, res) => {
   if (mailer.enabled() && email) {
     try {
       const isStaff = u.role === 'staff';
+      const tpl = require('./mailtpl');
+      const talepZamanı = new Date().toLocaleString('tr-TR', { timeZone: config.TZ, dateStyle: 'long', timeStyle: 'short' });
       await mailer.send({
         to: email,
         subject: `${config.BRAND || 'ScreenPano'} — Şifre Sıfırlama Talebi (${u.username})`,
-        text: `Merhaba${t ? ' ' + t.name : ''},\n\n"${u.username}" (${isStaff ? 'Personel' : 'İşletme Sahibi'}) hesabı için şifre sıfırlama talebinde bulunuldu.\n\nYeni şifre belirlemek için aşağıdaki bağlantıya tıklayın (30 dakika geçerlidir):\n${resetUrl}\n\nBu talebi siz yapmadıysanız bu e-postayı dikkate almayın.`,
-        html: `<div style="font:15px/1.6 system-ui,sans-serif;color:#111;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
-          <h2 style="margin:0 0 12px;color:#111">Şifre Sıfırlama Talebi</h2>
-          <p>Merhaba <b>${String((t && t.name) || u.username).replace(/[<>&]/g, '')}</b>,</p>
-          <p><b>${String(u.username).replace(/[<>&]/g, '')}</b> (${isStaff ? 'Personel hesabı' : 'İşletme hesabı'}) için şifre sıfırlama istendi.</p>
-          <p style="margin:22px 0"><a href="${resetUrl}" style="background:#c89a4b;color:#14110b;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:8px;display:inline-block">Yeni Şifre Belirle</a></p>
-          <p style="font-size:12px;color:#666">Bu bağlantı 30 dakika boyunca ve tek kullanım için geçerlidir. Talebi siz oluşturmadıysanız dikkate almayın.</p>
-        </div>`,
+        text: `Merhaba${t ? ' ' + t.name : ''},\n\n"${u.username}" (${isStaff ? 'Personel' : 'İşletme Sahibi'}) hesabı için şifre sıfırlama talebinde bulunuldu (${talepZamanı}).\n\nYeni şifre belirlemek için aşağıdaki bağlantıya tıklayın (30 dakika geçerlidir):\n${resetUrl}\n\nBu talebi siz yapmadıysanız bu e-postayı dikkate almayın; şifreniz değişmeden kalır.`,
+        html: tpl.html({
+          title: 'Şifre Sıfırlama Talebi',
+          body: tpl.p(`Merhaba <b>${tpl.e((t && t.name) || u.username)}</b>,`) +
+            tpl.p(`<b>${tpl.e(u.username)}</b> ${isStaff ? 'personel' : 'işletme'} hesabı için yeni şifre talebinde bulunuldu. Aşağıdaki düğme tek kullanımlık şifre belirleme ekranını açar.`) +
+            `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px">
+              ${tpl.kv('Hesap', tpl.e(u.username) + (isStaff ? ' · Personel' : ' · İşletme Sahibi'))}
+              ${tpl.kv('Talep zamanı', tpl.e(talepZamanı))}
+              ${tpl.kv('Geçerlilik', '30 dakika · tek kullanım')}
+            </table>`,
+          cta: resetUrl, ctaLabel: 'Yeni Şifre Belirle',
+          small: 'Bu talebi siz oluşturmadıysanız e-postayı dikkate almayın; bağlantı kullanılmadığı sürece şifreniz değişmez.',
+        }),
       });
       return res.json({ ok: true, sent: true, message: genericMsg });
     } catch (e) {

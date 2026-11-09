@@ -34,12 +34,22 @@ function gSpend() {
 }
 function gWarn(kind, u) {
   const k = `google_warn_${kind}_${u.month}`; if (store.setting(k, '')) return; store.setSetting(k, '1');
-  const text = kind === 'full'
+  const full = kind === 'full';
+  const text = full
     ? `ScreenPano: Google Places aylık çağrı sınırı doldu (${u.calls}/${u.cap}). Ücret çıkmaması için ay sonuna kadar yeni çağrı yapılmayacak; ekranlarda son alınan yorumlar gösterilir. Sınırı süper yönetimden (google_monthly_cap) artırabilirsiniz.`
     : `ScreenPano: Google Places çağrıları bu ay sınıra yaklaştı (${u.calls}/${u.cap}). Dolunca yeni çağrı yapılmaz.`;
   console.log('[Google]', text);
+  const tpl = require('./mailtpl');
+  const html = tpl.alert({
+    title: full ? 'Google Places sınırı doldu' : 'Google Places sınıra yaklaştı',
+    lead: full
+      ? 'Aylık Google Places çağrı sınırı doldu; ücret çıkmaması için ay sonuna kadar yeni çağrı yapılmayacak. Ekranlarda son alınan yorumlar gösterilmeye devam eder.'
+      : 'Google Places çağrıları bu ay sınıra yaklaştı. Sınır dolunca ay sonuna kadar yeni çağrı yapılmaz.',
+    rows: [['Bu ayki çağrı', `${u.calls} / ${u.cap}`], ['Durum', full ? 'Sınır doldu · çağrılar durduruldu' : 'Sınıra yaklaşılıyor']],
+    small: full ? 'Sınırı süper yönetimden (google_monthly_cap) artırabilirsiniz.' : '',
+  });
   const mon = require('./monitor'); mon.webhook(text);
-  mon.sendMail(store.setting('site_email', '') || store.setting('legal_email', ''), kind === 'full' ? 'Google Places sınırı doldu' : 'Google Places sınıra yaklaştı', text);
+  mon.sendMail(store.setting('site_email', '') || store.setting('legal_email', ''), full ? 'Google Places sınırı doldu' : 'Google Places sınıra yaklaştı', text, html);
 }
 
 // ---- Google ----

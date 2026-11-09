@@ -26,6 +26,31 @@ function text(t) {
   return L.join('\n');
 }
 
+// aynı özetin şablonlu HTML biçimi (mailtpl)
+function html(t) {
+  const tpl = require('./mailtpl');
+  const j = stats.summary(t, 7), T = j.totals, hrs = m => (m / 60).toFixed(1).replace('.', ',');
+  const rows = [
+    ['Dönem', tpl.e(`${j.daily[0].day} – ${j.daily[j.daily.length - 1].day}`)],
+    ['Ekran açık', `${tpl.e(hrs(T.online))} saat${tpl.e(pct(T.online, j.prev.online))}`],
+    ['İçerik oynatıldı', `${tpl.e(nf(T.plays))} kez${tpl.e(pct(T.plays, j.prev.plays))}`],
+    ['QR okutuldu', `${tpl.e(nf(T.scans))} kez${tpl.e(pct(T.scans, j.prev.scans))}`],
+  ];
+  if (T.drops) rows.push(['Kesinti', `${T.drops} kez · toplam ${Math.round(T.dropsec / 60)} dk`]);
+  const camp = j.impact.filter(x => (x.scans || x.shown)).slice(0, 5)
+    .map(x => `<b>${tpl.e(x.name)}</b>: ${nf(x.shown)} gösterim, ${nf(x.scans)} okutma${x.rate != null && x.shown ? ` <span style="color:#5b6470">(100 gösterimde ${String(x.rate).replace('.', ',')})</span>` : ''}`);
+  const best = j.impact.find(x => x.scans);
+  return tpl.html({
+    title: `Haftalık Özet · ${tpl.e(t.name)}`,
+    body: tpl.p('Son 7 günün özeti aşağıda. Ayrıntılı grafikler için panele bakın.')
+      + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px">${rows.map(([k, v]) => tpl.kv(k, v)).join('')}</table>`,
+    cta: `${config.BASE_URL}/panel#stats`, ctaLabel: 'Ayrıntılı İstatistikler',
+    small: (camp.length ? '<b>Kampanya etkisi</b> (gösterim → QR okutma)<br>' + camp.join('<br>') + '<br><br>' : '')
+      + (best && best.peakHour >= 0 ? `<b>İpucu:</b> "${tpl.e(best.name)}" en çok ${String(best.peakHour).padStart(2, '0')}:00 civarında okutuluyor; bu saatlerde daha sık göstermeyi deneyebilirsiniz.<br><br>` : '')
+      + 'Bu e-postayı Ayarlar → Bildirimler bölümünden kapatabilirsiniz.',
+  });
+}
+
 // Pazartesi 09:00'dan sonra haftada bir kez (sunucu yeniden başlasa da aynı hafta ikinci kez gitmez)
 const fails = new Map(); // işletme|gün -> başarısız gönderim sayısı
 let running = false;
@@ -47,10 +72,10 @@ async function tickInner() {
     const key = t.id + '|' + n.ymd, tries = (fails.get(key) || 0); if (tries >= 3) continue;
     const prev = no.weeklyAt; no.weeklyAt = n.ymd; tenants.save(t);
     let ok = false;
-    try { ok = await monitor.sendMail(no.email, `${config.BRAND}: haftalık özet · ${t.name}`, text(t)); } catch (e) { console.error('Haftalık özet:', e.message); }
+    try { ok = await monitor.sendMail(no.email, `${config.BRAND}: haftalık özet · ${t.name}`, text(t), html(t)); } catch (e) { console.error('Haftalık özet:', e.message); }
     if (!ok) { fails.set(key, tries + 1); no.weeklyAt = prev; tenants.save(t); }
   }
 }
 function start() { setInterval(() => tick().catch(e => console.error('Haftalık özet:', e.message)), 10 * 60000); setTimeout(() => tick().catch(() => {}), 90000); }
 
-module.exports = { start, text };
+module.exports = { start, text, html };

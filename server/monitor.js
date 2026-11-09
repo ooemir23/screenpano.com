@@ -12,10 +12,11 @@ const snaps = new Map();   // cihaz -> { at, data } ekran görüntüsü
 
 // ---- e-posta (SMTP ayarlıysa) ----
 const mailer = require('./mailer');
+const mailtpl = require('./mailtpl');
 const mailEnabled = () => mailer.enabled();
-async function sendMail(to, subject, text) {
+async function sendMail(to, subject, text, html) {
   if (!mailer.enabled() || !to) return false;
-  try { await mailer.send({ to, subject, text }); return true; }
+  try { await mailer.send({ to, subject, text, html }); return true; }
   catch (e) { console.error('E-posta gönderilemedi', e.message); return false; }
 }
 // Platform yöneticisi için webhook (Slack, Discord, Telegram köprüsü vb.: {"text": "..."} gönderilir)
@@ -66,7 +67,17 @@ function connected(t, d) {
     store.q.deviceAlerted.run(0, d.id);
     pushAlert(t, { kind: 'online', device: d.name || 'TV kutusu', text: `${d.name || 'TV kutusu'} yeniden bağlandı.` });
     const n = t.db.notify || {};
-    if (n.email && n.online !== false) sendMail(n.email, `${config.BRAND}: ekranınız yeniden açık`, `${t.name} – ${d.name || 'TV kutusu'} yeniden bağlandı (${new Date().toLocaleString('tr-TR', { timeZone: config.TZ })}).`);
+    if (n.email && n.online !== false) {
+      const saat = new Date().toLocaleString('tr-TR', { timeZone: config.TZ });
+      sendMail(n.email, `${config.BRAND}: ekranınız yeniden açık`,
+        `${t.name} – ${d.name || 'TV kutusu'} yeniden bağlandı (${saat}).`,
+        mailtpl.alert({
+          title: 'Ekranınız yeniden yayında',
+          lead: `<b>${mailtpl.e(d.name || 'TV kutusu')}</b> ekranı yeniden bağlandı ve yayına devam ediyor.`,
+          rows: [['İşletme', mailtpl.e(t.name)], ['Ekran', mailtpl.e(d.name || 'TV kutusu')], ['Bağlanma zamanı', mailtpl.e(saat)]],
+          cta: `${config.BASE_URL}/panel`, ctaLabel: 'Panele Git',
+        }));
+    }
   }
 }
 
@@ -83,7 +94,16 @@ function tick() {
     const name = d.name || 'TV kutusu', since = new Date(d.last_seen).toLocaleString('tr-TR', { timeZone: config.TZ, dateStyle: 'short', timeStyle: 'short' });
     pushAlert(t, { kind: 'offline', device: name, text: `${name} ${since} saatinden beri çevrimdışı.` });
     const n = t.db.notify || {};
-    if (n.email && n.offline !== false) sendMail(n.email, `${config.BRAND}: ekranınız çevrimdışı`, `${t.name} – ${name} ${since} saatinden beri bağlantı vermiyor.\n\nKontrol edin: kutunun elektriği, internet bağlantısı, uygulamanın açık olması.\n\nPanel: ${config.BASE_URL}/panel#settings/devices`);
+    if (n.email && n.offline !== false) sendMail(n.email, `${config.BRAND}: ekranınız çevrimdışı`,
+      `${t.name} – ${name} ${since} saatinden beri bağlantı vermiyor.\n\nKontrol edin: kutunun elektriği, internet bağlantısı, uygulamanın açık olması.\n\nPanel: ${config.BASE_URL}/panel#settings/devices`,
+      mailtpl.alert({
+        title: 'Ekranınız çevrimdışı',
+        lead: `<b>${mailtpl.e(name)}</b> ekranı <b>${mailtpl.e(since)}</b> saatinden beri bağlantı vermiyor.`,
+        rows: [['İşletme', mailtpl.e(t.name)], ['Ekran', mailtpl.e(name)], ['Son bağlantı', mailtpl.e(since)]],
+        bullets: ['Kutunun elektriğinin takılı olduğunu', 'İnternet bağlantısının çalıştığını', 'Ekranda ScreenPano uygulamasının açık olduğunu'],
+        cta: `${config.BASE_URL}/panel#settings/devices`, ctaLabel: 'Cihazları Gör',
+        small: 'Sorun sürerse kutuyu yeniden başlatın; uygulama açılmıyorsa pano üzerinden yeniden eşleştirin.',
+      }));
     webhook(`⚠️ ${t.name}: ${name} ${since} saatinden beri çevrimdışı`);
   }
 }

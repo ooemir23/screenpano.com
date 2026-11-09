@@ -188,7 +188,14 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const n = req.t.db.notify || {};
     if (!monitor.mailEnabled()) return res.status(400).json({ error: 'E-posta gönderimi sunucuda ayarlı değil (SMTP)' });
     if (!n.email) return res.status(400).json({ error: 'Önce e-posta adresinizi kaydedin' });
-    const ok = await monitor.sendMail(n.email, `${config.BRAND}: deneme bildirimi`, `${req.t.name} için uyarılar bu adrese gelecek.`);
+    const tpl = require('./mailtpl');
+    const ok = await monitor.sendMail(n.email, `${config.BRAND}: deneme bildirimi`, `${req.t.name} için uyarılar bu adrese gelecek.`,
+      tpl.alert({
+        title: 'Deneme Bildirimi',
+        lead: `Bu bir deneme postasıdır. <b>${tpl.e(req.t.name)}</b> işletmesinin ekran ve haftalık özet bildirimleri bu adrese gelecek.`,
+        rows: [['İşletme', tpl.e(req.t.name)], ['Bildirim adresi', tpl.e(n.email)]],
+        cta: `${config.BASE_URL}/panel#settings`, ctaLabel: 'Bildirim Ayarları',
+      }));
     ok ? res.json({ ok: true }) : res.status(502).json({ error: 'E-posta gönderilemedi' });
   });
   // haftalık özetin şimdi bir örneğini gönder
@@ -196,7 +203,8 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const n = req.t.db.notify || {};
     if (!monitor.mailEnabled()) return res.status(400).json({ error: 'E-posta gönderimi sunucuda ayarlı değil (SMTP)' });
     if (!n.email) return res.status(400).json({ error: 'Önce e-posta adresinizi kaydedin' });
-    const ok = await monitor.sendMail(n.email, `${config.BRAND}: haftalık özet · ${req.t.name}`, require('./weekly').text(req.t));
+    const weekly = require('./weekly');
+    const ok = await monitor.sendMail(n.email, `${config.BRAND}: haftalık özet · ${req.t.name}`, weekly.text(req.t), weekly.html(req.t));
     ok ? res.json({ ok: true }) : res.status(502).json({ error: 'E-posta gönderilemedi' });
   });
   r.get('/notify/weekly-preview', (req, res) => res.type('text/plain; charset=utf-8').send(require('./weekly').text(req.t)));
