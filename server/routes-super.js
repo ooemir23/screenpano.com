@@ -107,8 +107,13 @@ r.put('/tenants/:id', (req, res) => {
     for (const id of ids) { const x = tenants.get(id); if (x) { x.db.devices = nd; tenants.save(x); } }
   }
   if (typeof b.email === 'string') tenants.save(t);
-  for (const id of ids) { const ff = id === t.id ? f : Object.fromEntries(Object.entries(f).filter(([k]) => ['plan', 'status', 'paid_until', 'trial_until'].includes(k))); store.updateTenant(id, ff); tenants.refreshRow(id); hub.pushTenant(id); }
-  res.json({ ok: true, count: ids.length });
+  try {
+    for (const id of ids) { const ff = id === t.id ? f : Object.fromEntries(Object.entries(f).filter(([k]) => ['plan', 'status', 'paid_until', 'trial_until'].includes(k))); store.updateTenant(id, ff); tenants.refreshRow(id); hub.pushTenant(id); }
+    res.json({ ok: true, count: ids.length });
+  } catch (e) {
+    console.error('İşletme güncellenemedi:', req.params.id, e.message);
+    res.status(500).json({ error: 'İşletme güncellenemedi' });
+  }
 });
 r.post('/tenants/:id/password', (req, res) => {
   const owner = store.q.usersOf.all(req.params.id).find(u => u.role === 'owner');

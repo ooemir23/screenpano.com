@@ -22,7 +22,15 @@ fs.mkdirSync(DIR, { recursive: true });
 const KEY = 'platformAds', PKG = 'adPackages';
 
 const s = (v, n) => String(v ?? '').trim().slice(0, n);
-const num = v => { const n = Number(String(v ?? '').replace(',', '.')); return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : 0; };
+// Tutarı çöz: son ayraç ondalık kabul edilir ("1.500,00" → 1500, "12,5" → 12.5, "1500" → 1500)
+const num = v => {
+  let s = String(v ?? '').trim().replace(/[^\d.,]/g, '');
+  if (!s) return 0;
+  const i = Math.max(s.lastIndexOf('.'), s.lastIndexOf(','));
+  if (i >= 0) s = s.slice(0, i).replace(/[.,]/g, '') + '.' + s.slice(i + 1);
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : 0;
+};
 const ymd = v => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : '');
 const today = () => SCH.parts().ymd;
 const dayDiff = (a, b) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000);
@@ -78,10 +86,17 @@ function inject(t, list) {
 }
 
 // Gösterim istatistikleri (tüm zamanlar): işletme bazlı oynatma sayısı ve ekranda kalma süresi
+// statPad sonucu 30 sn önbellekte tutulur: /pads her reklam için perf(a) çağırır, N reklamda N tam tablo taraması (O(N²)) yerine tek tarama.
+let _statPadCache = null, _statPadAt = 0;
+function statPadRows() {
+  const now = Date.now();
+  if (!_statPadCache || now - _statPadAt > 30000) { _statPadCache = store.q.statPad.all(); _statPadAt = now; }
+  return _statPadCache;
+}
 function perf(a) {
   const ids = new Map((a.creatives || []).map(c => [c.id, c]));
   const o = { shown: 0, sec: 0, tenants: new Set(), daily: {}, byTenant: {}, byCreative: {} };
-  for (const r of store.q.statPad.all()) {
+  for (const r of statPadRows()) {
     const id = String(r.key).slice(4); if (!ids.has(id)) continue;
     const c = o.byCreative[id] || (o.byCreative[id] = { shown: 0, sec: 0 });
     if (r.kind === 'play') { o.shown += r.value; c.shown += r.value; o.tenants.add(r.tenant_id); o.daily[r.day] = (o.daily[r.day] || 0) + r.value; o.byTenant[r.tenant_id] = (o.byTenant[r.tenant_id] || 0) + r.value; }

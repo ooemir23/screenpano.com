@@ -206,8 +206,22 @@ app.use(express.static(config.PUBLIC_DIR, {
     else if (/\.svg$/.test(file)) res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   },
 }));
-// Sağlık kontrolü (Dokploy/izleme)
-app.get('/health', (req, res) => res.json({ ok: true, up: Math.round(process.uptime()) }));
+// Sağlık kontrolü (Dokploy/izleme): yalnızca liveness değil, temel bağımlılıkları da bildirir
+app.get('/health', (req, res) => {
+  const h = { ok: true, up: Math.round(process.uptime()) };
+  try { require('./store').sql.pragma('quick_check'); h.db = 'ok'; }
+  catch (e) { h.db = 'fail'; h.ok = false; }
+  try {
+    const s = require('fs').statfsSync(config.DATA_DIR);
+    const freeGB = Math.round((s.bavail * s.bsize) / 1e9 * 10) / 10;
+    h.diskFreeGB = freeGB;
+    h.disk = freeGB < 0.2 ? 'low' : 'ok';
+    if (freeGB < 0.2) h.ok = false;
+  } catch (e) { /* statfs yoksa atla */ }
+  const mem = process.memoryUsage();
+  h.memMB = Math.round(mem.rss / 1048576);
+  res.status(h.ok ? 200 : 503).json(h);
+});
 app.use('/api', (req, res) => res.status(404).json({ error: 'bulunamadı' }));
 // Beklenmeyen hatalar (dosya boyutu, bozuk JSON vb.): süreç düşmez, anlaşılır yanıt döner
 app.use((err, req, res, next) => {
@@ -233,6 +247,11 @@ require('./special').start();
 require('./social').start();
 require('./platformads').purgeLegacy(); require('./platformads').watch();
 process.on('unhandledRejection', e => console.error('Yakalanmamış söz:', e && e.message ? e.message : e));
+process.on('uncaughtException', e => {
+  console.error('Beklenmeyen hata:', e && e.stack ? e.stack : e);
+  try { tenants.flushAll(); } catch (err) { console.error('Kayıt yazılamadı:', err.message); }
+  process.exit(1); // Docker/izleme yeniden başlatsın
+});
 // Kapatma (deploy/docker stop): bekleyen kayıtlar diske yazılır, WAL birleştirilir, bağlantılar kapanır
 let closing = false;
 function shutdown(sig) {

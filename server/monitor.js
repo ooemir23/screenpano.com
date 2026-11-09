@@ -115,6 +115,6 @@ function fleet(latest) {
 function start() { setInterval(tick, 60000); }
 
 const perf = new Map(); // cihaz → son performans testi sonucu (bellekte)
-// Silinen cihazın bellekteki durumu ve ekran görüntüsü atılır
-const forgetDevice = id => { live.delete(id); snaps.delete(id); };
+// Silinen cihazın bellekteki durumu, ekran görüntüsü ve performans testi sonucu atılır
+const forgetDevice = id => { live.delete(id); snaps.delete(id); perf.delete(id); };
 module.exports = { forgetDevice, fleet, report, connected, tick, start, deviceView, overview, snaps, perf, live, sendMail, webhook, mailEnabled, pushAlert, OFFLINE_MIN, offlineMin };

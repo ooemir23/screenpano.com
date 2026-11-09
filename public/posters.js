@@ -139,7 +139,7 @@
     if (!el) return;
     const w = el.clientWidth || 1920, h = el.clientHeight || 1080, vert = h > w * 1.1;
     el.classList.toggle('vert', vert);
-    el.style.fontSize = Math.max(1.5, vert ? Math.min(w / 38, h / 56) : Math.min(w / 64, h / 34)) + 'px';
+    el.style.fontSize = Math.max(10, vert ? Math.min(w / 38, h / 56) : Math.min(w / 64, h / 34)) + 'px';
   }
   window.SPPoster = { TEMPLATES: T, FIELD_LABELS, html, fit };
 })();

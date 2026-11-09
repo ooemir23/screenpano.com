@@ -136,7 +136,7 @@ function noteFail(ip, user) {
     if (!r || Date.now() - r.at > WINDOW) fails.set(k, { n: 1, at: Date.now() }); else r.n++;
   }
 }
-function clearFails(ip, user) { for (const k of keys(null, user)) fails.delete(k); }
+function clearFails(ip, user) { for (const k of keys(ip, user)) fails.delete(k); }
 setInterval(() => { const t = Date.now(); for (const [k, r] of fails) if (t - r.at > WINDOW) fails.delete(k); }, 5 * 60 * 1000).unref();
 // Traefik/Dokploy gerçek istemci IP'sini X-Forwarded-For'un SONUNA ekler; baştaki değer istemci tarafından uydurulabilir
 const clientIp = req => { const x = String(req.headers['x-forwarded-for'] || '').split(',').map(v => v.trim()).filter(Boolean); return x.length ? x[x.length - 1] : String(req.socket.remoteAddress || ''); };

@@ -36,6 +36,9 @@ const platformKey = name => store.setting(name, '');
 const TR_WORDS = { Fenerbahce: 'Fenerbahçe', Besiktas: 'Beşiktaş', Goztepe: 'Göztepe', Basaksehir: 'Başakşehir', Istanbul: 'İstanbul', Kasimpasa: 'Kasımpaşa', Caykur: 'Çaykur', Genclerbirligi: 'Gençlerbirliği', Karagumruk: 'Karagümrük', Eyupspor: 'Eyüpspor', Umraniyespor: 'Ümraniyespor', Ankaragucu: 'Ankaragücü', Kecioren: 'Keçiören', Keciorengucu: 'Keçiörengücü', Bandirma: 'Bandırma', Corum: 'Çorum', Sanliurfa: 'Şanlıurfa', Igdir: 'Iğdır', Gazisehir: 'Gazişehir', Buyuksehir: 'Büyükşehir', Umraniye: 'Ümraniye', Bodrumspor: 'Bodrum', Genc: 'Genç', Gucu: 'Gücü', Cagdas: 'Çağdaş', Eskisehirspor: 'Eskişehirspor', Altinordu: 'Altınordu', Gencler: 'Gençler', Kirklarelispor: 'Kırklarelispor', Kirikkale: 'Kırıkkale', Usakspor: 'Uşakspor', Sanliurfaspor: 'Şanlıurfaspor', Istanbulspor: 'İstanbulspor' };
 const trTeam = n => String(n || '').replace(/[A-Za-z]+/g, w => TR_WORDS[w] || w);
 
+// Dış API çağrıları için ortak zaman aşımı: sağlayıcı asılı kalırsa ilgili yenileme döngüsü sonsuza dek beklemesin
+const fetchT = (url, opts = {}, ms = 12000) => fetch(url, { ...opts, signal: opts.signal || AbortSignal.timeout(ms) });
+
 // ================= HAVA DURUMU: konum başına =================
 const locKey = t => { const l = t.db.location || {}; return `${Number(l.lat || 41.01).toFixed(2)},${Number(l.lon || 28.98).toFixed(2)}`; };
 const weather = new Map(Object.entries(cacheGet('weatherByLoc') || {}));
@@ -47,7 +50,7 @@ async function getWeather(lat, lon) {
     return weather.get(key);
   }
   try {
-    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${Number(lat).toFixed(2)}&longitude=${Number(lon).toFixed(2)}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
+    const r = await fetchT(`https://api.open-meteo.com/v1/forecast?latitude=${Number(lat).toFixed(2)}&longitude=${Number(lon).toFixed(2)}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
     const j = await r.json();
     const data = { temp: j.current.temperature_2m, feels: j.current.apparent_temperature, code: j.current.weather_code, wind: j.current.wind_speed_10m, day: !!j.current.is_day, max: j.daily.temperature_2m_max[0], min: j.daily.temperature_2m_min[0] };
     weather.set(key, data);
@@ -87,7 +90,7 @@ async function refreshWeather() {
     if (weather.has(key) && Date.now() - (weatherAt.get(key) || 0) < 30 * MIN) continue;
     const [lat, lon] = key.split(',');
     try {
-      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
+      const r = await fetchT(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
       const j = await r.json();
       weather.set(key, { temp: j.current.temperature_2m, feels: j.current.apparent_temperature, code: j.current.weather_code, wind: j.current.wind_speed_10m, day: !!j.current.is_day, max: j.daily.temperature_2m_max[0], min: j.daily.temperature_2m_min[0] });
       weatherAt.set(key, Date.now());
@@ -102,7 +105,7 @@ let rates = cacheGet('rates') || { usd: null, eur: null, gold: null, updated: nu
 async function refreshRates() {
   if (cacheAge('rates:fx') > 60 * MIN || rates.gbp == null) {
     try {
-      const j = await (await fetch('https://open.er-api.com/v6/latest/USD')).json();
+      const j = await (await fetchT('https://open.er-api.com/v6/latest/USD')).json();
       const t = j.rates.TRY;
       rates = { ...rates, usd: t, eur: t / j.rates.EUR, gbp: j.rates.GBP ? t / j.rates.GBP : rates.gbp, updated: new Date().toISOString() };
       cachePut('rates:fx', true); cachePut('rates', rates);
@@ -115,7 +118,7 @@ async function refreshRates() {
   const marketOpen = weekday && mins >= 9 * 60 + 30 && mins <= 18 * 60 + 30;
   if (rates.usdCh == null || rates.bist == null || cacheAge('rates:gold') > (marketOpen ? 15 * MIN : 2 * HOUR)) {
     try {
-      const g = await (await fetch('https://finans.truncgil.com/v4/today.json')).json();
+      const g = await (await fetchT('https://finans.truncgil.com/v4/today.json')).json();
       rates = { ...rates, gold: Number(g.GRA.Selling), goldCh: Number(g.GRA.Change) };
       if (g.XU100 && Number(g.XU100.Selling) > 0) { rates.bist = Number(g.XU100.Selling); rates.bistCh = Number(g.XU100.Change); }
       if (g.USD && Number(g.USD.Selling) > 0) { rates.usd = Number(g.USD.Selling); rates.usdCh = Number(g.USD.Change); }
@@ -129,11 +132,11 @@ async function refreshRates() {
     try {
       let btc;
       try {
-        const j = await (await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true')).json();
+        const j = await (await fetchT('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true')).json();
         btc = { usd: Number(j.bitcoin.usd), ch: Number(j.bitcoin.usd_24h_change) };
         if (!(btc.usd > 0)) throw new Error('boş');
       } catch (e1) {
-        const j = await (await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT')).json();
+        const j = await (await fetchT('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT')).json();
         btc = { usd: Number(j.lastPrice), ch: Number(j.priceChangePercent) };
         if (!(btc.usd > 0)) throw new Error('Bitcoin verisi alınamadı');
       }

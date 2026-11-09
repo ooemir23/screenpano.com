@@ -169,9 +169,9 @@ r.post('/forgot', async (req, res) => {
     }
   }
 
-  // SMTP ayarlı değilse veya e-posta yoksa: test/yerel ortamda doğrudan sıfırlama bağlantısını dön, canlıda yönetici yönlendirmesi göster
-  if (config.APP_ENV !== 'production' && !mailer.enabled()) {
-    return res.json({ ok: true, sent: false, resetUrl, message: 'Test/yerel ortamda SMTP ayarlı olmadığı için doğrudan sıfırlama ekranı açılıyor.' });
+  // SMTP ayarlı değilse veya e-posta yoksa: yalnızca test ortamında doğrudan sıfırlama bağlantısını dön, canlıda asla gövdede bağlantı dönme
+  if (config.APP_ENV === 'test' && !mailer.enabled()) {
+    return res.json({ ok: true, sent: false, resetUrl, message: 'Test ortamında SMTP ayarlı olmadığı için doğrudan sıfırlama ekranı açılıyor.' });
   }
   return res.json({ ok: true, sent: false, message: email ? genericMsg : 'Bu hesapta kayıtlı e-posta adresi bulunamadı. İşletme sahibinden (Ayarlar → Kullanıcılar) veya destek hattından şifre sıfırlama isteyebilirsiniz.' });
 });

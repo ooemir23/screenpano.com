@@ -43,8 +43,11 @@ async function tvInstant(req) {
 }
 async function staleWhileRevalidate(req) {
   const c = await caches.open(SHELL), hit = await c.match(req);
-  const net = fetch(req).then(r => { if (r.ok && r.type === 'basic') c.put(req, r.clone()); return r; }).catch(() => hit);
-  return hit || net;
+  if (hit) {
+    fetch(req).then(r => { if (r.ok && r.type === 'basic') c.put(req, r.clone()); }).catch(() => {});
+    return hit;
+  }
+  return fetch(req); // ağ başarısızsa fetch reddeder; respondWith bunu ağ hatası olarak yansıtır (undefined dönmez)
 }
 // Önbellekteki tam dosyadan istenen aralığı kes (video etiketi "Range: bytes=..." ister)
 async function rangeFrom(resp, range) {
@@ -56,9 +59,18 @@ async function rangeFrom(resp, range) {
   if (start > end) return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } });
   return new Response(blob.slice(start, end + 1), { status: 206, headers: { 'Content-Type': resp.headers.get('Content-Type') || blob.type || 'application/octet-stream', 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': String(end - start + 1), 'Accept-Ranges': 'bytes' } });
 }
+// Büyük medya (video) dosyası için Range isteğini blob() ile kesmek RAM'i doldurur (OOM).
+// Bu boyutun üzerindeki dosyalarda isteği doğrudan ağa yönlendir (sunucu akışla Range yanıtlar).
+const RANGE_NETWORK_BYTES = 15 * 1024 * 1024;
 async function media(req) {
   const c = await caches.open(MEDIA), key = new URL(req.url).pathname, hit = await c.match(key);
-  if (hit) return rangeFrom(hit, req.headers.get('range'));
+  if (hit) {
+    const range = req.headers.get('range');
+    if (!range) return hit;
+    const len = Number(hit.headers.get('Content-Length'));
+    if (Number.isFinite(len) && len > RANGE_NETWORK_BYTES) return fetch(req);
+    return rangeFrom(hit, range);
+  }
   return fetch(req);
 }
 
@@ -80,8 +92,13 @@ async function prefetch(urls) {
   if (job) return job;
   job = (async () => {
     const c = await caches.open(MEDIA);
+    // Boş liste gönderildiğinde (ör. gece tüm içerikler zamanlamayla kapandığında) önbelleği boşaltma:
+    // sabah içerikler dönünce yeniden indirme bant/disk şoku yaşatır. Yalnız liste doluysa senkronla.
+    if (wanted.length) {
+      const keep = new Set(wanted.map(x => new URL(x, location.origin).pathname));
+      for (const k of await c.keys()) if (!keep.has(new URL(k.url).pathname)) await c.delete(k);
+    }
     const keep = new Set(wanted.map(x => new URL(x, location.origin).pathname));
-    for (const k of await c.keys()) if (!keep.has(new URL(k.url).pathname)) await c.delete(k);
     for (const p of keep) {
       if (await c.match(p)) continue;
       try {
