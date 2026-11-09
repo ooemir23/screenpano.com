@@ -215,7 +215,7 @@ function html({ title, badge, badgeColor = 'brand', preheader, body, cta, ctaLab
                 <tr>
                   <td style="padding-top:12px;font:500 12px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:${TEXT_MUTE}">
                     <a href="${e(config.BASE_URL)}/panel" style="color:${GOLD_LIGHT};text-decoration:none">İşletme Paneli</a> &nbsp;·&nbsp;
-                    <a href="${e(config.BASE_URL)}/panel#settings" style="color:${GOLD_LIGHT};text-decoration:none">Bildirim Ayarları</a> &nbsp;·&nbsp;
+                    <a href="${e(config.BASE_URL)}/panel#settings/notify" style="color:${GOLD_LIGHT};text-decoration:none">Bildirim Ayarları</a> &nbsp;·&nbsp;
                     <a href="${e(config.BASE_URL)}" style="color:${GOLD_LIGHT};text-decoration:none">${e(config.BASE_URL.replace(/^https?:\/\//, ''))}</a>
                   </td>
                 </tr>

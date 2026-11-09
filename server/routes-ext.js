@@ -189,7 +189,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     if (!monitor.mailEnabled()) return res.status(400).json({ error: 'E-posta gönderimi sunucuda ayarlı değil (SMTP)' });
     if (!n.email) return res.status(400).json({ error: 'Önce e-posta adresinizi kaydedin' });
     const tpl = require('./mailtpl');
-    const textMsg = `ScreenPano E-posta Bildirim Denemesi\n\nBu bir test iletisidir. ${req.t.name} işletmeniz için ekran ve haftalık performans bildirimleri bu adrese başarıyla ulaştırılacaktır.\n\nBildirim Adresi: ${n.email}\nPanel: ${config.BASE_URL}/panel#settings`;
+    const textMsg = `ScreenPano E-posta Bildirim Denemesi\n\nBu bir test iletisidir. ${req.t.name} işletmeniz için ekran ve haftalık performans bildirimleri bu adrese başarıyla ulaştırılacaktır.\n\nBildirim Adresi: ${n.email}\nPanel: ${config.BASE_URL}/panel#settings/notify`;
     const ok = await monitor.sendMail(n.email, `${config.BRAND || 'ScreenPano'} — E-posta Bildirim Denemesi`, textMsg,
       tpl.alert({
         title: 'E-posta Bildirimleriniz Hazır',
@@ -209,7 +209,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
           'Cihazlar yeniden internete bağlandığında ve yayına başladığında bilgilendirme iletisi',
           'Açık olduğu takdirde her Pazartesi sabahı haftalık ekran performansı ve kampanya etkileşim karnesi',
         ],
-        cta: `${config.BASE_URL}/panel#settings`,
+        cta: `${config.BASE_URL}/panel#settings/notify`,
         ctaLabel: 'Bildirim Ayarlarını Yönet',
       }));
     ok ? res.json({ ok: true }) : res.status(502).json({ error: 'E-posta gönderilemedi' });

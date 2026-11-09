@@ -124,7 +124,7 @@ const testHtml = mailtpl.alert({
     'Cihazlar yeniden internete bağlandığında ve yayına başladığında bilgilendirme iletisi',
     'Açık olduğu takdirde her Pazartesi sabahı haftalık ekran performansı ve kampanya etkileşim karnesi',
   ],
-  cta: 'https://screenpano.com/panel#settings',
+  cta: 'https://screenpano.com/panel#settings/notify',
   ctaLabel: 'Bildirim Ayarlarını Yönet',
 });
 
