@@ -982,7 +982,9 @@ body.glass .wz b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%
 .cell.qrcell{z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease} /* QR kutuları diğer widget'ların üstünde durabilir */
 .cell.qrcell.qpin{z-index:65} /* "Her zaman üstte": kayan haber bandı, kampanya vb. her şeyin üstünde kalır */
 .cell.qrcell.qhide{opacity:0;pointer-events:none}
-.cell.qrcell .wqr{display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:0;overflow:visible;gap:.8vh;padding:0;backdrop-filter:none;box-shadow:none}
+.cell.qrcell .wqr{display:flex;flex-direction:column;align-items:center;justify-content:center;background:none;border:none;border-radius:0;overflow:visible;gap:.8vh;padding:0;backdrop-filter:none;box-shadow:none}
+.cell.qrcell .wqr.no-lbl,.wqr.st-plain{gap:0!important}
+.wqr.no-lbl .lbl.qp,.wqr.st-plain .lbl.qp{display:none!important}
 .wqr .code{flex:none}
 /* QR yerleşimi: yanda dikey etiket (sağda / solda) ve yalnız QR */
 .wqr.st-right,.wqr.st-left{flex-direction:row;gap:1.2vh}
@@ -990,17 +992,17 @@ body.glass .wz b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%
 .wqr.st-right .lbl.qp,.wqr.st-left .lbl.qp,.wqr.st-right .lbl.qp.wf,.wqr.st-left .lbl.qp.wf{writing-mode:vertical-rl;width:calc(5.4vh*var(--qt,1));height:var(--qrs,17vh);max-width:none;padding:1.2vh 0;letter-spacing:.14em}
 .wqr.st-left .lbl.qp{transform:rotate(180deg)}
 /* QR kart tasarımları: "kart" (tema kutu stilinde çerçeveli kart) ve "sade" (çerçevesiz, ince hat); etiket hap yerine düz yazı; her şey QR boyutuyla orantılı */
-.cell.qrcell .wqr.lk-card,.cell.qrcell .wqr.lk-soft{flex:0 0 auto;align-self:center;justify-content:center;gap:calc(var(--qrs)*.05)}
-.cell.qrcell .wqr.lk-card{background:var(--bx-bg);border:max(1px,.1vh) solid var(--bx-bd);border-radius:calc(var(--qrs)*.12);box-shadow:var(--bx-sh);padding:calc(var(--qrs)*.07)}
-.wqr.lk-card .code,.wqr.lk-soft .code{border:0;border-radius:calc(var(--qrs)*.06);padding:calc(var(--qrs)*.035);box-sizing:border-box;box-shadow:0 calc(var(--qrs)*.03) calc(var(--qrs)*.1) rgba(0,0,0,.3)}
+.cell.qrcell .wqr.lk-card,.cell.qrcell .wqr.lk-soft{flex:0 0 auto;align-self:center;justify-content:center;gap:calc(var(--qrs)*.04)}
+.cell.qrcell .wqr.lk-card{background:var(--bx-bg);border:max(1px,.1vh) solid var(--bx-bd);border-radius:calc(var(--qrs)*.1);box-shadow:var(--bx-sh);padding:calc(var(--qrs)*.05)}
+.cell.qrcell .wqr.lk-card.no-lbl{gap:0}
+.wqr.lk-card .code,.wqr.lk-soft .code{border:0;border-radius:calc(var(--qrs)*.05);padding:calc(var(--qrs)*.03);box-sizing:border-box;box-shadow:0 calc(var(--qrs)*.025) calc(var(--qrs)*.08) rgba(0,0,0,.3)}
 .wqr.lk-soft .code{border:max(1px,.1vh) solid rgba(255,255,255,.4)}
-.wqr.lk-card .lbl.qp,.wqr.lk-soft .lbl.qp,.wqr.lk-card .lbl.qp.wf,.wqr.lk-soft .lbl.qp.wf{background:none;border:0;backdrop-filter:none;padding:0;height:auto;width:var(--qrs);max-width:none;border-radius:0;font-size:calc(var(--qrs)*.105*var(--tf,1));letter-spacing:.1em;font-weight:700;line-height:1.25;text-shadow:none}
+.wqr.lk-card .lbl.qp,.wqr.lk-soft .lbl.qp,.wqr.lk-card .lbl.qp.wf,.wqr.lk-soft .lbl.qp.wf{background:none;border:0;backdrop-filter:none;padding:0;height:auto;width:var(--qrs)!important;max-width:var(--qrs)!important;border-radius:0;font-size:calc(var(--qrs)*.11*var(--tf,1));letter-spacing:.08em;font-weight:700;line-height:1.25;text-shadow:none;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wqr.lk-soft .lbl.qp{text-shadow:0 .2vh .7vh rgba(0,0,0,.85)}
 .wqr.lk-card .lbl.qp.pw,.wqr.lk-soft .lbl.qp.pw{font-size:calc(var(--qrs)*.11*var(--tf,1));letter-spacing:.03em}
 .wqr.lk-card.st-right .lbl.qp,.wqr.lk-card.st-left .lbl.qp,.wqr.lk-soft.st-right .lbl.qp,.wqr.lk-soft.st-left .lbl.qp{writing-mode:vertical-rl;width:auto;height:var(--qrs);padding:0}
-.wqr.st-plain .lbl.qp{display:none}
-.wqr .lbl.qp{flex:none;background:rgba(10,8,6,.92);backdrop-filter:blur(0.56vh);border:max(2px,.25vh) solid var(--al);color:#fff;font-size:calc(2.3vh*var(--qt,1));font-weight:800;letter-spacing:.1em;text-transform:uppercase;text-shadow:0 .2vh .5vh #000;padding:0 1.2vw;border-radius:2vh;max-width:calc(var(--qrs,17vh) + 8vh);text-align:center;line-height:1.3;height:calc(5.4vh*var(--qt,1));box-sizing:border-box;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden}
-.wqr .lbl.qp.wf{width:var(--qrs,17vh);max-width:none;padding:0 .8vh} /* Wi-Fi etiketi QR genişliğini aşmaz; uzun şifre yazısı küçülerek sığar */
+.wqr .lbl.qp{flex:none;background:rgba(10,8,6,.92);backdrop-filter:blur(0.56vh);border:max(2px,.22vh) solid var(--al);color:#fff;font-size:calc(var(--qrs)*.11*var(--tf,1));font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 .2vh .5vh #000;padding:0 .4vh;border-radius:calc(var(--qrs)*.08);width:var(--qrs)!important;max-width:var(--qrs)!important;text-align:center;line-height:1.25;height:calc(var(--qrs)*.20*var(--qt,1));box-sizing:border-box;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden}
+.wqr .lbl.qp.wf{width:var(--qrs)!important;max-width:var(--qrs)!important;padding:0 .4vh} /* Wi-Fi etiketi QR genişliğini aşmaz */
 .wqr .code{border-radius:1.4vh;padding:.5vh;box-shadow:0 1vh 3vh rgba(0,0,0,.55)}
 .wqr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;padding:1.6vh 1.2vw;transition:opacity .4s}
 .wqr.out{opacity:0}
@@ -3700,44 +3702,62 @@ const qrTile = { list: [], cells: [], timer: null, sig: '' };
 // Her QR kutusu: seçili QR varsa hep onu, yoksa (ya da silinmişse) tüm QR'ları sırayla gösterir
 const qrOf = c => { const pick = c.qr && qrTile.list.find(q => q.id === c.qr); return pick ? [pick] : qrTile.list; };
 function drawQrCell(c) {
-  const el = c.el, list = qrOf(c), q = list[c.idx % Math.max(1, list.length)];
-  if (!q) { el.innerHTML = '<div class="lbl"><small>Panelden QR kod ekleyin</small></div>'; return; }
-  const cell = el.parentNode;
-  const qt = { s: .8, m: 1, l: 1.35 }[c.text] || 1, SZ = { xs: 10, s: 13.5, auto: 17, l: 21, xl: 26 }, st = c.style || 'below';
-  const look = ['card', 'soft'].includes(c.look) ? c.look : 'classic', side = st === 'right' || st === 'left';
-  let qv = SZ[c.size] || 17, sc = 1;
-  if (cell && cell.clientWidth && cell.clientHeight) {
-    const v1 = innerHeight / 100;
-    // Hücre içine rahatça sığması için kenar boşluk payı (her kenardan ~1vh)
-    const availW = Math.max(10, cell.clientWidth - 2 * v1);
-    const availH = Math.max(10, cell.clientHeight - 2 * v1);
-    let maxSc = 1, maxQv = 17;
-    if (look === 'classic') {
-      const k = 1 + 0.318 * qt, g = 0.8 * v1;
-      maxSc = st === 'plain' ? Math.min(availW, availH) / (17 * v1) : side ? Math.min((availW - g) / (17 * v1 * k), availH / (17 * v1)) : Math.min(availW / (17 * v1), (availH - g) / (17 * v1 * k));
-      maxSc = Math.max(0.15, maxSc);
-      maxQv = 17 * maxSc;
-    } else {
-      const pf = look === 'card' ? 0.22 : 0.08, lf = st === 'plain' ? 0 : 0.13 * qt + 0.05;
-      maxQv = Math.max(4, (side ? Math.min(availW / (1 + pf + lf), availH / (1 + pf)) : Math.min(availW / (1 + pf), availH / (1 + pf + lf))) / v1);
-      maxSc = maxQv / 17;
+  try {
+    const el = c.el, list = qrOf(c), q = list[c.idx % Math.max(1, list.length)];
+    if (!q) { el.innerHTML = '<div class="lbl"><small>Panelden QR kod ekleyin</small></div>'; return; }
+    const cell = el.parentNode;
+    const qt = { s: .8, m: 1, l: 1.35 }[c.text] || 1, st = c.style || 'below';
+    const look = ['card', 'soft'].includes(c.look) ? c.look : 'classic', side = st === 'right' || st === 'left';
+    const hasLabel = st !== 'plain' && !!(q.label && q.label.trim());
+
+    let qv = 17, sc = 1;
+    if (cell && cell.clientWidth && cell.clientHeight) {
+      const v1 = innerHeight / 100;
+      const availW = Math.max(10, cell.clientWidth - 8);
+      const availH = Math.max(10, cell.clientHeight - 8);
+      let wFactor, hFactor;
+      if (look === 'card') {
+        if (!hasLabel) {
+          wFactor = 1.12; hFactor = 1.12;
+        } else if (side) {
+          wFactor = 1.16 + 0.16 * qt; hFactor = 1.12;
+        } else {
+          wFactor = 1.12; hFactor = 1.16 + 0.16 * qt;
+        }
+      } else {
+        if (!hasLabel) {
+          wFactor = 1.04; hFactor = 1.04;
+        } else if (side) {
+          wFactor = 1.08 + 0.18 * qt; hFactor = 1.04;
+        } else {
+          wFactor = 1.04; hFactor = 1.08 + 0.18 * qt;
+        }
+      }
+      const maxS = Math.min(availW / wFactor, availH / hFactor);
+      const sizeMult = { xs: 0.6, s: 0.8, auto: 1, l: 1, xl: 1, box: 1 }[c.size] || 1;
+      const S = Math.max(20, maxS * sizeMult);
+      qv = S / v1;
+      sc = qv / 17;
     }
-    if (c.size === 'box') {
-      qv = Math.max(4, maxQv);
-      sc = Math.max(0.2, maxSc);
-    } else {
-      const wanted = SZ[c.size] || 17;
-      qv = Math.max(4, Math.min(wanted, maxQv));
-      sc = Math.max(0.2, Math.min(1, qv / 17));
+    el.style.setProperty('--qrs', qv + 'vh');
+    el.style.setProperty('--qt', qt * sc);
+    el.style.setProperty('--tf', qt);
+    el.style.setProperty('--qs', 'var(--qrs,17vh)');
+    el.classList.toggle('lk-card', look === 'card');
+    el.classList.toggle('lk-soft', look === 'soft');
+    el.classList.toggle('no-lbl', !hasLabel);
+    for (const k of ['below', 'right', 'left', 'plain']) el.classList.toggle('st-' + k, k === st);
+    el.innerHTML = `<div class="code" style="width:var(--qrs);height:var(--qrs)">${q.svg}</div>` +
+      (hasLabel ? `<div class="lbl qp${q.marquee ? ' wf' : ''}"><span class="wt">${esc(q.label)}</span></div>` : '');
+    clearTimeout(el._wt);
+    if (hasLabel) {
+      if (q.marquee) wifiCycle(el, q);
+      else fitLbl(el.querySelector('.lbl'));
     }
+    keepInside(el);
+  } catch (err) {
+    console.error('drawQrCell error:', err);
   }
-  el.style.setProperty('--qrs', qv + 'vh'); el.style.setProperty('--qt', qt * sc); el.style.setProperty('--tf', qt);
-  el.classList.toggle('lk-card', look === 'card'); el.classList.toggle('lk-soft', look === 'soft');
-  el.style.setProperty('--qs', 'var(--qrs,17vh)');
-  for (const k of ['below', 'right', 'left', 'plain']) el.classList.toggle('st-' + k, k === (c.style || 'below'));
-  el.innerHTML = `<div class="code" style="width:var(--qrs,17vh);height:var(--qrs,17vh)">${q.svg}</div><div class="lbl qp${q.marquee ? ' wf' : ''}"><span class="wt">${esc(q.label)}</span></div>`;
-  clearTimeout(el._wt); if (q.marquee) wifiCycle(el, q); else fitLbl(el.querySelector('.lbl'));
-  keepInside(el);
 }
 // QR kutusu küçükse içerik taşar: üstünde durduğu widget'ın (ya da ekranın) dışına çıkmasın diye içeri kaydırılır
 function keepInside(el) {
