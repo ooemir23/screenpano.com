@@ -176,7 +176,6 @@ html.native-exo video{opacity:0 !important;pointer-events:none !important}
 .trw .tn img{width:2.1vh;height:2.1vh;object-fit:contain;flex:none}
 .trw .tn b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .trw .pt{font-weight:800;color:var(--white)}
-position:absolute;top:.8vh;right:.8vw}
 .m .corner{position:absolute;top:.8vh;right:.8vw}
 .mid .lv{margin-bottom:.5vh}
 .pill{font-weight:700;letter-spacing:.08em;padding:.25vh .6vw;border-radius:2vh;background:rgba(255,255,255,.08);color:var(--soft);font-size:1.6vh;white-space:nowrap}
@@ -1772,7 +1771,8 @@ els.forEach(e => {
 
 // Türkçe olmayan adlar (Liverpool) büyük harfe çevrilirken İ'ye dönmesin: lang=en verilir
 const lng = t => /[çğışöüÇĞİŞÖÜ]|spor|galatasaray|fenerbah|samsun|gaziantep|kayseri|alanya|antalya|hatay|konya|bodrum|kocaeli|trabzon|sivas|adana|\blig\b|ligi|kupa|süper|türk/i.test(String(t || '')) ? ' lang="tr"' : ' lang="en"';
-const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const G_SVG = '<svg viewBox="0 0 24 24" width="1.05em" height="1.05em" aria-hidden="true" style="vertical-align:-.15em"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2 3.5-5 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-6-2.1-7-5.1l-3.9 3C3.2 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5 14.3c-.3-.8-.4-1.6-.4-2.3s.1-1.5.4-2.3L1.1 6.8C.4 8.4 0 10.1 0 12s.4 3.6 1.1 5.2L5 14.3z"/><path fill="#EA4335" d="M12 4.7c2.3 0 3.8 1 4.7 1.8l3.4-3.3C17.9 1.2 15.2 0 12 0 7.3 0 3.2 2.7 1.1 6.8L5 9.7c1-3 3.8-5 7-5z"/></svg>';
 const brandHtml = n => n === 'ScreenPano' ? '<img src="/logo.svg?v=4" alt="ScreenPano" style="height:7.5vh;display:block">' : esc(n);
 let PER_PAGE = 5;
 const PIN = new URLSearchParams(location.search).get('p');
@@ -2764,7 +2764,7 @@ function campShow(c) {
   exoStop();
   let el = document.getElementById('camp');
   if (!el) { el = document.createElement('div'); el.id = 'camp'; document.getElementById('frame').appendChild(el); }
-  const esc = t => String(t || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const esc = t => String(t || '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   if (c.photo) { // fotoğraflı kart: tam ekran fotoğraf; QR (varsa) seçilen yerde; Happy Hours için isteğe bağlı ad / saat / indirim rozeti
     el.className = 'photo'; el.style.fontFamily = '';
     el.innerHTML = `<img class="cph" src="${esc(c.image)}" alt="">`
