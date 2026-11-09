@@ -979,12 +979,10 @@ body.glass .wz b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%
 #wimage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 #wimage.contain img{object-fit:contain}
 #wimage .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:2vh}
-.cell.qrcell{z-index:20;transition:opacity .4s ease} /* QR kutuları diğer widget'ların üstünde durabilir */
+.cell.qrcell{z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease} /* QR kutuları diğer widget'ların üstünde durabilir */
 .cell.qrcell.qpin{z-index:65} /* "Her zaman üstte": kayan haber bandı, kampanya vb. her şeyin üstünde kalır */
-.cell.qrcell[data-va=b]{justify-content:flex-end}.cell.qrcell[data-va=t]{justify-content:flex-start}
-.cell.qrcell[data-va=b] .wqr:not(.lk-card):not(.lk-soft){justify-content:flex-end}.cell.qrcell[data-va=t] .wqr:not(.lk-card):not(.lk-soft){justify-content:flex-start}
 .cell.qrcell.qhide{opacity:0;pointer-events:none}
-.cell.qrcell .wqr{background:none;border:none;border-radius:0;overflow:visible;gap:.8vh;padding:0;backdrop-filter:none;box-shadow:none}
+.cell.qrcell .wqr{display:flex;align-items:center;justify-content:center;background:none;border:none;border-radius:0;overflow:visible;gap:.8vh;padding:0;backdrop-filter:none;box-shadow:none}
 .wqr .code{flex:none}
 /* QR yerleşimi: yanda dikey etiket (sağda / solda) ve yalnız QR */
 .wqr.st-right,.wqr.st-left{flex-direction:row;gap:1.2vh}
@@ -3702,42 +3700,57 @@ const qrOf = c => { const pick = c.qr && qrTile.list.find(q => q.id === c.qr); r
 function drawQrCell(c) {
   const el = c.el, list = qrOf(c), q = list[c.idx % Math.max(1, list.length)];
   if (!q) { el.innerHTML = '<div class="lbl"><small>Panelden QR kod ekleyin</small></div>'; return; }
-  // boyut kenar QR'ı ile birebir aynı (paneldeki QR boyutu ayarı); kutu yalnız konumu belirler
-  // QR ve yazı boyutu (kutu başına): sabit çarpan ya da "kutuya sığdır"
+  const cell = el.parentNode;
   const qt = { s: .8, m: 1, l: 1.35 }[c.text] || 1, SZ = { xs: 10, s: 13.5, auto: 17, l: 21, xl: 26 }, st = c.style || 'below';
   const look = ['card', 'soft'].includes(c.look) ? c.look : 'classic', side = st === 'right' || st === 'left';
   let qv = SZ[c.size] || 17, sc = 1;
-  if (c.size === 'box' && el.parentNode) {
-    const r = { width: el.parentNode.clientWidth, height: el.parentNode.clientHeight }, v1 = innerHeight / 100;
-    if (look === 'classic') { // etiket ve yazı QR ile orantılı küçülür/büyür
-      const k = 1 + .318 * qt, g = .8 * v1;
-      sc = st === 'plain' ? Math.min(r.width, r.height) / (17 * v1) : side ? Math.min((r.width - g) / (17 * v1 * k), r.height / (17 * v1)) : Math.min(r.width / (17 * v1), (r.height - g) / (17 * v1 * k));
-      sc = Math.max(.3, Math.min(3, sc)); qv = 17 * sc;
+  if (cell && cell.clientWidth && cell.clientHeight) {
+    const v1 = innerHeight / 100;
+    // Hücre içine rahatça sığması için kenar boşluk payı (her kenardan ~1vh)
+    const availW = Math.max(10, cell.clientWidth - 2 * v1);
+    const availH = Math.max(10, cell.clientHeight - 2 * v1);
+    let maxSc = 1, maxQv = 17;
+    if (look === 'classic') {
+      const k = 1 + 0.318 * qt, g = 0.8 * v1;
+      maxSc = st === 'plain' ? Math.min(availW, availH) / (17 * v1) : side ? Math.min((availW - g) / (17 * v1 * k), availH / (17 * v1)) : Math.min(availW / (17 * v1), (availH - g) / (17 * v1 * k));
+      maxSc = Math.max(0.15, maxSc);
+      maxQv = 17 * maxSc;
     } else {
-      const pf = look === 'card' ? .14 : 0, lf = st === 'plain' ? 0 : .13 * qt + .05;
-      qv = Math.max(5, (side ? Math.min(r.width / (1 + pf + lf), r.height / (1 + pf)) : Math.min(r.width / (1 + pf), r.height / (1 + pf + lf))) / v1);
+      const pf = look === 'card' ? 0.22 : 0.08, lf = st === 'plain' ? 0 : 0.13 * qt + 0.05;
+      maxQv = Math.max(4, (side ? Math.min(availW / (1 + pf + lf), availH / (1 + pf)) : Math.min(availW / (1 + pf), availH / (1 + pf + lf))) / v1);
+      maxSc = maxQv / 17;
+    }
+    if (c.size === 'box') {
+      qv = Math.max(4, maxQv);
+      sc = Math.max(0.2, maxSc);
+    } else {
+      const wanted = SZ[c.size] || 17;
+      qv = Math.max(4, Math.min(wanted, maxQv));
+      sc = Math.max(0.2, Math.min(1, qv / 17));
     }
   }
   el.style.setProperty('--qrs', qv + 'vh'); el.style.setProperty('--qt', qt * sc); el.style.setProperty('--tf', qt);
   el.classList.toggle('lk-card', look === 'card'); el.classList.toggle('lk-soft', look === 'soft');
   el.style.setProperty('--qs', 'var(--qrs,17vh)');
-  for (const k of ['below', 'right', 'left', 'plain']) el.classList.toggle('st-' + k, k === (c.style || 'below')); // yerleşim: etiket altta / yanda dikey / yok
+  for (const k of ['below', 'right', 'left', 'plain']) el.classList.toggle('st-' + k, k === (c.style || 'below'));
   el.innerHTML = `<div class="code" style="width:var(--qrs,17vh);height:var(--qrs,17vh)">${q.svg}</div><div class="lbl qp${q.marquee ? ' wf' : ''}"><span class="wt">${esc(q.label)}</span></div>`;
-  clearTimeout(el._wt); if (q.marquee) wifiCycle(el, q); else fitLbl(el.querySelector('.lbl')); // Wi-Fi: etiket ile şifre sırayla değişir
+  clearTimeout(el._wt); if (q.marquee) wifiCycle(el, q); else fitLbl(el.querySelector('.lbl'));
   keepInside(el);
 }
 // QR kutusu küçükse içerik taşar: üstünde durduğu widget'ın (ya da ekranın) dışına çıkmasın diye içeri kaydırılır
 function keepInside(el) {
   el.style.transform = '';
-  // sınır: QR kartının ortasının düştüğü widget (ör. medya) — yoksa tüm ekran; böylece alt bandın ya da ekranın dışına taşmaz
-  const cr = el.parentNode.getBoundingClientRect(), cx = (cr.left + cr.right) / 2, cy = (cr.top + cr.bottom) / 2;
+  const cell = el.parentNode;
+  if (!cell) return;
+  const cr = cell.getBoundingClientRect(), cx = (cr.left + cr.right) / 2, cy = (cr.top + cr.bottom) / 2;
+  // sınır: QR kartının ortasının düştüğü widget (ör. medya) — yoksa QR'ın kendi hücresi; böylece alt bandın ya da komşu kutuların dışına taşmaz
   const host = [...$id('app').querySelectorAll('.cell:not(.qrcell)')].map(c => c.getBoundingClientRect()).find(r => r.width && cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom);
-  const app = host || $id('app').getBoundingClientRect(), pad = innerHeight * 0.012;
+  const bounds = host || cr, pad = innerHeight * 0.008;
   let L = Infinity, T = Infinity, R = -Infinity, B = -Infinity;
   for (const k of el.children) { const r = k.getBoundingClientRect(); L = Math.min(L, r.left); T = Math.min(T, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom); }
   if (!isFinite(L)) return;
-  const dx = L < app.left + pad ? app.left + pad - L : R > app.right - pad ? app.right - pad - R : 0;
-  const dy = T < app.top + pad ? app.top + pad - T : B > app.bottom - pad ? app.bottom - pad - B : 0;
+  const dx = L < bounds.left + pad ? bounds.left + pad - L : R > bounds.right - pad ? bounds.right - pad - R : 0;
+  const dy = T < bounds.top + pad ? bounds.top + pad - T : B > bounds.bottom - pad ? bounds.bottom - pad - B : 0;
   const rot = window.__effRot || 0;
   const tx = rot === 90 ? dy : rot === 270 ? -dy : dx, ty = rot === 90 ? -dx : rot === 270 ? dx : dy;
   if (tx || ty) el.style.transform = `translate(${Math.round(tx)}px,${Math.round(ty)}px)`;
