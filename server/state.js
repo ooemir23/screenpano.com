@@ -54,8 +54,24 @@ function layoutFor(t, screen) {
   if (!l || !Array.isArray(l.widgets)) l = defaultLayout();
   const pro = plan(t).pro;
   // Hava durumu ve Finans ayrı widget; TV'ye (eski APK'lar dahil) ayarları kısılmış 'rates' kutusu olarak gider
-  const toRates = w => w.type === 'weather' ? { ...w, type: 'rates', props: { ...(w.props || {}), weather: true, rates: false, qr: false, qrs: '' } }
-    : w.type === 'finance' ? { ...w, type: 'rates', props: { valSize: 'xl', ...(w.props || {}), weather: false, rates: true, qr: false, qrs: '' } } : w;
+  const toRates = w => {
+    if (w.type === 'weather') {
+      const p = w.props || {};
+      const lat = p.lat, lon = p.lon;
+      const wx = (lat && lon ? F.weatherForLoc(lat, lon) : null) || F.weatherFor(t);
+      return { ...w, type: 'rates', props: { ...p, weather: true, rates: false, qr: false, qrs: '', wx, city: p.city || (t.db.location || {}).city || 'İstanbul', details: !!p.details } };
+    }
+    if (w.type === 'finance') {
+      return { ...w, type: 'rates', props: { valSize: 'xl', ...(w.props || {}), weather: false, rates: true, qr: false, qrs: '' } };
+    }
+    if (w.type === 'rates') {
+      const p = w.props || {};
+      const lat = p.lat, lon = p.lon;
+      const wx = (lat && lon ? F.weatherForLoc(lat, lon) : null) || (p.weather !== false ? F.weatherFor(t) : null);
+      return { ...w, props: { ...p, wx, city: p.city || (t.db.location || {}).city || 'İstanbul', details: !!p.details } };
+    }
+    return w;
+  };
   const toWorld = w => w.type === 'worldclock' ? { ...w, props: { ...(w.props || {}), cities: require('./world').cities((w.props || {}).zones) } } : w; // TV şehir adlarını dillere göre alır
   return { ...l, widgets: l.widgets.filter(w => WIDGETS[w.type] && (pro || !WIDGETS[w.type].pro)).map(toRates).map(toWorld) };
 }

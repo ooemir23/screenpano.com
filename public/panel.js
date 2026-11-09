@@ -374,7 +374,8 @@ function drawCanvas() {
     const d = S.cat.widgets[w.type] || { name: w.type };
     const p = w.props || {};
     const isFl = w.type === 'qr' || w.type === 'text';
-    const txtPrev = w.type === 'text' ? (p.title || p.body ? esc((p.title || '') + (p.title && p.body ? ' ' : '') + (p.body || '')).slice(0, 34) : 'Yazı kutusu') : esc(d.name);
+    const txtPrev = w.type === 'text' ? (p.title || p.body ? esc((p.title || '') + (p.title && p.body ? ' ' : '') + (p.body || '')).slice(0, 34) : 'Yazı kutusu')
+      : (w.type === 'weather' && p.city ? esc(p.city) + ' · Hava' : (w.type === 'rates' && p.city ? esc(p.city) + ' · ' + esc(d.name) : esc(d.name)));
     const sub = d.pro && !pro() ? '🔒 Pro'
       : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === p.qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h
       : w.type === 'text' ? (p.size ? p.size.toUpperCase() + ' · ' : '') + w.w + '×' + w.h
@@ -434,10 +435,15 @@ function drawProps() {
       + fl('Tutar', `<input type="number" min="0.01" step="any" value="${esc(p.amount || '100')}" onchange="setP('amount',this.value)">`)
       + `<div class="chips mt">${[['USD', 'Dolar'], ['EUR', 'Euro'], ['GBP', 'Sterlin'], ['XAU', 'Altın (gram)']].map(([c, l]) => `<button type="button" class="chip${on(c) ? ' on' : ''}" aria-pressed="${on(c)}" onclick="cvTog('${c}')">${l}</button>`).join('')}</div>`;
   }
-  if (w.type === 'weather') f = `<p class="muted" style="margin:6px 0 0">Bu kutu yalnız hava durumunu gösterir. Şehir Ayarlar sayfasındaki konumdan gelir.</p>`;
+  if (w.type === 'weather') f = wxProps(w, p);
   if (w.type === 'finance') f = `<p class="muted" style="margin:6px 0 0">Bu kutu yalnız döviz, altın, borsa ve Bitcoin gösterir.</p>` + fl('Tutar ve değişim boyutu', `<select onchange="setP('valSize',this.value)">${[['s', 'Küçük'], ['m', 'Normal'], ['l', 'Büyük'], ['xl', 'Çok büyük']].map(([v, l]) => `<option value="${v}" ${(p.valSize || 'xl') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`);
   if (w.type === 'rates') {
-    f = `<p class="muted" style="margin:6px 0 0">Havayı bir kutuya, piyasaları başka bir kutuya koymak için iki ayrı Hava ve piyasalar kutusu ekleyip birinde piyasaları, diğerinde havayı kapatın.</p>` + tg('weather', 'Hava durumu') + tg('rates', 'Döviz, altın, borsa') + (p.rates !== false ? fl('Tutar ve değişim boyutu', `<select onchange="setP('valSize',this.value)">${[['s', 'Küçük'], ['m', 'Normal'], ['l', 'Büyük'], ['xl', 'Çok büyük (şu anki)']].map(([v, l]) => `<option value="${v}" ${(p.valSize || 'xl') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : '') + tg('qr', 'QR kodlar', false);
+    f = `<p class="muted" style="margin:6px 0 0">Havayı bir kutuya, piyasaları başka bir kutuya koymak için iki ayrı Hava ve piyasalar kutusu ekleyip birinde piyasaları, diğerinde havayı kapatın.</p>`
+      + tg('weather', 'Hava durumu')
+      + (p.weather !== false ? wxProps(w, p) : '')
+      + tg('rates', 'Döviz, altın, borsa')
+      + (p.rates !== false ? fl('Tutar ve değişim boyutu', `<select onchange="setP('valSize',this.value)">${[['s', 'Küçük'], ['m', 'Normal'], ['l', 'Büyük'], ['xl', 'Çok büyük (şu anki)']].map(([v, l]) => `<option value="${v}" ${(p.valSize || 'xl') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) : '')
+      + tg('qr', 'QR kodlar', false);
     if (p.qr) {
       const qs = S.db.qrs || [], sel = String(p.qrs || '').split(',').filter(Boolean);
       f += qs.length ? `<div class="fl mt"><span>Gösterilecek QR'lar (seçmezseniz hepsi)</span><div class="chips">${qs.map(q => `<span class="chip ${sel.includes(q.id) ? 'on' : ''}" onclick="rQrPick('${q.id}')">${esc(q.label)}</span>`).join('')}</div></div><p class="muted mt">1-2 QR yan yana gösterilir; 3 ve fazlası tek tek, geçişli olarak sırayla değişir.</p>` : '<p class="muted mt">Önce <a href="#qr">QR Kodlar</a> sayfasından QR ekleyin.</p>';
@@ -498,7 +504,83 @@ function setClk(k, on) {
 function cvTog(c) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; const cs = String((w.props || {}).currencies || 'USD,EUR,GBP').split(',').filter(Boolean), i = cs.indexOf(c); if (i >= 0) { if (cs.length < 2) { toast('En az bir para birimi kalmalı'); return; } cs.splice(i, 1); } else if (cs.length >= 4) return; else cs.push(c); setP('currencies', cs.join(',')); drawProps(); }
 function wzAdd(tz) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w || !tz) return; const z = String((w.props || {}).zones || '').split(',').filter(Boolean); if (z.length >= (S.cat.worldMax || 5) || z.includes(tz)) return; setP('zones', [...z, tz].join(',')); drawProps(); }
 function wzDel(k) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; const z = String((w.props || {}).zones || '').split(',').filter(Boolean); z.splice(k, 1); if (!z.length) return toast('En az bir şehir kalmalı', true); setP('zones', z.join(',')); drawProps(); }
-function setP(k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); w.props = { ...(w.props || {}), [k]: v }; }
+function wxProps(w, p) {
+  const defCity = (S.db.location || {}).city || 'İstanbul';
+  const hasCustom = !!(p.city && p.lat != null && p.lon != null);
+  const curLocDesc = hasCustom ? `${esc(p.city)}${p.country ? ' · ' + esc(p.country) : ''}` : `Varsayılan: ${esc(defCity)} (İşletme)`;
+  const tg = (k, label, def = true) => `<div class="swr"><div class="b"><b>${label}</b></div>${sw(p[k] === undefined ? def : p[k], `setP('${k}',this.checked);drawCanvas();pushDraft()`)}</div>`;
+  return `<div class="card p mt" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px">
+    <div style="font-weight:700;font-size:13px;margin-bottom:6px">📍 Konum / Şehir</div>
+    <div class="row gap wrap" style="align-items:center;margin-bottom:8px">
+      <span class="chip on" style="font-size:12px">${curLocDesc}</span>
+      ${hasCustom ? `<button type="button" class="btn g s" onclick="clearWxLoc()">Varsayılana dön</button>` : ''}
+    </div>
+    <div class="fl">
+      <label style="font-size:12px">Farklı şehir veya ülke ara (Türkiye ve Dünya)</label>
+      <input type="text" id="wx-loc-q" placeholder="Örn: Londra, Berlin, Tokyo, Antalya, Kadıköy…" oninput="onWxLocSearch(this.value)">
+    </div>
+    <div id="wx-loc-list" class="col gap" style="max-height:160px;overflow-y:auto;margin-top:6px"></div>
+  </div>`
+  + tg('details', 'Durum açıklaması ve hissedilen sıcaklık (Parçalı bulutlu vb.)', false);
+}
+let wxSearchTimer = null;
+function onWxLocSearch(q) {
+  clearTimeout(wxSearchTimer);
+  const list = document.getElementById('wx-loc-list');
+  if (!list) return;
+  const qy = String(q || '').trim();
+  if (qy.length < 2) { list.innerHTML = ''; return; }
+  wxSearchTimer = setTimeout(async () => {
+    try {
+      const items = await req('GET', '/geo?q=' + encodeURIComponent(qy));
+      if (!items || !items.length) {
+        list.innerHTML = '<span class="muted" style="font-size:12px;padding:4px">Şehir bulunamadı</span>';
+        return;
+      }
+      list.innerHTML = items.map(item => `
+        <button type="button" class="btn g s" style="text-align:left;justify-content:flex-start;padding:6px 10px;font-size:12px;width:100%" onclick="pickWxLoc(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+          <b>${esc(item.city)}</b>
+          <span class="muted" style="margin-left:auto">${esc(item.country || item.admin || '')}</span>
+        </button>
+      `).join('');
+    } catch (e) {
+      list.innerHTML = '<span class="muted" style="font-size:12px;padding:4px">Arama hatası</span>';
+    }
+  }, 250);
+}
+async function pickWxLoc(item) {
+  const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return;
+  w.props = w.props || {};
+  w.props.city = item.city;
+  w.props.lat = item.lat;
+  w.props.lon = item.lon;
+  w.props.country = item.country || '';
+  EDIT.dirty = true;
+  drawCanvas(); pushDraft(); drawProps();
+  try {
+    const wx = await req('GET', `/weather?lat=${item.lat}&lon=${item.lon}`);
+    if (wx) {
+      w.props.wx = wx;
+      pushDraft();
+      toast(item.city + ' seçildi (' + Math.round(wx.temp) + '°)');
+    }
+  } catch (e) {
+    toast(item.city + ' konumu seçildi');
+  }
+}
+function clearWxLoc() {
+  const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return;
+  w.props = w.props || {};
+  delete w.props.city;
+  delete w.props.lat;
+  delete w.props.lon;
+  delete w.props.country;
+  delete w.props.wx;
+  EDIT.dirty = true;
+  drawCanvas(); pushDraft(); drawProps();
+  toast('Varsayılan işletme konumuna dönüldü');
+}
+function setP(k, v) { const w = EDIT.layout.widgets[EDIT.sel]; if (!w) return; snap(); w.props = { ...(w.props || {}), [k]: v }; EDIT.dirty = true; lbarSync(); }
 function rmW(i) { snap(); EDIT.layout.widgets.splice(i, 1); EDIT.sel = -1; drawCanvas(); drawProps(); drawPal(); }
 window.__txtFocus = 'title';
 function insTxtEmoji(emo) {

@@ -40,13 +40,53 @@ const trTeam = n => String(n || '').replace(/[A-Za-z]+/g, w => TR_WORDS[w] || w)
 const locKey = t => { const l = t.db.location || {}; return `${Number(l.lat || 41.01).toFixed(2)},${Number(l.lon || 28.98).toFixed(2)}`; };
 const weather = new Map(Object.entries(cacheGet('weatherByLoc') || {}));
 const weatherAt = new Map();
+async function getWeather(lat, lon) {
+  if (lat == null || lon == null || !isFinite(lat) || !isFinite(lon)) return null;
+  const key = `${Number(lat).toFixed(2)},${Number(lon).toFixed(2)}`;
+  if (weather.has(key) && Date.now() - (weatherAt.get(key) || 0) < 30 * MIN) {
+    return weather.get(key);
+  }
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${Number(lat).toFixed(2)}&longitude=${Number(lon).toFixed(2)}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
+    const j = await r.json();
+    const data = { temp: j.current.temperature_2m, feels: j.current.apparent_temperature, code: j.current.weather_code, wind: j.current.wind_speed_10m, day: !!j.current.is_day, max: j.daily.temperature_2m_max[0], min: j.daily.temperature_2m_min[0] };
+    weather.set(key, data);
+    weatherAt.set(key, Date.now());
+    cachePut('weatherByLoc', Object.fromEntries(weather));
+    return data;
+  } catch (e) {
+    console.error('getWeather error:', key, e.message);
+    return weather.get(key) || null;
+  }
+}
+function weatherForLoc(lat, lon) {
+  if (lat == null || lon == null || !isFinite(lat) || !isFinite(lon)) return null;
+  const key = `${Number(lat).toFixed(2)},${Number(lon).toFixed(2)}`;
+  const w = weather.get(key);
+  if (!w || Date.now() - (weatherAt.get(key) || 0) >= 30 * MIN) {
+    getWeather(lat, lon).catch(() => {});
+  }
+  return w || null;
+}
 async function refreshWeather() {
   const keys = new Set(liveTenants().map(locKey));
+  for (const t of liveTenants()) {
+    try {
+      for (const scr of (t.screens || [])) {
+        const l = scr && store.J(scr.layout);
+        for (const w of ((l && l.widgets) || [])) {
+          if ((w.type === 'weather' || w.type === 'rates') && w.props && w.props.lat && w.props.lon) {
+            keys.add(`${Number(w.props.lat).toFixed(2)},${Number(w.props.lon).toFixed(2)}`);
+          }
+        }
+      }
+    } catch (e) {}
+  }
   for (const key of keys) {
     if (weather.has(key) && Date.now() - (weatherAt.get(key) || 0) < 30 * MIN) continue;
     const [lat, lon] = key.split(',');
     try {
-      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FIstanbul&forecast_days=1`);
+      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
       const j = await r.json();
       weather.set(key, { temp: j.current.temperature_2m, feels: j.current.apparent_temperature, code: j.current.weather_code, wind: j.current.wind_speed_10m, day: !!j.current.is_day, max: j.daily.temperature_2m_max[0], min: j.daily.temperature_2m_min[0] });
       weatherAt.set(key, Date.now());
@@ -856,7 +896,7 @@ function start() {
 module.exports = {
   start, ymd, hm, norm, HOUR, MIN, TR_WORDS, trTeam,
   CATALOG, DEFAULT_LEAGUES, NO_TABLE, enabledLeagues, standings,
-  get rates() { return rates; }, weatherFor: t => weather.get(locKey(t)) || null,
+  get rates() { return rates; }, weatherFor: t => weather.get(locKey(t)) || null, getWeather, weatherForLoc,
   get autoMatches() { return autoMatches; }, refreshMatches, refreshStandings,
   get onThisDay() { return onThisDay; },
   pharmFor, fetchPharmacies, resolvePharmacy, pharmCfg, pharmMode, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,

@@ -94,14 +94,23 @@ r.put('/profile', ownerOnly, (req, res) => {
   }
   changed(t); res.json({ ok: true });
 });
-// şehir arama (Open-Meteo geocoding, ücretsiz)
+// şehir arama (Open-Meteo geocoding, ücretsiz; Türkiye ve dünya şehirleri)
 r.get('/geo', async (req, res) => {
   const qy = String(req.query.q || '').trim();
   if (qy.length < 2) return res.json([]);
   try {
-    const j = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(qy)}&count=8&language=tr&countryCode=TR`)).json();
-    res.json((j.results || []).map(x => ({ city: x.name, admin: x.admin1 || '', lat: x.latitude, lon: x.longitude })));
+    const cp = req.query.tr ? '&countryCode=TR' : '';
+    const j = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(qy)}&count=10&language=tr${cp}`)).json();
+    res.json((j.results || []).map(x => ({ city: x.name, country: x.country || '', admin: x.admin1 || '', lat: x.latitude, lon: x.longitude })));
   } catch (e) { res.status(502).json({ error: 'Şehir araması yapılamadı' }); }
+});
+// hava durumu sorgusu (panel önizlemesi ve widget konum testi için)
+r.get('/weather', async (req, res) => {
+  const lat = Number(req.query.lat), lon = Number(req.query.lon);
+  if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return res.status(400).json({ error: 'Geçersiz koordinat' });
+  const w = await F.getWeather(lat, lon);
+  if (!w) return res.status(502).json({ error: 'Hava durumu alınamadı' });
+  res.json(w);
 });
 // tarayıcı konumundan şehir adı bul (koordinat ~1 km'ye yuvarlanıp gönderilir; yalnız işletme konumu, kişisel veri değil)
 r.get('/geo/reverse', async (req, res) => {

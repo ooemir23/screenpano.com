@@ -196,12 +196,15 @@ position:absolute;top:.8vh;right:.8vw}
 .mid .sc{font-size:3.6vh;font-weight:800;letter-spacing:.04em;white-space:nowrap}
 .mid .sc i{font-style:normal;color:var(--mute);margin:0 .25vw;font-weight:400}
 .mid .sc.fin{color:var(--accent2)}
-#rates{--rv:1vh;flex:1;min-height:0;min-width:0;overflow:hidden;box-sizing:border-box;justify-content:center;background:var(--bx-bg);border:max(1px,calc(.1*var(--rv))) solid var(--bx-bd);border-radius:var(--bx-rad);box-shadow:var(--bx-sh);padding:calc(1.1*var(--rv)) calc(1.5*var(--rv));display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
-#wx{display:flex;align-items:center;gap:.9vw}
-#wx .wi{font-size:calc(4.6*var(--rv));line-height:1}
-#wx .wt{font-size:calc(4*var(--rv));font-weight:600;line-height:1}
-#wx .city{margin-left:auto;font-size:calc(1.8*var(--rv));letter-spacing:.28em;color:var(--accent2);font-weight:600;text-transform:uppercase;text-align:right}
-#wx .city small{display:block;letter-spacing:.04em;color:var(--mute);font-weight:400;text-transform:none;margin-top:calc(.3*var(--rv));font-size:calc(1.8*var(--rv))}
+#rates, .rtx{--rv:1vh;flex:1;min-height:0;min-width:0;overflow:hidden;box-sizing:border-box;justify-content:center;background:var(--bx-bg);border:max(1px,calc(.1*var(--rv))) solid var(--bx-bd);border-radius:var(--bx-rad);box-shadow:var(--bx-sh);padding:calc(1.1*var(--rv)) calc(1.5*var(--rv));display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
+#wx, .wx{display:flex;align-items:center;gap:.9vw;width:100%}
+#wx .wi, .wx .wi{font-size:calc(4.6*var(--rv));line-height:1}
+#wx .wt, .wx .wt{font-size:calc(4*var(--rv));font-weight:600;line-height:1}
+#wx .wd, .wx .wd{flex:1;min-width:0}
+#wx .wd b, .wx .wd b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(1.85*var(--rv));font-weight:600;color:var(--white)}
+#wx .wd small, .wx .wd small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(1.8*var(--rv));color:var(--mute);margin-top:calc(.3*var(--rv));letter-spacing:.04em}
+#wx .city, .wx .city{margin-left:auto;font-size:calc(1.8*var(--rv));letter-spacing:.28em;color:var(--accent2);font-weight:600;text-transform:uppercase;text-align:right}
+#wx .city small, .wx .city small{display:block;letter-spacing:.04em;color:var(--mute);font-weight:400;text-transform:none;margin-top:calc(.3*var(--rv));font-size:calc(1.8*var(--rv))}
 /* Hava ve piyasalar widget'ındaki QR bölümü: 2 QR yan yana, fazlası sırayla */
 #rmain{display:flex;flex-direction:column;gap:calc(.9*var(--rv))}
 #rqr{flex:1;min-height:0;display:none;align-items:stretch;justify-content:center;gap:calc(1.4*var(--rv))}
@@ -218,7 +221,7 @@ position:absolute;top:.8vh;right:.8vw}
 #rrow{display:flex;align-items:center;justify-content:space-between;width:100%;height:100%;box-sizing:border-box}
 #rrow.swap{transition:opacity .35s ease}
 #rrow.swap.out{opacity:0}
-#wx+#rrow{border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.8*var(--rv));margin-top:calc(.4*var(--rv))}
+#wx+#rrow, .wx+#rrow{border-top:max(1px,calc(.1*var(--rv))) solid var(--line);padding-top:calc(.8*var(--rv));margin-top:calc(.4*var(--rv))}
 
 .r-col{flex:1 1 0;min-width:0;height:100%;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 calc(.25*var(--rv));box-sizing:border-box;position:relative}
 .r-col:not(:last-child)::after{content:"";position:absolute;right:0;top:15%;bottom:15%;width:1px;background:var(--line);opacity:.35}
@@ -235,10 +238,10 @@ position:absolute;top:.8vh;right:.8vw}
 .r-val.fl{color:var(--mute)}
 .r-val.out{opacity:0;transform:translateY(-3px)}
 
-#rates.rates-solo, .rtx.rates-solo, #rates:not(:has(#wx)), .rtx:not(:has(#wx)){padding:calc(1.1*var(--rv)) calc(1.5*var(--rv))}
-#rates.rates-solo #rrow, .rtx.rates-solo #rrow, #rates:not(:has(#wx)) #rrow, .rtx:not(:has(#wx)) #rrow{height:100%}
-#rates.rates-solo .r-val, .rtx.rates-solo .r-val, #rates:not(:has(#wx)) .r-val, .rtx:not(:has(#wx)) .r-val{font-size:calc(2.35*var(--rv)*var(--vscale,1))}
-#rates.rates-solo .r-val.r-val-sm, .rtx.rates-solo .r-val.r-val-sm, #rates:not(:has(#wx)) .r-val.r-val-sm, .rtx:not(:has(#wx)) .r-val.r-val-sm{font-size:calc(2.06*var(--rv)*var(--vscale,1))}
+#rates.rates-solo, .rtx.rates-solo, #rates:not(:has(#wx, .wx)), .rtx:not(:has(#wx, .wx)){padding:calc(1.1*var(--rv)) calc(1.5*var(--rv))}
+#rates.rates-solo #rrow, .rtx.rates-solo #rrow, #rates:not(:has(#wx, .wx)) #rrow, .rtx:not(:has(#wx, .wx)) #rrow{height:100%}
+#rates.rates-solo .r-val, .rtx.rates-solo .r-val, #rates:not(:has(#wx, .wx)) .r-val, .rtx:not(:has(#wx, .wx)) .r-val{font-size:calc(2.35*var(--rv)*var(--vscale,1))}
+#rates.rates-solo .r-val.r-val-sm, .rtx.rates-solo .r-val.r-val-sm, #rates:not(:has(#wx, .wx)) .r-val.r-val-sm, .rtx:not(:has(#wx, .wx)) .r-val.r-val-sm{font-size:calc(2.06*var(--rv)*var(--vscale,1))}
 #goal{position:absolute;inset:0;z-index:6;border-radius:1.48vh;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2vh 1.2vw;
 --gc:var(--accent2);--gd:var(--ad);--gr:var(--a2);--gc2:var(--al);
 background:radial-gradient(120% 90% at 50% 0%,var(--gc) 0%,var(--gd) 45%,#141414 100%);border:max(1px,.1vh) solid rgba(var(--gr),.6)}
@@ -2431,28 +2434,58 @@ const rateCol = (sym, cVal, val, unit, mode) => {
       <div class="r-val ${cls}${isSm ? ' r-val-sm' : ''}">${valHtml}</div>
     </div>`;
 };
+function renderWx(w, p) {
+  if (!w) return '';
+  const [txt, dayIc, nightIc] = WMO(w.code);
+  const city = (p && p.city) || CITY || '';
+  const showDesc = !!(p && (p.details || p.desc));
+  const descHtml = showDesc ? `<div class="wd"><b>${txt}</b><small>His. ${Math.round(w.feels)}° · ${Math.round(w.wind)} km/s</small></div>` : '';
+  return `<div class="wx${showDesc ? ' has-wd' : ''}" id="wx" title="${esc(txt)}"><span class="wi">${w.day ? dayIc : nightIc}</span><span class="wt">${Math.round(w.temp)}°</span>
+    ${descHtml}
+    <div class="city">${esc(city)}<small>${Math.round(w.min)}° / ${Math.round(w.max)}°</small></div></div>`;
+}
+function loadCustomWx(p) {
+  if (!p || !p.lat || !p.lon || p.wx) return;
+  const key = `${Number(p.lat).toFixed(2)},${Number(p.lon).toFixed(2)}`;
+  window.__wxMap = window.__wxMap || {};
+  if (window.__wxMap[key]) {
+    p.wx = window.__wxMap[key];
+    return;
+  }
+  fetch(`/api/admin/weather?lat=${p.lat}&lon=${p.lon}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.temp != null) {
+        window.__wxMap[key] = data;
+        p.wx = data;
+        renderPanel();
+      }
+    })
+    .catch(() => {});
+}
 function renderPanel() {
-  const sig = JSON.stringify([lastRates, lastWeather, WPROPS.rates, CITY]);
+  const sig = JSON.stringify([lastRates, lastWeather, WPROPS.rates, window.__rtProps, CITY]);
   if (sig === window.__panelSig && document.getElementById('rrow')) return; // değişiklik yok
   window.__panelSig = sig;
-  const r = lastRates, w = lastWeather;
+  loadCustomWx(WPROPS.rates);
+  (window.__rtProps || []).forEach(loadCustomWx);
+  const r = lastRates;
   const f = (x, d = 2) => x ? x.toLocaleString('tr-TR', {minimumFractionDigits: d, maximumFractionDigits: d}) : '--';
   const t = r.updated ? new Date(r.updated).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul'}) : '';
-  let wx = '';
-  if (w) {
-    const [txt, dayIc, nightIc] = WMO(w.code);
-    wx = `<div id="wx" title="${esc(txt)}"><span class="wi">${w.day ? dayIc : nightIc}</span><span class="wt">${Math.round(w.temp)}°</span>
-      <div class="city">${esc(CITY)}<small>${Math.round(w.min)}° / ${Math.round(w.max)}°</small></div></div>`;
-  }
   rateSets = [
     mode => rateCol('USD', r.usdCh, f(r.usd), '₺', mode) + rateCol('EUR', r.eurCh, f(r.eur), '₺', mode) + rateCol('ALTIN', r.goldCh, f(r.gold, 0), '₺', mode),
     mode => rateCol('BIST 100', r.bistCh, f(r.bist, 0), '', mode) + rateCol('BITCOIN', r.btcCh, r.btc ? '$' + f(r.btc, 0) : '--', '', mode) + rateCol('STERLİN', r.gbpCh, f(r.gbp), '₺', mode),
   ];
   const rp = WPROPS.rates || {};
-  const mk = p => (p.weather === false ? '' : wx) + (p.rates === false ? '' : `<div id="rrow" class="swap rrx">${rateSets[rateIdx % rateSets.length](rateMode)}</div>`);
+  const mk = p => {
+    const wData = (p && p.wx) || lastWeather;
+    const wxHtml = (p && p.weather === false) ? '' : renderWx(wData, p);
+    const rHtml = (p && p.rates === false) ? '' : `<div id="rrow" class="swap rrx">${rateSets[rateIdx % rateSets.length](rateMode)}</div>`;
+    return wxHtml + rHtml;
+  };
   const main = mk(rp);
-  document.getElementById('rates').innerHTML = rp.qr ? `<div id="rmain">${main}</div><div id="rqr"></div>` : main; // QR açıksa hava/piyasa bir sayfa, QR'lar sonraki sayfa(lar)
-  // ek hava/piyasa kutuları (aynı düzende birden çok): yalnız hava ve/veya piyasa, QR yok
+  const ratesEl = document.getElementById('rates');
+  if (ratesEl) ratesEl.innerHTML = rp.qr ? `<div id="rmain">${main}</div><div id="rqr"></div>` : main;
   document.querySelectorAll('.rtx').forEach((el, i) => { el.innerHTML = mk((window.__rtProps || [])[i] || {}); });
   startRateSwap(); ratesQr(); fitRates();
 }
@@ -2489,7 +2522,7 @@ function fitRates() {
     const p = isFirst ? (WPROPS.rates || {}) : ((window.__rtProps || [])[rtxList.indexOf(el)] || WPROPS.rates || {});
     const valScale = getScale(p);
     el.style.setProperty('--vscale', valScale);
-    const hasWx = !!el.querySelector('#wx');
+    const hasWx = !!el.querySelector('#wx, .wx');
     el.classList.toggle('rates-solo', !hasWx);
     const vh = innerHeight / 100, cs = getComputedStyle(el);
     const set = k => el.style.setProperty('--rv', (k * vh).toFixed(3) + 'px');
@@ -2499,7 +2532,7 @@ function fitRates() {
       const maxH = el.clientHeight - padV, maxW = el.clientWidth - padH;
       if (el.scrollHeight > el.clientHeight + 1) return false;
       if (el.scrollWidth > el.clientWidth + 1) return false;
-      const wx = el.querySelector('#wx');
+      const wx = el.querySelector('#wx, .wx');
       if (wx && (wx.scrollHeight > maxH || wx.scrollWidth > maxW + 1)) return false;
       const cols = el.querySelectorAll('.r-col');
       for (const col of cols) {
@@ -3322,11 +3355,38 @@ function applyLayout(l) {
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
       boxProps(c, w.props); app.appendChild(c); used.add(w.type); attachTap(c.firstChild, () => window.__menu()); continue;
     }
-    if (w.type === 'rates' && rtn++) { // ikinci ve sonraki hava/piyasa kutuları: aynı biçim, kendi ayarlarıyla
-      const c = document.createElement('div'); c.className = 'cell rtcell'; c.dataset.w = 'rates';
-      c.innerHTML = '<div id="rates" class="rtx"></div>';
+    if (w.type === 'rates' || w.type === 'weather' || w.type === 'finance') { // hava, finans ve kurlar: ilk kutu ana hücreye, sonraki kutular dinamik rtcell'e
+      const isWx = w.type === 'weather', isFin = w.type === 'finance';
+      const wp = {
+        ...(w.props || {}),
+        weather: isWx ? true : (isFin ? false : (w.props && w.props.weather !== false)),
+        rates: isFin ? true : (isWx ? false : (w.props && w.props.rates !== false)),
+        city: (w.props && w.props.city) || '',
+        details: !!(w.props && (w.props.details || w.props.desc)),
+        lat: w.props && w.props.lat,
+        lon: w.props && w.props.lon,
+        wx: (w.props && w.props.wx) || null
+      };
+      if (rtn === 0) {
+        const c = document.querySelector('.cell[data-w="rates"]:not(.rtcell)');
+        if (c) {
+          c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
+          boxProps(c, w.props);
+          app.appendChild(c);
+          used.add('rates');
+          WPROPS.rates = wp;
+          rtn++;
+          continue;
+        }
+      }
+      const c = document.createElement('div'); c.className = 'cell rtcell'; c.dataset.w = w.type;
+      c.innerHTML = '<div class="rtx"></div>';
       c.style.gridArea = `${w.y + 1} / ${w.x + 1} / span ${w.h} / span ${w.w}`;
-      boxProps(c, w.props); app.appendChild(c); window.__rtProps.push(w.props || {}); continue;
+      boxProps(c, w.props);
+      app.appendChild(c);
+      window.__rtProps.push(wp);
+      rtn++;
+      continue;
     }
     if (w.type === 'text') { // birden çok duyuru/yazı kutusu olabilir; medyanın üstünde ya da ayrı kutuda durabilir
       const c = document.createElement('div'); c.className = 'cell txtcell'; c.dataset.w = 'text';
