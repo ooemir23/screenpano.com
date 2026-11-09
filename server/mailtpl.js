@@ -110,22 +110,18 @@ function html({ title, badge, badgeColor = 'brand', preheader, body, cta, ctaLab
   const brand = config.BRAND || 'ScreenPano';
   const preview = preheader || title;
   const bStyle = BADGE_STYLES[badgeColor] || BADGE_STYLES.brand;
+  const logoUrl = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(config.BASE_URL)
+    ? 'https://screenpano.com/logo.png'
+    : `${config.BASE_URL}/logo.png`;
+  const iconUrl = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(config.BASE_URL)
+    ? 'https://screenpano.com/logo-icon.png'
+    : `${config.BASE_URL}/logo-icon.png`;
 
   // Başlık bandındaki ScreenPano logosu ve rozet
   const brandMarkup = brand === 'ScreenPano'
-    ? `<table role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td style="vertical-align:middle;padding-right:12px">
-          <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:linear-gradient(135deg,#c9955c,#906538);border-radius:8px;padding:5px 8px;font:700 16px/1 -apple-system,BlinkMacSystemFont,sans-serif;color:#ffffff;text-align:center;box-shadow:0 0 12px rgba(201,149,92,0.3)">
-            📺
-          </td></tr></table>
-        </td>
-        <td style="vertical-align:middle">
-          <div style="line-height:1">
-            <span style="color:#ffffff;font:700 21px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;letter-spacing:-0.02em">Screen</span><span style="color:${GOLD_LIGHT};font:700 21px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;letter-spacing:-0.02em">Pano</span>
-          </div>
-          <div style="color:#8a939e;font:500 10.5px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;letter-spacing:0.04em;text-transform:uppercase;margin-top:3px">Dijital Ekran ve Menü Panosu</div>
-        </td>
-      </tr></table>`
+    ? `<a href="${e(config.BASE_URL)}" style="display:inline-block;text-decoration:none" target="_blank">
+        <img src="${e(logoUrl)}" alt="ScreenPano" width="165" height="37" style="display:block;width:165px;height:37px;max-width:165px;border:0;outline:none;text-decoration:none;color:#ffffff;font:700 20px/37px -apple-system,BlinkMacSystemFont,sans-serif;-ms-interpolation-mode:bicubic">
+      </a>`
     : `<span style="color:#ffffff;font:700 20px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">${e(brand)}</span>`;
 
   return `<!doctype html>
@@ -205,7 +201,14 @@ function html({ title, badge, badgeColor = 'brand', preheader, body, cta, ctaLab
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="font:400 12px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:${TEXT_MUTE}">
-                    <strong style="color:${TEXT_SOFT}">${e(brand)}</strong> · Bulut Tabanlı Dijital Ekran ve Menü Panosu<br>
+                    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:6px"><tr>
+                      <td style="vertical-align:middle;padding-right:8px">
+                        <img src="${e(iconUrl)}" alt="ScreenPano" width="18" height="18" style="display:block;width:18px;height:18px;border:0;border-radius:4px">
+                      </td>
+                      <td style="vertical-align:middle;font:600 12.5px/1 -apple-system,BlinkMacSystemFont,sans-serif;color:${TEXT_SOFT}">
+                        ${e(brand)} · Bulut Tabanlı Dijital Ekran ve Menü Panosu
+                      </td>
+                    </tr></table>
                     <span style="color:#525b68">Bu ileti, ${e(brand)} sisteminde kayıtlı bildirim adresinize otomatik olarak gönderilmiştir.</span>
                   </td>
                 </tr>
