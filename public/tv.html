@@ -982,31 +982,34 @@ body.glass .wz b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%
 .cell.qrcell{z-index:20;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease} /* QR kutuları diğer widget'ların üstünde durabilir */
 .cell.qrcell.qpin{z-index:65} /* "Her zaman üstte": kayan haber bandı, kampanya vb. her şeyin üstünde kalır */
 .cell.qrcell.qhide{opacity:0;pointer-events:none}
-.cell.qrcell .wqr{display:flex;flex-direction:column;align-items:center;justify-content:center;background:none;border:none;border-radius:0;overflow:visible;gap:.8vh;padding:0;backdrop-filter:none;box-shadow:none}
+.cell.qrcell .wqr{display:flex;flex-direction:column;align-items:center;justify-content:center;background:none;border:none;border-radius:0;overflow:visible;gap:calc(var(--qrs)*.04);padding:0;backdrop-filter:none;box-shadow:none}
+.cell.qrcell .wqr.st-above{flex-direction:column-reverse}
+.cell.qrcell .wqr.st-below{flex-direction:column}
+.cell.qrcell .wqr.st-right{flex-direction:row;gap:calc(var(--qrs)*.05)}
+.cell.qrcell .wqr.st-left{flex-direction:row-reverse;gap:calc(var(--qrs)*.05)}
 .cell.qrcell .wqr.no-lbl,.wqr.st-plain{gap:0!important}
 .wqr.no-lbl .lbl.qp,.wqr.st-plain .lbl.qp{display:none!important}
 .wqr .code{flex:none}
-/* QR yerleşimi: yanda dikey etiket (sağda / solda) ve yalnız QR */
-.wqr.st-right,.wqr.st-left{flex-direction:row;gap:1.2vh}
-.wqr.st-left{flex-direction:row-reverse}
-.wqr.st-right .lbl.qp,.wqr.st-left .lbl.qp,.wqr.st-right .lbl.qp.wf,.wqr.st-left .lbl.qp.wf{writing-mode:vertical-rl;width:calc(5.4vh*var(--qt,1));height:var(--qrs,17vh);max-width:none;padding:1.2vh 0;letter-spacing:.14em}
-.wqr.st-left .lbl.qp{transform:rotate(180deg)}
-/* QR kart tasarımları: "kart" (tema kutu stilinde çerçeveli kart) ve "sade" (çerçevesiz, ince hat); etiket hap yerine düz yazı; her şey QR boyutuyla orantılı */
-.cell.qrcell .wqr.lk-card,.cell.qrcell .wqr.lk-soft{flex:0 0 auto;align-self:center;justify-content:center;gap:calc(var(--qrs)*.04)}
+/* QR kart tasarımları: "kart" ve "sade" */
+.cell.qrcell .wqr.lk-card,.cell.qrcell .wqr.lk-soft{flex:0 0 auto;align-self:center;justify-content:center}
 .cell.qrcell .wqr.lk-card{background:var(--bx-bg);border:max(1px,.1vh) solid var(--bx-bd);border-radius:calc(var(--qrs)*.1);box-shadow:var(--bx-sh);padding:calc(var(--qrs)*.05)}
 .cell.qrcell .wqr.lk-card.no-lbl{gap:0}
 .wqr.lk-card .code,.wqr.lk-soft .code{border:0;border-radius:calc(var(--qrs)*.05);padding:calc(var(--qrs)*.03);box-sizing:border-box;box-shadow:0 calc(var(--qrs)*.025) calc(var(--qrs)*.08) rgba(0,0,0,.3)}
 .wqr.lk-soft .code{border:max(1px,.1vh) solid rgba(255,255,255,.4)}
-.wqr.lk-card .lbl.qp,.wqr.lk-soft .lbl.qp,.wqr.lk-card .lbl.qp.wf,.wqr.lk-soft .lbl.qp.wf{background:none;border:0;backdrop-filter:none;padding:0;height:auto;width:var(--qrs)!important;max-width:var(--qrs)!important;border-radius:0;font-size:calc(var(--qrs)*.11*var(--tf,1));letter-spacing:.08em;font-weight:700;line-height:1.25;text-shadow:none;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wqr.lk-soft .lbl.qp{text-shadow:0 .2vh .7vh rgba(0,0,0,.85)}
-.wqr.lk-card .lbl.qp.pw,.wqr.lk-soft .lbl.qp.pw{font-size:calc(var(--qrs)*.11*var(--tf,1));letter-spacing:.03em}
-.wqr.lk-card.st-right .lbl.qp,.wqr.lk-card.st-left .lbl.qp,.wqr.lk-soft.st-right .lbl.qp,.wqr.lk-soft.st-left .lbl.qp{writing-mode:vertical-rl;width:auto;height:var(--qrs);padding:0}
-.wqr .lbl.qp{flex:none;background:rgba(10,8,6,.92);backdrop-filter:blur(0.56vh);border:max(2px,.22vh) solid var(--al);color:#fff;font-size:calc(var(--qrs)*.11*var(--tf,1));font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-shadow:0 .2vh .5vh #000;padding:0 .4vh;border-radius:calc(var(--qrs)*.08);width:var(--qrs)!important;max-width:var(--qrs)!important;text-align:center;line-height:1.25;height:calc(var(--qrs)*.20*var(--qt,1));box-sizing:border-box;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden}
-.wqr .lbl.qp.wf{width:var(--qrs)!important;max-width:var(--qrs)!important;padding:0 .4vh} /* Wi-Fi etiketi QR genişliğini aşmaz */
+/* Yatay etiket (altta / üstte) */
+.cell.qrcell .wqr:not(.st-right):not(.st-left) .lbl.qp{writing-mode:horizontal-tb;width:var(--qrs)!important;max-width:var(--qrs)!important;height:auto;letter-spacing:.08em;font-size:calc(var(--qrs)*.11*var(--tf,1));font-weight:700;line-height:1.25;box-sizing:border-box;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cell.qrcell .wqr.lk-card:not(.st-right):not(.st-left) .lbl.qp,.cell.qrcell .wqr.lk-soft:not(.st-right):not(.st-left) .lbl.qp{background:none;border:0;backdrop-filter:none;padding:0;border-radius:0;text-shadow:none}
+/* Dikey etiket (sağda / solda) */
+.cell.qrcell .wqr.st-right .lbl.qp,.cell.qrcell .wqr.st-left .lbl.qp{writing-mode:vertical-rl;height:var(--qrs)!important;max-height:var(--qrs)!important;width:auto!important;max-width:none!important;padding:calc(var(--qrs)*.03) 0!important;letter-spacing:.12em;font-size:calc(var(--qrs)*.11*var(--tf,1));font-weight:700;line-height:1.2;box-sizing:border-box;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cell.qrcell .wqr.st-left .lbl.qp{transform:rotate(180deg)}
+.cell.qrcell .wqr.lk-card.st-right .lbl.qp,.cell.qrcell .wqr.lk-card.st-left .lbl.qp,.cell.qrcell .wqr.lk-soft.st-right .lbl.qp,.cell.qrcell .wqr.lk-soft.st-left .lbl.qp{background:none;border:0;backdrop-filter:none;border-radius:0;text-shadow:none}
+/* Klasik etiket hap görünümü */
+.cell.qrcell .wqr:not(.lk-card):not(.lk-soft):not(.st-right):not(.st-left) .lbl.qp{flex:none;background:rgba(10,8,6,.92);backdrop-filter:blur(0.56vh);border:max(2px,.22vh) solid var(--al);color:#fff;padding:0 .4vh;border-radius:calc(var(--qrs)*.08);height:calc(var(--qrs)*.20*var(--qt,1));display:flex;align-items:center;justify-content:center}
+.cell.qrcell .wqr:not(.lk-card):not(.lk-soft).st-right .lbl.qp,.cell.qrcell .wqr:not(.lk-card):not(.lk-soft).st-left .lbl.qp{background:rgba(10,8,6,.92);backdrop-filter:blur(0.56vh);border:max(2px,.22vh) solid var(--al);color:#fff;padding:.4vh 0;border-radius:calc(var(--qrs)*.08);display:flex;align-items:center;justify-content:center}
 .wqr .code{border-radius:1.4vh;padding:.5vh;box-shadow:0 1vh 3vh rgba(0,0,0,.55)}
 .wqr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;padding:1.6vh 1.2vw;transition:opacity .4s}
 .wqr.out{opacity:0}
-.wqr .code{background:#fff;border-radius:1.4vh;padding:.7vh;box-shadow:0 1vh 3vh rgba(0,0,0,.45);border:.25vh solid rgba(var(--a2),.85)}
+.wqr .code{background:#fff;border-radius:1.4vh;padding:.7vh;box-shadow:0 1vh 3vh rgba(0,0,0,.45);border:.25vh solid rgba(var(--a2),.85);box-sizing:border-box}
 .wqr .code svg{width:100%;height:100%;display:block}
 .wqr .lbl{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--white);text-align:center;font-size:2.2vh;line-height:1.25}
 .wqr .lbl small{display:block;margin-top:.5vh;font-size:2vh;letter-spacing:.04em;text-transform:none;color:var(--al);font-weight:600}
@@ -3746,7 +3749,7 @@ function drawQrCell(c) {
     el.classList.toggle('lk-card', look === 'card');
     el.classList.toggle('lk-soft', look === 'soft');
     el.classList.toggle('no-lbl', !hasLabel);
-    for (const k of ['below', 'right', 'left', 'plain']) el.classList.toggle('st-' + k, k === st);
+    for (const k of ['below', 'above', 'right', 'left', 'plain']) el.classList.toggle('st-' + k, k === st);
     el.innerHTML = `<div class="code" style="width:var(--qrs);height:var(--qrs)">${q.svg}</div>` +
       (hasLabel ? `<div class="lbl qp${q.marquee ? ' wf' : ''}"><span class="wt">${esc(q.label)}</span></div>` : '');
     clearTimeout(el._wt);
@@ -3767,9 +3770,10 @@ function keepInside(el) {
   const cr = cell.getBoundingClientRect();
   if (!cr.width || !cr.height) return;
   const cx = (cr.left + cr.right) / 2, cy = (cr.top + cr.bottom) / 2;
-  // sınır: QR kartının ortasının düştüğü widget (ör. medya) — yoksa QR'ın kendi hücresi; böylece alt bandın ya da komşu kutuların dışına taşmaz
+  // sınır: QR kartının ortasının düştüğü widget (ör. medya); kendi hücresindeyse flex zaten ortalıyor
   const host = [...$id('app').querySelectorAll('.cell:not(.qrcell)')].map(c => c.getBoundingClientRect()).find(r => r.width && cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom);
-  const bounds = host || cr, pad = innerHeight * 0.008;
+  if (!host) return;
+  const bounds = host, pad = innerHeight * 0.008;
   let L = Infinity, T = Infinity, R = -Infinity, B = -Infinity;
   for (const k of el.children) { const r = k.getBoundingClientRect(); L = Math.min(L, r.left); T = Math.min(T, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom); }
   if (!isFinite(L)) return;
