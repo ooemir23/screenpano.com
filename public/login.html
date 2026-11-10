@@ -10,35 +10,45 @@
 @font-face{font-family:'Hanken Grotesk';font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/hanken-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:'Hanken Grotesk';font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/hanken-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+25CA,U+FB01-FB02,U+FEFF,U+FFFD}
 @font-face{font-family:'Hanken Grotesk';font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/noto-kufi-arabic.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0897-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FE74,U+76-FEFC}
-:root{--gold:#e8a33d;--gold2:#f6c977;--on-gold:#221403;--ink:#f5f2ec;--soft2:#a9b1ba;--mute2:#78828d;--ln:rgba(255,255,255,.09);--ln2:rgba(255,255,255,.16)}
+:root{--gold:#e8a33d;--gold2:#f6c977;--on-gold:#221403;--ink:#f5f2ec;--soft2:#a9b1ba;--mute2:#8c96a3;--ln:rgba(255,255,255,.11);--ln2:rgba(255,255,255,.18)}
 *{box-sizing:border-box;margin:0}
 body{min-height:100vh;font-family:'Hanken Grotesk','Noto Kufi Arabic',system-ui,sans-serif;background:#07080a;color:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px 16px;position:relative;overflow-x:hidden}
 body::before,body::after{content:'';position:fixed;pointer-events:none;z-index:0}
 body::before{inset-inline-end:-20%;top:-30%;width:75%;height:90%;background:radial-gradient(closest-side,rgba(232,163,61,.15),transparent 72%)}
 body::after{inset-inline-start:-18%;bottom:-32%;width:60%;height:80%;background:radial-gradient(closest-side,rgba(64,120,150,.09),transparent 70%)}
-.wrap{width:100%;max-width:980px;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;position:relative;z-index:1}
-@media(max-width:820px){.wrap{grid-template-columns:1fr}.pitch{display:none}}
-.pitch h1{font-family:'Barlow Condensed','Noto Kufi Arabic',system-ui,sans-serif;font-size:58px;font-weight:700;line-height:.96;letter-spacing:.002em;text-transform:uppercase;margin-bottom:18px}
+.wrap{width:100%;max-width:1120px;display:grid;grid-template-columns:1fr 1.15fr;gap:44px;align-items:center;position:relative;z-index:1}
+@media(max-width:920px){.wrap{grid-template-columns:1fr;max-width:540px}.pitch{display:none}}
+.pitch h1{font-family:'Barlow Condensed','Noto Kufi Arabic',system-ui,sans-serif;font-size:54px;font-weight:700;line-height:.96;letter-spacing:.002em;text-transform:uppercase;margin-bottom:18px}
 .pitch h1 span{color:transparent;background:linear-gradient(100deg,var(--gold2),var(--gold) 60%,#b96f1e);-webkit-background-clip:text;background-clip:text}
-.pitch p{color:var(--soft2);font-size:16px;line-height:1.65;margin-bottom:22px;max-width:30em}
+.pitch p{color:var(--soft2);font-size:15px;line-height:1.65;margin-bottom:22px;max-width:28em}
 .pitch ul{list-style:none;padding:0;display:grid;gap:12px}
-.pitch li{font-size:15px;display:flex;gap:12px;align-items:flex-start;color:var(--soft2)}
-.pitch li .ic{color:var(--gold);width:20px;height:20px;margin-top:2px}
-.box{background:rgba(15,18,22,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--ln2);border-radius:22px;padding:30px;box-shadow:0 50px 110px -40px rgba(0,0,0,.85)}
+.pitch li{font-size:14px;display:flex;gap:12px;align-items:flex-start;color:var(--soft2)}
+.pitch li .ic{color:var(--gold);width:20px;height:20px;margin-top:2px;flex-shrink:0}
+.box{background:rgba(18,21,26,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--ln2);border-radius:24px;padding:32px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.05)}
 .brand{font-size:22px;font-weight:800;margin-bottom:4px}
-.tabs{display:flex;gap:4px;margin:20px 0 22px;background:rgba(0,0,0,.3);padding:4px;border-radius:12px;border:1px solid var(--ln)}
+.tabs{display:flex;gap:4px;margin:18px 0 20px;background:rgba(0,0,0,.45);padding:4px;border-radius:12px;border:1px solid var(--ln)}
 .tabs button{flex:1;padding:10px;border:0;border-radius:9px;background:none;color:var(--mute2);font:600 14px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;cursor:pointer;transition:background .2s,color .2s}
 .tabs button.on{background:linear-gradient(180deg,#f4b556,#df9425);color:var(--on-gold);box-shadow:0 6px 18px -8px rgba(232,163,61,.7)}
-label{display:block;font-size:12px;color:var(--mute2);margin:14px 0 6px;letter-spacing:.04em}
-input,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--ln);background:#0c0e11;color:var(--ink);font:500 15px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s}
-input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,163,61,.15)}
-.btn{width:100%;margin-top:20px;padding:14px;border:0;border-radius:12px;background:linear-gradient(180deg,#f4b556,#df9425);color:var(--on-gold);font:700 15px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;cursor:pointer;box-shadow:0 14px 34px -14px rgba(232,163,61,.6),inset 0 1px 0 rgba(255,255,255,.35)}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+@media(max-width:540px){.f-grid{grid-template-columns:1fr}}
+.f-col-2{grid-column:1 / -1}
+.field{display:flex;flex-direction:column}
+label{font-size:12px;color:#c0c8d2;margin-bottom:5px;font-weight:600;letter-spacing:.02em;display:flex;justify-content:space-between;align-items:baseline}
+label .hint{font-size:11px;color:var(--mute2);font-weight:400}
+input,select{width:100%;height:44px;padding:0 14px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:#13161b;color:var(--ink);font:500 14px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+input:focus,select:focus{background:#161a22;border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,163,61,.18)}
+input::placeholder{color:rgba(255,255,255,.28)}
+.btn{width:100%;margin-top:16px;height:48px;border:0;border-radius:12px;background:linear-gradient(180deg,#f4b556,#df9425);color:var(--on-gold);font:700 15px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;cursor:pointer;box-shadow:0 14px 30px -12px rgba(232,163,61,.65),inset 0 1px 0 rgba(255,255,255,.35);transition:filter .15s,transform .1s}
 .btn:hover{filter:brightness(1.06)}
-.btn:disabled{opacity:.6}
-.err{min-height:20px;margin-top:12px;color:var(--bad);font-size:14px}
-.note{color:var(--mute2);font-size:12px;margin-top:14px;line-height:1.5}
-.ck{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:var(--mute2);margin:12px 0 0;cursor:pointer}.ck input{width:18px;height:18px;flex:0 0 18px;margin:1px 0 0;accent-color:var(--gold)}.ck a{color:inherit}
-.legal{margin-top:18px;font-size:12px;color:var(--mute2);display:flex;gap:14px;flex-wrap:wrap}.legal a{color:inherit}
+.btn:active{transform:scale(.99)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.err{min-height:18px;margin-top:10px;color:#f87171;font-size:13px}
+.note{color:var(--mute2);font-size:12px;margin-top:12px;line-height:1.5}
+.ck{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.45;color:var(--soft2);margin-top:8px;cursor:pointer}
+.ck input{width:17px;height:17px;flex:0 0 17px;margin:2px 0 0;accent-color:var(--gold);background:#13161b;border-radius:4px}
+.ck a{color:var(--gold2);text-decoration:underline;text-underline-offset:2px}
+.legal{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:var(--mute2);display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.legal a{color:inherit;text-decoration:none}.legal a:hover{color:var(--ink)}
 :lang(ar) .pitch h1{text-transform:none;line-height:1.3}
 :lang(ar) body{line-height:1.8}
 </style></head><body>
@@ -80,23 +90,56 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,
     </form>
     <form id="f-signup" hidden>
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;pointer-events:none" aria-hidden="true">
-      <div id="signup-badge" style="display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:14px;background:rgba(232,163,61,.1);border:1px solid rgba(232,163,61,.25);border-radius:10px;font-size:13px;line-height:1.45;color:var(--gold2)">
-        <span style="font-size:16px">🎁</span>
+      <div id="signup-badge" style="display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:16px;background:rgba(232,163,61,.12);border:1px solid rgba(232,163,61,.28);border-radius:12px;font-size:13px;line-height:1.45;color:var(--gold2)">
+        <span style="font-size:18px;line-height:1">🎁</span>
         <span><b>3 Gün Ücretsiz Deneme:</b> Kredi kartı gerekmez. Kaydınızla birlikte tüm Pro özellikler hemen açılır.</span>
       </div>
-      <label>İşletme adı</label><input name="business" maxlength="80" required placeholder="örn. Sahil Kafe">
-      <label>İşletme türü <span style="opacity:.6;font-weight:400">(hazır ekran ve renkleri getirir)</span></label><select name="starter" id="starter"><option value="">Boş başlangıç</option></select>
-      <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire">
-      <label>Şifre (en az 8 karakter)</label><input name="password" type="password" autocomplete="new-password" minlength="8" required>
-      <label>E-posta <span style="opacity:.6;font-weight:400">(ekran durumu uyarıları ve doğrulama bu adrese gelir)</span></label><input name="email" type="email" maxlength="120" autocomplete="email" required placeholder="ornek@isletme.com">
-      <label>Telefon (isteğe bağlı)</label><input name="phone" type="tel" maxlength="30">
-      <label>Güvenlik sorusu: <b id="cap-q" style="color:var(--accent2)">…</b> <button type="button" id="cap-ref" title="Soruyu yenile" style="background:none;border:0;color:var(--mute);cursor:pointer;font-size:12px">↻</button></label>
-      <input name="captchaAns" id="cap-ans" inputmode="numeric" autocomplete="off" required placeholder="İşlemin sonucunu yazın">
-      <input type="hidden" name="captchaToken" id="cap-tok">
-      <label class="ck"><input type="checkbox" name="accept" required><span><a href="/kosullar" target="_blank">Kullanım Koşulları</a>'nı ve eki <a href="/veri-isleme" target="_blank">Veri İşleme Sözleşmesi</a>'ni okudum, kabul ediyorum; kişisel verilerimin <a href="/kvkk" target="_blank">KVKK Aydınlatma Metni</a> kapsamında işleneceğini biliyorum.</span></label>
-      <label class="ck"><input type="checkbox" name="marketing"><span>Yeni özellik ve kampanyalardan haberdar olmak için <a href="/acik-riza" target="_blank">Açık Rıza Metni</a> kapsamında ileti almak istiyorum (isteğe bağlı).</span></label>
+
+      <div class="f-grid">
+        <div class="field">
+          <label for="f-business">İşletme adı</label>
+          <input id="f-business" name="business" maxlength="80" required placeholder="örn. Sahil Kafe">
+        </div>
+
+        <div class="field">
+          <label for="starter">İşletme türü <span class="hint">(hazır tema)</span></label>
+          <select name="starter" id="starter"><option value="">Boş başlangıç</option></select>
+        </div>
+
+        <div class="field">
+          <label for="f-username">Kullanıcı adı</label>
+          <input id="f-username" name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire" placeholder="isletmeadi">
+        </div>
+
+        <div class="field">
+          <label for="f-pass">Şifre <span class="hint">(en az 8)</span></label>
+          <input id="f-pass" name="password" type="password" autocomplete="new-password" minlength="8" required placeholder="••••••••">
+        </div>
+
+        <div class="field">
+          <label for="f-email">E-posta <span class="hint">(doğrulama & uyarı)</span></label>
+          <input id="f-email" name="email" type="email" maxlength="120" autocomplete="email" required placeholder="ornek@isletme.com">
+        </div>
+
+        <div class="field">
+          <label for="f-phone">Telefon <span class="hint">(isteğe bağlı)</span></label>
+          <input id="f-phone" name="phone" type="tel" maxlength="30" placeholder="05xx xxx xx xx">
+        </div>
+
+        <div class="field f-col-2">
+          <label><span>Güvenlik sorusu: <b id="cap-q" style="color:var(--gold);font-weight:700">…</b> <button type="button" id="cap-ref" title="Soruyu yenile" style="background:none;border:0;color:var(--mute2);cursor:pointer;font-size:13px;padding:0 4px">↻</button></span><span class="hint">Bot koruması</span></label>
+          <input name="captchaAns" id="cap-ans" inputmode="numeric" autocomplete="off" required placeholder="İşlemin sonucunu yazın">
+          <input type="hidden" name="captchaToken" id="cap-tok">
+        </div>
+
+        <div class="f-col-2" style="margin-top:4px">
+          <label class="ck"><input type="checkbox" name="accept" required><span><a href="/kosullar" target="_blank">Kullanım Koşulları</a>'nı ve <a href="/veri-isleme" target="_blank">Veri İşleme Sözleşmesi</a>'ni okudum, kişisel verilerimin <a href="/kvkk" target="_blank">KVKK</a> kapsamında işlenmesini kabul ediyorum.</span></label>
+          <label class="ck"><input type="checkbox" name="marketing"><span>Yeni özellik ve kampanyalardan haberdar olmak istiyorum (isteğe bağlı).</span></label>
+        </div>
+      </div>
+
       <button class="btn">Hesabı oluştur</button>
-      <p class="note" id="trialnote"></p>
+      <p class="note" id="trialnote" style="text-align:center"></p>
     </form>
     <div class="err" id="err"></div>
     <div class="note" id="okmsg" style="color:#4ade80;font-size:13px;display:none"></div>
