@@ -58,7 +58,7 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,
     <div style="margin-bottom:16px"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:46px;display:block"></div>
     <div class="brand" id="brand" style="display:none">…</div>
     <div style="color:var(--mute);font-size:14px;margin-bottom:6px">İşletme paneli</div>
-    <div class="tabs" id="tabs"><button class="on" data-t="login">Giriş yap</button><button data-t="signup" id="tsignup">Ücretsiz dene</button></div>
+    <div class="tabs" id="tabs"><button class="on" data-t="login">Giriş yap</button><button data-t="signup" id="tsignup">Kayıt ol</button></div>
     <form id="f-login">
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required>
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px"><label style="margin:0">Şifre</label><a href="#unuttum" id="go-forgot" style="font-size:12px;color:var(--accent2);text-decoration:none;font-weight:600">Şifremi unuttum</a></div>
@@ -80,6 +80,10 @@ input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,
     </form>
     <form id="f-signup" hidden>
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;pointer-events:none" aria-hidden="true">
+      <div id="signup-badge" style="display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:14px;background:rgba(232,163,61,.1);border:1px solid rgba(232,163,61,.25);border-radius:10px;font-size:13px;line-height:1.45;color:var(--gold2)">
+        <span style="font-size:16px">🎁</span>
+        <span><b>3 Gün Ücretsiz Deneme:</b> Kredi kartı gerekmez. Kaydınızla birlikte tüm Pro özellikler hemen açılır.</span>
+      </div>
       <label>İşletme adı</label><input name="business" maxlength="80" required placeholder="örn. Sahil Kafe">
       <label>İşletme türü <span style="opacity:.6;font-weight:400">(hazır ekran ve renkleri getirir)</span></label><select name="starter" id="starter"><option value="">Boş başlangıç</option></select>
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire">
@@ -112,6 +116,7 @@ fetch('/api/auth/config').then(r => r.json()).then(c => {
   $('brand').textContent = c.brand; document.title = c.brand + ' · Giriş';
   if (!c.signup) $('tsignup').style.display = 'none';
   $('starter').innerHTML = (c.starters || []).filter(x => x.key !== 'bos').map(x => `<option value="${x.key}">${x.name}</option>`).join('') + '<option value="bos">Boş başlangıç</option>';
+  if ($('signup-badge')) $('signup-badge').querySelector('span:last-child').innerHTML = `<b>${c.trialDays} Gün Ücretsiz Deneme:</b> Kredi kartı gerekmez. Kaydınızla birlikte tüm Pro özellikler hemen açılır.`;
   $('trialnote').textContent = `${c.trialDays} gün boyunca tüm özellikler ücretsiz. Kredi kartı gerekmez.`;
 });
 function showView(v) {
