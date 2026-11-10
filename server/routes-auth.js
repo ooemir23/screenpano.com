@@ -69,7 +69,99 @@ r.post('/login', async (req, res) => {
   res.json({ ok: true, role: u.role, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : auth.subOf(req) === 'sadmin' && auth.superOk(u) ? '/super' : auth.homeFor(req, u) });
 });
 r.post('/logout', (req, res) => { auth.clearSession(res, req); res.json({ ok: true }); });
-r.get('/config', (req, res) => res.json({ env: config.APP_ENV, brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, smtp: mailer.enabled(), starters: require('./starters').list().map(({ key, name }) => ({ key, name })) }));
+
+// ---- Google ile giriş (OAuth 2.0 / OIDC) ----
+// Anahtarlar süper yönetimden gelir (google_oauth_client_id/secret); yoksa düğme hiç görünmez.
+const gCfg = () => ({
+  id: store.setting('google_oauth_client_id', '') || process.env.GOOGLE_OAUTH_CLIENT_ID || '',
+  secret: store.setting('google_oauth_secret', '') || process.env.GOOGLE_OAUTH_SECRET || '',
+});
+const gNonces = new Map(); // state nonce -> bitiş (tek kullanım; yeniden oynatma önlenir)
+const gHome = (req, res, hash) => res.redirect(`${baseOrigin(req)}/login${hash}`);
+r.get('/google/start', (req, res) => {
+  const g = gCfg();
+  if (!g.id || !g.secret) return gHome(req, res, '#gerr=1');
+  const ip = auth.clientIp(req);
+  if (auth.tooMany(ip)) return gHome(req, res, '#gerr=1');
+  auth.noteFail(ip); // Google başlatmaları da hız sınırına sayılır
+  const n = crypto.randomBytes(16).toString('hex');
+  gNonces.set(n, Date.now() + 10 * 60 * 1000);
+  const q = new URLSearchParams({
+    client_id: g.id, redirect_uri: `${baseOrigin(req)}/api/auth/google/callback`, response_type: 'code',
+    scope: 'openid email', state: auth.sign({ kind: 'g_state', n, exp: Date.now() + 10 * 60 * 1000 }), prompt: 'select_account',
+  });
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${q}`);
+});
+let gJwks = null, gJwksAt = 0; // Google imza anahtarları (1 saat önbellek)
+async function gVerifyIdToken(idToken, clientId) {
+  const [h, p, s] = String(idToken || '').split('.');
+  if (!h || !p || !s) throw new Error('bozuk kimlik belirteci');
+  const head = JSON.parse(Buffer.from(h, 'base64url').toString('utf8'));
+  if (head.alg !== 'RS256') throw new Error('beklenmeyen imza algoritması');
+  if (!gJwks || Date.now() - gJwksAt > 3600 * 1000) {
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+    gJwks = await r.json(); gJwksAt = Date.now();
+  }
+  const k = (gJwks.keys || []).find(x => x.kid === head.kid);
+  if (!k) { gJwks = null; throw new Error('imza anahtarı bulunamadı (anahtarlar yenilenecek)'); }
+  const pub = crypto.createPublicKey({ key: { kty: k.kty, n: k.n, e: k.e }, format: 'jwk' });
+  const imzalı = crypto.createVerify('RSA-SHA256').update(`${h}.${p}`).verify(pub, Buffer.from(s, 'base64url'));
+  if (!imzalı) throw new Error('imza doğrulanamadı');
+  const c = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
+  if (!['accounts.google.com', 'https://accounts.google.com'].includes(c.iss)) throw new Error('geçersiz sağlayıcı');
+  if (c.aud !== clientId) throw new Error('belirteç bu uygulamaya ait değil');
+  if (!c.exp || c.exp * 1000 < Date.now()) throw new Error('belirtecin süresi dolmuş');
+  return c;
+}
+r.get('/google/callback', async (req, res) => {
+  const g = gCfg();
+  const fail = msg => { console.error('[Google OAuth]', msg); return gHome(req, res, '#gerr=1'); };
+  try {
+    if (!g.id || !g.secret) return fail('anahtar yok');
+    const st = auth.verify(String(req.query.state || ''));
+    if (!st || st.kind !== 'g_state' || !st.n) return fail('state geçersiz');
+    const nb = gNonces.get(st.n);
+    gNonces.delete(st.n);
+    if (!nb || nb < Date.now()) return fail('state süresi dolmuş');
+    const code = String(req.query.code || '');
+    if (!code) return fail('kod yok');
+    const tr = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ code, client_id: g.id, client_secret: g.secret, redirect_uri: `${baseOrigin(req)}/api/auth/google/callback`, grant_type: 'authorization_code' }),
+    });
+    const tj = await tr.json();
+    if (!tj.id_token) return fail('token alınamadı: ' + (tj.error || tr.status));
+    const c = await gVerifyIdToken(tj.id_token, g.id);
+    if (!c.email || c.email_verified !== true) return fail('e-posta doğrulanmamış');
+    const emLow = String(c.email).toLowerCase();
+    // kayıtlı işletme: bildirim e-postası eşleşen işletmenin sahibi hesabı (varsa son girişli)
+    const hit = tenants.all()
+      .filter(t => String((t.db.notify || {}).email || '').toLowerCase() === emLow)
+      .map(t => ({ t, u: (store.q.usersOf.all(t.id).find(x => x.role === 'owner') || {}) }))
+      .filter(x => x.u.id)
+      .sort((a, b) => (b.u.last_login || 0) - (a.u.last_login || 0))[0];
+    if (hit) {
+      if (!(hit.t.db.notify || {}).verified) { hit.t.db.notify.verified = true; hit.t.db.notify.verifiedAt = Date.now(); tenants.saveNow(hit.t); } // Google doğrulaması yeterli
+      auth.clearFails(auth.clientIp(req), hit.u.username);
+      store.q.userLogin.run(Date.now(), hit.u.id);
+      auth.setSession(req, res, hit.u);
+      return res.redirect(`${baseOrigin(req)}${(auth.subOf && auth.subOf(req) === 'music') ? '/music' : auth.homeFor(req, hit.u)}`);
+    }
+    // eşleşme yok: kayıt ekranına güvenli e-posta taşı (tek kullanımlık belirteçle)
+    const gt = auth.sign({ kind: 'g_signup', email: c.email, exp: Date.now() + 15 * 60 * 1000 });
+    gHome(req, res, `#gsignup=${encodeURIComponent(gt)}`);
+  } catch (e) { fail(e.message); }
+});
+r.post('/google/prefill', (req, res) => {
+  const p = auth.verify(String((req.body || {}).token || ''));
+  if (!p || p.kind !== 'g_signup' || !p.email) return res.status(400).json({ error: 'Google oturum belirteci geçersiz veya süresi dolmuş' });
+  res.json({ email: p.email });
+});
+
+r.get('/config', (req, res) => {
+  const g = gCfg();
+  res.json({ env: config.APP_ENV, brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, smtp: mailer.enabled(), google: !!(g.id && g.secret), starters: require('./starters').list().map(({ key, name }) => ({ key, name })) });
+});
 r.post('/signup', (req, res) => {
   if (!config.ALLOW_SIGNUP) return res.status(403).json({ error: 'Yeni kayıt şu an kapalı' });
   const ip = auth.clientIp(req);
@@ -83,14 +175,21 @@ r.post('/signup', (req, res) => {
         throw new Error('Güvenlik sorusunun cevabı hatalı, lütfen tekrar deneyin');
       }
     }
-    const email = String(b.email || '').trim().slice(0, 120);
+    let email = String(b.email || '').trim().slice(0, 120);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Geçerli bir e-posta adresi girin');
+    let gVerified = false;
+    if (b.gtoken) { // Google ile açılan kayıt: e-posta Google tarafından doğrulanmış sayılır, alan kilitli gelir
+      const gp = auth.verify(String(b.gtoken));
+      if (!gp || gp.kind !== 'g_signup' || !gp.email) throw new Error('Google oturumu süresi dolmuş; sayfayı yenileyip tekrar deneyin');
+      if (gp.email.toLowerCase() !== email.toLowerCase()) throw new Error('E-posta adresi değiştirilemez: kaydı Google hesabınızdaki adresle açın');
+      gVerified = true;
+    }
     if (b.accept !== true) throw new Error('Devam etmek için Kullanım Koşulları ve KVKK Aydınlatma Metni\'ni onaylayın');
     const t = createTenant({ name: b.business, username: b.username, password: b.password, phone: b.phone, plan: 'pro', starter: require('./starters').STARTERS[b.starter] ? b.starter : null });
-    t.db.notify = { email, offline: true, online: true, verified: false, verifySentAt: Date.now() }; // ekran durumu uyarıları kayıttaki adrese gider
+    t.db.notify = { email, offline: true, online: true, verified: gVerified, verifySentAt: gVerified ? 0 : Date.now() }; // ekran durumu uyarıları kayıttaki adrese gider
     t.db.consent = { terms: LEGAL_VERSION, kvkk: LEGAL_VERSION, at: Date.now(), ip, marketing: b.marketing === true };
     tenants.saveNow(t);
-    sendVerifyEmail(req, t, email);
+    if (!gVerified) sendVerifyEmail(req, t, email); // Google'dan gelen adrese ayrıca doğrulama postası gerekmez
     auth.noteFail(ip); // kayıtlar da sayılır: tek IP'den seri hesap açılmasın
     const u = store.q.userByName.get(String(b.username).trim().toLowerCase());
     auth.setSession(req, res, u);

@@ -26,6 +26,14 @@ body::after{inset-inline-start:-18%;bottom:-32%;width:60%;height:80%;background:
 .pitch li .ic{color:var(--gold);width:20px;height:20px;margin-top:2px;flex-shrink:0}
 .box{background:rgba(18,21,26,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--ln2);border-radius:24px;padding:32px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.05)}
 .brand{font-size:22px;font-weight:800;margin-bottom:4px}
+.gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;height:46px;margin:4px 0 14px;border:1px solid var(--ln2);border-radius:12px;background:#fff;color:#1f1f1f;font:600 14.5px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;cursor:pointer;transition:background .15s}
+.gbtn:hover{background:#f4f4f6}
+.gbtn svg{width:18px;height:18px;flex:none}
+.gbtn[hidden]{display:none}
+.gsep{display:flex;align-items:center;gap:10px;margin:0 0 14px;color:var(--mute2);font-size:12px;font-weight:600}
+.gsep::before,.gsep::after{content:'';flex:1;height:1px;background:var(--ln)}
+.gsep[hidden]{display:none}
+.gnote{display:flex;align-items:center;gap:8px;margin:-4px 0 12px;padding:10px 12px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:10px;color:#4ade80;font-size:12.5px;line-height:1.4}
 .tabs{display:flex;gap:4px;margin:18px 0 20px;background:rgba(0,0,0,.45);padding:4px;border-radius:12px;border:1px solid var(--ln)}
 .tabs button{flex:1;padding:10px;border:0;border-radius:9px;background:none;color:var(--mute2);font:600 14px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;cursor:pointer;transition:background .2s,color .2s}
 .tabs button.on{background:linear-gradient(180deg,#f4b556,#df9425);color:var(--on-gold);box-shadow:0 6px 18px -8px rgba(232,163,61,.7)}
@@ -68,6 +76,8 @@ input::placeholder{color:rgba(255,255,255,.28)}
     <div style="margin-bottom:16px"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:46px;display:block"></div>
     <div class="brand" id="brand" style="display:none">…</div>
     <div style="color:var(--mute);font-size:14px;margin-bottom:6px">İşletme paneli</div>
+    <button type="button" class="gbtn" id="gbtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2 3.5-5 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-6-2.1-7-5.1l-3.9 3C3.2 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5 14.3c-.3-.8-.4-1.6-.4-2.3s.1-1.5.4-2.3L1.1 6.8C.4 8.4 0 10.1 0 12s.4 3.6 1.1 5.2L5 14.3z"/><path fill="#EA4335" d="M12 4.7c2.3 0 3.8 1 4.7 1.8l3.4-3.3C17.9 1.2 15.2 0 12 0 7.3 0 3.2 2.7 1.1 6.8L5 9.7c1-3 3.8-5 7-5z"/></svg><span>Google ile giriş</span></button>
+    <div class="gsep" id="gsep" hidden><span>veya</span></div>
     <div class="tabs" id="tabs"><button class="on" data-t="login">Giriş yap</button><button data-t="signup" id="tsignup">Kayıt ol</button></div>
     <form id="f-login">
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required>
@@ -90,6 +100,7 @@ input::placeholder{color:rgba(255,255,255,.28)}
     </form>
     <form id="f-signup" hidden>
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;pointer-events:none" aria-hidden="true">
+      <input type="hidden" name="gtoken" id="g-token">
       <div id="signup-badge" style="display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:16px;background:rgba(232,163,61,.12);border:1px solid rgba(232,163,61,.28);border-radius:12px;font-size:13px;line-height:1.45;color:var(--gold2)">
         <span style="font-size:18px;line-height:1">🎁</span>
         <span><b>3 Gün Ücretsiz Deneme:</b> Kredi kartı gerekmez. Kaydınızla birlikte tüm Pro özellikler hemen açılır.</span>
@@ -158,10 +169,12 @@ $('cap-ref').onclick = loadCaptcha;
 fetch('/api/auth/config').then(r => r.json()).then(c => {
   $('brand').textContent = c.brand; document.title = c.brand + ' · Giriş';
   if (!c.signup) $('tsignup').style.display = 'none';
+  if (c.google) { $('gbtn').hidden = false; $('gsep').hidden = false; } // anahtarlar süper yönetimde girilmişse
   $('starter').innerHTML = (c.starters || []).filter(x => x.key !== 'bos').map(x => `<option value="${x.key}">${x.name}</option>`).join('') + '<option value="bos">Boş başlangıç</option>';
   if ($('signup-badge')) $('signup-badge').querySelector('span:last-child').innerHTML = `<b>${c.trialDays} Gün Ücretsiz Deneme:</b> Kredi kartı gerekmez. Kaydınızla birlikte tüm Pro özellikler hemen açılır.`;
   $('trialnote').textContent = `${c.trialDays} gün boyunca tüm özellikler ücretsiz. Kredi kartı gerekmez.`;
 });
+$('gbtn').onclick = () => location.href = '/api/auth/google/start';
 function showView(v) {
   $('tabs').hidden = (v === 'forgot' || v === 'reset');
   $('f-login').hidden = v !== 'login';
@@ -184,6 +197,22 @@ function checkHash() {
     showView('reset');
   } else if (location.hash === '#unuttum') {
     showView('forgot');
+  } else if (location.hash.startsWith('#gerr')) {
+    $('err').textContent = 'Google ile giriş tamamlanamadı, tekrar deneyin.';
+  } else if (location.hash.startsWith('#gsignup=')) {
+    // Google doğrulaması yapıldı ama bu e-postayla işletme yok: kayıt ekranı e-posta kilitli gelir
+    const tok = decodeURIComponent(location.hash.slice(9));
+    document.querySelector('[data-t=signup]').click();
+    fetch('/api/auth/google/prefill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tok }) })
+      .then(r => r.json()).then(j => {
+        if (!j.email) return;
+        const em = $('f-email');
+        em.value = j.email; em.readOnly = true; em.style.opacity = .75;
+        $('g-token').value = tok;
+        const n = document.createElement('div'); n.className = 'gnote';
+        n.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M20 6 9 17l-5-5"/></svg><span>Bu e-posta Google hesabınızdan doğrulandı. İşletme bilgilerini tamamlayın.</span>';
+        em.closest('.field').after(n);
+      }).catch(() => {});
   } else if (location.hash === '#kayit' || location.hash === '#signup') {
     document.querySelector('[data-t=signup]').click();
   }
