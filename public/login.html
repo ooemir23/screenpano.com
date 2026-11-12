@@ -26,14 +26,26 @@ body::after{inset-inline-start:-18%;bottom:-32%;width:60%;height:80%;background:
 .pitch li .ic{color:var(--gold);width:20px;height:20px;margin-top:2px;flex-shrink:0}
 .box{background:rgba(18,21,26,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--ln2);border-radius:24px;padding:32px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.05)}
 .brand{font-size:22px;font-weight:800;margin-bottom:4px}
-.gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;height:46px;margin:4px 0 14px;border:1px solid var(--ln2);border-radius:12px;background:#fff;color:#1f1f1f;font:600 14.5px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;cursor:pointer;transition:background .15s}
-.gbtn:hover{background:#f4f4f6}
+[hidden]{display:none !important}
+.gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;height:46px;margin:12px 0 14px;padding:0 16px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(255,255,255,.06);color:var(--ink);font:600 14px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);transition:background .15s,border-color .15s,transform .1s}
+.gbtn:hover{background:rgba(255,255,255,.11);border-color:rgba(232,163,61,.45)}
+.gbtn:active{transform:scale(.99)}
 .gbtn svg{width:18px;height:18px;flex:none}
-.gbtn[hidden]{display:none}
 .gsep{display:flex;align-items:center;gap:10px;margin:0 0 14px;color:var(--mute2);font-size:12px;font-weight:600}
 .gsep::before,.gsep::after{content:'';flex:1;height:1px;background:var(--ln)}
-.gsep[hidden]{display:none}
-.gnote{display:flex;align-items:center;gap:8px;margin:-4px 0 12px;padding:10px 12px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:10px;color:#4ade80;font-size:12.5px;line-height:1.4}
+.gonb{margin:10px 0 16px}
+.gonb-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.gonb-title{font-size:17px;font-weight:700;color:var(--ink)}
+.gonb-back{background:none;border:0;padding:0;color:var(--mute2);font:600 12.5px inherit;cursor:pointer;text-decoration:none}
+.gonb-back:hover{color:var(--gold2)}
+.gonb-sub{font-size:13px;color:var(--soft2);line-height:1.45;margin-bottom:12px}
+.gchip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.28)}
+.gchip svg{width:18px;height:18px;flex:none}
+.gchip-info{min-width:0;flex:1}
+.gchip-mail{font-size:13.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gchip-tag{font-size:11.5px;color:#4ade80;font-weight:600}
+.gchip-chg{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:6px 10px;color:var(--ink);font:600 12px inherit;cursor:pointer;flex:none}
+.gchip-chg:hover{background:rgba(255,255,255,.13)}
 .tabs{display:flex;gap:4px;margin:18px 0 20px;background:rgba(0,0,0,.45);padding:4px;border-radius:12px;border:1px solid var(--ln)}
 .tabs button{flex:1;padding:10px;border:0;border-radius:9px;background:none;color:var(--mute2);font:600 14px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;cursor:pointer;transition:background .2s,color .2s}
 .tabs button.on{background:linear-gradient(180deg,#f4b556,#df9425);color:var(--on-gold);box-shadow:0 6px 18px -8px rgba(232,163,61,.7)}
@@ -75,7 +87,22 @@ input::placeholder{color:rgba(255,255,255,.28)}
   <div class="box">
     <div style="margin-bottom:16px"><img src="/logo.svg?v=4" alt="ScreenPano" style="height:46px;display:block"></div>
     <div class="brand" id="brand" style="display:none">…</div>
-    <div style="color:var(--mute);font-size:14px;margin-bottom:6px">İşletme paneli</div>
+    <div style="color:var(--mute2);font-size:14px;margin-bottom:6px" id="sub-title">İşletme paneli</div>
+    <div class="gonb" id="g-onboard" hidden>
+      <div class="gonb-top">
+        <div class="gonb-title">Son adım: İşletmenizi oluşturun</div>
+        <button type="button" class="gonb-back" id="g-back">← Giriş ekranı</button>
+      </div>
+      <p class="gonb-sub">Bu Google hesabıyla kayıtlı işletme bulunamadı. İşletme bilgilerinizi girip hemen başlayın.</p>
+      <div class="gchip">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2 3.5-5 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-6-2.1-7-5.1l-3.9 3C3.2 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5 14.3c-.3-.8-.4-1.6-.4-2.3s.1-1.5.4-2.3L1.1 6.8C.4 8.4 0 10.1 0 12s.4 3.6 1.1 5.2L5 14.3z"/><path fill="#EA4335" d="M12 4.7c2.3 0 3.8 1 4.7 1.8l3.4-3.3C17.9 1.2 15.2 0 12 0 7.3 0 3.2 2.7 1.1 6.8L5 9.7c1-3 3.8-5 7-5z"/></svg>
+        <div class="gchip-info">
+          <div class="gchip-mail" id="g-email-lbl">…</div>
+          <div class="gchip-tag">✓ Google ile doğrulandı</div>
+        </div>
+        <button type="button" class="gchip-chg" id="g-switch">Değiştir</button>
+      </div>
+    </div>
     <button type="button" class="gbtn" id="gbtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2 3.5-5 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-6-2.1-7-5.1l-3.9 3C3.2 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5 14.3c-.3-.8-.4-1.6-.4-2.3s.1-1.5.4-2.3L1.1 6.8C.4 8.4 0 10.1 0 12s.4 3.6 1.1 5.2L5 14.3z"/><path fill="#EA4335" d="M12 4.7c2.3 0 3.8 1 4.7 1.8l3.4-3.3C17.9 1.2 15.2 0 12 0 7.3 0 3.2 2.7 1.1 6.8L5 9.7c1-3 3.8-5 7-5z"/></svg><span>Google ile giriş</span></button>
     <div class="gsep" id="gsep" hidden><span>veya</span></div>
     <div class="tabs" id="tabs"><button class="on" data-t="login">Giriş yap</button><button data-t="signup" id="tsignup">Kayıt ol</button></div>
@@ -89,7 +116,7 @@ input::placeholder{color:rgba(255,255,255,.28)}
       <p class="note" style="margin:0 0 12px;font-size:13px">Kullanıcı adınızı veya kayıtlı e-posta adresinizi girin. Şifre sıfırlama bağlantısını işletmenizin e-posta adresine gönderelim.</p>
       <label>Kullanıcı adı veya E-posta</label><input name="identifier" autocomplete="username" autocapitalize="none" required placeholder="kullaniciadi veya ornek@isletme.com">
       <button class="btn">Sıfırlama bağlantısı gönder</button>
-      <button type="button" id="back-login" style="width:100%;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:var(--r-m);background:none;color:var(--mute);font:600 13px Montserrat,sans-serif;cursor:pointer">← Giriş ekranına dön</button>
+      <button type="button" id="back-login" style="width:100%;margin-top:10px;padding:10px;border:1px solid var(--ln);border-radius:10px;background:none;color:var(--mute2);font:600 13px inherit;cursor:pointer">← Giriş ekranına dön</button>
     </form>
     <form id="f-reset" hidden>
       <p class="note" style="margin:0 0 12px;font-size:13px">Hesabınız için yeni bir şifre belirleyin (en az 8 karakter).</p>
@@ -127,12 +154,12 @@ input::placeholder{color:rgba(255,255,255,.28)}
           <input id="f-pass" name="password" type="password" autocomplete="new-password" minlength="8" required placeholder="••••••••">
         </div>
 
-        <div class="field">
+        <div class="field" id="email-field">
           <label for="f-email">E-posta <span class="hint">(doğrulama & uyarı)</span></label>
           <input id="f-email" name="email" type="email" maxlength="120" autocomplete="email" required placeholder="ornek@isletme.com">
         </div>
 
-        <div class="field">
+        <div class="field" id="phone-field">
           <label for="f-phone">Telefon <span class="hint">(isteğe bağlı)</span></label>
           <input id="f-phone" name="phone" type="tel" maxlength="30" placeholder="05xx xxx xx xx">
         </div>
@@ -149,7 +176,7 @@ input::placeholder{color:rgba(255,255,255,.28)}
         </div>
       </div>
 
-      <button class="btn">Hesabı oluştur</button>
+      <button class="btn" id="signup-btn">Hesabı oluştur</button>
       <p class="note" id="trialnote" style="text-align:center"></p>
     </form>
     <div class="err" id="err"></div>
@@ -159,7 +186,7 @@ input::placeholder{color:rgba(255,255,255,.28)}
 </div>
 <script>
 const $ = id => document.getElementById(id);
-let canSignup = true, gPair = '';
+let canSignup = true, hasGoogle = false, gPair = '';
 function loadCaptcha() {
   fetch('/api/auth/captcha').then(r => r.json()).then(c => {
     if (c && c.question) { $('cap-q').textContent = c.question; $('cap-tok').value = c.token || ''; $('cap-ans').value = ''; }
@@ -167,18 +194,29 @@ function loadCaptcha() {
 }
 loadCaptcha();
 $('cap-ref').onclick = loadCaptcha;
+function syncAuthChrome() {
+  const onb = !$('g-onboard').hidden;
+  $('gbtn').hidden = onb || !hasGoogle;
+  $('gsep').hidden = onb || !hasGoogle;
+  $('sub-title').hidden = onb;
+  $('tabs').hidden = onb || !canSignup || !$('f-forgot').hidden || !$('f-reset').hidden;
+}
 function resetGoogleSignup() {
-  document.querySelectorAll('#f-signup .gnote').forEach(x => x.remove());
+  $('g-onboard').hidden = true;
+  $('email-field').hidden = false;
+  $('phone-field').classList.remove('f-col-2');
   const em = $('f-email');
   em.readOnly = false; em.style.opacity = '';
   $('g-token').value = ''; gPair = '';
   $('cap-wrap').hidden = false; $('cap-ans').required = true;
+  syncAuthChrome();
 }
 fetch('/api/auth/config').then(r => r.json()).then(c => {
   $('brand').textContent = c.brand; document.title = c.brand + ' · Giriş';
   canSignup = !!c.signup;
-  if (!canSignup) { $('tsignup').style.display = 'none'; $('tabs').hidden = true; }
-  if (c.google) { $('gbtn').hidden = false; $('gsep').hidden = false; } // anahtarlar süper yönetimde girilmişse
+  hasGoogle = !!c.google;
+  if (!canSignup) $('tsignup').style.display = 'none';
+  syncAuthChrome();
   $('starter').innerHTML = (c.starters || []).filter(x => x.key !== 'bos').map(x => `<option value="${x.key}">${x.name}</option>`).join('') + '<option value="bos">Boş başlangıç</option>';
   if ($('signup-badge')) $('signup-badge').querySelector('span:last-child').innerHTML = `<b>${c.trialDays} Gün Ücretsiz Deneme:</b> Kredi kartı gerekmez. Kaydınızla birlikte tüm Pro özellikler hemen açılır.`;
   $('trialnote').textContent = `${c.trialDays} gün boyunca tüm özellikler ücretsiz. Kredi kartı gerekmez.`;
@@ -187,15 +225,23 @@ $('gbtn').onclick = () => {
   const m = /^#pair=(\d{6})$/.exec(location.hash);
   location.href = '/api/auth/google/start' + (m ? '?pair=' + m[1] : '');
 };
+$('g-switch').onclick = () => {
+  location.href = '/api/auth/google/start' + (gPair ? '?pair=' + gPair : '');
+};
+$('g-back').onclick = () => {
+  const p = gPair ? '#pair=' + gPair : '';
+  resetGoogleSignup();
+  history.replaceState(null, '', location.pathname + p);
+  document.querySelector('[data-t=login]').click();
+};
 function showView(v) {
-  $('tabs').hidden = !canSignup || (v === 'forgot' || v === 'reset');
   $('f-login').hidden = v !== 'login';
   $('f-signup').hidden = v !== 'signup';
   $('f-forgot').hidden = v !== 'forgot';
   $('f-reset').hidden = v !== 'reset';
   $('err').textContent = '';
   $('okmsg').style.display = 'none';
-  if (v !== 'signup') resetGoogleSignup();
+  if (v !== 'signup') resetGoogleSignup(); else syncAuthChrome();
   if (v === 'signup' && !$('cap-tok').value && !$('g-token').value) loadCaptcha();
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
@@ -222,26 +268,28 @@ function checkHash() {
   } else if (location.hash.startsWith('#gerr')) {
     $('err').textContent = 'Google ile giriş tamamlanamadı, tekrar deneyin.';
   } else if (location.hash.startsWith('#gsignup=')) {
-    // Google doğrulaması yapıldı ama bu e-postayla işletme yok: kayıt ekranı e-posta kilitli gelir
+    // Google doğrulaması yapıldı ama bu e-postayla işletme yok: sade tamamlama ekranı açılır
     const tok = decodeURIComponent(location.hash.slice(9));
     document.querySelector('[data-t=signup]').click();
     fetch('/api/auth/google/prefill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tok }) })
       .then(async r => ({ ok: r.ok, j: await r.json().catch(() => ({})) }))
       .then(({ ok, j }) => {
         if (!ok || !j.email) { resetGoogleSignup(); $('err').textContent = j.error || 'Google oturum belirteci geçersiz veya süresi dolmuş'; return; }
-        resetGoogleSignup();
         const em = $('f-email');
-        em.value = j.email; em.readOnly = true; em.style.opacity = .75;
+        em.value = j.email; em.readOnly = true;
+        $('g-email-lbl').textContent = j.email;
         $('g-token').value = tok; gPair = j.pair || '';
+        $('g-onboard').hidden = false;
+        $('email-field').hidden = true;
+        $('phone-field').classList.add('f-col-2');
         $('cap-wrap').hidden = true; $('cap-ans').required = false;
+        syncAuthChrome();
         const un = $('f-username');
         if (un && !un.value) {
           const sug = j.email.split('@')[0].toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 32);
           if (sug.length >= 3) un.value = sug;
         }
-        const n = document.createElement('div'); n.className = 'gnote f-col-2';
-        n.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M20 6 9 17l-5-5"/></svg><span>Bu e-posta Google hesabınızdan doğrulandı. İşletme bilgilerini tamamlayın.</span>';
-        $('f-phone').closest('.field').after(n);
+        $('f-business').focus();
       }).catch(() => { resetGoogleSignup(); $('err').textContent = 'Google ile giriş tamamlanamadı, tekrar deneyin.'; });
   } else if (location.hash === '#kayit' || location.hash === '#signup') {
     document.querySelector('[data-t=signup]').click();
