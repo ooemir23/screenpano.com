@@ -55,10 +55,16 @@ app.use(require('compression')());
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); next(); });
 
+// HTML sayfalarına CSP: betikler/istekler kendi alan adından (sayfalar inline betik kullandığı için
+// unsafe-inline şart); medya ve görseller R2 yönlendirmeleri için https; YouTube/Spotify gömmeleri frame-src.
+// /u/ medya rotasının kendi, daha sıkı sandbox CSP'si vardır.
+const PAGE_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https: wss:; font-src 'self' data:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'";
+
 // TV sayfasına sunucu sürümü pişirilir: önbellekten açılan bayat kopya, WS sürüm mesajıyla karşılaştırıp
 // kendini yenileyebilir (pişmiş sürüm yoksa taze açılan sayfa "uyumlu" sanılır ve asla güncellenmezdi)
 const page = (file, only) => (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Content-Security-Policy', PAGE_CSP);
   if (only) { // müzik sayfası: panel, yalnız Müzik bölümüyle açılır
     return fs.readFile(path.join(config.PUBLIC_DIR, file), 'utf8', (err, html) => err ? res.sendStatus(404) : res.type('html').send(String(html).replace('<head>', '<head><script>window.__ONLY=' + JSON.stringify(only) + ';</script>')));
   }
