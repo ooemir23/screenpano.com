@@ -124,11 +124,11 @@
   "plan.b.name": "Başlangıç",
   "plan.b.note": "Tek ekranlı küçük işletmeler için",
   "plan.b.try": "Kayıt ol",
-  "plan.b.list": ["1 TV kutusu", "2 GB medya alanı", "Video, fotoğraf ve hazır afişler", "Saat, hava durumu, döviz ve altın", "QR kodlar ve kampanya kartı", "Fiyat listesi ({menuCats} kategori, {menuItems} ürün)", "Zamanlama ve çevrimdışı oynatma", "Maçlar, gol animasyonu, bilgi bandı", "Resmî günler, istatistik", "Ekranda ScreenPano ve sponsor reklamları"],
+  "plan.b.list": ["1 TV kutusu", "{gbB} GB medya alanı", "Video, fotoğraf ve hazır afişler", "Saat, hava durumu, döviz ve altın", "QR kodlar ve kampanya kartı", "Fiyat listesi ({menuCats} kategori, {menuItems} ürün)", "Zamanlama ve çevrimdışı oynatma", "Maçlar, gol animasyonu, bilgi bandı", "Resmî günler, istatistik", "Ekranda ScreenPano ve sponsor reklamları"],
   "plan.pro.badge": "Önerilen",
   "plan.pro.note": "Tüm işletmeler, oteller, mağazalar ve kurumlar için",
   "plan.pro.try": "Ücretsiz Kayıt Ol",
-  "plan.pro.list": ["<b>Başlangıç'taki her şey</b>", "<b>Reklamsız ekran</b>", "Müzik: YouTube Müzik ve Spotify", "2 TV kutusu (biri yedek için)", "20 GB medya alanı", "Sınırsız fiyat listesi, indirim saatleri", "Google yorumları ve Instagram", "Doğum günü kutlamaları", "3 lokasyon dahil, ek şubeler ücretli; 3 kullanıcı", "Köşede ürün ibaresi yok"],
+  "plan.pro.list": ["<b>Başlangıç'taki her şey</b>", "<b>Reklamsız ekran</b>", "Müzik: YouTube Müzik ve Spotify", "2 TV kutusu (biri yedek için)", "{gbPro} GB medya alanı", "Sınırsız fiyat listesi, indirim saatleri", "Google yorumları ve Instagram", "Doğum günü kutlamaları", "3 lokasyon dahil, ek şubeler ücretli; 3 kullanıcı", "Köşede ürün ibaresi yok"],
   "cmp.summary": "Tüm farkları karşılaştırın",
   "cmp.feature": "Özellik",
 

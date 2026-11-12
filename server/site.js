@@ -38,8 +38,8 @@ function dict(lang) {
   const n = config.TRIAL_DAYS;
   return k => {
     const v = d[k] !== undefined && d[k] !== null ? d[k] : tr[k] !== undefined ? tr[k] : k;
-    const B = PLANS.baslangic; // Başlangıç fiyat listesi sınırı metinlerde {menuCats} / {menuItems}
-    const fill = x => typeof x === 'string' ? x.replace(/\{trialDays\}/g, trialText(lang, n)).replace(/\{trial\}/g, n).replace(/\{menuCats\}/g, B.menuCats).replace(/\{menuItems\}/g, B.menuItems) : Array.isArray(x) ? x.map(fill) : x;
+    const B = PLANS.baslangic; // paket sınırları metinlerde: {menuCats} / {menuItems} / {gbB} / {gbPro} (plans.js'ten)
+    const fill = x => typeof x === 'string' ? x.replace(/\{trialDays\}/g, trialText(lang, n)).replace(/\{trial\}/g, n).replace(/\{menuCats\}/g, B.menuCats).replace(/\{menuItems\}/g, B.menuItems).replace(/\{gbB\}/g, Math.round(B.storageMB / 1024)).replace(/\{gbPro\}/g, Math.round(PLANS.pro.storageMB / 1024)) : Array.isArray(x) ? x.map(fill) : x;
     return fill(v); // dizi değerler de (ör. hero.ticks) süre yer tutucusunu alır
   };
 }

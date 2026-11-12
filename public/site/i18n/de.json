@@ -124,11 +124,11 @@
   "plan.b.name": "Starter",
   "plan.b.note": "Für kleine Betriebe mit einem Bildschirm",
   "plan.b.try": "Registrieren",
-  "plan.b.list": ["1 TV-Box", "2 GB Speicher für Medien", "Videos, Fotos und fertige Plakate", "Uhrzeit, Wetter, Wechselkurse und Goldpreis", "QR-Codes und Aktionskarte", "Preisliste ({menuCats} Kategorien, {menuItems} Artikel)", "Zeitplanung und Offline-Wiedergabe", "Spiele, Tor-Animation, Infoband", "Nationalfeiertage, Statistik", "ScreenPano- und Sponsorenwerbung am Bildschirm"],
+  "plan.b.list": ["1 TV-Box", "{gbB} GB Speicher für Medien", "Videos, Fotos und fertige Plakate", "Uhrzeit, Wetter, Wechselkurse und Goldpreis", "QR-Codes und Aktionskarte", "Preisliste ({menuCats} Kategorien, {menuItems} Artikel)", "Zeitplanung und Offline-Wiedergabe", "Spiele, Tor-Animation, Infoband", "Nationalfeiertage, Statistik", "ScreenPano- und Sponsorenwerbung am Bildschirm"],
   "plan.pro.badge": "Empfohlen",
   "plan.pro.note": "Für alle Unternehmen, Hotels, Einzelhandel und Institutionen",
   "plan.pro.try": "Kostenlos registrieren",
-  "plan.pro.list": ["<b>Alles aus Starter</b>", "<b>Werbefreier Bildschirm</b>", "Musik: YouTube Music und Spotify", "2 TV-Boxen (eine als Ersatz)", "20 GB Speicher für Medien", "Unbegrenzte Preisliste und Happy Hours", "Google-Bewertungen und Instagram", "Geburtstagsgrüße", "3 Standorte inklusive, weitere Filialen kostenpflichtig; 3 Nutzer", "Kein ScreenPano-Hinweis auf dem Bildschirm"],
+  "plan.pro.list": ["<b>Alles aus Starter</b>", "<b>Werbefreier Bildschirm</b>", "Musik: YouTube Music und Spotify", "2 TV-Boxen (eine als Ersatz)", "{gbPro} GB Speicher für Medien", "Unbegrenzte Preisliste und Happy Hours", "Google-Bewertungen und Instagram", "Geburtstagsgrüße", "3 Standorte inklusive, weitere Filialen kostenpflichtig; 3 Nutzer", "Kein ScreenPano-Hinweis auf dem Bildschirm"],
   "cmp.summary": "Alle Unterschiede vergleichen",
   "cmp.feature": "Funktion",
 
