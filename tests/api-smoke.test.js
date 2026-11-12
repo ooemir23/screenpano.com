@@ -52,6 +52,14 @@ test('sağlık ucu ve ana sayfa çalışır', async () => {
   assert.equal((await fetch(BASE + '/')).status, 200);
 });
 
+test('TV sayfası CSP: YouTube, Spotify SDK ve Google Fonts engellenmez', async () => {
+  const csp = (await fetch(BASE + '/tv')).headers.get('content-security-policy') || '';
+  const dir = n => (csp.split(';').map(x => x.trim()).find(x => x.startsWith(n + ' ')) || '');
+  for (const h of ['https://www.youtube.com', 'https://sdk.scdn.co']) assert.ok(dir('script-src').includes(h), 'script-src ' + h);
+  assert.ok(dir('style-src').includes('https://fonts.googleapis.com'), 'style-src fonts');
+  assert.ok(dir('font-src').includes('https://fonts.gstatic.com'), 'font-src gstatic');
+});
+
 test('süper giriş → işletme → şube limitleri (3 dahil, sonrası ücret onayı)', async () => {
   let r = await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
   assert.equal(r.status, 200); assert.equal(r.j.role, 'super');

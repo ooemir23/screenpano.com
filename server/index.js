@@ -60,7 +60,9 @@ app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff')
 // /u/ medya rotasının kendi, daha sıkı sandbox CSP'si vardır.
 // TV sayfası panel ve süper yönetim içindeki önizleme iframe'lerinde gösterildiği için frame-ancestors
 // 'self' ve panel/sadmin alan adlarına izin verir; diğer sayfalar (panel/super/login) dışarıdan gömülemez ('none').
-const PAGE_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https: wss:; font-src 'self' data:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'";
+// Dış kaynaklar (dar liste): YouTube IFrame API (müzik/fragman; iframe_api www.youtube.com/s/player/… betiğini de çeker),
+// Spotify Web Playback SDK, Google Fonts (TV tema yazı tipi + afiş stüdyosu yazı tipleri; css googleapis, dosyalar gstatic).
+const PAGE_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com https://sdk.scdn.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https: wss:; font-src 'self' data: https://fonts.gstatic.com; frame-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'";
 const TV_FRAME_ANCESTORS = baseHost && baseHost.includes('.')
   ? `'self' https://*.${baseHost} https://${baseHost} https://*.screenpano.com https://screenpano.com`
   : "'self'";
