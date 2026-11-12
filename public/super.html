@@ -800,7 +800,7 @@ function openTenant(id) {
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
           <div>
             <b style="font-size:13px">Giriş Şifresini Sıfırla</b>
-            <p class="hint" style="margin:2px 0 0;font-size:12px">Yeni rastgele şifre üretir ve panoya kopyalama seçeneği sunar.</p>
+            <p class="hint" style="margin:2px 0 0;font-size:12px">Tek kullanımlık sıfırlama bağlantısı üretir; e-posta kayıtlıysa bağlantı işletmeye postalananır.</p>
           </div>
           <button class="btn ghost sm" onclick="resetPw('${id}')">${ic('key-round')} Şifre Sıfırla</button>
         </div>
@@ -876,13 +876,15 @@ async function chargePaid(id, cid, paid = true) {
   } catch (e) { toast(e.message, true); }
 }
 
+// Şifre sıfırlama düz parola üretmez: tek kullanımlık bağlantı. E-posta kayıtlıysa bağlantı işletmeye
+// postalananır ve burada gösterilmez; değilse bir kez gösterilip işletmeyle paylaşılır.
 async function resetPw(id) {
-  const pw = await UI.ask('Yeni şifre (boş bırakırsanız rastgele üretilir):', { input: '', ok: 'Şifreyi sıfırla' });
-  if (pw === null) return;
+  if (!await UI.ask('Tek kullanımlık şifre sıfırlama bağlantısı üretilir (30 dakika geçerli). İşletmenin kayıtlı e-postası varsa bağlantı ona gönderilir; işletmenin mevcut oturumları kapanır. Devam edilsin mi?', { ok: 'Bağlantı üret' })) return;
   try {
-    const j = await api('POST', `/tenants/${id}/password`, { password: pw });
-    UI.ask(`${T('Kullanıcı')}: ${j.username}\n${T('Yeni şifre')}: ${j.password}`, { title: 'Yeni şifre', cancel: 'Kapat', ok: 'Kopyala' }).then(ok => {
-      if (ok) navigator.clipboard.writeText(j.password).then(() => toast('Kopyalandı')).catch(() => {});
+    const j = await api('POST', `/tenants/${id}/password`, {});
+    if (j.sent) return toast(`${j.username} için sıfırlama bağlantısı e-postayla gönderildi`);
+    UI.ask(j.resetUrl, { title: `Şifre Sıfırlama Bağlantısı — ${j.username}`, cancel: 'Kapat', ok: 'Kopyala' }).then(ok => {
+      if (ok) navigator.clipboard.writeText(j.resetUrl).then(() => toast('Kopyalandı')).catch(() => {});
     });
   } catch (e) { toast(e.message, true); }
 }
@@ -999,12 +1001,12 @@ PAGES.sources = {
     const src = [['CollectAPI', 'Eczane, haber, kitap', !!s.collect_key, b.hata || '', 'collect', 'k-collect'], ['Google Places', g.calls != null ? `${T('Bu ay')} ${g.calls} / ${g.cap} ${T('çağrı')}` : 'Google yorumları', !!s.google_places_key, '', '', 'k-places'], ['TMDB', 'Vizyondaki filmler', !!s.tmdb_key, '', 'tmdb', 'k-tmdb'], ['İBB trafik', 'Canlı trafik (isteğe bağlı)', !!s.traffic_api, '', 'traffic', 'k-traffic'], ['Google ile giriş', 'Tek tıkla panel girişi ve kayıt', !!(s.google_oauth_client_id && s.google_oauth_secret), '', '', 'k-gauth']];
     return head('Veri kaynakları', 'Bu anahtarlar tüm işletmeler için ortaktır; işletmeler hiçbir anahtar görmez. Veri her kaynaktan bir kez çekilip herkese dağıtılır. Ticari kullanım şartlarını her sağlayıcıdan kontrol edin.')
       + card('Kaynak durumu', 'Düzenlemek için satıra tıklayın; "Test et" kayıtlı anahtarla tek bir deneme isteği gönderir.', `<div class="scroll"><table class="srcl"><thead><tr><th>Kaynak</th><th>Ne için</th><th>Durum</th><th></th></tr></thead><tbody>${src.map(([n, w, ok, err, tk, id]) => `<tr class="click" onclick="$('${id}').scrollIntoView({behavior:'smooth',block:'center'})"><td><b>${n}</b></td><td style="color:var(--mute)">${w}</td><td>${ok ? (err ? '<span class="tag warn">Uyarı</span>' : '<span class="tag ok">Bağlı</span>') : '<span class="tag bad">Anahtar yok</span>'}<span id="tr-${tk || id}"></span></td><td onclick="event.stopPropagation()">${tk && ok ? `<button class="btn ghost sm" onclick="testSrc('${tk}',this)">Test et</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`)
-      + card('CollectAPI', 'Nöbetçi eczane, haber ve yeni çıkan kitap verileri.', `<div class="row">${setting('CollectAPI anahtarı', 'collect_key', 'type="password" autocomplete="off"')}<div style="max-width:260px"><label>CollectAPI planı</label><select id="s-collect_paid"><option value="">Ücretsiz (kota korumalı)</option><option value="1"${s.collect_paid ? ' selected' : ''}>Ücretli (kota sınırı yok)</option></select></div></div>`, saveBtn(['collect_key', 'collect_paid']), badge(s.collect_key))
+      + card('CollectAPI', 'Nöbetçi eczane, haber ve yeni çıkan kitap verileri. Anahtar write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('CollectAPI anahtarı', 'collect_key', 'type="password" autocomplete="off"')}<div style="max-width:260px"><label>CollectAPI planı</label><select id="s-collect_paid"><option value="">Ücretsiz (kota korumalı)</option><option value="1"${s.collect_paid ? ' selected' : ''}>Ücretli (kota sınırı yok)</option></select></div></div>`, saveBtn(['collect_key', 'collect_paid']), badge(s.collect_key))
       + card('Yeni çıkan kitaplar', 'Liste D&R yeni çıkanlarından (CollectAPI) günde bir alınır. Sesli kitaplar alınmaz; ekranlarda havuzdan rastgele 8 kitap gösterilir ve seçim 3 saatte bir değişir.', '<div id="bk-info" class="bkbox">…</div>', `<button class="btn ghost" type="button" onclick="refreshBooks(this)">Kitapları şimdi yenile</button>`)
-      + card('Google Places', 'Google yorumları için.', `<div class="row">${setting('Google Places API anahtarı', 'google_places_key', 'type="password" autocomplete="off"')}${setting('Google aylık çağrı sınırı', 'google_monthly_cap', 'type="number" min="0" placeholder="900 (boş = 900)"')}</div><div id="g-use"></div>`, saveBtn(['google_places_key', 'google_monthly_cap']), badge(s.google_places_key))
-      + card('TMDB', 'Sinema (vizyona girecek filmler) için.', `<div class="row">${setting('TMDB API anahtarı', 'tmdb_key', 'type="password" autocomplete="off"')}</div>`, saveBtn(['tmdb_key']), badge(s.tmdb_key))
-      + card('İBB trafik', 'İsteğe bağlı: canlı trafik değeri bir Cloudflare Worker üzerinden gelir.', `<div class="row">${setting('İBB trafik Worker adresi', 'traffic_api', 'placeholder="https://trafik.kullanici.workers.dev"')}${setting('Worker imza anahtarı (TRAFFIC_SECRET olarak girin)', 'traffic_secret', 'readonly')}</div>`, saveBtn(['traffic_api']), badge(s.traffic_api))
-      + card('Google ile giriş', 'İşletmeler giriş sayfasında "Google ile giriş" düğmesiyle tek tıkla açılır. Google Cloud → Credentials → OAuth Client ID (Web application) oluşturun; Yetkili yeniden yönlendirme URI\'lerine şu iki adresi ekleyin:<br><code style="word-break:break-all">https://screenpano.com/api/auth/google/callback</code><br><code style="word-break:break-all">https://test.screenpano.com/api/auth/google/callback</code><br>İki anahtar da girilmeden düğme gösterilmez. İşletme girişi bildirim e-postasıyla, süper yönetim ise aşağıdaki e-posta listesiyle eşleştirilir.', `<div class="row">${setting('OAuth Client ID', 'google_oauth_client_id', 'autocomplete="off"')}${setting('OAuth Client Secret', 'google_oauth_secret', 'type="password" autocomplete="off"')}</div><div style="margin-top:10px">${setting('Süper yönetici Google e-postaları', 'google_super_emails', 'placeholder="admin@ornek.com" autocomplete="off"')}</div>`, saveBtn(['google_oauth_client_id', 'google_oauth_secret', 'google_super_emails']), badge(s.google_oauth_client_id && s.google_oauth_secret));
+      + card('Google Places', 'Google yorumları için. Anahtar write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('Google Places API anahtarı', 'google_places_key', 'type="password" autocomplete="off"')}${setting('Google aylık çağrı sınırı', 'google_monthly_cap', 'type="number" min="0" placeholder="900 (boş = 900)"')}</div><div id="g-use"></div>`, saveBtn(['google_places_key', 'google_monthly_cap']), badge(s.google_places_key))
+      + card('TMDB', 'Sinema (vizyona girecek filmler) için. Anahtar write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('TMDB API anahtarı', 'tmdb_key', 'type="password" autocomplete="off"')}</div>`, saveBtn(['tmdb_key']), badge(s.tmdb_key))
+      + card('İBB trafik', 'İsteğe bağlı: canlı trafik değeri bir Cloudflare Worker üzerinden gelir. İmza anahtarı sunucuda tutulur ve panele düz metin gelmez; yenileme yeni değer üretip bir kez gösterir.', `<div class="row">${setting('İBB trafik Worker adresi', 'traffic_api', 'placeholder="https://trafik.kullanici.workers.dev"')}</div><div class="row"><div>${setting('Worker imza anahtarı (TRAFFIC_SECRET)', 'traffic_secret', 'readonly')}<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="btn ghost sm" onclick="regenTraffic()">Yenile ve göster</button><small class="hint" style="margin:0">Yeniledikten sonra Cloudflare Worker’daki TRAFFIC_SECRET değerini de güncelleyin.</small></div></div></div>`, saveBtn(['traffic_api']), badge(s.traffic_api))
+      + card('Google ile giriş', 'İşletmeler giriş sayfasında "Google ile giriş" düğmesiyle tek tıkla açılır. Google Cloud → Credentials → OAuth Client ID (Web application) oluşturun; Yetkili yeniden yönlendirme URI\'lerine şu iki adresi ekleyin:<br><code style="word-break:break-all">https://screenpano.com/api/auth/google/callback</code><br><code style="word-break:break-all">https://test.screenpano.com/api/auth/google/callback</code><br>İki anahtar da girilmeden düğme gösterilmez. İşletme girişi bildirim e-postasıyla, süper yönetim ise aşağıdaki e-posta listesiyle eşleştirilir. Client Secret write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('OAuth Client ID', 'google_oauth_client_id', 'autocomplete="off"')}${setting('OAuth Client Secret', 'google_oauth_secret', 'type="password" autocomplete="off"')}</div><div style="margin-top:10px">${setting('Süper yönetici Google e-postaları', 'google_super_emails', 'placeholder="admin@ornek.com" autocomplete="off"')}</div>`, saveBtn(['google_oauth_client_id', 'google_oauth_secret', 'google_super_emails']), badge(s.google_oauth_client_id && s.google_oauth_secret));
   },
   after() { const c = document.querySelectorAll('#main .card'); [['k-collect', 1], ['k-places', 3], ['k-tmdb', 4], ['k-traffic', 5], ['k-gauth', 6]].forEach(([id, i]) => { if (c[i]) c[i].id = id; }); liveSources(); },
 };
@@ -1034,11 +1036,21 @@ PAGES.notify = {
   html() {
     return head('Bildirimler', 'Bir TV kutusu 10 dakikadan uzun çevrimdışı kalınca uyarı gönderilir.')
       + card('E-posta (SMTP)', 'İşletmelere e-posta uyarısı için sunucuda SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM ortam değişkenlerini girin.', `<div class="row"><div><label>Deneme e-postası gönder</label><input id="mt-to" type="email" placeholder="ornek@alanadi.com"></div><div style="flex:none;min-width:0"><button class="btn ghost" onclick="testMail()">Gönder</button></div></div>`, '', D.mail ? '<span class="tag ok">SMTP ayarlı</span>' : '<span class="tag warn">SMTP ayarlı değil</span>')
-      + card('Webhook (Slack, Discord, Telegram)', 'Çevrimdışı uyarısı bu adrese {"text": "..."} olarak gönderilir.', `<div class="row">${setting('Webhook adresi (https://…)', 'alert_webhook', 'placeholder="https://hooks.slack.com/services/…"')}</div>`, `<button class="btn ghost" onclick="testHook()">Dene</button>${saveBtn(['alert_webhook'])}`, badge(D.settings.alert_webhook).replace('Anahtar yok', 'Adres yok'));
+      + card('Webhook (Slack, Discord, Telegram)', 'Çevrimdışı uyarısı bu adrese {"text": "..."} olarak gönderilir. Adres write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('Webhook adresi (https://…)', 'alert_webhook', 'placeholder="https://hooks.slack.com/services/…"')}</div>`, `<button class="btn ghost" onclick="testHook()">Dene</button>${saveBtn(['alert_webhook'])}`, badge(D.settings.alert_webhook).replace('Anahtar yok', 'Adres yok'));
   },
 };
 async function testMail() { const to = $('mt-to').value.trim(); if (!to) return toast('Adres yazın', true); toast('Gönderiliyor…'); try { const j = await api('POST', '/mail/test', { to }); toast(`${T('Gönderildi: port')} ${j.mode || j.port}. ${T('Gelen kutusunu ve spam klasörünü kontrol edin')}`); } catch (e) { toast(T('Gönderilemedi') + ': ' + e.message, true); } }
 async function testHook() { try { const j = await api('POST', '/alert/test'); toast(j.ok ? 'Deneme mesajı gönderildi' : 'Webhook ' + j.status + ' döndü', !j.ok); } catch (e) { toast(e.message, true); } }
+// trafik imza anahtarını yenile: yeni düz değer yalnız bu diyalogda bir kez görünür (Worker'a kopyalanır)
+async function regenTraffic() {
+  if (!await UI.ask('Yeni trafik imza anahtarı üretilir ve yalnız bir kez gösterilir. Cloudflare Worker’daki TRAFFIC_SECRET değerini de güncellemezseniz trafik verisi gelmez. Devam edilsin mi?', { ok: 'Yenile' })) return;
+  try {
+    const j = await api('POST', '/settings/traffic/regenerate', {});
+    UI.ask(j.secret, { title: 'Yeni TRAFFIC_SECRET', cancel: 'Kapat', ok: 'Kopyala' }).then(ok => {
+      if (ok) navigator.clipboard.writeText(j.secret).then(() => toast('Kopyalandı')).catch(() => {});
+    });
+  } catch (e) { toast(e.message, true); }
+}
 
 /* ================= YASAL VE SİTE ================= */
 PAGES.legal = {

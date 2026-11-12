@@ -68,6 +68,18 @@ const quota = (req, res, next) => {
   if (used + incoming > lim) return res.status(413).json({ error: `Depolama kotası doldu (${Math.round(used / 1048576)} / ${plan(req.t).storageMB} MB). Eski dosyaları silin ya da paketinizi yükseltin.` });
   next();
 };
+// multer diske yazdıktan sonra gerçek boyutla kota: Content-Length yoksa (chunked yükleme) aşım burada yakalanır.
+// Kullanım hesabı yeni dosyaları zaten içerdiğinde gelen dosyalar silinir — çift sayım yapılmaz.
+const postQuota = (req, res, next) => {
+  const files = req.files || (req.file ? [req.file] : []);
+  if (!files.length) return next();
+  const used = media.usedBytes(req.t), lim = plan(req.t).storageMB * 1024 * 1024;
+  if (used > lim) {
+    for (const f of files) rmUpload(req.t, f.filename);
+    return res.status(413).json({ error: `Depolama kotası doldu (${Math.round(used / 1048576)} / ${plan(req.t).storageMB} MB). Eski dosyaları silin ya da paketinizi yükseltin.` });
+  }
+  next();
+};
 const fileSize = (t, f) => { try { return fs.statSync(path.join(t.dirs.uploads, f)).size; } catch { const o = store.q.objGet.get(t.id, f); if (o) return o.size; throw new Error('yok'); } };
 const rmUpload = (t, file) => require('./storage').remove(t, file);
 
@@ -128,7 +140,11 @@ r.put('/password', (req, res) => {
   const u = store.q.userGet.get(req.user.id);
   if (!auth.checkPassword(current, u.pass)) return res.status(400).json({ error: 'Mevcut şifre yanlış' });
   if (String(nw || '').length < 8) return res.status(400).json({ error: 'Yeni şifre en az 8 karakter olmalı' });
-  store.q.userPass.run(auth.hashPassword(nw), u.id); res.json({ ok: true });
+  store.q.userPass.run(auth.hashPassword(nw), u.id);
+  // parola değişti: tüm oturumlar düşer; bu tarayıcı kalmaya devam etsin diye oturum tazelenir
+  store.bumpEpoch(u.id);
+  auth.setSession(req, res, store.q.userGet.get(u.id), { ...(req.user.imp ? { imp: req.user.imp } : {}), ...(req.user.br ? { br: req.user.br } : {}) });
+  res.json({ ok: true });
 });
 r.get('/users', (req, res) => res.json(store.q.usersOf.all(req.t.id)));
 r.post('/users', ownerOnly, (req, res) => {
@@ -216,7 +232,7 @@ r.post('/design/reset', ownerOnly, (req, res) => {
   changed(t); res.json({ ok: true });
 });
 r.put('/theme', (req, res) => { req.t.db.theme = W.cleanTheme(req.body || {}, req.t.db.theme); changed(req.t); res.json({ ok: true, theme: req.t.db.theme }); });
-r.post('/logo', quota, upload.single('file'), async (req, res) => {
+r.post('/logo', quota, upload.single('file'), postQuota, async (req, res) => {
   const f = req.file, t = req.t;
   try {
     if (!f) return res.status(400).json({ error: 'dosya yok' });
@@ -237,7 +253,7 @@ r.post('/logo', quota, upload.single('file'), async (req, res) => {
 });
 r.delete('/logo', (req, res) => { rmUpload(req.t, req.t.db.logo); req.t.db.logo = null; changed(req.t); res.json({ ok: true }); });
 // görsel widget'ı için resim
-r.post('/assets', quota, upload.single('file'), async (req, res) => {
+r.post('/assets', quota, upload.single('file'), postQuota, async (req, res) => {
   const f = req.file, t = req.t;
   if (!f) return res.status(400).json({ error: 'dosya yok' });
   if (!/\.(png|jpe?g|webp|gif|svg)$/i.test(f.originalname) || f.size > 15 * 1024 * 1024) { rmUpload(t, f.filename); return res.status(400).json({ error: 'Resim dosyası ve en çok 15 MB olmalı' }); }
@@ -491,7 +507,7 @@ r.put('/bigmatch', (req, res) => {
   changed(t); res.json({ ok: true });
   F.refreshBigMatches();
 });
-r.post('/bigmatch/photo', quota, upload.single('file'), (req, res) => {
+r.post('/bigmatch/photo', quota, upload.single('file'), postQuota, (req, res) => {
   const t = req.t, f = req.file, name = String((req.body && req.body.team) || '').trim().slice(0, 40);
   if (!f) return res.status(400).json({ error: 'dosya yok' });
   const bad = msg => { rmUpload(t, f.filename); return res.status(400).json({ error: msg }); };
@@ -659,7 +675,7 @@ r.post('/celebrate/preview', (req, res) => {
   changed(t); res.json({ ok: true });
   if (id) setTimeout(() => hub.pushTenant(t.id), 3 * 60 * 1000 + 500);
 });
-r.post('/celebrate/photos', quota, upload.single('file'), (req, res) => {
+r.post('/celebrate/photos', quota, upload.single('file'), postQuota, (req, res) => {
   const t = req.t, f = req.file, day = req.body && req.body.day;
   if (!f) return res.status(400).json({ error: 'dosya yok' });
   if (!F.HOLIDAYS.some(h => h.id === day)) { rmUpload(t, f.filename); return res.status(400).json({ error: 'geçersiz gün' }); }
@@ -708,7 +724,7 @@ r.put('/campaigns/:id', async (req, res) => {
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
-r.post('/campaigns/:id/image', quota, upload.single('file'), async (req, res) => {
+r.post('/campaigns/:id/image', quota, upload.single('file'), postQuota, async (req, res) => {
   const f = req.file, t = req.t;
   try {
     const c = (t.db.campaigns || []).find(x => x.id === req.params.id);
@@ -771,7 +787,7 @@ r.put('/happy-card', (req, res) => {
   if (c.on && !require('./state').hoursOf(t.db.menu).length) { c.on = false; changed(t); return res.status(400).json({ error: 'Önce Fiyat Listesi\'nde indirim saatini seçin' }); }
   changed(t); res.json({ ok: true });
 });
-r.post('/happy-card/image', quota, upload.single('file'), async (req, res) => {
+r.post('/happy-card/image', quota, upload.single('file'), postQuota, async (req, res) => {
   const f = req.file, t = req.t;
   try {
     if (!f) return res.status(400).json({ error: 'Görsel dosyası seçilmedi' });
@@ -852,7 +868,7 @@ r.put('/leagues', (req, res) => {
 });
 
 // ---- medya ----
-r.post('/videos', quota, upload.array('files'), (req, res) => {
+r.post('/videos', quota, upload.array('files'), postQuota, (req, res) => {
   const t = req.t, ids = [], only = req.query.only === '1'; // only: yalnız özel yayında oynasın (normal döngüde gizli)
   for (const f of req.files || []) {
     if (!/^(video|image)\//.test(f.mimetype)) { rmUpload(t, f.filename); continue; }
@@ -957,5 +973,5 @@ function startJobs() {
   }, 30000);
 }
 
-require('./routes-ext')(r, { changed, sendTo, upload, quota, ownerOnly, rmUpload, backupNow });
+require('./routes-ext')(r, { changed, sendTo, upload, quota, postQuota, ownerOnly, rmUpload, backupNow });
 module.exports = { router: r, startJobs, activeTenantId };

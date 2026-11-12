@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { spawn } = require('child_process');
-const { mkdtempSync, rmSync } = require('fs');
+const { mkdtempSync, rmSync, readdirSync } = require('fs');
 const { tmpdir } = require('os');
 const path = require('path');
 const crypto = require('crypto');
@@ -99,4 +99,106 @@ test('TV eşleştirme kodu hız sınırı: 16. istek reddedilir', async () => {
     if (last.status === 429) break;
   }
   assert.equal(last.status, 429);
+});
+
+test('platform anahtarları maskelenir; maskeli kayıt eskiyi korur, null siler', async () => {
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  const db = new (require('better-sqlite3'))(path.join(DATA, 'platform.db'), { readonly: true });
+  try {
+    let r = await req('PUT', '/api/super/settings', { collect_key: 'gizli-anahtar-9876' });
+    assert.equal(r.status, 200);
+    r = await req('GET', '/api/super/overview');
+    assert.ok(r.j.settings.collect_key.startsWith('••••'), 'maskeli değil: ' + r.j.settings.collect_key);
+    assert.ok(r.j.settings.collect_key.endsWith('9876'));
+    // maskeli ipucu geri gönderilince gerçek değer korunmalı
+    r = await req('PUT', '/api/super/settings', { collect_key: r.j.settings.collect_key });
+    assert.equal(db.prepare("SELECT value FROM settings WHERE key='collect_key'").get().value, 'gizli-anahtar-9876');
+    // null → siler
+    r = await req('PUT', '/api/super/settings', { collect_key: null });
+    assert.equal(db.prepare("SELECT value FROM settings WHERE key='collect_key'").get().value, '');
+  } finally { db.close(); }
+});
+
+test('superAccess yetkisi gizli anahtar ve işletme yönetimine yetmez', async () => {
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  const un = 'supacc' + Date.now();
+  let r = await req('POST', '/api/super/tenants', { name: 'SupAcc Kafe', username: un, password: 'parola-12345', plan: 'pro', days: 30 });
+  const tid = r.j.id;
+  r = await req('PUT', `/api/super/tenants/${tid}`, { superAccess: true });
+  assert.equal(r.status, 200);
+  // sahibiyle giriş: genel bakış açılır ama gizli işlemler 403
+  await req('POST', '/api/auth/login', { username: un, password: 'parola-12345' });
+  r = await req('GET', '/api/super/overview'); assert.equal(r.status, 200);
+  r = await req('PUT', '/api/super/settings', { tmdb_key: 'deneme' }); assert.equal(r.status, 403);
+  r = await req('DELETE', `/api/super/tenants/${tid}`, { confirm: 'SupAcc Kafe' }); assert.equal(r.status, 403);
+  r = await req('POST', `/api/super/tenants/${tid}/password`, {}); assert.equal(r.status, 403);
+});
+
+test('süper parola sıfırlama: düz parola dönmez, bağlantı tek kullanımlık, eski oturum düşer', async () => {
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  const un = 'epok' + Date.now();
+  let r = await req('POST', '/api/super/tenants', { name: 'Epok Kafe', username: un, password: 'parola-12345', plan: 'pro', days: 30 });
+  const tid = r.j.id;
+  // sahibi giriş yapsın; çerezi sakla
+  await req('POST', '/api/auth/login', { username: un, password: 'parola-12345' });
+  const ownerCookie = jar.cookie;
+  r = await req('GET', '/api/admin/me'); assert.equal(r.status, 200);
+  // süper sıfırlama bağlantısı üret
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  r = await req('POST', `/api/super/tenants/${tid}/password`, {});
+  assert.equal(r.status, 200);
+  assert.ok(!('password' in r.j), 'yanıtta düz parola döndü');
+  assert.ok(typeof r.j.resetUrl === 'string' && r.j.resetUrl.includes('#reset='));
+  const resetUrl = r.j.resetUrl;
+  // sahibin eski çerezi geçersiz (token_epoch arttı)
+  jar.cookie = ownerCookie;
+  r = await req('GET', '/api/admin/me'); assert.equal(r.status, 401);
+  // bağlantıyla yeni parola belirlenir ve giriş yapılır
+  const token = decodeURIComponent(resetUrl.split('#reset=')[1]);
+  r = await req('POST', '/api/auth/reset', { token, password: 'yeni-parola-99' });
+  assert.equal(r.status, 200, JSON.stringify(r.j));
+  r = await req('GET', '/api/admin/me'); assert.equal(r.status, 200);
+  // aynı bağlantı ikinci kez kullanılamaz
+  const again = await req('POST', '/api/auth/reset', { token, password: 'baska-parola-1' });
+  assert.equal(again.status, 400);
+});
+
+test('kota: Content-Length başlığı olmadan (chunked) yükleme reddedilir ve dosya silinir', async () => {
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  const un = 'kota' + Date.now();
+  let r = await req('POST', '/api/super/tenants', { name: 'Kota Kafe', username: un, password: 'parola-12345', plan: 'pro', days: 30 });
+  const tid = r.j.id;
+  await req('POST', `/api/super/tenants/${tid}/impersonate`, {});
+  // sahte R2 nesne kayıtlarıyla 21 GB "kullanım" oluştur (diskte dosya yok)
+  const Database = require('better-sqlite3');
+  const db = new Database(path.join(DATA, 'platform.db'));
+  try {
+    const ins = db.prepare('INSERT INTO objects (tenant_id, file, size, uploaded) VALUES (?, ?, ?, ?)');
+    for (let i = 0; i < 21; i++) ins.run(tid, 'fake' + i + '.bin', 1024 * 1024 * 1024, Date.now());
+    // Content-Length göndermeyen (chunked) multipart yükleme: ön kontrol aşılır, yazım sonrası kontrol yakalar
+    const boundary = '----spTest';
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    const parts = [
+      Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="t.png"\r\nContent-Type: image/png\r\n\r\n`),
+      png,
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ];
+    const { Readable } = require('stream');
+    const up = await fetch(BASE + '/api/admin/logo', {
+      method: 'POST',
+      headers: { 'content-type': 'multipart/form-data; boundary=' + boundary, cookie: jar.cookie },
+      body: Readable.toWeb(Readable.from(parts)),
+      duplex: 'half',
+    });
+    assert.equal(up.status, 413, 'chunked yükleme kota aşımında reddedilmeli');
+    // reddedilen dosya diskten silinmiş olmalı
+    const updir = path.join(DATA, 'tenants', tid, 'uploads');
+    assert.equal(readdirSync(updir).filter(f => !f.endsWith('.part')).length, 0, 'aşan dosya silinmeli');
+    // sahte kullanım temizlenince normal yükleme geçer (yanlış 413 yok)
+    db.prepare('DELETE FROM objects WHERE tenant_id = ?').run(tid);
+    const fd = new FormData();
+    fd.append('file', new Blob([png], { type: 'image/png' }), 't.png');
+    const up2 = await fetch(BASE + '/api/admin/logo', { method: 'POST', headers: { cookie: jar.cookie }, body: fd });
+    assert.equal(up2.status, 200, 'kota dahilinde normal yükleme geçmeli');
+  } finally { db.close(); }
 });

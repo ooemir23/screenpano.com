@@ -781,6 +781,12 @@ function trafficSecret() {
   if (!s) { s = crypto.randomBytes(32).toString('hex'); store.setSetting('traffic_secret', s); }
   return s;
 }
+// süper panelden yenileme: yeni imza üretir, düz değer yalnız bu çağrıya özel döner (Worker'a kopyalanır)
+function regenTrafficSecret() {
+  const s = crypto.randomBytes(32).toString('hex');
+  store.setSetting('traffic_secret', s);
+  return s;
+}
 function reportTraffic({ all, asia, europe, ts, sig }) {
   if (![all, asia, europe, ts].every(n => typeof n === 'number' && isFinite(n)) || typeof sig !== 'string') return [400, 'eksik veri'];
   const exp = crypto.createHmac('sha256', trafficSecret()).update(`${all}|${asia}|${europe}|${ts}`).digest('hex');
@@ -909,7 +915,7 @@ module.exports = {
   get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, BIG_STYLES, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,
-  get traffic() { return traffic; }, reportTraffic, trafficSecret, wantsTraffic, renderMap, maybeRenderMap, MAP_FILE, get mapAt() { return mapAt; }, get mapErr() { return mapErr; },
+  get traffic() { return traffic; }, reportTraffic, trafficSecret, regenTrafficSecret, wantsTraffic, renderMap, maybeRenderMap, MAP_FILE, get mapAt() { return mapAt; }, get mapErr() { return mapErr; },
   localLogo, makeLogo, runCmd, runFfmpeg,
   calories, cacheAge, get quota() { return quota; }, QUOTA, collectStats, refreshWeather,
 };

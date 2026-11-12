@@ -91,7 +91,12 @@ r.post('/login', async (req, res) => {
   auth.setSession(req, res, u);
   res.json({ ok: true, role: u.role, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : auth.subOf(req) === 'sadmin' && auth.superOk(u) ? '/super' : auth.homeFor(req, u) });
 });
-r.post('/logout', (req, res) => { auth.clearSession(res, req); res.json({ ok: true }); });
+// all:true gelirse kullanıcının tüm cihazlardaki oturumları da düşer (token_epoch artar)
+r.post('/logout', (req, res) => {
+  const u = auth.sessionUser(req);
+  if ((req.body || {}).all && u) store.bumpEpoch(u.id);
+  auth.clearSession(res, req); res.json({ ok: true });
+});
 
 // ---- Google ile giriş (OAuth 2.0 / OIDC) ----
 // Anahtarlar süper yönetimden gelir (google_oauth_client_id/secret); yoksa düğme hiç görünmez.
@@ -392,9 +397,10 @@ r.post('/reset', (req, res) => {
     return res.status(400).json({ error: 'Bu sıfırlama bağlantısı daha önce kullanılmış veya geçersiz' });
   }
   store.q.userPass.run(auth.hashPassword(pw), u.id);
+  store.bumpEpoch(u.id); // sıfırlamayla tüm eski oturumlar düşer
   auth.clearFails(ip, u.username);
   store.q.userLogin.run(Date.now(), u.id);
-  auth.setSession(req, res, u);
+  auth.setSession(req, res, store.q.userGet.get(u.id));
   res.json({ ok: true, username: u.username, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : auth.homeFor(req, u) });
 });
 

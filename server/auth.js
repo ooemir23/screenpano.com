@@ -71,7 +71,7 @@ function cookieDomain(req) {
   return BASE_HOST && BASE_HOST.includes('.') && (h === BASE_HOST || h.endsWith('.' + BASE_HOST)) ? `; Domain=${BASE_HOST}` : '';
 }
 function setSession(req, res, user, extra = {}) {
-  const token = sign({ uid: user.id, exp: Date.now() + 30 * DAY, ...extra });
+  const token = sign({ uid: user.id, ep: user.token_epoch || 0, exp: Date.now() + 30 * DAY, ...extra });
   const sec = isHttps(req) ? '; Secure' : '';
   const list = [`${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 86400}${cookieDomain(req)}${sec}`];
   if (cookieDomain(req)) list.push(`${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${sec}`); // eski, yalnız bu adrese ait çerezi sil (Domain çerezle çakışmasın)
@@ -83,12 +83,13 @@ function clearSession(res, req) {
   res.setHeader('Set-Cookie', list);
 }
 
-// Oturumdaki kullanıcı (+ süper yöneticinin "işletme olarak gir" bilgisi)
+// Oturumdaki kullanıcı (+ süper yöneticinin "işletme olarak gir" bilgisi).
+// ep (token_epoch) uyuşmazsa çerez reddedilir: parola değişimi/askıya alma eski oturumları düşürür.
 function sessionUser(req) {
   const p = verify(parseCookies(req)[COOKIE]);
   if (!p) return null;
   const u = store.q.userGet.get(p.uid);
-  if (!u) return null;
+  if (!u || (p.ep || 0) !== (u.token_epoch || 0)) return null;
   return { ...u, imp: p.imp || null, br: p.br || null };
 }
 
@@ -104,7 +105,9 @@ function superOk(u) {
 // "İşletme olarak gir" ile açılan işletme: süper yönetici ya da süper yetkisi hâlâ açık işletme sahibi için geçerlidir
 // (yetki kaldırılınca çerezdeki imp yok sayılır, kişi kendi işletmesine döner)
 function impOf(u) { return u && u.imp && (u.role === 'super' || superOk(u)) ? u.imp : null; }
-function superUser(req) { const u = sessionUser(req); return superOk(u) ? { ...u, role: 'super' } : null; }
+// trueSuper: gerçek süper yönetici hesabı mı (superAccess yetkili işletme sahibi değil)? Gizli anahtar ve
+// işletme yönetimi uçları yalnız gerçek süper hesaba açılır.
+function superUser(req) { const u = sessionUser(req); return superOk(u) ? { ...u, role: 'super', trueSuper: u.role === 'super' } : null; }
 
 // Cihaz token'ı: TV'de saklanır, veritabanında yalnızca özeti tutulur
 const newDeviceToken = () => crypto.randomBytes(32).toString('hex');

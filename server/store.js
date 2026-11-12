@@ -79,6 +79,7 @@ addCol('tenants', 'org_id', 'TEXT');          // çoklu şube: aynı org_id'ye s
 addCol('devices', 'status', 'TEXT');          // TV'nin son durum raporu (JSON)
 addCol('devices', 'alerted', 'INTEGER DEFAULT 0');
 addCol('devices', 'native', 'INTEGER DEFAULT 0');   // 1: kutu ekranı yerel (native) widget'larla çizer (Android 3.3+)
+addCol('users', 'token_epoch', 'INTEGER DEFAULT 0'); // oturum iptali: parola değişimi/askıya almada artar, eski çerezler düşer
 
 const J = s => { try { return JSON.parse(s); } catch { return null; } };
 
@@ -90,9 +91,11 @@ const q = {
   tenantDel: sql.prepare('DELETE FROM tenants WHERE id = ?'),
   userByName: sql.prepare('SELECT * FROM users WHERE username = ?'),
   userGet: sql.prepare('SELECT * FROM users WHERE id = ?'),
-  usersOf: sql.prepare('SELECT id, username, role, name, created, last_login FROM users WHERE tenant_id = ? ORDER BY created'),
+  usersOf: sql.prepare('SELECT id, username, role, name, created, last_login, token_epoch FROM users WHERE tenant_id = ? ORDER BY created'),
   userIns: sql.prepare('INSERT INTO users (id, tenant_id, username, pass, role, name, created) VALUES (@id, @tenant_id, @username, @pass, @role, @name, @created)'),
   userPass: sql.prepare('UPDATE users SET pass = ? WHERE id = ?'),
+  userEpoch: sql.prepare('UPDATE users SET token_epoch = token_epoch + 1 WHERE id = ?'),
+  usersEpochOf: sql.prepare('UPDATE users SET token_epoch = token_epoch + 1 WHERE tenant_id = ?'),
   userRename: sql.prepare('UPDATE users SET username = ? WHERE id = ?'),
   userLogin: sql.prepare('UPDATE users SET last_login = ? WHERE id = ?'),
   userDel: sql.prepare('DELETE FROM users WHERE id = ? AND tenant_id = ?'),
@@ -132,6 +135,8 @@ module.exports = {
   sql, q, J,
   setting(key, def = '') { const r = q.setGet.get(key); return r ? r.value : def; },
   setSetting(key, value) { q.setPut.run(key, String(value ?? '')); },
+  bumpEpoch(uid) { try { q.userEpoch.run(uid); } catch {} },        // kullanıcının tüm oturumları geçersiz olur
+  bumpTenantEpoch(tid) { try { q.usersEpochOf.run(tid); } catch {} }, // işletmenin tüm kullanıcılarının oturumları düşer
   updateTenant(id, fields) {
     const allowed = ['name', 'plan', 'status', 'trial_until', 'paid_until', 'phone', 'note', 'org_id'];
     const keys = Object.keys(fields).filter(k => allowed.includes(k));

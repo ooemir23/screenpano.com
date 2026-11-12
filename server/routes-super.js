@@ -21,14 +21,21 @@ const SETTINGS = ['youtube_api_key', 'collect_key', 'collect_paid', 'tmdb_key', 
   'legal_company', 'legal_address', 'legal_email', 'legal_phone', 'legal_mersis', 'legal_kep', 'legal_hosting',
   'site_url', 'site_phone', 'site_whatsapp', 'site_email', 'site_price_baslangic', 'site_price_pro', 'fee_extra_branch'];
 
+// Bu anahtarlar paneye düz metin gitmez (write-only): yalnız "ayarlı" bilgisi ve son 4 karakter ipucu döner.
+// Kaydederken boş ya da "••••" ile başlayan değer eskiyi korur; tam yeni değer yazılırsa değiştirir, null siler.
+const SECRET_KEYS = ['youtube_api_key', 'collect_key', 'tmdb_key', 'google_places_key', 'google_oauth_secret', 'alert_webhook'];
+const maskKey = v => (v ? '••••' + String(v).slice(-4) : '');
+// gizli anahtar ve işletme yönetimi uçları yalnız gerçek süper yönetici hesabına açıktır (superAccess yetkisi yetmez)
+const trueOnly = (req, res, next) => (req.user && req.user.trueSuper ? next() : res.status(403).json({ error: 'Bu işlem yalnız süper yönetici hesabıyla yapılır' }));
+
 r.get('/overview', (req, res) => {
   const online = hub.onlineDeviceIds();
   const list = tenants.all().map(t => {
     const devs = store.q.devicesOf.all(t.id), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
     return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0, charges: (t.db.charges || []).slice(-50) };
   });
-  const settings = Object.fromEntries(SETTINGS.map(k => [k, store.setting(k)]));
-  settings.traffic_secret = require('./feeds').trafficSecret();
+  const settings = Object.fromEntries(SETTINGS.map(k => [k, SECRET_KEYS.includes(k) ? maskKey(store.setting(k)) : store.setting(k)]));
+  settings.traffic_secret = maskKey(require('./feeds').trafficSecret());
   const gUse = require('./social').googleUsage();
   const backup = require('./backup'), storage = require('./storage'), monitor = require('./monitor');
   // S1: sistem şeridi — sunucu, yayındaki APK, cihaz sürümleri
@@ -48,7 +55,7 @@ r.get('/stats', (req, res) => {
   delete j.per; res.json(j);
 });
 r.get('/tenants/:id/stats', (req, res) => { const t = tenants.get(req.params.id); if (!t) return res.status(404).json({ error: 'bulunamadı' }); res.json(require('./stats').summary(t, STD(req.query.days))); });
-r.post('/tenants', (req, res) => {
+r.post('/tenants', trueOnly, (req, res) => {
   try {
     const b = req.body || {};
     const days = Math.max(0, Math.min(3650, Number(b.days) || 0));
@@ -100,6 +107,7 @@ r.put('/tenants/:id', (req, res) => {
   const ids = b.applyOrg && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
   // sınırsız (kendi işletmem): süre ve limit yok; zincirde istenirse tüm şubelere
   if (typeof b.canTest === 'boolean') { if (b.canTest) t.db.canTest = true; else delete t.db.canTest; tenants.save(t); hub.pushTenant(t.id); }
+  if (b.superAccess !== undefined && !req.user.trueSuper) return res.status(403).json({ error: 'superAccess yetkisi yalnız süper yönetici hesabıyla değiştirilir' });
   if (typeof b.superAccess === 'boolean') for (const id of [t.id]) { const x = tenants.get(id); if (x) { if (b.superAccess) x.db.superAccess = true; else delete x.db.superAccess; tenants.save(x); } }
   if (typeof b.unlimited === 'boolean') for (const id of ids) { const x = tenants.get(id); if (x) { if (b.unlimited) x.db.unlimited = true; else delete x.db.unlimited; tenants.save(x); } }
   if (b.devices !== undefined && b.devices !== '') {
@@ -109,19 +117,44 @@ r.put('/tenants/:id', (req, res) => {
   if (typeof b.email === 'string') tenants.save(t);
   try {
     for (const id of ids) { const ff = id === t.id ? f : Object.fromEntries(Object.entries(f).filter(([k]) => ['plan', 'status', 'paid_until', 'trial_until'].includes(k))); store.updateTenant(id, ff); tenants.refreshRow(id); hub.pushTenant(id); }
+    if (f.status === 'suspended') for (const id of ids) store.bumpTenantEpoch(id); // askıya alınan işletmenin oturumları düşer
     res.json({ ok: true, count: ids.length });
   } catch (e) {
     console.error('İşletme güncellenemedi:', req.params.id, e.message);
     res.status(500).json({ error: 'İşletme güncellenemedi' });
   }
 });
-r.post('/tenants/:id/password', (req, res) => {
+r.post('/tenants/:id/password', trueOnly, (req, res) => {
+  const t = tenants.get(req.params.id); if (!t) return res.status(404).json({ error: 'bulunamadı' });
   const owner = store.q.usersOf.all(req.params.id).find(u => u.role === 'owner');
   if (!owner) return res.status(404).json({ error: 'işletme sahibi bulunamadı' });
-  const pw = String((req.body || {}).password || '') || auth.uid(10);
-  if (pw.length < 8) return res.status(400).json({ error: 'Şifre en az 8 karakter olmalı' });
-  store.q.userPass.run(auth.hashPassword(pw), owner.id);
-  res.json({ ok: true, password: pw, username: owner.username });
+  // Düz parola üretilip döndürülmez: tek kullanımlık sıfırlama bağlantısı verilir. İşletmenin e-postası kayıtlıysa
+  // bağlantı ona postalananır (yanıtta gösterilmez); değilse bağlantı yalnız burada bir kez gösterilip paylaşılır.
+  const ownerFull = store.q.userGet.get(owner.id); // parola özeti (ph) için tam satır gerekir
+  const rtok = auth.sign({ kind: 'pwreset', uid: owner.id, ph: String((ownerFull || {}).pass || '').slice(-12), exp: Date.now() + 30 * 60 * 1000 });
+  const resetUrl = `${require('./routes-auth').baseOrigin(req)}/login#reset=${encodeURIComponent(rtok)}`;
+  store.bumpEpoch(owner.id); // sıfırlama talebi mevcut oturumları düşürür
+  const email = (t.db.notify || {}).email || '';
+  if (email && require('./mailer').enabled()) {
+    const tpl = require('./mailtpl');
+    require('./mailer').send({
+      to: email,
+      subject: `🔒 ${config.BRAND || 'ScreenPano'} — Şifre Sıfırlama Talebi (${owner.username})`,
+      text: `Merhaba ${t.name},\n\nYönetim paneli hesabınız ("${owner.username}") için yeni şifre talebinde bulunuldu.\nYeni şifrenizi belirlemek için bağlantıya tıklayın (30 dakika geçerli, tek kullanımlık):\n${resetUrl}\n\nBu talebi siz başlatmadıysanız bu iletiyi dikkate almayın.`,
+      html: tpl.html({
+        title: 'Şifre Sıfırlama Talebi',
+        badge: 'Güvenlik Bildirimi', badgeColor: 'warning',
+        preheader: `${owner.username} hesabı için yeni şifre belirleme bağlantısı.`,
+        body: tpl.p(`Merhaba <b>${tpl.e(t.name)}</b>,`) +
+          tpl.p(`<b>${tpl.e(owner.username)}</b> hesabı için yeni şifre talebinde bulunuldu. Aşağıdaki tek kullanımlık bağlantıyla yeni şifrenizi belirleyebilirsiniz. Güvenlik için oturumlarınız kapatıldı.`) +
+          tpl.callout('Bu talebi siz başlatmadıysanız bu iletiyi dikkate almayın; bağlantı kullanılmadıkça şifreniz değişmez.', 'warning'),
+        cta: resetUrl, ctaLabel: 'Yeni Şifre Belirle',
+        small: 'Bağlantı tek kullanımlıktır ve 30 dakika sonra geçersiz olur.',
+      }),
+    }).catch(e => console.error('Şifre sıfırlama e-postası gönderilemedi', e.message));
+    return res.json({ ok: true, username: owner.username, sent: true });
+  }
+  res.json({ ok: true, username: owner.username, sent: false, resetUrl });
 });
 // ek ücret kaydı (ek şube): ödendi/ödemedi işaretle — faturalama elle yapılır
 r.post('/tenants/:id/charges/:cid', (req, res) => {
@@ -138,23 +171,39 @@ r.post('/tenants/:id/impersonate', (req, res) => {
   res.json({ ok: true, next: '/panel' });
 });
 r.post('/unimpersonate', (req, res) => { auth.setSession(req, res, req.user); res.json({ ok: true, next: '/super' }); });
-r.delete('/tenants/:id', (req, res) => {
+r.delete('/tenants/:id', trueOnly, (req, res) => {
   const t = tenants.get(req.params.id); if (!t) return res.status(404).json({ error: 'bulunamadı' });
   if (String((req.body || {}).confirm || '') !== t.name) return res.status(400).json({ error: 'Silmek için işletme adını aynen yazın' });
   const ids = require('./accounts').deleteTenant(t.id); // ana işletmeyse şubeleri de silinir
   res.json({ ok: true, count: ids.length });
 });
-r.put('/settings', (req, res) => {
+r.put('/settings', trueOnly, (req, res) => {
   const b = req.body || {};
-  for (const k of SETTINGS) if (typeof b[k] === 'string') store.setSetting(k, b[k].trim().slice(0, 300));
+  for (const k of SETTINGS) {
+    if (!(k in b)) continue;
+    if (SECRET_KEYS.includes(k)) {
+      if (b[k] === null) { store.setSetting(k, ''); continue; } // açıkça kaldırma
+      const v = typeof b[k] === 'string' ? b[k].trim() : '';
+      if (!v || v.startsWith('••••')) continue; // boş ya da maskeli görüntü: eski değer korunur
+      store.setSetting(k, v.slice(0, 300));
+    } else if (typeof b[k] === 'string') store.setSetting(k, b[k].trim().slice(0, 300));
+  }
   hub.pushAll(); res.json({ ok: true });
+});
+// Trafik Worker imzası: yeni değer üretip yalnız bu yanıtta bir kez düz metin döner (Worker'a kopyalanır)
+r.post('/settings/traffic/regenerate', trueOnly, (req, res) => {
+  res.json({ ok: true, secret: require('./feeds').regenTrafficSecret() });
 });
 r.put('/password', (req, res) => {
   const { current, next: nw } = req.body || {};
   const u = store.q.userGet.get(req.user.id);
   if (!auth.checkPassword(current, u.pass)) return res.status(400).json({ error: 'Mevcut şifre yanlış' });
   if (String(nw || '').length < 10) return res.status(400).json({ error: 'Yeni şifre en az 10 karakter olmalı' });
-  store.q.userPass.run(auth.hashPassword(nw), u.id); res.json({ ok: true });
+  store.q.userPass.run(auth.hashPassword(nw), u.id);
+  // parola değişti: tüm oturumlar düşer; bu tarayıcı kalmaya devam etsin diye oturum tazelenir
+  store.bumpEpoch(u.id);
+  auth.setSession(req, res, store.q.userGet.get(u.id), { ...(req.user.imp ? { imp: req.user.imp } : {}) });
+  res.json({ ok: true });
 });
 
 // ---- platform yedekleri ----

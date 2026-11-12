@@ -18,7 +18,7 @@ const { LANGS } = require('./state');
 const DAY = 86400000;
 const s = (v, n) => String(v ?? '').trim().slice(0, n);
 
-module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpload, backupNow }) {
+module.exports = function (r, { changed, sendTo, upload, quota, postQuota, ownerOnly, rmUpload, backupNow }) {
   const err = (res, e, code = 400) => res.status(code).json({ error: e.message || String(e) });
 
   // ================= ZAMANLAMA =================
@@ -88,7 +88,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     list.splice(i, 1); if (!list.length) delete t.db.looseUp;
     return true;
   }
-  r.post('/posters/image', quota, upload.single('file'), (req, res) => {
+  r.post('/posters/image', quota, upload.single('file'), postQuota, (req, res) => {
     const f = req.file; if (!f) return res.status(400).json({ error: 'dosya yok' });
     if (!/^image\/(jpeg|png|webp|gif)$/.test(f.mimetype) || !/\.(jpe?g|png|webp|gif)$/i.test(f.filename)) { rmUpload(req.t, f.filename); return res.status(400).json({ error: 'Yalnız JPG, PNG, WEBP ya da GIF fotoğraf yüklenebilir' }); }
     pruneLoose(req.t);
@@ -138,7 +138,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     const png = await require('qrcode').toDataURL(QRT.trackUrl(code), { margin: 1, errorCorrectionLevel: 'M', width: 480, color: { dark: '#14100c', light: '#ffffff' } });
     res.json({ ok: true, code, png });
   });
-  r.post('/studio', quota, upload.single('file'), (req, res) => {
+  r.post('/studio', quota, upload.single('file'), postQuota, (req, res) => {
     const t = req.t, f = req.file;
     let m; try { m = JSON.parse((req.body || {}).meta || '{}'); } catch { m = {}; }
     if (!f || !/^image\/(jpeg|png)$/.test(f.mimetype)) { if (f) rmUpload(t, f.filename); return res.status(400).json({ error: 'Afiş görseli alınamadı' }); }
