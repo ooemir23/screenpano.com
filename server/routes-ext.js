@@ -61,6 +61,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
   }
   r.post('/posters', (req, res) => {
     const b = req.body || {}; if (!POSTERS.includes(b.tpl)) return res.status(400).json({ error: 'Şablon seçin' });
+    if (!require('./media').roomFor(req.t)) return res.status(400).json({ error: require('./media').fullMsg });
     const p = { id: auth.uid(), type: 'poster', status: 'ready', optimized: true, file: '' };
     applyPoster(p, b, req.t);
     if (b.position === 'first') req.t.db.videos.unshift(p); else req.t.db.videos.push(p);
@@ -113,7 +114,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     const key = String((req.body || {}).key || '');
     const st = STOCK_MEDIA.find(x => x.key === key);
     if (!st) return res.status(404).json({ error: 'Hazır medya bulunamadı' });
-    if (req.t.db.videos.length >= 300) return res.status(400).json({ error: 'En fazla 300 içerik eklenebilir' });
+    if (!require('./media').roomFor(req.t)) return res.status(400).json({ error: require('./media').fullMsg });
     const rec = st.type === 'poster'
       ? { id: auth.uid(), type: 'poster', tpl: st.tpl, name: st.title, fields: { ...st.fields }, dur: st.dur || 15, status: 'ready', optimized: true, file: '' }
       : { id: auth.uid(), type: 'youtube', yt: st.yt === '5qap5aO4i9A' ? 'lTRiuFIWV54' : st.yt, name: st.title, dur: st.dur || 45, status: 'ready', optimized: true };
@@ -147,6 +148,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     const hexc = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : undefined;
     const design = { layout: LAYOUTS.includes(d.layout) ? d.layout : 'tam', fields, colors: d.colors && { bg: hexc(d.colors.bg), accent: hexc(d.colors.accent), text: hexc(d.colors.text) }, palette: d.palette === 'theme' ? 'theme' : 'photo', photo: /^[\w.-]+$/.test(d.photo || '') ? d.photo : undefined, qrUrl: QRT.isUrl(d.qrUrl) ? s(d.qrUrl, 300) : undefined };
     let v = m.id && t.db.videos.find(x => x.id === m.id && x.design);
+    if (!v && !require('./media').roomFor(t)) { rmUpload(t, f.filename); return res.status(400).json({ error: require('./media').fullMsg }); } // yeni afiş: içerik sınırı
     // kaynak fotoğraf: aynı afişin mevcut fotoğrafı ya da yeni yüklenmiş (bekleyen) bir fotoğraf; başka dosya adı kabul edilmez
     const oldPhoto = v && v.design && v.design.photo;
     if (design.photo && design.photo !== oldPhoto && !claimLoose(t, design.photo)) design.photo = oldPhoto || undefined;
@@ -371,6 +373,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
           const need = items.reduce((a, v) => a + filesOf(v).reduce((b, f) => b + sizeOf(src, f), 0), 0);
           const freed = mode === 'replace' ? t.db.videos.reduce((a, v) => a + filesOf(v).reduce((b, f) => b + sizeOf(t, f), 0), 0) : 0;
           if (storage.usedBytes(t) - freed + need > lim) throw new Error(`${t.name}: depolama kotası yetmiyor`);
+          if ((mode === 'replace' ? 0 : t.db.videos.length) + items.length > require('./media').MAX_ITEMS) throw new Error(`${t.name}: en fazla ${require('./media').MAX_ITEMS} içerik olabilir`);
           const fresh = [], made = [];
           try {
             for (const v of items) {

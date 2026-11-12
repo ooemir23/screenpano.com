@@ -120,6 +120,10 @@ function jobInfo(id) {
 }
 function resumeAll() { for (const t of tenants.all()) for (const v of t.db.videos) if (v.status === 'processing') enqueue(t.id, v.id); }
 
+// Medya listesinde en çok içerik (dosya, YouTube, hazır içerik, afiş): panel ve TV döngüsü hafif kalsın
+const MAX_ITEMS = 300;
+const roomFor = t => Math.max(0, MAX_ITEMS - (t.db.videos || []).length);
+const fullMsg = `En fazla ${MAX_ITEMS} içerik eklenebilir. Kullanmadığınız içerikleri silin.`;
 // İşletmenin diskte kapladığı yer
 const usedBytes = t => require('./storage').usedBytes(t);
 // Kota: işletmeye yalnız küçültülmüş (yayına hazır) dosyalar sayılır. Kuyrukta bekleyen ham yüklemeler geçicidir;
@@ -138,4 +142,4 @@ function rebalance(t) {
   return true;
 }
 
-module.exports = { probeDur, enqueue, cancel, resumeAll, backfillDurations, usedBytes, settledBytes, pendingRawBytes, limitBytes, rebalance, jobInfo, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };
+module.exports = { MAX_ITEMS, roomFor, fullMsg, probeDur, enqueue, cancel, resumeAll, backfillDurations, usedBytes, settledBytes, pendingRawBytes, limitBytes, rebalance, jobInfo, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };

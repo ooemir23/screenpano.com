@@ -1086,7 +1086,7 @@ function upFiles(files) {
   el.innerHTML = `<span>${files.length} dosya yükleniyor (${fmtSize(size)})…</span><div class="bar"><i></i></div>`; $('ups').appendChild(el);
   const x = new XMLHttpRequest(); x.open('POST', '/api/admin/videos');
   x.upload.onprogress = e => { if (e.lengthComputable) el.querySelector('i').style.width = (e.loaded / e.total * 100) + '%'; };
-  x.onload = () => { let j = {}; try { j = JSON.parse(x.responseText); } catch {} if (x.status === 200) { el.remove(); toast('Yüklendi; hazırlanınca ekrana girecek'); refresh(); } else { el.querySelector('span').textContent = 'Yüklenemedi: ' + (j.error || x.status); el.style.color = 'var(--bad)'; } };
+  x.onload = () => { let j = {}; try { j = JSON.parse(x.responseText); } catch {} if (x.status === 200) { el.remove(); if (j.skipped) toast(`${j.skipped} dosya eklenmedi: en fazla ${j.max} içerik olabilir`, true, 'Kullanmadığınız içerikleri silip tekrar deneyin.'); else toast('Yüklendi; hazırlanınca ekrana girecek'); refresh(); } else { el.querySelector('span').textContent = 'Yüklenemedi: ' + (j.error || x.status); el.style.color = 'var(--bad)'; } };
   x.onerror = () => { el.querySelector('span').textContent = 'Bağlantı hatası'; };
   x.send(fd);
 }
@@ -1248,7 +1248,7 @@ function spUp(i, files) {
   x.onload = async () => {
     let j = {}; try { j = JSON.parse(x.responseText); } catch {}
     if (x.status !== 200) { el.querySelector('span').textContent = 'Yüklenemedi: ' + (j.error || x.status); return; }
-    S.db = await req('GET', '/db'); r.items.push(...(j.ids || [])); SP.dirty = 1; toast('Yüklendi; hazırlanınca özel yayında oynar'); render(true);
+    S.db = await req('GET', '/db'); r.items.push(...(j.ids || [])); SP.dirty = 1; if (j.skipped) toast(`${j.skipped} dosya eklenmedi: en fazla ${j.max} içerik olabilir`, true); else toast('Yüklendi; hazırlanınca özel yayında oynar'); render(true);
   };
   x.onerror = () => { el.querySelector('span').textContent = 'Bağlantı hatası'; };
   x.send(fd);

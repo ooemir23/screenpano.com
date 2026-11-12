@@ -74,6 +74,7 @@ const RAW_MAX = 4 * 1024 * 1024 * 1024;
 const quotaMsg = t => `Depolama kotası doldu (${Math.round(media.settledBytes(t) / 1048576)} / ${plan(t).storageMB} MB). Eski dosyaları silin ya da paketinizi yükseltin.`;
 const quotaMedia = (req, res, next) => {
   const t = req.t, incoming = Number(req.headers['content-length']) || 0;
+  if (!media.roomFor(t)) return res.status(400).json({ error: media.fullMsg });
   if (media.settledBytes(t) >= media.limitBytes(t)) return res.status(413).json({ error: quotaMsg(t) });
   if (media.pendingRawBytes(t) + incoming > RAW_MAX) return res.status(413).json({ error: 'Önceki yüklemeler hâlâ hazırlanıyor. Birkaç dakika sonra tekrar deneyin.' });
   next();
@@ -892,20 +893,23 @@ r.put('/leagues', (req, res) => {
 // ---- medya ----
 r.post('/videos', quotaMedia, upload.array('files'), postQuotaMedia, (req, res) => {
   const t = req.t, ids = [], only = req.query.only === '1'; // only: yalnız özel yayında oynasın (normal döngüde gizli)
+  let room = media.roomFor(t), skipped = 0; // içerik sınırı: sığanlar eklenir, fazlası silinip bildirilir
   for (const f of req.files || []) {
     if (!/^(video|image)\//.test(f.mimetype)) { rmUpload(t, f.filename); continue; }
+    if (room <= 0) { rmUpload(t, f.filename); skipped++; continue; }
+    room--;
     const rec = { id: auth.uid(), file: f.filename, name: f.originalname, type: f.mimetype.startsWith('image/') ? 'image' : 'video', status: 'processing' };
     if (only) rec.hidden = true;
     t.db.videos.push(rec); ids.push(rec.id);
     media.enqueue(t.id, rec.id);
   }
-  changed(t); res.json({ ok: true, ids });
+  changed(t); res.json({ ok: true, ids, ...(skipped ? { skipped, max: media.MAX_ITEMS } : {}) });
 });
 // YouTube bağlantısı: dosya yok; TV'de gömülü oynatıcıyla belirtilen süre boyunca (döngülü) oynar
 r.post('/videos/youtube', async (req, res) => {
   const yt = require('./ytlink'), id = yt.parse((req.body || {}).url);
   if (!id) return res.status(400).json({ error: 'Geçerli bir YouTube bağlantısı girin (örn. https://www.youtube.com/watch?v=...)' });
-  if (req.t.db.videos.length >= 300) return res.status(400).json({ error: 'En fazla 300 içerik eklenebilir' });
+  if (!media.roomFor(req.t)) return res.status(400).json({ error: media.fullMsg });
   const name = (await yt.title(id)) || 'YouTube videosu';
   const rec = { id: auth.uid(), type: 'youtube', yt: id, name: String((req.body || {}).name || '').trim().slice(0, 80) || name, dur: yt.clampDur((req.body || {}).dur), status: 'ready', optimized: true };
   if ((req.body || {}).sound === true) rec.sound = true;
