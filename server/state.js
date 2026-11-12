@@ -95,7 +95,7 @@ function baseMediaList(t, screenId) {
   const db = t.db, out = [];
   for (const v of db.videos) {
     if (v.status === 'processing' && !v.reopt) continue;
-    if (v.hidden || SCH.expired(v.sch)) continue;
+    if (v.hidden || v.quotaOver || SCH.expired(v.sch)) continue; // quotaOver: küçültme sonrası kotaya sığmadı
     if (screenId && Array.isArray(v.screens) && v.screens.length && !v.screens.includes(screenId)) continue;
     out.push(mediaItem(t, v));
   }

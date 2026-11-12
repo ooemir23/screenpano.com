@@ -8,8 +8,8 @@
 // paket yükselince hemen görünür. İndirim saatleri (fiyat değişimi ve duyuru kartı) Pro'dadır.
 // Pro'da 3 lokasyon (ana + 2 şube) dahil; sonrası her ek şube için "fee_extra_branch" ayarı kadar ücret kaydı düşer.
 const PLANS = {
-  baslangic: { id: 'baslangic', name: 'Başlangıç', devices: 1, storageMB: 3072, users: 1, pro: false, live: true, ads: true, badge: true, branches: 1, includedBranches: 1, menuCats: 3, menuItems: 40 },
-  pro: { id: 'pro', name: 'Pro', devices: 2, storageMB: 10240, users: 3, pro: true, live: true, ads: false, badge: false, branches: 99, includedBranches: 3, menuCats: 0, menuItems: 0 },
+  baslangic: { id: 'baslangic', name: 'Başlangıç', devices: 1, storageMB: 2048, users: 1, pro: false, live: true, ads: true, badge: true, branches: 1, includedBranches: 1, menuCats: 3, menuItems: 40 },
+  pro: { id: 'pro', name: 'Pro', devices: 2, storageMB: 5120, users: 3, pro: true, live: true, ads: false, badge: false, branches: 99, includedBranches: 3, menuCats: 0, menuItems: 0 },
 };
 // Süper yöneticinin "sınırsız" işaretlediği (kendi) işletmeler: tüm Pro özellikler, süre ve limit yok. Sitede ve kayıtta görünmez.
 const UNLIMITED = { id: 'sinirsiz', name: 'Sınırsız', devices: 999, storageMB: 1048576, users: 99, pro: true, live: true, ads: false, badge: false, branches: 99, includedBranches: 99, menuCats: 0, menuItems: 0 };

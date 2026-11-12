@@ -68,6 +68,28 @@ const quota = (req, res, next) => {
   if (used + incoming > lim) return res.status(413).json({ error: `Depolama kotası doldu (${Math.round(used / 1048576)} / ${plan(req.t).storageMB} MB). Eski dosyaları silin ya da paketinizi yükseltin.` });
   next();
 };
+// Video/fotoğraf yüklemesi (küçültülecek): kota küçültülmüş dosyalara göre. Ham dosya için geçici pay:
+// bekleyen ham yüklemeler + yeni gelen en çok RAW_MAX (diski korur); asıl kontrol küçültme bittikten sonra (media.js).
+const RAW_MAX = 4 * 1024 * 1024 * 1024;
+const quotaMsg = t => `Depolama kotası doldu (${Math.round(media.settledBytes(t) / 1048576)} / ${plan(t).storageMB} MB). Eski dosyaları silin ya da paketinizi yükseltin.`;
+const quotaMedia = (req, res, next) => {
+  const t = req.t, incoming = Number(req.headers['content-length']) || 0;
+  if (media.settledBytes(t) >= media.limitBytes(t)) return res.status(413).json({ error: quotaMsg(t) });
+  if (media.pendingRawBytes(t) + incoming > RAW_MAX) return res.status(413).json({ error: 'Önceki yüklemeler hâlâ hazırlanıyor. Birkaç dakika sonra tekrar deneyin.' });
+  next();
+};
+const postQuotaMedia = (req, res, next) => {
+  const t = req.t, files = req.files || (req.file ? [req.file] : []);
+  if (!files.length) return next();
+  const fresh = new Set(files.map(f => f.filename)), size = files.reduce((n, f) => n + (f.size || 0), 0);
+  const raw = new Set([...(t.db.videos || []).filter(v => v.status === 'processing' && !v.reopt && v.file).map(v => v.file), ...fresh]);
+  const settled = require('./storage').usedBytes(t, raw);
+  if (settled >= media.limitBytes(t) || media.pendingRawBytes(t) + size > RAW_MAX) {
+    for (const f of files) rmUpload(t, f.filename);
+    return res.status(413).json({ error: settled >= media.limitBytes(t) ? quotaMsg(t) : 'Önceki yüklemeler hâlâ hazırlanıyor. Birkaç dakika sonra tekrar deneyin.' });
+  }
+  next();
+};
 // multer diske yazdıktan sonra gerçek boyutla kota: Content-Length yoksa (chunked yükleme) aşım burada yakalanır.
 // Kullanım hesabı yeni dosyaları zaten içerdiğinde gelen dosyalar silinir — çift sayım yapılmaz.
 const postQuota = (req, res, next) => {
@@ -868,7 +890,7 @@ r.put('/leagues', (req, res) => {
 });
 
 // ---- medya ----
-r.post('/videos', quota, upload.array('files'), postQuota, (req, res) => {
+r.post('/videos', quotaMedia, upload.array('files'), postQuotaMedia, (req, res) => {
   const t = req.t, ids = [], only = req.query.only === '1'; // only: yalnız özel yayında oynasın (normal döngüde gizli)
   for (const f of req.files || []) {
     if (!/^(video|image)\//.test(f.mimetype)) { rmUpload(t, f.filename); continue; }
@@ -902,6 +924,7 @@ r.delete('/videos/:id', (req, res) => {
     t.db.assets = (t.db.assets || []).filter(a => a.file !== v.file && a.file !== v.image);
   }
   t.db.videos = t.db.videos.filter(x => x.id !== req.params.id);
+  media.rebalance(t); // yer açıldıysa kotaya takılan içerikler ekrana döner
   changed(t); res.json({ ok: true });
 });
 r.post('/videos/reorder', (req, res) => {

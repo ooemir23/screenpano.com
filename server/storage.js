@@ -16,11 +16,17 @@ const localPath = (t, f) => path.join(t.dirs.uploads, f);
 function exists(t, file) { return safe(file) && (fs.existsSync(localPath(t, file)) || !!store.q.objGet.get(t.id, file)); }
 
 // Diskte + yalnızca R2'de duran dosyaların toplamı (kota için)
-function usedBytes(t) {
+// skip: sayılmayacak dosya adları (ör. henüz küçültülmemiş ham yüklemeler)
+function usedBytes(t, skip) {
   let n = 0; const local = new Set();
-  for (const f of fs.existsSync(t.dirs.uploads) ? fs.readdirSync(t.dirs.uploads) : []) { try { n += fs.statSync(localPath(t, f)).size; local.add(f); } catch {} }
-  for (const o of store.q.objOf.all(t.id)) if (!local.has(o.file)) n += o.size;
+  for (const f of fs.existsSync(t.dirs.uploads) ? fs.readdirSync(t.dirs.uploads) : []) { try { const sz = fs.statSync(localPath(t, f)).size; local.add(f); if (!skip || !skip.has(f)) n += sz; } catch {} }
+  for (const o of store.q.objOf.all(t.id)) if (!local.has(o.file) && (!skip || !skip.has(o.file))) n += o.size;
   return n;
+}
+// tek dosyanın boyutu (yerel ya da nesne deposu); yoksa 0
+function sizeOf(t, file) {
+  try { return fs.statSync(localPath(t, file)).size; } catch {}
+  const o = store.q.objGet && store.q.objGet.get(t.id, file); return o ? o.size : 0;
 }
 
 function remove(t, file) {
@@ -110,4 +116,4 @@ function status() {
   return { enabled: s3.enabled, configError: s3.configError, bucket: s3.cfg.bucket, publicUrl: s3.cfg.publicUrl, keepLocal: KEEP_LOCAL, objects: tot.n, bytes: tot.bytes, pending: pendingCount, lastRun, lastError };
 }
 
-module.exports = { exists, usedBytes, remove, removeTenant, ensureLocal, copy, serve, syncTick, start, status, localPath, keyFor, typeOf };
+module.exports = { exists, usedBytes, sizeOf, remove, removeTenant, ensureLocal, copy, serve, syncTick, start, status, localPath, keyFor, typeOf };

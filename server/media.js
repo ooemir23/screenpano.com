@@ -85,7 +85,12 @@ async function optimizeItem(tid, id) {
     const dur = isImg ? null : await probeDur(out); // senkronlu çalma listesi için süre
     if (stale()) { fs.rmSync(out, { force: true }); if (!cur()) require('./storage').remove(t, srcFile); return; }
     require('./storage').remove(t, srcFile);
+    // yeni yüklemede (yeniden küçültmede değil) küçülmüş hal kotaya sığmıyorsa ekrana çıkmaz
+    const wasNew = !cur().reopt && cur().status === 'processing';
     done({ file: outName, sizeBefore: before, sizeAfter: after, optError: '', ...(dur ? { dur } : {}) });
+    const c2 = cur();
+    if (wasNew && c2 && settledBytes(t) > limitBytes(t)) { c2.quotaOver = true; tenants.save(t); hub.pushTenant(tid); }
+    else if (rebalance(t)) { tenants.save(t); hub.pushTenant(tid); } // başka yerden yer açıldıysa bekleyenler ekrana döner
   } catch (e) {
     fs.rmSync(out, { force: true });
     console.error('Optimizasyon başarısız:', v.name, e.message);
@@ -115,7 +120,22 @@ function jobInfo(id) {
 }
 function resumeAll() { for (const t of tenants.all()) for (const v of t.db.videos) if (v.status === 'processing') enqueue(t.id, v.id); }
 
-// İşletmenin diskte kapladığı yer (kota kontrolü için)
+// İşletmenin diskte kapladığı yer
 const usedBytes = t => require('./storage').usedBytes(t);
+// Kota: işletmeye yalnız küçültülmüş (yayına hazır) dosyalar sayılır. Kuyrukta bekleyen ham yüklemeler geçicidir;
+// küçültülünce asıl boyutlarıyla sayılırlar (1 GB telefon videosu çoğu zaman 100–350 MB'a iner).
+const rawFiles = t => new Set((t.db.videos || []).filter(v => v.status === 'processing' && !v.reopt && v.file).map(v => v.file));
+const settledBytes = t => require('./storage').usedBytes(t, rawFiles(t));
+const pendingRawBytes = t => [...rawFiles(t)].reduce((n, f) => n + require('./storage').sizeOf(t, f), 0);
+const limitBytes = t => require('./plans').plan(t).storageMB * 1048576;
+// Küçültme sonrası kota aşıldıysa yeni içerik ekrana çıkmaz (quotaOver); işletme yer açınca hepsi kendiliğinden döner.
+// Dosya silinmez: işletme hangisini sileceğine kendisi karar verir. true: durum değişti.
+function rebalance(t) {
+  const over = (t.db.videos || []).filter(v => v.quotaOver);
+  if (!over.length) return false;
+  if (settledBytes(t) > limitBytes(t)) return false;
+  for (const v of over) delete v.quotaOver;
+  return true;
+}
 
-module.exports = { probeDur, enqueue, cancel, resumeAll, backfillDurations, usedBytes, jobInfo, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };
+module.exports = { probeDur, enqueue, cancel, resumeAll, backfillDurations, usedBytes, settledBytes, pendingRawBytes, limitBytes, rebalance, jobInfo, get ffmpegOk() { return ffmpegOk; }, get queueLength() { return queue.length + (busy ? 1 : 0); } };
