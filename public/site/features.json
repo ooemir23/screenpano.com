@@ -727,7 +727,7 @@
         "Yeni sürüm tek seferde indirilir ve kurulur",
         "Oturum kapatma yanlışlıkla yapılmasın diye onay ister"
       ],
-      "plan": "all",
+      "plan": "pro",
       "compare": "Kumandadan müzik kontrolü",
       "added": "2026-11-06",
       "visual": {

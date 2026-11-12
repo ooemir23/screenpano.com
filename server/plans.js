@@ -3,7 +3,7 @@
 // branches: mutlak üst sınır (org_id başına toplam lokasyon). includedBranches: ek ücret uygulanmadan dahil olan lokasyon sayısı.
 // live: maçlar, puan durumu, gol, büyük maç ve bilgi içerikleri (haber, son dakika, eczane, sinema, kitap, tarihte bugün, trafik).
 // ads: ekran döngüsüne platform reklamları (ScreenPano tanıtımı + süper yönetimden satılan reklamlar) girer. Pro reklamsızdır.
-// pro: Pro'ya özel: indirim saatleri, şubeler, Google yorumları/Instagram, doğum günü, QR menü sayfası, sınırsız fiyat listesi.
+// pro: Pro'ya özel: müzik (YouTube Müzik / Spotify, kumandadan müzik), indirim saatleri, şubeler, Google yorumları/Instagram, doğum günü, QR menü sayfası, sınırsız fiyat listesi.
 // menuCats/menuItems: ekranda gösterilen fiyat listesi sınırı (0 = sınırsız). Veri kesilmez; fazlası yalnız ekrana çıkmaz,
 // paket yükselince hemen görünür. İndirim saatleri (fiyat değişimi ve duyuru kartı) Pro'dadır.
 // Pro'da 3 lokasyon (ana + 2 şube) dahil; sonrası her ek şube için "fee_extra_branch" ayarı kadar ücret kaydı düşer.

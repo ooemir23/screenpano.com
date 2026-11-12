@@ -275,7 +275,7 @@ function publicState(t, screenId) {
     qrSize: 17, // QR boyutu ayarı kaldırıldı: tüm QR'lar aynı boyutta
     qrs: (db.qrs || []).map(({ id, label, svg, kind, text, pin, hide }) => ({ id, label, svg, pin: pin !== false, hide: Array.isArray(hide) ? hide : [], marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
     menu: pro ? menuView(db.menu) : require('./plans').limitMenu(db.menu, p), // Başlangıç: sınırlı liste, indirim saati uygulanmaz
-    music: tvMusic(db.music),
+    music: pro ? tvMusic(db.music) : null, // müzik Pro'da; Başlangıç ekranında çalmaz
     rates: F.rates,
     weather: F.weatherFor(t),
     prayer, // Namaz vakitleri / güneş widget'ı (dün-bugün-yarın, ms)

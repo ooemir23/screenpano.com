@@ -488,7 +488,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
   setInterval(() => {
     for (const t of tenants.all()) {
       const m = t.db.music, a = m && m.spotify;
-      if (!a || !a.refreshToken || a.expired || !m.enabled || SP.external(t)) continue;
+      if (!plan(t).pro || !a || !a.refreshToken || a.expired || !m.enabled || SP.external(t)) continue;
       if (!(m.playlists || []).some(x => x.provider === 'spotify')) continue;
       if (!a.expiresAt || a.expiresAt - Date.now() < 15 * 60000) SP.access(t).catch(() => {});
     }
@@ -497,7 +497,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
   const spNowSig = new Map();
   setInterval(async () => {
     for (const t of tenants.all()) {
-      const m = t.db.music; if (!m || !m.enabled || !SP.external(t)) { spNowSig.delete(t.id); continue; }
+      const m = t.db.music; if (!plan(t).pro || !m || !m.enabled || !SP.external(t)) { spNowSig.delete(t.id); continue; }
       const cur = (m.playlists || []).find(x => x.id === m.activeId); if (!cur || cur.provider !== 'spotify') continue;
       const n = await SP.nowPlaying(t).catch(() => null), now = n && n.title ? { title: n.title, artist: n.artist, thumb: n.thumb, playing: n.playing } : null;
       const sig = JSON.stringify(now), last = spNowSig.get(t.id); // değişince, değişmese de dakikada bir (yeni açılan TV de görsün)

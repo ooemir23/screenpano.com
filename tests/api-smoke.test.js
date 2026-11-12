@@ -76,6 +76,7 @@ test('Paketler: maç/bilgi iki pakette, reklam yalnız Başlangıç, Pro kutusu 
   assert.equal(PLANS.baslangic.live, true); assert.equal(PLANS.pro.live, true);
   assert.equal(PLANS.baslangic.ads, true); assert.equal(PLANS.pro.ads, false); assert.equal(UNLIMITED.ads, false);
   assert.ok(!W.WIDGETS.info.pro, 'maçlar ve bilgi sayfaları kutusu Pro değil');
+  assert.ok(W.WIDGETS.music.pro, 'müzik kutusu Pro');
   const ws = W.TEMPLATES.spor.widgets;
   const b = W.forPlan(ws, false), p = W.forPlan(ws, true);
   assert.equal(b.length, ws.length, 'kutu silinmez');
