@@ -16,7 +16,7 @@ function getTenantMediaAt(t, ml) {
   return cur.at;
 }
 const { plan, access } = require('./plans');
-const { WIDGETS, defaultLayout } = require('./widgets');
+const W = require('./widgets'), { WIDGETS, defaultLayout } = W;
 
 // apk-version.json her yayında diskten okunmaz: 30 sn önbellek (deploy'da dosya değişince en geç 30 sn'de görülür)
 let _apkV = null, _apkAt = 0;
@@ -73,7 +73,7 @@ function layoutFor(t, screen) {
     return w;
   };
   const toWorld = w => w.type === 'worldclock' ? { ...w, props: { ...(w.props || {}), cities: require('./world').cities((w.props || {}).zones) } } : w; // TV şehir adlarını dillere göre alır
-  return { ...l, widgets: l.widgets.filter(w => WIDGETS[w.type] && (pro || !WIDGETS[w.type].pro)).map(toRates).map(toWorld) };
+  return { ...l, widgets: W.forPlan(l.widgets.filter(w => WIDGETS[w.type]), pro).map(toRates).map(toWorld) };
 }
 
 const SCH = require('./sched');
@@ -100,7 +100,7 @@ function baseMediaList(t, screenId) {
     out.push(mediaItem(t, v));
   }
   const bk = F.booksView();
-  const covers = require('./plans').plan(t).pro && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR
+  const covers = require('./plans').plan(t).live && db.showBooks !== false && db.showBookSlides !== false && bk && Date.now() - Date.parse(bk.updated) < 72 * F.HOUR
     ? (() => { // her slaytta 4 kitap (2x2: kapak, ad, yazar, yayınevi, açıklama)
       const cards = bk.items.map(b => ({ title: b.title, author: b.author || '', publisher: b.publisher || '', desc: b.desc || '', image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : null }));
       const out2 = [];
@@ -203,7 +203,7 @@ function activeSpecial(t) {
 function publicState(t, screenId) {
   const allScreens = store.q.screensOf.all(t.id);
   const screen = (screenId && allScreens.find(s => s.id === screenId)) || allScreens[0] || require('./tenants').mainScreen(t);
-  const db = t.db, p = plan(t), acc = access(t), pro = p.pro;
+  const db = t.db, p = plan(t), acc = access(t), pro = p.pro, live = !!p.live; // live: maç + bilgi içerikleri (iki pakette)
   const sp = access(t).ok ? activeSpecial(t) : null;
   let layout = layoutFor(t, screen);
   if (sp && sp.rule.full) layout = { ...layout, widgets: [{ type: 'media', x: 0, y: 0, w: layout.cols || 24, h: layout.rows || 24 }] }; // tam ekran: kenar kutular gizli
@@ -236,35 +236,35 @@ function publicState(t, screenId) {
     googleRating: pro && db.google && db.google.rating ? { rating: db.google.rating, count: db.google.count } : null,
     langs: langList(db), langSec: Math.max(5, Math.min(60, Number((db.lang || {}).sec) || 12)),
     tz: config.TZ,
-    matches: pro ? [
+    matches: live ? [
       ...F.autoMatches.filter(m => enabled.some(([, label]) => label === m.league)),
     ].slice(0, 30).map(m => ({ ...m, hl: F.localLogo(m.hl), al: F.localLogo(m.al) })) : [],
     videoGapSec: Math.max(0, Math.min(30, Number.isFinite(Number(db.videoGapSec)) && db.videoGapSec !== undefined ? Math.round(Number(db.videoGapSec)) : 3)), xfadeSec: Math.max(0.4, Math.min(4, Number.isFinite(Number(db.xfadeSec)) && db.xfadeSec !== undefined ? Number(db.xfadeSec) : 1.2)),
-    showStandings: pro && db.showStandings !== false,
-    standings: pro ? Object.fromEntries(enabled.filter(([code]) => F.standings.has(code) && !(db.hideTables || []).includes(code)).map(([code, label]) => [label, F.standings.get(code).map(r => ({ ...r, logo: F.localLogo(r.logo) }))])) : {},
-    trafficApi: pro && F.wantsTraffic(t) ? store.setting('traffic_api', '') : '',
-    mapAt: pro && F.wantsTraffic(t) && F.mapAt ? Math.round(F.mapAt) : null,
-    traffic: pro && F.wantsTraffic(t) ? F.traffic : null,
+    showStandings: live && db.showStandings !== false,
+    standings: live ? Object.fromEntries(enabled.filter(([code]) => F.standings.has(code) && !(db.hideTables || []).includes(code)).map(([code, label]) => [label, F.standings.get(code).map(r => ({ ...r, logo: F.localLogo(r.logo) }))])) : {},
+    trafficApi: live && F.wantsTraffic(t) ? store.setting('traffic_api', '') : '',
+    mapAt: live && F.wantsTraffic(t) && F.mapAt ? Math.round(F.mapAt) : null,
+    traffic: live && F.wantsTraffic(t) ? F.traffic : null,
     showQr: db.showQr !== false,
     env: config.APP_ENV, canTest: !!db.canTest, // menüdeki "Test ortamına geç" düğmesi yalnız canTest açık işletmelerde görünür
     fxMode: ['auto', 'lite', 'ultra', 'full'].includes(db.fxMode) ? db.fxMode : 'auto',
-    showOnThisDay: pro && db.showOnThisDay !== false,
-    onThisDay: pro && F.onThisDay && F.onThisDay.date === F.ymd(new Date()) ? cap(F.onThisDay, imax.otd) : null,
-    showNews: pro && (db.news || {}).enabled !== false,
-    news: pro ? cap(F.newsFor(t), imax.news) : null,
-    showBreaking: !sp && pro && F.breakingOn(t),
+    showOnThisDay: live && db.showOnThisDay !== false,
+    onThisDay: live && F.onThisDay && F.onThisDay.date === F.ymd(new Date()) ? cap(F.onThisDay, imax.otd) : null,
+    showNews: live && (db.news || {}).enabled !== false,
+    news: live ? cap(F.newsFor(t), imax.news) : null,
+    showBreaking: !sp && live && F.breakingOn(t),
     breakingBanner: !sp && (db.breaking || {}).banner !== false,
-    breaking: pro && F.breakingOn(t) ? cap(F.breakingFor(), imax.breaking) : null,
-    showBooks: pro && db.showBooks !== false,
-    books: pro && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.slice(0, imax.books || 999).map(b => ({ ...b, image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
-    showMovies: pro && (db.movies || {}).enabled !== false,
-    showTrailers: !sp && pro && (db.movies || {}).trailers !== false,
+    breaking: live && F.breakingOn(t) ? cap(F.breakingFor(), imax.breaking) : null,
+    showBooks: live && db.showBooks !== false,
+    books: live && books && Date.now() - Date.parse(books.updated) < 72 * F.HOUR ? { items: books.items.slice(0, imax.books || 999).map(b => ({ ...b, image: b.image && F.coverReady(b.image) ? '/cover/' + F.coverHash(b.image) + '.jpg' : '' })) } : null,
+    showMovies: live && (db.movies || {}).enabled !== false,
+    showTrailers: !sp && live && (db.movies || {}).trailers !== false,
     trailerEvery: (db.movies || {}).every || 4, trailerGapMin: (db.movies || {}).gapMin || 8, // fragman sıklığı: kaç içerikte bir / en az kaç dakika arayla
-    movies: pro && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items.slice(0, imax.movies || 999) } : null,
-    showPharmacy: pro && (db.pharmacy || {}).enabled !== false,
-    pharmacies: pro ? cap(F.pharmFor(t), imax.pharm) : null,
+    movies: live && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items.slice(0, imax.movies || 999) } : null,
+    showPharmacy: live && (db.pharmacy || {}).enabled !== false,
+    pharmacies: live ? cap(F.pharmFor(t), imax.pharm) : null,
     infoCfg: { pageSec: Math.max(5, Math.min(60, Number(ic.pageSec) || 12)), dur: ic.dur || {} }, // sayfa başına ekranda kalma süresi (sn)
-    bigMatches: !sp && pro && F.bigCfg(t).enabled ? F.activeBig(t) : [],
+    bigMatches: !sp && live && F.bigCfg(t).enabled ? F.activeBig(t) : [],
     bigCfg: (({ note, info, everyMin, durSec, style }) => ({ note, info, everyMin, durSec, style }))(F.bigCfg(t)),
     celebration: sp ? null : F.activeCelebration(t),
     campaigns: sp ? [] : [...(db.campaigns || []).filter(c => c.enabled && c.svg).map(pubCamp), ...(pro ? happyCamp(db) : [])],

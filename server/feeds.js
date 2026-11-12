@@ -29,7 +29,8 @@ const norm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').repla
 
 // Ekranı çalışan işletmeler (deneme/ödeme süresi geçerli)
 const liveTenants = () => tenants.all().filter(t => access(t).ok);
-const proTenants = () => liveTenants().filter(t => plan(t).pro);
+// canlı içerik (maç, haber, eczane, sinema, kitap…) alan işletmeler: paket 'live' ise (iki pakette de açık)
+const proTenants = () => liveTenants().filter(t => plan(t).live);
 const platformKey = name => store.setting(name, '');
 
 // ESPN takım adlarını ASCII verir (Fenerbahce, Besiktas…): Türkçe karakterli hâle çevrilir
@@ -253,7 +254,7 @@ async function refreshMatches() {
       const ac = goalCol(m.away, m.acol, m.acol2, TEAM_COLORS) || teamColor(m.away, m.acol, m.acol2);
       const goal = { at: Date.now(), id: m.id, league: m.league, home: m.home, away: m.away, hs: m.hs, as: m.as, side: cur.h > prev.h ? 'home' : 'away', minute: g.min || m.clock, player: g.player || '', own: !!g.own, pen: !!g.pen, hc, ac, hc2: goalCol(m.home, m.hcol2, m.hcol, TEAM_COLORS2) || teamColor2(m.home, m.hcol, m.hcol2, hc), ac2: goalCol(m.away, m.acol2, m.acol, TEAM_COLORS2) || teamColor2(m.away, m.acol, m.acol2, ac) };
       // gol yalnızca o ligi seçmiş Pro işletmelerin ekranlarına gider
-      hub.send(t => plan(t).pro && access(t).ok && !require('./state').activeSpecial(t) && enabledLeagues(t).some(([, l]) => l === m.league), { type: 'goal', goal });
+      hub.send(t => plan(t).live && access(t).ok && !require('./state').activeSpecial(t) && enabledLeagues(t).some(([, l]) => l === m.league), { type: 'goal', goal });
     }
     prevScores.set(m.id, cur);
   }
@@ -804,7 +805,7 @@ const isIstanbul = t => {
 };
 const wantsTraffic = t => {
   if (t.db.showTraffic === false) return false;
-  if (!plan(t).pro) return false;
+  if (!plan(t).live) return false;
   return isIstanbul(t) || t.db.showTraffic === true;
 };
 

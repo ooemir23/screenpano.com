@@ -104,6 +104,7 @@ function compare(data, lang, t) {
     row(t('s.cmp.branches'), false, t('s.cmp.branchesPro').replace('{n}', p.includedBranches || p.branches)),
     // compareB: Başlangıç hücresinde evet/hayır yerine sınır metni ({cats}, {items} plans.js'ten gelir)
     ...data.features.filter(f => f.compare).map(f => loc(f, lang)).map(f => row(f.compare, f.compareB ? String(f.compareB).replace('{cats}', b.menuCats).replace('{items}', b.menuItems) : f.plan !== 'pro', true)),
+    row(t('s.cmp.ads'), !b.ads, !p.ads), // Başlangıç reklamlı, Pro reklamsız (plans.js 'ads')
     row(t('s.cmp.badge'), b.badge ? t('s.cmp.badgeSmall') : t('s.no'), p.badge ? t('s.cmp.badgeSmall') : t('s.no')),
   ].join('');
 }

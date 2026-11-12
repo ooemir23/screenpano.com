@@ -78,7 +78,7 @@ function mainScreen(t) {
   const s = store.q.screensOf.all(t.id)[0];
   if (s) return s;
   const W = require('./widgets'), { plan } = require('./plans');
-  const row = { id: require('crypto').randomBytes(6).toString('hex'), tenant_id: t.id, name: 'Ana Ekran', layout: JSON.stringify(W.cleanLayout(W.defaultLayout(plan(t).pro ? 'spor' : 'temel'))), sort: 0, created: Date.now() };
+  const row = { id: require('crypto').randomBytes(6).toString('hex'), tenant_id: t.id, name: 'Ana Ekran', layout: JSON.stringify(W.cleanLayout(W.defaultLayout('spor'))), sort: 0, created: Date.now() };
   store.q.screenIns.run(row);
   return row;
 }

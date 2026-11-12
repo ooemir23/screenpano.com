@@ -128,7 +128,7 @@
         "Gol animasyonu ve canlı skor",
         "Yayın kanalı bilgisiyle kendi maç listeniz"
       ],
-      "plan": "pro",
+      "plan": "all",
       "compare": "Canlı maçlar ve gol animasyonu",
       "visual": {
         "type": "tv",
@@ -323,7 +323,7 @@
         "Trafik durumu (İstanbul)",
         "Her sayfa için ekranda kalma süresi"
       ],
-      "plan": "pro",
+      "plan": "all",
       "compare": "Bilgi bandı (haber, eczane, sinema…)",
       "visual": {
         "type": "win",

@@ -148,7 +148,7 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 const NAV = [
   'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'], ['agenda', 'calendar-clock', 'Yayın Ajandası'],
   'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi'], ['happy', 'sparkles', 'İndirim Saatleri', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
-  'Canlı veri', ['sport', 'trophy', 'Spor', 1], ['info', 'newspaper', 'Bilgi Bandı', 1],
+  'Canlı veri', ['sport', 'trophy', 'Spor'], ['info', 'newspaper', 'Bilgi Bandı'],
   'Takip', ['stats', 'chart-column', 'İstatistik'],
   null, ['settings', 'settings', 'Ayarlar'], ['help', 'circle-help', 'Yardım & SSS'],
 ];
@@ -318,9 +318,9 @@ SECTIONS.home = {
         `<div class="steps">${steps.map((s, i) => `<a class="step ${s[0] ? 'done' : ''}" href="${s[3]}"><span class="n">${s[0] ? '✓' : i + 1}</span><span class="b"><b>${s[1]}</b><span>${s[2]}</span></span><span>›</span></a>`).join('')}</div>`))
       + `</div>`
       + card('Hızlı işlemler', 'Ekranda anında bir gösterim başlatır; ayarlarınızı değiştirmez.', `<div class="row">
-          <button class="btn g" onclick="act('POST','/goal/test',undefined,'Gol animasyonu gönderildi',false)" ${pro() ? '' : 'disabled'}>⚽ Gol animasyonunu dene</button>
+          <button class="btn g" onclick="act('POST','/goal/test',undefined,'Gol animasyonu gönderildi',false)">⚽ Gol animasyonunu dene</button>
           <button class="btn g" onclick="act('POST','/birthday/fire',undefined,'Doğum günü kutlaması gönderildi (seçili kişi yoksa görünmez)',false)" ${pro() ? '' : 'disabled'}>🎂 Doğum günü kutlamasını göster</button>
-          <button class="btn g" onclick="bigTest()" ${pro() ? '' : 'disabled'}>🏟 Büyük maç görselini dene</button>
+          <button class="btn g" onclick="bigTest()">🏟 Büyük maç görselini dene</button>
           ${camp ? `<button class="btn g" onclick="act('POST','/campaigns/${camp.id}/test',undefined,'Kampanya kartı gönderildi',false)">🎁 Kampanya kartını göster</button>` : ''}
         </div>`)
       + `<div class="grid g3">
@@ -406,14 +406,14 @@ function orientSet(deg) {
   if (o) {
     EDIT.layout.orient = o;
     if (!cur) {
-      const tplKey = pro() ? 'dikey_menu' : 'dikey_vitrin';
+      const tplKey = 'dikey_menu';
       const tpl = S.cat.templates && S.cat.templates[tplKey];
       if (tpl && Array.isArray(tpl.widgets)) EDIT.layout.widgets = clone(tpl.widgets);
     }
   } else {
     delete EDIT.layout.orient;
     if (cur) {
-      const tplKey = pro() ? 'spor' : 'temel';
+      const tplKey = 'spor';
       const tpl = S.cat.templates && S.cat.templates[tplKey];
       if (tpl && Array.isArray(tpl.widgets)) EDIT.layout.widgets = clone(tpl.widgets);
     }
@@ -556,7 +556,7 @@ function drawCanvas() {
     const isFl = w.type === 'qr' || w.type === 'text';
     const txtPrev = w.type === 'text' ? (p.title || p.body ? esc((p.title || '') + (p.title && p.body ? ' ' : '') + (p.body || '')).slice(0, 34) : 'Yazı kutusu')
       : (w.type === 'weather' && p.city ? esc(p.city) + ' · Hava' : (w.type === 'rates' && p.city ? esc(p.city) + ' · ' + esc(d.name) : esc(d.name)));
-    const sub = d.pro && !pro() ? '🔒 Pro'
+    const sub = d.pro && !pro() ? '🔒 Pro · ekranda saat'
       : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === p.qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h
       : w.type === 'text' ? (p.size ? p.size.toUpperCase() + ' · ' : '') + w.w + '×' + w.h
       : w.w + '×' + w.h;
@@ -806,7 +806,7 @@ function addW(type) {
   const d = S.cat.widgets[type];
   const cnt = EDIT.layout.widgets.filter(w => w.type === type).length;
   if (d.multi ? cnt >= d.multi : cnt) return toast(d.multi ? `En fazla ${d.multi} tane eklenebilir` : 'Bu widget düzende zaten var', true);
-  if (d.pro && !pro()) toast('Bu widget Pro pakette; paketinizde ekranda görünmez', true);
+  if (d.pro && !pro()) toast('Bu kutu Pro pakette; paketinizde yerinde saat görünür', true);
   const G = EDIT.layout.cols || 24, [mw, mh] = (d.min || [3, 2]).map(v => v * G / 24); let spot = null;
   for (let y = 0; y <= G - mh && !spot; y++) for (let x = 0; x <= G - mw && !spot; x++) { const c = { x, y, w: mw, h: mh }; if (!EDIT.layout.widgets.some(w => overlap(w, c))) spot = c; }
   if (!spot && (type === 'qr' || type === 'text')) {
@@ -1664,7 +1664,6 @@ SECTIONS.sport = {
         sw(bc.enabled, "act('PUT','/bigmatch',{enabled:this.checked},this.checked?'Açıldı':'Kapatıldı')"), bc.enabled ? '' : 'off')
 ) }[sec]();
     return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.', `<button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button>`)
-      + lock('Maç ve spor özellikleri')
       + `<div class="spsum" id="sp-sum"></div>` + tabs('sport', TABS) + body;
   },
   async after() {
@@ -1958,7 +1957,6 @@ SECTIONS.info = {
     const maxIn = (k, d, lo, hi) => `<label class="ibf"><span>En çok kaç öğe</span><span class="ibn"><input type="number" class="ic-m" data-t="${k}" min="${lo}" max="${hi}" value="${imax[k] || ''}" placeholder="${d}"><em>adet</em></span></label>`;
     const tile = (icon, title, desc, on, js, body = '', extra = '') => `<div class="ibc ${on === null || on ? '' : 'off'}"><div class="ibh"><span class="ibi">${icon}</span><div class="b"><b>${title}</b><span>${desc}</span></div>${on === null ? '' : sw(on, js)}</div><div class="ibb">${body}</div>${extra ? `<details class="ibx"><summary>Diğer ayarlar</summary><div>${extra}</div></details>` : ''}</div>`;
     return head('Bilgi Bandı', '"Maçlar ve bilgi sayfaları" widget\'ında sırayla dönen ve kayan bantta akan bilgiler. Maç yokken ekranı canlı tutar.')
-      + lock('Bilgi bandı')
       + card('Genel süre', 'Her sayfa ekranda bu kadar kalır. Aşağıda bir içerik için ayrı süre girerseniz o içerik için o geçerli olur. Tüm ekranlar sunucu saatine göre aynı sayfada kalır.',
         `<div class="ibg"><input type="range" id="ic-def" min="5" max="60" step="1" value="${defSec}" oninput="$('ic-defv').textContent=this.value+' sn'"><b id="ic-defv">${defSec} sn</b></div>
          <div class="row end mt"><button class="btn" data-save onclick="saveInfoCfg()">Süreleri kaydet</button></div>`)
@@ -2051,7 +2049,7 @@ SECTIONS.settings = {
       const m = (l, used, lim, f = x => x) => `<div class="row" style="justify-content:space-between;font-size:14px"><span>${l}</span><span class="muted">${f(used)} / ${lim >= 999 || (p.id === 'sinirsiz' && l !== 'Cihaz') ? '∞' : f(lim)}</span></div><div class="meter" style="margin-bottom:12px"><i style="width:${Math.max(2, Math.min(100, lim >= 999 ? 0 : used / lim * 100))}%"></i></div>`;
       h += `<div class="grid g2">` + card('Paketiniz', '', `<div style="font-size:24px;font-weight:700;color:var(--accent2)">${esc(p.name)}</div><p class="muted" style="margin:2px 0 16px">${acc.kind === 'unlimited' ? 'Süresiz · tüm özellikler açık, sınır yok' : !acc.ok ? 'Süresi doldu' : (acc.kind === 'trial' ? 'Deneme · ' : 'Aktif · ') + fmtDate(acc.until) + ' tarihine kadar'}</p>
           ${m('Cihaz', u.devices, p.devices)}${m('Depolama', Math.round(u.storageBytes / 1048576), p.storageMB, x => x >= 1024 ? (x / 1024).toFixed(1) + ' GB' : x + ' MB')}${m('Kullanıcı', u.users, p.users)}`)
-        + card('Paketler', 'Paket değişikliği ve ödeme için bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Maçlar ve canlı skor<br>✓ Fiyat listesi<br>✓ Bilgi bandı, yorumlar, doğum günü' : '✓ Medya, logo, saat, hava, kurlar<br>✓ Kampanya kartı ve QR<br><span class="muted">Köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div>`;
+        + card('Paketler', 'Paket değişikliği ve ödeme için bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div>`;
     } else if (sub === 'branches') {
       h += branchesHtml();
     } else if (sub === 'privacy') {

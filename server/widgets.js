@@ -16,7 +16,7 @@ const WIDGETS = {
   text:    { name: 'Yazı ve duyuru kutusu', desc: 'Rezervasyon, telefon, duyuru veya özel metin; birden çok eklenebilir, medyanın üstüne ya da yanına konabilir', pro: false, min: [3, 2], multi: 8, props: { title: 'Rezervasyon', body: '', align: 'center', size: 'm' }, enums: { align: ['left', 'center', 'right'], size: ['xs', 's', 'm', 'l', 'xl'] } },
   image:   { name: 'Görsel', desc: 'Sabit afiş veya fotoğraf', pro: false, min: [3, 3], props: { url: '', fit: 'cover' } },
   qr:      { name: 'QR kart', desc: 'Seçtiğiniz QR kodu ya da tüm QR kodlarınızı sırayla gösterir; birden çok eklenebilir ve diğer kutuların üstüne konabilir', pro: false, min: [2, 3], multi: 6, props: { qr: '', style: 'below', size: 'auto', text: 'm', look: 'classic' }, enums: { look: ['classic', 'card', 'soft'], style: ['below', 'right', 'left', 'plain'], size: ['xs', 's', 'auto', 'l', 'xl', 'box'], text: ['s', 'm', 'l'] } },
-  info:    { name: 'Maçlar ve bilgi sayfaları', desc: 'Maçlar, puan durumu, nöbetçi eczane, haber, sinema, tarihte bugün, trafik', pro: true, min: [5, 8] },
+  info:    { name: 'Maçlar ve bilgi sayfaları', desc: 'Maçlar, puan durumu, nöbetçi eczane, haber, sinema, tarihte bugün, trafik', min: [5, 8] },
   reviews: { name: 'Google yorumları', desc: 'Müşteri yorumları şeridi', pro: true, min: [8, 2] },
   menu:    { name: 'Fiyat tarifesi', desc: 'Kategori, ürün ve fiyat listesi (Fiyat Etiketi Yönetmeliği için)', min: [5, 6], props: { title: 'Fiyat Listesi' } },
   music:   { name: 'Müzik', desc: 'Spotify / YouTube Müzik: şarkı değişince kapak ve ad açılır, birkaç saniye sonra yalnız kapak görseline küçülür', pro: false, min: [3, 3] },
@@ -268,4 +268,10 @@ function cleanTheme(t, cur = {}) {
   return o;
 }
 
-module.exports = { COLS, ROWS, WIDGETS, TEMPLATES, THEMES, FONTS, defaultLayout, cleanLayout, cleanTheme };
+// Paket Pro değilse Pro'ya özel kutular (ör. Google yorumları) silinmez, aynı yerde saat kutusuna döner:
+// hazır işletme düzenleri her pakette boşluksuz çalışır, paket yükselince asıl kutu geri gelir (kayıtlı düzen değişmez).
+function forPlan(widgets, pro) {
+  if (pro) return widgets;
+  return (widgets || []).map(w => (WIDGETS[w.type] || {}).pro ? { ...w, type: 'clock', props: {}, swappedFrom: w.type } : w);
+}
+module.exports = { COLS, ROWS, WIDGETS, TEMPLATES, THEMES, FONTS, defaultLayout, cleanLayout, cleanTheme, forPlan };

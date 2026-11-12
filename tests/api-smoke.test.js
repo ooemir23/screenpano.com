@@ -70,6 +70,20 @@ test('Başlangıç fiyat listesi: ekrana ilk 3 kategori / 40 ürün gider, indir
   assert.equal(m2.categories.length, 3, 'kategori sınırı');
 });
 
+test('Paketler: maç/bilgi iki pakette, reklam yalnız Başlangıç, Pro kutusu Başlangıç düzeninde saate döner', () => {
+  const { PLANS, UNLIMITED } = require('../server/plans');
+  const W = require('../server/widgets');
+  assert.equal(PLANS.baslangic.live, true); assert.equal(PLANS.pro.live, true);
+  assert.equal(PLANS.baslangic.ads, true); assert.equal(PLANS.pro.ads, false); assert.equal(UNLIMITED.ads, false);
+  assert.ok(!W.WIDGETS.info.pro, 'maçlar ve bilgi sayfaları kutusu Pro değil');
+  const ws = W.TEMPLATES.spor.widgets;
+  const b = W.forPlan(ws, false), p = W.forPlan(ws, true);
+  assert.equal(b.length, ws.length, 'kutu silinmez');
+  assert.ok(!b.some(w => W.WIDGETS[w.type].pro), 'Başlangıç ekranında Pro kutusu kalmaz');
+  assert.deepEqual(b.map(w => [w.x, w.y, w.w, w.h]), ws.map(w => [w.x, w.y, w.w, w.h]), 'yerleşim aynı');
+  assert.strictEqual(p, ws);
+});
+
 test('TV sayfası CSP: YouTube, Spotify SDK ve Google Fonts engellenmez', async () => {
   const csp = (await fetch(BASE + '/tv')).headers.get('content-security-policy') || '';
   const dir = n => (csp.split(';').map(x => x.trim()).find(x => x.startsWith(n + ' ')) || '');

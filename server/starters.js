@@ -65,15 +65,13 @@ const W = require('./widgets');
 const list = () => Object.entries(STARTERS).map(([k, v]) => ({ key: k, name: v.name, desc: v.desc, theme: W.THEMES[v.theme], widgets: W.TEMPLATES[v.layout].widgets, menu: !!v.menu }));
 const clone = o => JSON.parse(JSON.stringify(o));
 
-// Paketin içeriğini bir işletme dokümanına ve ekran düzenine dönüştürür. pro=false iken düzende Pro'ya özel kutu varsa 'temel' düzen kullanılır.
-// Paketin düzeninde Pro'ya özel kutu var mı (yoksa Başlangıç da aynı düzeni kullanır; ör. kafe: medya + fiyat listesi + saat)
-const proOnly = name => ((W.TEMPLATES[name] || {}).widgets || []).some(w => (W.WIDGETS[w.type] || {}).pro);
+// Paketin içeriğini bir işletme dokümanına ve ekran düzenine dönüştürür. Düzen paketten bağımsızdır.
 function build(key, pro) {
   const s = STARTERS[key]; if (!s) return null;
   const { name, ...theme } = W.THEMES[s.theme];
   return {
     doc: { theme: W.cleanTheme(theme, {}), ...(s.menu ? { menu: { currency: '₺', ...clone(s.menu) } } : {}) },
-    layout: W.cleanLayout(W.defaultLayout(pro || !proOnly(s.layout) ? s.layout : 'temel')),
+    layout: W.cleanLayout(W.defaultLayout(s.layout)), // işletme türü her pakette aynı; Pro'ya özel kutu ekranda saate döner (widgets.forPlan)
   };
 }
 module.exports = { STARTERS, list, build };

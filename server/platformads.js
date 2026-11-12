@@ -69,7 +69,13 @@ function eligible(a, t) {
 }
 // Deneme gönderimi: reklam yalnız seçilen işletmenin ekranlarında, kısa süreliğine (ödeme/dönem/hedef gözetmeden) sık aralıkla gösterilir
 const trialOn = (a, t) => !!(a.trial && a.trial.until > Date.now() && (!t || a.trial.tid === t.id) && (a.creatives || []).length && !a.paused);
-const liveFor = t => load().filter(a => trialOn(a, t) || (status(a) === 'live' && eligible(a, t)));
+// Pro reklamsızdır: reklam yalnız 'ads' açık pakette (Başlangıç) döner. Deneme gönderimi Pro'da yalnız süperin
+// kendi (sınırsız) işletmesinde çalışır; müşterinin Pro ekranına hiçbir koşulda reklam girmez.
+const liveFor = t => {
+  const p = require('./plans').plan(t);
+  if (!p.ads) return require('./plans').isUnlimited(t) ? load().filter(a => trialOn(a, t)) : [];
+  return load().filter(a => trialOn(a, t) || (status(a) === 'live' && eligible(a, t)));
+};
 
 // Medya döngüsüne reklam ekler: her reklam "every" içerikte bir, görselleri sırayla. Ekranda başka içerik yoksa yalnız reklamlar döner.
 function inject(t, list) {

@@ -194,8 +194,8 @@ r.delete('/designs/:id', (req, res) => {
 r.post('/designs/:id/apply', ownerOnly, (req, res) => {
   const t = req.t, d = designAll().find(x => x.id === req.params.id);
   if (!d) return res.status(404).json({ error: 'Tasarım bulunamadı' });
-  const pro = plan(t).pro, l = W.cleanLayout(d.layout);
-  if (!pro) l.widgets = l.widgets.filter(w => !(W.WIDGETS[w.type] || {}).pro);
+  const l = W.cleanLayout(d.layout);
+  // Pro'ya özel kutular kayıtta silinmez; ekrana Başlangıç'ta saat olarak gider (widgets.forPlan), Pro'ya geçince geri gelir
   store.updateScreen(tenants.mainScreen(t).id, t.id, { layout: JSON.stringify(W.cleanLayout(l)) });
   t.db.theme = W.cleanTheme({ ...t.db.theme, ...d.theme }, t.db.theme);
   changed(t); res.json({ ok: true });
@@ -217,7 +217,7 @@ r.post('/design/reset', ownerOnly, (req, res) => {
   if (!['layout', 'colors', 'tv', 'all'].includes(scope)) return res.status(400).json({ error: 'Geçersiz kapsam' });
   if (all || scope === 'layout') {
     const sc = tenants.mainScreen(t), cur = store.J(sc.layout) || {}, or = !all && [90, 270].includes(Number(cur.orient)) ? Number(cur.orient) : 0;
-    const l = W.cleanLayout({ ...W.defaultLayout(or ? (plan(t).pro ? 'dikey_menu' : 'dikey_vitrin') : (plan(t).pro ? 'spor' : 'temel')), ...(or ? { orient: or } : {}) });
+    const l = W.cleanLayout({ ...W.defaultLayout(or ? 'dikey_menu' : 'spor'), ...(or ? { orient: or } : {}) });
     store.updateScreen(sc.id, t.id, { layout: JSON.stringify(l) });
   }
   if (all || scope === 'colors') { const { name, ...th } = W.THEMES.kahve; t.db.theme = W.cleanTheme(th, {}); }
@@ -844,14 +844,14 @@ r.put('/options', (req, res) => {
     if (o) {
       cur.orient = o;
       if (!prevOr) {
-        const tplKey = plan(req.t).pro ? 'dikey_menu' : 'dikey_vitrin';
+        const tplKey = 'dikey_menu';
         const tpl = W.TEMPLATES[tplKey];
         if (tpl && Array.isArray(tpl.widgets)) cur.widgets = JSON.parse(JSON.stringify(tpl.widgets));
       }
     } else {
       delete cur.orient;
       if (prevOr) {
-        const tplKey = plan(req.t).pro ? 'spor' : 'temel';
+        const tplKey = 'spor';
         const tpl = W.TEMPLATES[tplKey];
         if (tpl && Array.isArray(tpl.widgets)) cur.widgets = JSON.parse(JSON.stringify(tpl.widgets));
       }
