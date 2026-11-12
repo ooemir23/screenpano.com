@@ -112,7 +112,7 @@ r.get('/me', (req, res) => {
   res.json({
     user: { id: req.user.id, username: req.user.username, role: req.user.role, name: req.user.name, impersonating: !!auth.impOf(req.user) },
     tenant: { id: t.id, name: t.name, plan: p, status: t.status, access: acc, trialUntil: t.trial_until, paidUntil: t.paid_until, location: t.db.location, menuCount: ((t.db.menu || {}).categories || []).length, logo: t.db.logo ? t.upBase + t.db.logo : null, theme: t.db.theme, notifyEmail: (t.db.notify && t.db.notify.email) || '', emailVerified: !!(t.db.notify && t.db.notify.verified) },
-    upBase: t.upBase, brand: config.BRAND, plans: PLANS,
+    upBase: t.upBase, brand: config.BRAND, plans: PLANS, pricing: require('./pricing').get(),
     usage: { devices: store.q.devicesOf.all(t.id).length, storageBytes: media.usedBytes(t), users: store.q.usersOf.all(t.id).length },
   });
 });

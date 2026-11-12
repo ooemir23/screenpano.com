@@ -45,7 +45,7 @@ r.get('/overview', (req, res) => {
     fleet: { total: fl.length, online: fl.filter(d => d.online).length, apk: fl.filter(d => d.apk).length, old: fl.filter(d => d.old), noBoot: fl.filter(d => d.boot === 'izin-yok') } };
   const byT = {}; for (const d of fl) (byT[d.tenantId] || (byT[d.tenantId] = [])).push({ name: d.name, online: d.online, app: d.app, old: d.old });
   for (const x of list) x.fleet = byT[x.id] || [];
-  res.json({ system, books: require('./feeds').booksInfo(), google: gUse, backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
+  res.json({ pricing: require('./pricing').get(), system, books: require('./feeds').booksInfo(), google: gUse, backup: backup.status(), storage: storage.status(), offline: monitor.overview(), mail: monitor.mailEnabled(), tenants: list, plans: PLANS, settings, totals: { tenants: list.length, live: list.filter(x => x.access.ok).length, devices: list.reduce((a, x) => a + x.devices, 0), online: online.size } });
 });
 // ---- istatistik: tüm platform ve işletme bazında ----
 const STD = v => [7, 30, 90].includes(Number(v)) ? Number(v) : 30;
@@ -176,6 +176,12 @@ r.delete('/tenants/:id', trueOnly, (req, res) => {
   if (String((req.body || {}).confirm || '') !== t.name) return res.status(400).json({ error: 'Silmek için işletme adını aynen yazın' });
   const ids = require('./accounts').deleteTenant(t.id); // ana işletmeyse şubeleri de silinir
   res.json({ ok: true, count: ids.length });
+});
+// Fiyatlandırma (paketler, ek kutu, ek şube; aylık + yıllık): site, işletme paneli ve şube ücreti buradan okur
+r.get('/pricing', (req, res) => res.json(require('./pricing').get()));
+r.put('/pricing', trueOnly, (req, res) => {
+  const p = require('./pricing').set(req.body || {});
+  res.json({ ok: true, pricing: p });
 });
 r.put('/settings', trueOnly, (req, res) => {
   const b = req.body || {};

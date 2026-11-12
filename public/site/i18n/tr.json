@@ -188,6 +188,13 @@
   "s.cmp.badge": "Ekranda ürün ibaresi",
   "s.cmp.badgeSmall": "Köşede küçük",
   "s.cmp.ads": "Reklamsız ekran",
+  "s.perMonth": "/ ay",
+  "s.yearly": "Yıllık {p}",
+  "s.monthsFree": "{n} ay hediye",
+  "s.vatExcl": "Fiyatlara KDV dahil değildir",
+  "s.vatIncl": "Fiyatlara KDV dahildir",
+  "s.extraBox": "Ek TV kutusu",
+  "s.extraBranch": "Ek şube",
   "s.yes": "Var",
   "s.no": "Yok",
 

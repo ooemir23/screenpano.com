@@ -1472,6 +1472,12 @@ async function removeHappyImg() {
 }
 async function testHappy() { await act('POST', '/happy-card/test', undefined, 'Kart TV\'de gösteriliyor', false); }
 
+// Paket fiyatı (süper yönetim → Fiyatlandırma): "2.000 ₺ / ay · yıllık 20.000 ₺"; girilmemişse boş
+function planPrice(id) {
+  const P = S.me && S.me.pricing, x = P && P[id]; if (!x || !x.monthly) return '';
+  const f = n => { const v = n.toLocaleString(I18N.locale); return P.currency === 'TRY' ? v + ' ₺' : (P.currency === 'USD' ? '$' : '€') + v; };
+  return `<span class="muted" style="display:block;font-weight:600;color:var(--accent2);margin:2px 0 6px">${f(x.monthly)} / ay${x.yearly ? ' · yıllık ' + f(x.yearly) : ''}${P.vat === 'incl' ? '' : ' + KDV'}</span>`;
+}
 /* ================= FİYAT LİSTESİ ================= */
 // Başlangıç paketinde ekrana ilk menuCats kategori ve toplam menuItems ürün gider (sunucu: state.js limitMenu); veri kesilmez.
 function menuLimitNote(m) {
@@ -2052,7 +2058,7 @@ SECTIONS.settings = {
       const m = (l, used, lim, f = x => x) => `<div class="row" style="justify-content:space-between;font-size:14px"><span>${l}</span><span class="muted">${f(used)} / ${lim >= 999 || (p.id === 'sinirsiz' && l !== 'Cihaz') ? '∞' : f(lim)}</span></div><div class="meter" style="margin-bottom:12px"><i style="width:${Math.max(2, Math.min(100, lim >= 999 ? 0 : used / lim * 100))}%"></i></div>`;
       h += `<div class="grid g2">` + card('Paketiniz', '', `<div style="font-size:24px;font-weight:700;color:var(--accent2)">${esc(p.name)}</div><p class="muted" style="margin:2px 0 16px">${acc.kind === 'unlimited' ? 'Süresiz · tüm özellikler açık, sınır yok' : !acc.ok ? 'Süresi doldu' : (acc.kind === 'trial' ? 'Deneme · ' : 'Aktif · ') + fmtDate(acc.until) + ' tarihine kadar'}</p>
           ${m('Cihaz', u.devices, p.devices)}${m('Depolama', Math.round(u.storageBytes / 1048576), p.storageMB, x => x >= 1024 ? (x / 1024).toFixed(1) + ' GB' : x + ' MB')}${m('Kullanıcı', u.users, p.users)}`)
-        + card('Paketler', 'Paket değişikliği ve ödeme için bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div>`;
+        + card('Paketler', 'Paket değişikliği ve ödeme için bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div>`;
     } else if (sub === 'branches') {
       h += branchesHtml();
     } else if (sub === 'privacy') {

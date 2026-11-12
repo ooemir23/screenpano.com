@@ -163,3 +163,9 @@ Alan yok · gösterilmiyor ¦ No space · not shown ¦ Kein Platz · nicht angez
 En fazla {} içerik eklenebilir. Kullanmadığınız içerikleri silin. ¦ You can add up to {} items. Delete items you no longer use. ¦ Es können höchstens {} Inhalte hinzugefügt werden. Löschen Sie nicht mehr genutzte Inhalte. ¦ يمكن إضافة {} محتوى كحد أقصى. احذف المحتويات التي لا تستخدمها.
 {} dosya eklenmedi: en fazla {} içerik olabilir ¦ {} file(s) were not added: the limit is {} items ¦ {} Datei(en) nicht hinzugefügt: höchstens {} Inhalte möglich ¦ لم تتم إضافة {} ملف: الحد الأقصى {} محتوى
 Kullanmadığınız içerikleri silip tekrar deneyin. ¦ Delete items you don't use and try again. ¦ Löschen Sie ungenutzte Inhalte und versuchen Sie es erneut. ¦ احذف المحتويات التي لا تستخدمها ثم أعد المحاولة.
+{} / ay · yıllık {} + KDV ¦ {} / month · {} per year + VAT ¦ {} / Monat · jährlich {} zzgl. MwSt. ¦ {} / شهرياً · {} سنوياً + ضريبة القيمة المضافة
+{} / ay + KDV ¦ {} / month + VAT ¦ {} / Monat zzgl. MwSt. ¦ {} / شهرياً + ضريبة القيمة المضافة
+{} / ay · yıllık {} ¦ {} / month · {} per year ¦ {} / Monat · jährlich {} ¦ {} / شهرياً · {} سنوياً
+{} / ay ¦ {} / month ¦ {} / Monat ¦ {} / شهرياً
+Fiyatlar kaydedildi ¦ Prices saved ¦ Preise gespeichert ¦ تم حفظ الأسعار
+Fiyatlandırma ¦ Pricing ¦ Preise ¦ التسعير

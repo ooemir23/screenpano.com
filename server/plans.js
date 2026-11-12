@@ -6,7 +6,7 @@
 // pro: Pro'ya özel: müzik (YouTube Müzik / Spotify, kumandadan müzik), indirim saatleri, şubeler, Google yorumları/Instagram, doğum günü, QR menü sayfası, sınırsız fiyat listesi.
 // menuCats/menuItems: ekranda gösterilen fiyat listesi sınırı (0 = sınırsız). Veri kesilmez; fazlası yalnız ekrana çıkmaz,
 // paket yükselince hemen görünür. İndirim saatleri (fiyat değişimi ve duyuru kartı) Pro'dadır.
-// Pro'da 3 lokasyon (ana + 2 şube) dahil; sonrası her ek şube için "fee_extra_branch" ayarı kadar ücret kaydı düşer.
+// Pro'da 3 lokasyon (ana + 2 şube) dahil; sonrası her ek şube için süper yönetim → Fiyatlandırma'daki ek şube ücreti kadar kayıt düşer.
 const PLANS = {
   baslangic: { id: 'baslangic', name: 'Başlangıç', devices: 1, storageMB: 2048, users: 1, pro: false, live: true, ads: true, badge: true, branches: 1, includedBranches: 1, menuCats: 3, menuItems: 40 },
   pro: { id: 'pro', name: 'Pro', devices: 2, storageMB: 5120, users: 3, pro: true, live: true, ads: false, badge: false, branches: 99, includedBranches: 3, menuCats: 0, menuItems: 0 },

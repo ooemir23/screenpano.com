@@ -122,7 +122,16 @@ function render(store, tenants, access, lang = 'tr') {
   const t = dict(lang);
   const st = k => store.setting(k, '');
   // D9: fiyat yazılmadıysa iletişim bölümüne giden "Teklif al" bağlantısı öne çıkar
-  const price = v => v ? e(v) : `<small>${e(t('s.priceAsk'))}</small><a class="ask" href="#contact">${e(t('s.quote'))} →</a>`;
+  // Fiyatlar süper yönetim → Fiyatlandırma'dan (server/pricing.js). Aylık boşsa "Fiyat için bize ulaşın".
+  const PR = require('./pricing'), pr = PR.get();
+  const yearLine = x => { if (!x.yearly) return ''; const n = PR.monthsFree(x); return `<span class="yr">${e(t('s.yearly').replace('{p}', PR.fmt(x.yearly, pr, lang)))}${n ? ' · ' + e(t('s.monthsFree').replace('{n}', String(n).replace('.', lang === 'en' ? '.' : ','))) : ''}</span>`; };
+  const price = x => x.monthly
+    ? `${e(PR.fmt(x.monthly, pr, lang))}<small> ${e(t('s.perMonth'))}</small>${yearLine(x)}`
+    : `<small>${e(t('s.priceAsk'))}</small><a class="ask" href="#contact">${e(t('s.quote'))} →</a>`;
+  const extraTxt = x => PR.fmt(x.monthly, pr, lang) + ' ' + t('s.perMonth') + (x.yearly ? ` (${t('s.yearly').replace('{p}', PR.fmt(x.yearly, pr, lang))})` : '');
+  const anyPrice = pr.baslangic.monthly || pr.pro.monthly;
+  const prExtras = [pr.extraBox.monthly && `${t('s.extraBox')}: ${extraTxt(pr.extraBox)}`, pr.extraBranch.monthly && `${t('s.extraBranch')}: ${extraTxt(pr.extraBranch)}`, anyPrice && t(pr.vat === 'incl' ? 's.vatIncl' : 's.vatExcl'), anyPrice && pr.annualNote].filter(Boolean);
+  const priceExtras = prExtras.length ? `<p class="pextra">${prExtras.map(e).join(' · ')}</p>` : '';
   const phone = st('site_phone'), wa = st('site_whatsapp').replace(/\D/g, ''), mail = st('site_email') || st('legal_email');
   const contact = [wa && `<a class="btn" href="https://wa.me/${wa}" rel="noopener">${e(t('contact.wa'))}</a>`, phone && `<a class="btn ghost" href="tel:${e(phone.replace(/\s/g, ''))}" dir="ltr">${e(phone)}</a>`, mail && `<a class="btn ghost" href="mailto:${e(mail)}">${e(mail)}</a>`].filter(Boolean).join('');
   const live = tenants.all().filter(x => access(x).ok).length;
@@ -138,7 +147,7 @@ function render(store, tenants, access, lang = 'tr') {
     LDJSON: JSON.stringify(ld).replace(/</g, '\\u003c'), JS_T: JSON.stringify(jsT).replace(/</g, '\\u003c'),
     FONT_PRELOAD: RTL.has(lang) ? '<link rel="preload" href="/fonts/noto-kufi-arabic.woff2" as="font" type="font/woff2" crossorigin>' : '',
     LANG_MENU: langMenu(lang), LANG_LINKS: LANGS.map(l => `<a href="${PATH(l)}" hreflang="${l}" lang="${l}" data-lang="${l}"${l === lang ? ' aria-current="true"' : ''}>${e(read(I18N(l), true)['meta.name'])}</a>`).join(''),
-    PRICE_BASLANGIC: price(st('site_price_baslangic')), PRICE_PRO: price(st('site_price_pro')), CONTACT: contact, YEAR: new Date().getFullYear(),
+    PRICE_BASLANGIC: price(pr.baslangic), PRICE_PRO: price(pr.pro), PRICE_EXTRAS: priceExtras, CONTACT: contact, YEAR: new Date().getFullYear(),
     LIVE: live >= 10 ? e(t('s.live').replace('{n}', live)) : e(t('s.liveDefault')),
     FEATURES: features(data, lang, t), EXTRAS: extras(data, lang, t), COMPARE: compare(data, lang, t), FAQ: faq, WIDGETS: widgets,
   };

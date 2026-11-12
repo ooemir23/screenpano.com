@@ -52,6 +52,20 @@ test('sağlık ucu ve ana sayfa çalışır', async () => {
   assert.equal((await fetch(BASE + '/')).status, 200);
 });
 
+test('fiyatlandırma: süperden girilir, sitede ve şube ücretinde görünür, yalnız gerçek süper değiştirebilir', async () => {
+  let r = await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  assert.equal(r.status, 200);
+  r = await req('PUT', '/api/super/pricing', { currency: 'TRY', vat: 'excl', baslangic: { monthly: '2.000', yearly: 20000 }, pro: { monthly: 3000, yearly: 30000 }, extraBox: { monthly: 500 }, extraBranch: { monthly: 1500, yearly: -5 } });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.j.pricing.baslangic, { monthly: 2000, yearly: 20000 });
+  assert.equal(r.j.pricing.extraBranch.yearly, 0, 'geçersiz tutar 0 olur');
+  const html = await (await fetch(BASE + '/')).text();
+  for (const x of ['2.000 ₺', '3.000 ₺', 'Yıllık 20.000 ₺', '2 ay hediye', 'Ek şube: 1.500 ₺', 'KDV dahil değildir']) assert.ok(html.includes(x), 'sitede yok: ' + x);
+  const en = await (await fetch(BASE + '/en')).text();
+  assert.ok(en.includes('2,000 ₺') && en.includes('/ month'), 'İngilizce biçim');
+  assert.equal(require('../server/pricing').monthsFree({ monthly: 2000, yearly: 20000 }), 2);
+});
+
 test('Başlangıç fiyat listesi: ekrana ilk 3 kategori / 40 ürün gider, indirim saati uygulanmaz', () => {
   const { PLANS } = require('../server/plans');
   assert.equal(PLANS.baslangic.menuCats, 3); assert.equal(PLANS.baslangic.menuItems, 40);

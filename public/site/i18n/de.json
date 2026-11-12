@@ -188,6 +188,13 @@
   "s.cmp.badge": "ScreenPano-Hinweis auf dem Bildschirm",
   "s.cmp.badgeSmall": "Klein, in der Ecke",
   "s.cmp.ads": "Werbefreier Bildschirm",
+  "s.perMonth": "/ Monat",
+  "s.yearly": "Jährlich {p}",
+  "s.monthsFree": "{n} Monate gratis",
+  "s.vatExcl": "Preise zzgl. MwSt.",
+  "s.vatIncl": "Preise inkl. MwSt.",
+  "s.extraBox": "Zusätzliche TV-Box",
+  "s.extraBranch": "Zusätzliche Filiale",
   "s.yes": "Enthalten",
   "s.no": "Nicht enthalten",
 

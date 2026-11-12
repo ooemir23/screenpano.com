@@ -282,12 +282,10 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
   // ================= ŞUBELER =================
   const homeOf = u => tenants.get(auth.impOf(u) || u.tenant_id);
   function orgList(t) { return t.org_id ? store.q.orgTenants.all(t.org_id) : [{ id: t.id, name: t.name }]; }
-  // Ek şube ücreti (TL): "fee_extra_branch" ayarından; sınırsız işletmelere uygulanmaz.
-  // Ayar boş ya da geçersizse 0 sayılıp şube ücretsiz açılmasın: varsayılan 500'e düşer.
+  // Ek şube ücreti (aylık): süper yönetim → Fiyatlandırma'dan; sınırsız işletmelere uygulanmaz.
   function extraFee(home) {
     if (plan(home).id === 'sinirsiz') return 0;
-    const v = Number(store.setting('fee_extra_branch', ''));
-    return v > 0 ? Math.round(v) : 500;
+    return require('./pricing').extraBranchFee(); // süper yönetim → Fiyatlandırma (boşsa 500)
   }
   r.get('/branches', (req, res) => {
     const home = homeOf(req.user), online = hub.onlineDeviceIds();

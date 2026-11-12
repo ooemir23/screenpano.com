@@ -188,6 +188,13 @@
   "s.cmp.badge": "ScreenPano badge on screen",
   "s.cmp.badgeSmall": "Small, in a corner",
   "s.cmp.ads": "Ad-free screen",
+  "s.perMonth": "/ month",
+  "s.yearly": "{p} per year",
+  "s.monthsFree": "{n} months free",
+  "s.vatExcl": "Prices exclude VAT",
+  "s.vatIncl": "Prices include VAT",
+  "s.extraBox": "Extra TV box",
+  "s.extraBranch": "Extra branch",
   "s.yes": "Included",
   "s.no": "Not included",
 

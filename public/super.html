@@ -996,6 +996,37 @@ async function saveKeys(keys, btn) {
   try { await api('PUT', '/settings', b); Object.assign(D.settings, b); toast('Kaydedildi'); drawNav(); } catch (e) { toast(e.message, true); }
   if (btn) btn.disabled = false;
 }
+/* ---- Fiyatlandırma: paketler, ek kutu, ek şube (aylık + yıllık). Site, işletme paneli ve şube ücreti buradan okur. ---- */
+const PR_ITEMS = [['baslangic', 'Başlangıç paketi', '1 TV kutusu'], ['pro', 'Pro paketi', '2 TV kutusu dahil'], ['extraBox', 'Ek TV kutusu', 'Pro\'da dahil kutuların üstündeki her kutu'], ['extraBranch', 'Ek şube', 'Pro\'daki 3 dahil lokasyonu aşan her şube; şube açılınca bu tutar istenir (boşsa 500)']];
+const prNum = v => { const n = Math.round(Number(String(v || '').replace(/[^\d]/g, ''))); return n > 0 ? n : 0; };
+const prFmt = n => n ? n.toLocaleString('tr-TR') : '';
+function prHint(k) {
+  const m = prNum(($('pr-' + k + '-m') || {}).value), y = prNum(($('pr-' + k + '-y') || {}).value), el = $('pr-' + k + '-h'); if (!el) return;
+  if (!m) { el.textContent = k === 'baslangic' || k === 'pro' ? 'Sitede "Fiyat için bize ulaşın" yazar' : 'Sitede gösterilmez'; return; }
+  if (!y) { el.textContent = '12 ay: ' + prFmt(m * 12); return; }
+  const free = (m * 12 - y) / m;
+  el.textContent = free >= 0.5 ? `Yıllıkta ${String(Math.round(free * 2) / 2).replace('.', ',')} ay hediye (${prFmt(m * 12 - y)} indirim)` : (y > m * 12 ? 'Yıllık, 12 aylıktan pahalı!' : 'Yıllıkta indirim yok');
+}
+function pricingCard() {
+  const P = D.pricing || {}, cur = P.currency || 'TRY';
+  const rows = PR_ITEMS.map(([k, n, d]) => { const x = P[k] || {};
+    return `<div class="row" style="align-items:flex-end"><div style="flex:1.3"><label>${esc(n)}</label><small class="hint" style="margin:0">${esc(d)}</small></div>
+      <div><label>Aylık</label><input id="pr-${k}-m" inputmode="numeric" value="${prFmt(x.monthly)}" placeholder="0" oninput="prHint('${k}')"></div>
+      <div><label>Yıllık</label><input id="pr-${k}-y" inputmode="numeric" value="${prFmt(x.yearly)}" placeholder="boş: yıllık yok" oninput="prHint('${k}')"></div>
+      <div style="flex:1.2"><small class="hint" id="pr-${k}-h" style="margin:0 0 10px;display:block"></small></div></div>`; }).join('');
+  return card('Fiyatlandırma', 'Tanıtım sitesindeki paket fiyatları, işletme panelindeki Paketler kartı ve şube açarken istenen ücret buradan gelir. Tutarları rakamla girin (örn. 2000). Değişiklik sitede hemen görünür; mevcut ödemeleri etkilemez.',
+    rows + `<div class="row"><div><label>Para birimi</label><select id="pr-cur">${[['TRY', '₺ Türk lirası'], ['USD', '$ ABD doları'], ['EUR', '€ Euro']].map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div><label>KDV</label><select id="pr-vat"><option value="excl"${P.vat !== 'incl' ? ' selected' : ''}>Fiyatlara KDV dahil değil</option><option value="incl"${P.vat === 'incl' ? ' selected' : ''}>Fiyatlara KDV dahil</option></select></div>
+      <div style="flex:1.5"><label>Ek not (isteğe bağlı)</label><input id="pr-note" maxlength="60" value="${esc(P.annualNote || '')}" placeholder="örn. İlk ay %50 indirim"></div></div>`,
+    `<button class="btn" onclick="savePricing(this)">Fiyatları kaydet</button>`);
+}
+async function savePricing(btn) {
+  const b = { currency: $('pr-cur').value, vat: $('pr-vat').value, annualNote: $('pr-note').value };
+  for (const [k] of PR_ITEMS) b[k] = { monthly: prNum($('pr-' + k + '-m').value), yearly: prNum($('pr-' + k + '-y').value) };
+  if (btn) btn.disabled = true;
+  try { const r = await api('PUT', '/pricing', b); D.pricing = r.pricing; toast('Fiyatlar kaydedildi'); PR_ITEMS.forEach(([k]) => prHint(k)); } catch (e) { toast(e.message, true); }
+  if (btn) btn.disabled = false;
+}
 const saveBtn = keys => `<button class="btn" onclick="saveKeys(${esc(JSON.stringify(keys))},this)">Kaydet</button>`;
 PAGES.sources = {
   html() {
@@ -1057,14 +1088,16 @@ async function regenTraffic() {
 
 /* ================= YASAL VE SİTE ================= */
 PAGES.legal = {
+  after() { PR_ITEMS.forEach(([k]) => prHint(k)); },
   html() {
     return head('Yasal ve site', 'KVKK ve sözleşme sayfalarında görünen şirket bilgileri ile tanıtım sitesindeki fiyat ve iletişim bilgileri.')
       + card('Yasal bilgiler', 'Metinler başlangıç taslağıdır; yayına almadan önce bir avukata kontrol ettirin. Sayfalar: <a href="/kvkk" target="_blank">/kvkk</a> · <a href="/kosullar" target="_blank">/kosullar</a> · <a href="/gizlilik" target="_blank">/gizlilik</a>',
         `<div class="row">${setting('Şirket unvanı', 'legal_company')}${setting('MERSİS no', 'legal_mersis')}</div><div class="row">${setting('Açık adres', 'legal_address')}</div><div class="row">${setting('KVKK başvuru e-postası', 'legal_email')}${setting('Telefon', 'legal_phone')}${setting('KEP adresi (varsa)', 'legal_kep')}</div><div class="row">${setting('Sunucu sağlayıcısı ve ülkesi (KVKK metninde görünür)', 'legal_hosting', 'placeholder="örn. Natro Hosting (Türkiye)"')}</div>`,
         saveBtn(['legal_company', 'legal_mersis', 'legal_address', 'legal_email', 'legal_phone', 'legal_kep', 'legal_hosting']))
-      + card('Tanıtım sitesi', 'Ana sayfadaki (<a href="/?site" target="_blank">önizle</a>) fiyatlar ve iletişim düğmeleri. Fiyat boşsa "Fiyat için bize ulaşın" yazar.',
-        `<div class="row">${setting('Başlangıç fiyatı', 'site_price_baslangic', 'placeholder="örn. 499 ₺ / ay"')}${setting('Pro fiyatı', 'site_price_pro', 'placeholder="örn. 899 ₺ / ay"')}</div><div class="row"><div>${setting('Ek şube ücreti (TL)', 'fee_extra_branch', 'type="number" min="0" placeholder="500"')}<small class="hint" style="margin:0">Pro'daki 3 dahil lokasyonu aşan her şube için istenir. Boş bırakılırsa 500 TL sayılır.</small></div></div><div class="row">${setting('WhatsApp numarası', 'site_whatsapp', 'placeholder="905xxxxxxxxx"')}${setting('Telefon', 'site_phone')}${setting('E-posta', 'site_email')}</div>`,
-        saveBtn(['site_price_baslangic', 'site_price_pro', 'fee_extra_branch', 'site_whatsapp', 'site_phone', 'site_email']));
+      + pricingCard()
+      + card('Tanıtım sitesi', 'Ana sayfadaki (<a href="/?site" target="_blank">önizle</a>) iletişim düğmeleri.',
+        `<div class="row">${setting('WhatsApp numarası', 'site_whatsapp', 'placeholder="905xxxxxxxxx"')}${setting('Telefon', 'site_phone')}${setting('E-posta', 'site_email')}</div>`,
+        saveBtn(['site_whatsapp', 'site_phone', 'site_email']));
   },
 };
 
