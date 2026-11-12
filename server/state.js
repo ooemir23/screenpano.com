@@ -267,14 +267,14 @@ function publicState(t, screenId) {
     bigMatches: !sp && pro && F.bigCfg(t).enabled ? F.activeBig(t) : [],
     bigCfg: (({ note, info, everyMin, durSec, style }) => ({ note, info, everyMin, durSec, style }))(F.bigCfg(t)),
     celebration: sp ? null : F.activeCelebration(t),
-    campaigns: sp ? [] : [...(db.campaigns || []).filter(c => c.enabled && c.svg).map(pubCamp), ...happyCamp(db)],
+    campaigns: sp ? [] : [...(db.campaigns || []).filter(c => c.enabled && c.svg).map(pubCamp), ...(pro ? happyCamp(db) : [])],
     special: sp ? { name: sp.rule.name || '', full: !!sp.rule.full } : null,
     safeInset: Math.max(0, Math.min(12, Number(db.safeInset) || 0)),
     safe: ['L', 'R', 'T', 'B'].reduce((o, k) => { const v = db['safe' + k]; o[k] = Math.max(0, Math.min(20, Number(v !== undefined && v !== null ? v : db.safeInset) || 0)); return o; }, {}),
     safeGuide: !!db.safeGuide,
     qrSize: 17, // QR boyutu ayarı kaldırıldı: tüm QR'lar aynı boyutta
     qrs: (db.qrs || []).map(({ id, label, svg, kind, text, pin, hide }) => ({ id, label, svg, pin: pin !== false, hide: Array.isArray(hide) ? hide : [], marquee: kind === 'wifi' ? wifiMarquee(db, text) : '' })),
-    menu: pro ? menuView(db.menu) : null,
+    menu: pro ? menuView(db.menu) : require('./plans').limitMenu(db.menu, p), // Başlangıç: sınırlı liste, indirim saati uygulanmaz
     music: tvMusic(db.music),
     rates: F.rates,
     weather: F.weatherFor(t),

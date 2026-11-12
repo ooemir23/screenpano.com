@@ -147,7 +147,7 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 // Metin olan satır grup başlığıdır; null ayraçtır
 const NAV = [
   'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'], ['agenda', 'calendar-clock', 'Yayın Ajandası'],
-  'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi', 1], ['happy', 'sparkles', 'İndirim Saatleri', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
+  'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik'], ['menu', 'receipt-text', 'Fiyat Listesi'], ['happy', 'sparkles', 'İndirim Saatleri', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
   'Canlı veri', ['sport', 'trophy', 'Spor', 1], ['info', 'newspaper', 'Bilgi Bandı', 1],
   'Takip', ['stats', 'chart-column', 'İstatistik'],
   null, ['settings', 'settings', 'Ayarlar'], ['help', 'circle-help', 'Yardım & SSS'],
@@ -304,7 +304,7 @@ SECTIONS.home = {
       [devs.length > 0, 'TV kutusunu bağlayın', 'Android kutuya ya da Windows bilgisayara uygulamayı kurun, kodu girin', '#settings/devices'],
       [!!(db.location || {}).custom, 'Şehrinizi seçin', 'Hava durumu için', '#settings/business'],
     ];
-    if (pro()) steps.push([(db.menu.categories || []).length > 0, 'Fiyat listesi', 'Ürünlerinizi ve fiyatlarınızı girin', '#menu']);
+    steps.push([(db.menu.categories || []).length > 0, 'Fiyat listesi', 'Ürünlerinizi ve fiyatlarınızı girin', '#menu']);
     const done = steps.filter(s => s[0]).length;
     const camp = (db.campaigns || []).find(c => c.enabled && c.url);
     const att = attention(db, t, S.scr.devices);
@@ -1470,12 +1470,22 @@ async function removeHappyImg() {
 async function testHappy() { await act('POST', '/happy-card/test', undefined, 'Kart TV\'de gösteriliyor', false); }
 
 /* ================= FİYAT LİSTESİ ================= */
+// Başlangıç paketinde ekrana ilk menuCats kategori ve toplam menuItems ürün gider (sunucu: state.js limitMenu); veri kesilmez.
+function menuLimitNote(m) {
+  const pl = (S.me && S.me.tenant.plan) || {}, mc = Number(pl.menuCats) || 0, mi = Number(pl.menuItems) || 0;
+  if (!mc && !mi) return '';
+  const cats = (m && m.categories) || [], items = cats.reduce((n, c) => n + (c.items || []).length, 0);
+  const over = (mc && cats.length > mc) || (mi && items > mi);
+  return `<div class="bn ${over ? 'bad' : 'lock'}"><span>${over
+    ? `<b>Listenin bir kısmı ekranda görünmüyor.</b> Paketinizde ekranda ilk ${mc} kategori ve toplam ${mi} ürün gösterilir (şu an ${cats.length} kategori, ${items} ürün). Sırayı değiştirerek hangilerinin görüneceğini seçebilir ya da Pro'ya geçebilirsiniz.`
+    : `Paketinizde ekranda en çok <b>${mc} kategori ve ${mi} ürün</b> gösterilir (şu an ${cats.length} kategori, ${items} ürün). Sınırsız liste ve indirim saatleri Pro pakette.`}</span><a class="btn s g" href="#settings/plan">Paketler</a></div>`;
+}
 let MENU = null;
 SECTIONS.menu = {
   html() {
     if (!MENU || !MENU.__dirty) MENU = clone(S.db.menu || { title: 'Fiyat Listesi', currency: '₺', categories: [] });
     return head('Fiyat Listesi', 'Ürünler ve fiyatlar. Düzene "Fiyat tarifesi" widget\'ı eklenince ekranda sayfa sayfa döner.', `<button class="btn" data-save onclick="saveMenu()">Kaydet</button>`)
-      + lock('Fiyat listesi')
+      + menuLimitNote(MENU)
       + card('Liste bilgisi', 'Kafe ve restoranlar giriş kapısındaki fiyat tarifesini dijital panoda da gösterebilir (Fiyat Etiketi Yönetmeliği). Giriş ekranı için Tasarım\'da "Vitrin" düzenini kullanabilirsiniz.',
         `<div class="f">${fl('Başlık', `<input type="text" id="mtitle" maxlength="40" value="${esc(MENU.title)}" oninput="MENU.title=this.value;MENU.__dirty=1">`)}${fl('Para birimi', `<input type="text" id="mcur" maxlength="4" value="${esc(MENU.currency || '₺')}" oninput="MENU.currency=this.value;MENU.__dirty=1">`)}</div>`)
       + langCard()

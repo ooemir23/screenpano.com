@@ -52,6 +52,24 @@ test('sağlık ucu ve ana sayfa çalışır', async () => {
   assert.equal((await fetch(BASE + '/')).status, 200);
 });
 
+test('Başlangıç fiyat listesi: ekrana ilk 3 kategori / 40 ürün gider, indirim saati uygulanmaz', () => {
+  const { PLANS } = require('../server/plans');
+  assert.equal(PLANS.baslangic.menuCats, 3); assert.equal(PLANS.baslangic.menuItems, 40);
+  assert.equal(require('../server/widgets').WIDGETS.menu.pro, undefined, 'fiyat tarifesi kutusu Pro değil');
+  const cat = (n, k) => ({ name: 'K' + n, items: Array.from({ length: k }, (_, i) => ({ name: 'u' + i, price: '10' })) });
+  const menu = { title: 'Menü', categories: [cat(1, 30), cat(2, 30), cat(3, 5), cat(4, 5)], happies: [{ id: 'h1', pct: 50, sch: { days: [0, 1, 2, 3, 4, 5, 6], from: '00:00', to: '23:59' } }] };
+  menu.categories.forEach(c => { c.hh = ['h1']; });
+  const { limitMenu } = require('../server/plans');
+  const m = limitMenu(menu, PLANS.baslangic);
+  assert.equal(m.categories.length, 2, 'ürün sınırı (40) 3. kategoriye yer bırakmaz');
+  assert.equal(m.categories.reduce((n, c) => n + c.items.length, 0), 40);
+  assert.equal(m.categories[0].items[0].was, undefined, 'indirim uygulanmaz');
+  assert.strictEqual(limitMenu(menu, PLANS.pro), menu, 'Pro sınırsız');
+  assert.equal(menu.categories[0].items.length, 30, 'veri kesilmez');
+  const m2 = limitMenu({ categories: [cat(1, 2), cat(2, 2), cat(3, 2), cat(4, 2)] }, PLANS.baslangic);
+  assert.equal(m2.categories.length, 3, 'kategori sınırı');
+});
+
 test('TV sayfası CSP: YouTube, Spotify SDK ve Google Fonts engellenmez', async () => {
   const csp = (await fetch(BASE + '/tv')).headers.get('content-security-policy') || '';
   const dir = n => (csp.split(';').map(x => x.trim()).find(x => x.startsWith(n + ' ')) || '');

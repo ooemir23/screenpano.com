@@ -124,11 +124,11 @@
   "plan.b.name": "Başlangıç",
   "plan.b.note": "Tek ekranlı küçük işletmeler için",
   "plan.b.try": "Kayıt ol",
-  "plan.b.list": ["1 TV kutusu", "2 GB medya alanı", "Video, fotoğraf ve hazır afişler", "Saat, hava durumu, döviz ve altın", "QR kodlar ve kampanya kartı", "Zamanlama ve çevrimdışı oynatma", "Resmî günler, istatistik"],
+  "plan.b.list": ["1 TV kutusu", "2 GB medya alanı", "Video, fotoğraf ve hazır afişler", "Saat, hava durumu, döviz ve altın", "QR kodlar ve kampanya kartı", "Fiyat listesi ({menuCats} kategori, {menuItems} ürün)", "Zamanlama ve çevrimdışı oynatma", "Resmî günler, istatistik"],
   "plan.pro.badge": "Önerilen",
   "plan.pro.note": "Tüm işletmeler, oteller, mağazalar ve kurumlar için",
   "plan.pro.try": "Ücretsiz Kayıt Ol",
-  "plan.pro.list": ["<b>Başlangıç'taki her şey</b>", "2 TV kutusu (biri yedek için)", "20 GB medya alanı", "Canlı maçlar, gol animasyonu, puan durumu", "Fiyat listesi ve çoklu dil", "Google yorumları ve Instagram", "Bilgi bandı ve doğum günü kutlamaları", "3 lokasyon dahil, ek şubeler ücretli; 3 kullanıcı", "Köşede ürün ibaresi yok"],
+  "plan.pro.list": ["<b>Başlangıç'taki her şey</b>", "2 TV kutusu (biri yedek için)", "20 GB medya alanı", "Canlı maçlar, gol animasyonu, puan durumu", "Sınırsız fiyat listesi, indirim saatleri", "Google yorumları ve Instagram", "Bilgi bandı ve doğum günü kutlamaları", "3 lokasyon dahil, ek şubeler ücretli; 3 kullanıcı", "Köşede ürün ibaresi yok"],
   "cmp.summary": "Tüm farkları karşılaştırın",
   "cmp.feature": "Özellik",
 

@@ -124,11 +124,11 @@
   "plan.b.name": "Starter",
   "plan.b.note": "For small businesses with a single screen",
   "plan.b.try": "Sign up",
-  "plan.b.list": ["1 TV box", "2 GB media storage", "Videos, photos and ready-made posters", "Clock, weather, exchange rates and gold prices", "QR codes and promotion card", "Scheduling and offline playback", "National holidays, statistics"],
+  "plan.b.list": ["1 TV box", "2 GB media storage", "Videos, photos and ready-made posters", "Clock, weather, exchange rates and gold prices", "QR codes and promotion card", "Price list ({menuCats} categories, {menuItems} items)", "Scheduling and offline playback", "National holidays, statistics"],
   "plan.pro.badge": "Recommended",
   "plan.pro.note": "For all businesses, hotels, retail and organisations",
   "plan.pro.try": "Sign up free",
-  "plan.pro.list": ["<b>Everything in Starter</b>", "2 TV boxes (one as a spare)", "20 GB media storage", "Live matches, goal animations, league tables", "Price list in multiple languages", "Google reviews and Instagram", "Info ticker and birthday greetings", "3 locations included, extra branches billed; 3 users", "No ScreenPano badge on screen"],
+  "plan.pro.list": ["<b>Everything in Starter</b>", "2 TV boxes (one as a spare)", "20 GB media storage", "Live matches, goal animations, league tables", "Unlimited price list and happy hours", "Google reviews and Instagram", "Info ticker and birthday greetings", "3 locations included, extra branches billed; 3 users", "No ScreenPano badge on screen"],
   "cmp.summary": "Compare all features",
   "cmp.feature": "Feature",
 

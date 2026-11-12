@@ -66,8 +66,10 @@
         "İngilizce, Almanca, Rusça, Arapça, Fransızca, İspanyolca",
         "Biten ürünü tek dokunuşla \"yok\" yapın"
       ],
-      "plan": "pro",
+      "plan": "all",
       "compare": "Fiyat listesi ve çoklu dil",
+      "compareB": "{cats} kategori, {items} ürün",
+      "added": "2026-11-12",
       "visual": {
         "type": "tv",
         "img": "tv-vitrin",
@@ -78,6 +80,7 @@
           "title": "Price lists and menus, multilingual for tourists",
           "short": "Price list",
           "compare": "Price list in multiple languages",
+          "compareB": "{cats} categories, {items} items",
           "text": "Enter your categories and items, and the list pages through on screen. When a price changes, there's nothing to reprint: fix it on your phone and save. The list rotates through Turkish and up to three other languages.",
           "points": [
             "Entrance display compliant with Turkish price-labelling rules",
@@ -90,6 +93,7 @@
           "title": "Preislisten und Speisekarten, mehrsprachig für Gäste aus aller Welt",
           "short": "Preisliste",
           "compare": "Mehrsprachige Preisliste",
+          "compareB": "{cats} Kategorien, {items} Artikel",
           "text": "Geben Sie Kategorien und Artikel ein – die Liste blättert auf dem Bildschirm Seite für Seite um. Ändert sich ein Preis, muss nichts neu gedruckt werden: einfach am Smartphone korrigieren und speichern. Die Liste wechselt zwischen Türkisch und bis zu drei weiteren Sprachen.",
           "points": [
             "Eingangsbildschirm gemäß türkischer Preisauszeichnungsverordnung",
@@ -102,6 +106,7 @@
           "title": "قوائم الأسعار والطعام بعدة لغات لضيوفك من السيّاح",
           "short": "قائمة الأسعار",
           "compare": "قائمة أسعار متعددة اللغات",
+          "compareB": "{cats} فئات، {items} صنفاً",
           "text": "أدخل الفئات والأصناف، فتُعرض القائمة على الشاشة صفحةً تلو الأخرى. وعند تغيّر الأسعار لا داعي لإعادة الطباعة: عدّلها من هاتفك واحفظها. تتناوب القائمة بين التركية وما يصل إلى ثلاث لغات أخرى.",
           "points": [
             "شاشة مدخل متوافقة مع لائحة ملصقات الأسعار التركية",

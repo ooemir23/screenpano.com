@@ -38,7 +38,8 @@ function dict(lang) {
   const n = config.TRIAL_DAYS;
   return k => {
     const v = d[k] !== undefined && d[k] !== null ? d[k] : tr[k] !== undefined ? tr[k] : k;
-    const fill = x => typeof x === 'string' ? x.replace(/\{trialDays\}/g, trialText(lang, n)).replace(/\{trial\}/g, n) : Array.isArray(x) ? x.map(fill) : x;
+    const B = PLANS.baslangic; // Başlangıç fiyat listesi sınırı metinlerde {menuCats} / {menuItems}
+    const fill = x => typeof x === 'string' ? x.replace(/\{trialDays\}/g, trialText(lang, n)).replace(/\{trial\}/g, n).replace(/\{menuCats\}/g, B.menuCats).replace(/\{menuItems\}/g, B.menuItems) : Array.isArray(x) ? x.map(fill) : x;
     return fill(v); // dizi değerler de (ör. hero.ticks) süre yer tutucusunu alır
   };
 }
@@ -101,7 +102,8 @@ function compare(data, lang, t) {
   return [
     row(t('s.cmp.devices'), b.devices, p.devices), row(t('s.cmp.storage'), gb(b.storageMB), gb(p.storageMB)), row(t('s.cmp.users'), b.users, p.users),
     row(t('s.cmp.branches'), false, t('s.cmp.branchesPro').replace('{n}', p.includedBranches || p.branches)),
-    ...data.features.filter(f => f.compare).map(f => loc(f, lang)).map(f => row(f.compare, f.plan !== 'pro', true)),
+    // compareB: Başlangıç hücresinde evet/hayır yerine sınır metni ({cats}, {items} plans.js'ten gelir)
+    ...data.features.filter(f => f.compare).map(f => loc(f, lang)).map(f => row(f.compare, f.compareB ? String(f.compareB).replace('{cats}', b.menuCats).replace('{items}', b.menuItems) : f.plan !== 'pro', true)),
     row(t('s.cmp.badge'), b.badge ? t('s.cmp.badgeSmall') : t('s.no'), p.badge ? t('s.cmp.badgeSmall') : t('s.no')),
   ].join('');
 }

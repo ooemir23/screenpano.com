@@ -18,7 +18,7 @@ const WIDGETS = {
   qr:      { name: 'QR kart', desc: 'Seçtiğiniz QR kodu ya da tüm QR kodlarınızı sırayla gösterir; birden çok eklenebilir ve diğer kutuların üstüne konabilir', pro: false, min: [2, 3], multi: 6, props: { qr: '', style: 'below', size: 'auto', text: 'm', look: 'classic' }, enums: { look: ['classic', 'card', 'soft'], style: ['below', 'right', 'left', 'plain'], size: ['xs', 's', 'auto', 'l', 'xl', 'box'], text: ['s', 'm', 'l'] } },
   info:    { name: 'Maçlar ve bilgi sayfaları', desc: 'Maçlar, puan durumu, nöbetçi eczane, haber, sinema, tarihte bugün, trafik', pro: true, min: [5, 8] },
   reviews: { name: 'Google yorumları', desc: 'Müşteri yorumları şeridi', pro: true, min: [8, 2] },
-  menu:    { name: 'Fiyat tarifesi', desc: 'Kategori, ürün ve fiyat listesi (Fiyat Etiketi Yönetmeliği için)', pro: true, min: [5, 6], props: { title: 'Fiyat Listesi' } },
+  menu:    { name: 'Fiyat tarifesi', desc: 'Kategori, ürün ve fiyat listesi (Fiyat Etiketi Yönetmeliği için)', min: [5, 6], props: { title: 'Fiyat Listesi' } },
   music:   { name: 'Müzik', desc: 'Spotify / YouTube Müzik: şarkı değişince kapak ve ad açılır, birkaç saniye sonra yalnız kapak görseline küçülür', pro: false, min: [3, 3] },
 };
 
@@ -63,7 +63,7 @@ const TEMPLATES = {
     ],
   },
   pastane: {
-    name: 'Pastane / fırın', desc: 'Büyük ürün medyası, günün ürünü, yanda fiyat tarifesi (Pro), altta "sıcak çıktı" duyurusu',
+    name: 'Pastane / fırın', desc: 'Büyük ürün medyası, günün ürünü, yanda fiyat tarifesi, altta "sıcak çıktı" duyurusu',
     widgets: [
       W('media', 0, 0, 17, 18), W('logo', 17, 0, 7, 3),
       TX(17, 3, 7, 4, ['Günün ürünü', 'Taze ve sıcak'], ['Product of the day', 'Fresh and warm'], ['Produkt des Tages', 'Frisch und warm'], ['Блюдо дня', 'Свежее и горячее'], ['منتج اليوم', 'طازج وساخن'], { size: 's' }),
@@ -112,7 +112,7 @@ const TEMPLATES = {
     ],
   },
   hizli: {
-    name: 'Hızlı servis / sipariş panosu', desc: 'Solda büyük menü panosu (Pro), sağda ürün medyası, logo, menü fırsatı ve QR',
+    name: 'Hızlı servis / sipariş panosu', desc: 'Solda büyük menü panosu, sağda ürün medyası, logo, menü fırsatı ve QR',
     widgets: [
       W('menu', 0, 0, 15, 22), W('media', 15, 0, 9, 11), W('logo', 15, 11, 9, 3),
       TX(15, 14, 9, 4, ['Menü fırsatı', 'Burger + patates + içecek'], ['Meal deal', 'Burger + fries + drink'], ['Menü-Angebot', 'Burger + Pommes + Getränk'], ['Комбо-предложение', 'Бургер + картофель + напиток'], ['وجبة موفرة', 'برغر + بطاطس + مشروب'], { size: 's' }),
@@ -144,7 +144,7 @@ const TEMPLATES = {
     widgets: [W('media', 0, 0, 24, 22), W('ticker', 0, 22, 24, 2)],
   },
   dikey_menu: {
-    name: 'Dikey menü panosu', desc: 'Dikey TV: üstte logo ve saat, ortada ürün medyası ve geniş fiyat listesi (Pro), altta kayan bant', orient: 90,
+    name: 'Dikey menü panosu', desc: 'Dikey TV: üstte logo ve saat, ortada ürün medyası ve geniş fiyat listesi, altta kayan bant', orient: 90,
     widgets: [
       W('logo', 0, 0, 14, 2), W('clock', 14, 0, 10, 2, { seconds: false, show: 'both' }),
       W('media', 0, 2, 24, 8), W('menu', 0, 10, 24, 12),
