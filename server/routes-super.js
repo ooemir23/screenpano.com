@@ -17,7 +17,7 @@ r.use((req, res, next) => {
   req.user = u; next();
 });
 
-const SETTINGS = ['youtube_api_key', 'collect_key', 'collect_paid', 'tmdb_key', 'traffic_api', 'google_places_key', 'google_monthly_cap', 'google_oauth_client_id', 'google_oauth_secret', 'alert_webhook',
+const SETTINGS = ['youtube_api_key', 'collect_key', 'collect_paid', 'tmdb_key', 'traffic_api', 'google_places_key', 'google_monthly_cap', 'google_oauth_client_id', 'google_oauth_secret', 'google_super_emails', 'alert_webhook',
   'legal_company', 'legal_address', 'legal_email', 'legal_phone', 'legal_mersis', 'legal_kep', 'legal_hosting',
   'site_url', 'site_phone', 'site_whatsapp', 'site_email', 'site_price_baslangic', 'site_price_pro', 'fee_extra_branch'];
 

@@ -48,7 +48,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   if (auth.superOk(auth.sessionUser(req))) return next();
   if (/^\/(panel|music|tv|super)(\/|$)/.test(req.path)) return res.redirect('/login');
-  if (req.path.startsWith('/api/') && !/^\/api\/auth\/(login|logout|config)$/.test(req.path)) return res.status(401).json({ error: 'Süper yönetici girişi gerekli' });
+  if (req.path.startsWith('/api/') && !/^\/api\/auth\/(login|logout|config|google\/(start|callback))$/.test(req.path)) return res.status(401).json({ error: 'Süper yönetici girişi gerekli' });
   next();
 });
 app.use(require('compression')());

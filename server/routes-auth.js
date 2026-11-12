@@ -99,6 +99,9 @@ const gCfg = () => ({
   id: store.setting('google_oauth_client_id', '') || process.env.GOOGLE_OAUTH_CLIENT_ID || '',
   secret: store.setting('google_oauth_secret', '') || process.env.GOOGLE_OAUTH_SECRET || '',
 });
+// Google ile doğrudan süper yönetime girebilecek e-postalar (Süper Yönetim veya SUPER_EMAIL ortam değişkeni)
+const gSuperEmails = () => String(store.setting('google_super_emails', '') || process.env.SUPER_EMAIL || '')
+  .split(/[\s,;]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
 const gNonces = new Map(); // state nonce -> bitiş (tek kullanım; yeniden oynatma önlenir)
 const gStarts = new Map(); // ip -> { n, at }: OAuth başlatma hız sınırı (şifre deneme sınırını kirletmez)
 const G_START_LIMIT = 20, G_START_WIN = 10 * 60 * 1000;
@@ -110,7 +113,8 @@ function pruneGState() {
 setInterval(pruneGState, 5 * 60 * 1000).unref();
 const gHome = (req, res, hash) => res.redirect(`${baseOrigin(req)}/login${hash}`);
 r.get('/google/start', (req, res) => {
-  if (auth.subOf && auth.subOf(req) === 'sadmin') return gHome(req, res, '#gerr=1');
+  const reqSub = auth.subOf ? auth.subOf(req) : '';
+  if (reqSub === 'sadmin' && !gSuperEmails().length) return gHome(req, res, '#gerr=1');
   const g = gCfg();
   if (!g.id || !g.secret) return gHome(req, res, '#gerr=1');
   const ip = auth.clientIp(req);
@@ -123,7 +127,7 @@ r.get('/google/start', (req, res) => {
   if (gNonces.size > 5000) return gHome(req, res, '#gerr=limit');
   const n = crypto.randomBytes(16).toString('hex');
   gNonces.set(n, now + 10 * 60 * 1000);
-  const sub = (auth.subOf && auth.subOf(req) === 'music') ? 'music' : '';
+  const sub = (reqSub === 'music' || reqSub === 'sadmin') ? reqSub : '';
   const pair = /^\d{6}$/.test(String(req.query.pair || '')) ? String(req.query.pair) : '';
   const q = new URLSearchParams({
     client_id: g.id, redirect_uri: `${baseOrigin(req)}/api/auth/google/callback`, response_type: 'code',
@@ -192,12 +196,24 @@ r.get('/google/callback', async (req, res) => {
     const c = await gVerifyIdToken(tj.id_token, g.id);
     if (!c.email || c.email_verified !== true) return fail('e-posta doğrulanmamış', 'unverified');
     const emLow = String(c.email).toLowerCase();
+    if (gSuperEmails().includes(emLow)) {
+      const su = store.sql.prepare("SELECT * FROM users WHERE role = 'super' ORDER BY created ASC LIMIT 1").get();
+      if (su) {
+        auth.clearFails(ip, su.username);
+        store.q.userLogin.run(Date.now(), su.id);
+        auth.setSession(req, res, su);
+        return res.redirect(postAuthUrl(req, su, st.sub === 'music' ? 'music' : '', st.pair || ''));
+      }
+    }
     // kayıtlı işletme: doğrulanmış olanlar önce, ardından son girişe göre bildirim e-postası eşleşen sahip hesabı
     const hit = tenants.all()
       .filter(t => String((t.db.notify || {}).email || '').toLowerCase() === emLow)
       .map(t => ({ t, u: (store.q.usersOf.all(t.id).find(x => x.role === 'owner') || {}) }))
       .filter(x => x.u.id)
       .sort((a, b) => ((b.t.db.notify || {}).verified ? 1 : 0) - ((a.t.db.notify || {}).verified ? 1 : 0) || (b.u.last_login || 0) - (a.u.last_login || 0))[0];
+    if (st.sub === 'sadmin') {
+      if (!hit || !auth.superOk(hit.u)) return fail('süper yönetim yetkisi yok', '1', true);
+    }
     if (hit) {
       if (!(hit.t.db.notify || {}).verified) {
         hit.t.db.notify = { ...(hit.t.db.notify || {}), verified: true, verifiedAt: Date.now() };
@@ -206,7 +222,7 @@ r.get('/google/callback', async (req, res) => {
       auth.clearFails(ip, hit.u.username);
       store.q.userLogin.run(Date.now(), hit.u.id);
       auth.setSession(req, res, hit.u);
-      return res.redirect(postAuthUrl(req, hit.u, st.sub || '', st.pair || ''));
+      return res.redirect(postAuthUrl(req, hit.u, st.sub === 'music' ? 'music' : '', st.pair || ''));
     }
     if (!config.ALLOW_SIGNUP) return fail('kayıt kapalı', 'nosignup', false);
     // eşleşme yok: kayıt ekranına güvenli e-posta taşı (imzalı belirteçle)
@@ -223,7 +239,8 @@ r.post('/google/prefill', (req, res) => {
 r.get('/config', (req, res) => {
   const g = gCfg();
   const isSadmin = auth.subOf && auth.subOf(req) === 'sadmin';
-  res.json({ env: config.APP_ENV, brand: config.BRAND, signup: isSadmin ? false : config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, smtp: mailer.enabled(), google: isSadmin ? false : !!(g.id && g.secret), starters: require('./starters').list().map(({ key, name }) => ({ key, name })) });
+  const hasG = !!(g.id && g.secret);
+  res.json({ env: config.APP_ENV, brand: config.BRAND, signup: isSadmin ? false : config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, smtp: mailer.enabled(), google: isSadmin ? (hasG && gSuperEmails().length > 0) : hasG, starters: require('./starters').list().map(({ key, name }) => ({ key, name })) });
 });
 r.post('/signup', (req, res) => {
   if (!config.ALLOW_SIGNUP) return res.status(403).json({ error: 'Yeni kayıt şu an kapalı' });
