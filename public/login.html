@@ -137,7 +137,7 @@ input::placeholder{color:rgba(255,255,255,.28)}
           <input id="f-phone" name="phone" type="tel" maxlength="30" placeholder="05xx xxx xx xx">
         </div>
 
-        <div class="field f-col-2">
+        <div class="field f-col-2" id="cap-wrap">
           <label><span>Güvenlik sorusu: <b id="cap-q" style="color:var(--gold);font-weight:700">…</b> <button type="button" id="cap-ref" title="Soruyu yenile" style="background:none;border:0;color:var(--mute2);cursor:pointer;font-size:13px;padding:0 4px">↻</button></span><span class="hint">Bot koruması</span></label>
           <input name="captchaAns" id="cap-ans" inputmode="numeric" autocomplete="off" required placeholder="İşlemin sonucunu yazın">
           <input type="hidden" name="captchaToken" id="cap-tok">
@@ -159,6 +159,7 @@ input::placeholder{color:rgba(255,255,255,.28)}
 </div>
 <script>
 const $ = id => document.getElementById(id);
+let canSignup = true, gPair = '';
 function loadCaptcha() {
   fetch('/api/auth/captcha').then(r => r.json()).then(c => {
     if (c && c.question) { $('cap-q').textContent = c.question; $('cap-tok').value = c.token || ''; $('cap-ans').value = ''; }
@@ -166,24 +167,36 @@ function loadCaptcha() {
 }
 loadCaptcha();
 $('cap-ref').onclick = loadCaptcha;
+function resetGoogleSignup() {
+  document.querySelectorAll('#f-signup .gnote').forEach(x => x.remove());
+  const em = $('f-email');
+  em.readOnly = false; em.style.opacity = '';
+  $('g-token').value = ''; gPair = '';
+  $('cap-wrap').hidden = false; $('cap-ans').required = true;
+}
 fetch('/api/auth/config').then(r => r.json()).then(c => {
   $('brand').textContent = c.brand; document.title = c.brand + ' · Giriş';
-  if (!c.signup) $('tsignup').style.display = 'none';
+  canSignup = !!c.signup;
+  if (!canSignup) { $('tsignup').style.display = 'none'; $('tabs').hidden = true; }
   if (c.google) { $('gbtn').hidden = false; $('gsep').hidden = false; } // anahtarlar süper yönetimde girilmişse
   $('starter').innerHTML = (c.starters || []).filter(x => x.key !== 'bos').map(x => `<option value="${x.key}">${x.name}</option>`).join('') + '<option value="bos">Boş başlangıç</option>';
   if ($('signup-badge')) $('signup-badge').querySelector('span:last-child').innerHTML = `<b>${c.trialDays} Gün Ücretsiz Deneme:</b> Kredi kartı gerekmez. Kaydınızla birlikte tüm Pro özellikler hemen açılır.`;
   $('trialnote').textContent = `${c.trialDays} gün boyunca tüm özellikler ücretsiz. Kredi kartı gerekmez.`;
 });
-$('gbtn').onclick = () => location.href = '/api/auth/google/start';
+$('gbtn').onclick = () => {
+  const m = /^#pair=(\d{6})$/.exec(location.hash);
+  location.href = '/api/auth/google/start' + (m ? '?pair=' + m[1] : '');
+};
 function showView(v) {
-  $('tabs').hidden = (v === 'forgot' || v === 'reset');
+  $('tabs').hidden = !canSignup || (v === 'forgot' || v === 'reset');
   $('f-login').hidden = v !== 'login';
   $('f-signup').hidden = v !== 'signup';
   $('f-forgot').hidden = v !== 'forgot';
   $('f-reset').hidden = v !== 'reset';
   $('err').textContent = '';
   $('okmsg').style.display = 'none';
-  if (v === 'signup' && !$('cap-tok').value) loadCaptcha();
+  if (v !== 'signup') resetGoogleSignup();
+  if (v === 'signup' && !$('cap-tok').value && !$('g-token').value) loadCaptcha();
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
@@ -191,12 +204,21 @@ document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
 });
 $('go-forgot').onclick = e => { e.preventDefault(); showView('forgot'); };
 $('back-login').onclick = () => { showView('login'); };
+const GERR_MSG = {
+  cancel: 'Google ile giriş iptal edildi.',
+  limit: 'Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.',
+  unverified: 'Google hesabınızın e-posta adresi doğrulanmamış.',
+  nosignup: 'Bu Google e-postasıyla kayıtlı işletme bulunamadı.',
+};
 function checkHash() {
   if (location.hash.startsWith('#reset=')) {
     $('r-token').value = decodeURIComponent(location.hash.slice(7));
     showView('reset');
   } else if (location.hash === '#unuttum') {
     showView('forgot');
+  } else if (location.hash.startsWith('#gerr=')) {
+    const code = location.hash.slice(6);
+    $('err').textContent = GERR_MSG[code] || 'Google ile giriş tamamlanamadı, tekrar deneyin.';
   } else if (location.hash.startsWith('#gerr')) {
     $('err').textContent = 'Google ile giriş tamamlanamadı, tekrar deneyin.';
   } else if (location.hash.startsWith('#gsignup=')) {
@@ -204,15 +226,23 @@ function checkHash() {
     const tok = decodeURIComponent(location.hash.slice(9));
     document.querySelector('[data-t=signup]').click();
     fetch('/api/auth/google/prefill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tok }) })
-      .then(r => r.json()).then(j => {
-        if (!j.email) return;
+      .then(async r => ({ ok: r.ok, j: await r.json().catch(() => ({})) }))
+      .then(({ ok, j }) => {
+        if (!ok || !j.email) { resetGoogleSignup(); $('err').textContent = j.error || 'Google oturum belirteci geçersiz veya süresi dolmuş'; return; }
+        resetGoogleSignup();
         const em = $('f-email');
         em.value = j.email; em.readOnly = true; em.style.opacity = .75;
-        $('g-token').value = tok;
-        const n = document.createElement('div'); n.className = 'gnote';
+        $('g-token').value = tok; gPair = j.pair || '';
+        $('cap-wrap').hidden = true; $('cap-ans').required = false;
+        const un = $('f-username');
+        if (un && !un.value) {
+          const sug = j.email.split('@')[0].toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 32);
+          if (sug.length >= 3) un.value = sug;
+        }
+        const n = document.createElement('div'); n.className = 'gnote f-col-2';
         n.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M20 6 9 17l-5-5"/></svg><span>Bu e-posta Google hesabınızdan doğrulandı. İşletme bilgilerini tamamlayın.</span>';
-        em.closest('.field').after(n);
-      }).catch(() => {});
+        $('f-phone').closest('.field').after(n);
+      }).catch(() => { resetGoogleSignup(); $('err').textContent = 'Google ile giriş tamamlanamadı, tekrar deneyin.'; });
   } else if (location.hash === '#kayit' || location.hash === '#signup') {
     document.querySelector('[data-t=signup]').click();
   }
@@ -224,8 +254,9 @@ async function submit(form, url) {
   try {
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign(Object.fromEntries(new FormData(form)), { accept: !!(form.accept && form.accept.checked), marketing: !!(form.marketing && form.marketing.checked) })) });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) { if (form.id === 'f-signup') loadCaptcha(); throw new Error(j.error || 'Bir hata oluştu'); }
-    location.href = j.next + (location.hash.startsWith('#pair=') ? location.hash : '');
+    if (!r.ok) { if (form.id === 'f-signup' && !$('g-token').value) loadCaptcha(); throw new Error(j.error || 'Bir hata oluştu'); }
+    const pairHash = location.hash.startsWith('#pair=') ? location.hash : (gPair ? '#pair=' + gPair : '');
+    location.href = j.next + (j.next.includes('#pair=') ? '' : pairHash);
   } catch (e) { $('err').textContent = e.message; btn.disabled = false; }
 }
 $('f-login').onsubmit = e => { e.preventDefault(); submit(e.target, '/api/auth/login'); };

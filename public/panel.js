@@ -2458,6 +2458,7 @@ function notifyPageHtml() {
         <div class="f">
           ${fl('Bildirim e-posta adresi', `<div class="row"><input type="email" id="nt-mail" placeholder="ornek@isletme.com" value="${esc(n.email || '')}" style="flex:1"><button class="btn" data-save onclick="saveNotify()">${ic('check')}Kaydet</button>${n.email && hasMail ? `<button class="btn g" onclick="act('POST','/notify/test',undefined,'Deneme e-postası gönderildi',false)">${ic('send')}Dene</button>` : ''}</div>`)}
         </div>
+        ${n.email ? (n.verified ? `<div class="okline" style="margin:4px 0 8px">${ic('circle-check')} E-posta doğrulandı (Google ile girişte de kullanılır)</div>` : `<div class="warnline" style="margin:4px 0 8px">${ic('triangle-alert')} E-posta henüz doğrulanmadı <button class="btn xs g" style="margin-inline-start:auto" onclick="resendVerifyEmail(this)">Doğrulama gönder</button></div>`) : ''}
         ${hasMail ? `<div class="okline" style="margin:4px 0 16px">${ic('circle-check')} Sunucuda e-posta servisi aktif</div>` : `<div class="warnline" style="margin:4px 0 16px">${ic('triangle-alert')} Sunucuda SMTP e-posta servisi henüz ayarlanmamış; bildirimler şimdilik yalnız panelde görünür.</div>`}
 
         <h4 style="margin:20px 0 10px;font-size:15px;font-weight:700">Bildirim Türleri</h4>
@@ -2526,7 +2527,8 @@ const saveNotify = () => {
     online: on ? on.checked : true,
     offlineMin: om ? +om.value : undefined,
     weekly: wk ? wk.checked : false,
-  }, 'Uyarı ayarları kaydedildi', false).then(() => {
+  }, 'Uyarı ayarları kaydedildi', false).then(async ok => {
+    if (ok) { try { S.me = await req('GET', '/me'); drawBanner(); } catch (e) {} }
     if (SUB.settings === 'notify') drawNotifySettings();
     else if (SUB.settings === 'devices') drawDevStatus();
   });

@@ -181,7 +181,18 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi girin' });
     const om = Math.round(Number(b.offlineMin));
     const old = req.t.db.notify || {};
-    req.t.db.notify = { email, offline: b.offline !== false, online: b.online !== false, offlineMin: om >= 1 && om <= 1440 ? om : undefined, weekly: typeof b.weekly === 'boolean' ? b.weekly : !!old.weekly, weeklyAt: old.weeklyAt };
+    const sameEmail = email.toLowerCase() === String(old.email || '').toLowerCase();
+    req.t.db.notify = {
+      email,
+      offline: b.offline !== false,
+      online: b.online !== false,
+      offlineMin: om >= 1 && om <= 1440 ? om : undefined,
+      weekly: typeof b.weekly === 'boolean' ? b.weekly : !!old.weekly,
+      weeklyAt: old.weeklyAt,
+      verified: sameEmail ? !!old.verified : false,
+      verifiedAt: sameEmail ? old.verifiedAt : undefined,
+      verifySentAt: sameEmail ? old.verifySentAt : undefined,
+    };
     changed(req.t); res.json({ ok: true });
   });
   r.post('/notify/test', ownerOnly, async (req, res) => {

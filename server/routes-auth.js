@@ -12,9 +12,32 @@ const r = express.Router();
 const LEGAL_VERSION = require('./legal').VERSION;
 
 function baseOrigin(req) {
-  if (config.BASE_URL && /^https?:\/\//i.test(config.BASE_URL)) return config.BASE_URL.replace(/\/+$/, '');
   const proto = (req.secure || String(req.headers['x-forwarded-proto'] || '').split(',')[0] === 'https') ? 'https' : 'http';
-  return `${proto}://${req.headers.host || 'localhost:3000'}`;
+  const rawHost = String(req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000');
+  const reqHost = rawHost.split(':')[0].toLowerCase();
+  if (config.BASE_URL && /^https?:\/\//i.test(config.BASE_URL)) {
+    try {
+      const baseHost = new URL(config.BASE_URL).hostname.toLowerCase();
+      // Ana alan adı ve alt alan adları için tek yetkili dönüş adresi kullanılır
+      if (reqHost === baseHost || reqHost.endsWith('.' + baseHost)) return config.BASE_URL.replace(/\/+$/, '');
+    } catch {}
+  }
+  return `${proto}://${rawHost}`;
+}
+
+function postAuthUrl(req, u, sub = '', pair = '') {
+  const hash = /^\d{6}$/.test(String(pair || '')) ? `#pair=${pair}` : '';
+  let target;
+  if (sub === 'music') {
+    let baseHost = '';
+    try { baseHost = new URL(config.BASE_URL).hostname.toLowerCase(); } catch {}
+    const reqHost = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(':')[0].toLowerCase();
+    const sameBase = baseHost && baseHost.includes('.') && (reqHost === baseHost || reqHost.endsWith('.' + baseHost));
+    target = (config.APP_ENV === 'live' && sameBase) ? `https://music.${baseHost}/music` : '/music';
+  } else {
+    target = auth.homeFor(req, u);
+  }
+  return (/^https?:\/\//i.test(target) ? target : `${baseOrigin(req)}${target}`) + hash;
 }
 
 function sendVerifyEmail(req, t, email) {
@@ -77,33 +100,59 @@ const gCfg = () => ({
   secret: store.setting('google_oauth_secret', '') || process.env.GOOGLE_OAUTH_SECRET || '',
 });
 const gNonces = new Map(); // state nonce -> bitiş (tek kullanım; yeniden oynatma önlenir)
+const gStarts = new Map(); // ip -> { n, at }: OAuth başlatma hız sınırı (şifre deneme sınırını kirletmez)
+const G_START_LIMIT = 20, G_START_WIN = 10 * 60 * 1000;
+function pruneGState() {
+  const now = Date.now();
+  for (const [k, exp] of gNonces) if (exp < now) gNonces.delete(k);
+  for (const [k, r] of gStarts) if (now - r.at > G_START_WIN) gStarts.delete(k);
+}
+setInterval(pruneGState, 5 * 60 * 1000).unref();
 const gHome = (req, res, hash) => res.redirect(`${baseOrigin(req)}/login${hash}`);
 r.get('/google/start', (req, res) => {
+  if (auth.subOf && auth.subOf(req) === 'sadmin') return gHome(req, res, '#gerr=1');
   const g = gCfg();
   if (!g.id || !g.secret) return gHome(req, res, '#gerr=1');
   const ip = auth.clientIp(req);
-  if (auth.tooMany(ip)) return gHome(req, res, '#gerr=1');
-  auth.noteFail(ip); // Google başlatmaları da hız sınırına sayılır
+  if (auth.tooMany(ip)) return gHome(req, res, '#gerr=limit');
+  const now = Date.now();
+  const sr = gStarts.get(ip);
+  if (sr && now - sr.at < G_START_WIN && sr.n >= G_START_LIMIT) return gHome(req, res, '#gerr=limit');
+  if (!sr || now - sr.at >= G_START_WIN) gStarts.set(ip, { n: 1, at: now }); else sr.n++;
+  if (gNonces.size > 1000) pruneGState();
+  if (gNonces.size > 5000) return gHome(req, res, '#gerr=limit');
   const n = crypto.randomBytes(16).toString('hex');
-  gNonces.set(n, Date.now() + 10 * 60 * 1000);
+  gNonces.set(n, now + 10 * 60 * 1000);
+  const sub = (auth.subOf && auth.subOf(req) === 'music') ? 'music' : '';
+  const pair = /^\d{6}$/.test(String(req.query.pair || '')) ? String(req.query.pair) : '';
   const q = new URLSearchParams({
     client_id: g.id, redirect_uri: `${baseOrigin(req)}/api/auth/google/callback`, response_type: 'code',
-    scope: 'openid email', state: auth.sign({ kind: 'g_state', n, exp: Date.now() + 10 * 60 * 1000 }), prompt: 'select_account',
+    scope: 'openid email', state: auth.sign({ kind: 'g_state', n, sub, pair, exp: now + 10 * 60 * 1000 }), prompt: 'select_account',
   });
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${q}`);
 });
 let gJwks = null, gJwksAt = 0; // Google imza anahtarları (1 saat önbellek)
+async function gFetchJwks() {
+  const r = await fetch('https://www.googleapis.com/oauth2/v3/certs', { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error('Google imza anahtarları alınamadı: ' + r.status);
+  const j = await r.json();
+  if (!j || !Array.isArray(j.keys)) throw new Error('Google imza anahtarları geçersiz');
+  gJwks = j; gJwksAt = Date.now();
+  return gJwks;
+}
 async function gVerifyIdToken(idToken, clientId) {
   const [h, p, s] = String(idToken || '').split('.');
   if (!h || !p || !s) throw new Error('bozuk kimlik belirteci');
   const head = JSON.parse(Buffer.from(h, 'base64url').toString('utf8'));
-  if (head.alg !== 'RS256') throw new Error('beklenmeyen imza algoritması');
-  if (!gJwks || Date.now() - gJwksAt > 3600 * 1000) {
-    const r = await fetch('https://www.googleapis.com/oauth2/v3/certs');
-    gJwks = await r.json(); gJwksAt = Date.now();
+  if (head.alg !== 'RS256' || !head.kid) throw new Error('beklenmeyen imza algoritması');
+  if (!gJwks || Date.now() - gJwksAt > 3600 * 1000) await gFetchJwks();
+  let k = (gJwks.keys || []).find(x => x.kid === head.kid);
+  if (!k) {
+    // Google anahtar döndürmüş olabilir: önbelleği bir kez yenile
+    await gFetchJwks();
+    k = (gJwks.keys || []).find(x => x.kid === head.kid);
   }
-  const k = (gJwks.keys || []).find(x => x.kid === head.kid);
-  if (!k) { gJwks = null; throw new Error('imza anahtarı bulunamadı (anahtarlar yenilenecek)'); }
+  if (!k) throw new Error('imza anahtarı bulunamadı');
   const pub = crypto.createPublicKey({ key: { kty: k.kty, n: k.n, e: k.e }, format: 'jwk' });
   const imzalı = crypto.createVerify('RSA-SHA256').update(`${h}.${p}`).verify(pub, Buffer.from(s, 'base64url'));
   if (!imzalı) throw new Error('imza doğrulanamadı');
@@ -115,52 +164,66 @@ async function gVerifyIdToken(idToken, clientId) {
 }
 r.get('/google/callback', async (req, res) => {
   const g = gCfg();
-  const fail = msg => { console.error('[Google OAuth]', msg); return gHome(req, res, '#gerr=1'); };
+  const ip = auth.clientIp(req);
+  const fail = (msg, code = '1', countFail = true) => {
+    console.error('[Google OAuth]', msg);
+    if (countFail) auth.noteFail(ip);
+    return gHome(req, res, `#gerr=${code}`);
+  };
   try {
-    if (!g.id || !g.secret) return fail('anahtar yok');
+    if (!g.id || !g.secret) return fail('anahtar yok', '1', false);
     const st = auth.verify(String(req.query.state || ''));
     if (!st || st.kind !== 'g_state' || !st.n) return fail('state geçersiz');
     const nb = gNonces.get(st.n);
     gNonces.delete(st.n);
     if (!nb || nb < Date.now()) return fail('state süresi dolmuş');
+    if (req.query.error) {
+      return fail('google error: ' + req.query.error, req.query.error === 'access_denied' ? 'cancel' : '1', false);
+    }
     const code = String(req.query.code || '');
     if (!code) return fail('kod yok');
     const tr = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      signal: AbortSignal.timeout(8000),
       body: new URLSearchParams({ code, client_id: g.id, client_secret: g.secret, redirect_uri: `${baseOrigin(req)}/api/auth/google/callback`, grant_type: 'authorization_code' }),
     });
     const tj = await tr.json();
     if (!tj.id_token) return fail('token alınamadı: ' + (tj.error || tr.status));
     const c = await gVerifyIdToken(tj.id_token, g.id);
-    if (!c.email || c.email_verified !== true) return fail('e-posta doğrulanmamış');
+    if (!c.email || c.email_verified !== true) return fail('e-posta doğrulanmamış', 'unverified');
     const emLow = String(c.email).toLowerCase();
-    // kayıtlı işletme: bildirim e-postası eşleşen işletmenin sahibi hesabı (varsa son girişli)
+    // kayıtlı işletme: doğrulanmış olanlar önce, ardından son girişe göre bildirim e-postası eşleşen sahip hesabı
     const hit = tenants.all()
       .filter(t => String((t.db.notify || {}).email || '').toLowerCase() === emLow)
       .map(t => ({ t, u: (store.q.usersOf.all(t.id).find(x => x.role === 'owner') || {}) }))
       .filter(x => x.u.id)
-      .sort((a, b) => (b.u.last_login || 0) - (a.u.last_login || 0))[0];
+      .sort((a, b) => ((b.t.db.notify || {}).verified ? 1 : 0) - ((a.t.db.notify || {}).verified ? 1 : 0) || (b.u.last_login || 0) - (a.u.last_login || 0))[0];
     if (hit) {
-      if (!(hit.t.db.notify || {}).verified) { hit.t.db.notify.verified = true; hit.t.db.notify.verifiedAt = Date.now(); tenants.saveNow(hit.t); } // Google doğrulaması yeterli
-      auth.clearFails(auth.clientIp(req), hit.u.username);
+      if (!(hit.t.db.notify || {}).verified) {
+        hit.t.db.notify = { ...(hit.t.db.notify || {}), verified: true, verifiedAt: Date.now() };
+        tenants.saveNow(hit.t); // Google doğrulaması yeterli
+      }
+      auth.clearFails(ip, hit.u.username);
       store.q.userLogin.run(Date.now(), hit.u.id);
       auth.setSession(req, res, hit.u);
-      return res.redirect(`${baseOrigin(req)}${(auth.subOf && auth.subOf(req) === 'music') ? '/music' : auth.homeFor(req, hit.u)}`);
+      return res.redirect(postAuthUrl(req, hit.u, st.sub || '', st.pair || ''));
     }
-    // eşleşme yok: kayıt ekranına güvenli e-posta taşı (tek kullanımlık belirteçle)
-    const gt = auth.sign({ kind: 'g_signup', email: c.email, exp: Date.now() + 15 * 60 * 1000 });
+    if (!config.ALLOW_SIGNUP) return fail('kayıt kapalı', 'nosignup', false);
+    // eşleşme yok: kayıt ekranına güvenli e-posta taşı (imzalı belirteçle)
+    const gt = auth.sign({ kind: 'g_signup', email: c.email, sub: st.sub || '', pair: st.pair || '', exp: Date.now() + 15 * 60 * 1000 });
     gHome(req, res, `#gsignup=${encodeURIComponent(gt)}`);
   } catch (e) { fail(e.message); }
 });
 r.post('/google/prefill', (req, res) => {
   const p = auth.verify(String((req.body || {}).token || ''));
   if (!p || p.kind !== 'g_signup' || !p.email) return res.status(400).json({ error: 'Google oturum belirteci geçersiz veya süresi dolmuş' });
-  res.json({ email: p.email });
+  res.json({ email: p.email, pair: p.pair || '' });
 });
 
 r.get('/config', (req, res) => {
   const g = gCfg();
-  res.json({ env: config.APP_ENV, brand: config.BRAND, signup: config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, smtp: mailer.enabled(), google: !!(g.id && g.secret), starters: require('./starters').list().map(({ key, name }) => ({ key, name })) });
+  const isSadmin = auth.subOf && auth.subOf(req) === 'sadmin';
+  res.json({ env: config.APP_ENV, brand: config.BRAND, signup: isSadmin ? false : config.ALLOW_SIGNUP, trialDays: config.TRIAL_DAYS, smtp: mailer.enabled(), google: isSadmin ? false : !!(g.id && g.secret), starters: require('./starters').list().map(({ key, name }) => ({ key, name })) });
 });
 r.post('/signup', (req, res) => {
   if (!config.ALLOW_SIGNUP) return res.status(403).json({ error: 'Yeni kayıt şu an kapalı' });
@@ -169,31 +232,31 @@ r.post('/signup', (req, res) => {
   try {
     const b = req.body || {};
     if (b.website) throw new Error('Geçersiz istek'); // honeypot alanı
-    if (b.captchaToken !== undefined) {
+    let email = String(b.email || '').trim().slice(0, 120);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Geçerli bir e-posta adresi girin');
+    let gVerified = false, gp = null;
+    if (b.gtoken) { // Google ile açılan kayıt: e-posta Google tarafından doğrulanmış sayılır, alan kilitli gelir
+      gp = auth.verify(String(b.gtoken));
+      if (!gp || gp.kind !== 'g_signup' || !gp.email) throw new Error('Google oturumu süresi dolmuş; sayfayı yenileyip tekrar deneyin');
+      if (gp.email.toLowerCase() !== email.toLowerCase()) throw new Error('E-posta adresi değiştirilemez: kaydı Google hesabınızdaki adresle açın');
+      gVerified = true;
+    } else {
       const cp = auth.verify(b.captchaToken);
       if (!cp || cp.kind !== 'captcha' || String(b.captchaAns || '').trim() !== cp.ans) {
         throw new Error('Güvenlik sorusunun cevabı hatalı, lütfen tekrar deneyin');
       }
     }
-    let email = String(b.email || '').trim().slice(0, 120);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Geçerli bir e-posta adresi girin');
-    let gVerified = false;
-    if (b.gtoken) { // Google ile açılan kayıt: e-posta Google tarafından doğrulanmış sayılır, alan kilitli gelir
-      const gp = auth.verify(String(b.gtoken));
-      if (!gp || gp.kind !== 'g_signup' || !gp.email) throw new Error('Google oturumu süresi dolmuş; sayfayı yenileyip tekrar deneyin');
-      if (gp.email.toLowerCase() !== email.toLowerCase()) throw new Error('E-posta adresi değiştirilemez: kaydı Google hesabınızdaki adresle açın');
-      gVerified = true;
-    }
     if (b.accept !== true) throw new Error('Devam etmek için Kullanım Koşulları ve KVKK Aydınlatma Metni\'ni onaylayın');
     const t = createTenant({ name: b.business, username: b.username, password: b.password, phone: b.phone, plan: 'pro', starter: require('./starters').STARTERS[b.starter] ? b.starter : null });
-    t.db.notify = { email, offline: true, online: true, verified: gVerified, verifySentAt: gVerified ? 0 : Date.now() }; // ekran durumu uyarıları kayıttaki adrese gider
+    t.db.notify = { email, offline: true, online: true, verified: gVerified, verifiedAt: gVerified ? Date.now() : undefined, verifySentAt: gVerified ? 0 : Date.now() }; // ekran durumu uyarıları kayıttaki adrese gider
     t.db.consent = { terms: LEGAL_VERSION, kvkk: LEGAL_VERSION, at: Date.now(), ip, marketing: b.marketing === true };
     tenants.saveNow(t);
     if (!gVerified) sendVerifyEmail(req, t, email); // Google'dan gelen adrese ayrıca doğrulama postası gerekmez
     auth.noteFail(ip); // kayıtlar da sayılır: tek IP'den seri hesap açılmasın
     const u = store.q.userByName.get(String(b.username).trim().toLowerCase());
     auth.setSession(req, res, u);
-    res.json({ ok: true, tenant: t.id, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : auth.homeFor(req, { ...u, role: 'owner' }) });
+    const sub = (gp && gp.sub) || (auth.subOf && auth.subOf(req)) || '';
+    res.json({ ok: true, tenant: t.id, next: postAuthUrl(req, { ...u, role: 'owner' }, sub, gp && gp.pair) });
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
