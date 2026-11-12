@@ -91,7 +91,8 @@ jobs:
             exit 0
           fi
           cp "$APK" public/app.apk
-          printf '{"versionCode":%s,"versionName":"%s","url":"/app.apk"}\n' "$CODE" "$NAME" > public/apk-version.json
+          DATE=$(TZ=Europe/Istanbul date +%F)
+          printf '{"versionCode":%s,"versionName":"%s","url":"/app.apk","date":"%s"}\n' "$CODE" "$NAME" "$DATE" > public/apk-version.json
           echo "publish=true" >> "$GITHUB_OUTPUT"
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "code=$CODE" >> "$GITHUB_OUTPUT"

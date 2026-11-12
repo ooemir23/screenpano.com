@@ -3027,10 +3027,15 @@ setInterval(() => {
 const upd = { avail: null, last: null, timer: 0, live: 0, busy: false };
 const $m = id => document.getElementById(id);
 function menuSt(t) { $m('mst').textContent = t || ''; }
+// "2026-11-12" -> "12.11.26" (kumanda menüsünde sürümün yanında)
+const shortDate = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); return m ? m[3] + '.' + m[2] + '.' + m[1].slice(2) : ''; };
+const withDate = (t, d) => { const s = shortDate(d); return s ? t + ' · ' + s : t; };
 function menuInfo() {
   const n = window.__N;
   $m('mbiz').textContent = BNAME ? (BNAME + (CITY ? ' (' + CITY + ')' : '')) : 'Ekran Hazır';
-  $m('mver').textContent = n && n.versionName ? 'v' + n.versionName() + ' (kod ' + n.versionCode() + ')' : (n && n.versionCode ? 'kod ' + n.versionCode() : 'Web Tarayıcı');
+  // kurulu APK'nın tarihi APK'dan gelir (yeni sürümler); eski APK'da kurulu sürüm sunucudaki ile aynıysa sunucu kaydındaki tarih kullanılır
+  const insDate = n && n.buildDate ? n.buildDate() : (upd.last && n && n.versionCode && Number(n.versionCode()) === Number(upd.last.versionCode) ? upd.last.date : '');
+  $m('mver').textContent = n && n.versionName ? withDate('v' + n.versionName() + ' (kod ' + n.versionCode() + ')', insDate) : (n && n.versionCode ? 'kod ' + n.versionCode() : 'Web Tarayıcı');
   $m('msoft').textContent = window.__build ? window.__build.slice(0, 8) + (window.__buildFresh ? '' : ' (güncelleniyor…)') : '-';
   $m('mhost').textContent = location.host;
   $m('mres').textContent = `${screen.width}×${screen.height} (${window.innerWidth}×${window.innerHeight})`;
@@ -3038,10 +3043,10 @@ function menuInfo() {
   const cn = $m('mconn'); cn.textContent = isWs ? '● Çevrimiçi' : (navigator.onLine === false ? '● İnternet yok' : '● Bağlanıyor…'); cn.className = 'chip ' + (isWs ? 'ok' : navigator.onLine === false ? 'bad' : 'warn');
   menuMusic();
   const a = upd.avail, last = upd.last;
-  $m('msrv').textContent = last ? 'v' + last.versionName + ' (kod ' + last.versionCode + ')' : 'Kontrol ediliyor…';
+  $m('msrv').textContent = last ? withDate('v' + last.versionName + ' (kod ' + last.versionCode + ')', last.date) : 'Kontrol ediliyor…';
   const ch = $m('mchip'); ch.textContent = a ? '⚡ Yeni sürüm var' : (last && n && n.versionCode ? '✓ Uygulama güncel' : 'Sürüm: ' + (n && n.versionName ? 'v' + n.versionName() : 'tarayıcı')); ch.className = 'chip ' + (a ? 'warn' : last && n && n.versionCode ? 'ok' : '');
   $m('mnew').style.display = a ? 'block' : 'none';
-  if (a) $m('mnew').textContent = '⚡ Yeni sürüm hazır: v' + a.versionName + ' (kod ' + a.versionCode + ')';
+  if (a) $m('mnew').textContent = '⚡ Yeni sürüm hazır: ' + withDate('v' + a.versionName + ' (kod ' + a.versionCode + ')', a.date);
   $m('mupd').style.display = (a && n && n.installUpdate) ? '' : 'none';
   // Test/canlı geçişi: test ortamındaysa her zaman (geri dönüş), canlıdaysa yalnız işletme için açıldıysa (süper yönetim)
   const env = n && n.env ? n.env() : '';

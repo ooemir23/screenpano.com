@@ -1009,6 +1009,10 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun versionCode(): Int = BuildConfig.VERSION_CODE
 
+        /** APK'nın derlendiği gün (yyyy-MM-dd); kumanda menüsünde sürümün yanında gösterilir. */
+        @JavascriptInterface
+        fun buildDate(): String = BuildConfig.BUILD_DATE
+
         @JavascriptInterface
         fun hwId(): String = prefs.getHardwareId()
 
