@@ -28,7 +28,7 @@
   "hero.lead": "Menünüz, kampanyalarınız, canlı maç skorları ve duyurularınız bütün ekranlarda. Mekana tek bir Android kutu koyarsınız, gerisini telefonunuzdan yönetirsiniz.",
   "hero.cta": "Ücretsiz Kayıt Ol",
   "hero.how": "Nasıl çalışır?",
-  "hero.ticks": ["3 gün ücretsiz deneme hediyeli", "Kredi kartı gerekmez", "Tüm özellikler açık"],
+  "hero.ticks": ["{trial} gün ücretsiz deneme hediyeli", "Kredi kartı gerekmez", "Tüm özellikler açık"],
   "hero.tvAria": "ScreenPano ile hazırlanmış örnek TV ekranları",
   "alt.tvKafe": "Kafe ekranı: fotoğraflı kahvaltı afişi, fiyat listesi, saat ve kayan maç sonuçları",
   "alt.tvOtel": "Otel lobi ekranı: dünya saatleri, hava durumu, Wi-Fi QR kodu ve karşılama panosu",

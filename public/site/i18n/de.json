@@ -28,7 +28,7 @@
   "hero.lead": "Speisekarte, Aktionen, Live-Ergebnisse und Ankündigungen auf allen Bildschirmen. Sie stellen eine einzige Android-Box auf und steuern alles Weitere bequem per Smartphone.",
   "hero.cta": "Kostenlos registrieren",
   "hero.how": "So funktioniert's",
-  "hero.ticks": ["3 Tage kostenlos testen", "Keine Kreditkarte nötig", "Alle Funktionen inklusive"],
+  "hero.ticks": ["{trialDays} kostenlos testen", "Keine Kreditkarte nötig", "Alle Funktionen inklusive"],
   "hero.tvAria": "Beispielbildschirme, erstellt mit ScreenPano",
   "alt.tvKafe": "Café-Bildschirm: Frühstücksplakat mit Foto, Preisliste, Uhr und laufende Spielergebnisse",
   "alt.tvOtel": "Hotel-Lobby: Weltuhren, Wetter, WLAN-QR-Code und Begrüßungstafel",

@@ -195,7 +195,7 @@ function route() {
     UI.ask(msg, { ok: 'Kaydetmeden çık', danger: true }).then(ok => { if (ok) { clear(); location.hash = to; } }); };
   if (PREV === 'design' && TAB !== 'design' && EDIT.dirty) { leave('design', 'design/layout', 'Düzende kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { EDIT.dirty = false; EDIT.layout = null; }); if (TAB === PREV) return; }
   if (PREV === 'menu' && TAB !== 'menu' && MENU && MENU.__dirty) { leave('menu', 'menu', 'Fiyat listesinde kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { MENU.__dirty = 0; MENU = null; }); if (TAB === PREV) return; }
-  PREV = TAB; menu(false); if ($('modal').classList.contains('on')) closeModal(); render(); scrollTo(0, 0);
+  PREV = TAB; document.body.dataset.tab = TAB; menu(false); if ($('modal').classList.contains('on')) closeModal(); render(); scrollTo(0, 0);
 }
 addEventListener('hashchange', route);
 // D1: bölüm metinlerinin başındaki emoji simgeleri tek tip çizgi ikona çevrilir (çeviri katmanı işini bitirdikten sonra)
@@ -259,8 +259,8 @@ function drawBanner() {
   if (S.db && S.db.deletion) h += `<div class="bn bad"><span><b>Hesap silme talebi var.</b> ${fmtDate(S.db.deletion.executeAt)} tarihinde tüm veriler kalıcı olarak silinecek.</span><a class="btn s g" href="#settings/privacy">Vazgeç</a></div>`;
   const off = S.scr && S.scr.devices.filter(d => !d.online && d.last_seen && Date.now() - d.last_seen > (S.scr.offlineMin || 10) * 60000 && Date.now() - d.last_seen < 7 * 86400000);
   if (acc.ok && off && off.length) h += `<div class="bn trial"><span><b>${esc(off[0].name || 'TV kutusu')}</b> ${offSince(off[0].last_seen)} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin.</span><a class="btn s g" href="#settings/devices">Cihazlar</a></div>`;
-  if (!acc.ok) {} else if (acc.kind === 'trial') h += `<div class="bn trial"><span>Deneme süreniz <b>${days} gün</b> sonra (${fmtDate(acc.until)}) bitiyor. Deneme boyunca tüm Pro özellikler açık.</span></div>`;
-  if (t.notifyEmail && !t.emailVerified) h += `<div class="bn trial"><span>E-posta adresiniz (<b>${esc(t.notifyEmail)}</b>) henüz doğrulanmadı. Ekran durumu uyarıları ve şifre sıfırlama için doğrulayın.</span><button class="btn s g" onclick="resendVerifyEmail(this)">Doğrulama e-postası gönder</button></div>`;
+  if (!acc.ok) {} else if (acc.kind === 'trial') h += `<div class="bn trial${days > 1 ? ' soft' : ''}"><span>Deneme süreniz <b>${days} gün</b> sonra (${fmtDate(acc.until)}) bitiyor. Deneme boyunca tüm Pro özellikler açık.</span></div>`;
+  if (t.notifyEmail && !t.emailVerified) h += `<div class="bn trial soft"><span>E-posta adresiniz (<b>${esc(t.notifyEmail)}</b>) henüz doğrulanmadı. Ekran durumu uyarıları ve şifre sıfırlama için doğrulayın.</span><button class="btn s g" onclick="resendVerifyEmail(this)">Doğrulama e-postası gönder</button></div>`;
   $('banner').innerHTML = h;
 }
 async function resendVerifyEmail(btn) {
@@ -576,7 +576,7 @@ function gridSet(n, quiet) {
 function drawPal() {
   const used = new Set(EDIT.layout.widgets.map(w => w.type));
   const n = k => EDIT.layout.widgets.filter(w => w.type === k).length;
-  $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} ${esc(d.name)}${d.pro && !pro() ? ' 🔒' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
+  $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} <span>${esc(d.name)}</span>${d.pro && !pro() ? ' 🔒' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
 }
 const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Google ve Instagram yorumları <a href="#promo">Kampanya ve yorumlar</a> sayfasından bağlanır.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
 const BOXES = [['accent', 'Düz (vurgu rengi tonlu)'], ['glass', 'Cam (yarı saydam koyu)'], ['dark', 'Koyu dolgu'], ['outline', 'Yalnız çerçeve'], ['none', 'Kutusuz']];
@@ -3491,17 +3491,17 @@ SECTIONS.agenda = {
 const FAQ_LIST = [
   ['TV kutusunu ekrana nasıl bağlarım?', 'TV kutunuzu HDMI ile televizyona takın ve internete bağlayın. Kutuda ScreenPano uygulamasını açtığınızda ekranda 6 haneli bir kod belirir. Panelde <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasına gidip bu kodu yazarak saniyeler içinde eşleştirebilirsiniz.'],
   ['İnternet kesilirse TV ekranı kararır mı?', 'Hayır. ScreenPano videolarınızı, fotoğraflarınızı ve fiyat listenizi TV kutusunun hafızasına kaydeder. İnternet kopsa bile ekranınız kesintisiz oynamaya devam eder; bağlantı geldiğinde yeni değişiklikleri otomatik alır.'],
-  ['Farklı televizyonlarda farklı içerik (birinde menü, diğerinde maç/video) gösterebilir miyim?', 'Evet! <a href="#design">Tasarım</a> sayfasının üstündeki <b>Ekran profili</b> çubuğundan "+ Yeni ekran" diyerek ikinci bir ekran tasarımı oluşturun. Ardından <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasında ilgili TV kutusunun "Ayrıntılar ve araçlar" penceresinden hangi ekran profilini göstereceğini seçin. Medya sekmesinde videoların üzerindeki "📺 Ekran" butonuyla hangi videonun hangi TV\'de döneceğini de seçebilirsiniz.'],
-  ['Yüklediğim videoların kendi sesi neden çıkmıyor veya müzikle çakışıyor mu?', '<a href="#media">Medya</a> sayfasında her videonun yanındaki <b>Sesli / Sessiz</b> butonuyla o videonun sesini açabilirsiniz. Sesli bir video başladığında arka planda çalan müzik otomatik olarak kısılır, video bitince müzik eski sesine döner.'],
+  ['Farklı televizyonlarda farklı içerik (birinde menü, diğerinde maç/video) gösterebilir miyim?', 'Evet. <a href="#design">Tasarım</a> sayfasındaki <b>Ekran Profilleri (Çoklu TV)</b> kartından <b>＋ Yeni ekran profili</b> ile ikinci bir ekran tasarımı oluşturun. Ardından <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasında ilgili TV kutusunun <b>Ayrıntılar ve araçlar</b> penceresinden hangi ekran profilini göstereceğini seçin. Birden fazla profil varken <a href="#media">Medya</a> sayfasında videonun <b>⋯</b> menüsündeki <b>Hangi ekranlarda oynasın?</b> ile videonun hangi TV\'lerde döneceğini de seçebilirsiniz.'],
+  ['Yüklediğim videoların kendi sesi neden çıkmıyor veya müzikle çakışıyor mu?', 'Videolar varsayılan olarak sessiz oynar. <a href="#media">Medya</a> sayfasında videonun <b>⋯</b> menüsünden <b>Sesli oynat (müziği kısar)</b> seçeneğiyle o videonun sesini açabilirsiniz. Sesli bir video başladığında arka planda çalan müzik otomatik olarak kısılır, video bitince müzik eski sesine döner.'],
   ['Fiyat listesine ürün fotoğrafı ve yabancı dil nasıl eklerim?', '<a href="#menu">Fiyat Listesi</a> sayfasında her ürünün solundaki kamera kutucuğuna tıklayarak ürün fotoğrafı yükleyebilirsiniz. Üstteki "Diller" kartından İngilizce, Almanca, Rusça veya Arapça seçip <b>"✨ Eksik çevirileri otomatik doldur"</b> butonuna basarak tüm menünüzü tek tıkla çevirebilirsiniz.'],
-  ['Panel çok detaylı görünüyor, daha sade bir görünüm var mı?', 'Sol menünün en altındaki <b>"✨ Basit moda geç"</b> butonuna tıklayarak günlük kullanımda en çok ihtiyaç duyulan bölümler dışındaki gelişmiş ayarları gizleyebilirsiniz. İstediğiniz zaman tekrar "Tüm özellikler" moduna dönebilirsiniz.'],
-  ['TV ekranında takılma veya yavaşlık olursa ne yapmalıyım?', '<a href="#media">Medya</a> sayfasındaki "TV\'ye uygun hazırla" butonuyla yüksek çözünürlüklü videoları TV kutusuna uygun akıcı hale getirebilirsiniz. Ayrıca <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasından cihazın "Ayrıntılar ve araçlar" bölümündeki <b>Takılma testi</b>ni çalıştırabilir veya <b>Uygulamayı yeniden başlat / Önbelleği temizle</b> komutlarını uzaktan gönderebilirsiniz.'],
+  ['Panel çok detaylı görünüyor, daha sade bir görünüm var mı?', 'Sol menünün en altındaki <b>Basit Mod</b> düğmesine tıklayarak günlük kullanımda en çok ihtiyaç duyulan bölümler dışındaki gelişmiş ayarları gizleyebilirsiniz. Aynı yerdeki <b>Gelişmiş Mod</b> düğmesiyle istediğiniz zaman tüm bölümlere dönebilirsiniz.'],
+  ['TV ekranında takılma veya yavaşlık olursa ne yapmalıyım?', '<a href="#media">Medya</a> sayfasındaki <b>Depolama ve Oynatma Akıcılığı</b> kartından oynatma akıcılığını <b>Akıcı</b> yapıp <b>Videoları TV\'ye uyarla</b> düğmesine basın; yüksek çözünürlüklü videolar kutuya uygun hale getirilir. Ayrıca <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasında cihazın <b>Ayrıntılar ve araçlar</b> penceresinden <b>Takılma testi</b>, <b>Uygulamayı yeniden başlat</b> ve <b>Önbelleği temizle</b> komutlarını uzaktan gönderebilirsiniz.'],
 ];
 SECTIONS.help = {
   html() {
     return head('Yardım ve Sık Sorulan Sorular', 'ScreenPano kullanımıyla ilgili hızlı yanıtlar, ipuçları ve destek kanalları.')
       + card('🔍 Sık Sorulan Sorular', 'Aradığınız konuyu aşağıya yazabilir veya başlığa tıklayarak cevabı açabilirsiniz.',
-        `<input type="search" id="faq-q" placeholder="Soru ara (örn. ses, internet, çoklu ekran, çeviri…)" oninput="filterFaq(this.value)" style="margin-bottom:14px">
+        `<input type="search" id="faq-q" placeholder="Soru ara (örn. ses, internet, çoklu ekran)" oninput="filterFaq(this.value)" style="margin-bottom:14px">
          <div id="faq-list">${FAQ_LIST.map(([q, a], i) => `<details class="faq" ${i === 0 ? 'open' : ''} data-q="${esc((q + ' ' + a).toLowerCase())}"><summary>${esc(q)}</summary><p>${a}</p></details>`).join('')}</div>`)
       + `<div class="grid g2">`
       + card('🚀 Hızlı Kısayollar', 'En sık kullanılan işlemler:',

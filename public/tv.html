@@ -3954,7 +3954,7 @@ function setQrTile(list) {
 // ---- fiyat tarifesi widget'ı: sayfalara bölünür, 12 sn'de bir döner ----
 const menuW = { data: null, pages: [], idx: 0, ncol: 1, timer: null, sig: '' };
 const fmtPrice = (p, cur) => /^\d+([.,]\d+)?$/.test(String(p || '').trim()) ? `${p} ${cur || '₺'}` : String(p || '');
-const menuRow = (r, cur) => r.c !== undefined ? `<div class="mc">${esc(r.c)}</div>` : `<div class="mi">${r.img ? `<img class="mimg" src="${esc(r.img)}" alt="" decoding="async" onerror="this.remove()">` : ''}<div class="n">${esc(r.name)}${r.desc || r.kcal ? `<small>${esc(r.desc || '')}${r.desc && r.kcal ? ' · ' : ''}${r.kcal ? '🔥 ' + esc(r.kcal) : ''}</small>` : ''}</div><i class="dots"></i><div class="p">${r.was ? `<s class="was">${esc(fmtPrice(r.was, cur))}</s>` : ''}${esc(fmtPrice(r.price, cur))}</div></div>`;
+const menuRow = (r, cur) => r.c !== undefined ? `<div class="mc">${esc(r.c)}</div>` : `<div class="mi">${r.img ? `<img class="mimg" src="${esc(r.img)}" alt="" decoding="async" onerror="this.remove()">` : ''}<div class="n">${esc(r.name)}${r.desc || r.kcal ? `<small>${esc(r.desc || '')}${r.desc && r.kcal ? ' · ' : ''}${r.kcal ? '🔥 ' + esc(r.kcal) : ''}</small>` : ''}</div>${String(r.price || '').trim() || r.was ? `<i class="dots"></i>` : ''}<div class="p">${r.was ? `<s class="was">${esc(fmtPrice(r.was, cur))}</s>` : ''}${esc(fmtPrice(r.price, cur))}</div></div>`;
 function setMenu(m) { const sig = JSON.stringify(m || null) + menuSchedSig(m); if (sig === menuW.sig) return; menuW.sig = sig; menuW.data = m; renderMenuW(true); }
 function renderMenuW(reset) {
   const box = $id('wmenu'), body = box.querySelector('.mb'), m = menuW.data;

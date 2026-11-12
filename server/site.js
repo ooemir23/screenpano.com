@@ -38,7 +38,8 @@ function dict(lang) {
   const n = config.TRIAL_DAYS;
   return k => {
     const v = d[k] !== undefined && d[k] !== null ? d[k] : tr[k] !== undefined ? tr[k] : k;
-    return typeof v === 'string' ? v.replace(/\{trialDays\}/g, trialText(lang, n)).replace(/\{trial\}/g, n) : v;
+    const fill = x => typeof x === 'string' ? x.replace(/\{trialDays\}/g, trialText(lang, n)).replace(/\{trial\}/g, n) : Array.isArray(x) ? x.map(fill) : x;
+    return fill(v); // dizi değerler de (ör. hero.ticks) süre yer tutucusunu alır
   };
 }
 // özellik kaydının çevirisi

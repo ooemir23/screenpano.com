@@ -218,7 +218,9 @@ class MenuWidget(context: Context) : LinearLayout(context), NativeWidget {
             if (r.desc.isNotEmpty()) { append("\n"); val a = length; append(r.desc); setSpan(RunSpan(vh * 1.8f, pal.mute, false, 0f), a, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE) }
         }
         row.addView(TextView(context).apply { text = nm; includeFontPadding = false }, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { })
-        row.addView(DotsView(context, Color.argb(71, 255, 255, 255), max(1f, vh * 0.2f)), LayoutParams(0, (vh * 2.2f).toInt(), 1f).apply { leftMargin = (vh * 0.6f).toInt(); rightMargin = (vh * 0.6f).toInt() })
+        // fiyat girilmemiş üründe (hazır paketlerin örnek listesi) noktalı çizgi boşluğa gitmesin; yer tutucu boş kalır
+        if (r.price.isNotBlank() || r.was.isNotEmpty()) row.addView(DotsView(context, Color.argb(71, 255, 255, 255), max(1f, vh * 0.2f)), LayoutParams(0, (vh * 2.2f).toInt(), 1f).apply { leftMargin = (vh * 0.6f).toInt(); rightMargin = (vh * 0.6f).toInt() })
+        else row.addView(View(context), LayoutParams(0, 1, 1f))
         val pr = SpannableStringBuilder().apply {
             if (r.was.isNotEmpty()) {
                 append(r.was); setSpan(RunSpan(vh * 2f, pal.mute, false, 0f), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)

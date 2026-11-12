@@ -28,7 +28,7 @@
   "hero.lead": "Your menu, promotions, live match scores and announcements on every screen. Place a single Android box in your venue and manage everything else from your phone.",
   "hero.cta": "Sign up free",
   "hero.how": "See how it works",
-  "hero.ticks": ["3-day free trial included", "No credit card required", "All features unlocked"],
+  "hero.ticks": ["{trial}-day free trial included", "No credit card required", "All features unlocked"],
   "hero.tvAria": "Sample TV screens created with ScreenPano",
   "alt.tvKafe": "Café screen: breakfast poster with photo, price list, clock and scrolling match results",
   "alt.tvOtel": "Hotel lobby screen: world clocks, weather, Wi-Fi QR code and welcome banner",

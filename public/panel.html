@@ -92,6 +92,8 @@ main{flex:1;min-width:0;padding:28px 36px 90px}
 #banner{margin-bottom:18px}
 .bn{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:var(--r-m);font-size:14px;margin-bottom:10px}
 .bn.trial{background:rgba(var(--a2),.1);border:1px solid rgba(var(--a2),.35)}
+/* bilgi amaçlı uyarılar (deneme süresi > 1 gün, e-posta doğrulama) yalnız Özet ve Ayarlar'da; acil olanlar her sayfada */
+body:not([data-tab=home]):not([data-tab=settings]) .bn.soft{display:none}
 .bn.bad{background:rgba(239,91,79,.1);border:1px solid rgba(239,91,79,.4)}
 #impbar{position:sticky;top:0;z-index:90;height:32px;display:flex;align-items:center;justify-content:center;gap:14px;background:var(--accent);color:#fff;font-size:13px;padding:0 12px}
 #impbar button{background:rgba(0,0,0,.25);border:0;color:#fff;font:inherit;font-weight:700;border-radius:var(--r-pill);padding:3px 12px;cursor:pointer}#impbar button:hover{background:rgba(0,0,0,.4)}
@@ -133,7 +135,7 @@ body.imp #side{top:32px;height:calc(100vh - 32px)}body.imp .jump{top:32px}body.i
 .f{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 14px;align-items:end}
 .fl{display:flex;flex-direction:column;gap:6px;min-width:0}
 .fl>span{font-size:12.5px;color:var(--mute);font-weight:500}
-input[type=text],input[type=password],input[type=number],input[type=time],input[type=tel],input[type=email],input[type=date],select,textarea{width:100%;background:#141616;border:1px solid var(--line2);border-radius:var(--r-m);padding:10px 12px;outline:none;min-width:0}
+input[type=text],input[type=search],input[type=password],input[type=number],input[type=time],input[type=tel],input[type=email],input[type=date],input[type=url],select,textarea{width:100%;background:#141616;border:1px solid var(--line2);border-radius:var(--r-m);padding:10px 12px;outline:none;min-width:0}
 input:focus,select:focus,textarea:focus{border-color:var(--accent2)}
 textarea{resize:vertical;min-height:80px}
 input[type=color]{width:100%;height:44px;border:1px solid var(--line2);border-radius:var(--r-m);background:#141616;padding:4px;cursor:pointer}
@@ -325,6 +327,7 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 /* ortak kayıt çubuğu (A2) */
 #savebar{position:fixed;left:calc(50% + 124px);bottom:18px;transform:translate(-50%,140%);z-index:65;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 18px;background:var(--panel3);border:1px solid rgba(var(--a2),.55);border-radius:var(--r-l);box-shadow:0 16px 40px rgba(0,0,0,.55);transition:transform .25s;max-width:calc(100vw - 32px)}
 #savebar.on{transform:translate(-50%,0)}
+#savebar:not(.on){visibility:hidden} /* gizliyken Tab ile görünmez düğmelere odaklanılmasın */
 #savebar span{font-size:14px;font-weight:600;margin-inline-end:8px;white-space:nowrap}
 body.sbon #toasts{bottom:86px}
 @media(max-width:900px){#savebar{left:50%}#savebar span{white-space:normal;font-size:13px}}
