@@ -57,7 +57,7 @@ async function req(method, path, body) {
   const r = await fetch('/api/admin' + path, { method, headers: body && !isForm ? { 'Content-Type': 'application/json' } : undefined, body: body === undefined ? undefined : isForm ? body : JSON.stringify(body) });
   if (r.status === 401) { location.href = '/login'; throw new Error('Oturum kapandı'); }
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || 'İşlem yapılamadı (' + r.status + ')');
+  if (!r.ok) { const e = new Error(j.error || 'İşlem yapılamadı (' + r.status + ')'); e.data = j; throw e; }
   return j;
 }
 // işlem + bildirim; reload: veriyi yenileyip bölümü yeniden çiz
@@ -1997,7 +1997,8 @@ SECTIONS.settings = {
       const loc = S.db.location || {};
       h += card('İşletme bilgileri', '', `<div class="f" style="align-items:start">${fl('İşletme adı', `<input type="text" id="s-name" maxlength="80" value="${esc(t.name)}">`)}${fl('Şehir / ilçe (hava durumu için)', `<input type="text" id="s-city" placeholder="örn. Kadıköy" autocomplete="off" oninput="geoSearch()"><button type="button" class="btn ghost sm" id="geo-me" style="margin-top:6px" onclick="geoLocate()">📍 Konumumu otomatik bul</button>`)}</div>
         <div class="geo" id="geo"></div><p class="muted mt">Şu anki konum: <b style="color:var(--text)">${esc(loc.city || '-')}</b>${loc.custom ? '' : ' (varsayılan)'}</p>
-        <div class="row end mt"><button class="btn" data-save onclick="saveProfile()">Kaydet</button></div>`);
+        <div class="row end mt"><button class="btn" data-save onclick="saveProfile()">Kaydet</button></div>`)
+        + '<div id="brloc"><div class="muted">Yükleniyor…</div></div>';
     } else if (sub === 'devices') {
       h += devicesPage();
       window.__pair = null;
@@ -2036,6 +2037,7 @@ SECTIONS.settings = {
     if (sub === 'devices') { drawDevStatus(); const pc = $('pcode'); if (pc && pc.value) pc.focus(); }
     if (sub === 'notify') drawNotifySettings();
     if (sub === 'branches') drawBranches();
+    if (sub === 'business') drawBizLocations();
   },
 };
 let geoT;
@@ -3324,10 +3326,12 @@ function branchesHtml() {
 }
 async function drawBranches() {
   let j; try { j = await req('GET', '/branches'); } catch (e) { return; } S.br = j;
-  $('brlist').innerHTML = j.list.map(b => `<div class="it"><span class="dot ${b.online ? 'on' : ''}"></span><div class="b"><b>${esc(b.name)}${b.id === j.current ? ' <span style="color:var(--accent2);font-weight:600"> · şu an burada</span>' : ''}${b.home ? ' <span class="muted" style="font-weight:400">· ana hesap</span>' : ''}</b><span>${b.online}/${b.devices} cihaz bağlı · ${b.media} içerik · ${b.access.ok ? (b.access.kind === 'trial' ? 'deneme · ' : '') + fmtDate(b.access.until) + ' tarihine kadar' : 'süresi dolmuş'}</span></div>
-      ${b.id !== j.current ? `<button class="btn xs" onclick="switchBranch('${b.id}')">Bu şubeye geç</button>` : ''}${owner() ? `<button class="btn xs g" data-nm="${esc(b.name)}" onclick="renBranch('${b.id}', this.dataset.nm)">Adlandır</button>` : ''}</div>`).join('');
+  const listEl = $('brlist'); if (!listEl) return;
+  listEl.innerHTML = j.list.map(b => `<div class="it"><span class="dot ${b.online ? 'on' : ''}"></span><div class="b"><b>${esc(b.name)}${b.id === j.current ? ' <span style="color:var(--accent2);font-weight:600"> · şu an burada</span>' : ''}${b.home ? ' <span class="muted" style="font-weight:400">· ana hesap</span>' : ''}</b><span>${b.online}/${b.devices} cihaz bağlı · ${b.media} içerik · ${b.access.ok ? (b.access.kind === 'trial' ? 'deneme · ' : '') + fmtDate(b.access.until) + ' tarihine kadar' : 'süresi dolmuş'}</span></div>
+      ${b.id !== j.current ? `<button class="btn xs" onclick="switchBranch('${b.id}')">Bu şubeye geç</button>` : ''}${owner() ? `<button class="btn xs g" data-nm="${esc(b.name)}" onclick="renBranch('${b.id}', this.dataset.nm)">Adlandır</button>` : ''}${owner() && !b.home && b.id !== j.current ? `<button class="btn xs d" data-nm="${esc(b.name)}" onclick="delBranch('${b.id}', this.dataset.nm)">Sil</button>` : ''}</div>`).join('');
   const others = j.list.filter(b => b.id !== j.current);
-  $('brmore').innerHTML = (owner() ? `<div class="grid g2">` + card('Yeni şube', `Paketinizde ${j.limit} şubeye kadar açabilirsiniz (${j.list.length}/${j.limit}). Yeni şube bu şubenin düzeni, renkleri ve logosuyla açılır; süresi ana hesabınızla aynıdır.`,
+  const inc = j.included || j.limit, quota = j.limit <= 1 ? 'Şube açmak Pro pakettedir.' : `Paketinizde ${inc} lokasyon (ana işletme + ${inc - 1} şube) dahildir; ${j.list.length}/${inc} kullanıldı.${j.extraFee ? ` Dahil olanları aşan her yeni şube faturanıza +${j.extraFee} TL olarak yansıtılır.` : ''}`;
+  $('brmore').innerHTML = (owner() ? `<div class="grid g2">` + card('Yeni şube', `${quota} Yeni şube bu şubenin düzeni, renkleri ve logosuyla açılır; süresi ana hesabınızla aynıdır.`,
       `<div class="row"><input type="text" id="br-n" maxlength="80" placeholder="örn. Kadıköy şubesi" style="flex:1"><button class="btn" onclick="addBranch()" ${j.list.length >= j.limit ? 'disabled' : ''}>Şube aç</button></div>`)
     + card('Diğer şubelere kopyala', others.length ? 'Bu şubedeki içeriği seçtiğiniz şubelere kopyalar. Kopyalanan bölümler hedef şubede bununla değişir; medya eklenir.' : 'Kopyalamak için önce bir şube daha açın.',
       others.length ? `<div class="fl"><span>Hedef şubeler</span><div class="chips" id="cp-t">${others.map(b => `<span class="chip on" data-id="${b.id}" onclick="this.classList.toggle('on')">${esc(b.name)}</span>`).join('')}</div></div>
@@ -3336,8 +3340,38 @@ async function drawBranches() {
         <div class="row end mt"><button class="btn" onclick="copyBranches()">Kopyala</button></div>` : '') + `</div>` : '');
 }
 async function switchBranch(id) { try { await req('POST', '/branches/switch', { id }); location.hash = '#home'; location.reload(); } catch (e) { toast(e.message, true); } }
-async function addBranch() { const name = $('br-n').value.trim(); if (name.length < 2) return toast('Şube adını yazın', true); try { const j = await req('POST', '/branches', { name }); toast('Şube açıldı'); if (await UI.ask('Yeni şubeye şimdi geçilsin mi?')) return switchBranch(j.id); drawBranches(); drawBranchSwitch(); } catch (e) { toast(e.message, true); } }
-const renBranch = async (id, cur) => { const n = await UI.ask('Şube adı:', { title: 'Şubeyi Adlandır', input: cur || '', ok: 'Kaydet' }); if (n && n.trim()) act('PUT', '/branches/' + id, { name: n.trim() }, 'Kaydedildi', false).then(() => { drawBranches(); drawBranchSwitch(); }); };
+async function addBranch(confirmed) {
+  const name = $('br-n').value.trim(); if (name.length < 2) return toast('Şube adını yazın', true);
+  try {
+    const j = await req('POST', '/branches', { name, confirmFee: confirmed === true });
+    toast(j.fee ? `Şube açıldı — faturanıza +${j.fee} TL yansıtılacak` : 'Şube açıldı');
+    if (await UI.ask('Yeni şubeye şimdi geçilsin mi?')) return switchBranch(j.id);
+    drawBranches(); drawBranchSwitch();
+  } catch (e) {
+    if (e.data && e.data.needConfirm) { // ek şube ücreti: onay verildiyse tekrar dene
+      if (await UI.ask(`${e.message} Onaylıyor musunuz?`, { title: 'Ek Şube Ücreti', ok: `Evet, +${e.data.fee} TL` })) return addBranch(true);
+      return;
+    }
+    toast(e.message, true);
+  }
+}
+const renBranch = async (id, cur) => { const n = await UI.ask('Şube adı:', { title: 'Şubeyi Adlandır', input: cur || '', ok: 'Kaydet' }); if (n && n.trim()) act('PUT', '/branches/' + id, { name: n.trim() }, 'Kaydedildi', false).then(() => { drawBranches(); drawBranchSwitch(); drawBizLocations(); }); };
+// şube silme (işletme panelinden): ad onayı ister; ana işletme satırında düğme yok
+async function delBranch(id, name) {
+  const c = await UI.ask(`"${name}" şubesi, içindeki tüm içerik ve cihazlarıyla kalıcı olarak silinir. Onaylamak için şube adını aynen yazın: ${name}`, { input: '', ok: 'Sil', danger: true });
+  if (c === null || !c.trim()) return;
+  try { await req('DELETE', '/branches/' + id, { confirm: c.trim() }); toast('Şube silindi'); }
+  catch (e) { return toast(e.message, true); }
+  drawBranches(); drawBranchSwitch(); drawBizLocations();
+}
+/* Lokasyonlarım: Ayarlar → İşletme sekmesindeki lokasyon listesi (ana işletme silinemez) */
+async function drawBizLocations() {
+  const el = $('brloc'); if (!el) return;
+  let j; try { j = await req('GET', '/branches'); } catch (e) { el.innerHTML = ''; return; } S.br = j;
+  el.innerHTML = card('Lokasyonlarım', 'İlk açılan işletme ana işletmedir ve silinemez. Şubeye geçince panel o şubeyi yönetir.',
+    '<div class="list">' + j.list.map(b => `<div class="it"><span class="dot ${b.online ? 'on' : ''}"></span><div class="b"><b>${esc(b.name)}${b.id === j.current ? ' <span style="color:var(--accent2);font-weight:600">· şu an burada</span>' : ''}</b><span>${b.home ? 'Ana İşletme' : 'Şube'} · ${b.online}/${b.devices} cihaz bağlı · ${b.media} içerik</span></div>
+      ${b.id !== j.current ? `<button class="btn xs" onclick="switchBranch('${b.id}')">Bu şubeye geç</button>` : ''}${owner() && !b.home && b.id !== j.current ? `<button class="btn xs g" data-nm="${esc(b.name)}" onclick="renBranch('${b.id}', this.dataset.nm)">Adlandır</button><button class="btn xs d" data-nm="${esc(b.name)}" onclick="delBranch('${b.id}', this.dataset.nm)">Sil</button>` : ''}</div>`).join('') + '</div>');
+}
 async function copyBranches() {
   const targets = [...document.querySelectorAll('#cp-t .chip.on')].map(x => x.dataset.id), parts = [...document.querySelectorAll('#cp-p .chip.on')].map(x => x.dataset.k);
   if (!targets.length || !parts.length) return toast('Şube ve kopyalanacak içerik seçin', true);

@@ -127,7 +127,7 @@
   "plan.pro.badge": "Empfohlen",
   "plan.pro.note": "Für alle Unternehmen, Hotels, Einzelhandel und Institutionen",
   "plan.pro.try": "Kostenlos registrieren",
-  "plan.pro.list": ["<b>Alles aus Starter</b>", "2 TV-Boxen (eine als Ersatz)", "20 GB Speicher für Medien", "Live-Spiele, Tor-Animation, Tabellen", "Mehrsprachige Preisliste", "Google-Bewertungen und Instagram", "Infoband und Geburtstagsgrüße", "Bis zu 10 Filialen, 3 Nutzer", "Kein ScreenPano-Hinweis auf dem Bildschirm"],
+  "plan.pro.list": ["<b>Alles aus Starter</b>", "2 TV-Boxen (eine als Ersatz)", "20 GB Speicher für Medien", "Live-Spiele, Tor-Animation, Tabellen", "Mehrsprachige Preisliste", "Google-Bewertungen und Instagram", "Infoband und Geburtstagsgrüße", "3 Standorte inklusive, weitere Filialen kostenpflichtig; 3 Nutzer", "Kein ScreenPano-Hinweis auf dem Bildschirm"],
   "cmp.summary": "Alle Unterschiede vergleichen",
   "cmp.feature": "Funktion",
 
@@ -183,6 +183,7 @@
   "s.cmp.users": "Nutzer",
   "s.cmp.branches": "Filialen",
   "s.cmp.upTo": "Bis zu {n}",
+  "s.cmp.branchesPro": "{n} Standorte inkl., weitere kostenpflichtig",
   "s.cmp.badge": "ScreenPano-Hinweis auf dem Bildschirm",
   "s.cmp.badgeSmall": "Klein, in der Ecke",
   "s.yes": "Enthalten",

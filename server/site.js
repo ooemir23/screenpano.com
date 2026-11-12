@@ -99,7 +99,7 @@ function compare(data, lang, t) {
   const row = (k, x, y) => `<tr><th scope="row">${e(k)}</th>${[x, y].map(v => v === true ? `<td class="y">${e(t('s.yes'))}</td>` : v === false ? `<td class="n">${e(t('s.no'))}</td>` : `<td>${e(v)}</td>`).join('')}</tr>`;
   return [
     row(t('s.cmp.devices'), b.devices, p.devices), row(t('s.cmp.storage'), gb(b.storageMB), gb(p.storageMB)), row(t('s.cmp.users'), b.users, p.users),
-    row(t('s.cmp.branches'), b.branches, b.branches === p.branches ? p.branches : t('s.cmp.upTo').replace('{n}', p.branches)),
+    row(t('s.cmp.branches'), false, t('s.cmp.branchesPro').replace('{n}', p.includedBranches || p.branches)),
     ...data.features.filter(f => f.compare).map(f => loc(f, lang)).map(f => row(f.compare, f.plan !== 'pro', true)),
     row(t('s.cmp.badge'), b.badge ? t('s.cmp.badgeSmall') : t('s.no'), p.badge ? t('s.cmp.badgeSmall') : t('s.no')),
   ].join('');

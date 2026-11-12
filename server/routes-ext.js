@@ -269,18 +269,29 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
   // ================= ŞUBELER =================
   const homeOf = u => tenants.get(auth.impOf(u) || u.tenant_id);
   function orgList(t) { return t.org_id ? store.q.orgTenants.all(t.org_id) : [{ id: t.id, name: t.name }]; }
+  // Ek şube ücreti (TL): "fee_extra_branch" ayarından; sınırsız işletmelere uygulanmaz.
+  // Ayar boş ya da geçersizse 0 sayılıp şube ücretsiz açılmasın: varsayılan 500'e düşer.
+  function extraFee(home) {
+    if (plan(home).id === 'sinirsiz') return 0;
+    const v = Number(store.setting('fee_extra_branch', ''));
+    return v > 0 ? Math.round(v) : 500;
+  }
   r.get('/branches', (req, res) => {
     const home = homeOf(req.user), online = hub.onlineDeviceIds();
     const list = orgList(req.t).map(b => { const bt = tenants.get(b.id), devs = store.q.devicesOf.all(b.id); return { id: b.id, name: bt.name, devices: devs.length, online: devs.filter(d => online.has(d.id)).length, access: access(bt), media: bt.db.videos.length, home: home && b.id === home.id }; });
-    res.json({ current: req.t.id, list, limit: plan(home || req.t).branches || 1, canManage: req.user.role !== 'staff' });
+    const pl = plan(home || req.t);
+    res.json({ current: req.t.id, list, limit: pl.branches || 1, included: pl.includedBranches || pl.branches || 1, extraFee: extraFee(home || req.t) || null, canManage: req.user.role !== 'staff' });
   });
   r.post('/branches', ownerOnly, (req, res) => {
     const home = homeOf(req.user); if (!home) return res.status(400).json({ error: 'işletme bulunamadı' });
     const name = s((req.body || {}).name, 80); if (name.length < 2) return res.status(400).json({ error: 'Şube adı gerekli' });
     // askıdaki ya da süresi dolmuş hesap şube açamaz (şube ayrı bir işletme olarak ekran yayınına başlardı)
     const acc = access(home); if (!acc.ok) return res.status(403).json({ error: acc.reason === 'suspended' ? 'Hesabınız askıda; şube açılamaz' : 'Aboneliğiniz sona erdi; şube açmak için paketinizi yenileyin' });
-    const lim = plan(home).branches || 1, cur = orgList(home).length;
+    const pl = plan(home), lim = pl.branches || 1, cur = orgList(home).length;
     if (cur >= lim) return res.status(400).json({ error: lim <= 1 ? 'Şube açmak Pro pakette. Paketinizi yükseltin.' : `Paketinizde en çok ${lim} şube olabilir` });
+    // pakete dahil lokasyonlar dolduysa her ek şube ücretli: istemci ücret onayıyla gelmeli (Google Play faturalaması öncesi kayıt manuel takip edilir)
+    const fee = extraFee(home), isExtra = cur >= (pl.includedBranches || lim) && fee > 0;
+    if (isExtra && (req.body || {}).confirmFee !== true) return res.status(400).json({ error: `Bu şube paketinize dahil değil; açılması faturanıza +${fee} TL olarak yansıtılır.`, fee, needConfirm: true });
     const org = home.org_id || home.id;
     if (!home.org_id) { store.updateTenant(home.id, { org_id: org }); tenants.refreshRow(home.id); }
     const id = auth.uid(), now = Date.now(), W = require('./widgets');
@@ -290,9 +301,10 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
       store.updateTenant(id, { org_id: org, note: `Şube: ${home.name}` });
       store.q.screenIns.run({ id: auth.uid(), tenant_id: id, name: 'Ana Ekran', layout: store.q.screensOf.all(home.id)[0] ? store.q.screensOf.all(home.id)[0].layout : JSON.stringify(W.cleanLayout(W.defaultLayout())), sort: 0, created: now });
     })();
+    if (isExtra) { home.db.charges = [...(home.db.charges || []), { id: auth.uid(), at: now, amount: fee, kind: 'extra-branch', label: name, branchId: id, status: 'pending' }]; tenants.save(home); }
     const t = tenants.get(id);
     if (home.db.logo) { try { const f = auth.uid(16) + path.extname(home.db.logo); storage.copy(home, home.db.logo, t, f).then(() => { t.db.logo = f; tenants.save(t); }).catch(() => {}); } catch (e) {} }
-    res.json({ ok: true, id });
+    res.json({ ok: true, id, fee: isExtra ? fee : 0 });
   });
   r.post('/branches/switch', (req, res) => {
     const id = String((req.body || {}).id || ''), list = orgList(homeOf(req.user) || req.t);
@@ -306,6 +318,18 @@ module.exports = function (r, { changed, sendTo, upload, quota, ownerOnly, rmUpl
     if (!orgList(homeOf(req.user) || req.t).some(b => b.id === req.params.id)) return res.status(404).json({ error: 'Şube bulunamadı' });
     const name = s((req.body || {}).name, 80); if (name.length < 2) return res.status(400).json({ error: 'Şube adı gerekli' });
     store.updateTenant(req.params.id, { name }); tenants.refreshRow(req.params.id); hub.pushTenant(req.params.id); res.json({ ok: true });
+  });
+  // şube silme: ana işletme (ilk açılan, sahibi olan işletme) silinemez; içinde bulunulan şube de silinemez
+  r.delete('/branches/:id', ownerOnly, (req, res) => {
+    const home = homeOf(req.user); if (!home) return res.status(400).json({ error: 'işletme bulunamadı' });
+    const id = req.params.id;
+    if (id === home.id) return res.status(400).json({ error: 'Ana işletme silinemez. Hesabınızın tamamını silmek için Ayarlar → Verilerim sekmesini kullanın.' });
+    if (!orgList(home).some(b => b.id === id)) return res.status(404).json({ error: 'Şube bulunamadı' });
+    if (req.t.id === id) return res.status(400).json({ error: 'Şu an bu şubedesiniz; önce ana işletmeye ya da başka bir şubeye geçin' });
+    const t = tenants.get(id); if (!t) return res.status(404).json({ error: 'Şube bulunamadı' });
+    if (String((req.body || {}).confirm || '') !== t.name) return res.status(400).json({ error: 'Silmek için şube adını aynen yazın', needName: true });
+    require('./accounts').deleteTenant(id); // yalnız bu şubeyi siler (ana işletme değil)
+    res.json({ ok: true, id });
   });
   // İçeriği diğer şubelere kopyala: düzen, renk ve logo, medya ve afişler, fiyat listesi, duyurular (kampanya + QR)
   const PARTS = ['layout', 'theme', 'media', 'menu', 'promo', 'lang'];

@@ -19,13 +19,13 @@ r.use((req, res, next) => {
 
 const SETTINGS = ['youtube_api_key', 'collect_key', 'collect_paid', 'tmdb_key', 'traffic_api', 'google_places_key', 'google_monthly_cap', 'google_oauth_client_id', 'google_oauth_secret', 'alert_webhook',
   'legal_company', 'legal_address', 'legal_email', 'legal_phone', 'legal_mersis', 'legal_kep', 'legal_hosting',
-  'site_url', 'site_phone', 'site_whatsapp', 'site_email', 'site_price_baslangic', 'site_price_pro'];
+  'site_url', 'site_phone', 'site_whatsapp', 'site_email', 'site_price_baslangic', 'site_price_pro', 'fee_extra_branch'];
 
 r.get('/overview', (req, res) => {
   const online = hub.onlineDeviceIds();
   const list = tenants.all().map(t => {
     const devs = store.q.devicesOf.all(t.id), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
-    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0 };
+    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0, charges: (t.db.charges || []).slice(-50) };
   });
   const settings = Object.fromEntries(SETTINGS.map(k => [k, store.setting(k)]));
   settings.traffic_secret = require('./feeds').trafficSecret();
@@ -122,6 +122,14 @@ r.post('/tenants/:id/password', (req, res) => {
   if (pw.length < 8) return res.status(400).json({ error: 'Şifre en az 8 karakter olmalı' });
   store.q.userPass.run(auth.hashPassword(pw), owner.id);
   res.json({ ok: true, password: pw, username: owner.username });
+});
+// ek ücret kaydı (ek şube): ödendi/ödemedi işaretle — faturalama elle yapılır
+r.post('/tenants/:id/charges/:cid', (req, res) => {
+  const t = tenants.get(req.params.id); if (!t) return res.status(404).json({ error: 'bulunamadı' });
+  const c = (t.db.charges || []).find(x => x.id === req.params.cid); if (!c) return res.status(404).json({ error: 'ücret kaydı bulunamadı' });
+  const paid = (req.body || {}).paid !== false;
+  if (paid) { c.status = 'paid'; c.paidAt = Date.now(); } else { delete c.status; delete c.paidAt; }
+  tenants.save(t); res.json({ ok: true });
 });
 // işletme olarak gir: panel o işletmenin gözünden açılır
 r.post('/tenants/:id/impersonate', (req, res) => {

@@ -1,11 +1,13 @@
 // Paketler, limitler ve abonelik durumu.
 // Mekânda tek Android kutu, HDMI dağıtıcıyla tüm TV'lere aynı görüntüyü verir; limit kutu (cihaz) sayısıdır.
+// branches: mutlak üst sınır (org_id başına toplam lokasyon). includedBranches: ek ücret uygulanmadan dahil olan lokasyon sayısı.
+// Pro'da 3 lokasyon (ana + 2 şube) dahil; sonrası her ek şube için "fee_extra_branch" ayarı kadar ücret kaydı düşer.
 const PLANS = {
-  baslangic: { id: 'baslangic', name: 'Başlangıç', devices: 1, storageMB: 2048, users: 1, pro: false, badge: true, branches: 1 },
-  pro: { id: 'pro', name: 'Pro', devices: 2, storageMB: 20480, users: 3, pro: true, badge: false, branches: 10 },
+  baslangic: { id: 'baslangic', name: 'Başlangıç', devices: 1, storageMB: 2048, users: 1, pro: false, badge: true, branches: 1, includedBranches: 1 },
+  pro: { id: 'pro', name: 'Pro', devices: 2, storageMB: 20480, users: 3, pro: true, badge: false, branches: 99, includedBranches: 3 },
 };
 // Süper yöneticinin "sınırsız" işaretlediği (kendi) işletmeler: tüm Pro özellikler, süre ve limit yok. Sitede ve kayıtta görünmez.
-const UNLIMITED = { id: 'sinirsiz', name: 'Sınırsız', devices: 999, storageMB: 1048576, users: 99, pro: true, badge: false, branches: 99 };
+const UNLIMITED = { id: 'sinirsiz', name: 'Sınırsız', devices: 999, storageMB: 1048576, users: 99, pro: true, badge: false, branches: 99, includedBranches: 99 };
 const isUnlimited = t => !!(t && t.db && t.db.unlimited);
 const plan = t => {
   const base = isUnlimited(t) ? UNLIMITED : (PLANS[t.plan] || PLANS.baslangic);

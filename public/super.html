@@ -213,6 +213,8 @@ function attention() {
   }
   // S3: depolaması %90'ı geçen işletme
   for (const x of D.tenants) if (x.storageLimitMB && x.storageMB >= x.storageLimitMB * 0.9) out.push({ lv: x.storageMB >= x.storageLimitMB ? 'bad' : 'warn', t: x.name, s: `${T('Depolama dolmak üzere')}: ${x.storageMB} / ${x.storageLimitMB} MB`, act: [T('Aç'), `openTenant('${x.id}')`] });
+  // S3b: bekleyen ek şube ücreti (faturalama elle yapılır)
+  for (const x of D.tenants) { const pend = (x.charges || []).filter(c => c.status !== 'paid'); if (pend.length) out.push({ lv: 'warn', t: x.name, s: `${T('Ek şube ücreti bekliyor')}: ${pend.reduce((a, c) => a + (Number(c.amount) || 0), 0)} TL · ${pend.length} ${T('kayıt')}`, act: [T('Aç'), `openTenant('${x.id}')`] }); }
   const fl = (D.system || {}).fleet || {};
   for (const d of (fl.old || []).slice(0, 10)) out.push({ lv: 'warn', t: `${d.tenant} · ${d.name || T('TV kutusu')}`, s: `${T('Eski uygulama sürümü')}: ${d.app} → ${D.system.apk}`, act: [T('Panele gir'), `imp('${d.tenantId}')`] });
   for (const d of (fl.noBoot || []).slice(0, 10)) out.push({ lv: 'warn', t: `${d.tenant} · ${d.name || T('TV kutusu')}`, s: T('Açılışta otomatik başlama izni verilmemiş'), act: [T('Panele gir'), `imp('${d.tenantId}')`] });
@@ -417,14 +419,20 @@ function drawRows() {
   const clr = $('flt-clear');
   if (clr) clr.style.display = q ? 'flex' : 'none';
 
+  // şubeler (sahibi olmayan zincir üyeleri) ana işletmelerinin satırı altında iç içe gösterilir
+  const brOf = {};
+  for (const b of D.tenants) if (!b.owner && b.org && headOf(b.org)) (brOf[b.org] || (brOf[b.org] = [])).push(b);
+  for (const o of Object.keys(brOf)) brOf[o].sort((a, b) => a.created - b.created);
+  const tops = D.tenants.filter(x => !(brOf[x.org] || []).some(b => b.id === x.id));
+
   // KPI şeridi güncelle
   const kpiEl = $('tenants-kpi');
   if (kpiEl) {
-    const total = D.tenants.length;
-    const activeN = D.tenants.filter(x => inK(x, 'active') || inK(x, 'unlimited')).length;
-    const trialN = D.tenants.filter(x => inK(x, 'trial')).length;
-    const expN = D.tenants.filter(x => inK(x, 'expired') || inK(x, 'suspended')).length;
-    const offN = D.tenants.filter(x => inK(x, 'offline')).length;
+    const total = tops.length;
+    const activeN = tops.filter(x => inK(x, 'active') || inK(x, 'unlimited')).length;
+    const trialN = tops.filter(x => inK(x, 'trial')).length;
+    const expN = tops.filter(x => inK(x, 'expired') || inK(x, 'suspended')).length;
+    const offN = D.tenants.filter(x => inK(x, 'offline')).length; // cihaz bazlı: şubeler de sayılır
     const oldN = D.tenants.filter(x => inK(x, 'old')).length;
 
     kpiEl.innerHTML = `<div class="kpi-ribbon">
@@ -465,7 +473,8 @@ function drawRows() {
   const chipsEl = $('chips');
   if (chipsEl) {
     chipsEl.innerHTML = FILTERS.map(([k, l]) => {
-      const n = D.tenants.filter(x => inK(x, k)).length;
+      const base = ['offline', 'old'].includes(k) ? D.tenants : tops; // cihaz bazlı filtrelerde şubeler de sayılır
+      const n = base.filter(x => inK(x, k)).length;
       return `<span class="chip ${TF.f === k ? 'on' : ''}" onclick="TF.f='${k}';drawRows()">${l} <b>${n}</b></span>`;
     }).join('');
   }
@@ -478,26 +487,52 @@ function drawRows() {
     login: (a, b) => (b.lastLogin || 0) - (a.lastLogin || 0)
   }[TF.sort];
 
-  const list = D.tenants.filter(x => inF(x) && (!q || [x.name, x.owner, x.phone, x.email, x.note, planName(x)].join(' ').toLocaleLowerCase('tr-TR').includes(q))).sort(cmp);
+  const hits = x => [x.name, x.owner, x.phone, x.email, x.note, planName(x)].join(' ').toLocaleLowerCase('tr-TR').includes(q)
+    || (brOf[x.org] || []).some(b => b.name.toLocaleLowerCase('tr-TR').includes(q)); // şube adıyla arama ana işletmeyi bulur
+  const list = tops.filter(x => inF(x) && (!q || hits(x))).sort(cmp);
 
   // Sonuç sayısı
   const cntEl = $('tenant-count');
   if (cntEl) {
+    const nb = D.tenants.length - tops.length;
     cntEl.innerHTML = (q || TF.f !== 'all')
-      ? `<b>${list.length}</b> / ${D.tenants.length} işletme`
-      : `Toplam <b>${D.tenants.length}</b> işletme`;
+      ? `<b>${list.length}</b> / ${tops.length} işletme`
+      : `Toplam <b>${tops.length}</b> işletme${nb ? ` · <b>${nb}</b> şube` : ''}`;
   }
 
+  // şube alt satırı: ana işletmenin hemen altında, sönük ve girintili
+  const branchRow = b => `<tr class="click" onclick="openTenant('${b.id}')" style="background:rgba(255,255,255,.015)">
+      <td style="padding-left:36px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="color:var(--mute);font-size:11px">└</span>
+          <b style="font-size:12.5px;color:var(--text);opacity:.85">${esc(b.name)}</b>
+          <span class="tag mute" style="font-size:10px">Şube</span>
+        </div>
+      </td>
+      <td>${planBadge(b)}</td>
+      <td>${stTag(b)}</td>
+      <td style="font-size:12px;white-space:nowrap">${b.unlimited ? '<span style="color:var(--ok)">∞</span>' : fmt(end(b))}</td>
+      <td class="num">${devCell(b)}</td>
+      <td class="num" style="font-size:12px">${b.storageMB} MB</td>
+      <td style="font-size:11.5px;color:var(--mute)">-</td>
+      <td style="padding-right:16px" onclick="event.stopPropagation()">
+        <div class="acts" style="justify-content:flex-end;gap:5px">
+          <button class="btn ghost sm" onclick="imp('${b.id}')" title="Şubenin paneline gir">${ic('external-link')}</button>
+        </div>
+      </td>
+    </tr>`;
+
   $('list').innerHTML = list.map(x => {
-    const h = !x.owner && x.org ? headOf(x.org) : null;
     const endDate = end(x);
     const endStr = x.unlimited ? '<span style="color:var(--ok);font-weight:600">∞ Sınırsız</span>' : fmt(endDate);
+    const nb = (brOf[x.org] || []).length;
+    const brs = q ? (brOf[x.org] || []).filter(b => b.name.toLocaleLowerCase('tr-TR').includes(q)) : (brOf[x.org] || []);
     return `<tr class="click" onclick="openTenant('${x.id}')">
       <td style="padding-left:16px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <b style="font-size:13.5px;color:var(--text)">${esc(x.name)}</b>
           ${x.note ? `<span title="${esc(x.note)}" style="color:var(--accent2);cursor:help;font-size:12px">📝</span>` : ''}
-          ${h ? `<span class="tag mute" style="font-size:10.5px">Şube · ${esc(h.name)}</span>` : ''}
+          ${nb ? `<span class="tag mute" style="font-size:10.5px" title="Bu zincirin ${nb} şubesi alt satırlarda">🏢 ${nb} şube</span>` : ''}
           ${x.superAccess ? `<span class="tag warn" style="font-size:10px" title="Süper Yönetici">SUPER</span>` : ''}
         </div>
         <div style="color:var(--mute);font-size:11.5px;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">
@@ -519,7 +554,7 @@ function drawRows() {
           <button class="btn ghost sm" title="Diğer işlemler" aria-label="Diğer işlemler" onclick="rowMenu(event,'${x.id}')">${ic('ellipsis')}</button>
         </div>
       </td>
-    </tr>`;
+    </tr>` + brs.map(branchRow).join('');
   }).join('') || `<tr><td colspan="8" class="empty" style="padding:40px 10px"><div style="font-size:24px;margin-bottom:8px">🔍</div>Arama kriterlerine uygun işletme bulunamadı.${q || TF.f !== 'all' ? '<br><button class="btn ghost sm" style="margin-top:12px" onclick="TF.q=\'\';TF.f=\'all\';const el=$(\'flt\');if(el)el.value=\'\';drawRows()">Filtreleri Temizle</button>' : ''}</td></tr>`;
 }
 
@@ -597,6 +632,10 @@ function openTenant(id) {
   const h = !x.owner && x.org ? headOf(x.org) : null;
   const lim = x.customDevices ? x.customDevices : (x.unlimited ? '∞' : (x.deviceLimit || 1));
   const devs = x.fleet || [];
+  // zincir lokasyonları: ana hesap (sahibi olan) başta, şubeler kuruluş sırasıyla
+  const chain = x.org ? D.tenants.filter(t => t.org === x.org) : [];
+  const homeT = chain.find(t => t.owner) || chain[0];
+  const chainRows = chain.slice().sort((a, b) => (b.id === homeT.id) - (a.id === homeT.id) || a.created - b.created);
 
   openDrawer(`
   <div class="m-head">
@@ -664,6 +703,18 @@ function openTenant(id) {
         </div>
       </div>
 
+      ${(x.charges || []).length ? `
+      <!-- Kart 2b: Ek Ücretler (ek şube) -->
+      <div class="d-card">
+        <h4>${ic('receipt-text')} Ek Ücretler (Ek Şube)</h4>
+        <div class="scroll"><table><tbody>${x.charges.slice().reverse().map(c => `<tr>
+          <td>${fmt(c.at)}</td>
+          <td>${esc(c.label || '')}${c.branchId ? ` <span class="tag mute">#${c.branchId.slice(0, 6)}</span>` : ''}</td>
+          <td class="num"><b>${Number(c.amount) || 0} TL</b></td>
+          <td style="text-align:right">${c.status === 'paid' ? `<span class="tag ok">Ödendi</span> <button class="btn ghost sm" title="İşareti kaldır" onclick="chargePaid('${x.id}','${c.id}',false)">Geri al</button>` : `<button class="btn sm g" onclick="chargePaid('${x.id}','${c.id}')">Ödendi işaretle</button>`}</td>
+        </tr>`).join('')}</tbody></table></div>
+      </div>` : ''}
+
       <!-- Kart 3: Özel Yetkiler -->
       <div class="d-card">
         <h4>${ic('shield-check')} Özel Yetkiler & Şube Ayarları</h4>
@@ -681,6 +732,24 @@ function openTenant(id) {
         </label>
         ${x.org ? `<label class="check-box-label" style="border-color:var(--accent2);background:rgba(var(--a2),.08)"><input type="checkbox" id="e-org"><span><b>Zincir Şube Eşitleme:</b> Paket ve süreyi zincirin tüm şubelerine uygula</span></label>` : ''}
       </div>
+
+      ${chain.length > 1 ? `
+      <!-- Kart 3b: Zincir Lokasyonları -->
+      <div class="d-card">
+        <h4>${ic('building-2')} Zincir Lokasyonları (${chain.length})</h4>
+        <div class="scroll"><table><tbody>${chainRows.map(t => `<tr>
+          <td><b>${esc(t.name)}</b> ${t.id === homeT.id ? '<span class="tag ok">Ana Hesap</span>' : '<span class="tag mute">Şube</span>'}</td>
+          <td>${stTag(t)}</td>
+          <td class="num">${t.devices} ${T('cihaz')}${t.online ? ` · ${t.online} ${T('çevrimiçi')}` : ''}</td>
+          <td style="text-align:right;white-space:nowrap">
+            <button class="btn ghost sm" onclick="openTenant('${t.id}')" title="Bu lokasyonun ayrıntılarını aç">${T('Aç')}</button>
+            <button class="btn ghost sm" onclick="imp('${t.id}')" title="Bu lokasyonun yönetim paneline gir">${T('Panel')}</button>
+            ${t.id !== homeT.id ? `<button class="btn ghost sm" data-nm="${esc(t.name)}" onclick="renBranchT('${t.id}','${x.id}',this.dataset.nm)">${T('Adlandır')}</button>
+            <button class="btn ghost sm" style="color:var(--bad)" data-nm="${esc(t.name)}" onclick="delBranchT('${t.id}','${x.id}',this.dataset.nm)">${T('Sil')}</button>` : ''}
+          </td>
+        </tr>`).join('')}</tbody></table></div>
+        <small class="hint" style="margin:0">${T('Ana hesabı silmek tüm zinciri siler; şube silmek yalnızca o şubeyi kaldırır. Şube adı onayı istenir.')}</small>
+      </div>` : ''}
     </div>
 
     <!-- SAĞ SÜTUN: İstatistikler, TV Cihazları, Güvenlik -->
@@ -797,6 +866,16 @@ async function extend(id, days) {
   } catch (e) { toast(e.message, true); }
 }
 
+// ek ücret kaydını ödendi/ödemedi işaretle; drawer güncel veriyle yeniden açılır
+async function chargePaid(id, cid, paid = true) {
+  try {
+    await api('POST', `/tenants/${id}/charges/${cid}`, { paid });
+    toast(paid ? 'Ödendi işaretlendi' : 'Ödeme işareti kaldırıldı');
+    await load();
+    openTenant(id);
+  } catch (e) { toast(e.message, true); }
+}
+
 async function resetPw(id) {
   const pw = await UI.ask('Yeni şifre (boş bırakırsanız rastgele üretilir):', { input: '', ok: 'Şifreyi sıfırla' });
   if (pw === null) return;
@@ -817,6 +896,29 @@ async function delT(id) {
     closeDrawer();
     toast('Silindi');
     await load();
+  } catch (e) { toast(e.message, true); }
+}
+
+// şube adlandır (işletme detayındaki zincir kartından): kaydedince açılış yapan drawer yenilenir
+async function renBranchT(id, origin, cur) {
+  const n = await UI.ask('Yeni şube adı:', { title: 'Şubeyi Adlandır', input: cur || '', ok: 'Kaydet' });
+  if (n === null || !n.trim()) return;
+  try {
+    await api('PUT', '/tenants/' + id, { name: n.trim() });
+    toast('Kaydedildi');
+    await load();
+    openTenant(origin && origin !== id ? origin : id);
+  } catch (e) { toast(e.message, true); }
+}
+// şube sil (yalnızca o şube; ana hesap silinse zincirin tamamı gider): onay için şube adı sorulur
+async function delBranchT(id, origin, name) {
+  const c = await UI.ask(`Bu şubenin tüm verileri, medyası ve cihazları kalıcı olarak silinir. Onaylamak için şube adını aynen yazın: ${name}`, { input: '', ok: 'Sil', danger: true });
+  if (c === null) return;
+  try {
+    await api('DELETE', '/tenants/' + id, { confirm: c });
+    toast('Şube silindi');
+    await load();
+    if (origin && origin !== id) openTenant(origin); else closeDrawer();
   } catch (e) { toast(e.message, true); }
 }
 
@@ -946,8 +1048,8 @@ PAGES.legal = {
         `<div class="row">${setting('Şirket unvanı', 'legal_company')}${setting('MERSİS no', 'legal_mersis')}</div><div class="row">${setting('Açık adres', 'legal_address')}</div><div class="row">${setting('KVKK başvuru e-postası', 'legal_email')}${setting('Telefon', 'legal_phone')}${setting('KEP adresi (varsa)', 'legal_kep')}</div><div class="row">${setting('Sunucu sağlayıcısı ve ülkesi (KVKK metninde görünür)', 'legal_hosting', 'placeholder="örn. Natro Hosting (Türkiye)"')}</div>`,
         saveBtn(['legal_company', 'legal_mersis', 'legal_address', 'legal_email', 'legal_phone', 'legal_kep', 'legal_hosting']))
       + card('Tanıtım sitesi', 'Ana sayfadaki (<a href="/?site" target="_blank">önizle</a>) fiyatlar ve iletişim düğmeleri. Fiyat boşsa "Fiyat için bize ulaşın" yazar.',
-        `<div class="row">${setting('Başlangıç fiyatı', 'site_price_baslangic', 'placeholder="örn. 499 ₺ / ay"')}${setting('Pro fiyatı', 'site_price_pro', 'placeholder="örn. 899 ₺ / ay"')}</div><div class="row">${setting('WhatsApp numarası', 'site_whatsapp', 'placeholder="905xxxxxxxxx"')}${setting('Telefon', 'site_phone')}${setting('E-posta', 'site_email')}</div>`,
-        saveBtn(['site_price_baslangic', 'site_price_pro', 'site_whatsapp', 'site_phone', 'site_email']));
+        `<div class="row">${setting('Başlangıç fiyatı', 'site_price_baslangic', 'placeholder="örn. 499 ₺ / ay"')}${setting('Pro fiyatı', 'site_price_pro', 'placeholder="örn. 899 ₺ / ay"')}</div><div class="row"><div>${setting('Ek şube ücreti (TL)', 'fee_extra_branch', 'type="number" min="0" placeholder="500"')}<small class="hint" style="margin:0">Pro'daki 3 dahil lokasyonu aşan her şube için istenir. Boş bırakılırsa 500 TL sayılır.</small></div></div><div class="row">${setting('WhatsApp numarası', 'site_whatsapp', 'placeholder="905xxxxxxxxx"')}${setting('Telefon', 'site_phone')}${setting('E-posta', 'site_email')}</div>`,
+        saveBtn(['site_price_baslangic', 'site_price_pro', 'fee_extra_branch', 'site_whatsapp', 'site_phone', 'site_email']));
   },
 };
 
