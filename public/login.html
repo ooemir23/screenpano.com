@@ -43,7 +43,7 @@ body::after{inset-inline-start:-18%;bottom:-32%;width:60%;height:80%;background:
 .gchip svg{width:18px;height:18px;flex:none}
 .gchip-info{min-width:0;flex:1}
 .gchip-mail{font-size:13.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gchip-tag{font-size:11.5px;color:#4ade80;font-weight:600}
+.gchip-tag{font-size:12px;color:#4ade80;font-weight:600}
 .gchip-chg{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:6px 10px;color:var(--ink);font:600 12px inherit;cursor:pointer;flex:none}
 .gchip-chg:hover{background:rgba(255,255,255,.13)}
 .tabs{display:flex;gap:4px;margin:18px 0 20px;background:rgba(0,0,0,.45);padding:4px;border-radius:12px;border:1px solid var(--ln)}
@@ -54,7 +54,7 @@ body::after{inset-inline-start:-18%;bottom:-32%;width:60%;height:80%;background:
 .f-col-2{grid-column:1 / -1}
 .field{display:flex;flex-direction:column}
 label{font-size:12px;color:#c0c8d2;margin-bottom:5px;font-weight:600;letter-spacing:.02em;display:flex;justify-content:space-between;align-items:baseline}
-label .hint{font-size:11px;color:var(--mute2);font-weight:400}
+label .hint{font-size:12px;color:var(--mute2);font-weight:400}
 input,select{width:100%;height:44px;padding:0 14px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:#13161b;color:var(--ink);font:500 14px 'Hanken Grotesk','Noto Kufi Arabic',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
 input:focus,select:focus{background:#161a22;border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,163,61,.18)}
 input::placeholder{color:rgba(255,255,255,.28)}
@@ -71,6 +71,10 @@ input::placeholder{color:rgba(255,255,255,.28)}
 .legal a{color:inherit;text-decoration:none}.legal a:hover{color:var(--ink)}
 :lang(ar) .pitch h1{text-transform:none;line-height:1.3}
 :lang(ar) body{line-height:1.8}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.pw{position:relative}.pw input{padding-inline-end:48px}.pw .eye{position:absolute;inset-inline-end:4px;top:0;height:44px;width:44px;background:none;border:0;color:var(--mute2);cursor:pointer;border-radius:10px;font:600 12px 'Hanken Grotesk',sans-serif}
+.pw .eye:hover{color:#fff}.pw .eye:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+input:focus-visible,select:focus-visible{outline:2px solid transparent}
 </style></head><body>
 <div data-langpick data-down style="position:fixed;top:14px;inset-inline-end:14px;z-index:5"></div>
 <div class="wrap">
@@ -105,7 +109,7 @@ input::placeholder{color:rgba(255,255,255,.28)}
     </div>
     <button type="button" class="gbtn" id="gbtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2 3.5-5 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-6-2.1-7-5.1l-3.9 3C3.2 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5 14.3c-.3-.8-.4-1.6-.4-2.3s.1-1.5.4-2.3L1.1 6.8C.4 8.4 0 10.1 0 12s.4 3.6 1.1 5.2L5 14.3z"/><path fill="#EA4335" d="M12 4.7c2.3 0 3.8 1 4.7 1.8l3.4-3.3C17.9 1.2 15.2 0 12 0 7.3 0 3.2 2.7 1.1 6.8L5 9.7c1-3 3.8-5 7-5z"/></svg><span>Google ile giriş</span></button>
     <div class="gsep" id="gsep" hidden><span>veya</span></div>
-    <div class="tabs" id="tabs"><button class="on" data-t="login">Giriş yap</button><button data-t="signup" id="tsignup">Kayıt ol</button></div>
+    <div class="tabs" id="tabs" role="tablist"><button type="button" role="tab" aria-selected="true" class="on" data-t="login">Giriş yap</button><button type="button" role="tab" aria-selected="false" data-t="signup" id="tsignup">Kayıt ol</button></div>
     <form id="f-login">
       <label>Kullanıcı adı</label><input name="username" autocomplete="username" autocapitalize="none" required>
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 6px"><label style="margin:0">Şifre</label><a href="#unuttum" id="go-forgot" style="font-size:12px;color:var(--accent2);text-decoration:none;font-weight:600">Şifremi unuttum</a></div>
@@ -179,8 +183,8 @@ input::placeholder{color:rgba(255,255,255,.28)}
       <button class="btn" id="signup-btn">Hesabı oluştur</button>
       <p class="note" id="trialnote" style="text-align:center"></p>
     </form>
-    <div class="err" id="err"></div>
-    <div class="note" id="okmsg" style="color:#4ade80;font-size:13px;display:none"></div>
+    <div class="err" id="err" role="alert" aria-live="assertive"></div>
+    <div class="note" id="okmsg" role="status" style="color:#4ade80;font-size:13px;display:none"></div>
     <div class="legal"><a href="/">screenpano.com</a><a href="/kosullar">Kullanım Koşulları</a><a href="/kvkk">KVKK</a><a href="/gizlilik">Gizlilik</a></div>
   </div>
 </div>
@@ -245,7 +249,7 @@ function showView(v) {
   if (v === 'signup' && !$('cap-tok').value && !$('g-token').value) loadCaptcha();
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('#tabs button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
   showView(b.dataset.t);
 });
 $('go-forgot').onclick = e => { e.preventDefault(); showView('forgot'); };
@@ -327,6 +331,27 @@ $('f-reset').onsubmit = async e => {
   if ($('r-pass').value !== $('r-pass2').value) { $('err').textContent = 'Girilen şifreler birbiriyle eşleşmiyor'; return; }
   submit(e.target, '/api/auth/reset');
 };
+</script>
+<script>
+/* Erişilebilirlik: etiketleri alanlara bağla (etikete tıklayınca odaklanır, ekran okuyucu adı okur); şifre göster/gizle */
+(function(){
+  var n=0;
+  document.querySelectorAll('form label').forEach(function(l){
+    if(l.querySelector('input,select')||l.htmlFor)return;
+    var el=l.nextElementSibling;
+    while(el&&!/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)){ var q=el.querySelector&&el.querySelector('input:not([type=hidden]),select,textarea'); if(q){el=q;break;} el=el.nextElementSibling; }
+    if(!el&&l.parentNode&&l.parentNode.nextElementSibling&&/^(INPUT|SELECT|TEXTAREA)$/.test(l.parentNode.nextElementSibling.tagName))el=l.parentNode.nextElementSibling;
+    if(!el)return; if(!el.id)el.id='fld'+(++n); l.htmlFor=el.id;
+  });
+  var eye='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var off='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  document.querySelectorAll('input[type=password]').forEach(function(i){
+    var w=document.createElement('div'); w.className='pw'; i.parentNode.insertBefore(w,i); w.appendChild(i);
+    var b=document.createElement('button'); b.type='button'; b.className='eye'; b.innerHTML=eye; b.setAttribute('aria-label','Şifreyi göster'); b.setAttribute('aria-pressed','false');
+    b.onclick=function(){ var show=i.type==='password'; i.type=show?'text':'password'; b.innerHTML=show?off:eye; b.setAttribute('aria-pressed',show); b.setAttribute('aria-label',show?'Şifreyi gizle':'Şifreyi göster'); };
+    w.appendChild(b);
+  });
+})();
 </script>
 <script>fetch('/api/auth/config').then(r=>r.json()).then(c=>{if(c.env!=='test')return;var f=function(){if(document.title.indexOf('[TEST]')!==0)document.title='[TEST] '+document.title};f();new MutationObserver(f).observe(document.querySelector('title'),{childList:true});var d=document.createElement('div');d.textContent='TEST';d.style.cssText='position:fixed;top:0;left:0;z-index:99999;background:#d6262a;color:#fff;font:700 11px/1 sans-serif;letter-spacing:.12em;padding:5px 12px;border-radius:0 0 8px 0;pointer-events:none';document.body.appendChild(d)}).catch(function(){})</script>
 </body></html>

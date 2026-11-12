@@ -157,6 +157,9 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
   .sidefoot{flex-direction:row;border:0;padding:0;align-items:center}
   main{padding:20px 16px 60px}.grid2{grid-template-columns:1fr}
 }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid #e8b27a;outline-offset:2px}
+@media(pointer:coarse){.modal-x{width:40px;height:40px}.btn.s,.btn.xs{min-height:40px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style></head><body>
 <div class="app">
   <aside id="side">
@@ -168,7 +171,7 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
   <main id="main"><div class="empty">Yükleniyor…</div></main>
 </div>
 <div id="drawer"><div class="bg" onclick="closeDrawer()"></div><div class="pane" id="pane"></div></div>
-<div id="toasts"></div>
+<div id="toasts" aria-live="polite"></div>
 <script src="/ui.js"></script>
 <script>
 const $ = id => document.getElementById(id);
@@ -181,7 +184,7 @@ const ago = ms => { if (!ms) return '-'; const m = Math.round((Date.now() - ms) 
 const hrs = m => (m / 60).toFixed(m < 600 ? 1 : 0).replace('.', ',');
 const dur = sec => sec >= 3600 ? hrs(sec / 60) + ' ' + T('sa') : Math.max(1, Math.round(sec / 60)) + ' ' + T('dk');
 const size = b => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : b >= 1048576 ? Math.round(b / 1048576) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
-function toast(m, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = T(m); $('toasts').appendChild(t); setTimeout(() => t.remove(), 4500); }
+function toast(m, err) { const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.setAttribute('role', err ? 'alert' : 'status'); t.textContent = T(m); $('toasts').appendChild(t); let tm = setTimeout(() => t.remove(), err ? 7000 : 4500); t.addEventListener('mouseenter', () => clearTimeout(tm)); t.addEventListener('mouseleave', () => { tm = setTimeout(() => t.remove(), 2500); }); }
 async function call(method, url, body) {
   const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({}));
@@ -399,7 +402,7 @@ function devCell(x) {
   const title = f.map(d => (d.name || 'TV') + ': ' + (d.online ? 'Çevrimiçi' : 'Çevrimdışı') + (d.app ? ' (' + d.app + ')' : '')).join('\n');
   return `<span class="devh" title="${esc(title)}">${dots} <b style="color:${on > 0 ? 'var(--ok)' : 'var(--mute)'};margin-left:3px">${on}/${x.devices}</b></span>`
     + (old ? `<br><span class="tag warn" style="font-size:10px;padding:1px 5px;margin-top:2px" title="Eski APK sürümü">${old} eski APK</span>` : '')
-    + `<br><span style="color:var(--mute);font-size:11px">sınır: ${lim}</span>`;
+    + `<br><span style="color:var(--mute);font-size:12px">sınır: ${lim}</span>`;
 }
 
 function rowMenu(ev, id) {
@@ -504,7 +507,7 @@ function drawRows() {
   const branchRow = b => `<tr class="click" onclick="openTenant('${b.id}')" style="background:rgba(255,255,255,.015)">
       <td style="padding-left:36px">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="color:var(--mute);font-size:11px">└</span>
+          <span style="color:var(--mute);font-size:12px">└</span>
           <b style="font-size:12.5px;color:var(--text);opacity:.85">${esc(b.name)}</b>
           <span class="tag mute" style="font-size:10px">Şube</span>
         </div>
@@ -1218,7 +1221,7 @@ async function adSave(id) {
 async function adPay(id) {
   try { await api('POST', `/pads/${id}/payments`, { amount: $('pp-amt').value, date: $('pp-date').value, method: $('pp-m').value, note: $('pp-note').value }); toast('Ödeme eklendi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
 }
-async function adPayDel(id, pid) { if (!confirm(T('Bu ödeme kaydı silinsin mi?'))) return; try { await api('DELETE', `/pads/${id}/payments/${pid}`); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
+async function adPayDel(id, pid) { if (!await UI.ask(T('Bu ödeme kaydı silinsin mi?'), { ok: T('Sil'), cancel: T('Vazgeç'), danger: true })) return; try { await api('DELETE', `/pads/${id}/payments/${pid}`); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
 async function adUp(id, files) {
   if (!files || !files.length) return; const fd = new FormData(); for (const f of files) fd.append('files', f); toast('Yükleniyor…');
   try { const r = await fetch(`/api/super/pads/${id}/media`, { method: 'POST', body: fd }), j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Hata'); if (j.errors && j.errors.length) toast(j.errors[0], true); else toast('Yüklendi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
@@ -1250,13 +1253,13 @@ async function adMove(id, cid, d) {
   try { await api('PUT', `/pads/${id}/media-order`, { order: ids }); await adOpen(id); } catch (e) { toast(e.message, true); }
 }
 async function adMediaDel(id, cid) {
-  if (!confirm(T('Bu görsel/video kalıcı olarak silinsin mi?'))) return;
+  if (!await UI.ask(T('Bu görsel/video kalıcı olarak silinsin mi?'), { ok: T('Sil'), cancel: T('Vazgeç'), danger: true })) return;
   try { await api('DELETE', `/pads/${id}/media/${cid}`); toast('Silindi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
 }
 async function adPause(id, v) { try { await api('PUT', '/pads/' + id, { paused: v }); toast(v ? 'Reklam durduruldu' : 'Reklam yeniden yayında'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); } }
-async function adDel(id) { if (!confirm(T('Bu reklam ve görselleri silinsin mi? Bu işlem geri alınamaz.'))) return; try { await api('DELETE', '/pads/' + id); closeDrawer(); toast('Silindi'); await adLoad(); } catch (e) { toast(e.message, true); } }
+async function adDel(id) { if (!await UI.ask(T('Bu reklam ve görselleri silinsin mi? Bu işlem geri alınamaz.'), { ok: T('Sil'), cancel: T('Vazgeç'), danger: true })) return; try { await api('DELETE', '/pads/' + id); closeDrawer(); toast('Silindi'); await adLoad(); } catch (e) { toast(e.message, true); } }
 async function adCopy(id) { try { await navigator.clipboard.writeText(AD.cur.ad.url); toast('Bağlantı kopyalandı'); } catch (e) { await UI.ask(T('Rapor bağlantısı'), { input: AD.cur.ad.url, ok: T('Tamam') }); } }
-async function adToken(id) { if (!confirm(T('Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz.'))) return; try { await api('POST', `/pads/${id}/token`); await adOpen(id); toast('Yeni bağlantı oluşturuldu'); } catch (e) { toast(e.message, true); } }
+async function adToken(id) { if (!await UI.ask(T('Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz.'), { ok: T('Oluştur'), cancel: T('Vazgeç') })) return; try { await api('POST', `/pads/${id}/token`); await adOpen(id); toast('Yeni bağlantı oluşturuldu'); } catch (e) { toast(e.message, true); } }
 // Paketler: ad, gün, fiyat; reklam eklerken seçilince fiyat ve bitiş tarihi otomatik dolar
 function adPkgs() {
   const rows = AD.d.packages.length ? AD.d.packages : [{ name: '', days: 30, price: '' }];

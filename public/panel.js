@@ -27,6 +27,7 @@ function popMenu(anchor, items) {
 function toast(m, err, sub) {
   const t = document.createElement('div');
   t.className = 'toast' + (err ? ' err' : '');
+  t.setAttribute('role', err ? 'alert' : 'status');
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;justify-content:space-between';
   const txt = document.createElement('span');
@@ -34,14 +35,19 @@ function toast(m, err, sub) {
   const x = document.createElement('button');
   x.type = 'button';
   x.textContent = '×';
-  x.style.cssText = 'background:none;border:0;color:var(--mute);font-size:16px;line-height:1;cursor:pointer;padding:0 2px';
-  x.onclick = () => t.remove();
+  x.setAttribute('aria-label', 'Kapat');
+  x.style.cssText = 'background:none;border:0;color:var(--mute);font-size:20px;line-height:1;cursor:pointer;padding:0 6px;min-width:28px;min-height:28px';
+  x.onclick = () => { clearTimeout(tm); t.remove(); };
   row.appendChild(txt);
   row.appendChild(x);
   t.appendChild(row);
   if (sub) { const s = document.createElement('small'); s.textContent = sub; t.appendChild(s); }
   $('toasts').appendChild(t);
-  setTimeout(() => t.remove(), sub || err ? 7500 : 5200);
+  // fare/odak üzerindeyken süre durur; okunamadan kaybolmaz
+  const ms = sub || err ? 7500 : 5200; let tm = setTimeout(() => t.remove(), ms);
+  t.addEventListener('mouseenter', () => clearTimeout(tm));
+  t.addEventListener('mouseleave', () => { clearTimeout(tm); tm = setTimeout(() => t.remove(), 2500); });
+  t.addEventListener('focusin', () => clearTimeout(tm));
 }
 // A11: kayıttan sonra değişikliğin kaç ekrana gönderildiği (bağlı kutular anında alır; kapalı olan açılınca alır)
 async function tvNote() {
@@ -109,9 +115,31 @@ function togglePvInteractive(btn) {
   const on = pv.classList.toggle('interactive');
   btn.textContent = on ? '🔒 Etkileşimi kapat' : '👆 Önizlemeye dokun / test et';
 }
-function openModal(html) { $('modalb').innerHTML = html; $('modal').classList.add('on'); }
-function closeModal() { $('modal').classList.remove('on'); $('modalb').innerHTML = ''; }
-function menu(open) { $('app').classList.toggle('menu', open); }
+let _modalFocus = null;
+function openModal(html) {
+  const m = $('modal');
+  if (!m.classList.contains('on')) _modalFocus = document.activeElement;
+  $('modalb').innerHTML = html; m.classList.add('on');
+  m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+  const b = $('modalb'); b.tabIndex = -1;
+  // odak pencereye taşınır (klavye ve ekran okuyucu için); içinde ilk etkileşimli öğe varsa ona
+  setTimeout(() => { const f = b.querySelector('input:not([type=hidden]),select,textarea,button,[href]'); try { (f || b).focus({ preventScroll: true }); } catch (e) {} }, 0);
+}
+function closeModal() {
+  $('modal').classList.remove('on'); $('modalb').innerHTML = '';
+  const f = _modalFocus; _modalFocus = null; if (f && f.isConnected) { try { f.focus({ preventScroll: true }); } catch (e) {} }
+}
+function menu(open) { $('app').classList.toggle('menu', open); const t = document.querySelector('#top button'); if (t) t.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+// Esc: önce açık pencere (UI.ask kendi Esc'ini işler), sonra hesap menüsü, sonra mobil menü
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || e.defaultPrevented) return;
+  const ui = document.getElementById('uidlg'); if (ui && ui.classList.contains('on')) return;
+  if ($('modal').classList.contains('on')) { e.preventDefault(); closeModal(); return; }
+  const ac = document.querySelector('.acct.on'); if (ac) { ac.classList.remove('on'); const b = $('acctb'); if (b) { b.setAttribute('aria-expanded', 'false'); b.focus(); } return; }
+  if ($('app').classList.contains('menu')) menu(false);
+});
+// hesap menüsü: dışarı tıklayınca kapanır
+addEventListener('click', e => { const ac = document.querySelector('.acct.on'); if (ac && !ac.contains(e.target)) { ac.classList.remove('on'); const b = $('acctb'); if (b) b.setAttribute('aria-expanded', 'false'); } });
 const logout = async () => { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/login'; };
 const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'POST' }); location.href = '/super'; };
 
