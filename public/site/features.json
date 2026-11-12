@@ -1101,7 +1101,7 @@
     {
       "icon": "🎧",
       "title": "Spotify hesabı ve yeni müzik bölümü",
-      "text": "Spotify hesabınızı bağlayın: listeleriniz ve şarkıları panelde görünür, TV kutusundaki Spotify uygulamasını panelden ya da telefondan çalıp durdurursunuz (Spotify Premium gerekir). Müzik bölümü YouTube Music düzeninde; YouTube ve Spotify kurulumu resimli adımlarla anlatılır.",
+      "text": "Spotify hesabınızı bağlayın: listeleriniz ve şarkılarınız panelde görünür, TV kutusundaki Spotify uygulamasını panelden ya da telefondan çalıp durdurursunuz (Spotify Premium gerekir). Müzik bölümü YouTube Music düzeninde; YouTube ve Spotify kurulumu resimli adımlarla anlatılır.",
       "added": "2026-11-06",
       "i18n": {
         "en": {
@@ -1535,7 +1535,7 @@
     {
       "icon": "💱",
       "title": "Döviz ve hava kutusu daha okunaklı",
-      "text": "Hava ve piyasalar kutusu küçük de olsa yazılar kutuya göre ölçülür, taşmaz; büyük kutuda büyür. Saat kutusu da 1 satırlık alanda sığar.",
+      "text": "Hava ve piyasalar kutusu küçük de olsa yazılar kutuya göre ölçülür, taşmaz; büyük kutuda büyür. Saat kutusu da 1 satırlık alana sığar.",
       "added": "2026-11-07",
       "i18n": {
         "en": {
@@ -1554,8 +1554,8 @@
     },
     {
       "icon": "🎨",
-      "title": "Widget kutuları tek stilde; istersen kutu kutu farklı",
-      "text": "Tasarım → Renkler'de seçtiğiniz kart stili (düz, cam, koyu, çerçeve, kutusuz) tüm widget kutularına aynı uygulanır. Düzen editöründe her kutu için ayrıca stil ve renk seçebilir, ya da 'Temayla aynı' diyerek temayı izletebilirsiniz.",
+      "title": "Widget kutuları tek stilde; isterseniz kutu kutu farklı",
+      "text": "Tasarım → Renkler'de seçtiğiniz kart stili (düz, cam, koyu, çerçeve, kutusuz) tüm widget kutularına aynı uygulanır. Düzen editöründe her kutu için ayrıca stil ve renk seçebilir ya da 'Temayla aynı' diyerek temayı izletebilirsiniz.",
       "added": "2026-11-07",
       "i18n": {
         "en": {

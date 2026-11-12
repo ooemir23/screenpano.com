@@ -5,7 +5,7 @@ const c = (name, en, items) => ({ name, t: { en }, items: items.map(([n, e, d]) 
 
 const STARTERS = {
   kafe: {
-    name: 'Kafe / kahveci', desc: 'Medya, yanda fiyat tarifesi, saat ve hava. Sıcak sıcak kahve renkleri.',
+    name: 'Kafe / Kahve Dükkanı', desc: 'Medya, yanda fiyat tarifesi, saat ve hava. Sıcak sıcak kahve renkleri.',
     layout: 'kahve', theme: 'kahve',
     menu: { title: 'Menü', categories: [
       c('Sıcak İçecekler', 'Hot Drinks', [['Türk Kahvesi', 'Turkish Coffee'], ['Filtre Kahve', 'Filter Coffee'], ['Latte', 'Latte'], ['Cappuccino', 'Cappuccino'], ['Çay', 'Tea']]),
@@ -33,7 +33,7 @@ const STARTERS = {
     ] },
   },
   lounge: {
-    name: 'Bar / lounge', desc: 'Medya ve fiyat listesi, mor neon renkler. Akşam mekânları için.',
+    name: 'Bar / lounge', desc: 'Medya ve fiyat listesi, mor neon renkler. Akşam mekanları için.',
     layout: 'kahve', theme: 'gece',
     menu: { title: 'Menü', categories: [
       c('Kokteyller', 'Cocktails', [['Mojito', 'Mojito'], ['Margarita', 'Margarita'], ['Long Island', 'Long Island']]),

@@ -35,7 +35,7 @@ const TEMPLATES = {
     widgets: [W('media', 0, 0, 17, 19), W('reviews', 0, 19, 17, 3), W('logo', 17, 0, 7, 3), W('info', 17, 3, 7, 13), W('rates', 17, 16, 7, 6), W('ticker', 0, 22, 24, 2)],
   },
   kahve: {
-    name: 'Kahveci / pastane', desc: 'Medya, yanda fiyat tarifesi, saat ve hava',
+    name: 'Kahve Dükkanı / pastane', desc: 'Medya, yanda fiyat tarifesi, saat ve hava',
     widgets: [W('media', 0, 0, 16, 22), W('logo', 16, 0, 8, 3), W('menu', 16, 3, 8, 13), W('clock', 16, 16, 8, 6), W('ticker', 0, 22, 24, 2)],
   },
   vitrin: {
