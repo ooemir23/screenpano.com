@@ -26,20 +26,15 @@ Docker imajı yaklaşık 1,5 GB tutar (ffmpeg ve Chromium dahil).
 
 ## 2. Kodu Dokploy'a verin
 
-İki yol var:
-
-**A) GitHub (önerilir; güncellemeler tek tıkla gelir)**
+**GitHub (önerilir; güncellemeler tek tıkla gelir)**
 1. Proje klasörünü özel (private) bir GitHub deposuna yükleyin: `git init && git add . && git commit -m ilk && git push`.
 2. Dokploy → Settings → Git → GitHub'ı bağlayın.
-
-**B) Zip ile yükleme**
-`screenpano-deploy.zip` dosyasını kullanın (Dokploy'da kaynak türü olarak "Drop" seçeneği varsa zip'i oraya bırakın).
 
 ## 3. Uygulamayı oluşturun
 
 1. Dokploy → **Projects → Create Project** → ad: `ScreenPano`.
 2. Proje içinde **Create Service → Application**.
-3. **Provider**: GitHub (depo ve `main` dalı) ya da Drop (zip).
+3. **Provider**: GitHub (depo ve `main` dalı).
 4. **Build Type**: `Dockerfile`, Dockerfile yolu: `./Dockerfile`.
 5. **Environment** sekmesine şunları girin (değerleri kendinize göre değiştirin):
 

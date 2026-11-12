@@ -321,10 +321,10 @@ h1{font-size:28px;margin:4px 0 2px}.mut{color:#7a7166;font-size:14px}.pill{displ
 </style></head><body><div class="w"><div class="mut">${esc(a.advertiser)} · ekran reklam raporu</div><h1>${esc(a.title || a.advertiser)}</h1>
 <div class="mut">${fd(a.start)}${a.end ? ' – ' + fd(a.end) : ''}${d.daysLeft !== null && d.status === 'live' ? ` · ${d.daysLeft} gün kaldı` : ''}</div>
 <div style="margin-top:10px"><span class="pill ${d.status === 'live' ? 'live' : ''}">${ST[d.status] || ''}</span> <button class="np" onclick="print()" style="margin-left:8px;border:0;background:#1d1a16;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer">Yazdır / PDF</button></div>
-<div class="g"><div class="c"><b>${nf(p.shown)}</b><span>kez ekranda gösterildi</span></div><div class="c"><b>${nf(p.tenants.size)}</b><span>farklı mekânda yayınlandı</span></div><div class="c"><b>${dur(p.sec)}</b><span>toplam ekranda kalma süresi</span></div></div>
+<div class="g"><div class="c"><b>${nf(p.shown)}</b><span>kez ekranda gösterildi</span></div><div class="c"><b>${nf(p.tenants.size)}</b><span>farklı mekanda yayınlandı</span></div><div class="c"><b>${dur(p.sec)}</b><span>toplam ekranda kalma süresi</span></div></div>
 ${days.length ? `<div class="bx"><h2>Günlük gösterim</h2><div class="bars">${days.map(x => `<div title="${fd(x)}: ${nf(p.daily[x])} gösterim"><i style="height:${Math.max(2, Math.round(p.daily[x] / mx * 100))}%"></i></div>`).join('')}</div>
 <div class="mut" style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span>${fd(days[0])}</span><span>${fd(days[days.length - 1])}</span></div></div>` : ''}
-<div class="ft">Sayılar, reklamın yayınlandığı mekânlardaki ekranların bildirdiği oynatmalardan otomatik oluşur. Son güncelleme: ${new Date().toLocaleString('tr-TR')}</div></div></body></html>`);
+<div class="ft">Sayılar, reklamın yayınlandığı mekanlardaki ekranların bildirdiği oynatmalardan otomatik oluşur. Son güncelleme: ${new Date().toLocaleString('tr-TR')}</div></div></body></html>`);
 }
 
 // /u/ads/<dosya>

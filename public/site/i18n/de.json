@@ -1,4 +1,5 @@
 {
+  "_dil": "Deutsch. Fehlende Schlüssel fallen auf Türkisch zurück. HTML ist erlaubt. Arrays werden als <li> gerendert.",
   "meta.name": "Deutsch",
   "meta.locale": "de_DE",
   "meta.title": "ScreenPano · Digital-Signage-Plattform für Unternehmen und Institutionen",

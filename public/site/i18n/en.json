@@ -1,4 +1,5 @@
 {
+  "_dil": "English. Missing keys fall back to Turkish. HTML is allowed. Array values render as <li>.",
   "meta.name": "English",
   "meta.locale": "en_GB",
   "meta.title": "ScreenPano · Digital signage platform for businesses and organisations",

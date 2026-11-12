@@ -14,3 +14,9 @@ keystore.properties
 *.p12
 android/*.properties
 !android/gradle/wrapper/gradle-wrapper.properties
+
+# Ortam ayarları ve araç dizinleri
+.env
+.env.*
+!.env.example
+.zcode/

@@ -49,14 +49,20 @@ r.post('/login', async (req, res) => {
 const pairs = new Map(); // pid -> { code, created, tid, agent }
 const byCode = new Map(); // code -> pid
 setInterval(() => { for (const [pid, p] of pairs) if (Date.now() - p.created > 15 * MIN) { pairs.delete(pid); byCode.delete(p.code); } }, MIN);
+// kod üretimini sömürüye kapat: IP başına dakikada en çok 15 yeni eşleştirme kodu
+const pairStarts = new Map(); // ip -> { n, t }
+setInterval(() => { const now = Date.now(); for (const [k, v] of pairStarts) if (now - v.t > MIN) pairStarts.delete(k); }, MIN);
 r.post('/pair/start', async (req, res) => {
+  const ip = auth.clientIp(req), ps = pairStarts.get(ip), fresh = ps && Date.now() - ps.t < MIN;
+  if (fresh && ps.n >= 15) return res.status(429).json({ error: 'Çok fazla eşleştirme isteği; bir dakika sonra tekrar deneyin' });
+  pairStarts.set(ip, { n: (fresh ? ps.n : 0) + 1, t: fresh ? ps.t : Date.now() });
   if (pairs.size > 5000) return res.status(503).json({ error: 'meşgul' });
   let code; do { code = String(require('crypto').randomInt(100000, 1000000)); } while (byCode.has(code));
   const pid = auth.uid(24);
   pairs.set(pid, { code, created: Date.now(), tid: null });
   byCode.set(code, pid);
-  // telefonla okutulunca panelin eşleştirme ekranı kod dolu açılır
-  const url = `${req.protocol}://${req.get('host')}/panel#pair=${code}`;
+  // telefonla okutulunca panelin eşleştirme ekranı kod dolu açılır; adres Host başlığından değil yetkili kaynaktan gelir
+  const url = require('./routes-auth').baseOrigin(req) + '/panel#pair=' + code;
   const qr = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#111111', light: '#ffffff' } });
   res.json({ pid, code, qr, expiresIn: 15 * 60 });
 });

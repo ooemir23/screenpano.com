@@ -2169,7 +2169,7 @@ function postersHtml() {
       `<div class="pgal">${Object.entries(SPPoster.TEMPLATES).filter(([, t]) => !t.hidden).map(([k, t]) => `<button class="pcard" onclick="editPoster(null,'${k}')"><div class="pmini" data-tpl="${k}" style="${themeVars()}"></div><b>${esc(t.name)}</b></button>`).join('')}</div>`)
     + card(`Afişleriniz <span class="muted">· ${mine.length}</span>`, 'Medya sırasında yer alırlar; sırayı "Medya ve sıra" sekmesinden değiştirebilirsiniz.',
       mine.length ? `<div class="pgal">${mine.map(x => `<button class="pcard" onclick="${x.design ? `openStudio('${x.id}')` : `editPoster('${x.id}')`}">${x.design ? `<div class="pmini"><img src="${S.me.upBase}${x.file}" loading="lazy" alt=""></div>` : `<div class="pmini" data-pid="${x.id}" style="${themeVars()}"></div>`}<b>${esc(x.name)}</b><span class="muted" style="font-size:12px">${x.sch ? '⏱ ' + esc(schShort(x.sch)) : 'Her zaman'}${x.hidden ? ' · gizli' : ''}</span></button>`).join('')}</div>` : '<div class="empty">Henüz afiş yok. Yukarıdan bir şablon seçin.</div>')
-    + card('🎬 Telifsiz Hazır Video ve Fotoğraf Havuzu', 'Kendi fotoğraf/videonuz yoksa mekânınızda hemen oynatabileceğiniz yüksek kaliteli telifsiz içerikler. Tek tıkla medya listenize eklenir.',
+    + card('🎬 Telifsiz Hazır Video ve Fotoğraf Havuzu', 'Kendi fotoğraf/videonuz yoksa mekanınızda hemen oynatabileceğiniz yüksek kaliteli telifsiz içerikler. Tek tıkla medya listenize eklenir.',
       `<div id="stock-gal" class="pgal"><div class="muted">Yükleniyor…</div></div>`);
 }
 async function drawPosterGallery() {
@@ -2670,12 +2670,12 @@ function showHeatTip(el) {
 const MUSIC_PRESETS = [
   { title: 'Kafe & Lofi Chill Beats (7/24)', category: 'Kafe & Akustik', provider: 'ytm', url: 'https://music.youtube.com/watch?v=lTRiuFIWV54', desc: 'Kafeler ve çalışma alanları için kesintisiz sakin Lofi & enstrümantal ritimler.', thumb: 'https://i.ytimg.com/vi/lTRiuFIWV54/hqdefault.jpg' },
   { title: 'Restoran & Smooth Jazz / Bossa Nova', category: 'Restoran & Caz', provider: 'ytm', url: 'https://music.youtube.com/watch?v=Dx5qFachd3A', desc: 'Yemek ve sohbet ortamına uygun sıcak saksafon, piyano ve Bossa Nova.', thumb: 'https://i.ytimg.com/vi/Dx5qFachd3A/hqdefault.jpg' },
-  { title: 'Lounge & Deep Chill Synth / House', category: 'Lounge & Bar', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Akşam saatleri, pub ve lounge mekânlar için modern atmosferik müzik.', thumb: 'https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg' },
+  { title: 'Lounge & Deep Chill Synth / House', category: 'Lounge & Bar', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Akşam saatleri, pub ve lounge mekanlar için modern atmosferik müzik.', thumb: 'https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg' },
   { title: 'Spotify Chill Hits · Kafe & Lounge', category: 'Kafe & Lounge', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6', desc: 'Spotify’ın en sevilen güncel sakin ve popüler mekan şarkıları listesi.' },
-  { title: 'Spotify Türkçe Pop & Güncel Hitler', category: 'Türkçe Pop', provider: 'spotify', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', desc: 'Mekânlarda en çok dinlenen güncel Türkçe pop parçalar.' },
+  { title: 'Spotify Türkçe Pop & Güncel Hitler', category: 'Türkçe Pop', provider: 'spotify', url: 'https://open.spotify.com/playlist/7uGniGmKxD4fmxGJWPqZAl', desc: 'Mekanlarda en çok dinlenen güncel Türkçe pop parçalar.' },
   { title: 'Spotify Coffee Table Jazz', category: 'Kafe & Caz', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DWVqfgj8NZEp1', desc: 'Kahve dükkanları ve pastaneler için yumuşak caz klasikleri.' },
   { title: 'Spor Salonu & Yüksek Enerji (Beast Mode)', category: 'Spor & Fitness', provider: 'spotify', url: 'https://open.spotify.com/playlist/37i9dQZF1DX76Wlfdnj7AP', desc: 'Spor salonları ve antrenman saatleri için yüksek tempolu motivasyon listesi.' },
-  { title: 'Maç Öncesi & Sosyal Mekân Ritmi', category: 'Maç Günü', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Maç öncesi toplanma saatlerinde arka planda akıcı ritmik yayın.', thumb: 'https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg' },
+  { title: 'Maç Öncesi & Sosyal Mekan Ritmi', category: 'Maç Günü', provider: 'ytm', url: 'https://music.youtube.com/watch?v=4xDzrJKXOOY', desc: 'Maç öncesi toplanma saatlerinde arka planda akıcı ritmik yayın.', thumb: 'https://i.ytimg.com/vi/4xDzrJKXOOY/hqdefault.jpg' },
 ];
 function musicData() {
   if (!S.db.music || typeof S.db.music !== 'object') S.db.music = { enabled: false, playing: true, volume: 75, muteVideo: true, showNowPlaying: true, activeId: '', playlists: [], spotify: {} };
@@ -2856,7 +2856,7 @@ function homeHtml() {
   return hero + empty
     + shelf('Kitaplığınız', lib.slice(0, 14), lib.length > 14 ? moreBtn('lib') : '', 'Tekrar dinleyin')
     + shelf('YouTube listeleriniz', yt, moreBtn('accounts', 'Hesap'), YTACC.st && YTACC.st.name ? esc(YTACC.st.name) : '')
-    + shelf('Mekânınız için hazır listeler', pre, moreBtn('explore', 'Keşfet'));
+    + shelf('Mekanınız için hazır listeler', pre, moreBtn('explore', 'Keşfet'));
 }
 
 // ---- Keşfet: hazır listeler kategoriye göre ----
@@ -3279,7 +3279,7 @@ function setupHtml() {
       ['device', 'Cihazı seçin', '“Çalınacak cihaz” listesinden TV kutusunu seçin. Görünmüyorsa kutuda Spotify’ı açıp Yenile’ye basın.'],
       ['play', 'Listeden çalın', 'Spotify listenizi açıp “Oynat”a basın. Çalan şarkı TV’de ve panelde görünür.'],
     ]) : '')
-    + `<p class="ytm-muted" style="margin-top:6px">${ic('info')} Ses TV kutusundan gelir: TV’nin ya da ses sisteminin sesi açık olmalı. Spotify ve YouTube hesap kuralları kişisel kullanım içindir; mekânda ticari yayın için ilgili lisansları kontrol edin.</p>`;
+    + `<p class="ytm-muted" style="margin-top:6px">${ic('info')} Ses TV kutusundan gelir: TV’nin ya da ses sisteminin sesi açık olmalı. Spotify ve YouTube hesap kuralları kişisel kullanım içindir; mekanda ticari yayın için ilgili lisansları kontrol edin.</p>`;
 }
 
 // ---- Komutlar ----

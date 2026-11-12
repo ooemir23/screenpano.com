@@ -125,8 +125,8 @@ ${smtpHost() ? `<li><b>E-posta gönderimi:</b> ${esc(smtpHost())} — yalnız si
 </ul>
 <h2>4. Müşterileriniz için örnek metin</h2>
 <p>Doğum günü kutlaması için müşterinizden rıza alırken kullanabileceğiniz örnek (kendi bilgilerinizle uyarlayın):</p>
-<blockquote>"[İşletme adı] olarak, doğum gününüzde adınızın ve kutlama mesajınızın mekânımızdaki ekranlarda gösterilmesi amacıyla adınızı işlemek istiyoruz. Bu bilgi yalnızca bu amaçla kullanılır, kutlamadan sonra tarafımızca silinir ve dijital ekran hizmeti aldığımız ${i.brand} sunucularında tutulur. Onay vermek zorunda değilsiniz; onayınızı dilediğiniz an [iletişim] üzerinden geri alabilirsiniz. ☐ Adımın ekranda gösterilmesine açık rıza veriyorum."</blockquote>
-<p>Mekânınızda kamera veya fotoğraf çekimi varsa bunun için ayrıca aydınlatma yapmanız gerekir; bu hizmetin kapsamı dışındadır.</p>
+<blockquote>"[İşletme adı] olarak, doğum gününüzde adınızın ve kutlama mesajınızın mekanımızdaki ekranlarda gösterilmesi amacıyla adınızı işlemek istiyoruz. Bu bilgi yalnızca bu amaçla kullanılır, kutlamadan sonra tarafımızca silinir ve dijital ekran hizmeti aldığımız ${i.brand} sunucularında tutulur. Onay vermek zorunda değilsiniz; onayınızı dilediğiniz an [iletişim] üzerinden geri alabilirsiniz. ☐ Adımın ekranda gösterilmesine açık rıza veriyorum."</blockquote>
+<p>Mekanınızda kamera veya fotoğraf çekimi varsa bunun için ayrıca aydınlatma yapmanız gerekir; bu hizmetin kapsamı dışındadır.</p>
 <p class="meta">Sürüm ${VERSION}</p>` },
 
   kosullar: { title: 'Kullanım Koşulları', body: i => `

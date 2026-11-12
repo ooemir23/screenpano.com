@@ -399,3 +399,4 @@ r.post('/reset', (req, res) => {
 });
 
 module.exports = r;
+module.exports.baseOrigin = baseOrigin; // routes-tv gibi başka modüller de yetkili kaynak adresini kullanır
