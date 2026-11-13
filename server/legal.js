@@ -153,9 +153,40 @@ ${smtpHost() ? `<li><b>E-posta gönderimi:</b> ${esc(smtpHost())} — yalnız si
 <h2>8. Değişiklikler ve uyuşmazlık</h2>
 <p>Koşullardaki önemli değişiklikler panel üzerinden duyurulur. Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır.</p>
 <p class="meta">Sürüm ${VERSION}</p>` },
+
+  // TASLAK: ödeme/iade politikası ve cayma hükümleri yayından önce avukata onaylatılmalıdır (bkz. dosya başı notu).
+  odeme: { title: 'Ödeme, Otomatik Ödeme ve İade Koşulları', body: i => `
+<p>Bu koşullar, ${contact(i)} ("Şirket") tarafından sunulan <b>${i.brand}</b> hizmetinin çevrimiçi ödenmesine ilişkindir ve <a href="/kosullar">Kullanım Koşulları</a>'nın eki niteliğindedir. Ödemeyi yapmadan önce okuyup onaylamanız istenir.</p>
+<h2>1. Hizmet ve fiyat</h2>
+<p>Hizmet, işletmelere yönelik ticari amaçlı bir abonelik hizmetidir. Paketler ve fiyatları tanıtım sitesinde ve panelde yer alır. Fiyatlar Türk lirasıdır; KDV hariç gösteriliyorsa ödeme ekranındaki <b>toplam tutara KDV eklenir</b>. Ödeyeceğiniz tutar, ödemeye geçmeden önce panelde "Toplam (KDV dahil)" olarak gösterilir.</p>
+<h2>2. Ödeme yöntemi ve kart güvenliği</h2>
+<p>Ödemeler, lisanslı ödeme kuruluşu <b>PayTR</b> altyapısı üzerinden alınır. Kart bilgilerinizi yalnızca ödeme kuruluşunun güvenli sayfasına girersiniz; Şirket kart numaranızı, son kullanma tarihinizi ve güvenlik kodunuzu <b>görmez ve saklamaz</b>. Otomatik ödemeyi seçerseniz kartınız ödeme kuruluşu tarafından saklanır; Şirket yalnızca kartı tanıyan bir referans ile kartın son dört hanesini tutar.</p>
+<h2>3. Süre ve etkinleşme</h2>
+<p>Ödeme onaylandığında hizmet süreniz seçtiğiniz dönem (aylık/yıllık) kadar uzar; süreniz hâlâ devam ediyorsa yeni dönem mevcut bitiş tarihinin ardından başlar. Ödeme kuruluşunun onayı birkaç dakika sürebilir. Ödemesi onaylanmayan işlem hizmet süresi doğurmaz.</p>
+<h2>4. Otomatik aylık ödeme</h2>
+<ul>
+<li>Otomatik ödeme <b>yalnızca siz seçerseniz</b> ve aylık dönemde kullanılabilir; yıllık ve tek seferlik ödemelerde uygulanmaz.</li>
+<li>Seçtiğinizde, ilk ödemede kartınız kaydedilir ve <b>her ay hizmet süreniz bitmeden en geç 1 gün önce</b>, onay verdiğiniz paket bedeli (KDV dahil) kayıtlı kartınızdan çekilir. Çekilen tutar, otomatik ödemeyi kurduğunuz andaki tutardır.</li>
+<li>Paket fiyatı değişirse yeni tutar için sizden ayrıca onay alınmadan daha yüksek bir tutar çekilmez; değişiklik önceden e-posta ve panel üzerinden bildirilir.</li>
+<li>Çekim başarısız olursa 1, 2 ve 3 gün arayla yeniden denenir ve e-posta ile bilgilendirilirsiniz. Üçüncü denemeden sonra otomatik ödeme durur; hizmet süreniz bittiğinde ekran yayını durur, içerikleriniz silinmez.</li>
+<li>Otomatik ödemeyi istediğiniz an <b>Panel → Ayarlar → Paket → "Otomatik ödemeyi durdur"</b> ile durdurabilirsiniz. Durdurma sonraki çekimi engeller; ödenmiş süre sonuna kadar hizmet sürer. Kayıtlı kartınızın silinmesini ${i.email} adresinden talep edebilirsiniz.</li>
+</ul>
+<h2>5. İptal ve iade</h2>
+<ul>
+<li>Ödenen dönem başladıktan sonra, o dönemin bedeli kural olarak iade edilmez; hizmet dönem sonuna kadar kullanılmaya devam eder.</li>
+<li>Hatalı veya mükerrer tahsilatlar, bildirimden itibaren 14 gün içinde ödemenin yapıldığı karta iade edilir. Hizmetin Şirket kaynaklı bir nedenle sunulamadığı süreler için süre uzatımı yapılır.</li>
+<li>İadelerin kartınıza yansıması bankanıza bağlı olarak birkaç iş günü sürebilir.</li>
+</ul>
+<h2>6. Cayma hakkı</h2>
+<p>Hizmet işletmelere yönelik ticari kullanım içindir; 6502 sayılı Tüketicinin Korunması Hakkında Kanun anlamında bir tüketici işlemi değildir. Hizmeti tüketici sıfatıyla satın aldığınızı düşünüyorsanız, Mesafeli Sözleşmeler Yönetmeliği'ndeki cayma hakkı ve elektronik ortamda anında ifa edilen hizmetlere ilişkin istisnalar saklıdır; bu durumda ${i.email} adresine yazın.</p>
+<h2>7. Fatura</h2>
+<p>Ödemenize ilişkin fatura yasal süresi içinde düzenlenir ve kayıtlı e-posta adresinize iletilir. Fatura bilgileriniz (ad, T.C. kimlik/vergi numarası, adres) ödeme sırasında girdiğiniz bilgilerdir; hatalı bilgi nedeniyle düzeltme gerekirse bize bildirin.</p>
+<h2>8. Uyuşmazlık ve iletişim</h2>
+<p>Ödeme ve iade talepleriniz için ${contact(i)} üzerinden bize ulaşabilirsiniz. Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır.</p>
+<p class="meta">Yürürlük: 13 Kasım 2026 · Sürüm ${VERSION}</p>` },
 };
 
-const NAV = [['kvkk', 'KVKK'], ['gizlilik', 'Çerezler'], ['acik-riza', 'Açık Rıza'], ['veri-isleme', 'Veri İşleme'], ['kosullar', 'Koşullar']];
+const NAV = [['kvkk', 'KVKK'], ['gizlilik', 'Çerezler'], ['acik-riza', 'Açık Rıza'], ['veri-isleme', 'Veri İşleme'], ['kosullar', 'Koşullar'], ['odeme', 'Ödeme']];
 function render(key) {
   const p = PAGES[key]; if (!p) return null;
   const i = Object.fromEntries(Object.entries(info()).map(([k, v]) => [k, esc(v)]));

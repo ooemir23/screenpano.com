@@ -286,3 +286,8 @@ test('çevrimiçi ödeme: varsayılan kapalı; yalnız gerçek süper modu açar
   await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
   await req('PUT', '/api/super/billing', { mode: 'off' });
 });
+
+test('ödeme koşulları sayfası yayında ve PayTR/otomatik ödeme/iade başlıklarını içerir', async () => {
+  const r = await fetch(BASE + '/odeme'); const h = await r.text();
+  assert.equal(r.status, 200); assert.match(h, /Otomatik aylık ödeme/); assert.match(h, /PayTR/); assert.match(h, /İptal ve iade/);
+});

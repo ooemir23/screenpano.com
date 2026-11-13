@@ -1478,6 +1478,65 @@ function planPrice(id) {
   const f = n => { const v = n.toLocaleString(I18N.locale); return P.currency === 'TRY' ? v + ' ₺' : (P.currency === 'USD' ? '$' : '€') + v; };
   return `<span class="muted" style="display:block;font-weight:600;color:var(--accent2);margin:2px 0 6px">${f(x.monthly)} / ay${x.yearly ? ' · yıllık ' + f(x.yearly) : ''}${P.vat === 'incl' ? '' : ' + KDV'}</span>`;
 }
+/* ================= ÇEVRİMİÇİ ÖDEME ================= */
+// Sunucuda mod kapalıysa ya da işletme pilotta değilse enabled:false döner: kart hiç çizilmez, "bizimle iletişime geçin" metni kalır.
+// Tutar yalnız gösterim içindir; ödenecek tutarı sunucu pricing.js'ten hesaplar. Kart bilgisi bu sayfaya girmez (ödeme sayfası sağlayıcıda).
+let BILL = null;
+const PAY_ST = { paid: 'Ödendi', failed: 'Başarısız', canceled: 'İptal', mismatch: 'Tutar uyuşmazlığı', orphan: 'İncelemede' };
+const money = n => Number(n).toLocaleString(I18N.locale, { maximumFractionDigits: 0 }) + ' ₺';
+async function drawPayCard() {
+  const el = $('paycard'); if (!el) return;
+  try { BILL = await req('GET', '/billing'); } catch (e) { el.innerHTML = ''; return; }
+  if (!BILL.enabled || !(BILL.quotes || []).length || !(BILL.providers.paytr || BILL.providers.iyzico)) { el.innerHTML = ''; return; }
+  const plans = [...new Set(BILL.quotes.map(q => q.plan))], rc = BILL.recurring;
+  const opts = plans.map(id => `<option value="${esc(id)}"${S.me.tenant.plan.id === id ? ' selected' : ''}>${esc((S.me.plans[id] || {}).name || id)}</option>`).join('');
+  const hist = (BILL.history || []).map(x => `<div class="it"><div class="b"><b>${new Date(x.created).toLocaleString(I18N.locale, { dateStyle: 'medium', timeStyle: 'short' })}</b><span>${esc((S.me.plans[x.plan] || {}).name || x.plan)} · ${x.period === 'yearly' ? 'Yıllık' : 'Aylık'} · ${money(x.amount / 100)}</span></div><span class="tag">${PAY_ST[x.status] || esc(x.status)}</span></div>`).join('');
+  const rcBox = !rc ? '' : rc.status === 'active'
+    ? `<div class="bn"><div><b>Otomatik ödeme aktif</b><div class="muted"><span>Kayıtlı kart:</span> <b>•••• ${esc(rc.last4)}</b></div><div class="muted">Çekim, süre bitiminden 1 gün önce yapılır.</div></div><button class="btn g s" onclick="payStop()">Otomatik ödemeyi durdur</button></div>`
+    : rc.status === 'past_due' ? `<div class="bn bad"><div><b>Otomatik ödeme çekilemedi</b><div>Kartınızı kontrol edip yeniden ödeme yapın.</div></div></div>` : '';
+  el.innerHTML = card('Ödeme', 'Paketinizi kartla çevrimiçi ödeyin. Kart bilgileriniz bizde saklanmaz.', `${rcBox}
+    <div class="f">${fl('Paket', `<select id="p-plan" onchange="payQuote()">${opts}</select>`)}${fl('Dönem', `<select id="p-per" onchange="payQuote()"><option value="monthly">Aylık</option><option value="yearly">Yıllık</option></select>`)}</div>
+    ${BILL.autoPay ? `<label class="row" id="p-autow" style="display:flex;gap:8px;margin-top:10px;align-items:center"><input type="checkbox" id="p-auto"> <span>Otomatik aylık ödeme (her ay kayıtlı kartınızdan çekilir)</span></label>` : ''}
+    <div class="row mt" style="justify-content:space-between"><span class="muted">Toplam (KDV dahil)</span><b id="p-total" style="font-size:20px"></b></div>
+    <div class="row end mt"><button class="btn" id="p-go" onclick="payStart()">Ödemeye geç</button></div>
+    ${hist ? `<hr class="sep2"><h4 style="margin:0 0 8px">Ödeme geçmişi</h4><div class="list">${hist}</div>` : ''}`);
+  payQuote();
+}
+function payQuote() {
+  const pl = $('p-plan'), pe = $('p-per'); if (!pl || !pe || !BILL) return;
+  const q = BILL.quotes.find(x => x.plan === pl.value && x.period === pe.value);
+  const yr = [...pe.options].find(o => o.value === 'yearly'), hasYr = BILL.quotes.some(x => x.plan === pl.value && x.period === 'yearly');
+  if (yr) yr.disabled = !hasYr; if (pe.value === 'yearly' && !hasYr) pe.value = 'monthly';
+  const q2 = BILL.quotes.find(x => x.plan === pl.value && x.period === pe.value);
+  $('p-total').textContent = q2 ? money(q2.gross) : '—'; $('p-go').disabled = !q2; void q;
+  const aw = $('p-autow'); if (aw) { aw.style.display = pe.value === 'monthly' ? '' : 'none'; if (pe.value !== 'monthly') $('p-auto').checked = false; }
+}
+function payStart() {
+  const plan = $('p-plan').value, period = $('p-per').value, auto = !!($('p-auto') && $('p-auto').checked && period === 'monthly');
+  const nm = String((S.me.user && S.me.user.name) || '').split(' ');
+  openModal(`<h3 style="margin:0 0 6px">Ödeme bilgileri</h3><p class="muted" style="margin:0 0 12px">Fatura için gereklidir. Kart bilgilerini bir sonraki adımda ödeme sağlayıcısının güvenli sayfasına gireceksiniz.</p>
+    <div class="f">${fl('Ad', '<input type="text" id="c-n" autocomplete="given-name" maxlength="40">')}${fl('Soyad', '<input type="text" id="c-s" autocomplete="family-name" maxlength="40">')}
+    ${fl('E-posta', `<input type="email" id="c-e" autocomplete="email" value="${esc(S.me.tenant.notifyEmail || '')}">`)}${fl('Telefon', '<input type="tel" id="c-g" autocomplete="tel" placeholder="5xx xxx xx xx">')}
+    ${fl('T.C. kimlik / vergi no (11 hane)', '<input type="text" id="c-i" inputmode="numeric" maxlength="11">')}${fl('Şehir', '<input type="text" id="c-c" autocomplete="address-level1" maxlength="60">')}</div>
+    <div class="f" style="margin-top:8px">${fl('Fatura adresi', '<input type="text" id="c-a" autocomplete="street-address" maxlength="200">')}</div>
+    <label class="row" style="display:flex;gap:8px;margin-top:12px;align-items:flex-start"><input type="checkbox" id="c-ok" style="margin-top:3px"> <span><a href="/odeme" target="_blank" rel="noopener">Ödeme, otomatik ödeme ve iade koşulları</a> <span>okudum, kabul ediyorum.</span></span></label>
+    ${auto ? '<p class="muted" style="margin:8px 0 0">Otomatik ödemeyi seçtiniz: kartınız kaydedilir ve her ay süre bitiminden 1 gün önce paket bedeli çekilir. Panelden istediğiniz an durdurabilirsiniz.</p>' : ''}
+    <div class="row end mt"><button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" id="c-go" onclick="payGo('${esc(plan)}','${esc(period)}',${auto})">Öde</button></div>`);
+  if (nm[0] && $('c-n')) { $('c-n').value = nm[0]; if (nm[1]) $('c-s').value = nm.slice(1).join(' '); }
+}
+async function payGo(plan, period, auto) {
+  const v = id => $(id).value.trim();
+  if (!$('c-ok').checked) return toast('Koşulları onaylamanız gerekir', true);
+  const b = $('c-go'); b.disabled = true;
+  try {
+    const j = await req('POST', '/billing/checkout', { plan, period, recurring: auto, customer: { name: v('c-n'), surname: v('c-s'), email: v('c-e'), gsm: v('c-g'), identityNumber: v('c-i'), city: v('c-c'), address: v('c-a') } });
+    location.href = j.url; // sağlayıcının ödeme sayfası; dönüşte /panel?odeme=ok|hata
+  } catch (e) { b.disabled = false; toast(e.message, true); }
+}
+async function payStop() {
+  if (!await UI.ask('Otomatik ödeme durdurulsun mu? Ödenmiş süre sonuna kadar hizmet sürer.', { ok: 'Durdur', danger: true })) return;
+  try { await req('POST', '/billing/cancel'); toast('Otomatik ödeme durduruldu'); drawPayCard(); } catch (e) { toast(e.message, true); }
+}
 /* ================= FİYAT LİSTESİ ================= */
 // Başlangıç paketinde ekrana ilk menuCats kategori ve toplam menuItems ürün gider (sunucu: state.js limitMenu); veri kesilmez.
 function menuLimitNote(m) {
@@ -2058,7 +2117,7 @@ SECTIONS.settings = {
       const m = (l, used, lim, f = x => x) => `<div class="row" style="justify-content:space-between;font-size:14px"><span>${l}</span><span class="muted">${f(used)} / ${lim >= 999 || (p.id === 'sinirsiz' && l !== 'Cihaz') ? '∞' : f(lim)}</span></div><div class="meter" style="margin-bottom:12px"><i style="width:${Math.max(2, Math.min(100, lim >= 999 ? 0 : used / lim * 100))}%"></i></div>`;
       h += `<div class="grid g2">` + card('Paketiniz', '', `<div style="font-size:24px;font-weight:700;color:var(--accent2)">${esc(p.name)}</div><p class="muted" style="margin:2px 0 16px">${acc.kind === 'unlimited' ? 'Süresiz · tüm özellikler açık, sınır yok' : !acc.ok ? 'Süresi doldu' : (acc.kind === 'trial' ? 'Deneme · ' : 'Aktif · ') + fmtDate(acc.until) + ' tarihine kadar'}</p>
           ${m('Cihaz', u.devices, p.devices)}${m('Depolama', Math.round(u.storageBytes / 1048576), p.storageMB, x => x >= 1024 ? (x / 1024).toFixed(1) + ' GB' : x + ' MB')}${m('Kullanıcı', u.users, p.users)}`)
-        + card('Paketler', 'Paket değişikliği ve ödeme için bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div>`;
+        + card('Paketler', 'Paket değişikliği ve ödeme için bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div><div id="paycard" style="grid-column:1/-1"></div>`;
     } else if (sub === 'branches') {
       h += branchesHtml();
     } else if (sub === 'privacy') {
@@ -2080,6 +2139,7 @@ SECTIONS.settings = {
       $('blist').innerHTML = bs.length ? bs.map(b => `<div class="it"><div class="b"><b>${new Date(b.time).toLocaleString(I18N.locale, { dateStyle: 'medium', timeStyle: 'short' })}</b><span>${esc(b.name.replace(/^db-|\.json$/g, '').split('-').pop())} · ${fmtSize(b.size)}</span></div><a class="btn xs g" href="/api/admin/backups/${encodeURIComponent(b.name)}/download">İndir</a>${owner() ? `<button class="btn xs g" onclick="restore('${b.name}')">Geri yükle</button>` : ''}</div>`).join('') : '<div class="empty">Henüz yedek yok</div>';
     }
     if (sub === 'devices') { drawDevStatus(); const pc = $('pcode'); if (pc && pc.value) pc.focus(); }
+    if (sub === 'plan') drawPayCard();
     if (sub === 'notify') drawNotifySettings();
     if (sub === 'branches') drawBranches();
     if (sub === 'business') drawBizLocations();
@@ -3563,6 +3623,11 @@ function drawBrand() {
   if (uq.get('verified') === '1') {
     history.replaceState(null, '', location.pathname + location.hash);
     setTimeout(() => toast('E-posta adresiniz başarıyla doğrulandı!'), 400);
+  }
+  if (uq.get('odeme')) { // ödeme sayfasından dönüş: Paketler bölümüne götür
+    const ok = uq.get('odeme') === 'ok';
+    history.replaceState(null, '', location.pathname + '#settings/plan'); route();
+    setTimeout(() => toast(ok ? 'Ödeme alındı. Süreniz birkaç dakika içinde uzar.' : 'Ödeme tamamlanamadı.', !ok), 400);
   }
   setInterval(async () => { if (document.hidden) return; try { S.scr = await req('GET', '/screen'); } catch (e) {} }, 30000);
 })();

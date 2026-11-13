@@ -41,7 +41,7 @@
 
 ## Canlıya açma sırası
 1. `staging` + `APP_ENV=test`: sandbox anahtarları env'e → sağlayıcı panelinde webhook adreslerini test alan adına ver.
-2. Doğrulanacaklar listesini sandbox'ta kapat.
+2. Doğrulanacaklar listesini sandbox'ta kapat; `/odeme` metnindeki iade/cayma hükümlerini avukata onaylat ve şirket bilgilerini süper yönetim → Yasal bilgiler'e gir.
 3. Canlıya `payments_mode=off` ile çık (kod zararsız). Canlı anahtarlar env'e.
 4. `pilot` + tek işletme (`canPay`) → gerçek küçük ödeme → süre/fatura kontrolü → `all`.
 
@@ -52,5 +52,5 @@
 - iyzico plan/ürün oluşturma gövde alanları (`paymentInterval`, `planPaymentType`…) ve yanıttaki `data.referenceCode`.
 - IYZWSv2 imzasında GET isteği (boş gövde) ve webhook imzasında `eventType` mi `iyziEventType` mi imzalanıyor (kod ikisini de dener).
 - `identityNumber` zorunlu: işletme için vergi no yerine T.C. kimlik no kabul ediliyor mu.
-- Panel arayüzü (Paketler kartında "Öde" formu) henüz YOK: uçlar hazır, `GET /api/admin/billing` `enabled` döner. Metinler eklenince `tools/i18n/panel-*.tsv` + `build.py` gerekir.
+- Panel arayüzü HAZIR (Ayarlar → Paket → "Ödeme" kartı; yalnız `enabled:true` iken çizilir; dört dil). Ödeme koşulları sayfası: `/odeme` (`server/legal.js`, TASLAK: avukata onaylat; iade politikası varsayılan metindir).
 - Mali: üye iş yeri başvurusu (şahıs şirketi/şirket), e-arşiv fatura, mesafeli satış sözleşmesi + iade metni (Yasal sayfalar).
