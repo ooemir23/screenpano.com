@@ -61,6 +61,7 @@ router.post('/paytr/notify', (req, res) => {
     if (p.status === 'success') {
       const r = core.settlePaid({ provider: 'paytr', eventId: p.merchant_oid, paymentId: p.merchant_oid, amount: p.total_amount });
       if (!r.ok) console.error('[ödeme] PayTR bildirimi işlenemedi:', p.merchant_oid, r.code);
+      else if (p.utoken) { const pay = core.getPay(p.merchant_oid); require('./recurring').onFirstPayment(pay, p.utoken).catch(e => console.error('[ödeme] kart bağlanamadı:', p.merchant_oid, e.message)); }
     } else core.settleFailed({ provider: 'paytr', eventId: p.merchant_oid, paymentId: p.merchant_oid });
   } catch (e) { console.error('[ödeme] PayTR bildirimi:', e.message); return res.status(500).type('text/plain').send('error'); }
   res.type('text/plain').send('OK');

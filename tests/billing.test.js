@@ -7,7 +7,7 @@ const crypto = require('crypto');
 process.env.DATA_DIR = mkdtempSync(path.join(tmpdir(), 'sp-bill-'));
 process.env.SESSION_SECRET = crypto.randomBytes(32).toString('hex');
 process.env.APP_ENV = 'test';
-Object.assign(process.env, { PAYTR_MERCHANT_ID: '12345', PAYTR_MERCHANT_KEY: 'kkk-key', PAYTR_MERCHANT_SALT: 'sss-salt', IYZICO_API_KEY: 'api', IYZICO_SECRET_KEY: 'sec-key', IYZICO_MERCHANT_ID: 'mid-1' });
+Object.assign(process.env, { PAYTR_MERCHANT_ID: '12345', PAYTR_MERCHANT_KEY: 'kkk-key', PAYTR_MERCHANT_SALT: 'sss-salt', IYZICO_API_KEY: 'api', IYZICO_SECRET_KEY: 'sec-key', IYZICO_MERCHANT_ID: 'mid-1', PAYTR_RECURRING: '1' });
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
@@ -19,6 +19,7 @@ const { createTenant } = require('../server/accounts');
 const core = require('../server/billing/core');
 const iyzico = require('../server/billing/iyzico');
 const paytr = require('../server/billing/paytr');
+const recurring = require('../server/billing/recurring');
 
 let server, BASE, n = 0;
 const DAY = 24 * 3600 * 1000;
@@ -147,4 +148,67 @@ test('ödeme sayfası: bilinmeyen/süresi dolmuş 404; açık sipariş kendi CSP
   assert.equal(r.status, 200); assert.match(r.headers.get('content-security-policy'), /frame-ancestors 'none'/); assert.match(html, /paytr\.com\/odeme\/guvenli\/tok123/);
   store.sql.prepare('UPDATE payments SET created = ? WHERE id = ?').run(Date.now() - 31 * 60 * 1000, o.id);
   assert.equal((await fetch(BASE + '/pay/' + o.id)).status, 404);
+});
+
+// ---- PayTR aylık otomatik ödeme (PayTR çağrıları taklit edilir) ----
+const CUST = { name: 'Ali', surname: 'Veli', email: 'a@b.co', gsm: '5551112233', address: 'Örnek mah. 1', city: 'İstanbul' };
+async function activeSub(paidUntil) {
+  const t = mk({ paidUntil }), o = order(t); core.setPay(o.id, { status: 'paid' }); // gerçek akışta ilk sipariş bildirimle zaten ödenmiş olur
+  recurring.begin({ tenantId: t.id, q: core.quote('pro', 'monthly'), orderId: o.id, ip: '1.2.3.4', customer: CUST });
+  paytr.listCards = async () => [{ ctoken: 'ct-1', last4: '4242', month: '12', year: '30', requireCvv: false }];
+  assert.equal(await recurring.onFirstPayment(o, 'ut-1'), true);
+  return t;
+}
+test('otomatik ödeme: ilk ödemede utoken ile kart bağlanır; utoken yoksa bağlanmaz', async () => {
+  const t = await activeSub(Date.now() + DAY * 20);
+  const s = recurring.getSub(t.id); assert.equal(s.status, 'active'); assert.equal(s.ctoken, 'ct-1'); assert.equal(s.last4, '4242');
+  const t2 = mk(), o2 = order(t2); recurring.begin({ tenantId: t2.id, q: core.quote('pro', 'monthly'), orderId: o2.id, ip: '1.1.1.1', customer: CUST });
+  assert.equal(await recurring.onFirstPayment(o2, ''), false); assert.equal(recurring.getSub(t2.id).status, 'awaiting_card');
+});
+test('otomatik ödeme: süresi bitmeye yakın abonelik tahsil edilir, süre uzar, ikinci tur tekrar çekmez', async () => {
+  core.setMode('all'); let calls = 0;
+  paytr.chargeStored = async () => { calls++; return { status: 'success' }; };
+  const t = await activeSub(Date.now() + 3600 * 1000), before = row(t.id).paid_until;
+  await recurring.tick(); assert.equal(calls >= 1, true);
+  assert.equal(row(t.id).paid_until, core.addMonths(before, 1));
+  const c = calls; await recurring.tick(); assert.equal(calls, c); core.setMode('off');
+});
+test('otomatik ödeme: süre yeterliyse, mod kapalıysa, askıdaysa tahsilat yok', async () => {
+  let calls = 0; paytr.chargeStored = async () => { calls++; return { status: 'success' }; };
+  const far = await activeSub(Date.now() + DAY * 20), near = await activeSub(Date.now() + 3600 * 1000);
+  core.setMode('all'); await recurring.tick(); const farCalls = recurring.getSub(far.id);
+  assert.equal(row(far.id).paid_until > Date.now() + DAY * 19, true); assert.equal(farCalls.fail_count, 0);
+  core.setMode('off'); const c = calls; const nearBefore = row(near.id).paid_until;
+  // yeni abonelik (mod kapalı): tick hiçbir şey yapmaz
+  const t = await activeSub(Date.now() + 3600 * 1000); await recurring.tick(); assert.equal(calls, c); assert.equal(row(t.id).paid_until < Date.now() + DAY, true);
+  core.setMode('all'); store.updateTenant(t.id, { status: 'suspended' }); tenants.refreshRow(t.id);
+  const before2 = calls; await recurring.tick(); assert.equal(row(t.id).paid_until < Date.now() + DAY, true); core.setMode('off'); void nearBefore; void before2;
+});
+test('otomatik ödeme: kesin ret 1-2-3 gün arayla denenir, 3. retten sonra past_due', async () => {
+  core.setMode('all'); paytr.chargeStored = async () => ({ status: 'failed', tryAgain: false, reason: 'kart kapalı' });
+  const t = await activeSub(Date.now() + 3600 * 1000); const until = row(t.id).paid_until;
+  await recurring.tick(); let s = recurring.getSub(t.id);
+  assert.equal(s.fail_count, 1); assert.equal(s.status, 'active'); assert.ok(s.next_try > Date.now() + DAY - 60000);
+  await recurring.tick(); assert.equal(recurring.getSub(t.id).fail_count, 1); // aynı gün tekrar denenmez
+  await recurring.tick(Date.now() + DAY + 1000); s = recurring.getSub(t.id); assert.equal(s.fail_count, 2);
+  await recurring.tick(Date.now() + 4 * DAY); s = recurring.getSub(t.id);
+  assert.equal(s.fail_count, 3); assert.equal(s.status, 'past_due'); assert.equal(row(t.id).paid_until, until); core.setMode('off');
+});
+test('otomatik ödeme: belirsiz sonuç (ağ hatası) bekleyen sipariş bırakır, yeniden çekim yapılmaz; bildirim gelince tek kez uzar', async () => {
+  core.setMode('all'); let calls = 0; paytr.chargeStored = async () => { calls++; throw new Error('zaman aşımı'); };
+  const t = await activeSub(Date.now() + 3600 * 1000), until = row(t.id).paid_until;
+  await recurring.tick(); assert.equal(calls, 1);
+  await recurring.tick(Date.now() + 20 * 60 * 1000); assert.equal(calls, 1); // 15 dk talep geçti ama bekleyen sipariş var
+  const pend = store.sql.prepare("SELECT * FROM payments WHERE tenant_id = ? AND status = 'pending' AND kind = 'recurring'").get(t.id); assert.ok(pend);
+  const h = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  await post('/paytr/notify', paytrBody(pend.id, 'success', pend.amount), h); await post('/paytr/notify', paytrBody(pend.id, 'success', pend.amount), h);
+  assert.equal(row(t.id).paid_until, core.addMonths(until, 1)); core.setMode('off');
+});
+test('otomatik ödeme: iptal edilen abonelik tahsil edilmez; CVV isteyen kart bağlanmaz', async () => {
+  core.setMode('all'); let calls = 0; paytr.chargeStored = async () => { calls++; return { status: 'success' }; };
+  const t = await activeSub(Date.now() + 3600 * 1000); assert.equal(recurring.cancel(t.id), true);
+  await recurring.tick(); assert.equal(calls, 0);
+  const t2 = mk(), o2 = order(t2); recurring.begin({ tenantId: t2.id, q: core.quote('pro', 'monthly'), orderId: o2.id, ip: '1.1.1.1', customer: CUST });
+  paytr.listCards = async () => [{ ctoken: 'c', last4: '1111', month: '1', year: '30', requireCvv: true }];
+  assert.equal(await recurring.onFirstPayment(o2, 'u'), false); assert.equal(recurring.getSub(t2.id).status, 'canceled'); core.setMode('off');
 });

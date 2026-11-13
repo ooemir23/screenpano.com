@@ -5,6 +5,7 @@ const accounts = require('../accounts');
 const core = require('./core');
 const iyzico = require('./iyzico');
 const paytr = require('./paytr');
+const recurring = require('./recurring');
 const config = require('../config');
 
 const providers = () => ({ iyzico: iyzico.configured(), paytr: paytr.configured() });
@@ -31,7 +32,7 @@ module.exports = function mount(r, { ownerOnly }) {
 
   r.get('/billing', (req, res) => {
     const enabled = core.enabledFor(req.t) && accounts.isHome(req.t) && req.user.role !== 'super';
-    const out = { enabled, providers: providers(), paidUntil: req.t.paid_until || null, history: core.history(req.t.id), quotes: [] };
+    const out = { enabled, providers: providers(), autoPay: paytr.recurringEnabled(), recurring: recurring.publicView(req.t.id), paidUntil: req.t.paid_until || null, history: core.history(req.t.id), quotes: [] };
     if (enabled) for (const plan of ['baslangic', 'pro']) for (const period of Object.keys(core.PERIODS)) { try { out.quotes.push(core.quote(plan, period)); } catch (e) { /* fiyat tanımsız */ } }
     res.json(out);
   });
@@ -39,19 +40,23 @@ module.exports = function mount(r, { ownerOnly }) {
   // body: { provider: 'iyzico'|'paytr', plan, period, customer: {...} }
   r.post('/billing/checkout', ownerOnly, guard, async (req, res) => {
     const b = req.body || {}, prov = providers();
-    const provider = b.provider === 'paytr' || b.provider === 'iyzico' ? b.provider : (prov.iyzico ? 'iyzico' : 'paytr');
+    const provider = b.provider === 'paytr' || b.provider === 'iyzico' ? b.provider : (prov.paytr ? 'paytr' : 'iyzico');
     if (!prov[provider]) return res.status(503).json({ error: 'Seçilen ödeme yöntemi yapılandırılmadı' });
     let q; try { q = core.quote(String(b.plan || ''), String(b.period || '')); } catch (e) { return res.status(400).json({ error: e.message }); }
     const cu = customerOf(b.customer || {}); if (cu.error) return res.status(400).json({ error: cu.error });
+    // otomatik aylık ödeme: yalnız PayTR + aylık dönem + PayTR'de kart saklama/Non3D izni açık (PAYTR_RECURRING=1)
+    const auto = b.recurring === true && provider === 'paytr';
+    if (b.recurring === true && (provider !== 'paytr' || q.period !== 'monthly' || !paytr.recurringEnabled())) return res.status(400).json({ error: 'Otomatik ödeme yalnız aylık dönemde ve etkinleştirilmişse kullanılabilir' });
     // aynı işletmenin kullanılmamış eski siparişleri: yeni ödeme açılırken iptal (kart çift çekilmesin)
     core.sql.prepare("UPDATE payments SET status = 'canceled', updated = ? WHERE tenant_id = ? AND status = 'pending'").run(Date.now(), req.t.id);
     const order = core.createOrder({ tenantId: req.t.id, provider, kind: provider === 'iyzico' ? 'sub' : 'oneoff', q });
+    if (auto) recurring.begin({ tenantId: req.t.id, q, orderId: order.id, ip: auth.clientIp(req), customer: cu.c });
     try {
       if (provider === 'iyzico') {
         const r1 = await iyzico.initCheckout({ order, gross: q.gross, callbackUrl: config.BASE_URL + '/api/billing/iyzico/return', customer: cu.c });
         core.setPay(order.id, { token: r1.token, pay_data: r1.html });
       } else {
-        const r1 = await paytr.initCheckout({ order, baseUrl: config.BASE_URL, ip: auth.clientIp(req), customer: cu.c, label: `ScreenPano ${q.plan} ${q.period === 'yearly' ? 'yıllık' : 'aylık'}` });
+        const r1 = await paytr.initCheckout({ order, baseUrl: config.BASE_URL, ip: auth.clientIp(req), customer: cu.c, label: `ScreenPano ${q.plan} ${q.period === 'yearly' ? 'yıllık' : 'aylık'}`, storeCard: auto });
         core.setPay(order.id, { token: r1.token, pay_data: r1.token });
       }
       res.json({ ok: true, url: config.BASE_URL + '/api/billing/pay/' + order.id });
@@ -64,6 +69,7 @@ module.exports = function mount(r, { ownerOnly }) {
 
   // otomatik yenilemeyi durdur (süre dönem sonuna kadar açık kalır)
   r.post('/billing/cancel', ownerOnly, guard, async (req, res) => {
+    if (recurring.cancel(req.t.id)) return res.json({ ok: true });
     const sub = core.sql.prepare("SELECT * FROM payments WHERE tenant_id = ? AND kind = 'sub' AND provider_ref != '' AND status IN ('paid','failed') ORDER BY created DESC LIMIT 1").get(req.t.id);
     if (!sub) return res.status(404).json({ error: 'Aktif abonelik bulunamadı' });
     try { await iyzico.cancel(sub.provider_ref); core.setPay(sub.id, { status: 'canceled' }); res.json({ ok: true }); }
