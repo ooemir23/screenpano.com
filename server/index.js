@@ -52,6 +52,8 @@ app.use((req, res, next) => {
   next();
 });
 app.use(require('compression')());
+// Ödeme sağlayıcı bildirimleri ham gövdeyle imza doğrular: express.json'dan ÖNCE (ayrıntı: BILLING.md)
+app.use('/api/billing', require('./billing/public').router);
 app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); next(); });
 

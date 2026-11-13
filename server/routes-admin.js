@@ -1000,5 +1000,6 @@ function startJobs() {
   }, 30000);
 }
 
+require('./billing/routes')(r, { ownerOnly }); // çevrimiçi ödeme (varsayılan kapalı)
 require('./routes-ext')(r, { changed, sendTo, upload, quota, postQuota, ownerOnly, rmUpload, backupNow });
 module.exports = { router: r, startJobs, activeTenantId };

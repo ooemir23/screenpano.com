@@ -72,6 +72,11 @@ jobs:
         working-directory: android
         run: gradle --no-daemon assembleRelease
 
+      - name: Play paketi (AAB) derle
+        working-directory: android
+        run: gradle --no-daemon bundleRelease
+        continue-on-error: true   # Play yayını hazırlığı: AAB hatası APK akışını (kutuların güncellemesi) durdurmasın
+
       - name: İmzayı ve sürümü denetle
         id: check
         run: |
@@ -111,6 +116,14 @@ jobs:
         with:
           name: ScreenPano-apk
           path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ScreenPano-aab
+          path: android/app/build/outputs/bundle/release/*.aab
           retention-days: 14
           if-no-files-found: ignore
 

@@ -20,3 +20,6 @@ android/*.properties
 .env.*
 !.env.example
 .zcode/
+
+# Gemini devretme çıktıları
+tmp/

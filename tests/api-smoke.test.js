@@ -257,3 +257,32 @@ test('kota: Content-Length başlığı olmadan (chunked) yükleme reddedilir ve 
     assert.equal(up2.status, 200, 'kota dahilinde normal yükleme geçmeli');
   } finally { db.close(); }
 });
+
+test('çevrimiçi ödeme: varsayılan kapalı; yalnız gerçek süper modu açar; pilotta yalnız işaretli işletme görür', async () => {
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  const un = 'odeme' + Date.now();
+  let r = await req('POST', '/api/super/tenants', { name: 'Ödeme Kafe', username: un, password: 'parola-12345', plan: 'pro', days: 30 });
+  assert.equal(r.status, 200);
+  const id = r.j.id || (r.j.tenant && r.j.tenant.id);
+  r = await req('GET', '/api/super/billing'); assert.equal(r.j.mode, 'off');
+  assert.equal((await req('PUT', '/api/super/billing', { mode: 'hepsi' })).status, 400);
+  // işletme tarafı: mod kapalı → ödeme yok
+  await req('POST', '/api/auth/login', { username: un, password: 'parola-12345' });
+  r = await req('GET', '/api/admin/billing'); assert.equal(r.status, 200); assert.equal(r.j.enabled, false);
+  r = await req('POST', '/api/admin/billing/checkout', { plan: 'pro', period: 'monthly' }); assert.equal(r.status, 404);
+  // süper pilotu açar, işletmeyi işaretler
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  assert.equal((await req('PUT', '/api/super/billing', { mode: 'pilot' })).j.mode, 'pilot');
+  await req('POST', '/api/auth/login', { username: un, password: 'parola-12345' });
+  assert.equal((await req('GET', '/api/admin/billing')).j.enabled, false); // pilot ama işaretli değil
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  if (id) { r = await req('PUT', `/api/super/tenants/${id}`, { canPay: true }); assert.equal(r.status, 200); }
+  await req('POST', '/api/auth/login', { username: un, password: 'parola-12345' });
+  r = await req('GET', '/api/admin/billing'); if (id) assert.equal(r.j.enabled, true);
+  // sağlayıcı anahtarı yok → checkout 503, sipariş açılmadan geçersiz giriş 400
+  if (id) {
+    r = await req('POST', '/api/admin/billing/checkout', { provider: 'paytr', plan: 'pro', period: 'monthly', customer: {} }); assert.equal(r.status, 503);
+  }
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  await req('PUT', '/api/super/billing', { mode: 'off' });
+});

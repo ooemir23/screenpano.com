@@ -32,7 +32,7 @@ r.get('/overview', (req, res) => {
   const online = hub.onlineDeviceIds();
   const list = tenants.all().map(t => {
     const devs = store.q.devicesOf.all(t.id), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
-    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0, charges: (t.db.charges || []).slice(-50) };
+    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, canPay: !!t.db.canPay, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0, charges: (t.db.charges || []).slice(-50) };
   });
   const settings = Object.fromEntries(SETTINGS.map(k => [k, SECRET_KEYS.includes(k) ? maskKey(store.setting(k)) : store.setting(k)]));
   settings.traffic_secret = maskKey(require('./feeds').trafficSecret());
@@ -106,6 +106,7 @@ r.put('/tenants/:id', (req, res) => {
   // zincirin tüm şubelerine uygula (paket, durum, süre)
   const ids = b.applyOrg && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
   // sınırsız (kendi işletmem): süre ve limit yok; zincirde istenirse tüm şubelere
+  if (typeof b.canPay === 'boolean') { if (b.canPay) t.db.canPay = true; else delete t.db.canPay; tenants.save(t); hub.pushTenant(t.id); } // çevrimiçi ödeme pilotu
   if (typeof b.canTest === 'boolean') { if (b.canTest) t.db.canTest = true; else delete t.db.canTest; tenants.save(t); hub.pushTenant(t.id); }
   if (b.superAccess !== undefined && !req.user.trueSuper) return res.status(403).json({ error: 'superAccess yetkisi yalnız süper yönetici hesabıyla değiştirilir' });
   if (typeof b.superAccess === 'boolean') for (const id of [t.id]) { const x = tenants.get(id); if (x) { if (b.superAccess) x.db.superAccess = true; else delete x.db.superAccess; tenants.save(x); } }
@@ -179,6 +180,11 @@ r.delete('/tenants/:id', trueOnly, (req, res) => {
 });
 // Fiyatlandırma (paketler, ek kutu, ek şube; aylık + yıllık): site, işletme paneli ve şube ücreti buradan okur
 r.get('/pricing', (req, res) => res.json(require('./pricing').get()));
+// Çevrimiçi ödeme modu: off (varsayılan) | pilot (yalnız "canPay" işaretli işletmeler) | all
+r.get('/billing', (req, res) => { const bc = require('./billing/core'); res.json({ mode: bc.mode(), envOverride: !!process.env.PAYMENTS_MODE, iyzico: require('./billing/iyzico').configured(), paytr: require('./billing/paytr').configured() }); });
+r.put('/billing', trueOnly, (req, res) => {
+  try { res.json({ ok: true, mode: require('./billing/core').setMode(String((req.body || {}).mode || '')) }); } catch (e) { res.status(400).json({ error: e.message }); }
+});
 r.put('/pricing', trueOnly, (req, res) => {
   const p = require('./pricing').set(req.body || {});
   res.json({ ok: true, pricing: p });
