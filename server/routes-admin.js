@@ -561,11 +561,10 @@ r.put('/movies', (req, res) => {
   t.db.movies = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, trailers: typeof b.trailers === 'boolean' ? b.trailers : cur.trailers !== false, every, gapMin };
   changed(t); res.json({ ok: true }); F.refreshMovies();
 });
-// Medya ekranı etkileşimli bilgi & mini quiz kartları + eğlenceli kısa video kuşağı (yerel havuz + YouTube RSS, tüm paketlerde ücretsiz)
+// Medya ekranı etkileşimli bilgi, görsel oyunlar & mini quiz kartları (yerel + günlük canlı havuz, tüm paketlerde ücretsiz)
 const TRIVIA = require('../public/trivia');
 r.put('/trivia', (req, res) => {
   const t = req.t, b = req.body || {}, cur = TRIVIA.normCfg(t.db.trivia);
-  const nextClips = b.clips && typeof b.clips === 'object' ? Object.assign({}, cur.clips, b.clips) : cur.clips;
   t.db.trivia = TRIVIA.normCfg({
     enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled,
     every: b.every !== undefined ? b.every : cur.every,
@@ -573,18 +572,12 @@ r.put('/trivia', (req, res) => {
     durSec: b.durSec !== undefined ? b.durSec : cur.durSec,
     modes: Array.isArray(b.modes) ? b.modes : cur.modes,
     cats: Array.isArray(b.cats) ? b.cats : cur.cats,
-    clips: nextClips,
   });
   changed(t); res.json({ ok: true, trivia: t.db.trivia });
-  if (t.db.trivia.clips && t.db.trivia.clips.enabled && typeof F.refreshFunClips === 'function') F.refreshFunClips();
 });
 r.post('/trivia/test', (req, res) => {
   const t = req.t, b = req.body || {};
-  if (b.kind === 'funclip') {
-    sendTo(t, { type: 'funclip', force: true, cat: b.cat || null });
-  } else {
-    sendTo(t, { type: 'trivia', force: true, mode: b.mode || null, cat: b.cat || null, id: b.id || null });
-  }
+  sendTo(t, { type: 'trivia', force: true, mode: b.mode || null, cat: b.cat || null, id: b.id || null });
   const on = hub.onlineDeviceIds(), online = store.q.devicesOf.all(t.id).filter(d => on.has(d.id)).length;
   res.json({ ok: true, online });
 });

@@ -1294,8 +1294,7 @@ function trailerError() { // video bu ülkede/gömülü oynatılamıyor: aynı f
   clearInterval(trailerHandshakeTimer);
   const alts = (trailerCur && trailerCur.alts) || [];
   if (trailerCur && ++trailerTry < alts.length) return showTrailer(trailerCur, alts[trailerTry]);
-  if (trailerCur && trailerCur.isFunClip && ++trailerFails < 4) return playFunClip(trailerCur.cat, true);
-  if (!trailerCur?.isFunClip && ++trailerFails < trailerList.length) return playTrailer(true);
+  if (++trailerFails < trailerList.length) return playTrailer(true);
   endTrailer();
 }
 addEventListener('message', e => {
@@ -1318,10 +1317,9 @@ addEventListener('message', e => {
     const dur = (d.info && typeof d.info.duration === 'number') ? d.info.duration : (typeof d.duration === 'number' ? d.duration : 0);
     const cur = (d.info && typeof d.info.currentTime === 'number') ? d.info.currentTime : (typeof d.currentTime === 'number' ? d.currentTime : 0);
     if (dur > 3) {
-      const capDur = (trailerCur && trailerCur.maxSec) ? Math.min(dur, trailerCur.maxSec) : dur;
-      trailerDur = capDur;
+      trailerDur = dur;
       clearTimeout(trailerTimer);
-      const remain = Math.max(0.5, trailerDur - cur - 2.2);
+      const remain = Math.max(0.5, dur - cur - 2.2);
       trailerTimer = setTimeout(endTrailer, remain * 1000);
       clearTimeout(trailerFadeT); trailerFadeT = setTimeout(() => trailerEl.classList.add('fade'), Math.max(0, remain - 1.1) * 1000); // bitişe doğru kararır: öneri ekranı hiç görünmez
     }
@@ -1344,14 +1342,12 @@ function showTrailer(m, key) {
   const pageOrigin = (location.origin && location.origin !== 'null') ? location.origin : 'https://screenpano.com';
   const url = `https://www.youtube.com/embed/${encodeURIComponent(key)}?autoplay=1&mute=1&controls=0&rel=0&playsinline=1&modestbranding=1&cc_load_policy=0&hl=tr&iv_load_policy=3&disablekb=1&fs=0&enablejsapi=1&origin=${encodeURIComponent(pageOrigin)}&widgetid=1`;
   clearTimeout(trailerFadeT); trailerEl.classList.remove('fade');
-  const badgeTxt = m.badge ? esc(m.badge) : `BU HAFTA VİZYONDA${m.date ? ' · ' + esc(trDate(m.date)) : ''}`;
-  trailerEl.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="${url}"></iframe><div class="tcv"></div><div class="tt"><small>${badgeTxt}</small>${esc(m.title)}</div>`;
+  trailerEl.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="${url}"></iframe><div class="tcv"></div><div class="tt"><small>BU HAFTA VİZYONDA${m.date ? ' · ' + esc(trDate(m.date)) : ''}</small>${esc(m.title)}</div>`;
   trailerEl.classList.add('on');
 
   clearTimeout(trailerTimer);
-  const maxSec = (m && m.maxSec) ? m.maxSec : 75;
-  // Süre bilgisi hiç gelmezse tavan süre (YouTube öneri ekranında beklemeyi önler)
-  trailerTimer = setTimeout(endTrailer, maxSec * 1000);
+  // Süre bilgisi hiç gelmezse 75 saniye tavan süre (YouTube öneri ekranında beklemeyi önler)
+  trailerTimer = setTimeout(endTrailer, 75000);
 
   // Video 9 saniyede başlamazsa (engelli video) alternatif fragmana geç
   clearTimeout(trailerStallTimer);
@@ -1411,35 +1407,10 @@ function playTrailer(retry) {
   trailerCur = m; trailerTry = 0; wsSend({ type: 'play', id: 'tr:' + String(m.id || m.title || 'x').replace(/[^\w-]/g, '').slice(0, 40) });
   showTrailer(m, (m.alts && m.alts[0]) || m.trailer);
 }
-// ---- Etkileşimli bilgi & mini quiz kartları + eğlenceli kısa video kuşağı ----
-let triviaCfg = window.SPTrivia ? SPTrivia.normCfg() : { enabled: true, every: 2, gapMin: 0, durSec: 14, modes: ['quiz', 'fact', 'stat', 'riddle', 'word', 'illusion', 'zoom', 'nostalgia'], cats: ['cafe', 'sport', 'general', 'cinema'], clips: { enabled: false, every: 3, gapMin: 3, durSec: 35, cats: ['pets', 'gags', 'awesome', 'satisfying', 'nature'] } };
+// ---- Etkileşimli bilgi, görsel oyunlar & mini quiz kartları ----
+let triviaCfg = window.SPTrivia ? SPTrivia.normCfg() : { enabled: true, every: 2, gapMin: 0, durSec: 14, modes: ['quiz', 'fact', 'stat', 'riddle', 'word', 'illusion', 'zoom', 'nostalgia'], cats: ['cafe', 'sport', 'general', 'cinema'] };
 let triviaPlays = 99, triviaAt = 0, triviaOn = false, triviaStop = null, triviaIdleT = 0;
 let triviaStep = Math.floor(Date.now() / 15000);
-let funClipPlays = 0, funClipAt = 0, funClipStep = Math.floor(Date.now() / 25000);
-function playFunClip(forceCat, retry, immediate) {
-  if (!window.SPTrivia || !SPTrivia.pickClip || !MEDIA_ON) return;
-  if (!immediate && (big.showing || camp.showing || trailerOn)) return;
-  if (triviaOn) {
-    triviaOn = false;
-    if (triviaStop) { triviaStop(); triviaStop = null; }
-    const tel = document.getElementById('trivia');
-    if (tel) { tel.classList.remove('on'); tel.innerHTML = ''; }
-  }
-  hideYt();
-  exoStop(true);
-  const clipCfg = (triviaCfg && triviaCfg.clips) || {};
-  const m = Object.assign({}, SPTrivia.pickClip(clipCfg, funClipStep++, forceCat), {
-    isFunClip: true,
-    maxSec: Math.max(15, Math.min(90, Number(clipCfg.durSec) || 35)),
-  });
-  if (!retry) trailerFails = 0;
-  funClipAt = Date.now();
-  funClipPlays = 0;
-  trailerOn = true; clearTimeout(timer); els.forEach(v => v.pause()); notePlay(null);
-  trailerCur = m; trailerTry = 0;
-  wsSend({ type: 'shown', kind: 'funclip', id: m.id });
-  showTrailer(m, (m.alts && m.alts[0]) || m.trailer);
-}
 function endTrivia() {
   if (!triviaOn) return;
   triviaOn = false;
@@ -1492,7 +1463,6 @@ function next() {
 function advance() {
   if (window.__pendingBig && !big.showing && !trailerOn) { const pb = window.__pendingBig; window.__pendingBig = null; big.queue = []; big.after = advance; bigShow(pb.match, pb.cfg); return; } // panelden gönderilen deneme: fragman/duyuru bitince
   if (++trailerPlays >= (window.__trailerEvery || 4) && trailerList.length && navigator.onLine !== false && Date.now() - trailerAt > (window.__trailerGapMin || 8) * 60 * 1000) { playTrailer(); return; }
-  if (triviaCfg && triviaCfg.clips && triviaCfg.clips.enabled && window.SPTrivia && navigator.onLine !== false && ++funClipPlays >= (triviaCfg.clips.every || 3) && Date.now() - funClipAt >= (triviaCfg.clips.gapMin || 0) * 60 * 1000) { playFunClip(); return; }
   if (triviaCfg && triviaCfg.enabled && window.SPTrivia && ++triviaPlays >= (triviaCfg.every || 2) && Date.now() - triviaAt >= (triviaCfg.gapMin || 0) * 60 * 1000) { playTrivia(); return; }
   if (NMED()) { window.__N.mediaResume(); return; }
   idx++; play();
@@ -2379,7 +2349,6 @@ function setState(s) {
   window.__triviaDynamic = window.SPTrivia && SPTrivia.buildDynamic ? SPTrivia.buildDynamic(s) : [];
   if (s.trivia) {
     const prevOn = triviaCfg && triviaCfg.enabled;
-    window.__funClipsRss = s.trivia.rssClips || [];
     triviaCfg = window.SPTrivia ? SPTrivia.normCfg(s.trivia) : s.trivia;
     if (!triviaCfg.enabled && triviaOn) endTrivia();
     else if (triviaCfg.enabled && !prevOn && !videos.length && MEDIA_ON && !triviaOn) playTrivia();
@@ -4279,7 +4248,6 @@ function connect() {
     else if (m.type === 'campaign') campShow(m.camp);
     else if (m.type === 'bigmatch') { if (m.force) { if (MEDIA_ON && videos.length && !big.showing) { window.__pendingBig = m; holdForEnd(); return; } /* içerik bitince */ big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
     else if (m.type === 'trivia') playTrivia(m.mode, m.cat, true, m.id);
-    else if (m.type === 'funclip') playFunClip(m.cat, false, true);
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
     else if (m.type === 'music_cmd') onMusicCmd(m);
     else if (m.type === 'music_now') { const n = m.now; MUS.spConnectTrack = n && n.title ? { title: n.title, artist: n.artist || '', thumb: n.thumb || '', paused: !n.playing } : null; renderMusicBar(); }

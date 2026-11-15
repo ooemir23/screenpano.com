@@ -285,48 +285,6 @@ async function refreshOnThisDay() {
   } catch (e) { console.error('Tarihte bugün alınamadı:', e.message); }
 }
 
-// ================= EĞLENCELİ KISA VİDEO KUŞAĞI (YouTube RSS + Sıfır API) =================
-const FUN_RSS_CHANNELS = [
-  { cat: 'pets', ch: 'UC9obdDRxQkmn_4YpcBMTYLw', label: 'Sevimli Hayvanlar' },
-  { cat: 'gags', ch: 'UCbFE2YhE8k3k3k3k3k3k3kQ', url: 'https://www.youtube.com/feeds/videos.xml?user=JustForLaughsTV', label: 'Sözsüz Kamera Şakası' },
-  { cat: 'awesome', ch: 'UCU3oAyhHDXjgbxazqOEG2UA', label: 'Yetenek & Trick-Shot' },
-  { cat: 'nature', ch: 'UC8D_NXFBh8A9KSLV7fIv3fw', label: '4K Doğa & Manzara' },
-];
-let funClipsRss = cacheGet('funclips') || [];
-if (Array.isArray(funClipsRss) && funClipsRss.length) global.__funClipsRss = funClipsRss;
-async function refreshFunClips(force) {
-  if (!force && funClipsRss.length && cacheAge('funclips') < 6 * HOUR) return;
-  if (!tenants.all().some(t => ((t.db.trivia && t.db.trivia.clips) || {}).enabled)) return;
-  const discovered = [];
-  for (const src of FUN_RSS_CHANNELS) {
-    try {
-      const feedUrl = src.url || `https://www.youtube.com/feeds/videos.xml?channel_id=${src.ch}`;
-      const r = await fetch(feedUrl, { signal: AbortSignal.timeout(10000), headers: { 'user-agent': 'Mozilla/5.0 ScreenPano' } });
-      if (!r.ok) continue;
-      const xml = await r.text();
-      const entries = xml.match(/<entry>[\s\S]*?<\/entry>/g) || [];
-      for (const ent of entries.slice(0, 4)) {
-        const vm = ent.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
-        const tm = ent.match(/<title>([^<]+)<\/title>/);
-        if (!vm) continue;
-        const vid = vm[1].trim();
-        const title = (tm ? tm[1] : src.label).replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").slice(0, 80);
-        try {
-          const oe = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent('https://www.youtube.com/watch?v=' + vid)}`, { signal: AbortSignal.timeout(5000) });
-          if (!oe.ok) continue;
-        } catch (e) { continue; }
-        discovered.push({ id: 'rss-' + vid, cat: src.cat, yt: vid, title });
-      }
-    } catch (e) { /* kanal RSS alınamadıysa yerel havuz devam eder */ }
-  }
-  if (discovered.length) {
-    funClipsRss = discovered;
-    global.__funClipsRss = discovered;
-    cachePut('funclips', discovered);
-    hub.pushAll();
-  }
-}
-
 // ================= CollectAPI: eczane (il+ilçe başına), haber (kategori başına), kitap =================
 const dutyDay = () => ymd(new Date(Date.now() - 9 * HOUR)); // nöbet sabah 09:00'da değişir
 const collectKey = () => platformKey('collect_key');
@@ -940,7 +898,6 @@ function start() {
   setTimeout(refreshBooks, 9000); setInterval(refreshBooks, 30 * MIN);
   setTimeout(() => downloadCovers().then(fillDescs), 12000); setInterval(() => downloadCovers().then(fillDescs), 30 * MIN);
   setTimeout(refreshMovies, 11000); setInterval(refreshMovies, 30 * MIN);
-  setTimeout(refreshFunClips, 14000); setInterval(refreshFunClips, 2 * HOUR);
   setTimeout(maybeRenderMap, 4000); setInterval(maybeRenderMap, 3 * MIN);
   // yeni işletme ya da lig seçimi değişince maç listesini beklemeden yenile
   let lastU = JSON.stringify(unionLeagues());
@@ -956,7 +913,7 @@ module.exports = {
   pharmFor, fetchPharmacies, resolvePharmacy, pharmCfg, pharmMode, refreshPharmacies, pharmSig, get pharmError() { return pharmError; }, dutyDay,
   newsFor, breakingFor, breakingOn, refreshBreaking, fetchNews, refreshNews, NEWS_TAGS, parseFeed, RSS_TAGS, NEWS_DEFAULT, get newsError() { return newsError; },
   coverHash, coverGet, coverReady: u => coverBuf.has(coverHash(u)), get books() { return books; }, get booksError() { return booksError; }, booksView, booksInfo: () => ({ alanlar: booksRaw, ornek: booksSample, adet: books ? books.items.length : 0, kapak: books ? books.items.filter(b => b.image && coverBuf.has(coverHash(b.image))).length : 0, gorselli: books ? books.items.filter(b => b.image).length : 0, aciklama: books ? books.items.filter(b => b.desc).length : 0, aciklamaHata: descErr, hata: booksError, kapakHata: coverErr, dk: Math.round(cacheAge('books') / 60000) }), refreshBooksNow: async () => { await refreshBooks(true); await downloadCovers(); fillDescs(); }, get coverErr() { return coverErr; }, refreshBooks,
-  get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies, refreshFunClips,
+  get movies() { return movies; }, get moviesError() { return moviesError; }, refreshMovies, fetchMovies,
   bigCfg, BIG_STYLES, activeBig, get bigMatches() { return bigMatches; }, get bigError() { return bigError; }, refreshBigMatches, TEAM_COLORS, teamPhoto,
   HOLIDAYS, celebPhotos, celebMode, activeCelebration,
   get traffic() { return traffic; }, reportTraffic, trafficSecret, regenTrafficSecret, wantsTraffic, renderMap, maybeRenderMap, MAP_FILE, get mapAt() { return mapAt; }, get mapErr() { return mapErr; },

@@ -1,4 +1,4 @@
-/* Yerel havuzlu + günlük canlı veri destekli etkileşimli medya ekranı kartları ve eğlenceli kısa video kuşağı:
+/* Yerel havuzlu + günlük canlı veri destekli etkileşimli medya ekranı kartları:
    - quiz:      2 aşamalı Mini Quiz / Tahmin Et (önce soru + şıklar, sonra doğru cevap + açıklama)
    - fact:      Kategorili "Bunları Biliyor Muydunuz?"
    - stat:      "Sayılarla Dünya" çarpıcı istatistik kartı
@@ -26,45 +26,6 @@
     general: { icon: '🌍', name: 'Bilim, Uzay & Doğa', desc: 'Uzay, doğa, insan vücudu ve teknoloji' },
     cinema:  { icon: '🎬', name: 'Sinema & Kültür', desc: 'Filmler, kamera arkası, müzik ve genel kültür' },
   };
-
-  // Sessiz kısa eğlenceli video kuşağı kategorileri (YouTube gömülü oynatıcı + RSS ile otomatik yenilenen havuz)
-  const FUN_CATS = {
-    pets:       { icon: '😂', name: 'Komik Hayvanlar & Sevimli Anlar', short: 'Komik Hayvanlar', badge: 'KOMİK HAYVANLAR · GÜLÜMSETEN ANLAR', desc: 'Kediler, köpekler ve sevimli hayvanların yüz güldüren komik anları' },
-    gags:       { icon: '🎭', name: 'Sözsüz Kamera Şakaları & Komedi', short: 'Sözsüz Komedi', badge: 'SÖZSÜZ KOMEDİ · KAMERA ŞAKASI', desc: 'Sese ihtiyaç duymayan görsel kamera şakaları ve fiziksel komedi' },
-    awesome:    { icon: '🤸', name: 'Yetenek, Trick-Shot & Ekstrem', short: 'Yetenek & Rekor', badge: 'İNANILMAZ YETENEKLER · TRICK-SHOT', desc: 'İmkansız basket/futbol atışları, akrobasi ve dünya rekorları' },
-    satisfying: { icon: '😌', name: 'Rahatlatıcı & Mutfak Sanatı', short: 'Rahatlatıcı Sanat', badge: 'RAHATLATICI VİDEO · GÖRSEL ŞÖLEN', desc: 'Hipnotize edici üretim videoları, kahve/pasta sanatı ve el işçiliği' },
-    nature:     { icon: '🌍', name: '4K Doğa, Drone & Uzay', short: '4K Doğa & Drone', badge: '4K DOĞA & MANZARA · DRONE', desc: 'Nefes kesici 4K drone uçuşları, okyanus altı ve uzay görüntüleri' },
-  };
-
-  const FUN_CLIPS = [
-    // Komik Hayvanlar & Sevimli Anlar
-    { id: 'fc-p1', cat: 'pets', yt: 'J---aiyznGQ', title: 'Piyano Çalan Sevimli Kedi', alts: ['J---aiyznGQ', 'tntOCGkgt98', 'hY7m5jjJ9mM', 'ByH9LuSILxU'] },
-    { id: 'fc-p2', cat: 'pets', yt: 'tntOCGkgt98', title: 'Komik Kediler ve Sevimli Tepkiler', alts: ['tntOCGkgt98', 'hY7m5jjJ9mM', 'J---aiyznGQ', 'ByH9LuSILxU'] },
-    { id: 'fc-p3', cat: 'pets', yt: 'hY7m5jjJ9mM', title: 'Meraklı Kedilerin Eğlenceli Anları', alts: ['hY7m5jjJ9mM', 'ByH9LuSILxU', 'tntOCGkgt98', 'J---aiyznGQ'] },
-    { id: 'fc-p4', cat: 'pets', yt: 'ByH9LuSILxU', title: 'Yavru Köpekler ve Kediler İş Başında', alts: ['ByH9LuSILxU', 'RgKAFK5djSk', 'tntOCGkgt98', 'hY7m5jjJ9mM'] },
-    { id: 'fc-p5', cat: 'pets', yt: '5dsGWM5XGdg', title: 'Sürprizlerle Dolu Sevimli Dostlar', alts: ['5dsGWM5XGdg', 'tntOCGkgt98', 'hY7m5jjJ9mM', 'J---aiyznGQ'] },
-
-    // Sözsüz Kamera Şakaları & Görsel Komedi
-    { id: 'fc-g1', cat: 'gags', yt: '7B2LPxggvqY', title: 'Sözsüz Kamera Şakası: Şaşkın Bakışlar', alts: ['7B2LPxggvqY', '9bZkp7q19f0', 'tntOCGkgt98', 'J---aiyznGQ'] },
-    { id: 'fc-g2', cat: 'gags', yt: 'b8HO6hba9ZE', title: 'Parkta Eğlenceli Görsel Şaka', alts: ['b8HO6hba9ZE', '7B2LPxggvqY', 'hY7m5jjJ9mM', 'tntOCGkgt98'] },
-    { id: 'fc-g3', cat: 'gags', yt: 'jofNR_WkoCE', title: 'Sokakta Gülümseten Sürprizler', alts: ['jofNR_WkoCE', '7B2LPxggvqY', 'b8HO6hba9ZE', 'tntOCGkgt98'] },
-    { id: 'fc-g4', cat: 'gags', yt: 'dQw4w9WgXcQ', title: 'Klasik Görsel Mizah Kuşağı', alts: ['7B2LPxggvqY', 'b8HO6hba9ZE', 'tntOCGkgt98', 'hY7m5jjJ9mM'] },
-
-    // Yetenek, Trick-Shot & Ekstrem
-    { id: 'fc-a1', cat: 'awesome', yt: 'uQITWbAaDx0', title: 'İmkansız Basketbol ve Hedef Atışları', alts: ['uQITWbAaDx0', 'b8HO6hba9ZE', 'LXb3EKWsInQ', '6v2L2UGZJAM'] },
-    { id: 'fc-a2', cat: 'awesome', yt: 'RFinNxS5KN4', title: 'Sınırları Zorlayan Akrobasi ve Yetenekler', alts: ['RFinNxS5KN4', 'uQITWbAaDx0', 'LXb3EKWsInQ', '6v2L2UGZJAM'] },
-    { id: 'fc-a3', cat: 'awesome', yt: '2Vv-BfVoq4g', title: 'Kusursuz Zamanlama ve Rekor Denemeleri', alts: ['uQITWbAaDx0', 'RFinNxS5KN4', 'LXb3EKWsInQ', '6v2L2UGZJAM'] },
-
-    // Rahatlatıcı & Mutfak Sanatı
-    { id: 'fc-s1', cat: 'satisfying', yt: '6v2L2UGZJAM', title: 'Kusursuz Simetri ve Rahatlatıcı Üretim', alts: ['6v2L2UGZJAM', 'LXb3EKWsInQ', 'ysz5S6PUM-U', 'Bey4XXJAqS8'] },
-    { id: 'fc-s2', cat: 'satisfying', yt: 'ysz5S6PUM-U', title: 'Kahve, Çikolata ve Pasta Sanatı', alts: ['ysz5S6PUM-U', '6v2L2UGZJAM', 'LXb3EKWsInQ', 'Bey4XXJAqS8'] },
-    { id: 'fc-s3', cat: 'satisfying', yt: 'CgGVpE2I5mE', title: 'Hipnotize Edici El İşçiliği ve Tasarım', alts: ['6v2L2UGZJAM', 'ysz5S6PUM-U', 'LXb3EKWsInQ', 'Bey4XXJAqS8'] },
-
-    // 4K Doğa, Drone & Uzay
-    { id: 'fc-n1', cat: 'nature', yt: 'LXb3EKWsInQ', title: '4K Kosta Rika Yağmur Ormanları ve Doğa', alts: ['LXb3EKWsInQ', '6v2L2UGZJAM', 'Bey4XXJAqS8', 'ysz5S6PUM-U'] },
-    { id: 'fc-n2', cat: 'nature', yt: 'Bey4XXJAqS8', title: '4K Alpler ve Gökyüzünden Drone Uçuşu', alts: ['Bey4XXJAqS8', 'LXb3EKWsInQ', '6v2L2UGZJAM', 'ysz5S6PUM-U'] },
-    { id: 'fc-n3', cat: 'nature', yt: 'BHACKCNDMW8', title: 'Okyanus Altı Mercan Resifleri ve Doğa', alts: ['BHACKCNDMW8', 'LXb3EKWsInQ', 'Bey4XXJAqS8', '6v2L2UGZJAM'] },
-  ];
 
   const ITEMS = [
     // ==================== QUIZ: KAFE & GASTRONOMİ ====================
@@ -215,14 +176,6 @@
     { id: 'n-8', mode: 'nostalgia', cat: 'cafe', art: 'gazoz', era: 'YAZ AKŞAMLARI', title: 'Açık hava yazlık sinemalar ve çekirdek-gazoz keyfi', body: 'Tahta sandalyelerin dizildiği yazlık bahçe sinemalarında yıldızların altında film izlenir, perde aralarında buz gibi gazoz ve kağıt külahlarda ay çekirdeği ikram edilirdi.', tag: 'Mahallece paylaşılan yaz neşesi' },
   ];
 
-  const DEFAULT_CLIPS_CFG = {
-    enabled: false,
-    every: 3,
-    gapMin: 3,
-    durSec: 35,
-    cats: ['pets', 'gags', 'awesome', 'satisfying', 'nature'],
-  };
-
   const DEFAULT_CFG = {
     enabled: true,
     every: 2,
@@ -230,19 +183,7 @@
     durSec: 14,
     modes: ['quiz', 'fact', 'stat', 'riddle', 'word', 'illusion', 'zoom', 'nostalgia'],
     cats: ['cafe', 'sport', 'general', 'cinema'],
-    clips: DEFAULT_CLIPS_CFG,
   };
-
-  function normClipsCfg(raw) {
-    const c = Object.assign({}, DEFAULT_CLIPS_CFG, raw || {});
-    c.enabled = !!c.enabled;
-    c.every = Math.max(1, Math.min(20, Math.round(Number(c.every)) || 3));
-    c.gapMin = Math.max(0, Math.min(60, Math.round(Number(c.gapMin)) || 0));
-    c.durSec = Math.max(15, Math.min(90, Math.round(Number(c.durSec)) || 35));
-    const cs = Array.isArray(c.cats) ? c.cats.filter(k => FUN_CATS[k]) : [];
-    c.cats = cs.length ? cs : DEFAULT_CLIPS_CFG.cats.slice();
-    return c;
-  }
 
   function normCfg(raw) {
     const c = Object.assign({}, DEFAULT_CFG, raw || {});
@@ -254,11 +195,6 @@
     c.modes = ms.length ? ms : DEFAULT_CFG.modes.slice();
     const cs = Array.isArray(c.cats) ? c.cats.filter(k => CATS[k]) : [];
     c.cats = cs.length ? cs : DEFAULT_CFG.cats.slice();
-    c.clips = normClipsCfg(raw && raw.clips);
-    const rss = (typeof global !== 'undefined' && Array.isArray(global.__funClipsRss) && global.__funClipsRss.length)
-      ? global.__funClipsRss
-      : (raw && Array.isArray(raw.rssClips) ? raw.rssClips : null);
-    if (rss && rss.length) c.rssClips = rss;
     return c;
   }
 
@@ -392,34 +328,6 @@
     const shuffled = pool.slice().sort(() => rnd() - 0.5);
     const modeStep = Math.floor(st / modes.length);
     return shuffled[modeStep % shuffled.length];
-  }
-
-  // Kısa eğlenceli video kuşağı için sıradaki klibi seçer (yerel havuz + YouTube RSS ile gelen taze videolar)
-  function pickClip(clipsCfgRaw, step, forceCat, extraClips) {
-    const cfg = normClipsCfg(clipsCfgRaw);
-    const cats = forceCat && FUN_CATS[forceCat] ? [forceCat] : cfg.cats;
-    const st = Math.max(0, Number(step) || 0);
-    const cat = cats[st % cats.length];
-    const rss = Array.isArray(extraClips) ? extraClips : (typeof window !== 'undefined' && Array.isArray(window.__funClipsRss) ? window.__funClipsRss : []);
-    const all = rss.length ? rss.concat(FUN_CLIPS) : FUN_CLIPS;
-    let pool = all.filter(c => c && c.cat === cat && c.yt);
-    if (!pool.length) pool = FUN_CLIPS.filter(c => c.cat === cat);
-    if (!pool.length) pool = FUN_CLIPS.slice();
-    const daySeed = Math.floor(Date.now() / (4 * 3600 * 1000));
-    const rnd = seeded(daySeed + cat.charCodeAt(0) * 73);
-    const shuffled = pool.slice().sort(() => rnd() - 0.5);
-    const catStep = Math.floor(st / cats.length);
-    const picked = shuffled[catStep % shuffled.length];
-    const catMeta = FUN_CATS[picked.cat] || FUN_CATS.pets;
-    const alts = [picked.yt, ...((picked.alts || []).filter(k => k !== picked.yt)), ...pool.map(x => x.yt).filter(k => k !== picked.yt)].slice(0, 6);
-    return {
-      id: picked.id || ('fc-' + picked.yt),
-      cat: picked.cat,
-      badge: catMeta.icon + ' ' + catMeta.badge,
-      title: picked.title || catMeta.name,
-      trailer: picked.yt,
-      alts,
-    };
   }
 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -950,8 +858,7 @@
 
   const api = {
     MODES, CATS, ITEMS, DEFAULT_CFG,
-    FUN_CATS, FUN_CLIPS, DEFAULT_CLIPS_CFG,
-    normCfg, normClipsCfg, buildDynamic, pick, pickClip,
+    normCfg, buildDynamic, pick,
     html, fit, mount,
   };
   if (typeof window !== 'undefined') window.SPTrivia = api;
