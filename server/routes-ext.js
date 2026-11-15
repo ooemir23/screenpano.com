@@ -34,7 +34,12 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
       const valid = b.screens.map(String).filter(Boolean).slice(0, 10);
       if (valid.length) v.screens = valid; else delete v.screens;
     }
-    if (b.dur !== undefined) v.dur = b.dur ? Math.max(3, Math.min(v.type === 'youtube' ? 3600 : 120, Math.round(Number(b.dur)) || 10)) : undefined;
+    if (b.dur !== undefined) {
+      // YouTube'da ilk değişiklikte orijinal süre dur0'da saklanır; dur: 0 gönderilince geri yüklenir (varsayılana dön)
+      if (v.type === 'youtube' && b.dur && v.dur0 == null && v.dur) v.dur0 = v.dur;
+      if (v.type === 'youtube' && !b.dur) { if (v.dur0 != null) { v.dur = v.dur0; delete v.dur0; } }
+      else v.dur = b.dur ? Math.max(3, Math.min(v.type === 'youtube' ? 3600 : 120, Math.round(Number(b.dur)) || 10)) : undefined;
+    }
     if (typeof b.name === 'string' && b.name.trim()) v.name = s(b.name, 80);
     changed(req.t); res.json({ ok: true });
   });

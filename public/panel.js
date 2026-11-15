@@ -1096,7 +1096,7 @@ function upFiles(files) {
 }
 const mvMedia = (id, dir) => act('POST', `/videos/${id}/move`, { dir });
 // Medya kartı: süre etiketi (video uzunluğu ya da fotoğraf süresi)
-const durTxt = x => x.type === 'video' ? (x.dur ? Math.floor(x.dur / 60) + ':' + String(Math.round(x.dur % 60)).padStart(2, '0') : '') : (S.db.imageSeconds || 10) + ' sn';
+const durTxt = x => { const mm = n => Math.floor(n / 60) + ':' + String(Math.round(n % 60)).padStart(2, '0'); return x.type === 'video' ? (x.dur ? mm(x.dur) : '') : x.type === 'youtube' ? mm(x.dur || 30) : (x.dur || S.db.imageSeconds || 10) + ' sn'; }; // değiştirilen süre de görünür
 // Başa / sona al: sıra istemciden hesaplanıp tek seferde gönderilir
 function mvEdge(id, first) { const ids = S.db.videos.map(x => x.id).filter(x => x !== id); first ? ids.unshift(id) : ids.push(id); act('POST', '/videos/reorder', { ids }, 'Sıra kaydedildi'); }
 // "⋯" menüsü: kartın ikincil işlemleri (sıralama, ses, ekran seçimi, aç/kapat, sil)
@@ -1110,10 +1110,27 @@ function tileMenu(ev, id) {
     [v.full ? 'Tam ekranı kapat' : 'Tam ekran göster', 'monitor', () => togFull(id)],
   ];
   if (isVid) items.push([v.sound ? 'Sesi kapat (sessiz oynat)' : 'Sesli oynat (müziği kısar)', v.sound ? 'volume-x' : 'volume-2', () => togSound(id)]);
+  if (v.type === 'image' || v.type === 'youtube') items.push(['Ekranda kalma süresi', 'clock', () => openDur(id)]);
   if (scrs.length > 1) items.push(['Hangi ekranlarda oynasın?', 'tv', () => openVidScreens(id)]);
   items.push([v.hidden ? 'Ekranda göster' : 'Ekrandan kaldır (gizle)', v.hidden ? 'eye' : 'eye-off', () => togHide(id)], null,
     ['Sil', 'trash-2', () => delMedia(id), 1]);
   popMenu(ev.currentTarget, items);
+}
+// Medya: görsel/YouTube süresi (akıştaki düzenleyiciyle aynı kayıt: PUT /videos/:id {dur})
+function openDur(id) {
+  const v = S.db.videos.find(x => x.id === id); if (!v) return;
+  const yt = v.type === 'youtube', hi = yt ? 3600 : 120, cur = v.dur || (yt ? 30 : S.db.imageSeconds || 10), canReset = yt ? v.dur0 != null : !!v.dur;
+  openModal(`<h3 style="margin:0 0 6px">Ekranda kalma süresi</h3>
+    <p style="margin:0 0 4px"><b>${esc(v.name)}</b></p><p class="muted" style="margin:0 0 ${yt ? 14 : 4}px;font-size:13px">${esc(3 + ' – ' + hi + ' sn arası')}</p>${yt ? '' : `<p class="muted" style="margin:0 0 14px;font-size:13px">${esc('Varsayılan fotoğraf süresi: ' + (S.db.imageSeconds || 10) + ' sn (Ayarlar)')}</p>`}
+    <div class="f"><label><span>Ekranda kalma süresi (saniye)</span><input type="number" id="durin" min="3" max="${hi}" value="${cur}" style="width:140px" onkeydown="if(event.key==='Enter')saveDur('${id}')"></label></div>
+    <div class="row end mt"><button class="btn g" onclick="closeModal()">Vazgeç</button>${canReset ? `<button class="btn g" onclick="saveDur('${id}',true)">Varsayılana dön</button>` : ''}<button class="btn" onclick="saveDur('${id}')">Kaydet</button></div>`);
+  const inp = $('durin'); if (inp) { inp.focus(); inp.select(); }
+}
+async function saveDur(id, reset) {
+  const v = S.db.videos.find(x => x.id === id); if (!v) return;
+  const hi = v.type === 'youtube' ? 3600 : 120, n = reset ? 0 : Math.round(Number($('durin').value));
+  if (!reset && (!Number.isFinite(n) || n < 3 || n > hi)) { toast(`3 – ${hi} sn arası bir süre girin`, true); return; }
+  if (await act('PUT', '/videos/' + id, { dur: n }, 'Süre kaydedildi')) closeModal();
 }
 const togSound = id => {
   const v = S.db.videos.find(x => x.id === id); if (!v) return;
@@ -3711,13 +3728,16 @@ function drawFlowRound(box, j, modeChips) {
     + `<p class="muted" style="font-size:12px;margin:12px 0 0">Tur, TV açıldığı andan başlayarak ana döngünün baştan sona bir kez dönmesidir. Süresi ölçülmemiş video 30 sn, fragman 90 sn sayılır.</p>`;
 }
 // Akıştan süre düzenleme: hangi içeriğin süresi değiştirilebilir (sınırlar sunucudakiyle aynı)
-const FLOW_EDIT = { image: [3, 120, 1], poster: [3, 120, 1], youtube: [3, 3600, 0], camp: [8, 60, 0], big: [5, 60, 0], insta: [5, 60, 0] }; // [en az, en çok, varsayılana dönülebilir]
+const FLOW_EDIT = { image: [3, 120], poster: [3, 120], youtube: [3, 3600], camp: [8, 60], big: [5, 60], insta: [5, 60] }; // [en az, en çok]
+const FLOW_DEF = { camp: 15, big: 15, insta: 10 }; // orijinal (varsayılan) süreler; fotoğraf/afiş: ayarlardaki genel süre, YouTube: ilk süre (dur0)
 const FLOW_FIXED = { video: 'Videonun süresi dosyasının kendi uzunluğudur ve değiştirilemez. Kısaltmak için videoyu kırpıp yeniden yükleyin.', ad: 'Reklam süresini ScreenPano reklam planı belirler.', trailer: 'Fragman süresi videonun kendi uzunluğudur.', book: 'Kitap kartı 12 sn gösterilir.' };
 function flowTarget(i) {
   const e = FLOW_DATA.ev[i], ref = FLOW_DATA.refs[e[4]], kind = FLOW_DATA.kinds[e[1]];
   const what = ref.k === 'v' ? ref.t : ref.k === 'ig' ? 'insta' : ref.k === 'camp' ? 'camp' : ref.k; // image/poster/youtube/video/insta/camp/big/ad/book/trailer
-  let rng = FLOW_EDIT[what]; if (what === 'camp' && ref.id === 'happy') rng = [5, 300, 0];
-  return { e, ref, kind, what, rng, name: FLOW_DATA.names[e[2]], dur: e[3] };
+  let rng = FLOW_EDIT[what]; if (what === 'camp' && ref.id === 'happy') rng = [5, 300];
+  const rec = ref.k === 'v' ? (S.db.videos || []).find(x => x.id === ref.id) : null;
+  const canReset = !!rng && (ref.k === 'v' ? (what === 'youtube' ? !!rec && rec.dur0 != null : !!rec && !!rec.dur) : e[3] !== FLOW_DEF[what]); // orijinalden farklıysa
+  return { e, ref, kind, what, rng, canReset, name: FLOW_DATA.names[e[2]], dur: e[3] };
 }
 function flowEdit(i) {
   const box = $('flowedit'); if (!box || !FLOW_DATA) return;
@@ -3729,14 +3749,14 @@ function flowEdit(i) {
   if (!t.rng) body = `<p class="muted" style="margin:0;font-size:13px">${esc(FLOW_FIXED[t.what] || FLOW_FIXED.video)}</p>`;
   else body = `<div class="row" style="gap:10px;align-items:end;flex-wrap:wrap"><label class="f" style="margin:0"><span>Ekranda kalma süresi (saniye)</span><input type="number" id="flowdur" min="${t.rng[0]}" max="${t.rng[1]}" value="${t.dur}" style="width:130px" onkeydown="if(event.key==='Enter')flowSave(${i})"></label>`
     + `<button type="button" class="btn s" onclick="flowSave(${i})">Kaydet</button>`
-    + (t.rng[2] ? `<button type="button" class="btn g s" onclick="flowSave(${i},true)">Varsayılana dön</button>` : '')
+    + (t.canReset ? `<button type="button" class="btn g s" onclick="flowSave(${i},true)">Varsayılana dön</button>` : '')
     + `<button type="button" class="btn g s" onclick="flowEdit(-1)">Vazgeç</button></div>`
-    + `<p class="muted" style="margin:8px 0 0;font-size:12px">${esc(t.rng[0] + ' – ' + t.rng[1] + ' sn arası')}${t.rng[2] ? ' · ' + esc('Varsayılan fotoğraf süresi: ' + (S.db.imageSeconds || 10) + ' sn (Ayarlar)') : ''}</p>`;
+    + `<p class="muted" style="margin:8px 0 0;font-size:12px">${esc(t.rng[0] + ' – ' + t.rng[1] + ' sn arası')}</p>${t.what === 'image' || t.what === 'poster' ? `<p class="muted" style="margin:2px 0 0;font-size:12px">${esc('Varsayılan fotoğraf süresi: ' + (S.db.imageSeconds || 10) + ' sn (Ayarlar)')}</p>` : ''}`;
   box.innerHTML = i < 0 ? '' : `<div style="margin:6px 0 14px;padding:14px;border:1px solid var(--line2);border-radius:var(--r-m)">${head}${body}</div>`;
   const inp = $('flowdur'); if (inp) { inp.focus(); inp.select(); }
 }
 async function flowSave(i, reset) {
-  const t = flowTarget(i), inp = $('flowdur'), v = reset ? 0 : Math.round(Number(inp && inp.value));
+  const t = flowTarget(i), inp = $('flowdur'), v = reset ? (t.ref.k === 'v' ? 0 : FLOW_DEF[t.what]) : Math.round(Number(inp && inp.value));
   if (!reset && (!Number.isFinite(v) || v < t.rng[0] || v > t.rng[1])) { toast(`${t.rng[0]} – ${t.rng[1]} sn arası bir süre girin`, true); return; }
   const r = t.ref, ok = 'Süre kaydedildi';
   let res;

@@ -291,3 +291,29 @@ test('ödeme koşulları sayfası yayında ve PayTR/otomatik ödeme/iade başlı
   const r = await fetch(BASE + '/odeme'); const h = await r.text();
   assert.equal(r.status, 200); assert.match(h, /Otomatik aylık ödeme/); assert.match(h, /PayTR/); assert.match(h, /İptal ve iade/);
 });
+
+test('YouTube süresi: değiştirilince orijinal saklanır, dur:0 ile geri yüklenir; sınırlar korunur', async () => {
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  const un = 'sure' + Date.now().toString(36);
+  let r = await req('POST', '/api/super/tenants', { name: 'Süre Kafe', username: un, password: 'parola-12345', plan: 'pro', days: 30 });
+  assert.equal(r.status, 200);
+  r = await req('POST', '/api/auth/login', { username: un, password: 'parola-12345' });
+  assert.equal(r.status, 200);
+  r = await req('POST', '/api/admin/media/stock', { key: 'coffee_pour' }); // hazır YouTube içeriği (ağ gerektirmez), orijinal süre 45
+  assert.equal(r.status, 200);
+  const item = async () => (await req('GET', '/api/admin/db')).j.videos.find(v => v.type === 'youtube');
+  let v = await item(); assert.equal(v.dur, 45); assert.equal(v.dur0, undefined);
+  assert.equal((await req('PUT', '/api/admin/videos/' + v.id, { dur: 20 })).status, 200);
+  v = await item(); assert.equal(v.dur, 20); assert.equal(v.dur0, 45);          // orijinal saklandı
+  await req('PUT', '/api/admin/videos/' + v.id, { dur: 30 });
+  v = await item(); assert.equal(v.dur, 30); assert.equal(v.dur0, 45);          // ikinci değişiklik orijinali ezmez
+  await req('PUT', '/api/admin/videos/' + v.id, { dur: 99999 });
+  v = await item(); assert.equal(v.dur, 3600);                                   // üst sınır
+  await req('PUT', '/api/admin/videos/' + v.id, { dur: 0 });
+  v = await item(); assert.equal(v.dur, 45); assert.equal(v.dur0, undefined);   // varsayılana dön
+  await req('PUT', '/api/admin/videos/' + v.id, { dur: 0 });
+  v = await item(); assert.equal(v.dur, 45);                                     // orijinal yokken sıfırlama bozmaz
+  const d = (await req('GET', '/api/admin/flow?rounds=1')).j;
+  assert.equal(d.round, true); assert.ok(d.ev.some(e => d.kinds[e[1]] === 'youtube' && e[3] === 45));
+  assert.equal((await req('PUT', '/api/admin/videos/yok-boyle-id', { dur: 20 })).status, 404);
+});
