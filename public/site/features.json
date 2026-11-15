@@ -1777,21 +1777,21 @@
     },
     {
       "icon": "💡",
-      "title": "Medya ekranında etkileşimli Mini Quiz, Bunları Biliyor Muydunuz?, İstatistik ve Bilmece kartları",
-      "text": "Medya ekranında videoların ve fotoğrafların arasında sırayla dönen 2 aşamalı Mini Quiz (önce soru ve şıklar, ardından doğru cevap ve açıklaması), kategorili Bunları Biliyor Muydunuz?, Sayılarla Dünya ve Günün Bilmecesi kartları eklendi. Kafe & gastronomi, spor, bilim & doğa ve sinema kategorilerini işletmenize göre seçebilir, ücretsiz olarak tüm paketlerde kullanabilirsiniz.",
+      "title": "Medya ekranında 8 etkileşimli bilgi/oyun formatı, günlük canlı sorular ve sessiz eğlenceli kısa video kuşağı",
+      "text": "Medya ekranında videoların ve fotoğrafların arasında sırayla dönen 8 etkileşimli format: 2 aşamalı Mini Quiz, Bunları Biliyor Muydunuz?, Sayılarla Dünya, Günün Bilmecesi, Kelime Bulmaca (Karışık Harfler), Optik İllüzyon & Dikkat Testi, Görsel Tahmin (Neresi/Ne?) ve 90'lar–2000'ler Nostalji Köşesi. Her gün Tarihte Bugün, canlı lig liderleri ve vizyondaki filmlerden otomatik yeni sorular üretilir; ayrıca arka plan müziğini bozmadan sessiz oynayan komik hayvanlar, sözsüz şakalar, yetenek/trick-shot ve rahatlatıcı kısa video kuşağı açılabilir.",
       "added": "2026-11-15",
       "i18n": {
         "en": {
-          "title": "Interactive Mini Quiz, Did You Know?, Statistics and Riddle cards on the media screen",
-          "text": "2-step Mini Quiz cards (first the question and options, then the revealed answer and explanation), categorised Did You Know?, World in Numbers and Riddle of the Day cards now rotate between your videos and photos on the media screen. Pick cafe & gastronomy, sports, science & nature or cinema categories for your venue, included free on every plan."
+          "title": "8 interactive trivia & visual game modes, daily live questions and muted fun video clips on the media screen",
+          "text": "8 interactive formats now rotate between your videos and photos on the media screen: 2-step Mini Quiz, Did You Know?, World in Numbers, Riddle of the Day, Word Scramble, Optical Illusion & Attention Test, Visual Guess (Where/What?) and 90s–2000s Nostalgia Corner. Fresh questions are generated automatically every day from On This Day, live league leaders and cinema releases, plus you can enable a muted fun short video channel (funny pets, silent gags, trick-shots and satisfying crafts) that never interrupts your background music."
         },
         "de": {
-          "title": "Interaktives Mini-Quiz, „Schon gewusst?“, Statistik- und Rätselkarten auf dem Medienbildschirm",
-          "text": "Zweistufige Mini-Quiz-Karten (zuerst Frage und Antwortmöglichkeiten, danach Auflösung mit Erklärung), kategorisiertes „Schon gewusst?“, „Die Welt in Zahlen“ und Tagesrätsel wechseln sich auf dem Medienbildschirm mit Ihren Videos und Fotos ab. Wählen Sie Café & Gastronomie, Sport, Wissenschaft & Natur oder Kino passend zu Ihrem Betrieb – kostenlos in allen Paketen."
+          "title": "8 interaktive Wissens- & Bildspiel-Formate, tägliche Live-Fragen und lautlose Kurzvideos auf dem Medienbildschirm",
+          "text": "Auf dem Medienbildschirm wechseln sich 8 interaktive Formate mit Ihren Videos und Fotos ab: zweistufiges Mini-Quiz, „Schon gewusst?“, „Die Welt in Zahlen“, Tagesrätsel, Worträtsel (Buchstabensalat), Optische Täuschung & Aufmerksamkeitstest, Bilderrätsel (Wo/Was?) und 90er-/2000er-Nostalgie-Ecke. Täglich entstehen automatisch neue Fragen aus „Heute vor…“, aktuellen Tabellenführern und Kinostarts; zusätzlich lässt sich ein lautloser Kurzvideo-Kanal (lustige Tiere, stumme Gags, Trick-Shots und Handwerkskunst) aktivieren, der Ihre Hintergrundmusik nicht stört."
         },
         "ar": {
-          "title": "بطاقات المسابقات القصيرة التفاعلية و«هل تعلم؟» والإحصاءات والألغاز على شاشة الوسائط",
-          "text": "بطاقات مسابقة قصيرة من مرحلتين (تظهر أولاً السؤال والخيارات ثم الإجابة الصحيحة مع الشرح)، إلى جانب بطاقات «هل تعلم؟» و«العالم بالأرقام» و«لغز اليوم» التي تدور تلقائيًا بين الفيديوهات والصور على شاشة الوسائط. اختر فئات المقهى وفنون الطهي أو الرياضة أو العلوم والطبيعة أو السينما بما يناسب منشأتك مجانًا في جميع الباقات."
+          "title": "8 صيغ تفاعلية للمعلومات والألعاب البصرية وأسئلة يومية حية وفقرة فيديوهات قصيرة صامتة على شاشة الوسائط",
+          "text": "تدور 8 صيغ تفاعلية تلقائيًا بين الفيديوهات والصور على شاشة الوسائط: مسابقة قصيرة من مرحلتين، «هل تعلم؟»، «العالم بالأرقام»، لغز اليوم، لغز الكلمات المبعثرة، خداع بصري واختبار تركيز، تخمين بصري (أين/ما هذا؟) وركن حنين التسعينيات والألفينيات. تُولَّد أسئلة جديدة يوميًا من أحداث اليوم ومتصدري الدوريات وأفلام السينما، مع إمكانية تفعيل فقرة فيديوهات قصيرة صامتة (حيوانات طريفة، مقالب صامتة، مهارات مذهلة وفنون مريحة) دون مقاطعة موسيقى الخلفية."
         }
       }
     }

@@ -1193,14 +1193,16 @@ async function addYt() {
 }
 function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return openModal(`<iframe src="https://www.youtube.com/embed/${esc(v.yt)}?rel=0" style="width:100%;aspect-ratio:16/9;border:0" allow="encrypted-media"></iframe><div class="muted">${i + 1}. ${esc(v.name)}</div>`); const u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
 
-/* ================= ETKİLEŞİMLİ BİLGİ & MİNİ QUİZ (MEDYA EKRANI) ================= */
+/* ================= ETKİLEŞİMLİ BİLGİ, OYUNLAR & KISA VİDEO KUŞAĞI (MEDYA EKRANI) ================= */
 let TRV_STOP = null, TRV_STEP = Math.floor(Date.now() / 15000), TRV_MODE = null, TRV_CUR = null;
-const trvCfg = () => window.SPTrivia ? SPTrivia.normCfg(S.db.trivia) : Object.assign({ enabled: true, every: 2, gapMin: 0, durSec: 14, modes: ['quiz', 'fact', 'stat', 'riddle'], cats: ['cafe', 'sport', 'general', 'cinema'] }, S.db.trivia || {});
+const trvCfg = () => window.SPTrivia ? SPTrivia.normCfg(S.db.trivia) : Object.assign({ enabled: true, every: 2, gapMin: 0, durSec: 14, modes: ['quiz', 'fact', 'stat', 'riddle', 'word', 'illusion', 'zoom', 'nostalgia'], cats: ['cafe', 'sport', 'general', 'cinema'], clips: { enabled: false, every: 3, gapMin: 3, durSec: 35, cats: ['pets', 'gags', 'awesome', 'satisfying', 'nature'] } }, S.db.trivia || {});
 function triviaCardHtml() {
   const c = trvCfg();
-  const modes = window.SPTrivia ? Object.entries(SPTrivia.MODES) : [['quiz', { icon: '🧠', name: '2 Aşamalı Mini Quiz' }], ['fact', { icon: '💡', name: 'Bunları Biliyor Muydunuz?' }], ['stat', { icon: '📊', name: 'Sayılarla Dünya' }], ['riddle', { icon: '🧩', name: 'Günün Bilmecesi & Zekâ Sorusu' }]];
+  const cl = c.clips || { enabled: false, every: 3, gapMin: 3, durSec: 35, cats: ['pets', 'gags', 'awesome', 'satisfying', 'nature'] };
+  const modes = window.SPTrivia ? Object.entries(SPTrivia.MODES) : [['quiz', { icon: '🧠', name: '2 Aşamalı Mini Quiz' }], ['fact', { icon: '💡', name: 'Bunları Biliyor Muydunuz?' }], ['stat', { icon: '📊', name: 'Sayılarla Dünya' }], ['riddle', { icon: '🧩', name: 'Günün Bilmecesi & Zekâ Sorusu' }], ['word', { icon: '🔤', name: 'Kelime Bulmaca (Karışık Harfler)' }], ['illusion', { icon: '🌀', name: 'Optik İllüzyon & Dikkat Testi' }], ['zoom', { icon: '🔍', name: 'Görsel Tahmin (Neresi / Ne?)' }], ['nostalgia', { icon: '📻', name: '90’lar & 2000’ler Nostalji Köşesi' }]];
   const cats = window.SPTrivia ? Object.entries(SPTrivia.CATS) : [['cafe', { icon: '☕', name: 'Kafe & Gastronomi' }], ['sport', { icon: '⚽', name: 'Spor & Rekorlar' }], ['general', { icon: '🌍', name: 'Bilim, Uzay & Doğa' }], ['cinema', { icon: '🎬', name: 'Sinema & Kültür' }]];
-  return card('💡 Etkileşimli Bilgi & Mini Quiz Kartları (Ücretsiz)', 'Medya ekranında videoların ve fotoğrafların arasında otomatik dönen 2 aşamalı Mini Quiz (Tahmin Et), Kategorili Bunları Biliyor Muydunuz?, Sayılarla Dünya ve Günün Bilmecesi kartları. Dış servis veya kota gerektirmez.',
+  const funCats = window.SPTrivia && SPTrivia.FUN_CATS ? Object.entries(SPTrivia.FUN_CATS) : [['pets', { icon: '😂', name: 'Komik Hayvanlar & Sevimli Anlar' }], ['gags', { icon: '🎭', name: 'Sözsüz Kamera Şakaları & Komedi' }], ['awesome', { icon: '🤸', name: 'Yetenek, Trick-Shot & Ekstrem' }], ['satisfying', { icon: '😌', name: 'Rahatlatıcı & Mutfak Sanatı' }], ['nature', { icon: '🌍', name: '4K Doğa, Drone & Uzay' }]];
+  return card('💡 Etkileşimli Bilgi, Görsel Oyunlar & Mini Quiz (Ücretsiz)', 'Medya ekranında videoların ve fotoğrafların arasında otomatik dönen 8 farklı format: Mini Quiz, Bunları Biliyor Muydunuz?, Sayılarla Dünya, Günün Bilmecesi, Kelime Bulmaca, Optik İllüzyon & Dikkat Testi, Görsel Tahmin (Neresi/Ne?) ve Nostalji Köşesi. Ayrıca her gün Tarihte Bugün, canlı lig liderleri ve vizyon verilerinden otomatik yeni sorular üretilir.',
     `<div class="swr"><div class="b"><b>Medya ekranında otomatik göster</b><span>Videoların ve fotoğrafların arasında sırayla ekrana gelir; hiç medya yüklü değilse ekranı tek başına canlı tutar</span></div>${sw(c.enabled, "saveTriviaCfg({enabled:this.checked})")}</div>
      <div class="ped mt" style="align-items:start">
        <div>
@@ -1226,7 +1228,26 @@ function triviaCardHtml() {
          </div>
          <div class="row end mt"><button type="button" class="btn s" onclick="saveTriviaCfg({every:+$('trv-every').value,durSec:+$('trv-dur').value})">Ayarları kaydet</button></div>
        </div>
-     </div>`);
+     </div>`)
+    + card('🎬 Eğlenceli Kısa Video Kuşağı (Komik Hayvanlar, Sözsüz Şakalar & Görsel Şölen)', 'Arka plan müziğinizi hiç bozmadan tamamen sessiz oynayan, sese ihtiyaç duymayan komik kedi/köpek videoları, sözsüz kamera şakaları, inanılmaz yetenek/trick-shot videoları, rahatlatıcı üretim sanatı ve 4K doğa klipleri. YouTube RSS beslemeleriyle havuz kendiliğinden yenilenir.',
+      `<div class="swr"><div class="b"><b>Eğlenceli kısa video kuşağını otomatik oynat</b><span>Medya döngüsünde seçtiğiniz sıklıkta 25–45 saniyelik sessiz eğlenceli klipler araya girer</span></div>${sw(!!cl.enabled, "saveFunClipsCfg({enabled:this.checked})")}</div>
+       <div class="fl mt"><span>Gösterilecek eğlenceli video kanalları</span>
+         <div class="chips" style="margin-top:6px">${funCats.map(([k, fc]) => `<span class="chip ${(cl.cats || []).includes(k) ? 'on' : ''}" onclick="togFunClipCat('${k}')" title="${esc(fc.desc || '')}">${fc.icon} ${esc(fc.name)}</span>`).join('')}</div>
+       </div>
+       <div class="f mt">
+         ${fl('Kaç medya içeriğinde bir klip oynasın', `<input type="number" id="fc-every" min="1" max="20" value="${cl.every || 3}">`)}
+         ${fl('Klipler arası en az bekleme (dakika)', `<input type="number" id="fc-gap" min="0" max="60" value="${cl.gapMin != null ? cl.gapMin : 3}">`)}
+         ${fl('Klip başına maksimum süre (saniye)', `<input type="number" id="fc-dur" min="15" max="90" value="${cl.durSec || 35}">`)}
+       </div>
+       <div class="row mt" style="flex-wrap:wrap;gap:8px;justify-content:space-between">
+         <div class="row" style="flex-wrap:wrap;gap:6px">
+           ${funCats.map(([k, fc]) => `<button type="button" class="btn xs g" onclick="testFunClipOnTv('${k}')">${fc.icon} ${esc(fc.short || fc.name)} Dene</button>`).join('')}
+         </div>
+         <div class="row" style="gap:8px">
+           <button type="button" class="btn g s" onclick="testFunClipOnTv()">📺 Şimdi TV'de Klip Oynat</button>
+           <button type="button" class="btn s" onclick="saveFunClipsCfg({every:+$('fc-every').value,gapMin:+$('fc-gap').value,durSec:+$('fc-dur').value})">Ayarları kaydet</button>
+         </div>
+       </div>`);
 }
 function drawTriviaPv() {
   const el = $('trv-pv');
@@ -1242,6 +1263,16 @@ async function togTriviaList(field, key) {
   if (!next.length) return toast('En az bir seçenek açık kalmalıdır', true);
   await saveTriviaCfg({ [field]: next });
 }
+async function togFunClipCat(key) {
+  const c = trvCfg(), cl = c.clips || {}, cur = cl.cats || [];
+  const next = cur.includes(key) ? cur.filter(x => x !== key) : [...cur, key];
+  if (!next.length) return toast('En az bir video kategorisi açık kalmalıdır', true);
+  await saveFunClipsCfg({ cats: next });
+}
+async function saveFunClipsCfg(patch) {
+  const c = trvCfg(), nextClips = Object.assign({}, c.clips || {}, patch);
+  await saveTriviaCfg({ clips: nextClips });
+}
 async function saveTriviaCfg(patch) {
   const j = await act('PUT', '/trivia', patch, 'Kaydedildi', false);
   if (j && j.trivia) { S.db.trivia = j.trivia; render(true); }
@@ -1249,6 +1280,9 @@ async function saveTriviaCfg(patch) {
 async function testTriviaOnTv() {
   const body = TRV_CUR ? { id: TRV_CUR.id, mode: TRV_CUR.mode, cat: TRV_CUR.cat } : { mode: TRV_MODE };
   await act('POST', '/trivia/test', body, 'Seçili kart TV medya ekranına gönderildi', false);
+}
+async function testFunClipOnTv(cat) {
+  await act('POST', '/trivia/test', { kind: 'funclip', cat: cat || null }, 'Eğlenceli kısa video TV medya ekranına gönderildi', false);
 }
 
 
