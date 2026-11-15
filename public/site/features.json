@@ -1066,11 +1066,12 @@
       "icon": "🗺️",
       "title": "Ekranda ne sırayla çıkıyor, tek çizgide görün",
       "short": "Akış özeti",
-      "text": "Panelde ana döngünün bir turu tek çizgide görünür: medya, video, reklam, kampanya, büyük maç duyurusu, fragman. Her kutuda içeriğin adı, süresi ve başlangıç saniyesi yazar. İsterseniz 2-3 tur ya da günün tamamını da görebilirsiniz.",
+      "text": "Panelde ana döngünün bir turu tek çizgide görünür: medya, video, reklam, kampanya, büyük maç duyurusu, fragman. Her kutuda içeriğin adı, süresi ve başlangıç saniyesi yazar. İsterseniz 2-3 tur ya da günün tamamını da görebilirsiniz. Akıştaki bir kutuya tıklayıp fotoğraf, afiş, YouTube, kampanya, büyük maç ve Instagram kartlarının ekranda kalma süresini oradan değiştirebilirsiniz.",
       "points": [
         "Tek tur: sıralı akış, ad, tür ve saniye bilgisiyle",
         "Kampanya, büyük maç ve fragmanın araya girdiği yerler",
-        "Günlük görünüm: gün toplamı ve en çok tekrar eden içerikler"
+        "Günlük görünüm: gün toplamı ve en çok tekrar eden içerikler",
+        "Süreyi akıştan değiştirin: kutuya tıkla, saniyeyi yaz, kaydet"
       ],
       "plan": "all",
       "compare": "Akış özeti",
@@ -1084,33 +1085,36 @@
           "title": "See what plays in what order, on a single line",
           "short": "Flow summary",
           "compare": "Flow summary",
-          "text": "The panel shows one round of the main loop on a single line: media, video, ads, offers, big-match announcements, trailers. Each box shows the content name, its length and its start second. You can also view 2-3 rounds or the whole day.",
+          "text": "The panel shows one round of the main loop on a single line: media, video, ads, offers, big-match announcements, trailers. Each box shows the content name, its length and its start second. You can also view 2-3 rounds or the whole day. Click a box in the flow to change how long photos, posters, YouTube, offers, big matches and Instagram cards stay on screen.",
           "points": [
             "Single round: ordered flow with name, type and seconds",
             "Where offers, big matches and trailers cut in",
-            "Daily view: totals and the most repeated content"
+            "Daily view: totals and the most repeated content",
+            "Change the duration from the flow: click a box, type seconds, save"
           ]
         },
         "de": {
           "title": "In welcher Reihenfolge läuft was, auf einer Linie",
           "short": "Ablaufübersicht",
           "compare": "Ablaufübersicht",
-          "text": "Das Panel zeigt eine Runde der Hauptschleife auf einer Linie: Medien, Video, Werbung, Aktionen, Großspiel-Ankündigungen, Trailer. Jedes Feld zeigt Name, Dauer und Startsekunde. Auf Wunsch sehen Sie auch 2-3 Runden oder den ganzen Tag.",
+          "text": "Das Panel zeigt eine Runde der Hauptschleife auf einer Linie: Medien, Video, Werbung, Aktionen, Großspiel-Ankündigungen, Trailer. Jedes Feld zeigt Name, Dauer und Startsekunde. Auf Wunsch sehen Sie auch 2-3 Runden oder den ganzen Tag. Klicken Sie auf ein Feld im Ablauf, um die Anzeigedauer von Fotos, Plakaten, YouTube, Aktionen, Großspielen und Instagram-Karten zu ändern.",
           "points": [
             "Eine Runde: geordneter Ablauf mit Name, Art und Sekunden",
             "Wo Aktionen, Großspiele und Trailer einsetzen",
-            "Tagesansicht: Summen und die am häufigsten wiederholten Inhalte"
+            "Tagesansicht: Summen und die am häufigsten wiederholten Inhalte",
+            "Dauer direkt im Ablauf ändern: Feld anklicken, Sekunden eingeben, speichern"
           ]
         },
         "ar": {
           "title": "شاهد ترتيب العرض على خط واحد",
           "short": "ملخص التدفق",
           "compare": "ملخص التدفق",
-          "text": "تعرض اللوحة دورة واحدة من الحلقة الرئيسية على خط واحد: وسائط، فيديو، إعلانات، عروض، إعلانات المباريات الكبرى، إعلانات تشويقية. يعرض كل مربع اسم المحتوى ومدته وثانية بدايته. ويمكنك أيضًا عرض دورتين أو ثلاث أو اليوم كله.",
+          "text": "تعرض اللوحة دورة واحدة من الحلقة الرئيسية على خط واحد: وسائط، فيديو، إعلانات، عروض، إعلانات المباريات الكبرى، إعلانات تشويقية. يعرض كل مربع اسم المحتوى ومدته وثانية بدايته. ويمكنك أيضًا عرض دورتين أو ثلاث أو اليوم كله. انقر على أي مربع في التدفق لتغيير مدة بقاء الصور والملصقات ويوتيوب والعروض والمباريات الكبرى وبطاقات إنستغرام على الشاشة.",
           "points": [
             "دورة واحدة: تدفق مرتب مع الاسم والنوع والثواني",
             "أماكن تدخّل العروض والمباريات الكبرى والإعلانات التشويقية",
-            "العرض اليومي: الإجماليات والمحتوى الأكثر تكرارًا"
+            "العرض اليومي: الإجماليات والمحتوى الأكثر تكرارًا",
+            "غيّر المدة من التدفق: انقر على مربع، اكتب الثواني، احفظ"
           ]
         }
       }

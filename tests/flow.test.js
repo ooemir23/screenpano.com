@@ -139,3 +139,15 @@ test('tek tur: boş listede boş akış', () => {
   STATE = { videos: [], campaigns: [], bigMatches: [] };
   assert.equal(summary(T(), undefined, 0, { rounds: 1 }).ev.length, 0);
 });
+
+test('düzenleme referansları: her olay bir kayda bağlı (görsel/afiş/youtube/kampanya/büyük maç/video/reklam/kitap)', () => {
+  STATE = { imageSeconds: 10, videos: [vid('a', 45), { id: 'i1', name: 'Latte', type: 'image' }, { id: 'p1', name: 'Menü', type: 'poster', dur: 15 }, vid('yt', 60, { type: 'youtube' }), vid('pad:1', 15), { id: 'bk1', name: 'Kitap', type: 'poster', tpl: 'kitap', dur: 12 }, { id: 'ig1', name: 'Instagram', type: 'poster', tpl: 'insta', dur: 10 }],
+    showTrailers: true, trailerEvery: 2, trailerGapMin: 0, movies: { items: [{ title: 'Film', trailer: 'x' }] },
+    campaigns: [{ id: 'c1', headline: 'K', everyMin: 1, durSec: 15 }, { id: 'happy', headline: 'HH', everyMin: 1, durSec: 15 }], bigCfg: { everyMin: 1, durSec: 15 }, bigMatches: [{ name: 'M' }] };
+  const r = summary(T(), undefined, 0, { rounds: 1 });
+  r.ev.forEach(e => assert.ok(r.refs[e[4]], 'ref yok'));
+  const find = k => r.refs.filter(x => x.k === k);
+  assert.deepEqual(r.refs.filter(x => x.k === 'v').map(x => x.t + ':' + x.id).sort(), ['image:i1', 'poster:p1', 'video:a', 'youtube:yt']);
+  assert.ok(find('ad').length && find('book').length && find('ig').length && find('big').length && find('trailer').length);
+  assert.deepEqual(find('camp').map(x => x.id).sort(), ['c1', 'happy']);
+});

@@ -3698,16 +3698,53 @@ function drawFlowRound(box, j, modeChips) {
   if (r.big) rules.push(`Büyük maç duyurusu: her ${r.big.everyMin} dk, maç başına ${r.big.durSec} sn`);
   const sumSec = j.totals.reduce((a, b) => a + b.sec, 0) || 1;
   const prop = j.ev.map(([at, k, ni, dur]) => `<i title="${esc(kn(j.kinds[k]) + ' · ' + j.names[ni] + ' · ' + dur + ' sn')}" style="flex:${dur} 0 0;background:${kc(j.kinds[k])};min-width:2px;box-shadow:inset -1px 0 0 rgba(0,0,0,.35)"></i>`).join('');
-  const seq = j.ev.map(([at, k, ni, dur]) => { const kind = j.kinds[k]; return `<div title="${esc(kn(kind) + ' · ' + j.names[ni] + ' · ' + dur + ' sn')}" style="flex:0 0 auto;width:${Math.max(84, Math.round(dur * 3))}px"><div style="height:50px;background:${kc(kind)};border-radius:6px;color:#fff;font-size:11px;line-height:1.25;padding:6px 7px;overflow:hidden;box-sizing:border-box"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.names[ni])}</b><span style="opacity:.9">${esc(kn(kind))} · ${dur} sn</span></div><div class="muted" style="font-size:11px;margin-top:3px;font-variant-numeric:tabular-nums">${mmss(at)}</div></div>`; }).join('');
+  const seq = j.ev.map(([at, k, ni, dur], i) => { const kind = j.kinds[k]; return `<div data-fe="${i}" onclick="flowEdit(${i})" title="${esc(kn(kind) + ' · ' + j.names[ni] + ' · ' + dur + ' sn')}" style="flex:0 0 auto;width:${Math.max(84, Math.round(dur * 3))}px;cursor:pointer"><div style="height:50px;background:${kc(kind)};border-radius:6px;color:#fff;font-size:11px;line-height:1.25;padding:6px 7px;overflow:hidden;box-sizing:border-box"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.names[ni])}</b><span style="opacity:.9">${esc(kn(kind))} · ${dur} sn</span></div><div class="muted" style="font-size:11px;margin-top:3px;font-variant-numeric:tabular-nums">${mmss(at)}</div></div>`; }).join('');
   const tbl = j.totals.map(t => `<tr><td>${chip(t.kind)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${t.plays}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${mmss(t.sec)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${Math.round(t.sec / sumSec * 100)}%</td></tr>`).join('');
   box.innerHTML = modeChips + roundChips
     + `<p style="margin:0 0 10px"><b>${esc('Tur süresi ' + mmss(j.totalSec) + ' · ' + j.ev.length + ' gösterim')}</b></p>`
     + (rules.length ? `<ul class="muted" style="margin:0 0 12px;padding-left:18px;font-size:13px">${rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '')
     + `<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;gap:1px;margin:0 0 12px;direction:ltr">${prop}</div>`
-    + `<div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:10px;direction:ltr">${seq}</div>`
+    + `<p class="muted" style="font-size:12px;margin:0 0 6px">Bir kutuya tıklayın: ekranda kalma süresini buradan değiştirin.</p>`
+    + `<div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:10px;direction:ltr">${seq}</div><div id="flowedit"></div>`
     + `<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 16px">${FLOW_KIND_ORDER.filter(k => j.totals.some(t => t.kind === k)).map(chip).join('')}</div>`
     + `<table style="width:100%;max-width:420px;font-size:13px;border-collapse:collapse"><thead><tr class="muted"><th style="text-align:start;font-weight:500">Tür</th><th style="text-align:right;font-weight:500">Gösterim</th><th style="text-align:right;font-weight:500">Süre</th><th style="text-align:right;font-weight:500">Pay</th></tr></thead><tbody>${tbl}</tbody></table>`
     + `<p class="muted" style="font-size:12px;margin:12px 0 0">Tur, TV açıldığı andan başlayarak ana döngünün baştan sona bir kez dönmesidir. Süresi ölçülmemiş video 30 sn, fragman 90 sn sayılır.</p>`;
+}
+// Akıştan süre düzenleme: hangi içeriğin süresi değiştirilebilir (sınırlar sunucudakiyle aynı)
+const FLOW_EDIT = { image: [3, 120, 1], poster: [3, 120, 1], youtube: [3, 3600, 0], camp: [8, 60, 0], big: [5, 60, 0], insta: [5, 60, 0] }; // [en az, en çok, varsayılana dönülebilir]
+const FLOW_FIXED = { video: 'Videonun süresi dosyasının kendi uzunluğudur ve değiştirilemez. Kısaltmak için videoyu kırpıp yeniden yükleyin.', ad: 'Reklam süresini ScreenPano reklam planı belirler.', trailer: 'Fragman süresi videonun kendi uzunluğudur.', book: 'Kitap kartı 12 sn gösterilir.' };
+function flowTarget(i) {
+  const e = FLOW_DATA.ev[i], ref = FLOW_DATA.refs[e[4]], kind = FLOW_DATA.kinds[e[1]];
+  const what = ref.k === 'v' ? ref.t : ref.k === 'ig' ? 'insta' : ref.k === 'camp' ? 'camp' : ref.k; // image/poster/youtube/video/insta/camp/big/ad/book/trailer
+  let rng = FLOW_EDIT[what]; if (what === 'camp' && ref.id === 'happy') rng = [5, 300, 0];
+  return { e, ref, kind, what, rng, name: FLOW_DATA.names[e[2]], dur: e[3] };
+}
+function flowEdit(i) {
+  const box = $('flowedit'); if (!box || !FLOW_DATA) return;
+  document.querySelectorAll('#flowv [data-fe]').forEach(b => { b.firstElementChild.style.outline = Number(b.dataset.fe) === i ? '2px solid #fff' : ''; });
+  const t = flowTarget(i), kcol = (FLOW_KIND[t.kind] || [0, '#888'])[1], knm = (FLOW_KIND[t.kind] || [t.kind])[0];
+  const chip = `<span style="display:inline-block;min-width:78px;text-align:center;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;color:#fff;background:${kcol}">${esc(knm)}</span>`;
+  const head = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">${chip}<b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.name)}</b></div>`;
+  let body;
+  if (!t.rng) body = `<p class="muted" style="margin:0;font-size:13px">${esc(FLOW_FIXED[t.what] || FLOW_FIXED.video)}</p>`;
+  else body = `<div class="row" style="gap:10px;align-items:end;flex-wrap:wrap"><label class="f" style="margin:0"><span>Ekranda kalma süresi (saniye)</span><input type="number" id="flowdur" min="${t.rng[0]}" max="${t.rng[1]}" value="${t.dur}" style="width:130px" onkeydown="if(event.key==='Enter')flowSave(${i})"></label>`
+    + `<button type="button" class="btn s" onclick="flowSave(${i})">Kaydet</button>`
+    + (t.rng[2] ? `<button type="button" class="btn g s" onclick="flowSave(${i},true)">Varsayılana dön</button>` : '')
+    + `<button type="button" class="btn g s" onclick="flowEdit(-1)">Vazgeç</button></div>`
+    + `<p class="muted" style="margin:8px 0 0;font-size:12px">${esc(t.rng[0] + ' – ' + t.rng[1] + ' sn arası')}${t.rng[2] ? ' · ' + esc('Varsayılan fotoğraf süresi: ' + (S.db.imageSeconds || 10) + ' sn (Ayarlar)') : ''}</p>`;
+  box.innerHTML = i < 0 ? '' : `<div style="margin:6px 0 14px;padding:14px;border:1px solid var(--line2);border-radius:var(--r-m)">${head}${body}</div>`;
+  const inp = $('flowdur'); if (inp) { inp.focus(); inp.select(); }
+}
+async function flowSave(i, reset) {
+  const t = flowTarget(i), inp = $('flowdur'), v = reset ? 0 : Math.round(Number(inp && inp.value));
+  if (!reset && (!Number.isFinite(v) || v < t.rng[0] || v > t.rng[1])) { toast(`${t.rng[0]} – ${t.rng[1]} sn arası bir süre girin`, true); return; }
+  const r = t.ref, ok = 'Süre kaydedildi';
+  let res;
+  if (r.k === 'v') res = await act('PUT', '/videos/' + r.id, { dur: v }, ok);
+  else if (r.k === 'camp') res = r.id === 'happy' ? await act('PUT', '/happy-card', { durSec: v }, ok) : await act('PUT', '/campaigns/' + r.id, { durSec: v }, ok);
+  else if (r.k === 'big') res = await act('PUT', '/bigmatch', { durSec: v }, ok);
+  else if (r.k === 'ig') res = await act('PUT', '/instagram', { dur: v }, ok);
+  if (res) drawFlow(); // act() paneli yeniler; haritayı yeni sürelerle yeniden çiz
 }
 const FLOW_KIND_ORDER = ['video', 'youtube', 'image', 'poster', 'ad', 'book', 'insta', 'camp', 'big', 'trailer'];
 

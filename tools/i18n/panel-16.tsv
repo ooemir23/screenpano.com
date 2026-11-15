@@ -26,3 +26,15 @@ Günlük ¦ Daily ¦ Tagesansicht ¦ يومي
 Tur süresi {} · {} gösterim ¦ Round length {} · {} items shown ¦ Rundendauer {} · {} Wiedergaben ¦ مدة الدورة {} · {} عرض
 Süre ¦ Time ¦ Dauer ¦ المدة
 Tur, TV açıldığı andan başlayarak ana döngünün baştan sona bir kez dönmesidir. Süresi ölçülmemiş video 30 sn, fragman 90 sn sayılır. ¦ A round is one full pass of the main loop, starting from the moment the TV starts. Videos with unmeasured length count as 30 s, trailers as 90 s. ¦ Eine Runde ist ein vollständiger Durchlauf der Hauptschleife ab dem Start des TVs. Videos ohne gemessene Länge zählen als 30 Sek., Trailer als 90 Sek. ¦ الدورة هي مرور كامل للحلقة الرئيسية بدءًا من لحظة تشغيل التلفزيون. يُحتسب الفيديو غير المقاس بـ30 ثانية والإعلان التشويقي بـ90 ثانية.
+Bir kutuya tıklayın: ekranda kalma süresini buradan değiştirin. ¦ Click a box to change how long it stays on screen. ¦ Klicken Sie auf ein Feld, um die Anzeigedauer hier zu ändern. ¦ انقر على مربع لتغيير مدة بقائه على الشاشة هنا.
+Ekranda kalma süresi (saniye) ¦ Time on screen (seconds) ¦ Anzeigedauer (Sekunden) ¦ مدة البقاء على الشاشة (بالثواني)
+Varsayılana dön ¦ Reset to default ¦ Auf Standard zurücksetzen ¦ العودة إلى الافتراضي
+Vazgeç ¦ Cancel ¦ Abbrechen ¦ تراجع
+Süre kaydedildi ¦ Duration saved ¦ Dauer gespeichert ¦ تم حفظ المدة
+{} – {} sn arası ¦ Between {} and {} s ¦ Zwischen {} und {} Sek. ¦ بين {} و{} ثانية
+Varsayılan fotoğraf süresi: {} sn (Ayarlar) ¦ Default photo duration: {} s (Settings) ¦ Standarddauer für Fotos: {} Sek. (Einstellungen) ¦ المدة الافتراضية للصور: {} ثانية (الإعدادات)
+{} – {} sn arası bir süre girin ¦ Enter a duration between {} and {} s ¦ Geben Sie eine Dauer zwischen {} und {} Sek. ein ¦ أدخل مدة بين {} و{} ثانية
+Videonun süresi dosyasının kendi uzunluğudur ve değiştirilemez. Kısaltmak için videoyu kırpıp yeniden yükleyin. ¦ A video's duration is the length of its file and cannot be changed. To shorten it, trim the video and upload it again. ¦ Die Dauer eines Videos entspricht der Länge der Datei und kann nicht geändert werden. Zum Kürzen schneiden Sie das Video zu und laden es erneut hoch. ¦ مدة الفيديو هي طول ملفه ولا يمكن تغييرها. لتقصيره، قصّ الفيديو وأعد رفعه.
+Reklam süresini ScreenPano reklam planı belirler. ¦ The duration of an ad is set by the ScreenPano ad plan. ¦ Die Dauer einer Werbung wird vom ScreenPano-Werbeplan festgelegt. ¦ تحدد خطة إعلانات ScreenPano مدة الإعلان.
+Fragman süresi videonun kendi uzunluğudur. ¦ A trailer's duration is the length of its video. ¦ Die Dauer eines Trailers entspricht der Länge seines Videos. ¦ مدة الإعلان التشويقي هي طول الفيديو نفسه.
+Kitap kartı 12 sn gösterilir. ¦ The book card is shown for 12 s. ¦ Die Buchkarte wird 12 Sek. angezeigt. ¦ تُعرض بطاقة الكتاب 12 ثانية.

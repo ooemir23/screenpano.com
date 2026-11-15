@@ -21,6 +21,8 @@ function kindOf(v) {
   if (v.type === 'image') return 'image';
   return 'video';
 }
+// Olayın hangi kayda ait olduğu: panelden süre düzenlemek için (ad/video/reklam/kitap düzenlenemez, panel bilir)
+const refOf = (k, v) => k === 'insta' ? { k: 'ig' } : k === 'book' ? { k: 'book' } : k === 'ad' ? { k: 'ad' } : { k: 'v', t: k, id: v.id };
 const isStill = k => k === 'image' || k === 'poster' || k === 'book' || k === 'insta';
 
 // dayOffset: 0 = bugün … 6
@@ -35,7 +37,7 @@ function summary(t, screenId, dayOffset = 0, opts = {}) {
   const imgSec = Number(s.imageSeconds) || 10;
   const toItem = v => {
     const k = kindOf(v), given = Number(v.dur) || 0;
-    return { kind: k, name: String(v.name || ''), dur: given || (isStill(k) ? imgSec : VIDEO_UNKNOWN_SEC), est: !given && !isStill(k), sch: v.sch || null };
+    return { kind: k, name: String(v.name || ''), dur: given || (isStill(k) ? imgSec : VIDEO_UNKNOWN_SEC), est: !given && !isStill(k), sch: v.sch || null, ref: refOf(k, v) };
   };
   const all = (s.videos || []).map(toItem);
 
@@ -77,17 +79,18 @@ function summary(t, screenId, dayOffset = 0, opts = {}) {
   });
   const hours = Array.from({ length: 24 }, () => ({ strip: [], counts: {}, n: 0, round: 0, special: null }));
   // Tek çizgi için sıralı olay listesi: [başlangıç sn, tür no, ad no, süre sn]; adlar tekrar etmesin diye tabloda
-  const ev = [], names = [], nameIx = new Map();
+  const ev = [], names = [], nameIx = new Map(), refs = [], refIx = new Map();
+  const refNo = r => { const key = JSON.stringify(r); let i = refIx.get(key); if (i == null) { i = refs.length; refs.push(r); refIx.set(key, i); } return i; };
   const nameNo = n => { let i = nameIx.get(n); if (i == null) { i = names.length; names.push(n); nameIx.set(n, i); } return i; };
   const totals = {}, top = new Map();
   let at = 0, idx = 0, plays = 0, trAt = -Infinity, trK = 0, bigLast = null, mainN = 0, target = 0;
   const campLast = {};
 
-  const addEv = (kind, name, dur) => {
+  const addEv = (kind, name, dur, ref) => {
     dur = Math.max(1, Math.round(dur));
     const h0 = Math.floor(at / 3600);
     if (h0 < 24) { hours[h0].counts[kind] = (hours[h0].counts[kind] || 0) + 1; }
-    if (at < DAY) ev.push([at, KINDS.indexOf(kind), nameNo(name), dur]);
+    if (at < DAY) ev.push([at, KINDS.indexOf(kind), nameNo(name), dur, refNo(ref || { k: kind })]);
     const tt = totals[kind] || (totals[kind] = { kind, plays: 0, sec: 0 }); tt.plays++; tt.sec += dur;
     const key = kind + '|' + name, tp = top.get(key) || { kind, name, plays: 0, sec: 0 }; tp.plays++; tp.sec += dur; top.set(key, tp);
     let a = at, rem = dur, first = true;
@@ -106,27 +109,27 @@ function summary(t, screenId, dayOffset = 0, opts = {}) {
     if (!H.n) { H.n = c.items.length; H.round = c.items.reduce((a, b) => a + b.dur, 0); }
     if (c.sp) H.special = c.sp.name || true;
     const it = c.items[idx++ % c.items.length];
-    addEv(it.kind, it.name, it.dur); mainN++;
+    addEv(it.kind, it.name, it.dur, it.ref); mainN++;
     if (c.sp) continue; // özel yayında araya bir şey girmez
     // O an dolmuş araya girenler (TV her 5 sn'de bakar, içerik bitince gösterir)
     if (c.bigs.length && at >= (bigLast == null ? -bigGap + 60 : bigLast) + bigGap) {
       bigLast = at;
-      for (const m of c.bigs) addEv('big', m.name || (m.home && m.away ? m.home + ' – ' + m.away : 'Büyük maç'), bigDur);
+      for (const m of c.bigs) addEv('big', m.name || (m.home && m.away ? m.home + ' – ' + m.away : 'Büyük maç'), bigDur, { k: 'big' });
       continue;
     }
     const camp = c.camps.find(k => at >= (campLast[k.id] == null ? -(k.everyMin || 3) * 60 + 25 : campLast[k.id]) + (k.everyMin || 3) * 60);
-    if (camp) { campLast[camp.id] = at; addEv('camp', camp.headline || 'Kampanya', camp.durSec || 15); continue; }
+    if (camp) { campLast[camp.id] = at; addEv('camp', camp.headline || 'Kampanya', camp.durSec || 15, { k: 'camp', id: camp.id }); continue; }
     if (trailers.length && ++plays >= trEvery && at - trAt > trGap) {
       const m = trailers[trK++ % trailers.length];
-      addEv('trailer', m.title || m.name || 'Fragman', TRAILER_SEC); trAt = at; plays = 0;
+      addEv('trailer', m.title || m.name || 'Fragman', TRAILER_SEC, { k: 'trailer' }); trAt = at; plays = 0;
     }
   }
 
-  if (rounds) return { round: true, rounds, totalSec: at, ev, kinds: KINDS, names, totals: Object.values(totals).sort((a, b) => b.sec - a.sec), loopCount: target / rounds || 0, rules: rulesOf() };
+  if (rounds) return { round: true, rounds, totalSec: at, ev, refs, kinds: KINDS, names, totals: Object.values(totals).sort((a, b) => b.sec - a.sec), loopCount: target / rounds || 0, rules: rulesOf() };
   const loopNow = context(Math.max(0, Math.min(DAY - 1, dayOffset === 0 ? (hh * 60 + mm) * 60 : 12 * 3600)));
   return {
     day: dayOffset, date, nowHour: dayOffset === 0 ? hh : null, nowSec: dayOffset === 0 ? (hh * 60 + mm) * 60 + now.getSeconds() : null,
-    hours, kinds: KINDS, names, ev,
+    hours, kinds: KINDS, names, ev, refs,
     totals: Object.values(totals).sort((a, b) => b.sec - a.sec),
     top: [...top.values()].sort((a, b) => b.plays - a.plays || b.sec - a.sec).slice(0, TOP_N),
     loopCount: loopNow.items.length,
