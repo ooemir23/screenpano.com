@@ -1060,6 +1060,60 @@
           ]
         }
       }
+    },
+    {
+      "id": "akis-ozeti",
+      "icon": "🗺️",
+      "title": "Ekranda ne zaman ne çıkacak, tek haritada görün",
+      "short": "Akış özeti",
+      "text": "Medya, reklam, kampanya, büyük maç duyurusu ve fragmanın hangi sırayla, kaç saniye ekranda kalacağını panelde zaman çizelgesi olarak görürsünüz. Aynı içeriğin üst üste gelip gelmediğini ve araya girenlerin sıklığını önceden kontrol edersiniz.",
+      "points": [
+        "Ana döngü: içerik sayısı ve bir turun süresi",
+        "Kampanya, büyük maç ve fragmanın araya girme kuralları",
+        "Sonraki 20 dakikanın içerik haritası ve saniye bilgisi"
+      ],
+      "plan": "all",
+      "compare": "Akış özeti",
+      "added": "2026-11-15",
+      "visual": {
+        "type": "win",
+        "img": "p-cihaz"
+      },
+      "i18n": {
+        "en": {
+          "title": "See what plays when, on one map",
+          "short": "Flow summary",
+          "compare": "Flow summary",
+          "text": "The panel shows a timeline of the order and length of media, ads, offers, big-match announcements and trailers. Check in advance whether the same content repeats and how often other items cut in.",
+          "points": [
+            "Main loop: item count and the length of one round",
+            "Rules for when offers, big matches and trailers cut in",
+            "A content map of the next 20 minutes, with seconds"
+          ]
+        },
+        "de": {
+          "title": "Alles, was wann läuft, auf einer Karte",
+          "short": "Ablaufübersicht",
+          "compare": "Ablaufübersicht",
+          "text": "Das Panel zeigt als Zeitleiste, in welcher Reihenfolge und wie lange Medien, Werbung, Aktionen, Großspiel-Ankündigungen und Trailer laufen. So prüfen Sie vorab, ob sich Inhalte wiederholen und wie oft andere dazwischenkommen.",
+          "points": [
+            "Hauptschleife: Anzahl der Inhalte und Dauer einer Runde",
+            "Regeln, wann Aktionen, Großspiele und Trailer einsetzen",
+            "Inhaltskarte der nächsten 20 Minuten mit Sekundenangaben"
+          ]
+        },
+        "ar": {
+          "title": "شاهد ما سيُعرض ومتى على خريطة واحدة",
+          "short": "ملخص التدفق",
+          "compare": "ملخص التدفق",
+          "text": "تعرض اللوحة جدولًا زمنيًا لترتيب الوسائط والإعلانات والعروض وإعلانات المباريات الكبرى والإعلانات التشويقية ومدة كل منها. تتحقق مسبقًا من تكرار المحتوى نفسه ومن عدد مرات تدخّل العناصر الأخرى.",
+          "points": [
+            "الحلقة الرئيسية: عدد العناصر ومدة الدورة الواحدة",
+            "قواعد تدخّل العروض والمباريات الكبرى والإعلانات التشويقية",
+            "خريطة محتوى للدقائق العشرين القادمة مع الثواني"
+          ]
+        }
+      }
     }
   ],
   "extras": [

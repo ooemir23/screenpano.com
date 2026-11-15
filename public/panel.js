@@ -3561,9 +3561,37 @@ SECTIONS.agenda = {
     }).join('');
     return head('Yayın Ajandası', 'Önümüzdeki 7 gün boyunca ekranınızda hangi saatte hangi indirim, menü, kampanya veya zamanlanmış medyanın çıkacağını tek bakışta görün.',
       `<div class="row"><a class="btn xs g" href="#media">Medya zamanla</a><a class="btn xs g" href="#menu">Menü saati ayarla</a><a class="btn xs g" href="#happy">İndirim saati ekle</a></div>`)
+      + card('Akış Özeti', 'Ekranda içeriklerin hangi sırayla ve kaç saniye gösterileceğinin tahmini haritası. Kampanya, büyük maç ve fragman o anki içerik bitince araya girer; gerçek akış TV\'de anlık belirlenir.', '<div id="flowv"><div class="loading">Yükleniyor…</div></div>')
       + card('7 Günlük Yayın Akışı', 'Bir öğeye tıklayarak ilgili ayar sayfasına gidebilirsiniz.', daysHtml);
-  }
+  },
+  async after() { drawFlow(); }
 };
+
+// Akış özeti: sunucunun TV kurallarına göre yaptığı tahmini benzetim (server/flow.js)
+const FLOW_KIND = { video: ['Video', '#3b82f6'], image: ['Fotoğraf', '#14b8a6'], poster: ['Afiş', '#a855f7'], youtube: ['YouTube', '#ef4444'], ad: ['Reklam', '#f59e0b'], book: ['Kitap', '#84cc16'], insta: ['Instagram', '#ec4899'], camp: ['Kampanya', '#f97316'], big: ['Büyük maç', '#22c55e'], trailer: ['Fragman', '#6366f1'] };
+const mmss = sec => { sec = Math.max(0, Math.round(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); };
+async function drawFlow() {
+  const box = $('flowv'); if (!box) return;
+  let j; try { j = await req('GET', '/flow'); } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  if (!$('flowv')) return; // bölüm değişti
+  if (j.blocked) { box.innerHTML = `<div class="empty">${esc(j.blocked)}</div>`; return; }
+  if (!j.loop.length) { box.innerHTML = '<div class="empty">Gösterilecek içerik yok. Medya sekmesinden içerik ekleyin.</div>'; return; }
+  const chip = k => { const [n, c] = FLOW_KIND[k] || [k, '#888']; return `<span style="display:inline-block;min-width:78px;text-align:center;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;color:#fff;background:${c}">${esc(n)}</span>`; };
+  const tl = j.timeline, end = tl.length ? tl[tl.length - 1].at + tl[tl.length - 1].dur : 1;
+  const bar = tl.map(e => `<i title="${esc(e.name)}" style="flex:${Math.max(e.dur, 1)} 0 0;background:${(FLOW_KIND[e.kind] || [0, '#888'])[1]};min-width:2px"></i>`).join('');
+  const r = j.rules, rules = [];
+  if (j.special) rules.push('Özel yayın sürüyor: yalnız seçili içerikler oynar, araya kampanya/fragman girmez.');
+  if (r.trailer) rules.push(`Fragman: her ${r.trailer.every} içerikte bir, en az ${r.trailer.gapMin} dk arayla`);
+  (r.camps || []).forEach(c => rules.push(`Kampanya “${c.name}”: her ${c.everyMin} dk, ${c.durSec} sn`));
+  if (r.big) rules.push(`Büyük maç duyurusu: her ${r.big.everyMin} dk, maç başına ${r.big.durSec} sn`);
+  const used = [...new Set(tl.map(e => e.kind))];
+  box.innerHTML = `<p style="margin:0 0 10px"><b>${esc('Ana döngü: ' + j.loop.length + ' içerik · bir tur ' + mmss(j.loopSec))}</b></p>`
+    + (rules.length ? `<ul class="muted" style="margin:0 0 12px;padding-left:18px;font-size:13px">${rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '')
+    + `<div style="display:flex;height:16px;border-radius:8px;overflow:hidden;gap:1px;margin:6px 0 8px;direction:ltr">${bar}</div>`
+    + `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${used.map(chip).join('')}</div>`
+    + `<div style="max-height:440px;overflow:auto;border:1px solid var(--line2);border-radius:var(--r-m);direction:ltr">${tl.map((e, i) => `<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;${i ? 'border-top:1px solid var(--line2);' : ''}font-size:13px"><span class="muted" style="width:44px;font-variant-numeric:tabular-nums">${mmss(e.at)}</span>${chip(e.kind)}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.name)}</span><span class="muted" style="font-variant-numeric:tabular-nums">${e.est ? '~' : ''}${e.dur} sn</span></div>`).join('')}</div>`
+    + `<p class="muted" style="font-size:12px;margin:8px 0 0">${esc('Sonraki ' + Math.round(end / 60) + ' dakikanın akışı · ~ işaretli süreler tahmindir (süresi ölçülmemiş video, fragman).')}</p>`;
+}
 
 const FAQ_LIST = [
   ['TV kutusunu ekrana nasıl bağlarım?', 'TV kutunuzu HDMI ile televizyona takın ve internete bağlayın. Kutuda ScreenPano uygulamasını açtığınızda ekranda 6 haneli bir kod belirir. Panelde <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasına gidip bu kodu yazarak saniyeler içinde eşleştirebilirsiniz.'],

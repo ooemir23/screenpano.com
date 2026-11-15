@@ -400,6 +400,7 @@ r.put('/menu', (req, res) => {
 
 // ================= DURUM (önizleme ve genel bakış için) =================
 r.get('/state', (req, res) => res.json(publicState(req.t, req.query.screen ? String(req.query.screen) : undefined)));
+r.get('/flow', (req, res) => res.json(require('./flow').summary(req.t, req.query.screen ? String(req.query.screen) : undefined))); // Akış özeti (tahmini benzetim)
 r.get('/vidlen', (req, res) => res.json(typeof require('./vidlen').dump === 'function' ? require('./vidlen').dump() : {})); // video süresi ölçümleri (tanılama)
 
 // ======================================================================
