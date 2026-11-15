@@ -1,7 +1,6 @@
-// Akış özeti benzetimi: TV kurallarına (kampanya/fragman/büyük maç araya girişi) uyduğunu doğrular
+// Akış özeti (günlük kuş bakışı) benzetimi: TV kurallarına (kampanya/fragman/büyük maç araya girişi, zamanlama, özel yayın) uyduğunu doğrular
 const { test } = require('node:test');
 const assert = require('node:assert');
-const path = require('path');
 
 let STATE = {};
 const statePath = require.resolve('../server/state');
@@ -9,8 +8,12 @@ require.cache[statePath] = { id: statePath, filename: statePath, loaded: true, e
 const { summary, kindOf } = require('../server/flow');
 
 const vid = (id, dur, extra) => ({ id, name: id, type: 'video', dur, ...extra });
+const T = (special) => ({ db: { special: special || [], videos: [] } });
+const sum = (h, k) => h.strip.filter(x => x[0] === k).reduce((a, b) => a + b[1], 0);
+const total = h => h.strip.reduce((a, b) => a + b[1], 0);
+const plays = (r, k) => (r.totals.find(x => x.kind === k) || { plays: 0 }).plays;
 
-test('tür ayrımı: reklam, kitap, instagram, youtube, afiş, fotoğraf', () => {
+test('tür ayrımı', () => {
   assert.equal(kindOf({ id: 'pad:1', type: 'video' }), 'ad');
   assert.equal(kindOf({ id: 'bk1', type: 'poster', tpl: 'kitap' }), 'book');
   assert.equal(kindOf({ id: 'x', type: 'poster', tpl: 'insta' }), 'insta');
@@ -19,57 +22,89 @@ test('tür ayrımı: reklam, kitap, instagram, youtube, afiş, fotoğraf', () =>
   assert.equal(kindOf({ id: 'i', type: 'image' }), 'image');
 });
 
-test('engelli ekran: boş akış ve neden', () => {
+test('engelli ekran: boş harita ve neden', () => {
   STATE = { blocked: 'Süre doldu' };
-  const r = summary({}, undefined);
-  assert.equal(r.blocked, 'Süre doldu'); assert.equal(r.timeline.length, 0);
+  const r = summary(T(), undefined, 0);
+  assert.equal(r.blocked, 'Süre doldu'); assert.equal(r.totals.length, 0);
 });
 
-test('döngü süresi: görsel varsayılan süre, süresiz video tahmini işaretlenir', () => {
-  STATE = { imageSeconds: 8, videos: [vid('a', 20), { id: 'b', name: 'b', type: 'image' }, vid('c', 0)], movies: null, campaigns: [], bigMatches: [] };
-  const r = summary({}, undefined);
-  assert.equal(r.loop.length, 3);
-  assert.equal(r.loop[1].dur, 8);
-  assert.equal(r.loop[2].dur, 30); assert.equal(r.loop[2].est, true);
-  assert.equal(r.loopSec, 58);
+test('boş liste: toplam yok', () => {
+  STATE = { videos: [], campaigns: [], bigMatches: [] };
+  assert.equal(summary(T(), undefined, 0).totals.length, 0);
 });
 
-test('kampanya: açılıştan ~25 sn sonra, içerik bitince araya girer ve everyMin sonra tekrarlar', () => {
+test('24 saat dolu: her saat 3600 sn, gün toplamı 86400', () => {
+  STATE = { imageSeconds: 10, videos: [vid('a', 20), vid('b', 40)], campaigns: [], bigMatches: [] };
+  const r = summary(T(), undefined, 0);
+  assert.equal(r.hours.length, 24);
+  r.hours.forEach(h => assert.equal(total(h), 3600));
+  assert.equal(r.totals.reduce((a, b) => a + b.sec, 0) >= 86400, true);
+  assert.equal(r.hours[0].n, 2); assert.equal(r.hours[0].round, 60);
+});
+
+test('gün parametresi sınırlanır; 7 gün ileri', () => {
+  STATE = { imageSeconds: 10, videos: [vid('a', 20)], campaigns: [], bigMatches: [] };
+  assert.equal(summary(T(), undefined, 99).day, 6);
+  assert.equal(summary(T(), undefined, -3).day, 0);
+  assert.equal(summary(T(), undefined, 0).nowHour != null, true);
+  assert.equal(summary(T(), undefined, 1).nowHour, null);
+});
+
+test('süresiz video 30 sn sayılır; görsel varsayılan süre', () => {
+  STATE = { imageSeconds: 8, videos: [vid('a', 0), { id: 'b', name: 'b', type: 'image' }], campaigns: [], bigMatches: [] };
+  const r = summary(T(), undefined, 0);
+  assert.equal(r.hours[0].round, 38);
+});
+
+test('kampanya: everyMin aralıkla tekrarlar (saatte ~20, içerik bitişini beklediği için biraz az)', () => {
   STATE = { imageSeconds: 10, videos: [vid('a', 20), vid('b', 20)], campaigns: [{ id: 'c1', headline: 'Kahve', everyMin: 3, durSec: 15 }], bigMatches: [] };
-  const r = summary({}, undefined), camps = r.timeline.filter(e => e.kind === 'camp');
-  assert.ok(camps.length >= 2);
-  assert.equal(camps[0].at, 40);               // a(0-20), b(20-40) -> 40'ta bitti, ilk kampanya
-  assert.ok(camps[1].at - camps[0].at >= 180); // en az 3 dk sonra
-  const k = r.timeline.findIndex(e => e.kind === 'camp');
-  assert.equal(r.timeline[k - 1].kind, 'video'); // kampanyadan önce içerik bitmiş olur
+  const r = summary(T(), undefined, 0);
+  const n = r.hours[5].counts.camp;
+  assert.ok(n >= 17 && n <= 20, 'saatlik kampanya sayısı ' + n);
+  assert.ok(sum(r.hours[5], 'camp') >= 17 * 15);
+});
+
+test('zamanlı kampanya yalnız kendi saatinde çıkar (indirim saati)', () => {
+  STATE = { imageSeconds: 10, videos: [vid('a', 20)], campaigns: [{ id: 'h', headline: 'Happy', everyMin: 2, durSec: 15, sch: { from: '09:00', to: '12:00' } }], bigMatches: [] };
+  const r = summary(T(), undefined, 0);
+  assert.ok(r.hours[10].counts.camp > 10);
+  assert.ok(!r.hours[13].counts.camp && !r.hours[8].counts.camp);
+});
+
+test('zamanlı içerik: yalnız kendi saatinde döngüye girer', () => {
+  STATE = { imageSeconds: 10, videos: [vid('a', 20), { id: 'p', name: 'Menü', type: 'poster', dur: 20, sch: { from: '09:00', to: '12:00' } }], campaigns: [], bigMatches: [] };
+  const r = summary(T(), undefined, 0);
+  assert.ok(sum(r.hours[10], 'poster') > 1000);
+  assert.equal(sum(r.hours[13], 'poster'), 0);
+  assert.equal(r.hours[10].n, 2); assert.equal(r.hours[13].n, 1);
 });
 
 test('fragman: her N içerikte bir ve en az gap dk arayla', () => {
   STATE = { imageSeconds: 10, videos: [vid('a', 30), vid('b', 30)], showTrailers: true, trailerEvery: 3, trailerGapMin: 1, movies: { items: [{ title: 'Film', trailer: 'x' }] }, campaigns: [], bigMatches: [] };
-  const r = summary({}, undefined), tr = r.timeline.filter(e => e.kind === 'trailer');
-  assert.ok(tr.length >= 1);
-  const i = r.timeline.findIndex(e => e.kind === 'trailer');
-  assert.equal(i, 3);                           // 3 içerikten sonra
-  assert.equal(r.timeline[i].est, true);
+  const r = summary(T(), undefined, 0);
+  assert.ok(plays(r, 'trailer') > 100);
+  assert.equal(r.rules.trailer.every, 3);
 });
 
-test('büyük maç: açılıştan ~1 dk sonra, tüm maçlar peş peşe', () => {
+test('büyük maç: tüm maçlar peş peşe, everyMin aralığıyla', () => {
   STATE = { imageSeconds: 10, videos: [vid('a', 40)], bigCfg: { everyMin: 6, durSec: 15 }, bigMatches: [{ name: 'M1' }, { name: 'M2' }], campaigns: [] };
-  const r = summary({}, undefined), big = r.timeline.filter(e => e.kind === 'big');
-  assert.equal(big[0].name, 'M1'); assert.equal(big[1].name, 'M2');
-  assert.equal(big[0].at, 80);                  // a(0-40), a(40-80) -> 80 >= 60
-  assert.equal(big[1].at, 95);
+  const r = summary(T(), undefined, 0);
+  assert.equal(plays(r, 'big') % 2, 0);
+  assert.ok(r.hours[3].counts.big >= 18 && r.hours[3].counts.big <= 20);
 });
 
-test('özel yayın: kampanya, maç ve fragman çıkmaz', () => {
-  STATE = { imageSeconds: 10, special: { name: 'Maç' }, videos: [vid('a', 20)], showTrailers: true, movies: { items: [{ title: 'F', trailer: 'x' }] }, campaigns: [{ id: 'c', headline: 'K', everyMin: 1, durSec: 10 }], bigMatches: [{ name: 'M' }] };
-  const r = summary({}, undefined);
-  assert.ok(r.timeline.length > 0);
-  assert.ok(r.timeline.every(e => e.kind === 'video'));
-  assert.ok(r.special);
+test('özel yayın: o saatlerde yalnız seçili içerik, araya kampanya/fragman girmez', () => {
+  const t = { db: { videos: [{ id: 'v1', name: 'Maç Açılış', type: 'video', dur: 20 }], special: [{ on: true, name: 'Derbi', items: ['v1'], sch: { from: '20:00', to: '22:00' } }] } };
+  STATE = { imageSeconds: 10, videos: [vid('a', 20)], showTrailers: true, movies: { items: [{ title: 'F', trailer: 'x' }] }, campaigns: [{ id: 'c', headline: 'K', everyMin: 1, durSec: 10 }], bigMatches: [{ name: 'M' }] };
+  const r = summary(t, undefined, 0);
+  assert.equal(r.hours[20].special, 'Derbi'); assert.equal(r.hours[19].special, null);
+  assert.ok(!r.hours[20].counts.camp && !r.hours[20].counts.big && !r.hours[20].counts.trailer);
+  assert.ok(r.hours[19].counts.camp > 0);
 });
 
-test('boş liste: zaman çizelgesi yok', () => {
-  STATE = { videos: [], campaigns: [], bigMatches: [] };
-  assert.equal(summary({}, undefined).timeline.length, 0);
+test('en çok tekrar eden içerikler sıralı ve en fazla 8', () => {
+  STATE = { imageSeconds: 10, videos: Array.from({ length: 12 }, (_, i) => vid('v' + i, i === 0 ? 10 : 30)), campaigns: [], bigMatches: [] };
+  const r = summary(T(), undefined, 0);
+  assert.ok(r.top.length <= 8);
+  for (let i = 1; i < r.top.length; i++) assert.ok(r.top[i - 1].plays >= r.top[i].plays);
 });
