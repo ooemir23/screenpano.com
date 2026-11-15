@@ -1,11 +1,9 @@
 Akış Özeti ¦ Flow summary ¦ Ablaufübersicht ¦ ملخص التدفق
-Seçtiğiniz günün tamamının kuş bakışı haritası: her satır bir saat, renkler o saatte ekranda ne gösterildiğini ve ne kadar kaldığını gösterir. Kampanya, büyük maç ve fragman o anki içerik bitince araya girer. Harita bir tahmindir; gerçek akış TV'de anlık belirlenir. ¦ A bird's-eye map of the whole day you choose: each row is one hour, and the colors show what is on screen in that hour and for how long. Offers, big matches and trailers cut in when the current item ends. The map is an estimate; the actual flow is decided live on the TV. ¦ Eine Vogelperspektive auf den gesamten gewählten Tag: Jede Zeile ist eine Stunde, die Farben zeigen, was in dieser Stunde wie lange auf dem Bildschirm läuft. Aktionen, Großspiele und Trailer folgen, wenn der aktuelle Inhalt endet. Die Übersicht ist eine Schätzung; der tatsächliche Ablauf wird live am TV bestimmt. ¦ خريطة بعين الطائر لليوم الذي تختاره: كل صف ساعة واحدة، وتوضح الألوان ما يُعرض على الشاشة في تلك الساعة ولكم من الوقت. تدخل العروض والمباريات الكبرى والإعلانات التشويقية عند انتهاء المحتوى الحالي. الخريطة تقديرية؛ أما التدفق الفعلي فيُحدَّد مباشرةً على التلفزيون.
+Seçtiğiniz günün akışı tek çizgide, içerikler sırayla ve süreleriyle orantılı: medya, video, reklam, fragman… Kampanya, büyük maç ve fragman o anki içerik bitince araya girer. Harita bir tahmindir; gerçek akış TV'de anlık belirlenir. ¦ The flow of the day you choose on a single line, in order and proportional to each item's length: media, video, ads, trailers… Offers, big matches and trailers cut in when the current item ends. The map is an estimate; the actual flow is decided live on the TV. ¦ Der Ablauf des gewählten Tages auf einer einzigen Linie, in Reihenfolge und proportional zur Länge: Medien, Video, Werbung, Trailer … Aktionen, Großspiele und Trailer folgen, wenn der aktuelle Inhalt endet. Die Übersicht ist eine Schätzung; der tatsächliche Ablauf wird live am TV bestimmt. ¦ تدفق اليوم الذي تختاره على خط واحد، بالترتيب وبما يتناسب مع مدة كل عنصر: وسائط، فيديو، إعلانات، إعلانات تشويقية… تدخل العروض والمباريات الكبرى والإعلانات التشويقية عند انتهاء المحتوى الحالي. الخريطة تقديرية؛ أما التدفق الفعلي فيُحدَّد مباشرةً على التلفزيون.
 Gösterilecek içerik yok. Medya sekmesinden içerik ekleyin. ¦ There is no content to show. Add content from the Media tab. ¦ Es gibt keine Inhalte zum Anzeigen. Fügen Sie im Tab „Medien“ Inhalte hinzu. ¦ لا يوجد محتوى للعرض. أضف محتوى من تبويب الوسائط.
 Fragman: her {} içerikte bir, en az {} dk arayla ¦ Trailer: after every {} items, at least {} min apart ¦ Trailer: nach je {} Inhalten, mindestens {} Min. Abstand ¦ الإعلان التشويقي: بعد كل {} عناصر، بفاصل {} دقيقة على الأقل
 Kampanya “{}”: her {} dk, {} sn ¦ Offer “{}”: every {} min, {} s ¦ Aktion „{}“: alle {} Min., {} Sek. ¦ العرض “{}”: كل {} دقيقة، {} ثانية
 Büyük maç duyurusu: her {} dk, maç başına {} sn ¦ Big match announcement: every {} min, {} s per match ¦ Großspiel-Ankündigung: alle {} Min., {} Sek. pro Spiel ¦ إعلان المباراة الكبرى: كل {} دقيقة، {} ثانية لكل مباراة
-{} içerik · tur {} ¦ {} items · round {} ¦ {} Inhalte · Runde {} ¦ {} عنصر · دورة {}
-Özel yayın ¦ Special broadcast ¦ Sonderübertragung ¦ بث خاص
 Tür ¦ Type ¦ Art ¦ النوع
 Gösterim ¦ Plays ¦ Wiedergaben ¦ مرات العرض
 Süre (sa:dk) ¦ Time (h:min) ¦ Dauer (Std:Min) ¦ المدة (س:د)
@@ -16,4 +14,9 @@ Süresi ölçülmemiş video 30 sn, fragman 90 sn sayılır. Ekranın gün boyu 
 Kitap ¦ Book ¦ Buch ¦ كتاب
 Fragman ¦ Trailer ¦ Trailer ¦ إعلان تشويقي
 Instagram ¦ Instagram ¦ Instagram ¦ إنستغرام
-Bir saate tıklayın: o saatte ekranda çıkan sırayı görün. ¦ Click an hour to see the order of items shown in that hour. ¦ Klicken Sie auf eine Stunde, um die Reihenfolge der in dieser Stunde gezeigten Inhalte zu sehen. ¦ انقر على ساعة لعرض ترتيب المحتوى الذي يظهر على الشاشة في تلك الساعة.
+Tüm gün ¦ Whole day ¦ Ganzer Tag ¦ اليوم كله
+1 saat ¦ 1 hour ¦ 1 Stunde ¦ ساعة
+10 dk ¦ 10 min ¦ 10 Min. ¦ 10 د
+2 dk ¦ 2 min ¦ 2 Min. ¦ 2 د
+Çizgiyi sağa sola kaydırın; kutunun üstüne gelince ayrıntı görünür. ¦ Scroll the line left and right; hover a box to see details. ¦ Scrollen Sie die Linie nach links und rechts; fahren Sie über ein Feld für Details. ¦ مرّر الخط يمينًا ويسارًا؛ وضع المؤشر على أي مربع لعرض التفاصيل.
+Özel yayın ¦ Special broadcast ¦ Sonderübertragung ¦ بث خاص

@@ -108,3 +108,16 @@ test('en çok tekrar eden içerikler sıralı ve en fazla 8', () => {
   assert.ok(r.top.length <= 8);
   for (let i = 1; i < r.top.length; i++) assert.ok(r.top[i - 1].plays >= r.top[i].plays);
 });
+
+test('tek çizgi: olaylar sıralı, art arda ve toplamlarla tutarlı', () => {
+  STATE = { imageSeconds: 10, videos: [vid('a', 45), { id: 'i', name: 'Latte', type: 'image' }, vid('pad:1', 15)], showTrailers: true, trailerEvery: 3, trailerGapMin: 1, movies: { items: [{ title: 'Film', trailer: 'x' }] }, campaigns: [{ id: 'c', headline: 'K', everyMin: 4, durSec: 15 }], bigMatches: [] };
+  const r = summary(T(), undefined, 0);
+  assert.ok(r.ev.length > 500);
+  for (let i = 1; i < r.ev.length; i++) assert.equal(r.ev[i][0], r.ev[i - 1][0] + r.ev[i - 1][3]); // boşluksuz, sıralı
+  assert.equal(r.ev[0][0], 0);
+  r.ev.forEach(([at, k, ni, dur]) => { assert.ok(r.kinds[k]); assert.ok(r.names[ni] != null); assert.ok(dur >= 1 && at < 86400); });
+  const camps = r.ev.filter(e => r.kinds[e[1]] === 'camp').length;
+  assert.equal(camps, plays(r, 'camp'));
+  assert.equal(r.nowSec != null, true);
+  assert.equal(summary(T(), undefined, 1).nowSec, null);
+});

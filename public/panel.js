@@ -3561,19 +3561,37 @@ SECTIONS.agenda = {
     }).join('');
     return head('Yayın Ajandası', 'Önümüzdeki 7 gün boyunca ekranınızda hangi saatte hangi indirim, menü, kampanya veya zamanlanmış medyanın çıkacağını tek bakışta görün.',
       `<div class="row"><a class="btn xs g" href="#media">Medya zamanla</a><a class="btn xs g" href="#menu">Menü saati ayarla</a><a class="btn xs g" href="#happy">İndirim saati ekle</a></div>`)
-      + card('Akış Özeti', 'Ekranda içeriklerin hangi sırayla ve kaç saniye gösterileceğinin tahmini haritası. Kampanya, büyük maç ve fragman o anki içerik bitince araya girer; gerçek akış TV\'de anlık belirlenir.', '<div id="flowv"><div class="loading">Yükleniyor…</div></div>')
+      + card('Akış Özeti', 'Seçtiğiniz günün akışı tek çizgide, içerikler sırayla ve süreleriyle orantılı: medya, video, reklam, fragman… Kampanya, büyük maç ve fragman o anki içerik bitince araya girer. Harita bir tahmindir; gerçek akış TV\'de anlık belirlenir.', '<div id="flowv"><div class="loading">Yükleniyor…</div></div>')
       + card('7 Günlük Yayın Akışı', 'Bir öğeye tıklayarak ilgili ayar sayfasına gidebilirsiniz.', daysHtml);
   },
   async after() { drawFlow(); }
 };
 
-// Akış özeti: günün kuş bakışı haritası; sunucunun TV kurallarına göre yaptığı tahmini benzetim (server/flow.js)
+// Akış özeti: günün tek çizgide sıralı akışı; sunucunun TV kurallarına göre yaptığı tahmini benzetim (server/flow.js)
 const FLOW_KIND = { video: ['Video', '#3b82f6'], image: ['Fotoğraf', '#14b8a6'], poster: ['Afiş', '#a855f7'], youtube: ['YouTube', '#ef4444'], ad: ['Reklam', '#f59e0b'], book: ['Kitap', '#84cc16'], insta: ['Instagram', '#ec4899'], camp: ['Kampanya', '#f97316'], big: ['Büyük maç', '#22c55e'], trailer: ['Fragman', '#6366f1'] };
-let FLOW_DAY = 0, FLOW_DATA = null;
-const FLOW_ORDER = ['video', 'youtube', 'image', 'poster', 'ad', 'book', 'insta', 'camp', 'big', 'trailer'];
-function flowHour(i) { const el = $('fh-' + i); if (!el) return; if (el.dataset.open === '1') { el.dataset.open = '0'; el.innerHTML = ''; return; } el.dataset.open = '1'; const h = FLOW_DATA.hours[i], ch = k => `<span style="display:inline-block;min-width:78px;text-align:center;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;color:#fff;background:${(FLOW_KIND[k] || [0, '#888'])[1]}">${esc((FLOW_KIND[k] || [k])[0])}</span>`; el.innerHTML = `<div style="margin:4px 0 8px 52px;border:1px solid var(--line2);border-radius:var(--r-m);direction:ltr">${h.seq.map(([at, k, name, dur], n) => `<div style="display:flex;align-items:center;gap:10px;padding:5px 12px;${n ? 'border-top:1px solid var(--line2);' : ''}font-size:13px"><span class="muted" style="width:44px;font-variant-numeric:tabular-nums">${mmss(at)}</span>${ch(k)}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(name)}</span><span class="muted" style="font-variant-numeric:tabular-nums">${dur} sn</span></div>`).join('')}</div>`; }
+let FLOW_DAY = 0, FLOW_DATA = null, FLOW_ZOOM = 600; // FLOW_ZOOM: çizgide görünen pencere (sn)
+const FLOW_ZOOMS = [[86400, 'Tüm gün'], [3600, '1 saat'], [600, '10 dk'], [120, '2 dk']];
 const mmss = sec => { sec = Math.max(0, Math.round(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); };
 const hmin = sec => { const m = Math.round(sec / 60); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); };
+const hms = sec => String(Math.floor(sec / 3600)).padStart(2, '0') + ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
+// Tek çizgi: her içerik süresiyle orantılı bir kutu, sırayla; üstte saat cetveli
+function drawFlowLine() {
+  const j = FLOW_DATA, wrap = $('flowline'); if (!j || !wrap) return;
+  const W = Math.max(300, wrap.clientWidth || 900), pps = W / FLOW_ZOOM, full = 86400 * pps, DAY = 86400;
+  const kc = k => (FLOW_KIND[k] || [0, '#888'])[1], kn = k => (FLOW_KIND[k] || [k])[0];
+  const steps = [3600, 1800, 600, 300, 120, 60, 30, 10], step = steps.find(x => x * pps >= 70) || 10;
+  let ticks = ''; for (let t = 0; t <= DAY; t += step) ticks += `<span style="position:absolute;left:${t * pps}px;top:0;font-size:11px;color:var(--mute);border-left:1px solid var(--line2);padding-left:4px;height:100%;font-variant-numeric:tabular-nums">${hms(t).slice(0, step >= 60 ? 5 : 8)}</span>`;
+  const blocks = j.ev.map(([at, k, ni, dur]) => {
+    const kind = j.kinds[k], w = dur * pps, name = j.names[ni];
+    const inner = w >= 100 ? `<b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(name)}</b><span style="opacity:.85">${esc(kn(kind))} · ${dur} sn</span>` : w >= 52 ? `<b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(kn(kind))}</b><span style="opacity:.85">${dur} sn</span>` : w >= 24 ? `<span>${dur}</span>` : '';
+    return `<div title="${esc(kn(kind) + ' · ' + name + ' · ' + dur + ' sn · ' + hms(at))}" style="position:absolute;left:${at * pps}px;width:${Math.max(w, .6)}px;top:0;height:100%;background:${kc(kind)};box-shadow:inset -1px 0 0 rgba(0,0,0,.35);color:#fff;font-size:11px;line-height:1.25;padding:5px 6px;overflow:hidden;box-sizing:border-box">${inner}</div>`;
+  }).join('');
+  let sp = ''; j.hours.forEach((h, i) => { if (h.special) sp += `<div title="${esc(typeof h.special === 'string' ? h.special : 'Özel yayın')}" style="position:absolute;left:${i * 3600 * pps}px;width:${3600 * pps}px;top:0;height:100%;border:2px solid #fff;border-radius:4px;box-sizing:border-box;pointer-events:none"></div>`; });
+  const now = j.nowSec != null ? `<div style="position:absolute;left:${j.nowSec * pps}px;top:-4px;bottom:-4px;width:2px;background:#ef4444;z-index:3" title="${hms(j.nowSec)}"></div>` : '';
+  wrap.innerHTML = `<div style="position:relative;width:${full}px;direction:ltr"><div style="position:relative;height:20px">${ticks}</div><div style="position:relative;height:52px;margin-top:4px;background:var(--line2);border-radius:4px">${blocks}${sp}${now}</div></div>`;
+  wrap.scrollLeft = j.nowSec != null ? Math.max(0, j.nowSec * pps - W * .15) : 0;
+}
+function flowZoom(z) { FLOW_ZOOM = z; document.querySelectorAll('#flowv [data-fz]').forEach(b => b.classList.toggle('g', Number(b.dataset.fz) !== z)); drawFlowLine(); }
 async function drawFlow() {
   const box = $('flowv'); if (!box) return;
   let j; try { j = await req('GET', '/flow?day=' + FLOW_DAY); } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
@@ -3590,24 +3608,20 @@ async function drawFlow() {
   (r.camps || []).forEach(c => rules.push(`Kampanya “${c.name}”: her ${c.everyMin} dk, ${c.durSec} sn`));
   if (r.big) rules.push(`Büyük maç duyurusu: her ${r.big.everyMin} dk, maç başına ${r.big.durSec} sn`);
   const sumSec = j.totals.reduce((a, b) => a + b.sec, 0) || 1;
-  const rows = j.hours.map((h, i) => {
-    const per = {}; h.strip.forEach(([k, sec]) => { per[k] = (per[k] || 0) + sec; });
-    const seg = FLOW_ORDER.filter(k => per[k]).map(k => `<i title="${esc((FLOW_KIND[k] || [k])[0])} · ${h.counts[k] || 0} · ${hmin(per[k])}" style="flex:${per[k]} 0 0;background:${kc(k)};min-width:2px"></i>`).join('');
-    return `<div onclick="flowHour(${i})" style="display:flex;align-items:center;gap:10px;padding:3px 0;cursor:pointer;${j.nowHour === i ? 'background:var(--line2);border-radius:6px;' : ''}">`
-      + `<span class="muted" style="width:42px;font-size:12px;font-variant-numeric:tabular-nums;text-align:right">${String(i).padStart(2, '0')}:00</span>`
-      + `<div style="flex:1;display:flex;height:18px;border-radius:5px;overflow:hidden;gap:1px;direction:ltr;${seg ? '' : 'border:1px dashed var(--line2)'}">${seg}</div>`
-      + `<span class="muted" style="width:150px;font-size:12px;white-space:nowrap">${h.special ? '<b>' + esc('Özel yayın') + '</b>' : (h.n ? esc(h.n + ' içerik · tur ' + mmss(h.round)) : '—')}</span></div><div id="fh-${i}"></div>`;
-  }).join('');
   const tbl = j.totals.map(t => `<tr><td>${chip(t.kind)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${t.plays}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${hmin(t.sec)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${Math.round(t.sec / sumSec * 100)}%</td></tr>`).join('');
   const top = j.top.map(t => `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-top:1px solid var(--line2);font-size:13px">${chip(t.kind)}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.name)}</span><span class="muted">${esc(t.plays + ' kez · ortalama ' + Math.max(1, Math.round(1440 / t.plays)) + ' dk arayla')}</span></div>`).join('');
+  const used = FLOW_KIND_ORDER.filter(k => j.totals.some(t => t.kind === k));
   box.innerHTML = `<div class="row" style="gap:6px;margin-bottom:12px">${dayChips}</div>`
     + (rules.length ? `<ul class="muted" style="margin:0 0 12px;padding-left:18px;font-size:13px">${rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '')
-    + `<p class="muted" style="font-size:12px;margin:0 0 6px">Bir saate tıklayın: o saatte ekranda çıkan sırayı görün.</p><div style="margin-bottom:14px">${rows}</div>`
-    + `<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;gap:1px;margin:0 0 10px;direction:ltr">${j.totals.map(t => `<i style="flex:${t.sec} 0 0;background:${kc(t.kind)}"></i>`).join('')}</div>`
+    + `<div class="row" style="gap:6px;margin-bottom:8px;align-items:center">${FLOW_ZOOMS.map(([z, n]) => `<button type="button" data-fz="${z}" class="btn xs ${z === FLOW_ZOOM ? '' : 'g'}" onclick="flowZoom(${z})">${n}</button>`).join('')}<span class="muted" style="font-size:12px">Çizgiyi sağa sola kaydırın; kutunun üstüne gelince ayrıntı görünür.</span></div>`
+    + `<div id="flowline" style="overflow-x:auto;padding-bottom:8px"></div>`
+    + `<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 16px">${used.map(chip).join('')}</div>`
     + `<table style="width:100%;max-width:420px;font-size:13px;border-collapse:collapse"><thead><tr class="muted"><th style="text-align:start;font-weight:500">Tür</th><th style="text-align:right;font-weight:500">Gösterim</th><th style="text-align:right;font-weight:500">Süre (sa:dk)</th><th style="text-align:right;font-weight:500">Pay</th></tr></thead><tbody>${tbl}</tbody></table>`
     + `<h4 style="margin:18px 0 6px">En çok tekrar eden içerikler</h4>${top}`
     + `<p class="muted" style="font-size:12px;margin:12px 0 0">Süresi ölçülmemiş video 30 sn, fragman 90 sn sayılır. Ekranın gün boyu açık olduğu varsayılır.</p>`;
+  drawFlowLine();
 }
+const FLOW_KIND_ORDER = ['video', 'youtube', 'image', 'poster', 'ad', 'book', 'insta', 'camp', 'big', 'trailer'];
 
 const FAQ_LIST = [
   ['TV kutusunu ekrana nasıl bağlarım?', 'TV kutunuzu HDMI ile televizyona takın ve internete bağlayın. Kutuda ScreenPano uygulamasını açtığınızda ekranda 6 haneli bir kod belirir. Panelde <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasına gidip bu kodu yazarak saniyeler içinde eşleştirebilirsiniz.'],

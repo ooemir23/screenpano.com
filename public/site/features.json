@@ -1064,13 +1064,13 @@
     {
       "id": "akis-ozeti",
       "icon": "🗺️",
-      "title": "Günün tamamı tek bakışta: ekranda ne zaman ne çıkıyor",
+      "title": "Ekranda ne zaman ne çıkıyor, tek çizgide görün",
       "short": "Akış özeti",
-      "text": "Panelde seçtiğiniz günün (bugün ya da önümüzdeki 6 gün) kuş bakışı haritasını görürsünüz. Her satır bir saattir; renkler medya, reklam, kampanya, büyük maç duyurusu ve fragmanın o saatteki payını gösterir. Bir saate tıklayınca gösterim sırası ve saniyeleri açılır.",
+      "text": "Panelde seçtiğiniz günün (bugün ya da önümüzdeki 6 gün) akışı tek bir çizgide sırayla görünür: medya, video, reklam, kampanya, büyük maç duyurusu, fragman. Her kutu süresiyle orantılıdır ve saniyesi yazar. Günün tamamından 2 dakikaya kadar yakınlaştırabilirsiniz.",
       "points": [
-        "Saat saat harita: indirim saati, zamanlı menü ve özel yayın ayrışır",
-        "Gün toplamı: hangi türden kaç kez, ne kadar süre gösterildi",
-        "En çok tekrar eden içerikler ve ortalama tekrar aralığı"
+        "Tek çizgide sıralı akış: ad, tür ve saniye bilgisiyle",
+        "Saat cetveli, şimdi işareti, zamanlı menü ve özel yayın saatleri",
+        "Gün toplamı ve en çok tekrar eden içerikler"
       ],
       "plan": "all",
       "compare": "Akış özeti",
@@ -1081,36 +1081,36 @@
       },
       "i18n": {
         "en": {
-          "title": "The whole day at a glance: what plays when",
+          "title": "See what plays when, on a single line",
           "short": "Flow summary",
           "compare": "Flow summary",
-          "text": "See a bird's-eye map of the day you pick (today or the next 6 days). Each row is one hour; colors show the share of media, ads, offers, big-match announcements and trailers in that hour. Click an hour to open the order and seconds of what plays.",
+          "text": "The day you pick (today or the next 6 days) appears in order on one line: media, video, ads, offers, big-match announcements, trailers. Each box is proportional to its length and shows its seconds. Zoom from the whole day down to 2 minutes.",
           "points": [
-            "Hour-by-hour map: happy hours, timed menus and special broadcasts stand out",
-            "Daily totals: how many times and how long each type played",
-            "Most repeated content and the average gap between repeats"
+            "Ordered flow on one line, with name, type and seconds",
+            "Time ruler, a \"now\" marker, timed menus and special-broadcast hours",
+            "Daily totals and the most repeated content"
           ]
         },
         "de": {
-          "title": "Der ganze Tag auf einen Blick: was wann läuft",
+          "title": "Was wann läuft, auf einer einzigen Linie",
           "short": "Ablaufübersicht",
           "compare": "Ablaufübersicht",
-          "text": "Sehen Sie eine Vogelperspektive des gewählten Tages (heute oder die nächsten 6 Tage). Jede Zeile ist eine Stunde; Farben zeigen den Anteil von Medien, Werbung, Aktionen, Großspiel-Ankündigungen und Trailern in dieser Stunde. Ein Klick auf eine Stunde zeigt Reihenfolge und Sekunden.",
+          "text": "Der gewählte Tag (heute oder die nächsten 6 Tage) erscheint der Reihe nach auf einer Linie: Medien, Video, Werbung, Aktionen, Großspiel-Ankündigungen, Trailer. Jedes Feld ist proportional zur Länge und zeigt seine Sekunden. Zoomen Sie vom ganzen Tag bis auf 2 Minuten.",
           "points": [
-            "Stunde für Stunde: Happy Hours, zeitgesteuerte Menüs und Sonderübertragungen heben sich ab",
-            "Tagessummen: wie oft und wie lange jede Art lief",
-            "Am häufigsten wiederholte Inhalte und der durchschnittliche Abstand"
+            "Geordneter Ablauf auf einer Linie mit Name, Art und Sekunden",
+            "Zeitleiste, „Jetzt“-Markierung, zeitgesteuerte Menüs und Sonderübertragungen",
+            "Tagessummen und die am häufigsten wiederholten Inhalte"
           ]
         },
         "ar": {
-          "title": "اليوم كله في نظرة واحدة: ماذا يُعرض ومتى",
+          "title": "شاهد ما يُعرض ومتى على خط واحد",
           "short": "ملخص التدفق",
           "compare": "ملخص التدفق",
-          "text": "شاهد خريطة بعين الطائر لليوم الذي تختاره (اليوم أو الأيام الستة القادمة). كل صف ساعة واحدة، وتبيّن الألوان حصة الوسائط والإعلانات والعروض وإعلانات المباريات الكبرى والإعلانات التشويقية في تلك الساعة. انقر على ساعة لعرض الترتيب والثواني.",
+          "text": "يظهر اليوم الذي تختاره (اليوم أو الأيام الستة القادمة) بالترتيب على خط واحد: وسائط، فيديو، إعلانات، عروض، إعلانات المباريات الكبرى، إعلانات تشويقية. كل مربع يتناسب مع مدته ويعرض ثوانيه. يمكنك التكبير من اليوم كله حتى دقيقتين.",
           "points": [
-            "خريطة ساعة بساعة: تتميز ساعات الخصم والقوائم المجدولة والبث الخاص",
-            "إجماليات اليوم: عدد مرات عرض كل نوع ومدته",
-            "المحتوى الأكثر تكرارًا ومتوسط الفاصل بين التكرارات"
+            "تدفق مرتب على خط واحد مع الاسم والنوع والثواني",
+            "مسطرة زمنية وعلامة «الآن» والقوائم المجدولة وساعات البث الخاص",
+            "إجماليات اليوم والمحتوى الأكثر تكرارًا"
           ]
         }
       }

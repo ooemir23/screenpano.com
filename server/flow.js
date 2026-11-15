@@ -10,6 +10,7 @@ const TRAILER_SEC = 90;          // fragman süresi YouTube'dan gelir; sunucu bi
 const VIDEO_UNKNOWN_SEC = 30;    // süresi henüz ölçülmemiş video
 const DAY = 86400;
 const TOP_N = 8;
+const KINDS = ['video', 'youtube', 'image', 'poster', 'ad', 'book', 'insta', 'camp', 'big', 'trailer'];
 
 function kindOf(v) {
   if (String(v.id || '').startsWith('pad:')) return 'ad';
@@ -66,8 +67,10 @@ function summary(t, screenId, dayOffset = 0) {
     return ctx;
   };
 
-  const hours = Array.from({ length: 24 }, () => ({ strip: [], counts: {}, n: 0, round: 0, special: null, seq: [] }));
-  const SEQ_MAX = 40; // saate tıklayınca gösterilen ilk gösterimler (sıra)
+  const hours = Array.from({ length: 24 }, () => ({ strip: [], counts: {}, n: 0, round: 0, special: null }));
+  // Tek çizgi için sıralı olay listesi: [başlangıç sn, tür no, ad no, süre sn]; adlar tekrar etmesin diye tabloda
+  const ev = [], names = [], nameIx = new Map();
+  const nameNo = n => { let i = nameIx.get(n); if (i == null) { i = names.length; names.push(n); nameIx.set(n, i); } return i; };
   const totals = {}, top = new Map();
   let at = 0, idx = 0, plays = 0, trAt = -Infinity, trK = 0, bigLast = null;
   const campLast = {};
@@ -75,7 +78,8 @@ function summary(t, screenId, dayOffset = 0) {
   const addEv = (kind, name, dur) => {
     dur = Math.max(1, Math.round(dur));
     const h0 = Math.floor(at / 3600);
-    if (h0 < 24) { hours[h0].counts[kind] = (hours[h0].counts[kind] || 0) + 1; if (hours[h0].seq.length < SEQ_MAX) hours[h0].seq.push([at - h0 * 3600, kind, name, dur]); }
+    if (h0 < 24) { hours[h0].counts[kind] = (hours[h0].counts[kind] || 0) + 1; }
+    if (at < DAY) ev.push([at, KINDS.indexOf(kind), nameNo(name), dur]);
     const tt = totals[kind] || (totals[kind] = { kind, plays: 0, sec: 0 }); tt.plays++; tt.sec += dur;
     const key = kind + '|' + name, tp = top.get(key) || { kind, name, plays: 0, sec: 0 }; tp.plays++; tp.sec += dur; top.set(key, tp);
     let a = at, rem = dur, first = true;
@@ -111,8 +115,8 @@ function summary(t, screenId, dayOffset = 0) {
 
   const loopNow = context(Math.max(0, Math.min(DAY - 1, dayOffset === 0 ? (hh * 60 + mm) * 60 : 12 * 3600)));
   return {
-    day: dayOffset, date, nowHour: dayOffset === 0 ? hh : null,
-    hours,
+    day: dayOffset, date, nowHour: dayOffset === 0 ? hh : null, nowSec: dayOffset === 0 ? (hh * 60 + mm) * 60 + now.getSeconds() : null,
+    hours, kinds: KINDS, names, ev,
     totals: Object.values(totals).sort((a, b) => b.sec - a.sec),
     top: [...top.values()].sort((a, b) => b.plays - a.plays || b.sec - a.sec).slice(0, TOP_N),
     loopCount: loopNow.items.length,
