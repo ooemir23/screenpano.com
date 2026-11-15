@@ -1033,11 +1033,13 @@ let mediaPoll = null;
 SECTIONS.media = {
   html() {
     const v = S.db.videos;
-    if (SUB.media === 'posters') return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler.') + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']]) + postersHtml();
+    const mTabs = tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler'], ['trivia', '💡 Bilgi & Mini Quiz']]);
+    if (SUB.media === 'posters') return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler.') + mTabs + postersHtml();
+    if (SUB.media === 'trivia') return head('Medya', 'Medya ekranında videoların ve fotoğrafların arasında dönen etkileşimli bilgi, mini quiz, istatistik ve bilmece kartları.') + mTabs + triviaCardHtml();
     const qo = v.filter(x => x.quotaOver).length;
     return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; saat simgesiyle gün ve saat verin.')
       + (qo ? `<div class="bn bad"><span><b>${qo} dosya depolama alanına sığmadığı için ekranda gösterilmiyor.</b> Kullanılmayan dosyaları silin; yer açılınca kendiliğinden ekrana gelir. Daha fazla alan Pro pakette.</span><a class="btn s g" href="#settings/plan">Paketler</a></div>` : '')
-      + tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler']])
+      + mTabs
       + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV\'de takılmadan oynayacak şekilde otomatik hazırlanır.',
         `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div><div class="row mt" style="align-items:center"><span class="muted" style="flex:1;font-size:13px">Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın.</span><button class="btn g s" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
       + card('YouTube bağlantısı ekle', 'Bir YouTube videosunun bağlantısını yapıştırın; ekranda sırası gelince belirttiğiniz süre boyunca oynar (video kısaysa baştan döner). İsterseniz sesli oynatabilirsiniz.',
@@ -1046,12 +1048,14 @@ SECTIONS.media = {
           <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}${x.full ? '<span class="fbadge">Tam ekran</span>' : ''}${x.quotaOver ? '<span class="fbadge" style="left:6px;right:auto;background:var(--bad)">Alan yok · gösterilmiyor</span>' : ''}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}${x.sound ? ' · 🔊' : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? `<div class="proc">Hazırlanıyor…${x.job ? `<br><small style="font-weight:400;font-size:11.5px">${x.job.pos > 1 ? 'Sıra #' + x.job.pos + ' · ' : ''}~${x.job.etaSec || 15} sn kaldı</small>` : ''}</div>` : ''}</div>
           <div class="m"><span class="grip" title="Sürükleyerek sıralayın">${ic('grip-vertical')}</span><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g ib" onclick="openSched('video','${x.id}')" title="Zamanla">${ic('clock')}</button><button class="btn xs g ib" onclick="tileMenu(event,'${x.id}')" title="Diğer işlemler">${ic('ellipsis')}</button></div></div>`).join('')}</div>`
         : '<div class="empty">Henüz dosya yok. Yukarıdan ekleyin.</div>')
+      + triviaCardHtml()
       + `<div class="grid g2">` + card('Fotoğraf süresi', 'Her fotoğraf ekranda kaç saniye kalsın.', `<div class="row"><input type="number" id="imgsec" min="3" max="120" value="${S.db.imageSeconds}" style="max-width:120px"><span class="muted">saniye</span><span style="flex:1"></span><button class="btn" data-save onclick="act('PUT','/settings',{imageSeconds:+$('imgsec').value},'Kaydedildi')">Kaydet</button></div>`)
       + card('Depolama ve Oynatma Akıcılığı', '', `<div id="stor" class="muted">Hesaplanıyor…</div>`) + `</div>`;
   },
   async after() {
     if (SUB.media === 'posters') return drawPosterGallery();
-    drawThumbs(); drawMBulk();
+    if (SUB.media === 'trivia') return drawTriviaPv();
+    drawThumbs(); drawMBulk(); drawTriviaPv();
     const g = $('mgrid');
     if (g) { let drag = null;
       g.addEventListener('dragstart', e => { drag = e.target.closest('.tile'); e.dataTransfer.effectAllowed = 'move'; });
@@ -1171,6 +1175,64 @@ async function addYt() {
   if (ok) refresh();
 }
 function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return openModal(`<iframe src="https://www.youtube.com/embed/${esc(v.yt)}?rel=0" style="width:100%;aspect-ratio:16/9;border:0" allow="encrypted-media"></iframe><div class="muted">${i + 1}. ${esc(v.name)}</div>`); const u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
+
+/* ================= ETKİLEŞİMLİ BİLGİ & MİNİ QUİZ (MEDYA EKRANI) ================= */
+let TRV_STOP = null, TRV_STEP = Math.floor(Date.now() / 15000), TRV_MODE = null, TRV_CUR = null;
+const trvCfg = () => window.SPTrivia ? SPTrivia.normCfg(S.db.trivia) : Object.assign({ enabled: true, every: 2, gapMin: 0, durSec: 14, modes: ['quiz', 'fact', 'stat', 'riddle'], cats: ['cafe', 'sport', 'general', 'cinema'] }, S.db.trivia || {});
+function triviaCardHtml() {
+  const c = trvCfg();
+  const modes = window.SPTrivia ? Object.entries(SPTrivia.MODES) : [['quiz', { icon: '🧠', name: '2 Aşamalı Mini Quiz' }], ['fact', { icon: '💡', name: 'Bunları Biliyor Muydunuz?' }], ['stat', { icon: '📊', name: 'Sayılarla Dünya' }], ['riddle', { icon: '🧩', name: 'Günün Bilmecesi & Zekâ Sorusu' }]];
+  const cats = window.SPTrivia ? Object.entries(SPTrivia.CATS) : [['cafe', { icon: '☕', name: 'Kafe & Gastronomi' }], ['sport', { icon: '⚽', name: 'Spor & Rekorlar' }], ['general', { icon: '🌍', name: 'Bilim, Uzay & Doğa' }], ['cinema', { icon: '🎬', name: 'Sinema & Kültür' }]];
+  return card('💡 Etkileşimli Bilgi & Mini Quiz Kartları (Ücretsiz)', 'Medya ekranında videoların ve fotoğrafların arasında otomatik dönen 2 aşamalı Mini Quiz (Tahmin Et), Kategorili Bunları Biliyor Muydunuz?, Sayılarla Dünya ve Günün Bilmecesi kartları. Dış servis veya kota gerektirmez.',
+    `<div class="swr"><div class="b"><b>Medya ekranında otomatik göster</b><span>Videoların ve fotoğrafların arasında sırayla ekrana gelir; hiç medya yüklü değilse ekranı tek başına canlı tutar</span></div>${sw(c.enabled, "saveTriviaCfg({enabled:this.checked})")}</div>
+     <div class="ped mt" style="align-items:start">
+       <div>
+         <div class="pv16" id="trv-pv" style="${themeVars()};position:relative;overflow:hidden;border-radius:10px;border:1px solid var(--line)"></div>
+         <div class="row mt" style="flex-wrap:wrap;gap:6px;justify-content:space-between">
+           <div class="row" style="flex-wrap:wrap;gap:6px">
+             ${modes.map(([k, m]) => `<button type="button" class="btn xs ${TRV_MODE === k ? '' : 'g'}" onclick="TRV_MODE='${k}';drawTriviaPv()">${m.icon} ${esc(m.short || m.name)}</button>`).join('')}
+             <button type="button" class="btn xs g" onclick="drawTriviaPv()">🎲 Başka Örnek</button>
+           </div>
+           <button type="button" class="btn s" onclick="testTriviaOnTv()">📺 TV'de Şimdi Göster</button>
+         </div>
+       </div>
+       <div>
+         <div class="fl"><span>Gösterilecek formatlar (sırayla döner)</span>
+           <div class="chips" style="margin-top:6px">${modes.map(([k, m]) => `<span class="chip ${c.modes.includes(k) ? 'on' : ''}" onclick="togTriviaList('modes','${k}')">${m.icon} ${esc(m.name)}</span>`).join('')}</div>
+         </div>
+         <div class="fl mt"><span>İşletmenize uygun bilgi kategorileri</span>
+           <div class="chips" style="margin-top:6px">${cats.map(([k, ct]) => `<span class="chip ${c.cats.includes(k) ? 'on' : ''}" onclick="togTriviaList('cats','${k}')" title="${esc(ct.desc || '')}">${ct.icon} ${esc(ct.name)}</span>`).join('')}</div>
+         </div>
+         <div class="f mt">
+           ${fl('Kaç medya içeriğinde bir gösterilsin', `<input type="number" id="trv-every" min="1" max="20" value="${c.every}">`)}
+           ${fl('Kartın ekranda kalma süresi (saniye)', `<input type="number" id="trv-dur" min="8" max="30" value="${c.durSec}">`)}
+         </div>
+         <div class="row end mt"><button type="button" class="btn s" onclick="saveTriviaCfg({every:+$('trv-every').value,durSec:+$('trv-dur').value})">Ayarları kaydet</button></div>
+       </div>
+     </div>`);
+}
+function drawTriviaPv() {
+  const el = $('trv-pv');
+  if (!el || !window.SPTrivia) return;
+  if (TRV_STOP) { TRV_STOP(); TRV_STOP = null; }
+  const c = trvCfg();
+  TRV_CUR = SPTrivia.pick(c, TRV_STEP++, TRV_MODE, null);
+  TRV_STOP = SPTrivia.mount(el, TRV_CUR, c.durSec || 14, () => drawTriviaPv());
+}
+async function togTriviaList(field, key) {
+  const c = trvCfg(), cur = c[field] || [];
+  const next = cur.includes(key) ? cur.filter(x => x !== key) : [...cur, key];
+  if (!next.length) return toast('En az bir seçenek açık kalmalıdır', true);
+  await saveTriviaCfg({ [field]: next });
+}
+async function saveTriviaCfg(patch) {
+  const j = await act('PUT', '/trivia', patch, 'Kaydedildi', false);
+  if (j && j.trivia) { S.db.trivia = j.trivia; render(true); }
+}
+async function testTriviaOnTv() {
+  const body = TRV_CUR ? { id: TRV_CUR.id, mode: TRV_CUR.mode, cat: TRV_CUR.cat } : { mode: TRV_MODE };
+  await act('POST', '/trivia/test', body, 'Seçili kart TV medya ekranına gönderildi', false);
+}
 
 
 /* ================= ÖZEL YAYIN ================= */
@@ -2050,6 +2112,7 @@ SECTIONS.info = {
            <div class="f mt">${fl('Kaç içerikte bir kitap slaytı', `<input type="number" min="1" max="50" value="${db.bookEvery || 6}" onchange="opt('bookEvery',+this.value)">`)}${fl('Kitap slaytları arası en az (dakika)', `<input type="number" min="0" max="120" value="${db.bookGapMin || 0}" placeholder="0" onchange="opt('bookGapMin',+this.value)">`)}</div>
            <p class="muted" style="font-size:12px;margin:6px 0 0">Örnek: 10 ve 5 yazarsanız 10 içerik oynadıktan sonra, en az 5 dakika geçmişse kitap slaytı gelir. Dakika 0 ise yalnız içerik sayısına bakılır.</p>`)
       + tile('📜', 'Tarihte bugün', 'Vikipedi\'den bugünün tarihinde yaşanan olaylar', db.showOnThisDay !== false, "opt('showOnThisDay',this.checked)", durIn('otd') + maxIn('otd', 'hepsi', 1, 12))
+      + tile('💡', 'Etkileşimli Bilgi & Mini Quiz (Medya ekranı)', 'Medya ekranında 2 aşamalı Mini Quiz, Bunları Biliyor Muydunuz?, Sayılarla Dünya ve Bilmece kartları (Ücretsiz)', trvCfg().enabled, "saveTriviaCfg({enabled:this.checked})", `<p class="muted" style="font-size:12px;margin:0">Format ve kategori seçimi için <a href="#media/trivia">Medya › Bilgi & Mini Quiz</a> bölümünü açın.</p>`)
       + tile('🚗', 'Canlı trafik', ist ? 'İstanbul trafik haritası ve yoğunluk yüzdesi' : 'Yalnızca İstanbul\'daki işletmelerde gösterilir', db.showTraffic !== false, "opt('showTraffic',this.checked)", durIn('traffic'))
       + `</div><div class="row end mt"><button class="btn" onclick="saveInfoCfg()">Süreleri ve sınırları kaydet</button></div>`;
   },

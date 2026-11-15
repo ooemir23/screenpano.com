@@ -260,6 +260,7 @@ function publicState(t, screenId) {
     showMovies: live && (db.movies || {}).enabled !== false,
     showTrailers: !sp && live && (db.movies || {}).trailers !== false,
     trailerEvery: (db.movies || {}).every || 4, trailerGapMin: (db.movies || {}).gapMin || 8, // fragman sıklığı: kaç içerikte bir / en az kaç dakika arayla
+    trivia: sp ? { ...require('../public/trivia').DEFAULT_CFG, enabled: false } : require('../public/trivia').normCfg(db.trivia),
     movies: live && movies && movies.items && Date.now() - Date.parse(movies.updated) < 4 * 24 * F.HOUR ? { items: movies.items.slice(0, imax.movies || 999) } : null,
     showPharmacy: live && (db.pharmacy || {}).enabled !== false,
     pharmacies: live ? cap(F.pharmFor(t), imax.pharm) : null,

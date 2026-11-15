@@ -1770,6 +1770,26 @@
           "text": "للأعمال التي تثبّت التلفاز عموديًا (طوليًا) على الحائط أو الواجهة، أُضيف وضع التلفاز العمودي (90° يمينًا / 270° يسارًا) في قسم التصميم مع 4 تخطيطات عمودية جاهزة (القائمة والواجهة، الواجهة والحملة، برج المباريات والنتائج، لوحة الفندق / الردهة). تدور الشاشة تلقائيًا دون إعداد إضافي في جهاز التلفاز، ويعمل محرر التخطيط والمعاينة المباشرة بنسبة 9:16."
         }
       }
+    },
+    {
+      "icon": "💡",
+      "title": "Medya ekranında etkileşimli Mini Quiz, Bunları Biliyor Muydunuz?, İstatistik ve Bilmece kartları",
+      "text": "Medya ekranında videoların ve fotoğrafların arasında sırayla dönen 2 aşamalı Mini Quiz (önce soru ve şıklar, ardından doğru cevap ve açıklaması), kategorili Bunları Biliyor Muydunuz?, Sayılarla Dünya ve Günün Bilmecesi kartları eklendi. Kafe & gastronomi, spor, bilim & doğa ve sinema kategorilerini işletmenize göre seçebilir, ücretsiz olarak tüm paketlerde kullanabilirsiniz.",
+      "added": "2026-11-15",
+      "i18n": {
+        "en": {
+          "title": "Interactive Mini Quiz, Did You Know?, Statistics and Riddle cards on the media screen",
+          "text": "2-step Mini Quiz cards (first the question and options, then the revealed answer and explanation), categorised Did You Know?, World in Numbers and Riddle of the Day cards now rotate between your videos and photos on the media screen. Pick cafe & gastronomy, sports, science & nature or cinema categories for your venue, included free on every plan."
+        },
+        "de": {
+          "title": "Interaktives Mini-Quiz, „Schon gewusst?“, Statistik- und Rätselkarten auf dem Medienbildschirm",
+          "text": "Zweistufige Mini-Quiz-Karten (zuerst Frage und Antwortmöglichkeiten, danach Auflösung mit Erklärung), kategorisiertes „Schon gewusst?“, „Die Welt in Zahlen“ und Tagesrätsel wechseln sich auf dem Medienbildschirm mit Ihren Videos und Fotos ab. Wählen Sie Café & Gastronomie, Sport, Wissenschaft & Natur oder Kino passend zu Ihrem Betrieb – kostenlos in allen Paketen."
+        },
+        "ar": {
+          "title": "بطاقات المسابقات القصيرة التفاعلية و«هل تعلم؟» والإحصاءات والألغاز على شاشة الوسائط",
+          "text": "بطاقات مسابقة قصيرة من مرحلتين (تظهر أولاً السؤال والخيارات ثم الإجابة الصحيحة مع الشرح)، إلى جانب بطاقات «هل تعلم؟» و«العالم بالأرقام» و«لغز اليوم» التي تدور تلقائيًا بين الفيديوهات والصور على شاشة الوسائط. اختر فئات المقهى وفنون الطهي أو الرياضة أو العلوم والطبيعة أو السينما بما يناسب منشأتك مجانًا في جميع الباقات."
+        }
+      }
     }
   ],
   "shots": {

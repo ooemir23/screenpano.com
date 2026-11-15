@@ -561,6 +561,26 @@ r.put('/movies', (req, res) => {
   t.db.movies = { enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled !== false, trailers: typeof b.trailers === 'boolean' ? b.trailers : cur.trailers !== false, every, gapMin };
   changed(t); res.json({ ok: true }); F.refreshMovies();
 });
+// Medya ekranı etkileşimli bilgi & mini quiz kartları (yerel havuz, sıfır API, tüm paketlerde ücretsiz)
+const TRIVIA = require('../public/trivia');
+r.put('/trivia', (req, res) => {
+  const t = req.t, b = req.body || {}, cur = TRIVIA.normCfg(t.db.trivia);
+  t.db.trivia = TRIVIA.normCfg({
+    enabled: typeof b.enabled === 'boolean' ? b.enabled : cur.enabled,
+    every: b.every !== undefined ? b.every : cur.every,
+    gapMin: b.gapMin !== undefined ? b.gapMin : cur.gapMin,
+    durSec: b.durSec !== undefined ? b.durSec : cur.durSec,
+    modes: Array.isArray(b.modes) ? b.modes : cur.modes,
+    cats: Array.isArray(b.cats) ? b.cats : cur.cats,
+  });
+  changed(t); res.json({ ok: true, trivia: t.db.trivia });
+});
+r.post('/trivia/test', (req, res) => {
+  const t = req.t, b = req.body || {};
+  sendTo(t, { type: 'trivia', force: true, mode: b.mode || null, cat: b.cat || null, id: b.id || null });
+  const on = hub.onlineDeviceIds(), online = store.q.devicesOf.all(t.id).filter(d => on.has(d.id)).length;
+  res.json({ ok: true, online });
+});
 // Bilgi bandı: her içerik türünün ekranda kalma süresi (sn) ve en çok kaç öğe gösterileceği
 const INFO_TYPES = ['league', 'table', 'pharm', 'breaking', 'news', 'movies', 'books', 'otd', 'traffic'];
 const INFO_MAX = { news: [1, 20], breaking: [1, 12], movies: [1, 20], books: [1, 40], otd: [1, 12], pharm: [1, 12] };

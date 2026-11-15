@@ -3,7 +3,7 @@
    - Medya (/u/...): önbellekte varsa oradan (video ileri sarma için Range desteğiyle), yoksa ağdan
    - TV, oynatma listesindeki medyayı "prefetch" mesajıyla sırayla indirtir; listeden çıkanlar silinir */
 const SHELL = 'sp-shell-v2', MEDIA = 'sp-media-v1';
-const SHELL_URLS = ['/tv', '/posters.js', '/favicon.svg', '/fonts/montserrat-latin.woff2', '/fonts/montserrat-latin-ext.woff2'];
+const SHELL_URLS = ['/tv', '/posters.js', '/trivia.js', '/favicon.svg', '/fonts/montserrat-latin.woff2', '/fonts/montserrat-latin-ext.woff2'];
 
 self.addEventListener('install', e => { e.waitUntil(caches.open(SHELL).then(c => c.addAll(SHELL_URLS)).catch(() => {}).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== SHELL && k !== MEDIA).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -81,7 +81,7 @@ self.addEventListener('fetch', e => {
   if (u.pathname.startsWith('/u/')) return e.respondWith(media(req));
   // Kök adres yalnız eski APK'ların WebView'ında TV sayfasıdır (sunucudaki "/" kuralıyla aynı); tarayıcıda tanıtım sitesi açılmalı
   if (u.pathname === '/tv' || (req.mode === 'navigate' && u.pathname === '/' && /; wv\)/.test(self.navigator.userAgent))) return e.respondWith(tvInstant(req));
-  if (u.pathname === '/posters.js' || u.pathname === '/panel.js' || u.pathname.startsWith('/i18n/')) return e.respondWith(networkFirst(req)); // poster/panel/çeviri güncellenince eski kopya bir reload geride kalmasın (internet yoksa önbellekten)
+  if (u.pathname === '/posters.js' || u.pathname === '/trivia.js' || u.pathname === '/panel.js' || u.pathname.startsWith('/i18n/')) return e.respondWith(networkFirst(req)); // poster/panel/çeviri güncellenince eski kopya bir reload geride kalmasın (internet yoksa önbellekten)
   if (/^\/(fonts|celebrate|logo)\//.test(u.pathname) || /\.(js|svg|png|jpe?g|webp|woff2)$/.test(u.pathname)) return e.respondWith(staleWhileRevalidate(req));
 });
 

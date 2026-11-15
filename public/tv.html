@@ -418,8 +418,9 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu #mtopcls{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.4vh;text-align:center}
 #menu .hint{font-size:1.6vh;color:#7d8791;text-align:center;letter-spacing:.02em}
 @media (max-aspect-ratio:1/1){#menu .mgrid{grid-template-columns:1fr}#menu .mx{width:94vw}}
-/* kampanya kartı */
+/* kampanya kartı ve etkileşimli bilgi kartı */
 #poster{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .8s ease-in-out;pointer-events:none}#poster.on{opacity:1}
+#trivia{position:absolute;inset:.6vh;z-index:6;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .55s ease-in-out}#trivia.on{opacity:1}
 #langchip{position:absolute;top:.8vh;right:.8vw;font:700 1.2vh/1 var(--font),sans-serif;letter-spacing:.08em;padding:.45vh .6vw;border-radius:.6vh;background:var(--accent);color:var(--white);opacity:.85}
 #a-branches{display:grid;gap:1.2vh;margin-top:1vh}#a-branches button{font-size:2.2vh}
 #camp{position:absolute;inset:.6vh;z-index:7;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .8s ease-in-out;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 70% 70% at 30% 40%,var(--ad) 0%,#2a1b0f 60%,#1a110a 100%)}
@@ -1252,6 +1253,7 @@ html.theme-glass .pill.live::before {
 </div></div>
 <div id="guide"><i></i><i></i><i></i><i></i><b id="gtxt"></b></div>
 <script src="/posters.js"></script>
+<script src="/trivia.js"></script>
 <script>
 const $id = id => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
@@ -1405,6 +1407,49 @@ function playTrailer(retry) {
   trailerCur = m; trailerTry = 0; wsSend({ type: 'play', id: 'tr:' + String(m.id || m.title || 'x').replace(/[^\w-]/g, '').slice(0, 40) });
   showTrailer(m, (m.alts && m.alts[0]) || m.trailer);
 }
+// ---- Etkileşimli bilgi & mini quiz kartları (yerel havuz, sıfır API) ----
+let triviaCfg = window.SPTrivia ? SPTrivia.normCfg() : { enabled: true, every: 2, gapMin: 0, durSec: 14, modes: ['quiz', 'fact', 'stat', 'riddle'], cats: ['cafe', 'sport', 'general', 'cinema'] };
+let triviaPlays = 99, triviaAt = 0, triviaOn = false, triviaStop = null, triviaIdleT = 0;
+let triviaStep = Math.floor(Date.now() / 15000);
+function endTrivia() {
+  if (!triviaOn) return;
+  triviaOn = false;
+  if (triviaStop) { triviaStop(); triviaStop = null; }
+  const el = document.getElementById('trivia');
+  if (el) {
+    el.classList.remove('on');
+    setTimeout(() => { if (!triviaOn && el) el.innerHTML = ''; }, 650);
+  }
+  triviaAt = Date.now();
+  triviaPlays = 0;
+  if (!videos.length && MEDIA_ON && triviaCfg && triviaCfg.enabled && !big.showing && !camp.showing && !trailerOn) {
+    clearTimeout(triviaIdleT);
+    triviaIdleT = setTimeout(() => { if (!videos.length && MEDIA_ON && triviaCfg && triviaCfg.enabled && !triviaOn) playTrivia(); }, 700);
+    return;
+  }
+  if (NMED()) { window.__N.mediaResume(); return; }
+  idx++; play();
+}
+function playTrivia(forceMode, forceCat, immediate, forceId) {
+  if (!window.SPTrivia || !MEDIA_ON) return;
+  if (!immediate && (big.showing || camp.showing || trailerOn)) return;
+  if (triviaOn && !immediate) return;
+  if (triviaStop) { triviaStop(); triviaStop = null; }
+  hideYt();
+  exoStop(true);
+  clearTimeout(timer);
+  clearTimeout(triviaIdleT);
+  els.forEach(v => v.pause());
+  let el = document.getElementById('trivia');
+  if (!el) { el = document.createElement('div'); el.id = 'trivia'; document.getElementById('frame').appendChild(el); }
+  triviaOn = true;
+  const item = (forceId && SPTrivia.ITEMS.find(x => x.id === forceId)) || SPTrivia.pick(triviaCfg, triviaStep++, forceMode, forceCat);
+  const dur = (triviaCfg && triviaCfg.durSec) || 14;
+  wsSend({ type: 'shown', kind: 'trivia', id: item ? item.id : 'trv' });
+  triviaStop = SPTrivia.mount(el, item, dur, endTrivia);
+  requestAnimationFrame(() => el.classList.add('on'));
+}
+addEventListener('resize', () => { const el = document.getElementById('trivia'); if (el && el.firstElementChild && window.SPTrivia) SPTrivia.fit(el.firstElementChild); });
 function next() {
   clearTimeout(timer);
   if (celeb.pd) { celeb.pd = false; if (celeb.on) { celeb.late = true; celebPhoto(); } }
@@ -1416,6 +1461,7 @@ function next() {
 function advance() {
   if (window.__pendingBig && !big.showing && !trailerOn) { const pb = window.__pendingBig; window.__pendingBig = null; big.queue = []; big.after = advance; bigShow(pb.match, pb.cfg); return; } // panelden gönderilen deneme: fragman/duyuru bitince
   if (++trailerPlays >= (window.__trailerEvery || 4) && trailerList.length && navigator.onLine !== false && Date.now() - trailerAt > (window.__trailerGapMin || 8) * 60 * 1000) { playTrailer(); return; }
+  if (triviaCfg && triviaCfg.enabled && window.SPTrivia && ++triviaPlays >= (triviaCfg.every || 2) && Date.now() - triviaAt >= (triviaCfg.gapMin || 0) * 60 * 1000) { playTrivia(); return; }
   if (NMED()) { window.__N.mediaResume(); return; }
   idx++; play();
 }
@@ -1581,7 +1627,7 @@ function showVideoSeamless(it, durMs, startMs) {
 
   if (window.__lite) bctx.clearRect(0, 0, bgc.width, bgc.height);
   const targetV = idleV(), oldV = curV();
-  targetV.dataset.url = it.url; targetV.src = it.url; targetV.loop = videos.length === 1;
+  targetV.dataset.url = it.url; targetV.src = it.url; targetV.loop = videos.length === 1 && !(triviaCfg && triviaCfg.enabled);
 
   const onPlaying = () => {
     if (current !== it.id) return;
@@ -1617,7 +1663,7 @@ window.__nmN = 0;
 window.__mediaBoundary = () => {
   window.__nmN++;
   next();
-  const hold = !!(trailerOn || big.showing || camp.showing);
+  const hold = !!(trailerOn || big.showing || camp.showing || triviaOn);
   if (hold && !window.__nativeCampOn && !window.__nativeBigOn) exoStop(true);
   return hold ? 'hold' : 'go';
 };
@@ -1661,7 +1707,7 @@ function play() {
 
 function syncToMedia(m) {
   if (!MEDIA_ON || !m || window.__perfHold || NMED()) return;
-  if (trailerOn || big.showing || camp.showing) return; // Fragman veya büyük duyurular oynarken sunucu senkronuyla kesilmez!
+  if (trailerOn || big.showing || camp.showing || triviaOn) return; // Fragman veya büyük duyurular oynarken sunucu senkronuyla kesilmez!
   if (!videos || !videos.length) {
     if (typeof ALLV !== 'undefined' && ALLV.length) applyVideos();
     if (!videos || !videos.length) return;
@@ -2298,6 +2344,12 @@ function setState(s) {
   if (BIGDEMO) bigDemo();
   trailerList = s.showTrailers !== false && s.movies ? s.movies.items.filter(m => m.trailer) : [];
   window.__trailerEvery = s.trailerEvery || 4; window.__trailerGapMin = s.trailerGapMin || 8;
+  if (s.trivia) {
+    const prevOn = triviaCfg && triviaCfg.enabled;
+    triviaCfg = window.SPTrivia ? SPTrivia.normCfg(s.trivia) : s.trivia;
+    if (!triviaCfg.enabled && triviaOn) endTrivia();
+    else if (triviaCfg.enabled && !prevOn && !videos.length && MEDIA_ON && !triviaOn) playTrivia();
+  }
   setCeleb(s.celebration);
   applySafe(s.safe || { L: s.safeInset, R: s.safeInset, T: s.safeInset, B: s.safeInset }, s.safeGuide);
   if ((s.fxMode || 'auto') !== window.__fx) { window.__fx = s.fxMode || 'auto'; try { localStorage.removeItem('fxAdapt'); } catch (e) { /* kayıt yok */ } window.__fxAuto = false; window.__applyFx(); }
@@ -3293,6 +3345,7 @@ document.addEventListener('keydown', e => {
   if (Date.now() - lastSkip < 350) return; // tuşa basılı tutunca atlamayı sınırla
   lastSkip = Date.now(); e.preventDefault();
   if (trailerOn) { endTrailer(); return; } // fragman: bitir ve döngüye dön
+  if (triviaOn) { endTrivia(); return; } // etkileşimli bilgi kartı: bitir ve döngüye dön
   clearTimeout(timer);
   idx += e.key === 'ArrowRight' ? 1 : -1;
   if (idx < 0) idx = videos.length - 1;
@@ -3927,6 +3980,7 @@ function qrCtx() {
   if (on('big') || window.__nativeBigOn) return 'big';
   if (on('camp') || window.__nativeCampOn) return 'camp';
   if (trailerOn) return 'trailer';
+  if (triviaOn) return 'poster';
   const it = videos.find(v => v.id === current);
   return it ? (it.type === 'image' || it.type === 'poster' ? it.type : 'video') : '';
 }
@@ -4190,6 +4244,7 @@ function connect() {
     else if (m.type === 'goal') { if (m.goal && m.goal.at && Date.now() + (window.__srvOff || 0) - m.goal.at > 60000) return; showGoal(m.goal); }
     else if (m.type === 'campaign') campShow(m.camp);
     else if (m.type === 'bigmatch') { if (m.force) { if (MEDIA_ON && videos.length && !big.showing) { window.__pendingBig = m; holdForEnd(); return; } /* içerik bitince */ big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
+    else if (m.type === 'trivia') playTrivia(m.mode, m.cat, true, m.id);
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
     else if (m.type === 'music_cmd') onMusicCmd(m);
     else if (m.type === 'music_now') { const n = m.now; MUS.spConnectTrack = n && n.title ? { title: n.title, artist: n.artist || '', thumb: n.thumb || '', paused: !n.playing } : null; renderMusicBar(); }
@@ -4256,8 +4311,13 @@ function applyVideos() {
     if (window.__nativePoster) exoStop(true); // yerel afiş kalmasın, bekleme ekranı görünsün
     imgs.forEach(im => { im.style.opacity = '0'; im.style.display = 'none'; });
     updateStandby(true);
+    if (triviaCfg && triviaCfg.enabled && MEDIA_ON && !triviaOn) {
+      clearTimeout(triviaIdleT);
+      triviaIdleT = setTimeout(() => { if (!videos.length && MEDIA_ON && triviaCfg && triviaCfg.enabled && !triviaOn) playTrivia(); }, 600);
+    }
     return;
   }
+  clearTimeout(triviaIdleT);
   updateStandby(false);
   prepared = { id: null };
   const k = videos.findIndex(x => x.id === current); idx = k >= 0 ? k : 0;
@@ -4410,7 +4470,7 @@ function sendStatus() {
     hwid: n && n.hwId ? String(n.hwId()).slice(0, 32) : '', boot: n && n.bootStatus ? String(n.bootStatus()).slice(0, 12) : '', model: n && n.model ? String(n.model()).slice(0, 60) : '',
     mus, nm: `b${window.__nmN || 0} cd${camp.due ? 1 : 0} cl${camp.list.length} cs${camp.showing ? 1 : 0} v${videos.length} m${MEDIA_ON ? 1 : 0} n${NMED() ? 1 : 0} g${big.showing ? 1 : 0}p${window.__pendingBig ? 1 : 0}`,
     screen: `${screen.width}x${screen.height}@${devicePixelRatio || 1}`, ua: navigator.userAgent, uptime: Math.round((Date.now() - BOOT) / 1000),
-    playing: trailerOn ? 'Film fragmanı' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
+    playing: trailerOn ? 'Film fragmanı' : triviaOn ? 'Etkileşimli Bilgi & Quiz' : (it ? it.name || it.type : ''), errors: ERR.n, lastError: ERR.last,
     cached: CACHE.cached, cacheMB: Math.round((CACHE.bytes || 0) / 1048576), online: navigator.onLine !== false,
     jank: (() => { const j = window.__jank, now = performance.now(), t0 = j.r || BOOT, sec = Math.max(1, (now - t0) / 1000); const out = { fps: Math.round(j.f / sec), drops: j.d }; adaptFx(out.fps); j.f = 0; j.d = 0; j.r = now; return out; })(),
     mem: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0,
