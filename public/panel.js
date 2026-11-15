@@ -3624,7 +3624,7 @@ SECTIONS.agenda = {
     }).join('');
     return head('Yayın Ajandası', 'Önümüzdeki 7 gün boyunca ekranınızda hangi saatte hangi indirim, menü, kampanya veya zamanlanmış medyanın çıkacağını tek bakışta görün.',
       `<div class="row"><a class="btn xs g" href="#media">Medya zamanla</a><a class="btn xs g" href="#menu">Menü saati ayarla</a><a class="btn xs g" href="#happy">İndirim saati ekle</a></div>`)
-      + card('Akış Özeti', 'Seçtiğiniz günün akışı tek çizgide, içerikler sırayla ve süreleriyle orantılı: medya, video, reklam, fragman… Kampanya, büyük maç ve fragman o anki içerik bitince araya girer. Harita bir tahmindir; gerçek akış TV\'de anlık belirlenir.', '<div id="flowv"><div class="loading">Yükleniyor…</div></div>')
+      + card('Akış Özeti', 'Ekranda içeriklerin hangi sırayla ve kaç saniye gösterileceği: ana döngünün bir turu tek çizgide, araya giren kampanya, büyük maç ve fragmanla birlikte. Günlük görünümde tüm günü görürsünüz. Harita bir tahmindir; gerçek akış TV\'de anlık belirlenir.', '<div id="flowv"><div class="loading">Yükleniyor…</div></div>')
       + card('7 Günlük Yayın Akışı', 'Bir öğeye tıklayarak ilgili ayar sayfasına gidebilirsiniz.', daysHtml);
   },
   async after() { drawFlow(); }
@@ -3632,7 +3632,7 @@ SECTIONS.agenda = {
 
 // Akış özeti: günün tek çizgide sıralı akışı; sunucunun TV kurallarına göre yaptığı tahmini benzetim (server/flow.js)
 const FLOW_KIND = { video: ['Video', '#3b82f6'], image: ['Fotoğraf', '#14b8a6'], poster: ['Afiş', '#a855f7'], youtube: ['YouTube', '#ef4444'], ad: ['Reklam', '#f59e0b'], book: ['Kitap', '#84cc16'], insta: ['Instagram', '#ec4899'], camp: ['Kampanya', '#f97316'], big: ['Büyük maç', '#22c55e'], trailer: ['Fragman', '#6366f1'] };
-let FLOW_DAY = 0, FLOW_DATA = null, FLOW_ZOOM = 600; // FLOW_ZOOM: çizgide görünen pencere (sn)
+let FLOW_DAY = 0, FLOW_DATA = null, FLOW_MODE = 'round', FLOW_ROUNDS = 1, FLOW_ZOOM = 600; // FLOW_ZOOM: çizgide görünen pencere (sn)
 const FLOW_ZOOMS = [[86400, 'Tüm gün'], [3600, '1 saat'], [600, '10 dk'], [120, '2 dk']];
 const mmss = sec => { sec = Math.max(0, Math.round(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); };
 const hmin = sec => { const m = Math.round(sec / 60); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); };
@@ -3657,15 +3657,17 @@ function drawFlowLine() {
 function flowZoom(z) { FLOW_ZOOM = z; document.querySelectorAll('#flowv [data-fz]').forEach(b => b.classList.toggle('g', Number(b.dataset.fz) !== z)); drawFlowLine(); }
 async function drawFlow() {
   const box = $('flowv'); if (!box) return;
-  let j; try { j = await req('GET', '/flow?day=' + FLOW_DAY); } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  let j; try { j = await req('GET', FLOW_MODE === 'round' ? '/flow?rounds=' + FLOW_ROUNDS : '/flow?day=' + FLOW_DAY); } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
   if (!$('flowv')) return; // bölüm değişti
   FLOW_DATA = j;
-  if (j.blocked) { box.innerHTML = `<div class="empty">${esc(j.blocked)}</div>`; return; }
+  const modeChips = `<div class="row" style="gap:6px;margin-bottom:12px">${[['round', 'Tek tur'], ['day', 'Günlük']].map(([m, n]) => `<button type="button" class="btn xs ${FLOW_MODE === m ? '' : 'g'}" onclick="FLOW_MODE='${m}';drawFlow()">${n}</button>`).join('')}</div>`;
+  if (j.blocked) { box.innerHTML = modeChips + `<div class="empty">${esc(j.blocked)}</div>`; return; }
+  if (j.round) { drawFlowRound(box, j, modeChips); return; }
   const kc = k => (FLOW_KIND[k] || [k, '#888'])[1];
   const chip = k => `<span style="display:inline-block;min-width:78px;text-align:center;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;color:#fff;background:${kc(k)}">${esc((FLOW_KIND[k] || [k])[0])}</span>`;
   const base = new Date(j.date + 'T12:00:00');
   const dayChips = Array.from({ length: 7 }, (_, i) => { const d = new Date(base.getTime() + (i - j.day) * 864e5); return `<button type="button" class="btn xs ${i === j.day ? '' : 'g'}" onclick="FLOW_DAY=${i};drawFlow()">${i === 0 ? 'Bugün' : i === 1 ? 'Yarın' : esc(d.toLocaleDateString(I18N.locale, { weekday: 'short' }))}</button>`; }).join('');
-  if (!j.totals.length) { box.innerHTML = `<div class="row" style="gap:6px;margin-bottom:12px">${dayChips}</div><div class="empty">Gösterilecek içerik yok. Medya sekmesinden içerik ekleyin.</div>`; return; }
+  if (!j.totals.length) { box.innerHTML = modeChips + `<div class="row" style="gap:6px;margin-bottom:12px">${dayChips}</div><div class="empty">Gösterilecek içerik yok. Medya sekmesinden içerik ekleyin.</div>`; return; }
   const r = j.rules, rules = [];
   if (r.trailer) rules.push(`Fragman: her ${r.trailer.every} içerikte bir, en az ${r.trailer.gapMin} dk arayla`);
   (r.camps || []).forEach(c => rules.push(`Kampanya “${c.name}”: her ${c.everyMin} dk, ${c.durSec} sn`));
@@ -3674,7 +3676,7 @@ async function drawFlow() {
   const tbl = j.totals.map(t => `<tr><td>${chip(t.kind)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${t.plays}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${hmin(t.sec)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${Math.round(t.sec / sumSec * 100)}%</td></tr>`).join('');
   const top = j.top.map(t => `<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-top:1px solid var(--line2);font-size:13px">${chip(t.kind)}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.name)}</span><span class="muted">${esc(t.plays + ' kez · ortalama ' + Math.max(1, Math.round(1440 / t.plays)) + ' dk arayla')}</span></div>`).join('');
   const used = FLOW_KIND_ORDER.filter(k => j.totals.some(t => t.kind === k));
-  box.innerHTML = `<div class="row" style="gap:6px;margin-bottom:12px">${dayChips}</div>`
+  box.innerHTML = modeChips + `<div class="row" style="gap:6px;margin-bottom:12px">${dayChips}</div>`
     + (rules.length ? `<ul class="muted" style="margin:0 0 12px;padding-left:18px;font-size:13px">${rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '')
     + `<div class="row" style="gap:6px;margin-bottom:8px;align-items:center">${FLOW_ZOOMS.map(([z, n]) => `<button type="button" data-fz="${z}" class="btn xs ${z === FLOW_ZOOM ? '' : 'g'}" onclick="flowZoom(${z})">${n}</button>`).join('')}<span class="muted" style="font-size:12px">Çizgiyi sağa sola kaydırın; kutunun üstüne gelince ayrıntı görünür.</span></div>`
     + `<div id="flowline" style="overflow-x:auto;padding-bottom:8px"></div>`
@@ -3683,6 +3685,29 @@ async function drawFlow() {
     + `<h4 style="margin:18px 0 6px">En çok tekrar eden içerikler</h4>${top}`
     + `<p class="muted" style="font-size:12px;margin:12px 0 0">Süresi ölçülmemiş video 30 sn, fragman 90 sn sayılır. Ekranın gün boyu açık olduğu varsayılır.</p>`;
   drawFlowLine();
+}
+// Tek tur: ana döngü baştan sona bir (ya da birkaç) kez; araya girenlerle sıralı akış. Kutular okunur olsun diye süreyle yumuşak orantılı.
+function drawFlowRound(box, j, modeChips) {
+  const kc = k => (FLOW_KIND[k] || [0, '#888'])[1], kn = k => (FLOW_KIND[k] || [k])[0];
+  const chip = k => `<span style="display:inline-block;min-width:78px;text-align:center;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;color:#fff;background:${kc(k)}">${esc(kn(k))}</span>`;
+  const roundChips = `<div class="row" style="gap:6px;margin-bottom:12px;align-items:center">${[1, 2, 3].map(n => `<button type="button" class="btn xs ${FLOW_ROUNDS === n ? '' : 'g'}" onclick="FLOW_ROUNDS=${n};drawFlow()">${n} tur</button>`).join('')}</div>`;
+  if (!j.ev.length) { box.innerHTML = modeChips + `<div class="empty">Gösterilecek içerik yok. Medya sekmesinden içerik ekleyin.</div>`; return; }
+  const r = j.rules, rules = [];
+  if (r.trailer) rules.push(`Fragman: her ${r.trailer.every} içerikte bir, en az ${r.trailer.gapMin} dk arayla`);
+  (r.camps || []).forEach(c => rules.push(`Kampanya “${c.name}”: her ${c.everyMin} dk, ${c.durSec} sn`));
+  if (r.big) rules.push(`Büyük maç duyurusu: her ${r.big.everyMin} dk, maç başına ${r.big.durSec} sn`);
+  const sumSec = j.totals.reduce((a, b) => a + b.sec, 0) || 1;
+  const prop = j.ev.map(([at, k, ni, dur]) => `<i title="${esc(kn(j.kinds[k]) + ' · ' + j.names[ni] + ' · ' + dur + ' sn')}" style="flex:${dur} 0 0;background:${kc(j.kinds[k])};min-width:2px;box-shadow:inset -1px 0 0 rgba(0,0,0,.35)"></i>`).join('');
+  const seq = j.ev.map(([at, k, ni, dur]) => { const kind = j.kinds[k]; return `<div title="${esc(kn(kind) + ' · ' + j.names[ni] + ' · ' + dur + ' sn')}" style="flex:0 0 auto;width:${Math.max(84, Math.round(dur * 3))}px"><div style="height:50px;background:${kc(kind)};border-radius:6px;color:#fff;font-size:11px;line-height:1.25;padding:6px 7px;overflow:hidden;box-sizing:border-box"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.names[ni])}</b><span style="opacity:.9">${esc(kn(kind))} · ${dur} sn</span></div><div class="muted" style="font-size:11px;margin-top:3px;font-variant-numeric:tabular-nums">${mmss(at)}</div></div>`; }).join('');
+  const tbl = j.totals.map(t => `<tr><td>${chip(t.kind)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${t.plays}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${mmss(t.sec)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${Math.round(t.sec / sumSec * 100)}%</td></tr>`).join('');
+  box.innerHTML = modeChips + roundChips
+    + `<p style="margin:0 0 10px"><b>${esc('Tur süresi ' + mmss(j.totalSec) + ' · ' + j.ev.length + ' gösterim')}</b></p>`
+    + (rules.length ? `<ul class="muted" style="margin:0 0 12px;padding-left:18px;font-size:13px">${rules.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '')
+    + `<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;gap:1px;margin:0 0 12px;direction:ltr">${prop}</div>`
+    + `<div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:10px;direction:ltr">${seq}</div>`
+    + `<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 16px">${FLOW_KIND_ORDER.filter(k => j.totals.some(t => t.kind === k)).map(chip).join('')}</div>`
+    + `<table style="width:100%;max-width:420px;font-size:13px;border-collapse:collapse"><thead><tr class="muted"><th style="text-align:start;font-weight:500">Tür</th><th style="text-align:right;font-weight:500">Gösterim</th><th style="text-align:right;font-weight:500">Süre</th><th style="text-align:right;font-weight:500">Pay</th></tr></thead><tbody>${tbl}</tbody></table>`
+    + `<p class="muted" style="font-size:12px;margin:12px 0 0">Tur, TV açıldığı andan başlayarak ana döngünün baştan sona bir kez dönmesidir. Süresi ölçülmemiş video 30 sn, fragman 90 sn sayılır.</p>`;
 }
 const FLOW_KIND_ORDER = ['video', 'youtube', 'image', 'poster', 'ad', 'book', 'insta', 'camp', 'big', 'trailer'];
 

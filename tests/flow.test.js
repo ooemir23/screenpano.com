@@ -121,3 +121,21 @@ test('tek çizgi: olaylar sıralı, art arda ve toplamlarla tutarlı', () => {
   assert.equal(r.nowSec != null, true);
   assert.equal(summary(T(), undefined, 1).nowSec, null);
 });
+
+test('tek tur: ana döngü bir kez döner, araya girenler dahil, şimdiden başlar', () => {
+  STATE = { imageSeconds: 10, videos: [vid('a', 45), { id: 'i', name: 'Latte', type: 'image' }, vid('pad:1', 15)], showTrailers: true, trailerEvery: 2, trailerGapMin: 0, movies: { items: [{ title: 'Film', trailer: 'x' }] }, campaigns: [{ id: 'c', headline: 'K', everyMin: 1, durSec: 15 }], bigMatches: [] };
+  const r = summary(T(), undefined, 0, { rounds: 1 });
+  assert.equal(r.round, true); assert.equal(r.rounds, 1);
+  const main = r.ev.filter(e => ['video', 'image', 'ad'].includes(r.kinds[e[1]]));
+  assert.equal(main.length, 3);                       // 3 ana içerik tam bir kez
+  assert.ok(r.ev.some(e => r.kinds[e[1]] === 'camp')); // kampanya araya girdi
+  assert.equal(r.ev[0][0], 0);
+  assert.equal(r.totalSec, r.ev.reduce((a, e) => a + e[3], 0));
+  const r3 = summary(T(), undefined, 0, { rounds: 3 });
+  assert.equal(r3.ev.filter(e => ['video', 'image', 'ad'].includes(r3.kinds[e[1]])).length, 9);
+});
+
+test('tek tur: boş listede boş akış', () => {
+  STATE = { videos: [], campaigns: [], bigMatches: [] };
+  assert.equal(summary(T(), undefined, 0, { rounds: 1 }).ev.length, 0);
+});

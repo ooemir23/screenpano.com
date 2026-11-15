@@ -24,8 +24,11 @@ function kindOf(v) {
 const isStill = k => k === 'image' || k === 'poster' || k === 'book' || k === 'insta';
 
 // dayOffset: 0 = bugün … 6
-function summary(t, screenId, dayOffset = 0) {
+// opts.rounds: verilirse günlük değil "tur" görünümü: şimdiden başlayıp ana döngü o kadar tur dönene dek (araya girenlerle) sıralı akış
+function summary(t, screenId, dayOffset = 0, opts = {}) {
   dayOffset = Math.max(0, Math.min(6, Math.round(Number(dayOffset)) || 0));
+  const rounds = opts.rounds ? Math.max(1, Math.min(5, Math.round(Number(opts.rounds)) || 1)) : 0;
+  if (rounds) dayOffset = 0;
   const s = publicState(t, screenId);
   const empty = extra => ({ day: dayOffset, hours: [], totals: [], top: [], rules: {}, ...extra });
   if (s.blocked) return empty({ blocked: s.blocked });
@@ -45,7 +48,7 @@ function summary(t, screenId, dayOffset = 0) {
 
   // Günün başlangıcı (işletme saat dilimine göre 00:00)
   const now = new Date(), [hh, mm] = SCH.parts(now).hm.split(':').map(Number);
-  const start = now.getTime() - ((hh * 60 + mm) * 60 + now.getSeconds()) * 1000 + dayOffset * DAY * 1000;
+  const start = rounds ? now.getTime() : now.getTime() - ((hh * 60 + mm) * 60 + now.getSeconds()) * 1000 + dayOffset * DAY * 1000; // tur görünümünde 0 sn = şimdi
   const date = SCH.parts(new Date(start + 12 * 3600 * 1000)).ymd;
 
   // Dakika başına bir kez: o dakikada geçerli içerik, kampanya ve özel yayın
@@ -67,12 +70,17 @@ function summary(t, screenId, dayOffset = 0) {
     return ctx;
   };
 
+  const rulesOf = () => ({
+    trailer: trailers.length ? { every: trEvery, gapMin: Math.round(trGap / 60), count: trailers.length } : null,
+    camps: campsAll.map(c => ({ name: c.headline || 'Kampanya', everyMin: c.everyMin || 3, durSec: c.durSec || 15 })),
+    big: bigsAll.length ? { everyMin: Math.round(bigGap / 60), durSec: bigDur, count: bigsAll.length } : null,
+  });
   const hours = Array.from({ length: 24 }, () => ({ strip: [], counts: {}, n: 0, round: 0, special: null }));
   // Tek çizgi için sıralı olay listesi: [başlangıç sn, tür no, ad no, süre sn]; adlar tekrar etmesin diye tabloda
   const ev = [], names = [], nameIx = new Map();
   const nameNo = n => { let i = nameIx.get(n); if (i == null) { i = names.length; names.push(n); nameIx.set(n, i); } return i; };
   const totals = {}, top = new Map();
-  let at = 0, idx = 0, plays = 0, trAt = -Infinity, trK = 0, bigLast = null;
+  let at = 0, idx = 0, plays = 0, trAt = -Infinity, trK = 0, bigLast = null, mainN = 0, target = 0;
   const campLast = {};
 
   const addEv = (kind, name, dur) => {
@@ -91,13 +99,14 @@ function summary(t, screenId, dayOffset = 0) {
     at += dur;
   };
 
-  while (at < DAY) {
+  while (at < DAY && !(rounds && target && mainN >= target)) {
     const c = context(at), H = hours[Math.floor(at / 3600)];
+    if (rounds && !target) target = c.items.length * rounds; // ilk bakışta ana döngü uzunluğu
     if (!c.items.length) { at = (Math.floor(at / 60) + 1) * 60; continue; } // o dakikada oynayacak içerik yok
     if (!H.n) { H.n = c.items.length; H.round = c.items.reduce((a, b) => a + b.dur, 0); }
     if (c.sp) H.special = c.sp.name || true;
     const it = c.items[idx++ % c.items.length];
-    addEv(it.kind, it.name, it.dur);
+    addEv(it.kind, it.name, it.dur); mainN++;
     if (c.sp) continue; // özel yayında araya bir şey girmez
     // O an dolmuş araya girenler (TV her 5 sn'de bakar, içerik bitince gösterir)
     if (c.bigs.length && at >= (bigLast == null ? -bigGap + 60 : bigLast) + bigGap) {
@@ -113,6 +122,7 @@ function summary(t, screenId, dayOffset = 0) {
     }
   }
 
+  if (rounds) return { round: true, rounds, totalSec: at, ev, kinds: KINDS, names, totals: Object.values(totals).sort((a, b) => b.sec - a.sec), loopCount: target / rounds || 0, rules: rulesOf() };
   const loopNow = context(Math.max(0, Math.min(DAY - 1, dayOffset === 0 ? (hh * 60 + mm) * 60 : 12 * 3600)));
   return {
     day: dayOffset, date, nowHour: dayOffset === 0 ? hh : null, nowSec: dayOffset === 0 ? (hh * 60 + mm) * 60 + now.getSeconds() : null,
@@ -120,11 +130,7 @@ function summary(t, screenId, dayOffset = 0) {
     totals: Object.values(totals).sort((a, b) => b.sec - a.sec),
     top: [...top.values()].sort((a, b) => b.plays - a.plays || b.sec - a.sec).slice(0, TOP_N),
     loopCount: loopNow.items.length,
-    rules: {
-      trailer: trailers.length ? { every: trEvery, gapMin: Math.round(trGap / 60), count: trailers.length } : null,
-      camps: campsAll.map(c => ({ name: c.headline || 'Kampanya', everyMin: c.everyMin || 3, durSec: c.durSec || 15 })),
-      big: bigsAll.length ? { everyMin: Math.round(bigGap / 60), durSec: bigDur, count: bigsAll.length } : null,
-    },
+    rules: rulesOf(),
   };
 }
 

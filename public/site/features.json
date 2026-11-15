@@ -1064,13 +1064,13 @@
     {
       "id": "akis-ozeti",
       "icon": "🗺️",
-      "title": "Ekranda ne zaman ne çıkıyor, tek çizgide görün",
+      "title": "Ekranda ne sırayla çıkıyor, tek çizgide görün",
       "short": "Akış özeti",
-      "text": "Panelde seçtiğiniz günün (bugün ya da önümüzdeki 6 gün) akışı tek bir çizgide sırayla görünür: medya, video, reklam, kampanya, büyük maç duyurusu, fragman. Her kutu süresiyle orantılıdır ve saniyesi yazar. Günün tamamından 2 dakikaya kadar yakınlaştırabilirsiniz.",
+      "text": "Panelde ana döngünün bir turu tek çizgide görünür: medya, video, reklam, kampanya, büyük maç duyurusu, fragman. Her kutuda içeriğin adı, süresi ve başlangıç saniyesi yazar. İsterseniz 2-3 tur ya da günün tamamını da görebilirsiniz.",
       "points": [
-        "Tek çizgide sıralı akış: ad, tür ve saniye bilgisiyle",
-        "Saat cetveli, şimdi işareti, zamanlı menü ve özel yayın saatleri",
-        "Gün toplamı ve en çok tekrar eden içerikler"
+        "Tek tur: sıralı akış, ad, tür ve saniye bilgisiyle",
+        "Kampanya, büyük maç ve fragmanın araya girdiği yerler",
+        "Günlük görünüm: gün toplamı ve en çok tekrar eden içerikler"
       ],
       "plan": "all",
       "compare": "Akış özeti",
@@ -1081,36 +1081,36 @@
       },
       "i18n": {
         "en": {
-          "title": "See what plays when, on a single line",
+          "title": "See what plays in what order, on a single line",
           "short": "Flow summary",
           "compare": "Flow summary",
-          "text": "The day you pick (today or the next 6 days) appears in order on one line: media, video, ads, offers, big-match announcements, trailers. Each box is proportional to its length and shows its seconds. Zoom from the whole day down to 2 minutes.",
+          "text": "The panel shows one round of the main loop on a single line: media, video, ads, offers, big-match announcements, trailers. Each box shows the content name, its length and its start second. You can also view 2-3 rounds or the whole day.",
           "points": [
-            "Ordered flow on one line, with name, type and seconds",
-            "Time ruler, a \"now\" marker, timed menus and special-broadcast hours",
-            "Daily totals and the most repeated content"
+            "Single round: ordered flow with name, type and seconds",
+            "Where offers, big matches and trailers cut in",
+            "Daily view: totals and the most repeated content"
           ]
         },
         "de": {
-          "title": "Was wann läuft, auf einer einzigen Linie",
+          "title": "In welcher Reihenfolge läuft was, auf einer Linie",
           "short": "Ablaufübersicht",
           "compare": "Ablaufübersicht",
-          "text": "Der gewählte Tag (heute oder die nächsten 6 Tage) erscheint der Reihe nach auf einer Linie: Medien, Video, Werbung, Aktionen, Großspiel-Ankündigungen, Trailer. Jedes Feld ist proportional zur Länge und zeigt seine Sekunden. Zoomen Sie vom ganzen Tag bis auf 2 Minuten.",
+          "text": "Das Panel zeigt eine Runde der Hauptschleife auf einer Linie: Medien, Video, Werbung, Aktionen, Großspiel-Ankündigungen, Trailer. Jedes Feld zeigt Name, Dauer und Startsekunde. Auf Wunsch sehen Sie auch 2-3 Runden oder den ganzen Tag.",
           "points": [
-            "Geordneter Ablauf auf einer Linie mit Name, Art und Sekunden",
-            "Zeitleiste, „Jetzt“-Markierung, zeitgesteuerte Menüs und Sonderübertragungen",
-            "Tagessummen und die am häufigsten wiederholten Inhalte"
+            "Eine Runde: geordneter Ablauf mit Name, Art und Sekunden",
+            "Wo Aktionen, Großspiele und Trailer einsetzen",
+            "Tagesansicht: Summen und die am häufigsten wiederholten Inhalte"
           ]
         },
         "ar": {
-          "title": "شاهد ما يُعرض ومتى على خط واحد",
+          "title": "شاهد ترتيب العرض على خط واحد",
           "short": "ملخص التدفق",
           "compare": "ملخص التدفق",
-          "text": "يظهر اليوم الذي تختاره (اليوم أو الأيام الستة القادمة) بالترتيب على خط واحد: وسائط، فيديو، إعلانات، عروض، إعلانات المباريات الكبرى، إعلانات تشويقية. كل مربع يتناسب مع مدته ويعرض ثوانيه. يمكنك التكبير من اليوم كله حتى دقيقتين.",
+          "text": "تعرض اللوحة دورة واحدة من الحلقة الرئيسية على خط واحد: وسائط، فيديو، إعلانات، عروض، إعلانات المباريات الكبرى، إعلانات تشويقية. يعرض كل مربع اسم المحتوى ومدته وثانية بدايته. ويمكنك أيضًا عرض دورتين أو ثلاث أو اليوم كله.",
           "points": [
-            "تدفق مرتب على خط واحد مع الاسم والنوع والثواني",
-            "مسطرة زمنية وعلامة «الآن» والقوائم المجدولة وساعات البث الخاص",
-            "إجماليات اليوم والمحتوى الأكثر تكرارًا"
+            "دورة واحدة: تدفق مرتب مع الاسم والنوع والثواني",
+            "أماكن تدخّل العروض والمباريات الكبرى والإعلانات التشويقية",
+            "العرض اليومي: الإجماليات والمحتوى الأكثر تكرارًا"
           ]
         }
       }
