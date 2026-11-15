@@ -111,14 +111,16 @@ function summary(t, screenId, dayOffset = 0, opts = {}) {
     const it = c.items[idx++ % c.items.length];
     addEv(it.kind, it.name, it.dur, it.ref); mainN++;
     if (c.sp) continue; // özel yayında araya bir şey girmez
-    // O an dolmuş araya girenler (TV her 5 sn'de bakar, içerik bitince gösterir)
+    // O an dolmuş araya girenler (TV her 5 sn'de bakar, içerik bitince gösterir). Büyük maç ve kampanya bitince TV advance()'ı çağırır:
+    // fragman sayacı her içerik sınırında bir kez ilerler (araya girenden sonra da). Aynı sınırda büyük maç varsa kampanya sıradaki sınırı bekler.
+    let shown = false;
     if (c.bigs.length && at >= (bigLast == null ? -bigGap + 60 : bigLast) + bigGap) {
       bigLast = at;
       for (const m of c.bigs) addEv('big', m.name || (m.home && m.away ? m.home + ' – ' + m.away : 'Büyük maç'), bigDur, { k: 'big' });
-      continue;
+      shown = true;
     }
-    const camp = c.camps.find(k => at >= (campLast[k.id] == null ? -(k.everyMin || 3) * 60 + 25 : campLast[k.id]) + (k.everyMin || 3) * 60);
-    if (camp) { campLast[camp.id] = at; addEv('camp', camp.headline || 'Kampanya', camp.durSec || 15, { k: 'camp', id: camp.id }); continue; }
+    const camp = shown ? null : c.camps.find(k => at >= (campLast[k.id] == null ? -(k.everyMin || 3) * 60 + 25 : campLast[k.id]) + (k.everyMin || 3) * 60);
+    if (camp) { campLast[camp.id] = at; addEv('camp', camp.headline || 'Kampanya', camp.durSec || 15, { k: 'camp', id: camp.id }); }
     if (trailers.length && ++plays >= trEvery && at - trAt > trGap) {
       const m = trailers[trK++ % trailers.length];
       addEv('trailer', m.title || m.name || 'Fragman', TRAILER_SEC, { k: 'trailer' }); trAt = at; plays = 0;
