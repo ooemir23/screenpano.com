@@ -4315,11 +4315,14 @@ function updateStandby(on) {
 }
 // kayan pano altı marka yazısı (süper yönetimden): metin boşsa şerit hiç ayrılmaz
 function applyTickerBrand(b) {
-  const tk = document.getElementById('ticker'); if (!tk) return;
+  const tk = document.getElementById('ticker'), cell = tk && tk.parentElement; if (!cell) return;
   let el = document.getElementById('tbrand');
   const text = b && b.text ? String(b.text) : '';
   if (!text) { if (el) el.remove(); return; }
-  if (!el) { el = document.createElement('div'); el.id = 'tbrand'; tk.appendChild(el); }
+  if (!el) { el = document.createElement('div'); el.id = 'tbrand'; } // kutunun değil hücrenin çocuğu: çerçeveli düzende çizginin altında kalır
+  if (el.parentElement !== cell) { if (getComputedStyle(cell).position === 'static') cell.style.position = 'relative'; cell.appendChild(el); }
+  const k = Math.min(3, Math.max(.5, (+b.size || 100) / 100));
+  el.style.fontSize = (.95 * k) + 'vh'; el.style.lineHeight = el.style.height = (1 * k) + 'vh';
   el.textContent = text; el.style.textAlign = ['left', 'right'].includes(b.align) ? b.align : 'center';
 }
 function applyVideos() {

@@ -1024,12 +1024,13 @@ function tickerBrandCard() {
   const T = D.tickerBrand || {}, al = T.align || 'center';
   return card('Kayan pano alt yazısı', 'Kayan panonun en altında, tüm ekranlarda görünen küçük marka yazısı (örn. www.screenpano.com). Boş bırakırsanız hiçbir şey gösterilmez. Yalnız buradan ayarlanır.',
     `<div class="row"><div style="flex:2"><label>Yazı</label><input id="tb-text" maxlength="60" value="${esc(T.text || '')}" placeholder="www.screenpano.com"></div>
+      <div><label>Yazı boyutu (%)</label><input id="tb-size" type="number" min="50" max="300" step="10" value="${+T.size || 100}"></div>
       <div><label>Konum</label><select id="tb-align">${[['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']].map(([v, l]) => `<option value="${v}"${v === al ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>`,
     `<button class="btn" onclick="saveTickerBrand(this)">Kaydet</button>`);
 }
 async function saveTickerBrand(btn) {
   if (btn) btn.disabled = true;
-  try { const r = await api('PUT', '/ticker-brand', { text: $('tb-text').value, align: $('tb-align').value }); D.tickerBrand = r.tickerBrand; toast('Kaydedildi; ekranlara kısa sürede yansır'); } catch (e) { toast(e.message, true); }
+  try { const r = await api('PUT', '/ticker-brand', { text: $('tb-text').value, align: $('tb-align').value, size: $('tb-size').value }); D.tickerBrand = r.tickerBrand; toast('Kaydedildi; ekranlara kısa sürede yansır'); } catch (e) { toast(e.message, true); }
   if (btn) btn.disabled = false;
 }
 async function savePricing(btn) {

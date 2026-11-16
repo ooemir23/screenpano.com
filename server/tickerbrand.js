@@ -4,7 +4,7 @@ const KEY = 'ticker_brand';
 const ALIGN = ['left', 'center', 'right'];
 const clean = b => {
   b = b || {};
-  return { text: String(b.text == null ? '' : b.text).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 60), align: ALIGN.includes(b.align) ? b.align : 'center' };
+  return { text: String(b.text == null ? '' : b.text).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 60), align: ALIGN.includes(b.align) ? b.align : 'center', size: Math.min(300, Math.max(50, Math.round(Number(b.size)) || 100)) };
 };
 function get() { try { return clean(JSON.parse(store.setting(KEY, '{}'))); } catch { return clean({}); }
 }
