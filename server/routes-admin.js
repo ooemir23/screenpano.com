@@ -933,6 +933,7 @@ r.post('/videos/youtube', async (req, res) => {
   if (!media.roomFor(req.t)) return res.status(400).json({ error: media.fullMsg });
   const name = (await yt.title(id)) || 'YouTube videosu';
   const rec = { id: auth.uid(), type: 'youtube', yt: id, name: String((req.body || {}).name || '').trim().slice(0, 80) || name, dur: yt.clampDur((req.body || {}).dur), status: 'ready', optimized: true };
+  if ((req.body || {}).rep !== undefined) { rec.rep = yt.clampRep(req.body.rep); rec.dur = yt.repDur(30, rec.rep); } // kaç kez arka arkaya: gerçek süre, TV videonun uzunluğunu bildirince düzelir
   if ((req.body || {}).sound === true) rec.sound = true;
   if ((req.body || {}).only) rec.hidden = true;
   req.t.db.videos.push(rec);

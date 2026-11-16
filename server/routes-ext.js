@@ -40,6 +40,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
       if (v.type === 'youtube' && !b.dur) { if (v.dur0 != null) { v.dur = v.dur0; delete v.dur0; } }
       else v.dur = b.dur ? Math.max(3, Math.min(v.type === 'youtube' ? 3600 : 120, Math.round(Number(b.dur)) || 10)) : undefined;
     }
+    if (b.rep !== undefined && v.type === 'youtube') { const yt = require('./ytlink'); v.rep = yt.clampRep(b.rep); if (v.dur0 == null) v.dur = yt.repDur(v.len, v.rep); else v.dur0 = yt.repDur(v.len, v.rep); }
     if (typeof b.name === 'string' && b.name.trim()) v.name = s(b.name, 80);
     changed(req.t); res.json({ ok: true });
   });

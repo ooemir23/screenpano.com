@@ -143,6 +143,14 @@ function onMessage(ws, raw) {
   if (!ws.deviceId) return;
   if (m.type === 'status') require('./monitor').report(ws.tid, ws.deviceId, m, ws.ip);
   else if (m.type === 'play') require('./stats').play(ws.tid, String(m.id || ''), m.sec);
+  else if (m.type === 'ytlen') { // TV oynatıcısı YouTube videosunun gerçek uzunluğunu bildirir: tekrar sayısı olan içeriğin süresi buna göre hesaplanır
+    const t = tenants.get(ws.tid), len = Math.round(Number(m.len)), v = t && t.db.videos.find(x => x.id === String(m.id || '') && x.type === 'youtube');
+    if (v && len >= 1 && len <= 14400 && v.len !== len) {
+      v.len = len;
+      if (v.rep) { const d = require('./ytlink').repDur(len, v.rep); if (v.dur0 == null) v.dur = d; else v.dur0 = d; }
+      tenants.save(t);
+    }
+  }
   else if (m.type === 'shown') require('./stats').shown(ws.tid, String(m.kind || ''), m.id ? String(m.id) : '');
   else if (m.type === 'perf' && Array.isArray(m.steps)) require('./monitor').perf.set(ws.deviceId, { at: Date.now(), result: JSON.parse(JSON.stringify({ steps: m.steps.slice(0, 12), sec: m.sec, screen: m.screen, lite: m.lite, exo: m.exo })) });
   else if (m.type === 'snap' && typeof m.data === 'string' && /^data:image\/(jpeg|png);base64,/.test(m.data)) require('./monitor').snaps.set(ws.deviceId, { at: Date.now(), data: m.data });

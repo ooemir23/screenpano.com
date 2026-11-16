@@ -1426,6 +1426,14 @@ addEventListener('message', e => {
   if (d && fr && e.source === fr.contentWindow) {
     const st = d.event === 'onStateChange' ? d.info : (d.event === 'infoDelivery' && d.info && typeof d.info.playerState === 'number' ? d.info.playerState : null);
     if (st !== null) fr.dataset.seen = '1';
+    if (d.info && d.info.duration > 0 && current) { // gerçek video uzunluğu: tekrar sayısı varsa içerik uzunluk × sayı kadar kalır
+      const yi = videos.find(x => x.id === current);
+      if (yi && yi.type === 'youtube' && window.__ytLenFor !== current + ':' + playStartedAt) {
+        window.__ytLenFor = current + ':' + playStartedAt;
+        const len = Math.round(d.info.duration); wsSend({ type: 'ytlen', id: yi.id, len });
+        if (yi.rep && yi.dur0 == null) { const total = Math.min(3600, len * yi.rep) * 1000, left = Math.max(1000, total - (Date.now() - playStartedAt)); clearTimeout(timer); timer = setTimeout(next, left + ((window.__ws && window.__ws.readyState === 1) ? 2500 : 0)); }
+      }
+    }
     if (st === 0) { try { fr.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [0, true] }), '*'); fr.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*'); } catch (x) {} } // döngü: playlist parametresi ileri/geri düğmesi çıkardığı için video bitince kendimiz başa sarıyoruz
     if (st === 1 || st === 3) fr.style.opacity = '1'; else if (st === 0 || st === 2 || st === 5) fr.style.opacity = '0';
   }

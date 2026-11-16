@@ -23,4 +23,7 @@ async function title(id) {
 }
 const thumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const clampDur = (v, def = 30) => Math.max(5, Math.min(3600, Math.round(Number(v)) || def));
-module.exports = { parse, title, thumb, clampDur };
+// Arka arkaya oynatma sayısı (1–50). Süre = video uzunluğu × sayı; uzunluğu TV oynatıcısı bildirir.
+const clampRep = v => Math.max(1, Math.min(50, Math.round(Number(v)) || 1));
+const repDur = (len, rep) => Math.max(3, Math.min(3600, Math.round((Number(len) || 30) * rep)));
+module.exports = { parse, title, thumb, clampDur, clampRep, repDur };
