@@ -85,7 +85,7 @@ const langList = db => ['tr', ...(((db.lang || {}).list) || []).filter(l => l !=
 function mediaItem(t, v) { const it = mediaItem0(t, v); return v.full ? { ...it, full: true } : it; } // full: bu içerik oynarken tam ekran (kenar kutular gizli)
 function mediaItem0(t, v) {
   // YouTube bağlantısı: TV gömülü oynatıcıyla gösterir; url eski uygulamalar için kapak görseli (süre boyunca fotoğraf gibi görünür)
-  if (v.type === 'youtube') return { id: v.id, name: v.name, type: 'youtube', yt: v.yt, url: require('./ytlink').thumb(v.yt), dur: v.dur || 30, rep: v.rep || undefined, dur0: v.dur0 != null ? v.dur0 : undefined, sch: v.sch || null, sound: !!v.sound };
+  if (v.type === 'youtube') return { id: v.id, name: v.name, type: 'youtube', yt: v.yt, url: require('./ytlink').thumb(v.yt), dur: v.dur || 30, rep: v.rep || undefined, len: v.len || undefined, dur0: v.dur0 != null ? v.dur0 : undefined, sch: v.sch || null, sound: !!v.sound };
   if (v.type === 'poster') return { id: v.id, name: v.name, type: 'poster', tpl: v.tpl, fields: v.fields || {}, i18n: v.i18n || null, image: v.image ? t.upBase + v.image : null, dur: v.dur || null, sch: v.sch || null };
   return { id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null, sound: !!v.sound };
 }

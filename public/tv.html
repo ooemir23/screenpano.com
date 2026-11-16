@@ -1432,7 +1432,7 @@ addEventListener('message', e => {
       if (yi && yi.type === 'youtube' && window.__ytLenFor !== current + ':' + playStartedAt) {
         window.__ytLenFor = current + ':' + playStartedAt;
         const len = Math.round(d.info.duration); wsSend({ type: 'ytlen', id: yi.id, len });
-        if (yi.rep && yi.dur0 == null) { const total = Math.min(3600, len * yi.rep) * 1000, left = Math.max(1000, total - (Date.now() - playStartedAt)); clearTimeout(timer); timer = setTimeout(next, left + ((window.__ws && window.__ws.readyState === 1) ? 2500 : 0)); }
+        if (yi.rep && yi.dur0 == null) { const total = Math.min(3600, len * yi.rep) * 1000, left = Math.max(1000, total - (Date.now() - playStartedAt)); clearTimeout(timer); timer = setTimeout(next, left + 8000); } // yedek: bitiş bildirimi gelmezse; normalde video bitince hemen geçilir
       }
     }
     if (st === 0) { // video bitti: "kez" ayarlıysa o kadar kez oynayınca sıradakine geçilir; değilse süre dolana dek başa sarılır
@@ -1729,6 +1729,7 @@ window.__mediaBoundary = () => {
 };
 // yerel motor o an hangi içeriği gösteriyor: durum raporu ve istatistik doğru olsun
 window.__setCur = id => { current = id; const k = videos.findIndex(v => v.id === id); if (k >= 0) { idx = k; fullMedia(videos[k].full); } };
+const ytRepMode = it => !!(it && it.type === 'youtube' && it.rep && it.dur0 == null);
 let coverTok = 0;
 // yeni medyanın ilk karesi görününce önceki YouTube/afiş katmanı kaldırılır
 function coverRelease() { coverTok++; hideYt(); hidePoster(); }
@@ -1749,7 +1750,8 @@ function play() {
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
     els.forEach(e => e.pause());
     hidePoster(); showYt(it);
-    timer = setTimeout(next, (window.__ws && window.__ws.readyState === 1) ? fullDurMs + 2500 : fullDurMs);
+    // "kez" modunda içerik videonun bitişiyle ilerler (bitiş bildirimi gelir); zamanlayıcı yalnız yedek: video yarıda kesilmez
+    timer = setTimeout(next, ytRepMode(it) ? (it.len ? fullDurMs + 8000 : 15 * 60 * 1000) : (window.__ws && window.__ws.readyState === 1) ? fullDurMs + 2500 : fullDurMs);
     setTimeout(prepNext, 500);
     return;
   }
@@ -1792,7 +1794,7 @@ function syncToMedia(m) {
   // Zaten bu içerik oynatılıyorsa: fotoğraf/afişte bitiş sayacını sunucunun kalan süresine hizala (kesme yok, yalnız sayaç düzelir).
   // Video kendi 'ended' olayıyla biter; ona dokunulmaz. Süre en az ~3 sn'de kalır: sunucu çoktan sona yaklaşmışsa foto göz kırpması gibi geçmesin.
   if (current === it.id) {
-    if (it.type !== 'video' && typeof m.remain === 'number') {
+    if (it.type !== 'video' && !ytRepMode(it) && typeof m.remain === 'number') {
       const want = Math.max(m.remain + 250, 3000 - (Date.now() - playStartedAt)); // bitiş anı sabit kalır: her mesajda aynı mutlak zamana kurulur
       clearTimeout(timer); timer = setTimeout(next, want);
     }
@@ -1809,7 +1811,8 @@ function syncToMedia(m) {
   if (curIt && curIt.type === 'video') {
     const minVidMs = (curIt.dur ? curIt.dur * 1000 + (typeof window.__vgap === 'number' ? window.__vgap : 3000) + 1500 : 25000); // bekleme süresi dahil
     if (Date.now() - playStartedAt < minVidMs) return;
-  } else if (curIt && Date.now() - playStartedAt < itemLen(curIt) * 1000) return; // fotoğraf/afiş/YouTube de süresi dolmadan kesilmez; fark sıradaki geçişte düzelir
+  } else if (ytRepMode(curIt) && Date.now() - playStartedAt < 15 * 60 * 1000) return; // 'kez' modundaki YouTube kendi bitişiyle ilerler: sunucu senkronu videoyu yarıda kesmez
+  else if (curIt && Date.now() - playStartedAt < itemLen(curIt) * 1000) return; // fotoğraf/afiş/YouTube de süresi dolmadan kesilmez; fark sıradaki geçişte düzelir
 
   // Yeni veya farklı içerik: hemen bu içeriğe geç
   clearTimeout(timer);
