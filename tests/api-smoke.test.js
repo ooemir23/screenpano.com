@@ -61,7 +61,7 @@ test('fiyatlandırma: süperden girilir, sitede ve şube ücretinde görünür, 
   assert.equal(r.j.pricing.extraBranch.yearly, 0, 'geçersiz tutar 0 olur');
   r = await req('PUT', '/api/super/ticker-brand', { text: ' www.screenpano.com<b> ', align: 'sağ' });
   assert.equal(r.status, 200);
-  assert.deepEqual(r.j.tickerBrand, { text: 'www.screenpano.comb', align: 'center' }, 'etiket ayıklanır, geçersiz hizalama ortaya döner');
+  assert.deepEqual(r.j.tickerBrand, { text: 'www.screenpano.comb', align: 'center', size: 100 }, 'etiket ayıklanır, geçersiz hizalama ortaya döner');
   r = await req('PUT', '/api/super/ticker-brand', { text: 'www.screenpano.com', align: 'right' });
   assert.equal(r.j.tickerBrand.align, 'right');
   const html = await (await fetch(BASE + '/')).text();
