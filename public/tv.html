@@ -4370,15 +4370,28 @@ function updateStandby(on) {
   }
 }
 // kayan pano altı marka yazısı (süper yönetimden): metin boşsa şerit hiç ayrılmaz
+let brandCfg = null;
+// yazı bantın altındaki boş şeridin ortasına oturur ve şeride sığacak kadar büyür; şerit yoksa (bant ekran kenarında) ince bir satır olarak en altta kalır
+function placeBrand() {
+  const el = document.getElementById('tbrand'); if (!el || !brandCfg) return;
+  const vh = innerHeight / 100, k = Math.min(3, Math.max(.5, (+brandCfg.size || 100) / 100));
+  const tk = document.getElementById('ticker'), r = tk && tk.getBoundingClientRect();
+  const gap = r && r.height ? innerHeight - r.bottom : 0; // bantın altındaki boş yükseklik (px)
+  let h, bot;
+  if (gap >= 2.2 * vh) { h = Math.min(1.9 * vh * k, gap * .85); bot = Math.max(.2 * vh, (gap - h) / 2); } // bant ile ekran kenarı arasındaki şeridin ortası
+  else { h = 1.1 * vh * k; bot = .4 * vh; }
+  el.style.bottom = bot + 'px'; el.style.height = el.style.lineHeight = h + 'px'; el.style.fontSize = (h * .88) + 'px';
+}
+setInterval(placeBrand, 3000); addEventListener('resize', () => setTimeout(placeBrand, 100));
 function applyTickerBrand(b) { // her tasarımda ekranın en altında sabit; yerleşimi etkilemez (ekrana sabitlenmiş, tıklanmaz katman)
   let el = document.getElementById('tbrand');
   const text = b && b.text ? String(b.text) : '';
-  if (!text) { if (el) el.remove(); return; }
+  if (!text) { if (el) el.remove(); brandCfg = null; return; }
   if (!el) { el = document.createElement('div'); el.id = 'tbrand'; }
   if (el.parentElement !== document.body) document.body.appendChild(el);
-  const k = Math.min(3, Math.max(.5, (+b.size || 100) / 100));
-  el.style.fontSize = (1 * k) + 'vh'; el.style.lineHeight = el.style.height = (1.1 * k) + 'vh';
+  brandCfg = b;
   el.textContent = text; el.style.textAlign = ['left', 'right'].includes(b.align) ? b.align : 'center';
+  placeBrand();
 }
 function applyVideos() {
   const list = ALLV.filter(x => schedOk(x.sch)), sig = JSON.stringify(list);
