@@ -2149,10 +2149,23 @@ function showQr(side) {
 // Wi-Fi etiketi: önce "Wi-Fi şifresi" yazar, söner, şifre belirir, bir süre kalır, söner, başa döner
 // yazı etiket genişliğine sığana kadar küçültülür
 function fitLbl(l) {
-  l.style.fontSize = '';
-  let fs = parseFloat(getComputedStyle(l).fontSize);
+  const t = l.querySelector('.wt');
+  if (t && t._an) { try { t._an.cancel(); } catch (e) {} t._an = null; }
+  l.style.fontSize = ''; l.style.textOverflow = ''; l.style.textAlign = '';
+  if (t) { t.style.display = ''; t.style.transform = ''; }
+  let fs = parseFloat(getComputedStyle(l).fontSize); const fs0 = fs;
   const vert = l.classList.contains('qp') && !!l.closest('.st-right,.st-left'); // dikey etiket: taşma yüksekliktedir
-  while ((vert ? l.scrollHeight > l.clientHeight + 1 : l.scrollWidth > l.clientWidth + 1) && fs > 9) { fs -= 1; l.style.fontSize = fs + 'px'; }
+  const over = () => vert ? l.scrollHeight > l.clientHeight + 1 : l.scrollWidth > l.clientWidth + 1;
+  while (over() && fs > Math.max(9, fs0 * .75)) { fs -= 1; l.style.fontSize = fs + 'px'; } // önce en çok %25 küçülür
+  if (!t || !over() || !(vert ? l.clientHeight : l.clientWidth)) return;
+  // hâlâ sığmıyorsa (örn. uzun Wi-Fi şifresi): yazı yavaşça uçtan uca kayar, bekleyip geri döner
+  l.style.textOverflow = 'clip'; l.style.textAlign = 'start'; t.style.display = 'inline-block';
+  const r = t.getBoundingClientRect(), cs = getComputedStyle(l);
+  const room = vert ? l.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) : l.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const dist = Math.ceil((vert ? r.height : r.width) - room);
+  if (dist <= 2) return;
+  const ax = vert ? 'translateY' : 'translateX', ms = Math.min(30000, Math.max(4000, dist * 45)); // ~22 px/sn
+  t._an = t.animate([{ transform: ax + '(0)', offset: 0 }, { transform: ax + '(0)', offset: .18 }, { transform: ax + '(-' + dist + 'px)', offset: .82 }, { transform: ax + '(-' + dist + 'px)', offset: 1 }], { duration: ms + 2400, iterations: Infinity, direction: 'alternate', easing: 'linear' });
 }
 function wifiCycle(el, q) {
   const l = el.querySelector('.lbl'), t = l.querySelector('.wt'); let ph = 0; // çerçeve (l) sabit, yalnızca yazı (t) söner/belirir
