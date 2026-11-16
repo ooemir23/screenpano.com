@@ -152,8 +152,8 @@ async function refreshRates() {
 const CATALOG = [
   ['tur.1', 'Süper Lig', 'Türkiye'], ['tur.2', 'TFF 1. Lig', 'Türkiye'],
   ['uefa.champions', 'Şampiyonlar Ligi', 'Avrupa Kupaları'], ['uefa.europa', 'Avrupa Ligi', 'Avrupa Kupaları'],
-  ['uefa.europa.conf', 'Konferans Ligi', 'Avrupa Kupaları'], ['uefa.nations', 'UEFA Uluslar Ligi', 'Avrupa Kupaları'],
-  ['uefa.champions_qual', 'Şampiyonlar Ligi Eleme', 'Avrupa Kupaları'], ['uefa.euro', 'Avrupa Şampiyonası', 'Avrupa Kupaları'],
+  ['uefa.europa.conf', 'Konferans Ligi', 'Avrupa Kupaları'], ['uefa.nations', 'UEFA Uluslar Ligi', 'Milli Takımlar'],
+  ['uefa.champions_qual', 'Şampiyonlar Ligi Eleme', 'Avrupa Kupaları'], ['uefa.euro', 'Avrupa Şampiyonası', 'Milli Takımlar'],
   ['esp.1', 'La Liga', 'İspanya'], ['esp.2', 'La Liga 2', 'İspanya'],
   ['eng.1', 'Premier Lig', 'İngiltere'], ['eng.2', 'Championship', 'İngiltere'], ['eng.fa', 'FA Cup', 'İngiltere'],
   ['ita.1', 'Serie A', 'İtalya'], ['ita.2', 'Serie B', 'İtalya'],
@@ -164,10 +164,16 @@ const CATALOG = [
   ['gre.1', 'Yunanistan Süper Ligi', 'Diğer Ülkeler'], ['aut.1', 'Avusturya Ligi', 'Diğer Ülkeler'],
   ['sui.1', 'İsviçre Ligi', 'Diğer Ülkeler'], ['rus.1', 'Rusya Ligi', 'Diğer Ülkeler'],
   ['usa.1', 'MLS', 'Diğer Ülkeler'], ['bra.1', 'Brezilya Serie A', 'Diğer Ülkeler'], ['arg.1', 'Arjantin Ligi', 'Diğer Ülkeler'],
-  ['fifa.world', 'Dünya Kupası', 'Diğer Ülkeler'],
+  ['fifa.world', 'Dünya Kupası', 'Milli Takımlar'], ['fifa.worldq.uefa', 'Dünya Kupası Elemeleri (UEFA)', 'Milli Takımlar'],
+  ['uefa.euroq', 'Avrupa Şampiyonası Elemeleri', 'Milli Takımlar'], ['fifa.friendly', 'Milli Maçlar (Hazırlık)', 'Milli Takımlar'],
+  ['conmebol.america', 'Copa América', 'Milli Takımlar'],
+  ['bk.nba', 'NBA', 'Basketbol'], ['bk.euroleague', 'EuroLeague', 'Basketbol'], ['bk.wnba', 'WNBA', 'Basketbol'], // bk.: ESPN basketbol uç noktası
 ];
+// ESPN uç noktası: futbol ligleri soccer/<kod>, basketbol bk.<kod> → basketball/<kod>
+const isBk = code => String(code).startsWith('bk.');
+const sportPath = code => isBk(code) ? 'basketball/' + code.slice(3) : 'soccer/' + code;
 const DEFAULT_LEAGUES = ['uefa.champions', 'uefa.europa', 'tur.1', 'tur.2', 'esp.1', 'eng.1', 'ita.1', 'ger.1', 'fra.1'];
-const NO_TABLE = new Set(['eng.fa', 'fifa.world']);
+const NO_TABLE = new Set(['eng.fa', 'fifa.world', 'fifa.worldq.uefa', 'uefa.euroq', 'fifa.friendly', 'conmebol.america', 'uefa.nations', 'uefa.euro', 'bk.nba', 'bk.euroleague', 'bk.wnba']); // puan durumu çekilmeyenler
 const enabledLeagues = t => CATALOG.filter(([code]) => (t.db.leagues || DEFAULT_LEAGUES).includes(code)).map(([code, label]) => [code, label]);
 const unionLeagues = () => { const set = new Set(); for (const t of proTenants()) for (const [c] of enabledLeagues(t)) set.add(c); return CATALOG.filter(([c]) => set.has(c)).map(([c, l]) => [c, l]); };
 
@@ -216,7 +222,7 @@ async function refreshMatches() {
   for (const q of qs) {
     await Promise.all(leagues.map(async ([code, label]) => {
       try {
-        const j = await (await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard${q}`)).json();
+        const j = await (await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sportPath(code)}/scoreboard${q}`)).json();
         for (const e of j.events || []) {
           const st = e.status.type.state, when = new Date(e.date);
           if (st === 'post' && when.getTime() < todayStart && when.getTime() + MATCH_MS <= todayStart) continue;
@@ -229,7 +235,7 @@ async function refreshMatches() {
             ts: when.getTime(), day: st === 'pre' && d > today ? (d === tomorrow ? 'Yarın' : WD.format(when)) : (d > today ? 'Yarın' : 'Bugün'), time: hm(when),
             hl: home.team.logo || null, al: away.team.logo || null, live: st === 'in', final: st === 'post',
             hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '',
-            hs: st === 'pre' ? null : home.score, as: st === 'pre' ? null : away.score, clock: st === 'in' ? e.status.displayClock : null,
+            hs: st === 'pre' ? null : home.score, as: st === 'pre' ? null : away.score, clock: st === 'in' ? (isBk(code) ? `${e.status.period}. Ç ${e.status.displayClock}` : e.status.displayClock) : null, bk: isBk(code) || undefined,
             lastGoal: (() => { const g = (e.competitions[0].details || []).filter(d => d.scoringPlay).pop(); return g ? { min: g.clock && g.clock.displayValue, player: ((g.athletesInvolved || [])[0] || {}).displayName || '', own: !!g.ownGoal, pen: !!g.penaltyKick } : null; })(),
           });
         }
@@ -246,7 +252,7 @@ async function refreshMatches() {
   }
   finalBaseline = true;
   for (const m of autoMatches) {
-    if (!m.live) continue;
+    if (!m.live || m.bk) continue; // basketbolda her sayıda gol bildirimi gitmez
     const cur = { h: +m.hs || 0, a: +m.as || 0 }, prev = prevScores.get(m.id);
     if (prev && (cur.h > prev.h || cur.a > prev.a)) {
       const g = m.lastGoal || {};

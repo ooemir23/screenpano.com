@@ -321,6 +321,10 @@ test('YouTube süresi: değiştirilince orijinal saklanır, dur:0 ile geri yükl
   const d = (await req('GET', '/api/admin/flow?rounds=1')).j;
   assert.equal(d.round, true); assert.ok(d.ev.some(e => d.kinds[e[1]] === 'youtube' && e[3] === 45));
   assert.equal((await req('PUT', '/api/admin/videos/yok-boyle-id', { dur: 20 })).status, 404);
+  const lg = (await req('GET', '/api/admin/leagues')).j; // milli takım ve basketbol seçilebilir; puan durumu çekilmez
+  for (const c of ['bk.nba', 'bk.euroleague', 'fifa.friendly', 'fifa.worldq.uefa', 'conmebol.america']) assert.ok(lg.catalog.some(x => x.code === c), c);
+  assert.ok(lg.catalog.some(x => x.group === 'Milli Takımlar') && lg.catalog.some(x => x.group === 'Basketbol'));
+  assert.ok(!lg.tables.includes('bk.nba') && !lg.tables.includes('fifa.friendly'));
   await req('PUT', '/api/admin/videos/' + v.id, { rep: 3 });
   v = await item(); assert.equal(v.rep, 3); assert.equal(v.dur, 90);             // uzunluk bilinmiyorsa 30 sn varsayımı × 3
   const yt = require('../server/ytlink');
