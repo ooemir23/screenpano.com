@@ -39,3 +39,10 @@ Reklam süresini ScreenPano reklam planı belirler. ¦ The duration of an ad is 
 Fragman süresi videonun kendi uzunluğudur. ¦ A trailer's duration is the length of its video. ¦ Die Dauer eines Trailers entspricht der Länge seines Videos. ¦ مدة الإعلان التشويقي هي طول الفيديو نفسه.
 Kitap kartı 12 sn gösterilir. ¦ The book card is shown for 12 s. ¦ Die Buchkarte wird 12 Sek. angezeigt. ¦ تُعرض بطاقة الكتاب 12 ثانية.
 Ekranda kalma süresi ¦ Time on screen ¦ Anzeigedauer ¦ مدة البقاء على الشاشة
+Kayan pano alt yazısı ¦ Ticker footer text ¦ Fußtext der Laufleiste ¦ نص أسفل الشريط المتحرك
+Kayan panonun en altında, tüm ekranlarda görünen küçük marka yazısı (örn. www.screenpano.com). Boş bırakırsanız hiçbir şey gösterilmez. Yalnız buradan ayarlanır. ¦ A small brand line at the very bottom of the ticker, shown on all screens (e.g. www.screenpano.com). Leave empty to show nothing. Can only be set here. ¦ Kleine Markenzeile ganz unten in der Laufleiste auf allen Bildschirmen (z. B. www.screenpano.com). Leer lassen, um nichts anzuzeigen. Nur hier einstellbar. ¦ سطر صغير للعلامة التجارية أسفل الشريط المتحرك يظهر على كل الشاشات (مثل www.screenpano.com). اتركه فارغًا لعدم إظهار شيء. يُضبط من هنا فقط.
+Yazı ¦ Text ¦ Text ¦ النص
+Konum ¦ Position ¦ Position ¦ الموضع
+Sola ¦ Left ¦ Links ¦ يسار
+Ortaya ¦ Center ¦ Mitte ¦ وسط
+Kaydedildi; ekranlara kısa sürede yansır ¦ Saved; it reaches the screens shortly ¦ Gespeichert; erscheint in Kürze auf den Bildschirmen ¦ تم الحفظ؛ سيظهر على الشاشات قريبًا

@@ -59,6 +59,11 @@ test('fiyatlandırma: süperden girilir, sitede ve şube ücretinde görünür, 
   assert.equal(r.status, 200);
   assert.deepEqual(r.j.pricing.baslangic, { monthly: 2000, yearly: 20000 });
   assert.equal(r.j.pricing.extraBranch.yearly, 0, 'geçersiz tutar 0 olur');
+  r = await req('PUT', '/api/super/ticker-brand', { text: ' www.screenpano.com<b> ', align: 'sağ' });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.j.tickerBrand, { text: 'www.screenpano.comb', align: 'center' }, 'etiket ayıklanır, geçersiz hizalama ortaya döner');
+  r = await req('PUT', '/api/super/ticker-brand', { text: 'www.screenpano.com', align: 'right' });
+  assert.equal(r.j.tickerBrand.align, 'right');
   const html = await (await fetch(BASE + '/')).text();
   for (const x of ['2.000 ₺', '3.000 ₺', 'Yıllık 20.000 ₺', '2 ay hediye', 'Ek şube: 1.500 ₺', 'KDV dahil değildir']) assert.ok(html.includes(x), 'sitede yok: ' + x);
   const en = await (await fetch(BASE + '/en')).text();

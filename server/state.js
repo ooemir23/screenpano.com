@@ -252,6 +252,7 @@ function publicState(t, screenId) {
     onThisDay: live && F.onThisDay && F.onThisDay.date === F.ymd(new Date()) ? cap(F.onThisDay, imax.otd) : null,
     showNews: live && (db.news || {}).enabled !== false,
     news: live ? cap(F.newsFor(t), imax.news) : null,
+    tickerBrand: require('./tickerbrand').get(), // kayan pano altındaki marka yazısı (yalnız süper yönetim)
     showBreaking: !sp && live && F.breakingOn(t),
     breakingBanner: !sp && (db.breaking || {}).banner !== false,
     breaking: live && F.breakingOn(t) ? cap(F.breakingFor(), imax.breaking) : null,

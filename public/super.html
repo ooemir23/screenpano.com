@@ -1020,6 +1020,18 @@ function pricingCard() {
       <div style="flex:1.5"><label>Ek not (isteğe bağlı)</label><input id="pr-note" maxlength="60" value="${esc(P.annualNote || '')}" placeholder="örn. İlk ay %50 indirim"></div></div>`,
     `<button class="btn" onclick="savePricing(this)">Fiyatları kaydet</button>`);
 }
+function tickerBrandCard() {
+  const T = D.tickerBrand || {}, al = T.align || 'center';
+  return card('Kayan pano alt yazısı', 'Kayan panonun en altında, tüm ekranlarda görünen küçük marka yazısı (örn. www.screenpano.com). Boş bırakırsanız hiçbir şey gösterilmez. Yalnız buradan ayarlanır.',
+    `<div class="row"><div style="flex:2"><label>Yazı</label><input id="tb-text" maxlength="60" value="${esc(T.text || '')}" placeholder="www.screenpano.com"></div>
+      <div><label>Konum</label><select id="tb-align">${[['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']].map(([v, l]) => `<option value="${v}"${v === al ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>`,
+    `<button class="btn" onclick="saveTickerBrand(this)">Kaydet</button>`);
+}
+async function saveTickerBrand(btn) {
+  if (btn) btn.disabled = true;
+  try { const r = await api('PUT', '/ticker-brand', { text: $('tb-text').value, align: $('tb-align').value }); D.tickerBrand = r.tickerBrand; toast('Kaydedildi; ekranlara kısa sürede yansır'); } catch (e) { toast(e.message, true); }
+  if (btn) btn.disabled = false;
+}
 async function savePricing(btn) {
   const b = { currency: $('pr-cur').value, vat: $('pr-vat').value, annualNote: $('pr-note').value };
   for (const [k] of PR_ITEMS) b[k] = { monthly: prNum($('pr-' + k + '-m').value), yearly: prNum($('pr-' + k + '-y').value) };
@@ -1095,6 +1107,7 @@ PAGES.legal = {
         `<div class="row">${setting('Şirket unvanı', 'legal_company')}${setting('MERSİS no', 'legal_mersis')}</div><div class="row">${setting('Açık adres', 'legal_address')}</div><div class="row">${setting('KVKK başvuru e-postası', 'legal_email')}${setting('Telefon', 'legal_phone')}${setting('KEP adresi (varsa)', 'legal_kep')}</div><div class="row">${setting('Sunucu sağlayıcısı ve ülkesi (KVKK metninde görünür)', 'legal_hosting', 'placeholder="örn. Natro Hosting (Türkiye)"')}</div>`,
         saveBtn(['legal_company', 'legal_mersis', 'legal_address', 'legal_email', 'legal_phone', 'legal_kep', 'legal_hosting']))
       + pricingCard()
+      + tickerBrandCard()
       + card('Tanıtım sitesi', 'Ana sayfadaki (<a href="/?site" target="_blank">önizle</a>) iletişim düğmeleri.',
         `<div class="row">${setting('WhatsApp numarası', 'site_whatsapp', 'placeholder="905xxxxxxxxx"')}${setting('Telefon', 'site_phone')}${setting('E-posta', 'site_email')}</div>`,
         saveBtn(['site_whatsapp', 'site_phone', 'site_email']));
