@@ -325,6 +325,8 @@ test('YouTube süresi: değiştirilince orijinal saklanır, dur:0 ile geri yükl
   for (const c of ['bk.nba', 'bk.euroleague', 'fifa.friendly', 'fifa.worldq.uefa', 'conmebol.america']) assert.ok(lg.catalog.some(x => x.code === c), c);
   assert.ok(lg.catalog.some(x => x.group === 'Milli Takımlar') && lg.catalog.some(x => x.group === 'Basketbol'));
   assert.ok(!lg.tables.includes('bk.nba') && !lg.tables.includes('fifa.friendly'));
+  assert.equal((await req('PUT', '/api/admin/options', { showLeaders: false })).status, 200);
+  assert.equal((await req('GET', '/api/admin/db')).j.showLeaders, false);
   await req('PUT', '/api/admin/videos/' + v.id, { rep: 3 });
   v = await item(); assert.equal(v.rep, 3); assert.equal(v.dur, 90);             // uzunluk bilinmiyorsa 30 sn varsayımı × 3
   const yt = require('../server/ytlink');

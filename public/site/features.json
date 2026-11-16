@@ -1118,6 +1118,60 @@
           ]
         }
       }
+    },
+    {
+      "id": "gol-asist-kralligi",
+      "icon": "👟",
+      "title": "Gol ve asist krallığı ekranda",
+      "short": "Gol ve asist krallığı",
+      "text": "Takip ettiğiniz liglerin ilk 5 golcüsü ve ilk 5 asist yapan oyuncusu, puan tablosunun ardından ayrı sayfalarda gösterilir. Panelden tek anahtarla açıp kapatabilir, ekranda kalma süresini ayarlayabilirsiniz. Milli takım turnuvaları ve basketbol (NBA, EuroLeague) maçları da lig listesinden seçilebilir.",
+      "points": [
+        "Ligin ilk 5 golcüsü ve ilk 5 asisti, takım logosuyla",
+        "Tek anahtarla aç/kapat, süre ayarlanabilir",
+        "Milli takım turnuvaları ve basketbol maçları da seçilebilir"
+      ],
+      "plan": "all",
+      "compare": "Gol ve asist krallığı",
+      "added": "2026-11-17",
+      "visual": {
+        "type": "tv",
+        "img": "tv-gol"
+      },
+      "i18n": {
+        "en": {
+          "title": "Top scorers and assists on screen",
+          "short": "Top scorers and assists",
+          "compare": "Top scorers and assists",
+          "text": "The top 5 scorers and top 5 assist providers of the leagues you follow are shown on separate pages after the table. Turn it on or off with one switch in the panel and set how long it stays on screen. National-team tournaments and basketball (NBA, EuroLeague) games can also be picked from the league list.",
+          "points": [
+            "Top 5 scorers and top 5 assists of the league, with team logos",
+            "One switch to turn on or off, duration adjustable",
+            "National-team tournaments and basketball games can also be selected"
+          ]
+        },
+        "de": {
+          "title": "Torschützen- und Assistkönige auf dem Bildschirm",
+          "short": "Torschützen und Assists",
+          "compare": "Torschützen und Assists",
+          "text": "Die besten 5 Torschützen und die besten 5 Vorlagengeber der verfolgten Ligen erscheinen nach der Tabelle auf eigenen Seiten. Im Panel mit einem Schalter ein- oder ausschalten und die Anzeigedauer einstellen. Auch Turniere der Nationalmannschaften und Basketball (NBA, EuroLeague) sind in der Ligaliste wählbar.",
+          "points": [
+            "Top 5 Torschützen und Top 5 Assists der Liga, mit Vereinslogos",
+            "Ein Schalter zum Ein-/Ausschalten, Dauer einstellbar",
+            "Nationalmannschafts-Turniere und Basketballspiele ebenfalls wählbar"
+          ]
+        },
+        "ar": {
+          "title": "هدافو الدوري وصنّاع الأهداف على الشاشة",
+          "short": "الهدافون وصنّاع الأهداف",
+          "compare": "الهدافون وصنّاع الأهداف",
+          "text": "يظهر أفضل 5 هدافين وأفضل 5 صنّاع أهداف في الدوريات التي تتابعها في صفحات منفصلة بعد جدول الترتيب. يمكنك تفعيله أو إيقافه بمفتاح واحد من اللوحة وضبط مدة ظهوره. كما يمكن اختيار بطولات المنتخبات الوطنية ومباريات كرة السلة (NBA، يوروليغ) من قائمة الدوريات.",
+          "points": [
+            "أفضل 5 هدافين وأفضل 5 صنّاع أهداف في الدوري مع شعارات الفرق",
+            "مفتاح واحد للتفعيل أو الإيقاف مع ضبط المدة",
+            "يمكن اختيار بطولات المنتخبات ومباريات كرة السلة أيضًا"
+          ]
+        }
+      }
     }
   ],
   "extras": [

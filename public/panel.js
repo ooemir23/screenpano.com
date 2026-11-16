@@ -1803,6 +1803,8 @@ SECTIONS.sport = {
 ), table: () => (''
       + card('Puan durumu', 'Lig maçlarının ardından o ligin puan tablosu gösterilir.', `<div class="chips">${tbl.map(l => `<span class="chip ${(L.hideTables || []).includes(l.code) ? '' : 'on'}" onclick="togTable('${l.code}')">${esc(l.label)}</span>`).join('') || '<span class="muted">Puan tablosu olan bir lig seçin.</span>'}</div>`,
         sw(db.showStandings !== false, "opt('showStandings',this.checked).then(()=>render(true))"), db.showStandings === false ? 'off' : '')
+      + card('Gol ve asist krallığı', 'Puan tablosu olan ligler için ilk 5 golcü ve ilk 5 asist yapan oyuncu ayrı sayfalarda gösterilir. Hangi liglerin gösterileceğini yukarıdaki lig seçimi belirler.', '',
+        sw(db.showLeaders !== false, "opt('showLeaders',this.checked)"), db.showLeaders === false ? 'off' : '')
 ), big: () => (''
       + card('Büyük maç duyurusu', 'Dört büyüklerin derbileri ve Avrupa maçları, başlamadan birkaç gün önce ekranda tam sayfa görselle duyurulur.',
         `<div class="fl"><span>Tasarım <span class="muted">· ön izlemek için tıklayın</span></span><div class="bstyles">${BIG_STYLES.map(([k, l, d]) => `<button type="button" class="bsty ${bigCur() === k ? 'on' : ''}" onclick="bigPreview('${k}')"><span class="bth t-${k}"><i></i><i></i><i></i></span><b>${l}${bigCur() === k ? ' <em>✓ Seçili</em>' : ''}</b><span>${d}</span></button>`).join('')}</div></div>
@@ -2113,6 +2115,7 @@ SECTIONS.info = {
       + `<div class="ibgrid">`
       + tile('⚽', 'Maç sayfaları', 'Seçili liglerin yaklaşan maçları', null, '', durIn('league') + `<p class="muted" style="font-size:12px;margin:0">Ligleri <a href="#sport">Spor</a> sayfasından seçin.</p>`)
       + tile('🏆', 'Puan durumu', 'Ligin puan tablosu (birden çok sayfa olabilir)', db.showStandings !== false, "opt('showStandings',this.checked)", durIn('table'))
+      + tile('👟', 'Gol ve asist krallığı', 'İlk 5 golcü ve ilk 5 asist yapan oyuncu (puan tablosu olan liglerde)', db.showLeaders !== false, "opt('showLeaders',this.checked)", durIn('leaders'))
       + tile('🚨', 'Son dakika', 'Seçtiğiniz kaynakların başlıkları; yeni haber gelince üstte kırmızı bantla da çıkar', bk.enabled !== false, "act('PUT','/breaking',{enabled:this.checked},'Kaydedildi')",
           durIn('breaking') + maxIn('breaking', 8, 1, 12),
           `<div class="swr"><div class="b"><b>Ekranda bildirim bandı</b><span>Yeni son dakika gelince birkaç saniye üstte gösterilir</span></div>${sw(bk.banner !== false, "act('PUT','/breaking',{banner:this.checked},'Kaydedildi',false)")}</div>

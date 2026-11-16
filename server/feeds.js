@@ -180,6 +180,36 @@ const unionLeagues = () => { const set = new Set(); for (const t of proTenants()
 const standings = new Map();
 for (const k of Object.keys(cache)) if (k.startsWith('standings:')) standings.set(k.slice(10), cache[k].data);
 const standingsDirty = new Set();
+// Gol ve asist krallığı (ilk 5): ESPN core API; oyuncu ve takım bağlantıları ayrıca çözülür, sonuç 6 saat önbellekte kalır
+const leaders = new Map();
+for (const k of Object.keys(cache)) if (k.startsWith('leaders:')) leaders.set(k.slice(8), cache[k].data);
+const refCache = new Map();
+const jget = async u => { const r = await fetch(String(u).replace(/^http:/, 'https:'), { signal: AbortSignal.timeout(9000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); };
+const refGet = async u => { if (refCache.has(u)) return refCache.get(u); const j = await jget(u); refCache.set(u, j); if (refCache.size > 3000) refCache.delete(refCache.keys().next().value); return j; };
+async function leadersOf(code) {
+  const now = new Date(), y = now.getFullYear(), seasons = [...new Set([now.getMonth() >= 6 ? y : y - 1, y])];
+  for (const s of seasons) {
+    let j; try { j = await jget(`https://sports.core.api.espn.com/v2/sports/soccer/leagues/${code}/seasons/${s}/types/1/leaders`); } catch { continue; }
+    const cats = j.categories || [], pick = n => (cats.find(c => c.name === n + 'Leaders') || cats.find(c => c.name === n) || {}).leaders || [];
+    const build = async list => (await Promise.all(list.slice(0, 5).map(async (l, i) => {
+      try {
+        const [a, t] = await Promise.all([refGet(l.athlete.$ref), refGet(l.team.$ref)]);
+        return { rank: i + 1, name: a.shortName || a.displayName || '', team: trTeam(t.shortDisplayName || t.displayName || t.name || ''), logo: (t.logos || [])[0] ? t.logos[0].href : null, v: Math.round(Number(l.value)) };
+      } catch { return null; }
+    }))).filter(Boolean);
+    const goals = await build(pick('goals')), assists = await build(pick('assists'));
+    if (goals.length || assists.length) return { goals, assists };
+  }
+  return null;
+}
+async function refreshLeaders() {
+  const want = new Set(unionLeagues().map(([c]) => c));
+  const targets = CATALOG.filter(([code, , group]) => want.has(code) && group !== 'Avrupa Kupaları' && !NO_TABLE.has(code));
+  for (const [code] of targets) {
+    if (leaders.has(code) && cacheAge('leaders:' + code) < 6 * HOUR) continue;
+    try { const r = await leadersOf(code); if (r) { leaders.set(code, r); cachePut('leaders:' + code, r); } } catch (err) { console.error('Gol/asist krallığı alınamadı', code, err.message); }
+  }
+}
 async function refreshStandings() {
   const want = new Set(unionLeagues().map(([c]) => c));
   const targets = CATALOG.filter(([code, , group]) => want.has(code) && group !== 'Avrupa Kupaları' && !NO_TABLE.has(code));
@@ -896,6 +926,7 @@ function start() {
   refreshWeather(); setInterval(refreshWeather, 10 * MIN);
   refreshRates(); setInterval(refreshRates, 5 * MIN);
   refreshStandings(); setInterval(refreshStandings, 20 * MIN);
+  refreshLeaders(); setInterval(refreshLeaders, 60 * MIN);
   matchLoop();
   setTimeout(refreshOnThisDay, 2000); setInterval(refreshOnThisDay, 30 * MIN);
   setTimeout(refreshPharmacies, 4000); setInterval(refreshPharmacies, 30 * MIN);
@@ -907,12 +938,12 @@ function start() {
   setTimeout(maybeRenderMap, 4000); setInterval(maybeRenderMap, 3 * MIN);
   // yeni işletme ya da lig seçimi değişince maç listesini beklemeden yenile
   let lastU = JSON.stringify(unionLeagues());
-  setInterval(() => { const u = JSON.stringify(unionLeagues()); if (u !== lastU) { lastU = u; refreshMatches(); refreshStandings(); refreshBigMatches(); } }, 30 * 1000);
+  setInterval(() => { const u = JSON.stringify(unionLeagues()); if (u !== lastU) { lastU = u; refreshMatches(); refreshStandings(); refreshLeaders(); refreshBigMatches(); } }, 30 * 1000);
 }
 
 module.exports = {
   start, ymd, hm, norm, HOUR, MIN, TR_WORDS, trTeam,
-  CATALOG, DEFAULT_LEAGUES, NO_TABLE, enabledLeagues, standings,
+  CATALOG, DEFAULT_LEAGUES, NO_TABLE, enabledLeagues, standings, leaders,
   get rates() { return rates; }, weatherFor: t => weather.get(locKey(t)) || null, getWeather, weatherForLoc,
   get autoMatches() { return autoMatches; }, refreshMatches, refreshStandings,
   get onThisDay() { return onThisDay; },

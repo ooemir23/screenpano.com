@@ -864,6 +864,7 @@ r.put('/options', (req, res) => {
   const db = req.t.db, b = req.body || {};
   if (b.videoMaxH != null) db.videoMaxH = [480, 720, 1080].includes(Number(b.videoMaxH)) ? Number(b.videoMaxH) : 1080; // video çözünürlük tavanı (işletmeye bağlı)
   if (typeof b.showStandings === 'boolean') db.showStandings = b.showStandings;
+  if (typeof b.showLeaders === 'boolean') db.showLeaders = b.showLeaders;
   if (Array.isArray(b.hideTables)) db.hideTables = b.hideTables.filter(c => F.CATALOG.some(([k]) => k === c));
   if (typeof b.showQr === 'boolean') db.showQr = b.showQr;
   if (b.qrSize != null) db.qrSize = Math.max(10, Math.min(30, Number(b.qrSize) || 17));

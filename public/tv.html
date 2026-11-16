@@ -165,6 +165,13 @@ html.native-exo video{opacity:0 !important;pointer-events:none !important}
 .od p{font-size:2.4vh;line-height:1.3;color:var(--white);display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
 .m .chn{position:absolute;right:.8vw;bottom:.7vh;font-size:1.6vh;font-weight:600;letter-spacing:.06em;color:var(--accent2);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tbl{display:flex;flex-direction:column;gap:.25vh;height:100%}
+.ldr{display:flex;flex-direction:column;gap:.6vh;height:100%}
+.lrw{flex:1 1 0;min-height:0;max-height:9vh;display:grid;grid-template-columns:3.4vh 1fr auto;align-items:center;gap:1vw;padding:0 1vw;border-radius:1vh;background:rgba(255,255,255,.05);contain:layout style}
+.lrw:nth-child(odd){background:rgba(255,255,255,.085)}
+.lrw .rk{font-size:2.4vh;font-weight:800;text-align:center;color:var(--mute)}.lrw.top1 .rk{color:var(--accent)}
+.lrw .lt{display:flex;align-items:center;gap:.9vw;min-width:0}.lrw .lt img{height:4.6vh;width:4.6vh;object-fit:contain;flex:none}
+.lrw .ln{display:flex;flex-direction:column;min-width:0}.lrw .ln b{font-size:2.3vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lrw .ln small{font-size:1.6vh;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrw .lv2{font-size:3.4vh;font-weight:800;display:flex;align-items:baseline;gap:.4vw}.lrw.top1 .lv2{color:var(--accent)}.lrw .lv2 small{font-size:1.3vh;letter-spacing:.12em;color:var(--mute);font-weight:600}
 .th,.trw{display:grid;grid-template-columns:2.6vh 1fr repeat(4,2.9vh) 4vh 4vh;align-items:center;gap:.25vw;padding:0 .6vw}
 .th{height:3vh;flex:none;font-size:1.6vh;letter-spacing:.14em;color:var(--mute);font-weight:600;text-align:center}
 .th span:nth-child(2){text-align:left}
@@ -1907,7 +1914,10 @@ function card(m) {
   const chn = m.channel ? `<span class="chn">📺 ${esc(m.channel)}</span>` : '';
   return `<div class="m">${dayl}<span class="corner">${corner}</span><div class="tr3">${team(m.home, m.hl, m.final && aw)}<div class="mid">${mid}</div>${team(m.away, m.al, m.final && hw)}</div>${chn}</div>`.replace('class="m"', m.channel ? 'class="m hasch"' : 'class="m"');
 }
-let standingsData = {}, showStandings = true, TROWS = 10;
+let standingsData = {}, showStandings = true, TROWS = 10, leadersData = {}, showLeaders = true;
+function leadersHtml(rows, kind) {
+  return `<div class="ldr">${rows.map(r => `<div class="lrw ${r.rank === 1 ? 'top1' : ''}"><span class="rk">${esc(r.rank)}</span><span class="lt">${r.logo ? `<img src="${esc(r.logo)}" alt="" decoding="async" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<span class="ln"><b>${esc(r.name)}</b><small>${esc(r.team)}</small></span></span><span class="lv2">${esc(r.v)}<small>${kind === 'goals' ? 'GOL' : 'ASİST'}</small></span></div>`).join('')}</div>`;
+}
 function tableHtml(rows) {
   return '<div class="tbl"><div class="th"><span>#</span><span>Takım</span><span>O</span><span>G</span><span>B</span><span>M</span><span>AV</span><span>P</span></div>' +
     rows.map(r => `<div class="trw ${r.rank === 1 ? 'top1' : ''}"><span class="rk">${esc(r.rank)}</span><span class="tn">${r.logo ? `<img src="${esc(r.logo)}" alt="" decoding="async" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}<b>${esc(r.name)}</b></span><span>${esc(r.gp)}</span><span>${esc(r.w)}</span><span>${esc(r.d)}</span><span>${esc(r.l)}</span><span>${esc(r.gd)}</span><span class="pt">${esc(r.pts)}</span></div>`).join('') + '</div>';
@@ -1969,6 +1979,8 @@ function buildPages() {
         const parts = Math.ceil(rows.length / TROWS), per = Math.ceil(rows.length / parts);
         for (let i = 0; i < parts; i++) pages.push({ type: 'table', league, rows: rows.slice(i * per, (i + 1) * per), part: i + 1, parts });
       }
+      const ld = showLeaders && leadersData[league]; // gol ve asist krallığı (ilk 5)
+      if (ld) for (const kind of ['goals', 'assists']) if (ld[kind] && ld[kind].length) pages.push({ type: 'leaders', league, kind, rows: ld[kind].slice(0, 5) });
     }
   if (showPharm && pharmData && pharmData.items.length) {
     const ch = paginate(pharmData.items, pharmCard);
@@ -2020,11 +2032,12 @@ function render() {
     loadTraffic();
   }
   list.style.display = isTraffic ? 'none' : 'flex';
-  document.getElementById('mtitle').innerHTML = isTraffic ? 'Canlı Trafik' : pg.type === 'empty' ? 'Maçlar' : pg.type === 'movies' ? `Vizyona Giriyor<em>BU HAFTA${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'books' ? `Yeni Çıkan Kitaplar<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'D&R'}</em>` : pg.type === 'breaking' ? `Son Dakika<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'CANLI'}</em>` : pg.type === 'news' ? `Gündem<em>TÜRKİYE${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'pharm' ? `Nöbetçi Eczaneler<em>${esc((pharmData.districts || []).join(' · ').toLocaleUpperCase('tr-TR'))}${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'otd' ? `Tarihte Bugün<em>${pg.date ? esc(Number(pg.date.split('-')[2]) + ' ' + MONTHS[Number(pg.date.split('-')[1]) - 1].toLocaleUpperCase('tr-TR')) : ''}${pg.parts > 1 ? ` · ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'table' ? `${esc(pg.league)}<em>PUAN DURUMU${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : esc(pg.league);
+  document.getElementById('mtitle').innerHTML = isTraffic ? 'Canlı Trafik' : pg.type === 'empty' ? 'Maçlar' : pg.type === 'movies' ? `Vizyona Giriyor<em>BU HAFTA${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'books' ? `Yeni Çıkan Kitaplar<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'D&R'}</em>` : pg.type === 'breaking' ? `Son Dakika<em>${pg.parts > 1 ? `${pg.part}/${pg.parts}` : 'CANLI'}</em>` : pg.type === 'news' ? `Gündem<em>TÜRKİYE${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'pharm' ? `Nöbetçi Eczaneler<em>${esc((pharmData.districts || []).join(' · ').toLocaleUpperCase('tr-TR'))}${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'otd' ? `Tarihte Bugün<em>${pg.date ? esc(Number(pg.date.split('-')[2]) + ' ' + MONTHS[Number(pg.date.split('-')[1]) - 1].toLocaleUpperCase('tr-TR')) : ''}${pg.parts > 1 ? ` · ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'table' ? `${esc(pg.league)}<em>PUAN DURUMU${pg.parts > 1 ? ` ${pg.part}/${pg.parts}` : ''}</em>` : pg.type === 'leaders' ? `${esc(pg.league)}<em>${pg.kind === 'goals' ? 'GOL KRALLIĞI' : 'ASİST KRALLIĞI'}</em>` : esc(pg.league);
   document.getElementById('mtitle').lang = /lang="tr"/.test(lng(pg.league)) || !pg.league ? 'tr' : 'en';
   document.getElementById('mtitle').classList.toggle('long', document.getElementById('mtitle').textContent.length > 20);
   if (pg.type === 'league') list.innerHTML = pg.items.map(card).join('');
   else if (pg.type === 'table') list.innerHTML = tableHtml(pg.rows);
+  else if (pg.type === 'leaders') list.innerHTML = leadersHtml(pg.rows, pg.kind);
   else if (pg.type === 'pharm') list.innerHTML = pg.items.map(pharmCard).join('');
   else if (pg.type === 'movies') list.innerHTML = pg.items.map(movieCard).join('');
   else if (pg.type === 'books') list.innerHTML = pg.items.map(bookCard).join('');
@@ -2084,10 +2097,10 @@ function schedule() {
   rot = setTimeout(tick, sp.msLeft);
 }
 addEventListener('resize', () => { fit(); pagesDirty = true; render(); });
-function setMatches(list, st, show) {
-  const same = JSON.stringify([list, st, show]) === JSON.stringify([matches, standingsData, showStandings]);
+function setMatches(list, st, show, ld, showLd) {
+  const same = JSON.stringify([list, st, show, ld || {}, showLd !== false]) === JSON.stringify([matches, standingsData, showStandings, leadersData, showLeaders]);
   if (matches.some(m => m.channel) !== list.some(m => m.channel)) window.fitted = false;
-  matches = list; standingsData = st || {}; showStandings = show !== false;
+  matches = list; standingsData = st || {}; showStandings = show !== false; leadersData = ld || {}; showLeaders = showLd !== false;
   if (!same || !pages.length || window.__forceRender) {
     window.__forceRender = false;
     pagesDirty = true;
@@ -2448,7 +2461,7 @@ function setState(s) {
   if (s.mapAt !== mapAt) { const had = !!mapAt; mapAt = s.mapAt || null; if (!had !== !mapAt) { pagesDirty = true; window.__forceRender = true; } loadTraffic(); }
   window.__vgap = Math.max(0, Math.min(30, Number(s.videoGapSec))) * 1000; if (!isFinite(window.__vgap)) window.__vgap = 3000; // videodan sonra son karede bekleme
   { const xf = Math.max(0.4, Math.min(4, Number(s.xfadeSec) || 1.2)); if (xf !== window.__xf) { window.__xf = xf; document.documentElement.style.setProperty('--xf', xf + 's'); } } // medya geçişinde yumuşak sönme/açılma süresi
-  setMatches(s.matches, s.standings, s.showStandings);
+  setMatches(s.matches, s.standings, s.showStandings, s.leaders, s.showLeaders);
   setRates(s.rates);
   if (s.weather) setWeather(s.weather);
   setTicker(s.matches);
