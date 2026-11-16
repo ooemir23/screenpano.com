@@ -144,11 +144,12 @@ html.native-exo video{opacity:0 !important;pointer-events:none !important}
 #brk small{flex:none;color:#ffb0b0;font-size:1.8vh;font-weight:600;letter-spacing:.08em}
 #trailer{position:absolute;inset:.6vh;z-index:5;display:none;background:#000;border-radius:1.30vh;overflow:hidden;contain:paint}
 #trailer.on{display:block}
-#trailer iframe,#ytm iframe{position:absolute;width:100%;height:100%;left:0;top:0;border:0;pointer-events:none}
+#trailer iframe,#ytm iframe,#ytpre iframe{position:absolute;width:100%;height:100%;left:0;top:0;border:0;pointer-events:none}
 #trailer .tcv{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .9s ease;pointer-events:none;z-index:2}
 #trailer.fade .tcv{opacity:1}
 #ytm{position:absolute;inset:.6vh;z-index:5;display:none;background:#000;border-radius:1.30vh;overflow:hidden;contain:paint}
 #ytm.on{display:block}
+#ytpre{position:absolute;inset:.6vh;z-index:5;display:block;visibility:hidden;background:#000;border-radius:1.30vh;overflow:hidden;contain:paint;pointer-events:none}
 #trailer .tt{position:absolute;left:2vh;top:2vh;max-width:70%;padding:1.4vh 2vw 1.6vh 1.6vw;background:rgba(10,8,6,.88);border-left:.6vh solid var(--accent2);border-radius:1vh;color:#fff;font-size:4.4vh;font-weight:800;line-height:1.15;text-shadow:0 .2vh .6vh #000;box-shadow:0 1vh 3vh rgba(0,0,0,.6);pointer-events:none;animation:ttfade .6s ease}
 @keyframes ttfade{from{opacity:0;transform:translateY(-1vh)}to{opacity:1;transform:translateY(0)}}
 #trailer .tt small{display:block;font-size:2.1vh;font-weight:800;color:var(--accent2);letter-spacing:.14em;margin-bottom:.8vh}
@@ -1371,7 +1372,30 @@ function showTrailer(m, key) {
 }
 // ---- YouTube bağlantılı medya (panelden ya da reklamdan eklenen): gömülü oynatıcı, süre dolunca sıradakine geçilir ----
 let ytOn = false, ytHs = 0;
+// YouTube önceden yüklenir: sıradaki içerik YouTube ise gizli bir çerçeve oynatıcıyı hazırlar; sıra gelince yalnız "oynat" komutu gider (gecikme/siyah ekran olmaz)
+const ytSrc = (it, auto) => { const k = encodeURIComponent(it.yt), o = (location.origin && location.origin !== 'null') ? location.origin : 'https://screenpano.com';
+  return `https://www.youtube.com/embed/${k}?autoplay=${auto}&mute=${it.sound ? 0 : 1}&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&loop=1&playlist=${k}&enablejsapi=1&origin=${encodeURIComponent(o)}`; };
+function prepYt(n) {
+  const old = document.getElementById('ytpre');
+  if (old && old.dataset.k === n.yt) return;
+  if (old) old.remove();
+  if (!n.yt || navigator.onLine === false) return;
+  const d = document.createElement('div'); d.id = 'ytpre'; d.dataset.k = n.yt;
+  d.innerHTML = `<iframe allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="${ytSrc(n, 0)}"></iframe>`;
+  document.getElementById('frame').appendChild(d);
+}
 function showYt(it) {
+  const pre = document.getElementById('ytpre');
+  if (pre && it.yt && pre.dataset.k === it.yt && pre.querySelector('iframe')) { // hazır oynatıcıyı öne al
+    const old = document.getElementById('ytm'); if (old) old.remove();
+    pre.id = 'ytm'; pre.removeAttribute('data-k'); pre.classList.add('on'); ytOn = true;
+    const fr = pre.querySelector('iframe');
+    const cmd = f => { try { fr.contentWindow.postMessage(JSON.stringify({ event: 'command', func: f, args: [] }), '*'); } catch (e) {} };
+    [0, 300, 800, 1600, 3000].forEach(t => setTimeout(() => { if (ytOn && pre.isConnected) { cmd('playVideo'); if (it.sound) cmd('unMute'); } }, t));
+    clearInterval(ytHs); let n = 0;
+    ytHs = setInterval(() => { if (!ytOn || !fr.isConnected || ++n > 20) return clearInterval(ytHs); try { fr.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 'ytm' }), '*'); fr.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onError'] }), '*'); } catch (e) {} }, 500);
+    return;
+  }
   const el = document.getElementById('ytm'); if (!el || !it.yt) return;
   const pageOrigin = (location.origin && location.origin !== 'null') ? location.origin : 'https://screenpano.com';
   const k = encodeURIComponent(it.yt);
@@ -1489,7 +1513,9 @@ function cleanupLayers(keep) {
 // Sıradaki medyayı boştaki öğeye önceden yükle: geçişte bekleme veya takılma olmaz
 function prepNext() {
   if (videos.length < 2) { prepared = { id: null }; return; }
+  { const pre = document.getElementById('ytpre'), nx = videos[(idx + 1) % videos.length]; if (pre && (!nx || nx.type !== 'youtube' || nx.yt !== pre.dataset.k)) pre.remove(); } // artık sıradaki değilse hazır oynatıcıyı bırak
   const n = videos[(idx + 1) % videos.length], el = idleV();
+  if (n.type === 'youtube') { prepYt(n); prepared = { id: null }; return; }
   if (n.type === 'poster') { if (n.image) { const im = new Image(); im.src = n.image; } prepared = { id: null }; return; }
   if (n.type === 'image') {
     if (window.__N && window.__N.preloadImage) { try { window.__N.preloadImage(n.url); } catch (e) {} }
