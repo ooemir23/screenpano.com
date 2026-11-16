@@ -1456,6 +1456,8 @@ function next() {
   clearTimeout(timer);
   if (celeb.pd) { celeb.pd = false; if (celeb.on) { celeb.late = true; celebPhoto(); } }
   if (window.__pendingBig && !big.showing) { const pb = window.__pendingBig; window.__pendingBig = null; els.forEach(v => v.pause()); big.queue = []; big.after = advance; bigShow(pb.match, pb.cfg); return; } // panelden gönderilen deneme: o anki içerik bitince
+  if (window.__pendingCamp && !camp.showing && !big.showing) { const c = window.__pendingCamp; window.__pendingCamp = null; els.forEach(v => v.pause()); camp.after = advance; campShow(c); return; } // panelden gönderilen kampanya: o anki içerik bitince
+  if (window.__pendingTrivia && !triviaOn && !camp.showing && !big.showing) { const t = window.__pendingTrivia; window.__pendingTrivia = null; playTrivia(t.mode, t.cat, true, t.id); return; } // panelden gönderilen bilgi yarışması: o anki içerik bitince
   if (big.due && big.list.length && !big.showing) { big.due = false; els.forEach(v => v.pause()); big.queue = big.list.slice(1); big.after = advance; bigShow(big.list[0]); return; } // büyük maç duyurusu: o anki medya bitince
   if (camp.due && !camp.showing && !big.showing) { const c = camp.due; camp.due = null; els.forEach(v => v.pause()); camp.after = advance; campShow(c); return; } // kampanya: o anki medya bitince
   advance();
@@ -1557,6 +1559,7 @@ function showImageNative(it) {
     if (done || tk !== exoTok || current !== it.id) return; done = true;
     nativeShowing = 'photo';
     exoShow(true);
+    coverRelease();
     imgs.forEach(im => { if (im.style.display === 'block') { im.style.opacity = '0'; setTimeout(() => { if (tk === exoTok) im.style.display = 'none'; }, 450); } });
     // fotoğrafın kenar boşluklarında duraklatılmış videonun son karesi görünmesin: geçiş bitince video katmanı gizlenir
     if (prev === 'video') setTimeout(() => { if (tk === exoTok && window.__N.hideExo) window.__N.hideExo(); }, 450);
@@ -1581,6 +1584,7 @@ function showImageWeb(it) {
         drawBg(nextIm, nextIm.naturalWidth, nextIm.naturalHeight);
         imgi = 1 - imgi;
         cleanupLayers(nextIm);
+        coverRelease();
         if (NX()) { const tk = ++exoTok; setTimeout(() => { if (tk === exoTok && current === it.id) { exoShow(false); nativeShowing = null; if (window.__N.stopExo) window.__N.stopExo(); } }, window.__lite ? 400 : 700); }
       }
     }));
@@ -1606,6 +1610,7 @@ function showVideoSeamless(it, durMs, startMs) {
       exoShow(true);
       if (nativeShowing !== 'video' && window.__N.hideImage) window.__N.hideImage(); // yerel fotoğraf videonun üstündeydi
       nativeShowing = 'video';
+      coverRelease();
       imgs.forEach(im => { if (im.style.display === 'block') { im.style.opacity = '0'; setTimeout(() => { if (tk === exoTok) im.style.display = 'none'; }, 450); } });
     };
     window.__exoStarted = reveal;
@@ -1637,6 +1642,7 @@ function showVideoSeamless(it, durMs, startMs) {
     targetV.style.opacity = '1';
     ci = 1 - ci;
     cleanupLayers(targetV);
+    coverRelease();
     if (oldV !== targetV) {
       setTimeout(() => { if (curV() === targetV) { oldV.pause(); oldV.style.opacity = '0'; } }, 350);
     }
@@ -1671,6 +1677,9 @@ window.__mediaBoundary = () => {
 };
 // yerel motor o an hangi içeriği gösteriyor: durum raporu ve istatistik doğru olsun
 window.__setCur = id => { current = id; const k = videos.findIndex(v => v.id === id); if (k >= 0) { idx = k; fullMedia(videos[k].full); } };
+let coverTok = 0;
+// yeni medyanın ilk karesi görününce önceki YouTube/afiş katmanı kaldırılır
+function coverRelease() { coverTok++; hideYt(); hidePoster(); }
 function play() {
   if (NMED()) return;
   clearTimeout(timer); fadeTok++;
@@ -1682,7 +1691,7 @@ function play() {
   if (typeof syncVideoMute === 'function') syncVideoMute(it);
   playStartedAt = Date.now();
   const fullDurMs = (it.dur || imageSeconds || 10) * 1000;
-  hideYt();
+  if (it.type !== 'video' && it.type !== 'image') hideYt(); // video/fotoğrafa geçerken eski kapak (YouTube/afiş) yenisi hazır olana dek kalır: boş ekran olmasın
   if (it.type === 'youtube') {
     exoStop();
     if (window.__N && window.__N.hideImage) window.__N.hideImage();
@@ -1702,7 +1711,7 @@ function play() {
     setTimeout(prepNext, 500);
     return;
   }
-  hidePoster();
+  const tkc = ++coverTok; setTimeout(() => { if (tkc === coverTok) coverRelease(); }, 2500); // yedek: yeni içerik hazır haberi gelmezse kapak yine de kalkar
   if (it.type === 'image') showImageSeamless(it, fullDurMs);
   else showVideoSeamless(it, fullDurMs, 0);
 }
@@ -1746,7 +1755,7 @@ function syncToMedia(m) {
   if (curIt && curIt.type === 'video') {
     const minVidMs = (curIt.dur ? curIt.dur * 1000 + (typeof window.__vgap === 'number' ? window.__vgap : 3000) + 1500 : 25000); // bekleme süresi dahil
     if (Date.now() - playStartedAt < minVidMs) return;
-  }
+  } else if (curIt && Date.now() - playStartedAt < itemLen(curIt) * 1000) return; // fotoğraf/afiş/YouTube de süresi dolmadan kesilmez; fark sıradaki geçişte düzelir
 
   // Yeni veya farklı içerik: hemen bu içeriğe geç
   clearTimeout(timer);
@@ -4227,7 +4236,7 @@ function connect() {
     if (m.type === 'version') { if (m.now) window.__srvOff = m.now - Date.now(); const mine = window.__pageBuild || window.__build; window.__buildFresh = !mine || mine === m.build; if (m.build && mine && mine !== m.build) { try { const k = '__buildReloads', now = Date.now(), arr = (JSON.parse(sessionStorage.getItem(k) || '[]')).filter(t => now - t < 30000); arr.push(now); sessionStorage.setItem(k, JSON.stringify(arr)); if (arr.length <= 4) location.reload(); } catch (e) { location.reload(); } } window.__build = m.build; }
     else if (m.type === 'sync_anchor') {
       if (m.serverTime) window.__srvOff = m.serverTime - Date.now();
-      if (m.mediaAt) { window.__mediaAt = m.mediaAt; idx = 0; play(); }
+      if (m.mediaAt) { window.__mediaAt = m.mediaAt; if (current && MEDIA_ON && videos.length) idx = -1; /* oynayan içerik bitince başa döner */ else { idx = 0; play(); } }
       const sp = syncWidgetPage(); page = sp.page; render(); schedule();
     }
     else if (m.type === 'sync_media') {
@@ -4245,9 +4254,9 @@ function connect() {
     else if (m.type === 'weather') setWeather(m.weather);
     else if (m.type === 'traffic') setTraffic(m.traffic);
     else if (m.type === 'goal') { if (m.goal && m.goal.at && Date.now() + (window.__srvOff || 0) - m.goal.at > 60000) return; showGoal(m.goal); }
-    else if (m.type === 'campaign') campShow(m.camp);
+    else if (m.type === 'campaign') { if (MEDIA_ON && videos.length && !big.showing && !camp.showing && !triviaOn && !trailerOn) { window.__pendingCamp = m.camp; holdForEnd(); } else campShow(m.camp); } // o anki içerik bitince
     else if (m.type === 'bigmatch') { if (m.force) { if (MEDIA_ON && videos.length && !big.showing) { window.__pendingBig = m; holdForEnd(); return; } /* içerik bitince */ big.queue = []; big.showing = false; } bigShow(m.match, m.cfg); }
-    else if (m.type === 'trivia') playTrivia(m.mode, m.cat, true, m.id);
+    else if (m.type === 'trivia') { if (MEDIA_ON && videos.length && !big.showing && !camp.showing && !triviaOn && !trailerOn) { window.__pendingTrivia = m; holdForEnd(); } else playTrivia(m.mode, m.cat, true, m.id); } // o anki içerik bitince
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
     else if (m.type === 'music_cmd') onMusicCmd(m);
     else if (m.type === 'music_now') { const n = m.now; MUS.spConnectTrack = n && n.title ? { title: n.title, artist: n.artist || '', thumb: n.thumb || '', paused: !n.playing } : null; renderMusicBar(); }
@@ -4324,6 +4333,7 @@ function applyVideos() {
   updateStandby(false);
   prepared = { id: null };
   const k = videos.findIndex(x => x.id === current); idx = k >= 0 ? k : 0;
+  if (k < 0 && current !== null && !NMED() && curOld && (curOld.type === 'video' ? els.some(v => !v.paused) : true) && Date.now() - playStartedAt < itemLen(curOld) * 1000 + 5000) { idx = -1; return; } // listeden çıkan içerik bile bitene dek ekranda kalır; sonraki geçişte yeni listenin başına dönülür
   if (k < 0 || current === null) play();
   else if (!NMED() && curNew && curNew.type === 'poster' && JSON.stringify(curOld) !== JSON.stringify(curNew)) showPoster(curNew); // afiş metni değişti
 }
