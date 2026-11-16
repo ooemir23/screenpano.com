@@ -34,13 +34,18 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
       const valid = b.screens.map(String).filter(Boolean).slice(0, 10);
       if (valid.length) v.screens = valid; else delete v.screens;
     }
-    if (b.dur !== undefined) {
+    let repOn = false;
+    if (b.rep !== undefined && v.type === 'youtube') { // kaç kez arka arkaya: 0 = kapalı (süre saniye olarak); >0 iken süre = video uzunluğu × sayı
+      const yt = require('./ytlink'), n = Math.round(Number(b.rep)) || 0;
+      if (n > 0) { v.rep = yt.clampRep(n); delete v.dur0; v.dur = yt.repDur(v.len, v.rep); repOn = true; }
+      else if (v.rep) { delete v.rep; if (v.dur0 == null && b.dur === undefined) v.dur = 30; }
+    }
+    if (b.dur !== undefined && !repOn) {
       // YouTube'da ilk değişiklikte orijinal süre dur0'da saklanır; dur: 0 gönderilince geri yüklenir (varsayılana dön)
       if (v.type === 'youtube' && b.dur && v.dur0 == null && v.dur) v.dur0 = v.dur;
       if (v.type === 'youtube' && !b.dur) { if (v.dur0 != null) { v.dur = v.dur0; delete v.dur0; } }
       else v.dur = b.dur ? Math.max(3, Math.min(v.type === 'youtube' ? 3600 : 120, Math.round(Number(b.dur)) || 10)) : undefined;
     }
-    if (b.rep !== undefined && v.type === 'youtube') { const yt = require('./ytlink'); v.rep = yt.clampRep(b.rep); if (v.dur0 == null) v.dur = yt.repDur(v.len, v.rep); else v.dur0 = yt.repDur(v.len, v.rep); }
     if (typeof b.name === 'string' && b.name.trim()) v.name = s(b.name, 80);
     changed(req.t); res.json({ ok: true });
   });

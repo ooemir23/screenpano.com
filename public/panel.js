@@ -1042,8 +1042,8 @@ SECTIONS.media = {
       + mTabs
       + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV\'de takılmadan oynayacak şekilde otomatik hazırlanır.',
         `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div><div class="row mt" style="align-items:center"><span class="muted" style="flex:1;font-size:13px">Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın.</span><button class="btn g s" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
-      + card('YouTube bağlantısı ekle', 'Bir YouTube videosunun bağlantısını yapıştırın; ekranda sırası gelince belirttiğiniz kez arka arkaya oynar. İsterseniz sesli oynatabilirsiniz.',
-        `<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><input type="number" id="yt-rep" min="1" max="50" value="1" style="width:80px" title="Kaç kez arka arkaya oynasın"><span class="muted">kez oynat</span><label class="ckl" style="font-size:13px"><input type="checkbox" id="yt-sound"> Sesli oynat</label><button class="btn" onclick="addYt()">Ekle</button></div>`)
+      + card('YouTube bağlantısı ekle', 'Bir YouTube videosunun bağlantısını yapıştırın; ekranda sırası gelince belirttiğiniz süre boyunca oynar (video kısaysa baştan döner). “Kez” alanını doldurursanız süre yerine o kadar kez arka arkaya oynar. İsterseniz sesli oynatabilirsiniz.',
+        `<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><input type="number" id="yt-dur" min="5" max="3600" value="30" style="width:90px" title="Süre (saniye)"><span class="muted">saniye</span><input type="number" id="yt-rep" min="0" max="50" value="0" style="width:70px" title="Kaç kez arka arkaya oynasın (0 = kapalı)"><span class="muted">kez (0 = kapalı)</span><label class="ckl" style="font-size:13px"><input type="checkbox" id="yt-sound"> Sesli oynat</label><button class="btn" onclick="addYt()">Ekle</button></div>`)
       + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div id="mbulk" class="mbulk" hidden></div><div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile${MSEL.has(x.id) ? ' picked' : ''}" draggable="true" data-id="${x.id}">
           <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}${x.full ? '<span class="fbadge">Tam ekran</span>' : ''}${x.quotaOver ? '<span class="fbadge" style="left:6px;right:auto;background:var(--bad)">Alan yok · gösterilmiyor</span>' : ''}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}${x.sound ? ' · 🔊' : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? `<div class="proc">Hazırlanıyor…${x.job ? `<br><small style="font-weight:400;font-size:11.5px">${x.job.pos > 1 ? 'Sıra #' + x.job.pos + ' · ' : ''}~${x.job.etaSec || 15} sn kaldı</small>` : ''}</div>` : ''}</div>
           <div class="m"><span class="grip" title="Sürükleyerek sıralayın">${ic('grip-vertical')}</span><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g ib" onclick="openSched('video','${x.id}')" title="Zamanla">${ic('clock')}</button><button class="btn xs g ib" onclick="tileMenu(event,'${x.id}')" title="Diğer işlemler">${ic('ellipsis')}</button></div></div>`).join('')}</div>`
@@ -1123,14 +1123,17 @@ function openDur(id) {
   openModal(`<h3 style="margin:0 0 6px">Ekranda kalma süresi</h3>
     <p style="margin:0 0 4px"><b>${esc(v.name)}</b></p><p class="muted" style="margin:0 0 ${yt ? 14 : 4}px;font-size:13px">${esc(3 + ' – ' + hi + ' sn arası')}</p>${yt ? '' : `<p class="muted" style="margin:0 0 14px;font-size:13px">${esc('Varsayılan fotoğraf süresi: ' + (S.db.imageSeconds || 10) + ' sn (Ayarlar)')}</p>`}
     <div class="f"><label><span>Ekranda kalma süresi (saniye)</span><input type="number" id="durin" min="3" max="${hi}" value="${cur}" style="width:140px" onkeydown="if(event.key==='Enter')saveDur('${id}')"></label></div>
+    ${yt ? `<div class="f"><label><span>Kaç kez arka arkaya oynasın (0 = kapalı)</span><input type="number" id="repin" min="0" max="50" value="${v.rep || 0}" style="width:140px" oninput="$('durin').disabled=+this.value>0" onkeydown="if(event.key==='Enter')saveDur('${id}')"></label><small class="muted">Açıkken süre otomatik: video uzunluğu × kez</small></div>` : ''}
     <div class="row end mt"><button class="btn g" onclick="closeModal()">Vazgeç</button>${canReset ? `<button class="btn g" onclick="saveDur('${id}',true)">Varsayılana dön</button>` : ''}<button class="btn" onclick="saveDur('${id}')">Kaydet</button></div>`);
-  const inp = $('durin'); if (inp) { inp.focus(); inp.select(); }
+  const inp = $('durin'); if (inp) { if (yt && v.rep) inp.disabled = true; else { inp.focus(); inp.select(); } }
 }
 async function saveDur(id, reset) {
   const v = S.db.videos.find(x => x.id === id); if (!v) return;
-  const hi = v.type === 'youtube' ? 3600 : 120, n = reset ? 0 : Math.round(Number($('durin').value));
-  if (!reset && (!Number.isFinite(n) || n < 3 || n > hi)) { toast(`3 – ${hi} sn arası bir süre girin`, true); return; }
-  if (await act('PUT', '/videos/' + id, { dur: n }, 'Süre kaydedildi')) closeModal();
+  const hi = v.type === 'youtube' ? 3600 : 120, rep = !reset && v.type === 'youtube' && $('repin') ? Math.max(0, Math.min(50, Math.round(Number($('repin').value)) || 0)) : 0;
+  const n = reset || rep ? 0 : Math.round(Number($('durin').value));
+  if (!reset && !rep && (!Number.isFinite(n) || n < 3 || n > hi)) { toast(`3 – ${hi} sn arası bir süre girin`, true); return; }
+  const body = rep ? { rep } : v.type === 'youtube' && !reset ? { rep: 0, dur: n } : { dur: n }; // kez açıksa süre onun sonucudur
+  if (await act('PUT', '/videos/' + id, body, 'Süre kaydedildi')) closeModal();
 }
 const togSound = id => {
   const v = S.db.videos.find(x => x.id === id); if (!v) return;
@@ -1188,7 +1191,7 @@ const togHide = id => { const v = S.db.videos.find(x => x.id === id); act('PUT',
 async function addYt() {
   const url = $('yt-url').value.trim(); if (!url) return toast('Bağlantıyı yapıştırın', true);
   const sound = !!($('yt-sound') && $('yt-sound').checked);
-  const ok = await act('POST', '/videos/youtube', { url, rep: $('yt-rep').value, sound }, 'YouTube içeriği eklendi');
+  const ok = await act('POST', '/videos/youtube', { url, dur: $('yt-dur').value, rep: $('yt-rep').value, sound }, 'YouTube içeriği eklendi');
   if (ok) refresh();
 }
 function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return openModal(`<iframe src="https://www.youtube.com/embed/${esc(v.yt)}?rel=0" style="width:100%;aspect-ratio:16/9;border:0" allow="encrypted-media"></iframe><div class="muted">${i + 1}. ${esc(v.name)}</div>`); const u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }

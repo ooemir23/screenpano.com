@@ -324,6 +324,8 @@ test('YouTube süresi: değiştirilince orijinal saklanır, dur:0 ile geri yükl
   await req('PUT', '/api/admin/videos/' + v.id, { rep: 3 });
   v = await item(); assert.equal(v.rep, 3); assert.equal(v.dur, 90);             // uzunluk bilinmiyorsa 30 sn varsayımı × 3
   const yt = require('../server/ytlink');
+  await req('PUT', '/api/admin/videos/' + v.id, { rep: 0, dur: 40 });
+  v = await item(); assert.equal(v.rep, undefined); assert.equal(v.dur, 40);   // kez kapatılınca saniye geçerli
   assert.equal(yt.repDur(100, 3), 300); assert.equal(yt.repDur(2000, 5), 3600); assert.equal(yt.clampRep(0), 1); assert.equal(yt.clampRep(99), 50);
 
 });
