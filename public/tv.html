@@ -147,7 +147,7 @@ html.native-exo video{opacity:0 !important;pointer-events:none !important}
 #trailer iframe,#ytm iframe,#ytpre iframe{position:absolute;width:100%;height:100%;left:0;top:0;border:0;pointer-events:none}
 #trailer .tcv{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .9s ease;pointer-events:none;z-index:2}
 #trailer.fade .tcv{opacity:1}
-#ytm{position:absolute;inset:.6vh;z-index:5;display:none;background:#000;border-radius:1.30vh;overflow:hidden;contain:paint}
+#ytm{pointer-events:none;user-select:none;position:absolute;inset:.6vh;z-index:5;display:none;background:#000;border-radius:1.30vh;overflow:hidden;contain:paint}
 #ytm.on{display:block}
 #ytpre{position:absolute;inset:.6vh;z-index:5;display:block;visibility:hidden;background:#000;border-radius:1.30vh;overflow:hidden;contain:paint;pointer-events:none}
 #trailer .tt{position:absolute;left:2vh;top:2vh;max-width:70%;padding:1.4vh 2vw 1.6vh 1.6vw;background:rgba(10,8,6,.88);border-left:.6vh solid var(--accent2);border-radius:1vh;color:#fff;font-size:4.4vh;font-weight:800;line-height:1.15;text-shadow:0 .2vh .6vh #000;box-shadow:0 1vh 3vh rgba(0,0,0,.6);pointer-events:none;animation:ttfade .6s ease}
@@ -1381,7 +1381,7 @@ function prepYt(n) {
   if (old) old.remove();
   if (!n.yt || navigator.onLine === false) return;
   const d = document.createElement('div'); d.id = 'ytpre'; d.dataset.k = n.yt;
-  d.innerHTML = `<iframe style="opacity:0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="${ytSrc(n, 0)}"></iframe>`;
+  d.innerHTML = `<iframe style="opacity:0" tabindex="-1" inert allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="${ytSrc(n, 0)}"></iframe>`;
   document.getElementById('frame').appendChild(d);
 }
 function showYt(it) {
@@ -1401,7 +1401,7 @@ function showYt(it) {
   const pageOrigin = (location.origin && location.origin !== 'null') ? location.origin : 'https://screenpano.com';
   const k = encodeURIComponent(it.yt);
   const muteParam = it.sound ? 0 : 1;
-  el.innerHTML = `<iframe style="opacity:0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/${k}?autoplay=1&mute=${muteParam}&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&enablejsapi=1&origin=${encodeURIComponent(pageOrigin)}"></iframe>`;
+  el.innerHTML = `<iframe style="opacity:0" tabindex="-1" inert allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/${k}?autoplay=1&mute=${muteParam}&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&enablejsapi=1&origin=${encodeURIComponent(pageOrigin)}"></iframe>`;
   el.classList.add('on'); ytOn = true;
   { const f0 = el.querySelector('iframe'); setTimeout(() => { if (ytOn && f0 && f0.isConnected && f0.style.opacity === '0') f0.style.opacity = '1'; }, 3500); } // durum bildirimi gelmezse görüntü yine de açılır
   clearInterval(ytHs); let n = 0; // hata bildirimi için kısa süre el sıkışma: oynatılamayan video hata ekranı göstermesin
