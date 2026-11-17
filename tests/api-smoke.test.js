@@ -62,6 +62,13 @@ test('fiyatlandırma: süperden girilir, sitede ve şube ücretinde görünür, 
   r = await req('PUT', '/api/super/ticker-brand', { text: ' www.screenpano.com<b> ', align: 'sağ' });
   assert.equal(r.status, 200);
   assert.deepEqual(r.j.tickerBrand, { text: 'www.screenpano.comb', align: 'center', size: 100 }, 'etiket ayıklanır, geçersiz hizalama ortaya döner');
+  r = await req('POST', '/api/super/pads', { advertiser: 'Test Reklam', price: 100 }); // reklam: ses, tam ekran, bağlantı doğrulaması, silme
+  assert.equal(r.status, 200); const padId = r.j.id;
+  r = await req('PUT', '/api/super/pads/' + padId, { sound: true, full: true }); assert.equal(r.j.ad.sound, true); assert.equal(r.j.ad.full, true);
+  r = await req('POST', `/api/super/pads/${padId}/link`, { url: 'http://127.0.0.1:1/x.mp4' }); assert.equal(r.status, 400); assert.match(r.j.error, /erişilemez/);
+  r = await req('POST', `/api/super/pads/${padId}/link`, { url: 'ftp://example.com/x.mp4' }); assert.equal(r.status, 400);
+  r = await req('POST', `/api/super/pads/${padId}/link`, { url: 'https://youtu.be/dQw4w9WgXcQ', dur: 20 }); assert.equal(r.status, 200); assert.equal(r.j.ad.creatives[0].type, 'youtube');
+  r = await req('DELETE', '/api/super/pads/' + padId); assert.equal(r.status, 200);
   r = await req('PUT', '/api/super/ticker-brand', { text: 'www.screenpano.com', align: 'right' });
   assert.equal(r.j.tickerBrand.align, 'right');
   const html = await (await fetch(BASE + '/')).text();

@@ -80,7 +80,7 @@ const liveFor = t => {
 // Medya döngüsüne reklam ekler: her reklam "every" içerikte bir, görselleri sırayla. Ekranda başka içerik yoksa yalnız reklamlar döner.
 function inject(t, list) {
   const ads = liveFor(t); if (!ads.length) return list;
-  const pools = ads.map(a => ({ items: a.creatives.map(c => c.type === 'youtube' ? ({ id: 'pad:' + c.id, name: a.title || a.advertiser, type: 'youtube', yt: c.yt, url: require('./ytlink').thumb(c.yt), dur: c.dur || a.dur || 30, sch: null, ad: true }) : ({ id: 'pad:' + c.id, name: a.title || a.advertiser, url: '/u/ads/' + c.file, type: c.type, dur: c.type === 'video' ? (c.dur || a.dur || 15) : (a.dur || 10), sch: null, ad: true })), k: 0, every: trialOn(a, t) ? 1 : Math.max(1, Math.min(50, Number(a.every) || 4)) }));
+  const pools = ads.map(a => ({ items: a.creatives.map(c => c.type === 'youtube' ? ({ id: 'pad:' + c.id, name: a.title || a.advertiser, type: 'youtube', yt: c.yt, url: require('./ytlink').thumb(c.yt), dur: c.dur || a.dur || 30, sch: null, ad: true, sound: !!a.sound, full: !!a.full }) : ({ id: 'pad:' + c.id, name: a.title || a.advertiser, url: '/u/ads/' + c.file, type: c.type, dur: c.type === 'video' ? (c.dur || a.dur || 15) : (a.dur || 10), sch: null, ad: true, sound: c.type === 'video' && !!a.sound, full: !!a.full })), k: 0, every: trialOn(a, t) ? 1 : Math.max(1, Math.min(50, Number(a.every) || 4)) }));
   if (!list.length) return pools.flatMap(p => p.items);
   const out = [];
   list.forEach((v, i) => {
@@ -159,6 +159,8 @@ function clean(b, a) {
   if ('dur' in b || 'sec' in b) a.dur = Math.max(3, Math.min(120, Math.round(Number(b.dur ?? b.sec)) || 10));
   if (typeof b.allowUnpaid === 'boolean') a.allowUnpaid = b.allowUnpaid || undefined;
   if (typeof b.paused === 'boolean') a.paused = b.paused || undefined;
+  if (typeof b.sound === 'boolean') a.sound = b.sound || undefined; // videolar/YouTube sesli oynar
+  if (typeof b.full === 'boolean') a.full = b.full || undefined; // reklam oynarken tam ekran (kenar kutular gizli)
   if (b.target && typeof b.target === 'object') a.target = cleanTarget(b.target, a.target);
   return a;
 }
@@ -205,9 +207,41 @@ async function prepare(file) {
     if (!media.ffmpegOk) throw new Error('Video işlemek için ffmpeg gerekli');
     const name = id + '-' + auth.uid(8) + '.mp4', out = path.join(DIR, name);
     await require('./feeds').runFfmpeg(['-y', '-i', src, '-vf', "scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2,fps=fps='min(source_fps,30)',format=yuv420p",
-      '-c:v', 'libx264', '-profile:v', 'high', '-level', '4.1', '-preset', 'veryfast', '-crf', '23', '-maxrate', '6M', '-bufsize', '12M', '-an', '-movflags', '+faststart', '-threads', '2', out]);
+      '-map', '0:v:0', '-map', '0:a:0?', '-c:v', 'libx264', '-profile:v', 'high', '-level', '4.1', '-preset', 'veryfast', '-crf', '23', '-maxrate', '6M', '-bufsize', '12M', '-c:a', 'aac', '-b:a', '128k', '-ac', '2', '-movflags', '+faststart', '-threads', '2', out]);
     return { id, file: name, type: 'video', name: s(file.originalname, 80), dur: await media.probeDur(out) };
   } finally { fs.rmSync(src, { force: true }); }
+}
+// Bağlantıdan indirme: yalnız http(s), özel/iç ağ adresleri reddedilir, yönlendirmeler tek tek doğrulanır, boyut ve süre sınırlıdır
+const privIp = ip => /^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1$|::$|f[cd][0-9a-f]{2}:|fe80:)/i.test(ip) || /^::ffff:(127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(ip);
+async function safeUrl(u) {
+  let x; try { x = new URL(u); } catch { throw new Error('Geçerli bir bağlantı girin'); }
+  if (!/^https?:$/.test(x.protocol)) throw new Error('Yalnız http veya https bağlantısı');
+  const addrs = await require('dns').promises.lookup(x.hostname, { all: true }).catch(() => { throw new Error('Adres çözülemedi'); });
+  if (!addrs.length || addrs.some(a => privIp(a.address))) throw new Error('Bu adrese erişilemez');
+  return x.toString();
+}
+const MIME_EXT = { 'video/mp4': '.mp4', 'video/quicktime': '.mov', 'video/webm': '.webm', 'video/x-matroska': '.mkv', 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+async function fetchMedia(u) {
+  let url = await safeUrl(u), r;
+  for (let i = 0; i < 4; i++) {
+    r = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(180000), headers: { 'user-agent': 'ScreenPano/1.0' } });
+    if (r.status >= 300 && r.status < 400 && r.headers.get('location')) { url = await safeUrl(new URL(r.headers.get('location'), url).toString()); continue; }
+    break;
+  }
+  if (!r.ok) throw new Error('Bağlantı açılamadı (' + r.status + ')');
+  let mime = String(r.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+  const nameFromUrl = decodeURIComponent(path.basename(new URL(url).pathname) || 'medya');
+  if (!MIME_EXT[mime]) { const e = path.extname(nameFromUrl).toLowerCase(), m = Object.entries(MIME_EXT).find(([, x]) => x === e); if (m && (!mime || mime === 'application/octet-stream')) mime = m[0]; }
+  if (!MIME_EXT[mime]) throw new Error('Bağlantı bir video (mp4, mov, webm) ya da görsel (jpg, png, webp) olmalı');
+  const file = path.join(DIR, 'raw-' + auth.uid(16) + MIME_EXT[mime]), out = fs.createWriteStream(file); let n = 0;
+  try {
+    await new Promise((ok, bad) => {
+      const rd = require('stream').Readable.fromWeb(r.body);
+      rd.on('data', ch => { n += ch.length; if (n > 300 * 1024 * 1024) { rd.destroy(new Error('Dosya 300 MB sınırını aşıyor')); } });
+      rd.on('error', bad); out.on('error', bad); out.on('finish', ok); rd.pipe(out);
+    });
+  } catch (e) { fs.rmSync(file, { force: true }); throw e; }
+  return { file, mime, name: nameFromUrl };
 }
 const rm = c => {
   if (c && c.file) {
@@ -273,6 +307,19 @@ function routes(r) {
     if (f.a.creatives.length >= 12) return res.status(400).json({ error: 'En fazla 12 görsel' });
     f.a.creatives.push({ id: auth.uid(10), type: 'youtube', yt: id, name: (await yt.title(id)) || 'YouTube videosu', dur: yt.clampDur((req.body || {}).dur) });
     save(f.list); pushAll(); res.json({ ok: true, ad: derive(f.a) });
+  });
+  // Bağlantıdan ekle: YouTube, doğrudan video (mp4…) ya da görsel (jpg/png/webp) adresi; dosya sunucuya indirilip yüklemeyle aynı işlenir
+  r.post('/pads/:id/link', async (req, res) => {
+    const f = find(req, res); if (!f) return; const body = req.body || {}, url = String(body.url || '').trim();
+    if (f.a.creatives.length >= 12) return res.status(400).json({ error: 'En fazla 12 görsel' });
+    const yt = require('./ytlink'), id = yt.parse(url);
+    if (id) { f.a.creatives.push({ id: auth.uid(10), type: 'youtube', yt: id, name: (await yt.title(id)) || 'YouTube videosu', dur: yt.clampDur(body.dur) }); save(f.list); pushAll(); return res.json({ ok: true, ad: derive(f.a) }); }
+    let tmp;
+    try {
+      const got = await fetchMedia(url); tmp = got.file;
+      const c = await prepare({ filename: path.basename(got.file), mimetype: got.mime, originalname: got.name });
+      f.a.creatives.push(c); save(f.list); pushAll(); res.json({ ok: true, ad: derive(f.a) });
+    } catch (e) { if (tmp) fs.rmSync(tmp, { force: true }); res.status(400).json({ error: e.message || 'Bağlantı indirilemedi' }); }
   });
   // Görsel/video sırası: gönderilen kimlik listesine göre yeniden dizilir
   r.put('/pads/:id/media-order', (req, res) => {
