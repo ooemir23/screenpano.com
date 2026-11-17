@@ -2988,7 +2988,7 @@ function bigDesign(el, m, cfg, design, o) {
   el.style.setProperty('--c2', c2); el.style.setProperty('--c2b', c2b);
   const H = crest(m.hl, m.home, c1), A = crest(m.al, m.away, c2);
   const nm = (t, c = 'yname', n = 13) => `<div class="${c}${String(t).length > n ? ' sm' : ''}"${lng(t)}>${esc(t)}</div>`;
-  const kick = m.derby ? 'BÜYÜK DERBİ' : 'AVRUPA GECESİ', league = up(m.league);
+  const kick = m.derby ? 'BÜYÜK DERBİ' : m.nat ? 'MİLLİ MAÇ' : 'AVRUPA GECESİ', league = up(m.league);
   const brand = LOGO ? `<img class="ybrand" src="${esc(LOGO)}" alt="">` : `<div class="ybrandt">${esc(up(BNAME))}</div>`;
   const top = `<div class="ytop">${brand}<div class="ykick">${kick}</div>${!m.derby && league ? `<div class="ylea">${esc(league)}</div>` : ''}</div>`;
   const infos = o.info.map((t, i) => `<span>${o.icons[i % 3]} ${esc(t)}</span>`).join('');
@@ -3146,7 +3146,7 @@ function bigShow(m, cfg) {
   if (design !== 'uyum') bigDesign(el, m, cfg, design, { dayTxt, dayName, tm, info, icons });
   else
   el.innerHTML = '<div class="bl"></div><div class="br"></div><div class="bsh"></div>' + side(m.hl, m.hp, true) + side(m.al, m.ap, false)
-    + `<div class="bc"><div style="text-align:center">${LOGO ? '<img class="blogo" src="' + esc(LOGO) + '" alt="">' : '<div class="bk1" style="font-size:' + U(3) + ';letter-spacing:.2em">' + esc(BNAME.toLocaleUpperCase('tr-TR')) + '</div>'}<div class="bt1" style="margin-top:${U(1.4)}">${m.derby ? 'BÜYÜK DERBİ' : 'AVRUPA GECESİ'}</div>${sub}</div>`
+    + `<div class="bc"><div style="text-align:center">${LOGO ? '<img class="blogo" src="' + esc(LOGO) + '" alt="">' : '<div class="bk1" style="font-size:' + U(3) + ';letter-spacing:.2em">' + esc(BNAME.toLocaleUpperCase('tr-TR')) + '</div>'}<div class="bt1" style="margin-top:${U(1.4)}">${m.derby ? 'BÜYÜK DERBİ' : m.nat ? 'MİLLİ MAÇ' : 'AVRUPA GECESİ'}</div>${sub}</div>`
     + `<div class="btm"><div class="bnm"><b${lng(m.home)}${m.home.length > 13 ? ' class="sm"' : ''}>${esc(m.home)}</b><i>VS</i><b${lng(m.away)}${m.away.length > 13 ? ' class="sm"' : ''}>${esc(m.away)}</b></div>`
     + `<div class="bclk"><svg viewBox="0 0 24 24" fill="none" stroke="#f4c04f" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2"/></svg>${esc(tm)}</div>`
     + `<div class="bday">${esc(dayTxt)}</div>`

@@ -149,7 +149,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         val (c1, c1b) = teamPair(m.str("home"), m.str("hc"), m.str("hc2"), m.str("hcol"), m.str("hcol2"))
         val (c2, c2b) = teamPair(m.str("away"), m.str("ac"), m.str("ac2"), m.str("acol"), m.str("acol2"))
         val (lc1, lc2) = leagueColors(m.str("league"), m.optBoolean("derby"))
-        val league = up(m.str("league")); val kick = if (m.optBoolean("derby")) "BÜYÜK DERBİ" else "AVRUPA GECESİ"
+        val league = up(m.str("league")); val kick = if (m.optBoolean("derby")) "BÜYÜK DERBİ" else if (m.optBoolean("nat")) "MİLLİ MAÇ" else "AVRUPA GECESİ"
         val dayTxt = d.optString("dayTxt"); val tm = d.optString("tm")
         val llogo = leagueLogo(m)
         val gold = Color.parseColor("#ffe08a")
@@ -309,7 +309,7 @@ class BigArenaView(context: Context) : FrameLayout(context) {
         val logo = s.raw.optJSONObject("brand")?.str("logo") ?: ""
         if (logo.isNotEmpty()) top.addView(ImageView(context).apply { scaleType = ImageView.ScaleType.FIT_CENTER; load(NativeEnv.url(logo)) { crossfade(false) } }, LinearLayout.LayoutParams((40 * w).toInt(), (9 * u).toInt()))
         else top.addView(tv(up(s.brandName), 3 * u, Color.parseColor("#ffe9a8")).apply { letterSpacing = 0.2f })
-        top.addView(tv(if (m.optBoolean("derby")) "BÜYÜK DERBİ" else "AVRUPA GECESİ", 8.6f * u, Color.parseColor("#f2c14e")).apply {
+        top.addView(tv(if (m.optBoolean("derby")) "BÜYÜK DERBİ" else if (m.optBoolean("nat")) "MİLLİ MAÇ" else "AVRUPA GECESİ", 8.6f * u, Color.parseColor("#f2c14e")).apply {
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC); gravity = Gravity.CENTER; setShadowLayer(u * 0.8f, 0f, u * 0.5f, Color.argb(200, 0, 0, 0))
         }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (1.4f * u).toInt() })
         if (!m.optBoolean("derby")) top.addView(tv(up(m.str("league")), 2.3f * u, Color.parseColor("#ffe9a8")).apply { letterSpacing = 0.34f; gravity = Gravity.CENTER }, LinearLayout.LayoutParams(-2, -2).also { it.topMargin = (0.8f * u).toInt() })

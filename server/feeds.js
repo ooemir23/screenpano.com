@@ -35,7 +35,9 @@ const platformKey = name => store.setting(name, '');
 
 // ESPN takım adlarını ASCII verir (Fenerbahce, Besiktas…): Türkçe karakterli hâle çevrilir
 const TR_WORDS = { Fenerbahce: 'Fenerbahçe', Besiktas: 'Beşiktaş', Goztepe: 'Göztepe', Basaksehir: 'Başakşehir', Istanbul: 'İstanbul', Kasimpasa: 'Kasımpaşa', Caykur: 'Çaykur', Genclerbirligi: 'Gençlerbirliği', Karagumruk: 'Karagümrük', Eyupspor: 'Eyüpspor', Umraniyespor: 'Ümraniyespor', Ankaragucu: 'Ankaragücü', Kecioren: 'Keçiören', Keciorengucu: 'Keçiörengücü', Bandirma: 'Bandırma', Corum: 'Çorum', Sanliurfa: 'Şanlıurfa', Igdir: 'Iğdır', Gazisehir: 'Gazişehir', Buyuksehir: 'Büyükşehir', Umraniye: 'Ümraniye', Bodrumspor: 'Bodrum', Genc: 'Genç', Gucu: 'Gücü', Cagdas: 'Çağdaş', Eskisehirspor: 'Eskişehirspor', Altinordu: 'Altınordu', Gencler: 'Gençler', Kirklarelispor: 'Kırklarelispor', Kirikkale: 'Kırıkkale', Usakspor: 'Uşakspor', Sanliurfaspor: 'Şanlıurfaspor', Istanbulspor: 'İstanbulspor' };
-const trTeam = n => String(n || '').replace(/[A-Za-z]+/g, w => TR_WORDS[w] || w);
+// milli takım adları (yalnızca tam eşleşmede; kulüp adlarını bozmaz)
+const NAT_TR = { Turkey: 'Türkiye', Germany: 'Almanya', Spain: 'İspanya', Italy: 'İtalya', France: 'Fransa', England: 'İngiltere', Netherlands: 'Hollanda', Portugal: 'Portekiz', Croatia: 'Hırvatistan', Belgium: 'Belçika', Wales: 'Galler', Hungary: 'Macaristan', Georgia: 'Gürcistan', Bulgaria: 'Bulgaristan', Latvia: 'Letonya', Poland: 'Polonya', Serbia: 'Sırbistan', Denmark: 'Danimarka', Switzerland: 'İsviçre', Austria: 'Avusturya', Greece: 'Yunanistan', Romania: 'Romanya', Czechia: 'Çekya', 'Czech Republic': 'Çekya', Ukraine: 'Ukrayna', Armenia: 'Ermenistan', Azerbaijan: 'Azerbaycan', Iceland: 'İzlanda', Ireland: 'İrlanda', 'Republic of Ireland': 'İrlanda', Sweden: 'İsveç', Norway: 'Norveç', Scotland: 'İskoçya', Slovakia: 'Slovakya', Slovenia: 'Slovenya', Finland: 'Finlandiya', Albania: 'Arnavutluk', Kosovo: 'Kosova', Montenegro: 'Karadağ', 'North Macedonia': 'Kuzey Makedonya', 'Bosnia and Herzegovina': 'Bosna Hersek', Brazil: 'Brezilya', Argentina: 'Arjantin', Japan: 'Japonya', 'United States': 'ABD', Mexico: 'Meksika', Uruguay: 'Uruguay', Colombia: 'Kolombiya', Russia: 'Rusya', Israel: 'İsrail', Cyprus: 'Kıbrıs', Malta: 'Malta', Luxembourg: 'Lüksemburg', Estonia: 'Estonya', Lithuania: 'Litvanya', Kazakhstan: 'Kazakistan', Belarus: 'Belarus', Moldova: 'Moldova', 'Faroe Islands': 'Faroe Adaları', Andorra: 'Andorra', 'San Marino': 'San Marino', Liechtenstein: 'Lihtenştayn', Gibraltar: 'Cebelitarık', 'Northern Ireland': 'Kuzey İrlanda' };
+const trTeam = n => NAT_TR[String(n || '').trim()] || String(n || '').replace(/[A-Za-z]+/g, w => TR_WORDS[w] || w);
 
 // Dış API çağrıları için ortak zaman aşımı: sağlayıcı asılı kalırsa ilgili yenileme döngüsü sonsuza dek beklemesin
 const fetchT = (url, opts = {}, ms = 12000) => fetch(url, { ...opts, signal: opts.signal || AbortSignal.timeout(ms) });
@@ -715,7 +717,11 @@ async function refreshMovies(force) {
 
 // ================= BÜYÜK MAÇ DUYURUSU =================
 const isBig4 = name => ['galatasaray', 'fenerbahce', 'besiktas', 'trabzonspor'].some(k => norm(name).includes(k));
-const BIG_LEAGUES = [['tur.1', 'Süper Lig'], ['uefa.champions', 'Şampiyonlar Ligi'], ['uefa.europa', 'Avrupa Ligi'], ['uefa.europa.conf', 'Konferans Ligi'], ['uefa.champions_qual', 'Şampiyonlar Ligi Eleme']];
+// Türkiye milli takımı maçları da büyük maç sayılır: yalnızca bu turnuvalarda Türkiye'nin oynadığı maçlar alınır
+const NAT_BIG = new Set(['fifa.world', 'fifa.worldq.uefa', 'uefa.euro', 'uefa.euroq', 'uefa.nations', 'fifa.friendly']);
+const isTR = n => /^(turkiye|turkey)$/.test(norm(n));
+const BIG_LEAGUES = [['tur.1', 'Süper Lig'], ['uefa.champions', 'Şampiyonlar Ligi'], ['uefa.europa', 'Avrupa Ligi'], ['uefa.europa.conf', 'Konferans Ligi'], ['uefa.champions_qual', 'Şampiyonlar Ligi Eleme'],
+  ['fifa.world', 'Dünya Kupası'], ['fifa.worldq.uefa', 'Dünya Kupası Elemeleri'], ['uefa.euro', 'Avrupa Şampiyonası'], ['uefa.euroq', 'Avrupa Şampiyonası Elemeleri'], ['uefa.nations', 'UEFA Uluslar Ligi'], ['fifa.friendly', 'Milli Maç']];
 const LEAGUE_LOGOS = { 'Süper Lig': '/logo/l-18.png?v=2', 'Şampiyonlar Ligi': '/logo/l-2.png?v=2', 'Şampiyonlar Ligi Eleme': '/logo/l-2.png?v=2', 'Avrupa Ligi': '/logo/l-2310.png?v=2', 'Konferans Ligi': '/logo/l-20296.png?v=2' };
 // Büyük maç tasarımları; kaldırılan eski tasarımlar (klasik, yan, sade, skor) Klasik (ekrana uyumlu) olarak gösterilir
 const BIG_STYLES = ['prime', 'uyum', 'stadyum', 'bant', 'sayac', 'poster', 'duello', 'turnuva', 'arena', 'matchday', 'neonarena'];
@@ -739,8 +745,8 @@ async function refreshBigMatches() {
         const c = e.competitions[0].competitors, home = c.find(x => x.homeAway === 'home'), away = c.find(x => x.homeAway === 'away');
         if (!home || !away) continue;
         const hb = isBig4(home.team.displayName), ab = isBig4(away.team.displayName), derby = code === 'tur.1' && hb && ab;
-        if (!derby && (code === 'tur.1' || !(hb || ab))) continue;
-        out.push({ id: e.id, league: label, ll, venue: ((e.competitions[0].venue || {}).fullName || '').slice(0, 60), home: trTeam(home.team.shortDisplayName || home.team.displayName), away: trTeam(away.team.shortDisplayName || away.team.displayName), ts: new Date(e.date).getTime(), hl: home.team.logo || null, al: away.team.logo || null, hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '', derby });
+        if (NAT_BIG.has(code) ? !(isTR(home.team.displayName) || isTR(away.team.displayName)) : (!derby && (code === 'tur.1' || !(hb || ab)))) continue;
+        out.push({ id: e.id, league: label, ll, venue: ((e.competitions[0].venue || {}).fullName || '').slice(0, 60), home: trTeam(home.team.shortDisplayName || home.team.displayName), away: trTeam(away.team.shortDisplayName || away.team.displayName), ts: new Date(e.date).getTime(), hl: home.team.logo || null, al: away.team.logo || null, hcol: home.team.color || '', acol: away.team.color || '', hcol2: home.team.alternateColor || '', acol2: away.team.alternateColor || '', derby, nat: NAT_BIG.has(code) || undefined });
       }
     } catch (err) { bigError = err.message; console.error('Büyük maç alınamadı', code, err.message); }
   }
@@ -751,8 +757,8 @@ async function refreshBigMatches() {
   cachePut('bigmatches', bigMatches);
   hub.pushAll();
 }
-const TEAM_COLORS = { galatasaray: '#c9082a', fenerbahce: '#123690', besiktas: '#22252c', trabzonspor: '#800f34' };
-const TEAM_COLORS2 = { galatasaray: '#ffb800', fenerbahce: '#ffdd00', besiktas: '#e2e8f0', trabzonspor: '#29a8ff' };
+const TEAM_COLORS = { turkiye: '#e30a17', galatasaray: '#c9082a', fenerbahce: '#123690', besiktas: '#22252c', trabzonspor: '#800f34' };
+const TEAM_COLORS2 = { turkiye: '#ffffff', galatasaray: '#ffb800', fenerbahce: '#ffdd00', besiktas: '#e2e8f0', trabzonspor: '#29a8ff' };
 const lum = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return -1; const n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; };
 const teamColor = (name, c1, c2) => {
   const k = Object.keys(TEAM_COLORS).find(x => norm(name).includes(x)); if (k) return TEAM_COLORS[k];

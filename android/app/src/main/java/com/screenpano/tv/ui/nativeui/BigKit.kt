@@ -130,7 +130,7 @@ internal class BigCtx(val v: FrameLayout, d: JSONObject, val s: TvState) {
     private val lcs = BigColors.leagueColors(m.str("league"), derby)
     val lc1 = lcs.first; val lc2 = lcs.second
     val league = up(m.str("league"))
-    val kick = if (derby) "BÜYÜK DERBİ" else "AVRUPA GECESİ"
+    val kick = if (derby) "BÜYÜK DERBİ" else if (m.optBoolean("nat")) "MİLLİ MAÇ" else "AVRUPA GECESİ"
     val dayTxt = d.optString("dayTxt"); val dayName = d.optString("dayName"); val tm = d.optString("tm")
     val venue = m.str("venue")
     val ts = m.optLong("ts")
