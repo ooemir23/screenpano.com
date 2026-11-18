@@ -118,13 +118,13 @@ async function refreshResults() {
 // Kadro (golcü / asist seçimi için): takım başına günde bir
 async function squad(teamId) {
   const c = C.squads[teamId];
-  if (c && Date.now() - c.at < DAY) return c.list;
+  if (c && c.v === 2 && Date.now() - c.at < DAY) return c.list;
   try {
     const j = await jget(`${ESPN}/teams/${encodeURIComponent(teamId)}/roster`);
     const ORDER = { F: 0, M: 1, D: 2, G: 3 };
-    const list = (j.athletes || []).filter(a => a && a.id).map(a => ({ id: String(a.id), name: String(a.displayName || '').slice(0, 60), pos: ((a.position || {}).abbreviation || '').slice(0, 2) }))
+    const list = (j.athletes || []).filter(a => a && a.id).map(a => ({ id: String(a.id), name: String(a.displayName || '').slice(0, 60), pos: ((a.position || {}).abbreviation || '').slice(0, 2), no: /^\d{1,3}$/.test(String(a.jersey || '')) ? String(a.jersey) : '' }))
       .sort((a, b) => (ORDER[a.pos] ?? 9) - (ORDER[b.pos] ?? 9) || a.name.localeCompare(b.name, 'tr'));
-    C.squads[teamId] = { at: Date.now(), list }; saveCache();
+    C.squads[teamId] = { at: Date.now(), v: 2, list }; saveCache();
     return list;
   } catch (e) { return c ? c.list : []; }
 }
@@ -138,8 +138,16 @@ function pointsFor(p, m) {
     if (p.h === m.sc[0] && p.a === m.sc[1]) { o.score = PTS.exact; o.exact = true; }
     else if (sign(p.h, p.a) === sign(m.sc[0], m.sc[1])) o.score = PTS.result;
   }
-  if (p.g && r.goals[p.g]) o.goal = PTS.goal * r.goals[p.g];
-  if (p.as && r.assists[p.as]) o.assist = PTS.assist * r.assists[p.as];
+  // gol kutuları: her kutu bir golün golcüsü (g) ve asisti (a). Aynı oyuncu birden çok kutuda olabilir; oyuncunun
+  // maçtaki gol/asist sayısını aşan kutular puan almaz. Eski biçim (tek g / as) de okunur.
+  const slots = Array.isArray(p.gl) ? p.gl : [{ g: p.g, a: p.as }].filter(x => x.g || x.a);
+  const gl = { ...(r.goals || {}) }, al = { ...(r.assists || {}) };
+  o.slots = slots.map(x => {
+    const v = { g: 0, a: 0 };
+    if (x.g && gl[x.g] > 0) { gl[x.g]--; v.g = PTS.goal; }
+    if (x.a && al[x.a] > 0) { al[x.a]--; v.a = PTS.assist; }
+    o.goal += v.g; o.assist += v.a; return v;
+  });
   if (Number.isInteger(p.yc) && p.yc === r.yc) o.yellow = PTS.yellow;
   if (typeof p.rc === 'boolean' && p.rc === r.rc > 0) o.red = PTS.red;
   o.total = o.score + o.goal + o.assist + o.yellow + o.red;

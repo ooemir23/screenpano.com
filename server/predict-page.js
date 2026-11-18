@@ -45,6 +45,31 @@ input[type=date]{min-height:46px;-webkit-appearance:none;appearance:none}
 .or{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12px;margin:14px 0 2px}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--bd)}
 .noad{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--tx);background:color-mix(in srgb,var(--ok) 14%,transparent);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);border-radius:10px;padding:8px 10px;margin:12px 0 0}
 details{font-size:12.5px;color:var(--mut)}details summary{cursor:pointer;color:var(--a2)}
+.gls{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.gsd{border:1px solid var(--bd);border-radius:14px;padding:10px;background:color-mix(in srgb,var(--tx) 4%,transparent)}
+.gsd h4{margin:0 0 8px;font-size:13px;display:flex;align-items:center;gap:8px}.gsd h4 img{width:20px;height:20px;object-fit:contain}.gsd h4 span{color:var(--mut);font-weight:600;margin-left:auto;font-size:12px}
+.gsl{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}.gsl+.gsl{margin-top:10px;padding-top:10px;border-top:1px dashed var(--bd)}.gsl .bt{display:flex;flex-direction:column;gap:6px;min-width:0}.gsl .no{margin-top:9px}
+.gsl .no{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;background:var(--a2);color:#111;font-weight:800}
+.pkb{display:flex;align-items:center;gap:7px;min-width:0;width:100%;text-align:left;border:1px dashed var(--bd);background:transparent;color:var(--mut);border-radius:10px;padding:8px 9px;font:600 13px inherit;cursor:pointer;min-height:44px}
+.pkb.on{border-style:solid;border-color:color-mix(in srgb,var(--a2) 60%,transparent);background:color-mix(in srgb,var(--a2) 14%,transparent);color:var(--tx)}
+.pkb .ic{flex:none;font-size:14px}.pkb .nr{flex:none;font-weight:800;color:var(--mut);font-size:12px;min-width:22px;text-align:right}.pkb.a{min-height:38px;padding:6px 9px;font-size:12.5px}.pkb .tx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pkb small{display:block;font-size:10.5px;color:var(--mut);font-weight:700;letter-spacing:.04em}
+.ps{flex:none;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 6px;border-radius:6px;color:#fff}
+.ps.F{background:#e5484d}.ps.M{background:#30a46c}.ps.D{background:#3e63dd}.ps.G{background:#f5a524;color:#111}.ps.X{background:#666}
+.hint{font-size:12.5px;color:var(--mut);text-align:center;padding:4px 0 0}
+#sheet{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+#sheet .sh{background:var(--bg);border-top:1px solid var(--bd);border-radius:20px 20px 0 0;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.5);max-width:560px;width:100%;margin:0 auto}
+#sheet .hd{padding:10px 16px 10px;border-bottom:1px solid var(--bd)}#sheet .grab{width:42px;height:5px;border-radius:9px;background:var(--bd);margin:0 auto 10px}
+#sheet .tt{display:flex;align-items:center;gap:10px}#sheet .tt img{width:30px;height:30px;object-fit:contain}#sheet .tt b{font-size:16px;display:block}#sheet .tt small{color:var(--mut);font-size:12.5px}
+#sheet .x{margin-left:auto;width:36px;height:36px;border-radius:50%;border:0;background:var(--card);color:var(--tx);font-size:20px}
+#sheet input{margin-top:10px}
+#sheet .ls{overflow:auto;padding:4px 10px calc(16px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+#sheet .gp{font-size:11.5px;font-weight:800;letter-spacing:.1em;color:var(--mut);text-transform:uppercase;padding:12px 6px 6px;display:flex;align-items:center;gap:8px}
+#sheet .pl{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:var(--tx);padding:9px 8px;border-radius:12px;font:600 15px inherit;text-align:left;cursor:pointer}
+#sheet .pl:active,#sheet .pl.sel{background:color-mix(in srgb,var(--a2) 16%,transparent)}#sheet .pl:disabled{opacity:.35}
+#sheet .jn{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;background:color-mix(in srgb,var(--tx) 10%,transparent);border:2px solid var(--bd)}
+#sheet .pl.sel .jn{background:var(--a2);color:#111;border-color:var(--a2)}
+#sheet .pn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#sheet .ck{color:var(--a2);font-weight:900}
+#sheet .clr{color:var(--bad)}
 [hidden]{display:none!important}
 </style></head><body><main>
 <header>${logo ? `<img src="${esc(logo)}" alt="">` : ''}<h1>${esc(name)} Tahmin Ligi</h1><p id="wk">Süper Lig</p></header>
@@ -74,7 +99,7 @@ details{font-size:12.5px;color:var(--mut)}details summary{cursor:pointer;color:v
 <section id="t-k" hidden><div class="card"><b>Puanlar</b><table id="ptsT"></table>
   <p class="note">İstediğin maçlara tahmin girersin; maç sayısı zorunlu değildir. Her maçta alanların hepsini doldurman gerekmez, yalnız doldurduklarından puan alırsın. Tahminler maç başlayana kadar değiştirilebilir.</p>
   <p class="note">Hafta Salı'dan Pazartesi'ye kadardır. Haftanın birincisi, o haftanın maçlarından en çok puanı toplayandır. Eşitlikte daha çok tam skor bilen, o da eşitse tahminlerini daha önce tamamlayan öne geçer. Kura veya çekiliş yoktur; katılım ücretsizdir ve alışveriş şartı yoktur.</p>
-  <p class="note">Golcü ve asist puanı oyuncunun o maçtaki her golü/asisti için verilir; kendi kalesine atılan gol sayılmaz. Maç sonuçları ve istatistikler maçtan sonra otomatik işlenir. Ertelenen maçtan puan çıkmaz.</p>
+  <p class="note">Skoru kaç gol tahmin edersen o kadar golcü ve asist seçebilirsin; her golün golcüsü ve asisti yalnız o golü atan takımdan seçilir. Aynı oyuncuyu birden çok gole yazabilirsin; oyuncu maçta kaç gol attıysa (asist yaptıysa) o kadarı puan alır. Kendi kalesine atılan gol sayılmaz. Maç sonuçları ve istatistikler maçtan sonra otomatik işlenir. Ertelenen maçtan puan çıkmaz.</p>
   <button class="btn ghost" id="del" hidden>Hesabımı ve tahminlerimi sil</button></div></section>
 </main>
 <script>
@@ -105,43 +130,107 @@ function render() {
   for (const b of $('tabs').children) b.classList.toggle('on', b.dataset.t === tab);
   $('t-m').hidden = !inn || tab !== 'm'; $('t-b').hidden = inn ? tab !== 'b' : false; $('t-k').hidden = inn ? tab !== 'k' : false;
   const P = S.pts;
-  $('ptsT').innerHTML = [['Tam skor', P.exact], ['Doğru sonuç (1 / X / 2)', P.result], ['Golcü: her golü', P.goal], ['Asist: her asisti', P.assist], ['Sarı kart sayısı tam', P.yellow], ['Kırmızı kart çıkar / çıkmaz', P.red]].map(([a, b]) => '<tr><td>' + a + '</td><td>' + b + ' puan</td></tr>').join('');
+  $('ptsT').innerHTML = [['Tam skor', P.exact], ['Doğru sonuç (1 / X / 2)', P.result], ['Her doğru golcü', P.goal], ['Her doğru asist', P.assist], ['Sarı kart sayısı tam', P.yellow], ['Kırmızı kart çıkar / çıkmaz', P.red]].map(([a, b]) => '<tr><td>' + a + '</td><td>' + b + ' puan</td></tr>').join('');
   if (inn) renderMatches();
   renderBoard();
 }
+const POS = { F: ['FV', 'Forvetler'], M: ['OS', 'Orta sahalar'], D: ['DF', 'Defans oyuncuları'], G: ['KL', 'Kaleciler'] };
+const psChip = p => '<span class="ps ' + (POS[p] ? p : 'X') + '">' + (POS[p] ? POS[p][0] : '–') + '</span>';
 function pickRows(m) {
   const p = m.pick, o = m.pts; if (!p) return '<div class="note">Bu maça tahmin girmedin.</div>';
   const pp = v => o ? '<span class="p' + (v ? '' : ' z') + '">' + (v ? '+' + v : '0') + '</span>' : '<span class="p z">–</span>';
   let h = '<div class="mine">';
   if (p.h != null) h += '<div><span>Skor: ' + p.h + ' – ' + p.a + '</span>' + pp(o && o.score) + '</div>';
-  if (p.g) h += '<div><span>Golcü: ' + E(p.gn || '') + '</span>' + pp(o && o.goal) + '</div>';
-  if (p.as) h += '<div><span>Asist: ' + E(p.asn || '') + '</span>' + pp(o && o.assist) + '</div>';
+  const gl = p.gl || (p.g || p.as ? [{ g: p.g, gn: p.gn, a: p.as, an: p.asn }] : []);
+  gl.forEach((x, i) => {
+    const sl = o && o.slots ? o.slots[i] : null, tm = x.s ? (x.s === 'h' ? m.home.name : m.away.name) : '';
+    if (x.g) h += '<div><span>⚽ ' + E(x.gn || '') + (tm ? ' <small style="color:var(--mut)">(' + E(tm) + ')</small>' : '') + '</span>' + pp(sl && sl.g) + '</div>';
+    if (x.a) h += '<div><span>👟 Asist: ' + E(x.an || '') + '</span>' + pp(sl && sl.a) + '</div>';
+  });
   if (p.yc != null) h += '<div><span>Sarı kart: ' + p.yc + (m.res ? ' (maçta ' + m.res.yc + ')' : '') + '</span>' + pp(o && o.yellow) + '</div>';
   if (p.rc != null) h += '<div><span>Kırmızı kart: ' + (p.rc ? 'çıkar' : 'çıkmaz') + (m.res ? ' (maçta ' + m.res.rc + ')' : '') + '</span>' + pp(o && o.red) + '</div>';
   if (o) h += '<div><b>Bu maçtan</b><span class="tot">' + o.total + ' puan</span></div>';
   return h + '</div>';
 }
+const allM = () => [...S.matches, ...(S.next ? S.next.matches : [])];
+const plOf = (mid, side, id) => { const sq = SQ[mid]; if (!sq || !id) return null; return (sq[side === 'h' ? 'home' : 'away'].players || []).find(x => x.id === id) || null; };
+// skor kadar gol kutusu: her kutuda golcü + asist; yalnız golü atan takımın oyuncuları
+function goalsHtml(m, d) {
+  const n = { h: d.h || 0, a: d.a || 0 };
+  d.gl = (d.gl || []).filter(x => x && (x.s === 'h' || x.s === 'a'));
+  for (const side of ['h', 'a']) { const k = d.gl.filter(x => x.s === side); if (k.length > n[side]) d.gl = d.gl.filter(x => x.s !== side || k.indexOf(x) < n[side]); }
+  if (d.h == null || d.a == null) return '<div class="hint">Golcü ve asist seçmek için önce skoru yaz.</div>';
+  if (!n.h && !n.a) return '<div class="hint">Golsüz tahminde golcü ve asist seçilmez.</div>';
+  let h = '';
+  for (const side of ['h', 'a']) {
+    if (!n[side]) continue;
+    const tm = side === 'h' ? m.home : m.away, own = d.gl.filter(x => x.s === side);
+    h += '<div class="gsd"><h4>' + (tm.logo ? '<img src="' + E(tm.logo) + '" alt="">' : '') + E(tm.name) + ' golleri<span>' + n[side] + ' gol</span></h4>';
+    for (let i = 0; i < n[side]; i++) {
+      const x = own[i] || {}, gp = plOf(m.id, side, x.g), ap = plOf(m.id, side, x.a);
+      const btn = (k, pl, nm, ph, ic) => '<button type="button" class="pkb' + (k === 'a' ? ' a' : '') + (nm ? ' on' : '') + '" data-pk="' + k + '" data-sd="' + side + '" data-i="' + i + '"><span class="ic">' + ic + '</span>' + (nm ? '<span class="tx"><small>' + (k === 'g' ? 'GOLCÜ' : 'ASİST') + '</small>' + E(nm) + '</span><span style="flex:1"></span>' + (pl && pl.no ? '<span class="nr">#' + E(pl.no) + '</span>' : '') + (pl ? psChip(pl.pos) : '') : '<span class="tx">' + ph + '</span>') + '</button>';
+      h += '<div class="gsl"><span class="no">' + (i + 1) + '</span><div class="bt">' + btn('g', gp, x.gn, 'Golcüyü seç', '⚽') + btn('a', ap, x.an, 'Asist yapanı seç (isteğe bağlı)', '👟') + '</div></div>';
+    }
+    h += '</div>';
+  }
+  return h;
+}
 function matchCard(m) {
-  const d = draft[m.id] || (draft[m.id] = m.pick ? { ...m.pick } : {});
+  const d = draft[m.id] || (draft[m.id] = m.pick ? JSON.parse(JSON.stringify(m.pick)) : {});
+  if (!d.gl && (d.g || d.as)) d.gl = [];
   const st = m.st === 'in' ? '<span class="badge live">Canlı</span>' : m.st === 'post' ? '<span class="badge">Bitti</span>' : m.st === 'off' ? '<span class="badge">Ertelendi</span>' : '';
   const mid = m.sc ? '<div class="s">' + m.sc[0] + ' – ' + m.sc[1] + '</div>' + st : '<div class="t">' + when(m.at) + '</div>' + (m.pick ? '<span class="badge ok">Tahmin var</span>' : '');
   let h = '<div class="card" data-m="' + m.id + '"><div class="m-top"><div class="tm">' + (m.home.logo ? '<img src="' + E(m.home.logo) + '" alt="">' : '') + '<span>' + E(m.home.name) + '</span></div><div class="mid">' + mid + '</div><div class="tm">' + (m.away.logo ? '<img src="' + E(m.away.logo) + '" alt="">' : '') + '<span>' + E(m.away.name) + '</span></div></div>';
   if (m.locked) return h + pickRows(m) + '</div>';
-  const stp = (k, v, max) => '<div class="step"><button type="button" data-st="' + k + '" data-d="-1">−</button><input data-f="' + k + '" inputmode="numeric" value="' + (v == null ? '' : v) + '" placeholder="–" maxlength="2"><button type="button" data-st="' + k + '" data-d="1">+</button></div>';
+  const stp = (k, v) => '<div class="step"><button type="button" data-st="' + k + '" data-d="-1">−</button><input data-f="' + k + '" inputmode="numeric" value="' + (v == null ? '' : v) + '" placeholder="–" maxlength="2"><button type="button" data-st="' + k + '" data-d="1">+</button></div>';
   h += '<label>Skor</label><div class="sc">' + stp('h', d.h) + '<span class="x">–</span>' + stp('a', d.a) + '</div>';
-  const sq = SQ[m.id];
-  const opts = sel => !sq ? '<option value="">Kadro yükleniyor…</option>' : '<option value="">Seçme</option>' + [sq.home, sq.away].map(t => '<optgroup label="' + E(t.name) + '">' + t.players.filter(p => p.pos !== 'G').map(p => '<option value="' + p.id + '"' + (sel === p.id ? ' selected' : '') + '>' + E(p.name) + '</option>').join('') + '</optgroup>').join('');
-  h += '<div class="two"><div><label>Golcü</label><select data-f="g">' + opts(d.g) + '</select></div><div><label>Asist</label><select data-f="as">' + opts(d.as) + '</select></div></div>';
+  h += '<div class="gls" data-gls>' + goalsHtml(m, d) + '</div>';
   h += '<div class="two"><div><label>Sarı kart (toplam)</label>' + stp('yc', d.yc) + '</div><div><label>Kırmızı kart</label><div class="seg"><button type="button" data-rc="1" class="' + (d.rc === true ? 'on' : '') + '">Çıkar</button><button type="button" data-rc="0" class="' + (d.rc === false ? 'on' : '') + '">Çıkmaz</button></div></div></div>';
   h += '<button class="btn" data-save="' + m.id + '">' + (m.pick ? 'Tahmini güncelle' : 'Tahmini kaydet') + '</button><div class="saved" data-ok="' + m.id + '"></div><div class="err" data-er="' + m.id + '"></div></div>';
-  if (!sq) loadSquad(m.id);
+  if (!SQ[m.id]) loadSquad(m.id);
   return h;
 }
+function refreshGoals(card, id) { const m = allM().find(x => x.id === id), el = card.querySelector('[data-gls]'); if (m && el) el.innerHTML = goalsHtml(m, draft[id]); }
 async function loadSquad(id) {
   if (SQ[id] === 0) return; SQ[id] = 0;
   try { SQ[id] = await api('GET', '/squad/' + id); } catch (e) { SQ[id] = { home: { name: '', players: [] }, away: { name: '', players: [] } }; }
-  const el = document.querySelector('[data-m="' + id + '"]'); if (el) { const all = [...S.matches, ...(S.next ? S.next.matches : [])], m = all.find(x => x.id === id); if (m) el.outerHTML = matchCard(m); }
+  const el = document.querySelector('[data-m="' + id + '"]'); if (el) refreshGoals(el, id);
 }
+// oyuncu seçme paneli (alttan açılır): mevkiye göre gruplu, forma numarası, arama
+let SH = null;
+function openSheet(mid, side, i, k) {
+  const m = allM().find(x => x.id === mid), d = draft[mid], tm = side === 'h' ? m.home : m.away;
+  const own = d.gl.filter(x => x.s === side); while (own.length <= i) { const n = { s: side }; d.gl.push(n); own.push(n); }
+  SH = { mid, side, slot: own[i], k, q: '' };
+  const el = document.createElement('div'); el.id = 'sheet';
+  el.innerHTML = '<div class="sh" role="dialog" aria-modal="true"><div class="hd"><div class="grab"></div><div class="tt">' + (tm.logo ? '<img src="' + E(tm.logo) + '" alt="">' : '') + '<div><b>' + (k === 'g' ? (i + 1) + '. golü kim atar?' : (i + 1) + '. gole kim asist yapar?') + '</b><small>' + E(tm.name) + ' oyuncuları</small></div><button class="x" data-shx aria-label="Kapat">×</button></div><input type="search" id="shq" placeholder="Oyuncu ara" autocomplete="off"></div><div class="ls" id="shl"></div></div>';
+  document.body.appendChild(el); document.body.style.overflow = 'hidden';
+  drawSheet();
+  el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-shx]')) closeSheet(); });
+  el.querySelector('#shq').addEventListener('input', e => { SH.q = e.target.value; drawSheet(); });
+}
+function drawSheet() {
+  const sq = SQ[SH.mid], box = document.getElementById('shl'); if (!box) return;
+  if (!sq) { box.innerHTML = '<div class="empty">Kadro yükleniyor…</div>'; loadSquad(SH.mid).then(drawSheet); return; }
+  const list = (sq[SH.side === 'h' ? 'home' : 'away'].players || []), q = SH.q.trim().toLocaleLowerCase('tr');
+  const cur = SH.slot[SH.k], other = SH.slot[SH.k === 'g' ? 'a' : 'g'];
+  let h = cur ? '<button class="pl clr" data-pl=""><span class="jn">×</span><span class="pn">Seçimi kaldır</span></button>' : '';
+  for (const pos of ['F', 'M', 'D', 'G', '']) {
+    const ps = list.filter(p => (pos ? p.pos === pos : !POS[p.pos]) && (!q || p.name.toLocaleLowerCase('tr').includes(q)));
+    if (!ps.length) continue;
+    h += '<div class="gp">' + psChip(pos) + (POS[pos] ? POS[pos][1] : 'Diğer') + '</div>';
+    h += ps.map(p => '<button class="pl' + (p.id === cur ? ' sel' : '') + '" data-pl="' + p.id + '"' + (p.id === other ? ' disabled' : '') + '><span class="jn">' + (p.no || '–') + '</span><span class="pn">' + E(p.name) + '</span>' + (p.id === cur ? '<span class="ck">✓</span>' : p.id === other ? '<small style="color:var(--mut)">' + (SH.k === 'g' ? 'asist' : 'golcü') + '</small>' : '') + '</button>').join('');
+  }
+  box.innerHTML = h || '<div class="empty">' + (list.length ? 'Oyuncu bulunamadı.' : 'Kadro alınamadı; biraz sonra tekrar dene.') + '</div>';
+}
+function closeSheet() { const el = document.getElementById('sheet'); if (el) el.remove(); document.body.style.overflow = ''; SH = null; }
+document.addEventListener('click', e => {
+  const b = e.target.closest('#sheet [data-pl]'); if (!b || !SH) return;
+  const id = b.dataset.pl, pl = id ? plOf(SH.mid, SH.side, id) : null, k = SH.k;
+  if (id) { SH.slot[k] = id; SH.slot[k + 'n'] = pl ? pl.name : ''; } else { delete SH.slot[k]; delete SH.slot[k + 'n']; }
+  const card = document.querySelector('[data-m="' + SH.mid + '"]'), mid = SH.mid; closeSheet(); if (card) refreshGoals(card, mid);
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 function renderMatches() {
   const open = S.matches.filter(m => !m.locked), done = S.matches.filter(m => m.locked);
   let h = '';
@@ -218,18 +307,18 @@ document.addEventListener('click', async e => {
   const bv = e.target.closest('[data-bv]'); if (bv) { bView = bv.dataset.bv; renderBoard(); return; }
   const card = e.target.closest('[data-m]'); if (!card) return; const id = card.dataset.m, d = draft[id] || (draft[id] = {});
   const st = e.target.closest('[data-st]');
-  if (st) { const k = st.dataset.st, inp = card.querySelector('[data-f="' + k + '"]'); let v = inp.value === '' ? (+st.dataset.d > 0 ? -1 : 1) : +inp.value; v = Math.max(0, Math.min(k === 'yc' ? 15 : 15, v + +st.dataset.d)); inp.value = v; d[k] = v; return; }
+  if (st) { const k = st.dataset.st, inp = card.querySelector('[data-f="' + k + '"]'); let v = inp.value === '' ? (+st.dataset.d > 0 ? -1 : 1) : +inp.value; v = Math.max(0, Math.min(k === 'yc' ? 15 : 10, v + +st.dataset.d)); inp.value = v; d[k] = v; if (k !== 'yc') { if (d.h == null && k === 'a') { d.h = 0; card.querySelector('[data-f="h"]').value = 0; } if (d.a == null && k === 'h') { d.a = 0; card.querySelector('[data-f="a"]').value = 0; } refreshGoals(card, id); } return; }
+  const pk = e.target.closest('[data-pk]'); if (pk) { openSheet(id, pk.dataset.sd, +pk.dataset.i, pk.dataset.pk); return; }
   const rc = e.target.closest('[data-rc]');
   if (rc) { const v = rc.dataset.rc === '1'; d.rc = d.rc === v ? undefined : v; for (const b of card.querySelectorAll('[data-rc]')) b.classList.toggle('on', d.rc === (b.dataset.rc === '1')); return; }
   const sv = e.target.closest('[data-save]');
   if (sv) {
     const er = card.querySelector('[data-er]'), ok = card.querySelector('[data-ok]'); er.textContent = ''; ok.textContent = '';
     if ((d.h == null) !== (d.a == null)) { er.textContent = 'Skor için iki takımın golünü de yaz'; return; }
-    const nm = sel => { const o = card.querySelector('[data-f="' + sel + '"]'); return o && o.selectedIndex > 0 ? o.options[o.selectedIndex].text : ''; };
     sv.disabled = true;
     try {
-      const j = await api('POST', '/pick', { mid: id, h: d.h, a: d.a, g: d.g || '', gn: nm('g'), as: d.as || '', asn: nm('as'), yc: d.yc, rc: d.rc });
-      const all = [...S.matches, ...(S.next ? S.next.matches : [])], m = all.find(x => x.id === id); if (m) m.pick = j.pick;
+      const j = await api('POST', '/pick', { mid: id, h: d.h, a: d.a, gl: (d.gl || []).filter(x => x.g || x.a), yc: d.yc, rc: d.rc });
+      const m = allM().find(x => x.id === id); if (m) m.pick = j.pick;
       ok.textContent = j.pick ? 'Kaydedildi ✓' : 'Tahmin silindi'; sv.textContent = j.pick ? 'Tahmini güncelle' : 'Tahmini kaydet';
     } catch (x) { er.textContent = x.message; if (x.status === 409) setTimeout(load, 1200); }
     sv.disabled = false;
@@ -239,7 +328,7 @@ document.addEventListener('input', e => {
   const f = e.target.closest('[data-f]'), card = e.target.closest('[data-m]'); if (!f || !card) return;
   const d = draft[card.dataset.m] || (draft[card.dataset.m] = {}), k = f.dataset.f;
   if (f.tagName === 'SELECT') d[k] = f.value || undefined;
-  else { const v = f.value.replace(/\\D/g, '').slice(0, 2); f.value = v; d[k] = v === '' ? undefined : Math.min(15, +v); }
+  else { const v = f.value.replace(/\\D/g, '').slice(0, 2); f.value = v; d[k] = v === '' ? undefined : Math.min(k === 'yc' ? 15 : 10, +v); if (k !== 'yc') refreshGoals(card, card.dataset.m); }
 });
 document.addEventListener('change', e => { const f = e.target.closest('select[data-f]'), card = e.target.closest('[data-m]'); if (f && card) { (draft[card.dataset.m] || (draft[card.dataset.m] = {}))[f.dataset.f] = f.value || undefined; } });
 load().catch(e => { document.body.insertAdjacentHTML('beforeend', '<p class="err" style="text-align:center">' + E(e.message) + '</p>'); });

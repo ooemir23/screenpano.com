@@ -167,7 +167,7 @@ pub.post('/:code/mail', (req, res) => {
 });
 
 // Tahmin kaydet (maç başlayana kadar değiştirilebilir). Boş alanlar tahmin edilmemiş sayılır.
-pub.post('/:code/pick', (req, res) => {
+pub.post('/:code/pick', async (req, res) => {
   const c = ctx(req, res); if (!c) return;
   if (!c.uid) return res.status(401).json({ error: 'Önce giriş yapın' });
   if (limited('pk|' + c.t.id + '|' + c.uid, 60, 60e3)) return res.status(429).json({ error: 'Çok hızlı; biraz bekleyin' });
@@ -180,14 +180,30 @@ pub.post('/:code/pick', (req, res) => {
   const h = int(b.h, 0, 20), a = int(b.a, 0, 20), yc = int(b.yc, 0, 20);
   if ([h, a, yc].some(Number.isNaN)) return res.status(400).json({ error: 'Geçersiz sayı' });
   if ((h === undefined) !== (a === undefined)) return res.status(400).json({ error: 'Skor için iki takımın golünü de yazın' });
-  const pid = v => (v == null || v === '' ? undefined : /^\d{1,12}$/.test(String(v)) ? String(v) : NaN);
-  const g = pid(b.g), as = pid(b.as);
-  if ([g, as].some(Number.isNaN)) return res.status(400).json({ error: 'Geçersiz oyuncu' });
   const rc = typeof b.rc === 'boolean' ? b.rc : undefined;
+  // gol kutuları: tahmin edilen skordan fazla olamaz; golcü ve asist yalnız golü atan takımdan, asist golcünün kendisi olamaz
+  const raw = Array.isArray(b.gl) ? b.gl.slice(0, 41) : [];
+  const want = { h: h || 0, a: a || 0 }, cnt = { h: 0, a: 0 }, gl = [];
+  const sq = {};
+  for (const side of ['h', 'a']) if (raw.some(x => x && x.s === side)) {
+    const list = await P.squad((side === 'h' ? m.home : m.away).id); sq[side] = new Map(list.map(x => [x.id, x]));
+  }
+  for (const x of raw) {
+    if (!x || (x.s !== 'h' && x.s !== 'a')) return res.status(400).json({ error: 'Geçersiz gol seçimi' });
+    const g = x.g ? String(x.g) : '', as = x.a ? String(x.a) : '';
+    if (!g && !as) continue;
+    if (h === undefined) return res.status(400).json({ error: 'Golcü ve asist seçmek için önce skoru yazın' });
+    if (++cnt[x.s] > want[x.s]) return res.status(400).json({ error: 'Golcü ve asist sayısı tahmin ettiğiniz gol sayısını geçemez' });
+    const M = sq[x.s], team = x.s === 'h' ? m.home.name : m.away.name;
+    for (const id of [g, as]) if (id && (!/^\d{1,12}$/.test(id) || (M.size && !M.has(id)))) return res.status(400).json({ error: `Golcü ve asist yalnız ${team} oyuncularından seçilebilir` });
+    if (g && g === as) return res.status(400).json({ error: 'Oyuncu kendi golüne asist yapamaz' });
+    const nm = (id, v) => (M.get(id) || {}).name || String(v || '').slice(0, 60);
+    const o = { s: x.s }; if (g) { o.g = g; o.gn = nm(g, x.gn); } if (as) { o.a = as; o.an = nm(as, x.an); }
+    gl.push(o);
+  }
   const p = { at: now() };
   if (h !== undefined) { p.h = h; p.a = a; }
-  if (g) { p.g = g; p.gn = String(b.gn || '').slice(0, 60); }
-  if (as) { p.as = as; p.asn = String(b.asn || '').slice(0, 60); }
+  if (gl.length) p.gl = gl;
   if (yc !== undefined) p.yc = yc;
   if (rc !== undefined) p.rc = rc;
   const picks = c.d.picks[c.uid] || (c.d.picks[c.uid] = {});
