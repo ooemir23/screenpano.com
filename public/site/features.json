@@ -1860,6 +1860,26 @@
           "text": "تدور 8 صيغ تفاعلية تلقائيًا بين الفيديوهات والصور على شاشة الوسائط: مسابقة قصيرة من مرحلتين، «هل تعلم؟»، «العالم بالأرقام»، لغز اليوم، لغز الكلمات المبعثرة، خداع بصري واختبار تركيز، تخمين بصري (أين/ما هذا؟) وركن حنين التسعينيات والألفينيات. تُولَّد أسئلة جديدة يوميًا من أحداث اليوم ومتصدري الدوريات وأفلام السينما والكتب الجديدة مجانًا في جميع الباقات."
         }
       }
+    },
+    {
+      "icon": "🎧",
+      "title": "Müzik widget'ı: 5 tasarım",
+      "text": "Ekranda çalan şarkıyı gösteren kutu artık beş farklı tasarımda: disk, kart, afiş, şerit ve yazı. Spotify'da yeşil, YouTube Music'te kırmızı vurgulu; kart, afiş ve yazı tasarımlarında şarkının ilerlemesi de görünür.",
+      "added": "2026-11-18",
+      "i18n": {
+        "en": {
+          "title": "Music widget: 5 designs",
+          "text": "The box that shows the current song now comes in five designs: disc, card, poster, strip and text. Green accents for Spotify, red for YouTube Music; the card, poster and text designs also show song progress."
+        },
+        "de": {
+          "title": "Musik-Widget: 5 Designs",
+          "text": "Die Box mit dem aktuellen Titel gibt es jetzt in fünf Designs: Scheibe, Karte, Poster, Streifen und Text. Grüne Akzente bei Spotify, rote bei YouTube Music; Karte, Poster und Text zeigen auch den Fortschritt des Titels."
+        },
+        "ar": {
+          "title": "أداة الموسيقى: 5 تصاميم",
+          "text": "المربع الذي يعرض الأغنية الحالية متاح الآن بخمسة تصاميم: قرص وبطاقة وملصق وشريط ونص. لمسات خضراء في Spotify وحمراء في YouTube Music؛ وتعرض تصاميم البطاقة والملصق والنص تقدّم الأغنية أيضًا."
+        }
+      }
     }
   ],
   "shots": {

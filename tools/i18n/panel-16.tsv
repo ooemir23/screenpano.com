@@ -113,3 +113,16 @@ Karışık çal: kapalı ¦ Shuffle: off ¦ Zufallswiedergabe: aus ¦ التشغ
 Tekrar: tek şarkı ¦ Repeat: one song ¦ Wiederholen: ein Titel ¦ التكرار: أغنية واحدة
 Tekrar: kapalı ¦ Repeat: off ¦ Wiederholen: aus ¦ التكرار: متوقف
 Tekrar: liste ¦ Repeat: playlist ¦ Wiederholen: Playlist ¦ التكرار: القائمة
+Disk (yuvarlak kapak; sonra küçülür) ¦ Disc (round cover; shrinks afterwards) ¦ Scheibe (rundes Cover; wird danach kleiner) ¦ قرص (غلاف دائري؛ يصغر بعد ذلك)
+Kart (kapak + şarkı + ilerleme) ¦ Card (cover + song + progress) ¦ Karte (Cover + Titel + Fortschritt) ¦ بطاقة (غلاف + أغنية + تقدّم)
+Afiş (kapak tüm kutuyu kaplar) ¦ Poster (cover fills the whole box) ¦ Poster (Cover füllt die ganze Box) ¦ ملصق (الغلاف يملأ المربع كله)
+Şerit (ince yatay kutular için) ¦ Strip (for thin horizontal boxes) ¦ Streifen (für schmale waagerechte Boxen) ¦ شريط (للمربعات الأفقية الرفيعة)
+Yazı (kapaksız, büyük harfler) ¦ Text (no cover, large type) ¦ Text (ohne Cover, große Schrift) ¦ نص (بلا غلاف، خط كبير)
+İlerleme çubuğu ¦ Progress bar ¦ Fortschrittsbalken ¦ شريط التقدّم
+Kaynak adı (Spotify / YouTube Music) ¦ Source name (Spotify / YouTube Music) ¦ Quellenname (Spotify / YouTube Music) ¦ اسم المصدر (Spotify / YouTube Music)
+Yatay kutularda en iyi görünür (ör. 8×4). ¦ Looks best in wide boxes (e.g. 8×4). ¦ Wirkt am besten in breiten Boxen (z. B. 8×4). ¦ يبدو أفضل في المربعات العريضة (مثل 8×4).
+Kare ya da dikey kutularda en iyi görünür (ör. 6×6). ¦ Looks best in square or tall boxes (e.g. 6×6). ¦ Wirkt am besten in quadratischen oder hohen Boxen (z. B. 6×6). ¦ يبدو أفضل في المربعات المربعة أو الطويلة (مثل 6×6).
+Alt ya da üst kenarda ince, uzun kutular için (ör. 12×2). ¦ For thin, long boxes along the top or bottom edge (e.g. 12×2). ¦ Für schmale, lange Boxen am oberen oder unteren Rand (z. B. 12×2). ¦ للمربعات الرفيعة الطويلة عند الحافة العليا أو السفلى (مثل 12×2).
+Kapak görseli yok; fiyat listesinin yanında sade durur. ¦ No cover image; sits neatly next to the price list. ¦ Kein Coverbild; wirkt schlicht neben der Preisliste. ¦ بلا صورة غلاف؛ يبدو بسيطًا بجانب قائمة الأسعار.
+Şarkı değişince kapak ve ad açılır, birkaç saniye sonra yalnız kapak kalır. ¦ When the song changes the cover and title appear; after a few seconds only the cover remains. ¦ Bei Titelwechsel erscheinen Cover und Name; nach einigen Sekunden bleibt nur das Cover. ¦ عند تغيّر الأغنية يظهر الغلاف والاسم، وبعد ثوانٍ يبقى الغلاف فقط.
+Çalan şarkı (Spotify / YouTube Music): 5 tasarım — disk, kart, afiş, şerit, yazı ¦ Now playing (Spotify / YouTube Music): 5 designs — disc, card, poster, strip, text ¦ Aktueller Titel (Spotify / YouTube Music): 5 Designs — Scheibe, Karte, Poster, Streifen, Text ¦ الأغنية الحالية (Spotify / YouTube Music): 5 تصاميم — قرص، بطاقة، ملصق، شريط، نص

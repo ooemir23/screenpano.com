@@ -1214,7 +1214,51 @@ body.glass .wz b{background:linear-gradient(135deg,#fff3b0 0%,var(--accent2) 50%
 #musicw .mw-sub{font-size:1.8vh;font-weight:600;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #musicw.on.sp .mw-cov{border-color:rgba(29,185,84,.8);box-shadow:0 0 2.4vh rgba(29,185,84,.35),0 1vh 3vh rgba(0,0,0,.5)}
 #musicw.on.yt .mw-cov{border-color:rgba(255,50,70,.8);box-shadow:0 0 2.4vh rgba(255,50,70,.35),0 1vh 3vh rgba(0,0,0,.5)}
-#musicw.idle{opacity:.55}
+#musicw.idle{opacity:.55}#musicw.lk.idle .mw-prw,#musicw.lk.idle .mw-eqs{display:none}
+/* ---- Müzik widget'ı tasarımları (props.look): disk (varsayılan, yukarıdaki), kart, afiş, şerit, yazı.
+   Boyutlar kutuya göre (cq birimleri); sürekli animasyon yalnız ekolayzerde ve zayıf kutularda (lite) durur.
+   Renk: Spotify yeşil, YouTube kırmızı, radyo/diğer temanın vurgu rengi. */
+#musicw.lk{container-type:size;align-self:stretch;width:100%;flex:1 1 0;min-height:0;--mc:var(--accent2,#c9955c);display:block;padding:0;text-align:left;overflow:hidden;position:relative}
+#musicw.lk.sp{--mc:#1ed760}#musicw.lk.yt{--mc:#ff3355}
+#musicw .mw-lb{display:flex;align-items:center;gap:.5em;font-size:max(1.3vh,min(6.5cqh,3cqw));font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#musicw .mw-lb b{font-weight:800;text-transform:none;letter-spacing:.06em}
+#musicw .mw-lb i{flex:none;width:.7em;height:.7em;border-radius:50%;background:var(--mc)}
+#musicw.paused .mw-lb{color:rgba(255,255,255,.6)}#musicw.paused .mw-lb i{background:rgba(255,255,255,.45)}
+#musicw .mw-pr{height:max(.5vh,1.6cqh);border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden}#musicw .mw-pr i{display:block;height:100%;width:0;background:var(--mc);border-radius:99px;transition:width 1s linear}
+#musicw .mw-tm{display:flex;justify-content:space-between;font-size:max(1.2vh,min(5.5cqh,2.6cqw));font-weight:600;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;margin-top:.4em}
+#musicw .mw-img{background:rgba(255,255,255,.08) center/cover no-repeat;display:grid;place-items:center;color:rgba(255,255,255,.55)}
+#musicw.lk .mw-tit{text-shadow:none}
+/* kart: solda kare kapak, sağda etiket, ad, sanatçı, ilerleme */
+#musicw.lk .mw-in{position:absolute;inset:0}
+#musicw.lk-card .mw-in{display:flex;flex-direction:row;align-items:center;gap:5cqw;padding:6cqh 5cqw}
+#musicw.lk-card .mw-img{flex:none;height:min(88cqh,46cqw);aspect-ratio:1;border-radius:6%;box-shadow:0 1vh 3vh rgba(0,0,0,.45);font-size:30cqh}
+#musicw.lk-card .mw-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2.4cqh}
+#musicw.lk-card .mw-tit{font-size:max(1.8vh,min(13cqh,7cqw));line-height:1.1;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#musicw.lk-card .mw-sub{font-size:max(1.4vh,min(8cqh,4.6cqw))}
+/* afiş: kapak tüm kutuyu kaplar, altta koyu geçiş üstünde yazılar */
+#musicw.lk-poster .mw-img{position:absolute;inset:0;font-size:40cqh}
+#musicw.lk-poster .mw-sh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 35%,rgba(0,0,0,.55) 62%,rgba(0,0,0,.92) 100%)}
+#musicw.lk-poster .mw-tx{position:absolute;left:6cqw;right:6cqw;bottom:6cqh;display:flex;flex-direction:column;gap:1.8cqh}
+#musicw.lk-poster .mw-tit{font-size:max(1.8vh,min(10cqh,8cqw));line-height:1.1;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#musicw.lk-poster .mw-sub{font-size:max(1.4vh,min(6.5cqh,5cqw))}
+/* şerit: ince yatay kutular için — küçük kapak, ad · sanatçı, ekolayzer */
+#musicw.lk-bar .mw-in{display:flex;flex-direction:row;align-items:center;gap:3cqw;padding:0 3cqw}
+#musicw.lk-bar .mw-img{flex:none;height:72cqh;aspect-ratio:1;border-radius:12%;font-size:40cqh}
+#musicw.lk-bar .mw-tx{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4cqh}
+#musicw.lk-bar .mw-tit{font-size:max(1.6vh,min(30cqh,4.4cqw));line-height:1.1}
+#musicw.lk-bar .mw-sub{font-size:max(1.2vh,min(22cqh,3.4cqw))}
+#musicw.lk-bar .mw-eqs{flex:none;height:44cqh;aspect-ratio:1.1;display:flex;align-items:flex-end;justify-content:space-between}
+#musicw .mw-eqs i{width:18%;height:100%;border-radius:99px;background:var(--mc);transform-origin:50% 100%;animation:meqbar .85s ease-in-out infinite alternate}
+#musicw .mw-eqs i:nth-child(2){animation-duration:.7s;animation-delay:.12s}#musicw .mw-eqs i:nth-child(3){animation-duration:1s;animation-delay:.24s}#musicw .mw-eqs i:nth-child(4){animation-duration:.8s;animation-delay:.06s}
+#musicw.paused .mw-eqs i{animation:none;transform:scaleY(.25);background:rgba(255,255,255,.4)}
+/* yazı: kapaksız, büyük tipografi — menü panosu yanında sade */
+#musicw.lk-text .mw-in{display:flex;flex-direction:column;justify-content:center;gap:3cqh;padding:7cqh 6cqw}
+#musicw.lk-text .mw-tit{font-size:max(2vh,min(17cqh,8.5cqw));line-height:1.08;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#musicw.lk-text .mw-sub{font-size:max(1.4vh,min(9cqh,5cqw))}
+#musicw.lk-text .mw-q{position:absolute;right:4cqw;top:2cqh;font-size:60cqh;line-height:1;color:var(--mc);opacity:.12;font-weight:900}
+#musicw.lk .mw-tit,#musicw.lk .mw-sub{max-width:100%}
+html.lite #musicw .mw-eq i,html.lite #musicw .mw-eqs i{animation:none;transform:scaleY(.6)}
+#musicw.lk-text .mw-tx{position:relative;display:flex;flex-direction:column;gap:2.6cqh}
 @keyframes meqbar{0%{transform:scaleY(.22)}100%{transform:scaleY(1)}}
 #music-unlock{position:fixed;left:1.5vw;bottom:9.2vh;z-index:95;display:none;align-items:center;gap:.8vw;padding:1.2vh 1.6vw;border-radius:99px;background:linear-gradient(135deg,#e6a23c,#c97518);color:#fff;font-size:1.9vh;font-weight:800;box-shadow:0 1vh 3vh rgba(0,0,0,.8),0 0 2.5vh rgba(230,162,60,.65);border:.2vh solid #ffe3a8;cursor:pointer;animation:mpulse 1.4s ease-in-out infinite alternate}
 #music-unlock.on{display:inline-flex}
@@ -4982,6 +5026,12 @@ function renderMusicWidget() {
   const box = $id('musicw'); if (!box) return;
   if (!musicWidgetOn()) { box.className = 'wbox'; box.innerHTML = ''; return; }
   const m = MUS.cfg, spLive = MUS.spConnectTrack, it = activeMusicItem(m);
+  const look = ['card', 'poster', 'bar', 'text'].includes((WPROPS.music || {}).look) ? WPROPS.music.look : 'disk';
+  if (look !== 'disk' && ((MUS.err && !spLive && m && m.enabled) || (!spLive && (!m || !m.enabled || !it)))) { // seçili tasarımda boş/hata durumu
+    const err = MUS.err && m && m.enabled;
+    renderMusicLook(box, look, { isSp: false, paused: true, title: err ? 'Çalınamadı' : 'Müzik Kutusu', sub: err ? MUS.err : 'Müzik çaldığında burada görünür', thumb: '', it: null });
+    box.classList.add('idle'); return;
+  }
   if (MUS.err && !spLive && m && m.enabled) {
     box.className = 'wbox idle';
     box.innerHTML = `<div class="mw-cov">⚠</div><div class="mw-meta"><div class="mw-tit">Çalınamadı</div><div class="mw-sub">${esc(MUS.err)}</div></div>`;
@@ -4997,14 +5047,48 @@ function renderMusicWidget() {
   const title = spLive ? spLive.title : (MUS.trackTitle || it.title || 'Müzik');
   const sub = spLive ? spLive.artist : '';
   const thumb = spLive ? spLive.thumb : (MUS.trackThumb || it.thumb || '');
+  if (look !== 'disk') return renderMusicLook(box, look, { isSp, paused, title, sub, thumb, it });
   const key = (isSp ? 'sp' : 'yt') + '|' + title + '|' + (thumb || '');
-  const wasOn = /(^|\s)on(\s|$)/.test(box.className);
+  const wasOn = /(^|\s)on(\s|$)/.test(box.className) && !/(^|\s)lk(\s|$)/.test(box.className);
   const changed = !wasOn || key !== musicWKey; musicWKey = key;
   box.className = 'wbox on ' + (isSp ? 'sp' : 'yt') + (paused ? ' paused' : '') + (!changed && /(^|\s)mini(\s|$)/.test(box.className) ? ' mini' : '');
   box.innerHTML = `<div class="mw-cov">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : '<span class="mw-ic">🎵</span>'}<div class="mw-eq"><i></i><i></i><i></i><i></i></div></div>`
     + `<div class="mw-meta"><div class="mw-tit">${esc(title)}</div>${sub ? `<div class="mw-sub">${esc(sub)}</div>` : ''}</div>`;
   if (changed) { clearTimeout(MUS.wTimer); MUS.wTimer = setTimeout(() => { const b = $id('musicw'); if (b) b.classList.add('mini'); }, 8000); }
 }
+// kart / afiş / şerit / yazı tasarımları; yalnız içerik değişince yeniden çizilir, ilerleme saniyede bir yerinde güncellenir
+function renderMusicLook(box, look, o) {
+  const p = WPROPS.music || {}, src = o.isSp ? 'sp' : o.it && ['yt', 'ytm', 'ytmix'].includes(o.it.provider) ? 'yt' : 'rd';
+  const srcName = src === 'sp' ? 'Spotify' : src === 'yt' ? 'YouTube Music' : o.it && o.it.provider === 'radio' ? 'Radyo' : 'Müzik';
+  const sub = o.sub || (src === 'yt' ? MUS.trackSub || '' : '') || (o.it && o.it.title !== o.title ? o.it.title : '');
+  const lbl = `<span class="mw-lb"><i></i>${!o.it ? 'Müzik' : o.paused ? 'Duraklatıldı' : 'Şu an çalıyor'}${p.src === false || !o.it ? '' : ` · <b>${srcName}</b>`}</span>`; // marka adı büyük harfe çevrilmez (Türkçe 'i' → 'İ' olmasın)
+  const img = cls => `<div class="mw-img ${cls || ''}"${o.thumb ? ` style="background-image:url('${esc(o.thumb).replace(/'/g, '%27')}')"` : ''}>${o.thumb ? '' : '♪'}</div>`;
+  const pr = p.progress === false ? '' : `<div class="mw-prw"><div class="mw-pr"><i></i></div>${look === 'card' || look === 'poster' ? '<div class="mw-tm"><span class="e"></span><span class="d"></span></div>' : ''}</div>`;
+  const tx = `<div class="mw-tit">${esc(o.title)}</div>${sub ? `<div class="mw-sub">${esc(sub)}</div>` : ''}`;
+  const html = look === 'card' ? img() + `<div class="mw-tx">${lbl}${tx}${pr}</div>`
+    : look === 'poster' ? img() + '<div class="mw-sh"></div>' + `<div class="mw-tx">${lbl}${tx}${pr}</div>`
+    : look === 'bar' ? img() + `<div class="mw-tx">${tx}</div><div class="mw-eqs"><i></i><i></i><i></i><i></i></div>`
+    : `<div class="mw-q">♪</div><div class="mw-tx">${lbl}${tx}${pr}</div>`;
+  const key = look + '|' + html;
+  box.className = `wbox on lk lk-${look} ${src}${o.paused ? ' paused' : ''}`;
+  if (key !== musicWKey) { musicWKey = key; box.innerHTML = `<div class="mw-in">${html}</div>`; }
+  musicWidgetProgress();
+}
+// çalan şarkının konumu: kutudaki Spotify (sunucunun bildirdiği) ya da TV'deki YouTube oynatıcısı
+function musicProgress() {
+  const m = MUS.cfg, it = activeMusicItem(m), sp = MUS.spConnectTrack;
+  if (sp && sp.dur) return { el: Math.min(sp.dur, sp.progress + (!sp.paused ? (Date.now() - sp.t0) / 1000 : 0)), dur: sp.dur };
+  const y = typeof ytNow === 'function' ? ytNow(it) : null;
+  return y && y.dur > 0 && y.dur < 36000 ? { el: Math.min(y.dur, y.cur), dur: y.dur } : null;
+}
+function musicWidgetProgress() {
+  const box = $id('musicw'); if (!box || !/(^|\s)lk(\s|$)/.test(box.className)) return;
+  const w = box.querySelector('.mw-prw'); if (!w) return;
+  const g = musicProgress(); w.style.visibility = g ? '' : 'hidden'; if (!g) return;
+  const f = w.querySelector('.mw-pr i'); if (f) f.style.width = (g.el / g.dur * 100).toFixed(1) + '%';
+  const e = w.querySelector('.e'), d = w.querySelector('.d'); if (e) e.textContent = mlDur(Math.floor(g.el)) || '0:00'; if (d) d.textContent = mlDur(Math.round(g.dur));
+}
+setInterval(() => { if (musicWidgetOn()) musicWidgetProgress(); }, 1000);
 function renderMusicBar() {
   const bar = $id('music-bar'); if (!bar) return;
   renderMusicWidget();
