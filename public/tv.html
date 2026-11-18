@@ -394,11 +394,18 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .mgrid{display:grid;grid-template-columns:1.15fr 1fr;grid-auto-rows:min-content;gap:2vh 1.6vw;overflow-y:auto;min-height:0;padding:.4vh .4vh 1vh}
 #menu .mc{background:rgba(255,255,255,.045);border:max(1px,.1vh) solid rgba(255,255,255,.08);border-radius:2vh;padding:2.2vh 1.5vw;display:flex;flex-direction:column;gap:1.4vh;min-width:0}
 #menu .mc>h4{margin:0;font-size:1.5vh;letter-spacing:.12em;text-transform:uppercase;color:#8d96a0;font-weight:700}
-#menu .mus{grid-column:1;grid-row:1 / span 3;min-height:0;overflow:hidden}
-#menu .mc:not(.mus){grid-column:2}
+#menu .mgrid{grid-template-columns:1fr}
+#menu .mus{height:70vh;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-template-rows:repeat(5,auto) 1fr;column-gap:2.6vw;align-content:start}
+#menu .mus>*{grid-column:1}#menu .mus>.mlib{grid-column:2;grid-row:1 / -1;border-top:0;padding-top:0;border-left:max(1px,.1vh) solid rgba(255,255,255,.08);padding-left:2.4vw;min-height:0}
+#menu .mus .ctl{margin-top:1.4vh}#menu .mus .vol{margin-top:1.4vh}
+#menu .mc:not(.mus){display:none}
+#menu.set .mgrid{grid-template-columns:1fr 1fr}#menu.set .mus{display:none}#menu.set .mc:not(.mus){display:flex}#menu.set .mc.dev{grid-row:span 2}
+#menu .hb{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.6vh;text-align:center;flex:none}
+#menu .hb.on{background:rgba(255,255,255,.22)}
+#menu #mhupd{display:none;height:5.6vh;padding:0 1.6vw;border-radius:5vh;align-items:center;gap:.6vw;white-space:nowrap;font-size:1.9vh}#menu #mhupd.on{display:inline-flex}
 #menu .mpr{display:grid;grid-template-columns:5vh 1fr 5vh;align-items:center;gap:.8vw;font-size:1.6vh;color:#9aa3ad;font-variant-numeric:tabular-nums;margin-top:-.4vh}#menu .mpr span:first-child{text-align:right}
 #menu .mpr .tr{height:.6vh;border-radius:.6vh;background:rgba(255,255,255,.14);overflow:hidden}#menu .mpr .tr i{display:block;height:100%;width:0;background:#fff;border-radius:.6vh}
-#menu .mlib{display:flex;flex-direction:column;gap:1vh;flex:1 1 0;min-height:24vh;border-top:max(1px,.1vh) solid rgba(255,255,255,.08);padding-top:1.4vh}
+#menu .mlib{display:flex;flex-direction:column;gap:1vh;border-top:max(1px,.1vh) solid rgba(255,255,255,.08);padding-top:1.4vh}
 #menu .mlh{display:flex;align-items:baseline;gap:1vw;min-width:0}#menu .mlh b{font-size:2.1vh;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#menu .mlh span{font-size:1.6vh;color:#8d96a0;white-space:nowrap}
 #menu .mll{display:flex;flex-direction:column;gap:.6vh;flex:1 1 0;min-height:0;overflow-y:auto;padding:.5vh;margin:-.5vh;contain:content}
 #menu .mll .mtop{display:grid;grid-template-columns:auto 1fr;gap:.8vw;margin-bottom:.4vh}
@@ -443,7 +450,7 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu button#mout:focus{background:#b3261e;color:#fff;border-color:#ff4d4d;box-shadow:0 0 0 .35vh #ff4d4d,0 0 1.6vh rgba(255,0,0,.5)}
 #menu #mtopcls{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.4vh;text-align:center}
 #menu .hint{font-size:1.6vh;color:#7d8791;text-align:center;letter-spacing:.02em}
-@media (max-aspect-ratio:1/1){#menu .mgrid{grid-template-columns:1fr}#menu .mx{width:94vw}#menu .mus,#menu .mc:not(.mus){grid-column:auto;grid-row:auto}#menu .mlib{flex:none}#menu .mll{flex:none;max-height:34vh}}
+@media (max-aspect-ratio:1/1){#menu .mgrid,#menu.set .mgrid{grid-template-columns:1fr}#menu .mx{width:94vw}#menu .mus{height:auto;grid-template-columns:1fr}#menu .mus>.mlib{grid-column:1;grid-row:auto;border-left:0;padding-left:0;border-top:max(1px,.1vh) solid rgba(255,255,255,.08);padding-top:1.4vh}#menu.set .mc.dev{grid-row:auto}#menu .mlib{flex:none}#menu .mll{flex:none;max-height:34vh}}
 /* zayıf kutularda odak: bulanık gölge ve büyütme yerine düz çerçeve (her ok basışında yeniden boyama ucuz kalsın) */
 html.lite #menu button:focus{box-shadow:none;transform:none;outline:.35vh solid #fff;outline-offset:0}html.lite #menu button.pri:focus{outline-color:#a5d6a7}html.lite #menu button#mout:focus{outline-color:#ff4d4d}
 /* kampanya kartı ve etkileşimli bilgi kartı */
@@ -1227,6 +1234,9 @@ html.theme-glass .pill.live::before {
   <div class="mh2">
     <div class="mt"><b id="mbrand">TV</b><span id="mbiz">-</span></div>
     <div class="chips"><span id="mconn" class="chip">-</span><span id="mchip" class="chip">-</span></div>
+    <button id="mhupd" class="pri" type="button" data-nav>⚡ Güncelle</button>
+    <button id="mhrel" class="hb" type="button" data-nav title="Sayfayı yenile" aria-label="Sayfayı yenile">↻</button>
+    <button id="mhset" class="hb" type="button" data-nav title="Ayarlar" aria-label="Ayarlar">⚙</button>
     <button id="mtopcls" type="button" data-nav title="Kapat" aria-label="Kapat">✕</button>
   </div>
   <div class="mgrid">
@@ -1238,7 +1248,7 @@ html.theme-glass .pill.live::before {
       <div class="mlib"><div class="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span></div><div class="mll" id="mml"></div></div>
       <span id="mmus" style="display:none"></span>
     </section>
-    <section class="mc"><h4>Cihaz bilgisi</h4>
+    <section class="mc dev"><h4>Cihaz bilgisi</h4>
       <div class="row"><span>Kurulu APK sürümü</span><span id="mver">-</span></div>
       <div class="row"><span>Sunucu APK sürümü</span><span id="msrv">-</span></div>
       <div class="row"><span>Ekran yazılımı (yayın)</span><span id="msoft">-</span></div>
@@ -3217,6 +3227,7 @@ function menuInfo() {
   $m('mnew').style.display = a ? 'block' : 'none';
   if (a) $m('mnew').textContent = '⚡ Yeni sürüm hazır: ' + withDate('v' + a.versionName + ' (kod ' + a.versionCode + ')', a.date);
   $m('mupd').style.display = (a && n && n.installUpdate) ? '' : 'none';
+  const hu = $m('mhupd'); hu.classList.toggle('on', !!(a && n && n.installUpdate)); if (a) hu.textContent = '⚡ Güncelle · v' + a.versionName; ch.style.display = hu.classList.contains('on') ? 'none' : ''; // aynı bilgi düğmede: başlığa yer kalsın
   // Test/canlı geçişi: test ortamındaysa her zaman (geri dönüş), canlıdaysa yalnız işletme için açıldıysa (süper yönetim)
   const env = n && n.env ? n.env() : '';
   const showT = !!(n && n.switchEnv && (env === 'test' || (window.__envInfo && window.__envInfo.canTest)));
@@ -3331,7 +3342,8 @@ function menuOpen() {
   upd.openedAt = Date.now(); try { menuInfo(); } catch (e) {} document.documentElement.classList.add('menu-open'); try { clearTimeout(brkTimer); brkEl.classList.remove('on'); window.__N && window.__N.brkHide && window.__N.brkHide(); } catch (e) {} $m('menu').classList.add('on'); try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} menuInfo(); menuSt('');
   $m('menu').scrollTop = 0;
   setTimeout(checkUpdateSilently, 400);
-  const pickFirst = () => upd.avail && $m('mupd').style.display !== 'none' ? $m('mupd') : (MUS.cfg && (MUS.cfg.playlists || []).length ? $m('mmplay') : $m('mchk'));
+  $m('menu').classList.remove('set'); $m('mhset').classList.remove('on'); // her açılış müzikle başlar
+  const pickFirst = () => upd.avail && $m('mhupd').classList.contains('on') ? $m('mhupd') : (MUS.cfg && (MUS.cfg.playlists || []).length ? $m('mmplay') : $m('mhset'));
   requestAnimationFrame(() => { const b = pickFirst(); if (b && b.focus) b.focus({ preventScroll: true }); });
   menuIdle(90000);
   clearInterval(upd.live); upd.live = setInterval(() => { if ($m('menu').classList.contains('on')) menuInfo(); }, 1500);
@@ -3345,9 +3357,9 @@ window.__menu = () => {
   lastMenuToggle = now;
   $m('menu').classList.contains('on') ? menuClose() : menuOpen();
 }; // Menü tuşu
-window.__menuClose = () => { if ($m('menu').classList.contains('on')) menuClose(); }; // Geri tuşu
+window.__menuClose = () => { if (!$m('menu').classList.contains('on')) return; if ($m('menu').classList.contains('set') && !upd.busy) return menuSet(false); menuClose(); }; // Geri tuşu: ayarlardan müziğe, sonra kapat
 window.__updateStatus = msg => {
-  if (!$m('menu').classList.contains('on')) menuOpen(); menuSt(msg);
+  if (!$m('menu').classList.contains('on')) menuOpen(); if (!$m('menu').classList.contains('set')) menuSet(true); menuSt(msg);
   const pr = /%(\d+)/.exec(msg || ''), bar = $m('mprog');
   if (pr) { bar.style.display = 'block'; bar.firstElementChild.style.width = pr[1] + '%'; upd.busy = true; }
   else if (/^İndiriliyor/.test(msg || '')) { bar.style.display = 'block'; upd.busy = true; }
@@ -3364,7 +3376,7 @@ function checkUpdate(a) {
   if ($m('menu').classList.contains('on')) {
     menuInfo();
     // menü yeni açıldıysa ve yeni sürüm bu sırada bulunduysa odak doğrudan "indir ve kur"a gelir (iki kez basmak gerekmesin)
-    if (upd.avail && Date.now() - (upd.openedAt || 0) < 3000 && $m('mupd').style.display !== 'none' && ['mchk', 'mmplay'].includes((document.activeElement || {}).id)) $m('mupd').focus();
+    if (upd.avail && Date.now() - (upd.openedAt || 0) < 3000 && $m('mhupd').classList.contains('on') && ['mchk', 'mmplay', 'mhset'].includes((document.activeElement || {}).id)) ($m('menu').classList.contains('set') ? $m('mupd') : $m('mhupd')).focus();
   }
 }
 
@@ -3409,6 +3421,15 @@ attachTap('mupd', () => {
 });
 
 attachTap('mrel', () => location.reload());
+attachTap('mhrel', () => { menuSt('Yenileniyor…'); location.reload(); });
+// ⚙ Ayarlar: cihaz bilgisi, güncelleme ve işlemler ayrı görünümde (menü varsayılan olarak müzikle açılır)
+function menuSet(on) {
+  $m('menu').classList.toggle('set', on); $m('mhset').classList.toggle('on', on);
+  requestAnimationFrame(() => { const b = on ? ($m('mupd').style.display !== 'none' ? $m('mupd') : $m('mchk')) : $m('mmplay'); if (b) b.focus({ preventScroll: true }); });
+}
+attachTap('mhset', () => menuSet(!$m('menu').classList.contains('set')));
+// üst çubuktaki "Güncelle": ilerleme ve durum ayarlar görünümündeki güncelleme kartında görünsün
+attachTap('mhupd', () => { menuSet(true); $m('mupd').click(); });
 // Ortam değiştirme: yanlışlıkla basılmasın diye iki basış (5 sn içinde onay)
 attachTap('mtest', () => {
   const b = $m('mtest'), n = window.__N;
@@ -3492,6 +3513,7 @@ document.addEventListener('keydown', e => {
   if (isBack) {
     e.preventDefault();
     e.stopImmediatePropagation();
+    if ($m('menu').classList.contains('set') && !upd.busy) { menuSet(false); return; }
     menuClose();
     return;
   }
