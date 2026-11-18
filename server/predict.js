@@ -15,7 +15,7 @@ const tenants = require('./tenants');
 
 const LEAGUE = 'tur.1';
 const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/soccer/' + LEAGUE;
-const PTS = Object.freeze({ exact: 5, result: 2, goal: 3, assist: 2, yellow: 2, red: 2 });
+const PTS = Object.freeze({ exact: 5, result: 2, goal: 3, assist: 2, yellow: 2, red: 2, ycp: 2, rcp: 4 }); // ycp/rcp: sarı/kırmızı kart görecek oyuncuyu bilme
 const TZ_MS = 3 * 3600e3; // Türkiye UTC+3 (yaz saati yok)
 const DAY = 86400e3;
 const CACHE_FILE = path.join(config.DATA_DIR, 'predict-cache.json');
@@ -83,19 +83,21 @@ async function refreshFixtures(force) {
 // Biten maçın oyuncu istatistikleri: gol (kendi kalesine hariç), asist, sarı ve kırmızı kart toplamı
 async function fetchResult(m) {
   const s = await jget(`${ESPN}/summary?event=${m.id}`);
-  const goals = {}, assists = {}; let yc = 0, rc = 0, seen = 0;
+  const goals = {}, assists = {}, ycp = {}, rcp = {}; let yc = 0, rc = 0, seen = 0;
   for (const tm of s.rosters || []) for (const p of tm.roster || []) {
     const st = {}; for (const x of p.stats || []) st[x.name] = Number(x.value) || 0;
     const id = String((p.athlete || {}).id || ''); if (!id) continue; seen++;
     if (st.totalGoals > 0) goals[id] = st.totalGoals;
     if (st.goalAssists > 0) assists[id] = st.goalAssists;
+    if (st.yellowCards > 0) ycp[id] = st.yellowCards;
+    if (st.redCards > 0) rcp[id] = st.redCards;
     yc += st.yellowCards || 0; rc += st.redCards || 0;
   }
   if (!seen) throw new Error('Maç istatistiği henüz yok');
   const cs = (((s.header || {}).competitions || [])[0] || {}).competitors || [];
   const h = cs.find(x => x.homeAway === 'home'), a = cs.find(x => x.homeAway === 'away');
   const sc = h && a ? [Number(h.score) || 0, Number(a.score) || 0] : m.sc;
-  return { sc, res: { goals, assists, yc, rc } };
+  return { sc, res: { goals, assists, yc, rc, ycp, rcp } };
 }
 // Biten ama sonucu alınmamış maçlar (maç bittikten 15 dk sonra; istatistikler geç oturur, 6 saat boyunca tazelenir)
 let resBusy = false;
@@ -133,7 +135,7 @@ async function squad(teamId) {
 const sign = (h, a) => Math.sign(h - a);
 function pointsFor(p, m) {
   if (!p || !m || m.st !== 'post' || !m.res || !m.sc) return null;
-  const r = m.res, o = { score: 0, goal: 0, assist: 0, yellow: 0, red: 0, exact: false };
+  const r = m.res, o = { score: 0, goal: 0, assist: 0, yellow: 0, red: 0, ycp: 0, rcp: 0, exact: false };
   if (Number.isInteger(p.h) && Number.isInteger(p.a)) {
     if (p.h === m.sc[0] && p.a === m.sc[1]) { o.score = PTS.exact; o.exact = true; }
     else if (sign(p.h, p.a) === sign(m.sc[0], m.sc[1])) o.score = PTS.result;
@@ -150,7 +152,11 @@ function pointsFor(p, m) {
   });
   if (Number.isInteger(p.yc) && p.yc === r.yc) o.yellow = PTS.yellow;
   if (typeof p.rc === 'boolean' && p.rc === r.rc > 0) o.red = PTS.red;
-  o.total = o.score + o.goal + o.assist + o.yellow + o.red;
+  // kart görecek oyuncular: her doğru oyuncu ayrı puan (oyuncu başına bir kez)
+  o.ycps = (Array.isArray(p.ycl) ? p.ycl : []).map(x => (x && r.ycp && r.ycp[x.id] > 0 ? PTS.ycp : 0));
+  o.rcps = (Array.isArray(p.rcl) ? p.rcl : []).map(x => (x && r.rcp && r.rcp[x.id] > 0 ? PTS.rcp : 0));
+  o.ycp = o.ycps.reduce((a, b) => a + b, 0); o.rcp = o.rcps.reduce((a, b) => a + b, 0);
+  o.total = o.score + o.goal + o.assist + o.yellow + o.red + o.ycp + o.rcp;
   return o;
 }
 

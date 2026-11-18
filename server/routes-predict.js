@@ -184,8 +184,9 @@ pub.post('/:code/pick', async (req, res) => {
   // gol kutuları: tahmin edilen skordan fazla olamaz; golcü ve asist yalnız golü atan takımdan, asist golcünün kendisi olamaz
   const raw = Array.isArray(b.gl) ? b.gl.slice(0, 41) : [];
   const want = { h: h || 0, a: a || 0 }, cnt = { h: 0, a: 0 }, gl = [];
+  const ycr = Array.isArray(b.ycl) ? b.ycl.slice(0, 21) : [], rcr = Array.isArray(b.rcl) ? b.rcl.slice(0, 6) : [];
   const sq = {};
-  for (const side of ['h', 'a']) if (raw.some(x => x && x.s === side)) {
+  for (const side of ['h', 'a']) if (raw.some(x => x && x.s === side) || ycr.length || rcr.length) {
     const list = await P.squad((side === 'h' ? m.home : m.away).id); sq[side] = new Map(list.map(x => [x.id, x]));
   }
   for (const x of raw) {
@@ -201,8 +202,26 @@ pub.post('/:code/pick', async (req, res) => {
     const o = { s: x.s }; if (g) { o.g = g; o.gn = nm(g, x.gn); } if (as) { o.a = as; o.an = nm(as, x.an); }
     gl.push(o);
   }
+  // kart görecek oyuncular: sarıda en fazla tahmin edilen sarı kart sayısı kadar, kırmızıda "çıkar" denmişse en fazla 3; iki takımdan da seçilebilir
+  const cardList = (list, max, what) => {
+    const out = [], seen = new Set();
+    for (const x of list) {
+      const id = String((x && x.id) || ''); if (!id) continue;
+      if (seen.has(id)) return { error: `Aynı oyuncu ${what} listesinde iki kez seçilemez` };
+      if (!/^\d{1,12}$/.test(id)) return { error: 'Geçersiz oyuncu' };
+      const side = sq.h && sq.h.has(id) ? 'h' : sq.a && sq.a.has(id) ? 'a' : (sq.h && sq.h.size) || (sq.a && sq.a.size) ? null : (x.s === 'a' ? 'a' : 'h');
+      if (!side) return { error: 'Oyuncu bu maçın takımlarında değil' };
+      seen.add(id); out.push({ id, n: ((sq[side] && sq[side].get(id)) || {}).name || String(x.n || '').slice(0, 60), s: side });
+    }
+    if (out.length > max) return { error: max ? `En fazla ${max} oyuncu seçebilirsiniz` : (what === 'sarı kart' ? 'Sarı kart görecek oyuncu seçmek için önce sarı kart sayısını yazın' : 'Kırmızı kart görecek oyuncu seçmek için "Çıkar" seçin') };
+    return { out };
+  };
+  const yr = cardList(ycr, yc || 0, 'sarı kart'); if (yr.error) return res.status(400).json({ error: yr.error });
+  const rr = cardList(rcr, rc === true ? 3 : 0, 'kırmızı kart'); if (rr.error) return res.status(400).json({ error: rr.error });
   const p = { at: now() };
   if (h !== undefined) { p.h = h; p.a = a; }
+  if (yr.out.length) p.ycl = yr.out;
+  if (rr.out.length) p.rcl = rr.out;
   if (gl.length) p.gl = gl;
   if (yc !== undefined) p.yc = yc;
   if (rc !== undefined) p.rc = rc;
