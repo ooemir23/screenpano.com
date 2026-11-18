@@ -725,6 +725,7 @@
       "points": [
         "Müzik: önceki, oynat/duraklat, sonraki, ses",
         "Kitaplıktaki listeleri gezin, listeden istediğiniz şarkıyı çalın",
+        "Kumandayla Spotify ya da YouTube Music’te şarkı arayıp çalma",
         "Spotify ya da YouTube Music seçimi, karışık çal ve tekrar",
         "Yeni sürüm tek seferde indirilir ve kurulur",
         "Oturum kapatma yanlışlıkla yapılmasın diye onay ister"
@@ -745,6 +746,7 @@
           "points": [
             "Music: previous, play/pause, next, volume",
             "Browse the playlists in your library and play any song from a list",
+            "Search Spotify or YouTube Music with the remote and play",
             "Choose Spotify or YouTube Music, shuffle and repeat",
             "A new version downloads and installs in one go",
             "Signing out asks for confirmation so it can't happen by accident"
@@ -758,6 +760,7 @@
           "points": [
             "Musik: zurück, Wiedergabe/Pause, weiter, Lautstärke",
             "Playlists der Bibliothek durchsuchen und jeden Titel daraus abspielen",
+            "Mit der Fernbedienung in Spotify oder YouTube Music suchen und abspielen",
             "Spotify oder YouTube Music wählen, Zufallswiedergabe und Wiederholen",
             "Eine neue Version wird in einem Zug geladen und installiert",
             "Abmelden fragt nach, damit es nicht versehentlich passiert"
@@ -771,6 +774,7 @@
           "points": [
             "الموسيقى: السابق، تشغيل/إيقاف مؤقت، التالي، الصوت",
             "تصفّح قوائم التشغيل في مكتبتك وشغّل أي أغنية منها",
+            "البحث في Spotify أو YouTube Music بجهاز التحكم والتشغيل",
             "اختيار Spotify أو YouTube Music، والتشغيل العشوائي والتكرار",
             "يُنزَّل الإصدار الجديد ويُثبَّت دفعة واحدة",
             "تسجيل الخروج يطلب تأكيدًا حتى لا يحدث بالخطأ"

@@ -403,6 +403,13 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .hb{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.6vh;text-align:center;flex:none}
 #menu .hb.on{background:rgba(255,255,255,.22)}
 #menu #mhupd{display:none;height:5.6vh;padding:0 1.6vw;border-radius:5vh;align-items:center;gap:.6vw;white-space:nowrap;font-size:1.9vh}#menu #mhupd.on{display:inline-flex}
+#menu .mlh #mlsbtn{margin-left:auto;padding:.7vh 1.2vw;border-radius:5vh;font-size:1.7vh;font-weight:700}
+#menu .mls{display:none;align-items:center;gap:.8vw}#menu .mlib.srch .mls{display:flex}#menu .mlib.srch .mlh{display:none}
+#menu .mls #mlback{width:5.4vh;height:5.4vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:3vh;flex:none}
+#menu .mls input{flex:1;min-width:0;height:5.4vh;padding:0 1.4vw;border-radius:5vh;border:max(1px,.1vh) solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font:600 2vh Montserrat,sans-serif;outline:none}
+#menu .mls input:focus{border-color:#fff;background:rgba(255,255,255,.14);box-shadow:0 0 0 .3vh rgba(255,255,255,.35)}
+#menu .mls #mlgo{height:5.4vh;padding:0 1.4vw;border-radius:5vh;font-size:1.8vh;flex:none}
+#menu .mll .sh{font-size:1.6vh;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8d96a0;margin:1vh .4vw .2vh}
 #menu .msrc{display:flex;align-items:center;gap:.6vw}
 #menu .msrc>span{font-size:1.5vh;letter-spacing:.12em;text-transform:uppercase;color:#8d96a0;font-weight:700}
 #menu .msrc button{display:none;align-items:center;gap:.6vw;padding:.8vh 1.2vw;border-radius:5vh;font-size:1.7vh;font-weight:700;background:rgba(255,255,255,.07);border-color:transparent;color:#cfd5db}
@@ -1264,7 +1271,7 @@ html.theme-glass .pill.live::before {
       <div class="mpr" id="mmpr" style="visibility:hidden"><span id="mmpe">0:00</span><span class="tr"><i id="mmpf"></i></span><span id="mmpd"></span></div>
       <div class="ctl"><button id="mmshuf" class="sm" type="button" data-nav aria-label="Karışık çal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></svg></button><button id="mmprev" type="button" data-nav aria-label="Önceki">⏮</button><button id="mmplay" class="big" type="button" data-nav aria-label="Oynat / duraklat">▶</button><button id="mmnext" type="button" data-nav aria-label="Sonraki">⏭</button><button id="mmrep" class="sm" type="button" data-nav aria-label="Tekrarla"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/><path class="one" d="M11 10h1v4"/></svg></button></div>
       <div class="vol"><button id="mmvolm" type="button" data-nav aria-label="Sesi kıs">−</button><span class="bar"><i id="mmbar"></i></span><button id="mmvolp" type="button" data-nav aria-label="Sesi aç">+</button><b id="mmvol">-</b></div>
-      <div class="mlib"><div class="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span></div><div class="mll" id="mml"></div></div>
+      <div class="mlib"><div class="mlh" id="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span><button id="mlsbtn" type="button" data-nav>🔍 Ara</button></div><div class="mls" id="mls"><button id="mlback" type="button" data-nav aria-label="Kitaplığa dön">‹</button><input id="mlq" type="search" data-nav autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" maxlength="80" placeholder="Şarkı ya da sanatçı ara"><button id="mlgo" type="button" data-nav>Ara</button></div><div class="mll" id="mml"></div></div>
       <span id="mmus" style="display:none"></span>
     </section>
     <section class="mc dev"><h4>Cihaz bilgisi</h4>
@@ -3304,6 +3311,8 @@ function mlRender(force) {
   const m = MUS.cfg || {}, lib = m.playlists || [], cur = activeMusicItem(m), on = !!(m.enabled && m.playing);
   const nowT = (MUS.spConnectTrack && MUS.spConnectTrack.title) || MUS.trackTitle || '';
   if (ML.view === 'list' && !lib.some(x => x.id === ML.id)) { ML.view = 'lib'; ML.id = ''; ML.items = null; }
+  $m('mml').parentElement.classList.toggle('srch', ML.view === 'search');
+  if (ML.view === 'search') return mlRenderSearch(force, box, cur);
   const it = ML.view === 'list' ? lib.find(x => x.id === ML.id) : null;
   // kitaplıkta çalan kaynağın listeleri; diğer kaynağın listeleri düğmeyle açılır
   const grp = mlGrp(cur), shown = lib.filter(x => mlGrp(x) === grp); // kitaplık çalan kaynağın listeleri (kaynak üstteki seçiciyle değişir)
@@ -3330,6 +3339,44 @@ function mlRender(force) {
   box.innerHTML = h; box.scrollTop = st;
   if (fk) { const b = box.querySelector(`[data-k="${CSS.escape(fk)}"]`); if (b) b.focus({ preventScroll: true }); }
 }
+// ---- Menüde arama: çalan kaynakta (Spotify ya da YouTube Music) şarkı/liste arar; sonuç seçilince TV'de çalar ----
+const MS = { q: '', src: '', tracks: null, lists: null, err: '', busy: false, t: 0, sig: '' };
+const msSrc = () => { const c = activeMusicItem(MUS.cfg); return c && c.provider === 'spotify' ? 'spotify' : 'yt'; };
+function mlRenderSearch(force, box, cur) {
+  const src = msSrc(), nowT = (MUS.spConnectTrack && MUS.spConnectTrack.title) || MUS.trackTitle || '';
+  $m('mlq').placeholder = src === 'spotify' ? 'Spotify’da şarkı ya da sanatçı ara' : 'YouTube Music’te şarkı ya da sanatçı ara';
+  if (MS.src && MS.src !== src) { MS.tracks = MS.lists = null; MS.err = ''; MS.q = ''; } // kaynak değişti: eski sonuçlar geçersiz
+  const sig = 'S|' + src + '|' + MS.q + '|' + MS.busy + '|' + MS.err + '|' + (MS.tracks ? MS.tracks.length : -1) + '|' + (MS.lists ? MS.lists.length : -1) + '|' + nowT;
+  if (!force && sig === ML.sig) return; ML.sig = sig;
+  const fk = document.activeElement && box.contains(document.activeElement) ? document.activeElement.dataset.k : '', st = box.scrollTop;
+  const row = (x, i, a, n) => `<button type="button" data-nav class="mli tr${nowT && x.t === nowT ? ' on' : ''}" data-a="${a}" data-i="${i}" data-k="${a}:${i}"><span class="n">${n}</span><span class="c"${mlCv(x.th)}></span><span class="t"><b>${esc(x.t)}</b><span>${esc(x.c || '')}</span></span><span class="d">${mlDur(x.d)}</span></button>`;
+  let h = '';
+  if (MS.busy) h = '<div class="msg">Aranıyor…</div>';
+  else if (MS.err) h = `<div class="msg">${esc(MS.err)}</div>`;
+  else if (!MS.tracks) h = `<div class="msg">Yukarıya yazıp OK’a basın. Seçtiğiniz şarkı TV’de hemen çalar.</div>`;
+  else if (!MS.tracks.length && !(MS.lists || []).length) h = '<div class="msg">Sonuç bulunamadı.</div>';
+  else {
+    if (MS.tracks.length) h += '<div class="sh">Şarkılar</div>' + MS.tracks.slice(0, 20).map((x, i) => row(x, i, 'hit', '▶')).join('');
+    if ((MS.lists || []).length) h += '<div class="sh">Listeler</div>' + MS.lists.slice(0, 12).map((x, i) => row(x, i, 'hitl', '☰')).join('');
+  }
+  box.innerHTML = h; box.scrollTop = st;
+  if (fk) { const b = box.querySelector(`[data-k="${CSS.escape(fk)}"]`); if (b) b.focus({ preventScroll: true }); }
+}
+function msRun() {
+  const q = ($m('mlq').value || '').trim(); clearTimeout(MS.t);
+  if (q.length < 2) { menuSt('En az 2 harf yazın'); return; }
+  if (q === MS.q && MS.src === msSrc() && (MS.busy || MS.tracks)) return;
+  Object.assign(MS, { q, src: msSrc(), tracks: null, lists: null, err: '', busy: true });
+  wsSend({ type: 'music_search', q, src: MS.src });
+  clearTimeout(MS.to); MS.to = setTimeout(() => { if (MS.busy) { MS.busy = false; MS.err = 'Arama yanıt vermedi (bağlantı yok)'; mlRender(true); } }, 12000);
+  mlRender(true);
+}
+function onMusicSearch(msg) {
+  if (msg.q !== MS.q || msg.src !== MS.src) return; // eski aramanın yanıtı
+  clearTimeout(MS.to); MS.busy = false; MS.tracks = msg.tracks || []; MS.lists = msg.lists || []; MS.err = msg.err || ''; mlRender(true);
+}
+function mlSearchOpen() { ML.view = 'search'; mlRender(true); const q = $m('mlq'); q.focus(); }
+function mlSearchClose() { ML.view = 'lib'; mlRender(true); const b = $m('mlsbtn'); if (b) b.focus(); }
 function mlOpen(id) {
   ML.view = 'list'; ML.id = id; ML.items = null; ML.err = '';
   const it = ((MUS.cfg || {}).playlists || []).find(x => x.id === id);
@@ -3346,6 +3393,11 @@ attachTap('mssp', () => { if ($m('mssp').classList.contains('on')) return; menuS
 attachTap('msyt', () => { if ($m('msyt').classList.contains('on')) return; menuSt('YouTube Music açılıyor…'); ML.view = 'lib'; menuMusicCmd('source', { source: 'yt' }); });
 attachTap('mmshuf', () => { const on = !(MUS.cfg && MUS.cfg.shuffle); menuSt(on ? 'Karışık çal açık' : 'Karışık çal kapalı'); menuMusicCmd('shuffle', { on }); });
 attachTap('mmrep', () => { const R = ['all', 'one', 'off'], c = (MUS.cfg && MUS.cfg.repeat) || 'all', n = R[(R.indexOf(c) + 1) % 3]; menuSt(n === 'one' ? 'Tekrar: tek şarkı' : n === 'off' ? 'Tekrar kapalı' : 'Tekrar: liste'); menuMusicCmd('repeat', { mode: n }); });
+attachTap('mlsbtn', mlSearchOpen);
+attachTap('mlback', mlSearchClose);
+attachTap('mlgo', msRun);
+$m('mlq').addEventListener('input', () => { clearTimeout(MS.t); MS.t = setTimeout(() => { if (($m('mlq').value || '').trim().length >= 3) msRun(); }, 900); }); // yazmayı bitirince kendiliğinden arar
+$m('mlq').addEventListener('keydown', e => { menuIdle(90000); if (e.key === 'Enter' || e.keyCode === 13 || e.keyCode === 66) { e.preventDefault(); msRun(); } });
 $m('mml').addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button[data-a]'); if (!b) return;
   e.stopPropagation(); menuIdle(90000);
@@ -3356,6 +3408,13 @@ $m('mml').addEventListener('click', e => {
     const x = ((MUS.cfg || {}).playlists || []).find(y => y.id === b.dataset.id), ytl = x && (x.provider === 'ytmix' || ((x.provider === 'yt' || x.provider === 'ytm') && x.listId));
     menuSt('Çalınıyor…'); mmOpt = { playing: true, at: Date.now() };
     menuMusicCmd('select', ytl ? { id: b.dataset.id, index: 0 } : { id: b.dataset.id }); // YouTube listesi ilk şarkıdan başlar
+    return;
+  }
+  if (a === 'hit' || a === 'hitl') { // arama sonucu: kitaplığa eklenir (zaten varsa o kullanılır) ve TV'de çalar
+    const x = (a === 'hit' ? MS.tracks : MS.lists || [])[+b.dataset.i]; if (!x) return;
+    menuSt('Çalınıyor: ' + x.t); mmOpt = { playing: true, at: Date.now() };
+    if (PREVIEW) { menuSt('Önizlemede müzik kontrolü kapalı'); return; }
+    wsSend({ type: 'music_hit', k: x.k, t: x.t, th: x.th || '', list: a === 'hitl' });
     return;
   }
   if (a === 'track') {
@@ -3405,7 +3464,7 @@ window.__menu = () => {
   lastMenuToggle = now;
   $m('menu').classList.contains('on') ? menuClose() : menuOpen();
 }; // Menü tuşu
-window.__menuClose = () => { if (!$m('menu').classList.contains('on')) return; if ($m('menu').classList.contains('set') && !upd.busy) return menuSet(false); menuClose(); }; // Geri tuşu: ayarlardan müziğe, sonra kapat
+window.__menuClose = () => { if (!$m('menu').classList.contains('on')) return; if ($m('menu').classList.contains('set') && !upd.busy) return menuSet(false); if (ML.view === 'search') return mlSearchClose(); menuClose(); }; // Geri tuşu: ayarlardan müziğe, sonra kapat
 window.__updateStatus = msg => {
   if (!$m('menu').classList.contains('on')) menuOpen(); if (!$m('menu').classList.contains('set')) menuSet(true); menuSt(msg);
   const pr = /%(\d+)/.exec(msg || ''), bar = $m('mprog');
@@ -3546,6 +3605,12 @@ function menuNav(dir) {
 document.addEventListener('keydown', e => {
   if (!$m('menu') || !$m('menu').classList.contains('on')) return;
   menuIdle(90000); // her tuşta bekleme süresi yenilenir
+  const inInput = document.activeElement && document.activeElement.tagName === 'INPUT';
+  if (inInput) { // arama kutusu: yazı tuşları kutuya gider; ▲▼ ile çıkılır, Geri klavyeyi/kutuyu bırakır
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.keyCode === 19 || e.keyCode === 20) { e.preventDefault(); e.stopImmediatePropagation(); menuNav(e.key === 'ArrowUp' || e.keyCode === 19 ? 'up' : 'down'); }
+    else if (e.key === 'Escape' || e.key === 'GoBack' || e.keyCode === 4 || e.keyCode === 27) { e.preventDefault(); e.stopImmediatePropagation(); document.activeElement.blur(); $m('mlback').focus(); }
+    return;
+  }
   const dir = e.key === 'ArrowDown' || e.keyCode === 20 ? 'down' : e.key === 'ArrowUp' || e.keyCode === 19 ? 'up' : e.key === 'ArrowRight' || e.keyCode === 22 ? 'right' : e.key === 'ArrowLeft' || e.keyCode === 21 ? 'left' : '';
   const isOk = e.key === 'Enter' || e.key === ' ' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23 || e.keyCode === 66;
   const isBack = e.key === 'Escape' || e.key === 'Backspace' || e.key === 'GoBack' || e.keyCode === 4 || e.keyCode === 27;
@@ -3562,6 +3627,7 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     e.stopImmediatePropagation();
     if ($m('menu').classList.contains('set') && !upd.busy) { menuSet(false); return; }
+    if (ML.view === 'search') { mlSearchClose(); return; }
     menuClose();
     return;
   }
@@ -3570,6 +3636,7 @@ document.addEventListener('keydown', e => {
 // Kumanda: Menü tuşu (veya ContextMenu / Settings / Info / Escape / Kırmızı tuş) menüyü açar/kapatır
 document.addEventListener('keydown', e => {
   if (window.__auth || /^Media/.test(e.key || '')) return; // 176 = MediaTrackNext: medya tuşu menüyü açmasın
+  if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return; // yazarken (82 = 'R' harfi) menü kapanmasın
   const isMenuKey = e.key === 'Escape' || e.key === 'ContextMenu' || e.key === 'Menu' || e.key === 'Settings' ||
                     e.keyCode === 82 || e.keyCode === 165 || e.keyCode === 176 || e.keyCode === 183;
   if (isMenuKey) {
@@ -4534,6 +4601,8 @@ function connect() {
     else if (m.type === 'music_now') { const n = m.now; MUS.spConnectTrack = n && n.title ? { title: n.title, artist: n.artist || '', thumb: n.thumb || '', paused: !n.playing, progress: +n.progress || 0, dur: +n.dur || 0, t0: Date.now() } : null; renderMusicBar(); if ($m('menu').classList.contains('on')) menuMusic(); }
     else if (m.type === 'music_tracks') onMusicTracks(m);
     else if (m.type === 'music_list') onMusicList(m);
+    else if (m.type === 'music_search') onMusicSearch(m);
+    else if (m.type === 'music_warn') { if ($m('menu').classList.contains('on')) menuSt(m.msg || ''); else musicToast(m.msg || ''); }
   };
   ws.onclose = () => { clearInterval(wsDog); if (!authFail && !dead) wsRetry(); };
 }

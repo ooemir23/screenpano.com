@@ -141,6 +141,42 @@ function onMessage(ws, raw) {
     }
     return;
   }
+  // TV menüsünde müzik araması (Spotify ya da YouTube Music); cihaz başına dakikada 20 arama
+  if (m.type === 'music_search' && typeof m.q === 'string') {
+    const t = tenants.get(ws.tid), q = m.q.trim().slice(0, 120), src = m.src === 'spotify' ? 'spotify' : 'yt';
+    const reply = o => sendRaw(ws, { type: 'music_search', q, src, tracks: [], lists: [], err: '', ...o });
+    if (!t || ws.preview || q.length < 2) return reply({});
+    const k = 'ms' + (ws.deviceId || ws.tid), now = Date.now(), h = onMessage.mc.get(k) || { n: 0, at: now };
+    if (now - h.at > 60000) { h.n = 0; h.at = now; }
+    if (++h.n > 20) return reply({ err: 'Çok sık arama yapıldı; biraz bekleyin' });
+    onMessage.mc.set(k, h);
+    if (src === 'spotify') {
+      const SP = require('./spotify');
+      if (!SP.connected(t)) return reply({ err: 'Spotify hesabı bağlı değil' });
+      SP.search(t, q).then(r => reply({ tracks: (r.tracks || []).map(x => ({ k: x.uri, t: x.title, c: x.artist, th: x.thumb, d: x.dur })), lists: (r.playlists || []).map(p => ({ k: p.id, t: p.title, c: p.owner, th: p.thumb })) }))
+        .catch(e => reply({ err: e.message }));
+    } else {
+      // YouTube araması genel videoları da getirir: müzik çalarda 15 dk'yı aşanlar (bölüm, canlı yayın, derleme) sona alınır
+      require('./youtube').search(q).then(l => { l = l || []; const song = x => x.dur > 0 && x.dur <= 900; reply({ tracks: l.filter(song).concat(l.filter(x => !song(x))).map(x => ({ k: x.videoId, t: x.title, c: x.channel, th: x.thumb, d: x.dur || 0 })) }); })
+        .catch(() => reply({ err: 'Arama yapılamadı; tekrar deneyin' }));
+    }
+    return;
+  }
+  // TV menüsünde arama sonucunu çal: şarkı (ya da Spotify listesi) kitaplığa eklenir/bulunur ve çalınır (panelle aynı yol)
+  if (m.type === 'music_hit' && !ws.preview) {
+    const k = 'mh' + (ws.deviceId || ws.tid), now = Date.now();
+    if (now - (onMessage.mc.get(k) || 0) < 1500) return;
+    onMessage.mc.set(k, now);
+    const t = tenants.get(ws.tid), hub = require('./hub'), key = String(m.k || '');
+    let url = '';
+    if (/^spotify:track:[A-Za-z0-9]{10,40}$/.test(key)) url = 'https://open.spotify.com/track/' + key.split(':')[2];
+    else if (m.list && /^[A-Za-z0-9]{10,40}$/.test(key)) url = 'https://open.spotify.com/playlist/' + key;
+    else if (/^[A-Za-z0-9_-]{11}$/.test(key)) url = 'https://music.youtube.com/watch?v=' + key;
+    if (!t || !url || !hub.musicAdd) return;
+    hub.musicAdd(t, { url, title: String(m.t || '').slice(0, 90), thumb: /^https:\/\//.test(m.th || '') ? String(m.th).slice(0, 300) : '', playNow: true, hit: !m.list })
+      .then(o => { if (o.body && o.body.warn) sendRaw(ws, { type: 'music_warn', msg: o.body.warn }); }).catch(() => {});
+    return;
+  }
   // TV menüsündeki müzik çalar: kitaplıktaki bir listenin şarkıları (Spotify ya da YouTube); cihaz başına saniyede bir sorgu
   if (m.type === 'music_list' && typeof m.itemId === 'string') {
     const k = 'ml' + (ws.deviceId || ws.tid), now = Date.now();

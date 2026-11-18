@@ -600,26 +600,43 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     changed(req.t);
     res.json({ ok: true, music: m });
   });
-  r.post('/music/playlist', async (req, res) => {
-    const m = ensureMusic(req.t.db), b = req.body || {};
-    const parsed = parseMusicUrl(b.url);
-    if (!parsed) return res.status(400).json({ error: 'Geçerli bir Spotify, YouTube Music, YouTube veya Radyo bağlantısı girin' });
-    let title = s(b.title, 90), thumb = s(b.thumb, 300), category = s(b.category, 40);
-    if (!title || !thumb) {
-      const meta = await fetchMusicMeta(parsed);
-      if (!title) title = meta.title || (parsed.provider === 'spotify' ? 'Spotify Listesi' : parsed.provider === 'ytm' ? 'YouTube Music Listesi' : parsed.provider === 'yt' ? 'YouTube Müzik' : 'Canlı Radyo');
-      if (!thumb && meta.thumb) thumb = meta.thumb;
-    }
-    const item = { id: auth.uid(10), title, category: category || '', thumb: thumb || '', ...parsed, addedAt: Date.now() };
-    m.playlists.unshift(item);
-    m.playlists = m.playlists.slice(0, 50);
-    if (b.playNow || !m.activeId) { m.activeId = item.id; m.enabled = true; m.playing = true; }
-    changed(req.t);
-    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: item.id, music: tvMusic(m) });
+  // Kitaplığa ekle (panelden ve TV menüsünden aynı yol). Aynı içerik varsa yeniden eklenmez, o kullanılır.
+  // hit: aramadan "çal" ile gelen tek şarkı; kitaplık dolunca önce en eski bu tür şarkılar çıkar (işletmenin listeleri silinmez)
+  const sameItem = (a, p) => a.provider === p.provider && (p.provider === 'spotify' ? a.spotifyType === p.spotifyType && a.spotifyId === p.spotifyId
+    : p.provider === 'radio' ? a.url === p.url : (a.videoId || '') === (p.videoId || '') && (a.listId || '') === (p.listId || ''));
+  async function addMusicItem(t, b) {
+    const m = ensureMusic(t.db), parsed = parseMusicUrl(b.url);
+    if (!parsed) return { code: 400, body: { error: 'Geçerli bir Spotify, YouTube Music, YouTube veya Radyo bağlantısı girin' } };
+    let item = m.playlists.find(x => sameItem(x, parsed));
+    if (!item) {
+      let title = s(b.title, 90), thumb = s(b.thumb, 300), category = s(b.category, 40);
+      if (!title || !thumb) {
+        const meta = await fetchMusicMeta(parsed);
+        if (!title) title = meta.title || (parsed.provider === 'spotify' ? 'Spotify Listesi' : parsed.provider === 'ytm' ? 'YouTube Music Listesi' : parsed.provider === 'yt' ? 'YouTube Müzik' : 'Canlı Radyo');
+        if (!thumb && meta.thumb) thumb = meta.thumb;
+      }
+      item = { id: auth.uid(10), title, category: category || '', thumb: thumb || '', ...parsed, ...(b.hit ? { hit: true } : {}), addedAt: Date.now() };
+      m.playlists.unshift(item);
+      // sınır ayrı sayılır: en çok 50 liste + aramadan çalınan en çok 10 tek şarkı; dolunca o türün en eskisi çıkar (çalan ve yeni eklenen hariç).
+      // Böylece aramadan şarkı çalmak işletmenin listelerini kitaplıktan silmez.
+      for (const [isHit, max] of [[false, 50], [true, 10]]) {
+        while (m.playlists.filter(x => !!x.hit === isHit).length > max) {
+          let k = -1; for (let i = m.playlists.length - 1; i >= 0; i--) { const x = m.playlists[i]; if (!!x.hit === isHit && x.id !== m.activeId && x !== item) { k = i; break; } }
+          if (k < 0) break; m.playlists.splice(k, 1);
+        }
+      }
+    } else if (!b.hit && item.hit) delete item.hit; // kitaplığa bilerek eklendi: artık kalıcı
+    if (b.playNow || !m.activeId) { m.activeId = item.id; m.enabled = true; m.playing = true; m.lastBy = { ...(m.lastBy || {}), [item.provider === 'spotify' ? 'spotify' : 'yt']: item.id }; }
+    changed(t);
+    if (b.playNow) sendTo(t, { type: 'music_cmd', cmd: 'select', id: item.id, music: tvMusic(m) });
     let warn = '';
-    if (b.playNow && item.provider === 'spotify' && SP.external(req.t)) { try { await SP.play(req.t, item, null, m.volume); } catch (e) { warn = e.message; } }
-    res.json({ ok: true, item, music: m, warn });
-  });
+    if (b.playNow && item.provider === 'spotify' && SP.external(t)) { try { await SP.play(t, item, null, m.volume); spNowKick(t); } catch (e) { warn = e.message; } }
+    // başka kaynaktan geçildiyse Spotify susturulur (iki müzik üst üste çalmasın)
+    if (b.playNow && item.provider !== 'spotify' && SP.external(t)) { try { await SP.control(t, 'pause'); } catch (e) {} }
+    return { code: 200, body: { ok: true, item, music: m, warn } };
+  }
+  hub.musicAdd = addMusicItem;
+  r.post('/music/playlist', async (req, res) => { const o = await addMusicItem(req.t, req.body || {}); res.status(o.code).json(o.body); });
   r.delete('/music/playlist/:id', (req, res) => {
     const m = ensureMusic(req.t.db);
     m.playlists = m.playlists.filter(x => x.id !== req.params.id);

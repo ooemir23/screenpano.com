@@ -3285,7 +3285,7 @@ async function draftSave(playNow) {
 }
 async function playNowVideo(i) { // arama sonucunu tek şarkı olarak TV'de çal
   const t = (MSEARCH.items || [])[i]; if (!t) return;
-  const j = await act('POST', '/music/playlist', { url: 'https://music.youtube.com/watch?v=' + t.videoId, title: t.title, thumb: t.thumb, playNow: true }, '', false);
+  const j = await act('POST', '/music/playlist', { url: 'https://music.youtube.com/watch?v=' + t.videoId, title: t.title, thumb: t.thumb, playNow: true, hit: true }, '', false);
   if (j && j.music) { S.db.music = j.music; MNOW = { ...(MNOW || {}), title: t.title, artist: t.channel, thumb: t.thumb, videoId: t.videoId, err: '', at: Date.now() }; render(true); }
 }
 function editCustom(id) {
@@ -3303,7 +3303,7 @@ async function playCustomTrack(i) {
 async function spPlayHit(i) { // Spotify arama sonucu: tek şarkı olarak TV'de çal
   const t = ((SPS.r || {}).tracks || [])[i]; if (!t) return;
   const id = t.uri.split(':')[2];
-  const j = await act('POST', '/music/playlist', { url: 'https://open.spotify.com/track/' + id, title: t.title, thumb: t.thumb, playNow: true }, `TV'de çalıyor: ${t.title}`, false);
+  const j = await act('POST', '/music/playlist', { url: 'https://open.spotify.com/track/' + id, title: t.title, thumb: t.thumb, playNow: true, hit: true }, `TV'de çalıyor: ${t.title}`, false);
   if (j && j.warn) toast(j.warn, true);
   if (j && j.music) { S.db.music = j.music; render(true); }
 }
