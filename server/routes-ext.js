@@ -13,7 +13,7 @@ const stats = require('./stats');
 const social = require('./social');
 const storage = require('./storage');
 const { plan, access } = require('./plans');
-const { LANGS } = require('./state');
+const { LANGS, tvMusic } = require('./state');
 
 const DAY = 86400000;
 const s = (v, n) => String(v ?? '').trim().slice(0, n);
@@ -512,9 +512,10 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
       const m = t.db.music; if (!plan(t).pro || !m || !m.enabled || !SP.external(t)) { spNowSig.delete(t.id); continue; }
       const cur = (m.playlists || []).find(x => x.id === m.activeId); if (!cur || cur.provider !== 'spotify') continue;
       const n = await SP.nowPlaying(t).catch(() => null), now = n && n.title ? { title: n.title, artist: n.artist, thumb: n.thumb, playing: n.playing } : null;
+      // konum imzaya girmez (her turda değişir); gönderilirken eklenir, TV aradaki süreyi kendisi sayar
       const sig = JSON.stringify(now), last = spNowSig.get(t.id); // değişince, değişmese de dakikada bir (yeni açılan TV de görsün)
       if (last && last.sig === sig && Date.now() - last.at < 60000) continue;
-      spNowSig.set(t.id, { sig, at: Date.now() }); sendTo(t, { type: 'music_now', now });
+      spNowSig.set(t.id, { sig, at: Date.now() }); sendTo(t, { type: 'music_now', now: now && { ...now, progress: n.progress || 0, dur: n.dur || 0 } });
     }
   }, 8000).unref();
   function ensureMusic(db) {
@@ -604,7 +605,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     m.playlists = m.playlists.slice(0, 50);
     if (b.playNow || !m.activeId) { m.activeId = item.id; m.enabled = true; m.playing = true; }
     changed(req.t);
-    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: item.id, music: m });
+    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: item.id, music: tvMusic(m) });
     let warn = '';
     if (b.playNow && item.provider === 'spotify' && SP.external(req.t)) { try { await SP.play(req.t, item, null, m.volume); } catch (e) { warn = e.message; } }
     res.json({ ok: true, item, music: m, warn });
@@ -663,7 +664,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
       } catch (e) { warn = e.message; }
     }
     tenants.save(req.t);
-    sendTo(req.t, { type: 'music_cmd', cmd, rotated, start, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: m });
+    sendTo(req.t, { type: 'music_cmd', cmd, rotated, start, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: tvMusic(m) });
     hub.pushTenant(req.t.id);
     return { code: 200, body: { ok: true, music: m, warn } };
   };
@@ -712,7 +713,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     m.playlists = m.playlists.slice(0, 50);
     if (b.playNow || !m.activeId) { m.activeId = item.id; m.enabled = true; m.playing = true; }
     changed(req.t);
-    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: item.id, music: m });
+    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: item.id, music: tvMusic(m) });
     res.json({ ok: true, item, music: m });
   });
   r.put('/music/custom/:id', (req, res) => {
@@ -728,7 +729,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     }
     if (b.playNow) { m.activeId = it.id; m.enabled = true; m.playing = true; }
     changed(req.t);
-    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: it.id, music: m });
+    if (b.playNow) sendTo(req.t, { type: 'music_cmd', cmd: 'select', id: it.id, music: tvMusic(m) });
     res.json({ ok: true, item: it, music: m });
   });
   // TV'nin bildirdiği o an çalan şarkı (panelin "Şimdi çalıyor" çubuğu için)

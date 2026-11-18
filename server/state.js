@@ -287,4 +287,4 @@ function publicState(t, screenId) {
   };
 }
 
-module.exports = { activeSpecial, happyOn, happySig, hoursOf, catIn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };
+module.exports = { tvMusic, activeSpecial, happyOn, happySig, hoursOf, catIn, menuView, parsePrice, publicState, layoutFor, appVersion, CAMP_QR, pubCamp, mediaList, LANGS };

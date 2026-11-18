@@ -396,6 +396,8 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .mc>h4{margin:0;font-size:1.5vh;letter-spacing:.12em;text-transform:uppercase;color:#8d96a0;font-weight:700}
 #menu .mus{grid-column:1;grid-row:1 / span 3;min-height:0;overflow:hidden}
 #menu .mc:not(.mus){grid-column:2}
+#menu .mpr{display:grid;grid-template-columns:5vh 1fr 5vh;align-items:center;gap:.8vw;font-size:1.6vh;color:#9aa3ad;font-variant-numeric:tabular-nums;margin-top:-.4vh}#menu .mpr span:first-child{text-align:right}
+#menu .mpr .tr{height:.6vh;border-radius:.6vh;background:rgba(255,255,255,.14);overflow:hidden}#menu .mpr .tr i{display:block;height:100%;width:0;background:#fff;border-radius:.6vh}
 #menu .mlib{display:flex;flex-direction:column;gap:1vh;flex:1 1 0;min-height:24vh;border-top:max(1px,.1vh) solid rgba(255,255,255,.08);padding-top:1.4vh}
 #menu .mlh{display:flex;align-items:baseline;gap:1vw;min-width:0}#menu .mlh b{font-size:2.1vh;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#menu .mlh span{font-size:1.6vh;color:#8d96a0;white-space:nowrap}
 #menu .mll{display:flex;flex-direction:column;gap:.6vh;flex:1 1 0;min-height:0;overflow-y:auto;padding:.5vh;margin:-.5vh;contain:content}
@@ -1230,6 +1232,7 @@ html.theme-glass .pill.live::before {
   <div class="mgrid">
     <section class="mc mus" id="mmc"><h4>Müzik</h4>
       <div class="np"><div class="cv" id="mmcv">♪</div><div class="tx"><b id="mmtitle">-</b><span id="mmsub">-</span></div></div>
+      <div class="mpr" id="mmpr" style="visibility:hidden"><span id="mmpe">0:00</span><span class="tr"><i id="mmpf"></i></span><span id="mmpd"></span></div>
       <div class="ctl"><button id="mmprev" type="button" data-nav aria-label="Önceki">⏮</button><button id="mmplay" class="big" type="button" data-nav aria-label="Oynat / duraklat">▶</button><button id="mmnext" type="button" data-nav aria-label="Sonraki">⏭</button></div>
       <div class="vol"><button id="mmvolm" type="button" data-nav aria-label="Sesi kıs">−</button><span class="bar"><i id="mmbar"></i></span><button id="mmvolp" type="button" data-nav aria-label="Sesi aç">+</button><b id="mmvol">-</b></div>
       <div class="mlib"><div class="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span></div><div class="mll" id="mml"></div></div>
@@ -3225,15 +3228,22 @@ let mmOpt = null; // iyimser durum (basılınca hemen değişsin): { playing, vo
 function menuMusic() {
   const m = MUS.cfg, it = activeMusicItem(m), has = !!(m && (m.playlists || []).length), on = !!(m && m.enabled && it);
   const opt = mmOpt && Date.now() - mmOpt.at < 2500 ? mmOpt : null;
-  const playing = opt && opt.playing != null ? opt.playing : !!(on && m.playing && !MUS.err);
+  const sp0 = m && m.spotify && m.spotify.ext && it && it.provider === 'spotify' ? MUS.spConnectTrack : null; // kutudaki Spotify'ın bildirdiği gerçek durum
+  const playing = opt && opt.playing != null ? opt.playing : sp0 ? !!(on && !sp0.paused) : !!(on && m.playing && !MUS.err);
   const vol = Math.max(0, Math.min(100, Math.round(opt && opt.vol != null ? opt.vol : (MUS.vol != null ? MUS.vol : (m && m.volume) || 0))));
   const sp = MUS.spConnectTrack;
   $m('mmc').classList.toggle('off', !has);
   $m('mmtitle').textContent = !has ? 'Müzik ayarlanmamış' : sp && sp.title ? sp.title : (on && MUS.trackTitle) || (it && it.title) || 'Müzik kapalı';
-  $m('mmsub').textContent = !has ? 'Panelde Müzik sayfasından bir liste ekleyin' : !on ? 'Kapalı: ▶ ile açın' : MUS.err ? MUS.err : sp && sp.artist ? sp.artist : (MUS.trackSub || '') + (playing ? '' : (MUS.trackSub ? ' · ' : '') + 'duraklatıldı');
+  $m('mmsub').textContent = !has ? 'Panelde Müzik sayfasından bir liste ekleyin' : !on ? 'Kapalı: ▶ ile açın' : sp0 ? (sp0.artist || 'Spotify') + (playing ? '' : ' · duraklatıldı') : MUS.err ? MUS.err : sp && sp.artist ? sp.artist : (MUS.trackSub || '') + (playing ? '' : (MUS.trackSub ? ' · ' : '') + 'duraklatıldı');
   const th = (sp && sp.thumb) || (on && MUS.trackThumb) || (it && it.thumb) || '', cv = $m('mmcv');
   if (cv.dataset.t !== th) { cv.dataset.t = th; cv.style.backgroundImage = th ? `url("${th.replace(/"/g, '%22')}")` : ''; cv.textContent = th ? '' : '♪'; }
   $m('mmplay').textContent = playing ? '⏸' : '▶';
+  // şarkı ilerlemesi: kutudaki Spotify'ın bildirdiği konum + bildirimden beri geçen süre
+  const pr = $m('mmpr');
+  if (sp0 && sp0.dur) {
+    const el = Math.min(sp0.dur, sp0.progress + (!sp0.paused ? (Date.now() - sp0.t0) / 1000 : 0));
+    pr.style.visibility = ''; $m('mmpe').textContent = mlDur(Math.floor(el)) || '0:00'; $m('mmpd').textContent = mlDur(sp0.dur); $m('mmpf').style.width = (el / sp0.dur * 100).toFixed(1) + '%';
+  } else pr.style.visibility = 'hidden';
   $m('mmbar').style.width = vol + '%'; $m('mmvol').textContent = '%' + vol;
   $m('mmus').textContent = on ? `${(it && it.title) || ''} (Ses: %${vol})` : 'Kapalı';
   mlRender();
@@ -4451,7 +4461,7 @@ function connect() {
     else if (m.type === 'trivia') { if (MEDIA_ON && videos.length && !big.showing && !camp.showing && !triviaOn && !trailerOn) { window.__pendingTrivia = m; holdForEnd(); } else playTrivia(m.mode, m.cat, true, m.id); } // o anki içerik bitince
     else if (m.type === 'birthday') birthday(m.texts, m.duration);
     else if (m.type === 'music_cmd') onMusicCmd(m);
-    else if (m.type === 'music_now') { const n = m.now; MUS.spConnectTrack = n && n.title ? { title: n.title, artist: n.artist || '', thumb: n.thumb || '', paused: !n.playing } : null; renderMusicBar(); }
+    else if (m.type === 'music_now') { const n = m.now; MUS.spConnectTrack = n && n.title ? { title: n.title, artist: n.artist || '', thumb: n.thumb || '', paused: !n.playing, progress: +n.progress || 0, dur: +n.dur || 0, t0: Date.now() } : null; renderMusicBar(); if ($m('menu').classList.contains('on')) menuMusic(); }
     else if (m.type === 'music_tracks') onMusicTracks(m);
     else if (m.type === 'music_list') onMusicList(m);
   };

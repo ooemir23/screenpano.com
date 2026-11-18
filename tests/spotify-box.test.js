@@ -53,3 +53,30 @@ test('bağlı hesapta müziği her zaman harici cihaz (kutudaki Spotify) çalar'
   assert.equal(SP.external(T({ target: 'screenpano' })), true);
   assert.equal(SP.external({ id: 'x', db: { music: { spotify: {} } } }), false);
 });
+
+test('TV\'ye giden müzik: Spotify anahtarları ayıklanır, harici cihaz bayrağı (ext) vardır', () => {
+  // state.js sunucu modüllerini (zamanlayıcılar, veritabanı) yükler: ayrı süreçte, geçici veri klasörüyle çalıştırılır
+  const os = require('os'), path = require('path'), fs = require('fs'), { spawnSync } = require('child_process');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sp-test-'));
+  const code = `const { tvMusic } = require(${JSON.stringify(path.join(__dirname, '..', 'server', 'state'))});
+    const m = { enabled: true, playlists: [], spotify: { refreshToken: 'gizli-r', accessToken: 'gizli-a', expiresAt: 1, target: 'screenpano', targetName: 'x', name: 'hesap' } };
+    const x = tvMusic(m);
+    process.stdout.write(JSON.stringify({ x, kept: m.spotify.refreshToken, empty: tvMusic({ playlists: [], spotify: {} }).spotify.ext }));
+    process.exit(0);`;
+  const r = spawnSync(process.execPath, ['-e', code], { env: { ...process.env, DATA_DIR: dir }, encoding: 'utf8', timeout: 30000 });
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.equal(r.status, 0, r.stderr);
+  const o = JSON.parse(r.stdout), s = JSON.stringify(o.x);
+  assert.ok(!s.includes('gizli-r') && !s.includes('gizli-a'), 'anahtar sızdı');
+  assert.equal(o.x.spotify.ext, true);
+  assert.equal(o.x.spotify.target, '');
+  assert.equal(o.kept, 'gizli-r', 'kayıtlı veri değişmemeli');
+  assert.equal(o.empty, false);
+});
+
+test('routes-ext: TV\'ye giden her music_cmd mesajı tvMusic ile ayıklanır', () => {
+  const src = require('fs').readFileSync(require.resolve('../server/routes-ext.js'), 'utf8');
+  const sends = src.match(/sendTo\([^\n]*type: 'music_cmd'[^\n]*/g) || [];
+  assert.ok(sends.length >= 4);
+  for (const l of sends) assert.ok(/music: tvMusic\(m\)/.test(l), l.trim().slice(0, 120));
+});
