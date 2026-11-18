@@ -119,7 +119,7 @@
 .spp.t-tahmin .pill.hot{background:var(--tc);color:#111;border-color:transparent}
 .spp.t-tahmin .biz{font-size:1.9em;font-weight:700;line-height:1.05;opacity:.95;overflow-wrap:anywhere;margin-top:.25em}
 .spp.t-tahmin .biz.lg{font-size:1.55em}.spp.t-tahmin .biz.xl{font-size:1.25em}
-.spp.t-tahmin h1{margin:-.05em 0 0;font-size:4.9em;font-weight:900;line-height:.98;letter-spacing:-.03em;text-transform:uppercase;
+.spp.t-tahmin h1{margin:-.15em 0 -.1em;padding:.1em .06em .1em 0;font-size:4.9em;font-weight:900;line-height:.98;letter-spacing:-.03em;text-transform:uppercase;
   background:linear-gradient(180deg,#fff 0%,#fff 45%,color-mix(in srgb,var(--tc) 70%,#fff) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .06em .12em rgba(0,0,0,.45))}
 .spp.t-tahmin h1 em{font-style:normal;display:block;margin-top:.04em;color:var(--tc);-webkit-text-fill-color:var(--tc)}
 .spp.t-tahmin .prz{display:flex;align-items:center;gap:.9em;padding:.85em 1.1em;border-radius:.8em;
@@ -164,7 +164,7 @@
 .spp.t-dogan>*:not(.cf):not(.bl){position:relative;z-index:1}
 .spp.t-dogan .k{display:inline-flex;align-items:center;gap:.6em;font-size:.95em;font-weight:800;letter-spacing:.18em;text-transform:uppercase;padding:.5em 1.1em;border-radius:99em;background:rgba(255,255,255,.08);border:.06em solid rgba(255,255,255,.18)}
 .spp.t-dogan .k b{color:var(--g)}
-.spp.t-dogan h1{margin:0;font-size:5.4em;font-weight:900;line-height:.95;letter-spacing:-.025em;background:linear-gradient(180deg,#fff 20%,color-mix(in srgb,var(--g) 85%,#fff) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .06em .14em rgba(0,0,0,.5))}
+.spp.t-dogan h1{margin:-.12em 0 -.16em;padding:.12em .08em .16em;font-size:5.4em;font-weight:900;line-height:1.05;letter-spacing:-.025em;background:linear-gradient(180deg,#fff 20%,color-mix(in srgb,var(--g) 85%,#fff) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .06em .14em rgba(0,0,0,.5))}
 .spp.t-dogan .nm{display:flex;flex-wrap:wrap;justify-content:center;gap:.7em;max-width:100%}
 .spp.t-dogan .n{display:inline-flex;align-items:center;gap:.45em;font-weight:800;padding:.42em .95em;border-radius:.6em;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06));border:.08em solid color-mix(in srgb,var(--g) 55%,transparent);box-shadow:0 .4em 1.2em rgba(0,0,0,.35);white-space:nowrap}
 .spp.t-dogan .n i{font-style:normal}
