@@ -153,11 +153,21 @@ const sha = v => crypto.createHash('sha256').update(String(v)).digest('hex');
 function cfg(t) {
   const d = t.db.predict || (t.db.predict = {});
   if (!d.code) d.code = rnd(8);
+  if (!d.qk) d.qk = rnd(16); // ekrandaki QR anahtarı ve e-posta aboneliğinden çıkma bağlantısı için işletmeye özel sır
   d.users = d.users || {}; d.picks = d.picks || {}; d.awards = d.awards || {};
   if (typeof d.prize !== 'string') d.prize = '';
   return d;
 }
 const urlOf = t => `${config.BASE_URL}/lig/${cfg(t).code}`;
+// Ekrandaki QR'da 2 saatte bir değişen anahtar (k): yeni kayıt yalnız bununla yapılır; işletmede olmayan,
+// eski/paylaşılmış bağlantıyla gelen kişi kayıt olamaz. Geçerlilik: içinde bulunulan ve bir önceki pencere (2–4 saat).
+const QR_WIN = 2 * 3600e3;
+const qrWin = (ms = Date.now()) => Math.floor(ms / QR_WIN);
+const qrKey = (t, w = qrWin()) => sha(cfg(t).qk + '|' + w).slice(0, 10);
+const qrValid = (t, k) => { k = String(k || ''); return /^[a-f0-9]{10}$/.test(k) && (k === qrKey(t) || k === qrKey(t, qrWin() - 1)); };
+const joinUrl = t => `${urlOf(t)}?k=${qrKey(t)}`;
+const unsubSig = (t, uid) => sha(cfg(t).qk + '|mail|' + uid).slice(0, 24);
+const unsubUrl = (t, uid) => `${config.BASE_URL}/api/lig/${cfg(t).code}/unsub?u=${uid}&s=${unsubSig(t, uid)}`;
 let codeIdx = null, codeAt = 0;
 function byCode(code) {
   code = String(code || '').toLowerCase();
@@ -201,15 +211,33 @@ async function settle() {
     const b = board(t, prev), w = b[0];
     d.awards[prev] = w && w.pts > 0 ? { uid: w.uid, nick: w.nick, pts: w.pts, at: Date.now(), given: false, prize: d.prize || '' } : { none: true, at: Date.now() };
     tenants.save(t);
-    const u = w && w.pts > 0 && d.users[w.uid];
-    if (u && u.email) {
-      try {
-        const T = require('./mailtpl'), esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        await require('./mailer').send({ to: u.email, subject: `${t.name}: haftanın tahmin ligi birincisisiniz!`,
-          text: `Tebrikler ${u.nick}! ${weekLabel(prev)} haftasında ${w.pts} puanla ${t.name} tahmin liginin birincisi oldunuz.${d.prize ? ' Ödülünüz: ' + d.prize + '.' : ''} Ödülünüzü almak için işletmeye bu e-postayı ve takma adınızı gösterin.`,
-          html: T.html({ title: 'Haftanın birincisisiniz!', preheader: `${t.name} tahmin ligi`, body: `<p>Tebrikler <b>${esc(u.nick)}</b>! ${esc(weekLabel(prev))} haftasında <b>${w.pts} puanla</b> ${esc(t.name)} tahmin liginin birincisi oldunuz.</p>${d.prize ? `<p>Ödülünüz: <b>${esc(d.prize)}</b></p>` : ''}<p>Ödülünüzü almak için işletmeye bu e-postayı ve takma adınızı gösterin.</p>` }) });
-      } catch (e) { console.error('Tahmin ligi kazanan e-postası gönderilemedi', t.id, e.message); }
-    }
+    mailWeek(t, prev, b).catch(e => console.error('Tahmin ligi haftalık e-postaları gönderilemedi', t.id, e.message));
+  }
+}
+
+// Haftalık puan durumu e-postası: her katılımcıya bir e-posta (birinciye tebrik + ödül, diğerlerine kendi sırası).
+// Reklam içermez; her e-postada tek tıkla çıkma bağlantısı vardır. Hafta başına bir kez (awards[hafta].mailed).
+const escH = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+async function mailWeek(t, key, b) {
+  const d = cfg(t), aw = d.awards[key]; if (!aw || aw.mailed) return;
+  aw.mailed = Date.now(); tenants.save(t);
+  const T = require('./mailtpl'), mailer = require('./mailer'), label = weekLabel(key), top = b.slice(0, 10), w = !aw.none && b[0];
+  const byUid = new Map(b.map(r => [r.uid, r]));
+  const table = top.length ? `<table style="width:100%;border-collapse:collapse;font-size:14px">${top.map(r => `<tr><td style="padding:6px 4px;border-bottom:1px solid #eee;width:28px;color:#888;font-weight:700">${r.rank}</td><td style="padding:6px 4px;border-bottom:1px solid #eee">${escH(r.nick)}</td><td style="padding:6px 4px;border-bottom:1px solid #eee;text-align:right;font-weight:800">${r.pts}</td></tr>`).join('')}</table>` : '<p>Bu hafta puan alan olmadı.</p>';
+  for (const [uid, u] of Object.entries(d.users)) {
+    if (!u || u.off || u.noMail || !u.email) continue;
+    const me = byUid.get(uid), won = w && w.uid === uid && w.pts > 0;
+    const head = won ? `<p>Tebrikler <b>${escH(u.nick)}</b>! <b>${w.pts} puanla</b> haftanın birincisi oldunuz.</p>${aw.prize ? `<p>Ödülünüz: <b>${escH(aw.prize)}</b>. Almak için işletmeye bu e-postayı ve kullanıcı adınızı gösterin.</p>` : ''}`
+      : me ? `<p>Merhaba ${escH(u.nick)}, bu hafta <b>${me.pts} puanla ${me.rank}. sıradasınız</b>.</p>` : `<p>Merhaba ${escH(u.nick)}, bu hafta tahmin girmediniz. Yeni haftanın maçları tahmine açık.</p>`;
+    const body = `${head}<p style="margin:16px 0 6px;font-weight:700">${escH(label)} puan durumu</p>${table}${w && !won ? `<p>🏆 Haftanın birincisi: <b>${escH(w.nick)}</b> (${w.pts} puan)</p>` : ''}`
+      + `<p><a href="${urlOf(t)}">Yeni haftanın tahminlerini gir</a></p><p style="color:#888;font-size:12px">Bu e-posta yalnız tahmin ligi puan durumu içindir; reklam içermez. Haftalık e-postaları almak istemiyorsanız: <a href="${unsubUrl(t, uid)}">e-postaları kapat</a></p>`;
+    try {
+      await mailer.send({ to: u.email, subject: won ? `${t.name}: haftanın tahmin ligi birincisisiniz!` : `${t.name} Tahmin Ligi · ${label} puan durumu`,
+        text: `${t.name} Tahmin Ligi · ${label}\n` + (won ? `Tebrikler, ${w.pts} puanla haftanın birincisi oldunuz.${aw.prize ? ' Ödülünüz: ' + aw.prize + '.' : ''}\n` : me ? `Bu hafta ${me.pts} puanla ${me.rank}. sıradasınız.\n` : '')
+          + top.map(r => `${r.rank}. ${r.nick} — ${r.pts}`).join('\n') + `\n\nTahmin: ${urlOf(t)}\nE-postaları kapat: ${unsubUrl(t, uid)}`,
+        html: T.html({ title: won ? 'Haftanın birincisisiniz!' : 'Haftalık puan durumu', preheader: `${t.name} Tahmin Ligi`, body }) });
+    } catch (e) { console.error('Tahmin ligi e-postası gönderilemedi', t.id, e.message); }
+    await new Promise(r => setTimeout(r, 300)); // SMTP'yi boğmamak için
   }
 }
 
@@ -225,12 +253,15 @@ function prune(t) {
   if (ch) tenants.save(t);
 }
 
-let started = false;
+let started = false, lastWin = null;
 function start() {
   if (started) return; started = true;
   const tick = async () => {
     const any = tenants.all().some(t => t.db.predict && t.db.predict.on);
     if (!any) return;
+    const w = qrWin(); // QR anahtarı değişti: ekranlara yeni QR gitsin
+    if (lastWin !== null && w !== lastWin) for (const t of tenants.all()) if (t.db.predict && t.db.predict.on) { try { require('./hub').pushTenant(t.id); } catch (e) {} }
+    lastWin = w;
     try { await refreshFixtures(); await refreshResults(); await settle(); } catch (e) { console.error('Tahmin ligi güncellenemedi', e.message); }
   };
   setTimeout(tick, 20e3);
@@ -253,7 +284,7 @@ function qrSvg(url) {
 // TV'de döngü arasına giren "Tahmin Ligi" afişi için veri (yalnız açıkken)
 function tvView(t) {
   if (!isOn(t)) return null;
-  const d = cfg(t), key = weekKey(Date.now()), url = urlOf(t);
+  const d = cfg(t), key = weekKey(Date.now()), url = joinUrl(t);
   const top = board(t, key).slice(0, 5).map(r => ({ nick: r.nick, pts: r.pts }));
   const lastKey = weekKey(Date.now() - 7 * DAY), lw = d.awards[lastKey];
   const left = weekMatches(key).filter(m => m.st === 'pre' && m.at > Date.now()).length;
@@ -262,5 +293,5 @@ function tvView(t) {
     last: lw && !lw.none ? { nick: lw.nick, pts: lw.pts, week: weekLabel(lastKey) } : null, every: Math.max(3, Math.min(30, Number(d.every) || 8)) };
 }
 
-module.exports = { PTS, LEAGUE, start, cfg, urlOf, byCode, isOn, board, pointsFor, weekKey, weekLabel, weekRange, weekStart, weekMatches, weekDone,
+module.exports = { PTS, LEAGUE, qrKey, qrValid, joinUrl, unsubSig, mailWeek, start, cfg, urlOf, byCode, isOn, board, pointsFor, weekKey, weekLabel, weekRange, weekStart, weekMatches, weekDone,
   squad, refreshFixtures, refreshResults, settle, tvView, qrSvg, sha, rnd, prune, get matches() { return C.matches; }, _cache: C };

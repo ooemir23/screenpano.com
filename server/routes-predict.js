@@ -1,5 +1,5 @@
 // Tahmin Ligi yolları: müşteri sayfası (/lig/:kod), müşteri API'si (/api/lig/:kod/...) ve panel API'si (/api/admin/predict...).
-// Müşteri girişi: e-postaya 6 haneli kod; doğrulanınca rastgele oturum anahtarı (yalnız özeti saklanır).
+// Müşteri girişi yalnız Google ile; yeni kayıt ekrandaki QR'ın değişen anahtarını (k) ister. Oturum anahtarının yalnız özeti saklanır.
 const express = require('express');
 const crypto = require('crypto');
 const P = require('./predict');
@@ -22,19 +22,29 @@ function birth(v) {
   if (age < 0 || age > 120) return null;
   return { bd: m[0], age };
 }
-// yeni katılımcı bilgileri (e-posta ve Google kaydı ortak): hata metni ya da null
-function newUserError(d, { nick, bd, consent }) {
-  if (!NICK.test(nick)) return 'Takma ad 3–20 karakter olmalı (harf, rakam, boşluk, . _ -)';
+// ad / soyad: harf, boşluk, kesme ve tire; 2–30 karakter
+const NAME = /^[\p{L}][\p{L} '’.-]{1,29}$/u;
+const cap = v => String(v || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr').replace(/(^|[\s'’-])(\p{L})/gu, (m, a, b) => a + b.toLocaleUpperCase('tr'));
+// yeni katılımcı bilgileri: hata metni ya da null
+function newUserError(d, { ad, soyad, bd, consent }) {
+  if (!NAME.test(ad)) return 'Adınızı yazın';
+  if (!NAME.test(soyad)) return 'Soyadınızı yazın';
   const b = birth(bd); if (!b) return bd ? 'Geçerli bir doğum tarihi girin' : 'Doğum tarihinizi girin';
   if (d.minAge && b.age < d.minAge) return `Bu lige ${d.minAge} yaş ve üzeri katılabilir`;
   if (consent !== true) return 'Devam etmek için aydınlatma metnini onaylayın';
-  if (nickTaken(d, nick)) return 'Bu takma ad alınmış; başka bir tane deneyin';
   return null;
 }
-const nickTaken = (d, nick, except) => Object.entries(d.users).some(([id, u]) => id !== except && !u.off && u.nick.toLocaleLowerCase('tr') === nick.toLocaleLowerCase('tr'));
-function newUser(d, { email, nick, bd, consentAt, via }) {
+const nickTaken = (d, nick, except) => Object.entries(d.users).some(([id, u]) => id !== except && u.nick.toLocaleLowerCase('tr') === nick.toLocaleLowerCase('tr'));
+// kullanıcı adı: "Ahmet Y." — doluysa "Ahmet Y. 2", "Ahmet Y. 3"…
+function makeNick(d, ad, soyad) {
+  const first = ad.split(' ')[0].replace(/[^\p{L}\p{N} ._-]/gu, '').slice(0, 14) || 'Oyuncu', base = `${first} ${soyad.replace(/[^\p{L}]/gu, '').charAt(0).toLocaleUpperCase('tr')}.`;
+  if (!nickTaken(d, base)) return base;
+  for (let i = 2; i < 10000; i++) { const n = `${base} ${i}`; if (!nickTaken(d, n)) return n; }
+  return base + ' ' + P.rnd(4);
+}
+function newUser(d, { email, ad, soyad, bd, consentAt, via }) {
   if (Object.keys(d.users).length >= 5000) return null;
-  const uid = P.rnd(10); d.users[uid] = { nick, email, bd, via, at: now(), consentAt, tk: [] };
+  const uid = P.rnd(10); d.users[uid] = { nick: makeNick(d, ad, soyad), ad, soyad, email, bd, via, at: now(), consentAt, tk: [] };
   return uid;
 }
 function issue(t, u) {
@@ -54,9 +64,6 @@ function limited(key, max, winMs) {
   if (hits.size > 20000) for (const [k, v] of hits) if (!v.length || t - v[v.length - 1] > 3600e3) hits.delete(k);
   return false;
 }
-// bekleyen e-posta kodları: tid|e-posta → { h (kod özeti), exp, tries, nick }
-const pending = new Map();
-
 // ---- müşteri isteği: işletme ve (varsa) oturumdaki kullanıcı ----
 function ctx(req, res) {
   const t = P.byCode(req.params.code);
@@ -95,8 +102,8 @@ pub.get('/:code/state', async (req, res) => {
   const strip = r => r && { rank: r.rank, nick: r.nick, pts: r.pts, me: r.uid === uid };
   const lastKey = P.weekKey(now() - 7 * 86400e3), lw = d.awards[lastKey];
   res.json({
-    biz: t.name, prize: d.prize || '', pts: P.PTS, google: googleOn(), minAge: d.minAge || 0,
-    me: user ? { nick: user.nick, email: user.email.replace(/^(.).*?(.)?@/, (m, a, b) => a + '•••' + (b || '') + '@') } : null,
+    biz: t.name, prize: d.prize || '', pts: P.PTS, google: googleOn(), minAge: d.minAge || 0, qr: P.qrValid(t, req.query.k),
+    me: user ? { nick: user.nick, mail: !user.noMail, name: [user.ad, user.soyad].filter(Boolean).join(' '), email: user.email.replace(/^(.).*?(.)?@/, (m, a, b) => a + '•••' + (b || '') + '@') } : null,
     week: { key, label: P.weekLabel(key) }, matches: ms.map(m => matchView(m, picks[m.id])),
     next: next.length ? { key: nextKey, label: P.weekLabel(nextKey), matches: next.map(m => matchView(m, picks[m.id])) } : null,
     board: { week: wk.slice(0, 20).map(strip), weekMe: strip(mine(wk)), all: all.slice(0, 20).map(strip), allMe: strip(mine(all)), players: wk.length },
@@ -113,69 +120,26 @@ pub.get('/:code/squad/:mid', async (req, res) => {
   res.json({ home: { name: m.home.name, players: h }, away: { name: m.away.name, players: a } });
 });
 
-// Kayıt / giriş 1: e-postaya kod
-pub.post('/:code/start', async (req, res) => {
-  const c = ctx(req, res); if (!c) return;
-  const b = req.body || {}, email = String(b.email || '').trim().toLowerCase().slice(0, 200), nick = String(b.nick || '').trim().replace(/\s+/g, ' ');
-  if (!EMAIL.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi yazın' });
-  const ex = Object.values(c.d.users).find(u => u.email === email);
-  if (!ex) {
-    const er = newUserError(c.d, { nick, bd: b.bd, consent: b.consent });
-    if (er) return res.status(/alınmış/.test(er) ? 409 : 400).json({ error: er, need: 'new' });
-  } else if (ex.off) return res.status(403).json({ error: 'Bu hesap işletme tarafından kapatıldı' });
-  const ip = clientIp(req);
-  if (limited('ip|' + ip, 10, 3600e3) || limited('em|' + email, 5, 3600e3) || limited('em1|' + email, 1, 50e3)) return res.status(429).json({ error: 'Çok sık kod istendi; biraz sonra tekrar deneyin' });
-  const otp = String(crypto.randomInt(0, 1e6)).padStart(6, '0');
-  pending.set(c.t.id + '|' + email, { h: P.sha(otp + email), exp: now() + 15 * 60e3, tries: 0, nick: ex ? ex.nick : nick, bd: ex ? ex.bd : birth(b.bd).bd, consentAt: ex ? ex.consentAt : now() });
-  try {
-    const T = require('./mailtpl');
-    await require('./mailer').send({ to: email, subject: `${c.t.name} tahmin ligi giriş kodunuz: ${otp}`,
-      text: `${c.t.name} tahmin ligine giriş kodunuz: ${otp}\nKod 15 dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı yok sayın.`,
-      html: T.html({ title: 'Giriş kodunuz', preheader: `${c.t.name} tahmin ligi`, body: `<p>${esc(c.t.name)} tahmin ligine giriş kodunuz:</p><p style="font-size:30px;font-weight:800;letter-spacing:6px">${otp}</p><p>Kod 15 dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı yok sayın.</p><p style="color:#888;font-size:12px">Bu adrese reklam veya tanıtım e-postası gönderilmez.</p>` }) });
-  } catch (e) { pending.delete(c.t.id + '|' + email); return res.status(503).json({ error: 'E-posta gönderilemedi; biraz sonra tekrar deneyin' }); }
-  res.json({ ok: true, known: !!ex });
-});
-
-// Kayıt / giriş 2: kodu doğrula → oturum anahtarı
-pub.post('/:code/verify', (req, res) => {
-  const c = ctx(req, res); if (!c) return;
-  const b = req.body || {}, email = String(b.email || '').trim().toLowerCase(), otp = String(b.otp || '').replace(/\D/g, '');
-  const k = c.t.id + '|' + email, p = pending.get(k);
-  if (!p || p.exp < now()) { pending.delete(k); return res.status(400).json({ error: 'Kodun süresi doldu; yeni kod isteyin' }); }
-  if (++p.tries > 5) { pending.delete(k); return res.status(429).json({ error: 'Çok fazla hatalı deneme; yeni kod isteyin' }); }
-  if (P.sha(otp + email) !== p.h) return res.status(400).json({ error: 'Kod hatalı' });
-  pending.delete(k);
-  const d = c.d;
-  let uid = Object.keys(d.users).find(id => d.users[id].email === email);
-  if (!uid) {
-    if (nickTaken(d, p.nick)) return res.status(409).json({ error: 'Bu takma ad az önce alındı; başka bir tane deneyin' });
-    uid = newUser(d, { email, nick: p.nick, bd: p.bd, consentAt: p.consentAt, via: 'email' });
-    if (!uid) return res.status(403).json({ error: 'Lig dolu' });
-  } else if (d.users[uid].off) return res.status(403).json({ error: 'Bu hesap işletme tarafından kapatıldı' });
-  const u = d.users[uid];
-  res.json({ ok: true, token: issue(c.t, u), nick: u.nick });
-});
-
-// Google ile ilk kayıt: Google dönüşünde imzalı e-posta belirteci (gt) + takma ad, doğum tarihi, onay
+// Google ile ilk kayıt: Google dönüşündeki imzalı belirteç (gt; QR anahtarı orada doğrulandı) + ad, soyad, doğum tarihi, onay
 pub.post('/:code/gsignup', (req, res) => {
   const c = ctx(req, res); if (!c) return;
   const b = req.body || {}, g = auth.verify(String(b.gt || ''));
-  if (!g || g.kind !== 'lig_g' || g.tid !== c.t.id || !g.email) return res.status(400).json({ error: 'Google oturumunun süresi doldu; yeniden deneyin' });
+  if (!g || g.kind !== 'lig_g' || g.tid !== c.t.id || !g.email) return res.status(400).json({ error: 'Oturumun süresi doldu; ekrandaki QR kodu yeniden okutun' });
   const d = c.d, email = String(g.email).toLowerCase();
   let uid = Object.keys(d.users).find(id => d.users[id].email === email);
   if (!uid) {
-    const nick = String(b.nick || '').trim().replace(/\s+/g, ' ');
-    const er = newUserError(d, { nick, bd: b.bd, consent: b.consent });
-    if (er) return res.status(/alınmış/.test(er) ? 409 : 400).json({ error: er });
-    uid = newUser(d, { email, nick, bd: birth(b.bd).bd, consentAt: now(), via: 'google' });
+    const ad = cap(b.ad), soyad = cap(b.soyad);
+    const er = newUserError(d, { ad, soyad, bd: b.bd, consent: b.consent });
+    if (er) return res.status(400).json({ error: er });
+    uid = newUser(d, { email, ad, soyad, bd: birth(b.bd).bd, consentAt: now(), via: 'google' });
     if (!uid) return res.status(403).json({ error: 'Lig dolu' });
   } else if (d.users[uid].off) return res.status(403).json({ error: 'Bu hesap işletme tarafından kapatıldı' });
   const u = d.users[uid];
   res.json({ ok: true, token: issue(c.t, u), nick: u.nick });
 });
-// Google dönüşü (routes-auth geri çağrısından): kayıtlıysa oturum aç, değilse kayıt formuna imzalı e-posta taşı.
+// Google dönüşü (routes-auth geri çağrısından): kayıtlıysa oturum aç; değilse QR anahtarı geçerliyse kayıt formuna imzalı e-posta taşı.
 // Oturum anahtarı adres çubuğunda # içinde taşınır (sunucuya ve günlüklere gitmez), sayfa hemen siler.
-function googleDone(req, res, code, email) {
+function googleDone(req, res, code, email, k, gn) {
   const t = P.byCode(code), back = h => res.redirect(`/lig/${encodeURIComponent(String(code))}#${h}`);
   if (!t || !P.isOn(t)) return back('gerr=kapali');
   const d = P.cfg(t), uid = Object.keys(d.users).find(id => d.users[id].email === email);
@@ -183,8 +147,24 @@ function googleDone(req, res, code, email) {
     if (d.users[uid].off) return back('gerr=kapatildi');
     return back('tk=' + issue(t, d.users[uid]));
   }
-  back('gs=' + encodeURIComponent(auth.sign({ kind: 'lig_g', tid: t.id, email, exp: now() + 20 * 60e3 })) + '&ge=' + encodeURIComponent(email));
+  if (!P.qrValid(t, k)) return back('gerr=qr'); // işletmedeki ekranı okutmadan yeni kayıt yok
+  const q = new URLSearchParams({ gs: auth.sign({ kind: 'lig_g', tid: t.id, email, exp: now() + 20 * 60e3 }), ge: email, ga: cap(gn && gn.ad).slice(0, 30), gy: cap(gn && gn.soyad).slice(0, 30) });
+  back(q.toString());
 }
+// Haftalık e-postayı kapat / aç
+pub.get('/:code/unsub', (req, res) => {
+  const t = P.byCode(req.params.code), uid = String(req.query.u || ''), d = t && P.cfg(t), u = d && d.users[uid];
+  res.type('html');
+  if (!u || String(req.query.s || '') !== P.unsubSig(t, uid)) return res.status(400).send('<meta charset="utf-8"><p style="font:16px sans-serif;padding:24px">Bağlantı geçersiz.</p>');
+  u.noMail = true; tenants.save(t);
+  res.send(`<meta charset="utf-8"><meta name="viewport" content="width=device-width"><p style="font:16px sans-serif;padding:24px">${esc(t.name)} Tahmin Ligi haftalık e-postaları kapatıldı. Tahmin sayfasından yeniden açabilirsiniz.</p>`);
+});
+pub.post('/:code/mail', (req, res) => {
+  const c = ctx(req, res); if (!c) return;
+  if (!c.uid) return res.status(401).json({ error: 'Önce giriş yapın' });
+  c.user.noMail = (req.body || {}).on === false ? true : undefined; if (!c.user.noMail) delete c.user.noMail;
+  tenants.save(c.t); res.json({ ok: true, mail: !c.user.noMail });
+});
 
 // Tahmin kaydet (maç başlayana kadar değiştirilebilir). Boş alanlar tahmin edilmemiş sayılır.
 pub.post('/:code/pick', (req, res) => {
@@ -253,7 +233,8 @@ function admin(r, { changed, ownerOnly }) {
       last: { key: lastKey, label: P.weekLabel(lastKey), done: P.weekDone(lastKey) },
       awards: Object.entries(d.awards).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12).map(([k, a]) => ({ key: k, label: P.weekLabel(k), ...(a.none ? { none: true } : { nick: a.nick, pts: a.pts, given: !!a.given, prize: a.prize || '', email: mask((d.users[a.uid] || {}).email) }) })),
       minAge: d.minAge || 0,
-      users: Object.entries(d.users).map(([uid, u]) => { const b = birth(u.bd); return { uid, nick: u.nick, email: mask(u.email), at: u.at, off: !!u.off, age: b ? b.age : null, via: u.via || 'email', n: Object.keys(d.picks[uid] || {}).length }; }).sort((a, b) => b.at - a.at).slice(0, 500),
+      google: googleOn(),
+      users: Object.entries(d.users).map(([uid, u]) => { const b = birth(u.bd); return { uid, nick: u.nick, name: [u.ad, u.soyad].filter(Boolean).join(' '), mail: !u.noMail, email: mask(u.email), at: u.at, off: !!u.off, age: b ? b.age : null, via: u.via || 'email', n: Object.keys(d.picks[uid] || {}).length }; }).sort((a, b) => b.at - a.at).slice(0, 500),
       userCount: Object.keys(d.users).length,
     };
   };
@@ -279,20 +260,25 @@ function admin(r, { changed, ownerOnly }) {
   r.get('/predict/user/:uid', ownerOnly, (req, res) => {
     const d = P.cfg(req.t), uid = String(req.params.uid), u = d.users[uid];
     if (!u) return res.status(404).json({ error: 'Katılımcı bulunamadı' });
-    res.json({ uid, nick: u.nick, email: u.email, bd: u.bd || '', via: u.via || 'email', at: u.at, off: !!u.off, picks: Object.keys(d.picks[uid] || {}).length });
+    res.json({ uid, nick: u.nick, ad: u.ad || '', soyad: u.soyad || '', mail: !u.noMail, email: u.email, bd: u.bd || '', via: u.via || 'email', at: u.at, off: !!u.off, picks: Object.keys(d.picks[uid] || {}).length });
   });
   r.put('/predict/user/:uid', ownerOnly, (req, res) => {
     const d = P.cfg(req.t), uid = String(req.params.uid), u = d.users[uid], b = req.body || {};
     if (!u) return res.status(404).json({ error: 'Katılımcı bulunamadı' });
     const nick = String(b.nick == null ? u.nick : b.nick).trim().replace(/\s+/g, ' ');
     const email = String(b.email == null ? u.email : b.email).trim().toLowerCase().slice(0, 200);
-    if (!NICK.test(nick)) return res.status(400).json({ error: 'Takma ad 3–20 karakter olmalı (harf, rakam, boşluk, . _ -)' });
-    if (nickTaken(d, nick, uid)) return res.status(409).json({ error: 'Bu takma ad başka bir katılımcıda' });
+    if (!NICK.test(nick)) return res.status(400).json({ error: 'Kullanıcı adı 3–20 karakter olmalı (harf, rakam, boşluk, . _ -)' });
+    if (nickTaken(d, nick, uid)) return res.status(409).json({ error: 'Bu kullanıcı adı başka bir katılımcıda' });
     if (!EMAIL.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi yazın' });
     if (Object.entries(d.users).some(([id, x]) => id !== uid && x.email === email)) return res.status(409).json({ error: 'Bu e-posta başka bir katılımcıda' });
     let bd = u.bd;
     if (b.bd != null) { if (b.bd === '') bd = undefined; else { const x = birth(b.bd); if (!x) return res.status(400).json({ error: 'Doğum tarihi geçersiz' }); bd = x.bd; } }
+    const ad = b.ad == null ? u.ad : cap(b.ad), soyad = b.soyad == null ? u.soyad : cap(b.soyad);
+    if (ad && !NAME.test(ad)) return res.status(400).json({ error: 'Ad geçersiz' });
+    if (soyad && !NAME.test(soyad)) return res.status(400).json({ error: 'Soyad geçersiz' });
     if (email !== u.email) u.tk = []; // e-posta değişince eski oturumlar kapanır
+    if (ad) u.ad = ad; if (soyad) u.soyad = soyad;
+    if (typeof b.mail === 'boolean') { if (b.mail) delete u.noMail; else u.noMail = true; }
     u.nick = nick; u.email = email; if (bd) u.bd = bd; else delete u.bd;
     // kesinleşmiş haftalık birincilik kayıtlarındaki takma ad da güncellensin
     for (const a of Object.values(d.awards)) if (a && a.uid === uid) a.nick = nick;

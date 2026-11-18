@@ -94,7 +94,7 @@ const mediaList = (t, screenId) => withPredict(t, require('./platformads').injec
 // Tahmin Ligi: açıkken döngüde her N içerikte bir "puan durumu + katıl QR" afişi (tpl 'tahmin'; TV'de web olarak çizilir)
 function withPredict(t, list) {
   const v = require('./predict').tvView(t); if (!v) return list;
-  const slide = { id: 'tahmin-' + require('crypto').createHash('sha1').update(JSON.stringify([v.top, v.prize, v.week, v.last, !!v.qr])).digest('hex').slice(0, 10), name: 'Tahmin Ligi', type: 'poster', tpl: 'tahmin', fields: {}, predict: v, dur: 15 };
+  const slide = { id: 'tahmin-' + require('crypto').createHash('sha1').update(JSON.stringify([v.top, v.prize, v.week, v.last, v.url, v.biz])).digest('hex').slice(0, 10), name: 'Tahmin Ligi', type: 'poster', tpl: 'tahmin', fields: {}, predict: v, dur: 15 };
   if (!list.length) return [slide];
   const out = []; list.forEach((x, i) => { out.push(x); if ((i + 1) % v.every === 0) out.push(slide); });
   if (list.length < v.every) out.push(slide);

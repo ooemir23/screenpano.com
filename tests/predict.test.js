@@ -59,7 +59,7 @@ test('puan durumu: puan, sonra tam skor, sonra erken tahmin; kapatılan katılı
 test('hafta kapanınca birinci kesinleşir, bir kez e-posta gider; puan alan yoksa kazanan yok', async () => {
   const prev = P.weekKey(Date.now() - 7 * 86400e3), [s] = P.weekRange(prev), at = s + 3 * 86400e3;
   Object.assign(P.matches, { p1: { id: 'p1', at, wk: prev, st: 'post', sc: [0, 0], res: { goals: {}, assists: {}, yc: 1, rc: 0 } }, p2: { id: 'p2', at, wk: prev, st: 'off', sc: null, res: null } });
-  const t = { id: 't2', name: 'Kafe', db: { predict: { on: true, prize: 'Tatlı', users: { w: { nick: 'Kazanan', email: 'w@x.co' }, l: { nick: 'Diğer', email: 'l@x.co' } },
+  const t = { id: 't2', name: 'Kafe', db: { predict: { on: true, prize: 'Tatlı', users: { w: { nick: 'Kazanan', email: 'w@x.co' }, l: { nick: 'Diğer', email: 'l@x.co' }, n: { nick: 'Kapalı', email: 'n@x.co', noMail: true } },
     picks: { w: { p1: { h: 0, a: 0, at: 1 } }, l: { p1: { h: 1, a: 0, at: 1 } } }, awards: {} } } };
   const empty = { id: 't3', name: 'Boş', db: { predict: { on: true, users: { z: { nick: 'Z', email: 'z@x.co' } }, picks: { z: { p1: { h: 1, a: 0, yc: 4, at: 1 } } }, awards: {} } } };
   T.push(t, empty);
@@ -67,7 +67,12 @@ test('hafta kapanınca birinci kesinleşir, bir kez e-posta gider; puan alan yok
   await P.settle(); await P.settle();
   assert.equal(t.db.predict.awards[prev].nick, 'Kazanan'); assert.equal(t.db.predict.awards[prev].pts, 5); assert.equal(t.db.predict.awards[prev].prize, 'Tatlı');
   assert.ok(empty.db.predict.awards[prev].none);
-  assert.equal(MAILS.filter(m => m.to === 'w@x.co').length, 1, 'kazanana tek e-posta');
+  await new Promise(r => setTimeout(r, 1500)); // haftalık e-postalar arka planda sırayla gider
+  const w = MAILS.filter(m => m.to === 'w@x.co'), l = MAILS.filter(m => m.to === 'l@x.co');
+  assert.equal(w.length, 1, 'kazanana tek e-posta'); assert.match(w[0].subject, /birincisisiniz/);
+  assert.equal(l.length, 1, 'diğerine haftalık puan durumu'); assert.match(l[0].html, /2\. sıradasınız/); assert.match(l[0].html, /unsub\?u=l&amp;s=|unsub\?u=l&s=/);
+  assert.equal(MAILS.filter(m => m.to === 'n@x.co').length, 0, 'e-postayı kapatan almaz');
+  assert.equal(MAILS.filter(m => m.to === 'z@x.co').length, 1, 'kazanan olmayan haftada da puan durumu gider');
 });
 
 test('doğum tarihi doğrulama ve yaş', () => {
@@ -77,4 +82,13 @@ test('doğum tarihi doğrulama ve yaş', () => {
   assert.equal(birth('3000-01-01'), null);
   assert.equal(birth('abc'), null);
   const b = birth('2000-01-01'); assert.equal(b.bd, '2000-01-01'); assert.ok(b.age >= 26);
+});
+
+test('QR anahtarı: şimdiki ve bir önceki 2 saatlik pencere geçerli, başka işletmeninki geçersiz', () => {
+  const a = { id: 'qa', db: { predict: {} } }, b = { id: 'qb', db: { predict: {} } };
+  const k = P.qrKey(a);
+  assert.ok(P.qrValid(a, k)); assert.ok(!P.qrValid(b, k)); assert.ok(!P.qrValid(a, '')); assert.ok(!P.qrValid(a, 'zzzzzzzzzz'));
+  const w = Math.floor(Date.now() / 7200e3);
+  assert.ok(P.qrValid(a, P.qrKey(a, w - 1)), 'önceki pencere'); assert.ok(!P.qrValid(a, P.qrKey(a, w - 2)), 'daha eski geçersiz');
+  assert.match(P.joinUrl(a), /\/lig\/[a-z0-9]{8}\?k=[a-f0-9]{10}$/);
 });

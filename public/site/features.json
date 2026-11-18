@@ -1190,11 +1190,11 @@
       "icon": "🎯",
       "title": "İşletmenize özel Süper Lig Tahmin Ligi",
       "short": "Tahmin Ligi",
-      "text": "Müşterileriniz ekrandaki QR'ı okutup Google hesabıyla ya da e-posta koduyla ücretsiz katılır; haftanın istedikleri maçlarına skor, golcü, asist ve kart tahmini girer. Puanlar maç bitince kendiliğinden hesaplanır, işletmenizin adını taşıyan puan durumu ekranda döngü arasında gösterilir. Haftanın birincisine sizin belirlediğiniz ikram verilir. Katılımcılara reklam e-postası gönderilmez.",
+      "text": "Müşterileriniz işletmenizdeki ekranda çıkan QR'ı okutup Google hesaplarıyla tek dokunuşla ücretsiz katılır; yalnız ad, soyad ve doğum tarihi istenir, kullanıcı adı kendiliğinden oluşur. QR birkaç saatte bir yenilendiği için işletmeye gelmeyen kişi kayıt olamaz. Haftanın istedikleri maçlarına skor, golcü, asist ve kart tahmini girerler; puan durumu ekranda gösterilir ve her hafta e-postayla gider. Haftanın birincisine sizin belirlediğiniz ikram verilir. Reklam e-postası gönderilmez.",
       "points": [
         "Skor, golcü, asist, sarı ve kırmızı kart tahmini",
-        "Google ya da e-posta koduyla kayıt, isteğe bağlı 18 yaş sınırı",
-        "Haftanın ilk 5'i ve katılım QR'ı ekranda",
+        "QR'dan doğrudan Google ile kayıt; yalnız işletmedekiler katılabilir",
+        "Haftalık puan durumu ekranda ve e-postayla",
         "Katılımcıları panelden düzenleme, ligden çıkarma ve silme"
       ],
       "plan": "pro",
@@ -1205,11 +1205,11 @@
           "title": "Your own Süper Lig Prediction League",
           "short": "Prediction League",
           "compare": "Süper Lig Prediction League",
-          "text": "Customers scan the QR on screen and join free with their Google account or an email code, then predict the score, scorer, assist and cards for any of the week's matches. Points are calculated automatically after each match and the standings, carrying your business's name, appear on screen between content. The week's winner gets the treat you choose. Participants never receive promotional emails.",
+          "text": "Customers scan the QR on the screen in your venue and join free with one tap using their Google account; only their name and date of birth are asked and a username is created automatically. Because the QR refreshes every few hours, people who aren't at your venue can't sign up. They predict the score, scorer, assist and cards for any of the week's matches; the standings appear on screen and are emailed every week. The week's winner gets the treat you choose. No promotional emails are sent.",
           "points": [
             "Score, scorer, assist, yellow and red card predictions",
-            "Sign up with Google or an email code, optional 18+ age limit",
-            "The week's top 5 and the join QR on screen",
+            "Straight from the QR to Google sign-up; only people at your venue can join",
+            "Weekly standings on screen and by email",
             "Edit, remove or delete participants in the panel"
           ]
         },
@@ -1217,11 +1217,11 @@
           "title": "Ihr eigenes Süper-Lig-Tippspiel",
           "short": "Tippspiel",
           "compare": "Süper-Lig-Tippspiel",
-          "text": "Gäste scannen den QR-Code auf dem Bildschirm und machen kostenlos mit Google-Konto oder E-Mail-Code mit; sie tippen Ergebnis, Torschützen, Vorlage und Karten für beliebige Spiele der Woche. Die Punkte werden nach jedem Spiel automatisch berechnet, die Tabelle mit Ihrem Firmennamen erscheint zwischen den Inhalten. Der Wochensieger bekommt das von Ihnen festgelegte Geschenk. Teilnehmer erhalten keine Werbe-E-Mails.",
+          "text": "Gäste scannen den QR-Code auf dem Bildschirm in Ihrem Lokal und machen mit einem Tipp über ihr Google-Konto kostenlos mit; abgefragt werden nur Name und Geburtsdatum, der Benutzername entsteht automatisch. Da sich der QR-Code alle paar Stunden ändert, kann sich niemand von außerhalb anmelden. Getippt werden Ergebnis, Torschützen, Vorlage und Karten beliebiger Spiele der Woche; die Tabelle erscheint auf dem Bildschirm und kommt jede Woche per E-Mail. Der Wochensieger bekommt Ihr Geschenk. Es werden keine Werbe-E-Mails verschickt.",
           "points": [
             "Tipps auf Ergebnis, Torschützen, Vorlage, Gelb und Rot",
-            "Anmeldung mit Google oder E-Mail-Code, optionale Altersgrenze ab 18",
-            "Top 5 der Woche und Teilnahme-QR auf dem Bildschirm",
+            "Vom QR-Code direkt zur Google-Anmeldung; nur Gäste vor Ort können mitmachen",
+            "Wöchentliche Tabelle auf dem Bildschirm und per E-Mail",
             "Teilnehmer im Panel bearbeiten, ausschließen oder löschen"
           ]
         },
@@ -1229,11 +1229,11 @@
           "title": "دوري توقعات الدوري التركي الخاص بنشاطك",
           "short": "دوري التوقعات",
           "compare": "دوري توقعات الدوري التركي",
-          "text": "يمسح العملاء رمز QR على الشاشة وينضمون مجانًا بحساب Google أو برمز البريد الإلكتروني، ثم يتوقعون النتيجة والهداف وصانع الهدف والبطاقات لأي مباريات يريدونها هذا الأسبوع. تُحسب النقاط تلقائيًا بعد كل مباراة ويظهر الترتيب باسم نشاطك على الشاشة بين المحتوى. يحصل بطل الأسبوع على الضيافة التي تحددها. لا تُرسل أي رسائل إعلانية للمشاركين.",
+          "text": "يمسح العملاء رمز QR على الشاشة في نشاطك وينضمون مجانًا بلمسة واحدة عبر حساب Google؛ ولا يُطلب سوى الاسم وتاريخ الميلاد ويُنشأ اسم المستخدم تلقائيًا. ولأن رمز QR يتجدد كل بضع ساعات، لا يستطيع من هم خارج نشاطك التسجيل. يتوقعون النتيجة والهداف وصانع الهدف والبطاقات لأي مباريات هذا الأسبوع؛ ويظهر الترتيب على الشاشة ويُرسل بالبريد كل أسبوع. يحصل بطل الأسبوع على الضيافة التي تحددها. لا تُرسل رسائل إعلانية.",
           "points": [
             "توقع النتيجة والهداف وصانع الهدف والبطاقات الصفراء والحمراء",
-            "التسجيل عبر Google أو رمز البريد، مع حد عمر 18 اختياري",
-            "أفضل 5 هذا الأسبوع ورمز QR للانضمام على الشاشة",
+            "من رمز QR مباشرة إلى التسجيل عبر Google؛ يشارك الموجودون في نشاطك فقط",
+            "الترتيب الأسبوعي على الشاشة وبالبريد",
             "تعديل المشاركين أو إخراجهم أو حذفهم من اللوحة"
           ]
         }

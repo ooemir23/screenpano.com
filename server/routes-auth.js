@@ -157,7 +157,7 @@ r.get('/google/lig/:code', (req, res) => {
   gNonces.set(n, now + 10 * 60 * 1000);
   const q = new URLSearchParams({
     client_id: g.id, redirect_uri: `${baseOrigin(req)}/api/auth/google/callback`, response_type: 'code',
-    scope: 'openid email', state: auth.sign({ kind: 'g_state', n, lig: code, exp: now + 10 * 60 * 1000 }), prompt: 'select_account',
+    scope: 'openid email profile', state: auth.sign({ kind: 'g_state', n, lig: code, k: /^[a-f0-9]{10}$/.test(String(req.query.k || '')) ? String(req.query.k) : '', exp: now + 10 * 60 * 1000 }), prompt: 'select_account',
   });
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${q}`);
 });
@@ -225,7 +225,7 @@ r.get('/google/callback', async (req, res) => {
     const c = await gVerifyIdToken(tj.id_token, g.id);
     if (!c.email || c.email_verified !== true) return fail('e-posta doğrulanmamış', 'unverified');
     const emLow = String(c.email).toLowerCase();
-    if (lig) return require('./routes-predict').googleDone(req, res, lig, emLow); // panel oturumu açılmaz
+    if (lig) return require('./routes-predict').googleDone(req, res, lig, emLow, st.k || '', { ad: c.given_name || '', soyad: c.family_name || '' }); // panel oturumu açılmaz
     if (gSuperEmails().includes(emLow)) {
       const su = store.sql.prepare("SELECT * FROM users WHERE role = 'super' ORDER BY created ASC LIMIT 1").get();
       if (su) {
