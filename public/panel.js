@@ -3375,7 +3375,8 @@ const APPSTEPS = {
   ],
   spotify: [
     ['Spotify hesabınızla Developer Dashboard\'a girin ve “Create app” düğmesine basın.', 'https://developer.spotify.com/dashboard', 'Dashboard\'ı aç'],
-    ['App name: ScreenPano. Açıklama: istediğiniz bir cümle. Redirect URI: aşağıdaki adresi yapıştırıp “Add” deyin. “Which API/SDKs” bölümünde Web API ve Web Playback SDK\'yı işaretleyin, şartları kabul edip Save\'e basın.'],
+    ['App name: ScreenPano. Açıklama: istediğiniz bir cümle. Redirect URI: aşağıdaki adresi yapıştırıp “Add” deyin. “Which API/SDKs” bölümünde Web API\'yi işaretleyin, şartları kabul edip Save\'e basın. (Spotify, geliştirici uygulaması için Premium hesap ister.)'],
+    ['Panele bu uygulamayı oluşturduğunuz hesaptan başka bir Spotify hesabı bağlayacaksanız: Settings › User Management bölümüne o hesabın adını ve e-postasını ekleyin (en çok 5 hesap).'],
     ['Açılan uygulamada Settings\'e girin: Client ID\'yi kopyalayın; “View client secret” ile Client Secret\'ı da kopyalayın.'],
     ['İkisini aşağıdaki kutulara yapıştırıp Kaydet\'e basın.'],
   ],
@@ -3486,20 +3487,26 @@ function ill(k) {
 function setupHtml() {
   const flow = (cls, title, sub, steps) => `<section class="ytm-flow ${cls}"><div class="ytm-sh"><div><small>${sub}</small><h2>${title}</h2></div></div>
     <ol class="ytm-steps">${steps.map(([k, h, p, lk], i) => `<li><div class="ill">${ill(k)}</div><span class="n">${i + 1}</span><b>${h}</b><p>${p}</p>${lk ? `<a class="ytm-btn sm" href="${lk[0]}"${lk[0][0] === '#' ? '' : ' target="_blank" rel="noopener"'}>${lk[1]}</a>` : ''}</li>`).join('')}</ol></section>`;
+  // adımlar hesabın gerçek durumuna göre: platform anahtarı yoksa önce işletmenin kendi Google/Spotify uygulaması kurulur
+  const yst = YTACC.st || {}, sst = SPACC.st || {};
+  const ytSteps = [
+    ...(!yst.configured ? [['panel', 'Google uygulamanızı kurun (bir kez)', 'Hesaplar sayfasındaki “Kendi Google uygulamamla bağlan” adımlarını izleyin (yaklaşık 10 dakika). Google “doğrulanmamış uygulama” uyarısı gösterirse Gelişmiş › “devam et” ile geçin.', ['#music/accounts', 'Hesaplar sayfasına git']]] : []),
+    ['login', 'Hesabı bağlayın (isteğe bağlı)', 'Hesaplar sayfasında “YouTube ile bağlan”a basın, Google hesabınızı seçip izin verin; yalnız okuma izni istenir. Hesap bağlamadan da arama yapıp kendi listenizi kurabilir ya da hazır listeleri çalabilirsiniz.', ['#music/accounts', 'Hesaplar sayfasına git']],
+    ['list', 'Listenizi seçin', 'Hesabınızdaki listeler Ana sayfada “YouTube listeleriniz” bölümünde görünür; açıp “Kitaplığa ekle”ye basın. “Özel” listeler 🔒 ile görünür ama TV’de çalmaz: YouTube’da “Liste dışı” ya da “Herkese açık” yapın.', ['https://music.youtube.com/library/playlists', 'YouTube Music listelerim']],
+    ['play', 'TV’de çalın', 'Listeyi açıp “Oynat”a basın; müzik birkaç saniye içinde TV’de başlar. YouTube için kutuya ayrı uygulama kurmak gerekmez.'],
+    ['remote', 'Panelden ya da kumandadan yönetin', 'Paneldeki alt çubuk; ya da kumandada Menü tuşu (müzik ve kitaplık), oynat/duraklat, ileri/geri tuşları.'],
+  ];
+  const spSteps = [
+    ['premium', 'Premium hesap', 'Spotify’ı panelden ve kumandadan yönetmek için Spotify Premium gerekir. Ücretsiz hesapta listeler görünür ama çalınamaz.', ['https://www.spotify.com/premium/', 'Premium sayfasını aç']],
+    ...(!sst.configured ? [['panel', 'Spotify uygulamanızı oluşturun (bir kez)', 'Hesaplar sayfasındaki “Kendi Spotify uygulamamla bağlan” adımlarını izleyin. Uygulamayı Premium hesabınızla oluşturun; panele başka bir Spotify hesabı bağlayacaksanız Spotify Dashboard › Settings › User Management’a o hesabın e-postasını ekleyin (en çok 5 hesap).', ['#music/accounts', 'Hesaplar sayfasına git']]] : []),
+    ['box', 'Spotify’ı TV kutusuna kurun', 'Kutunun Google Play mağazasından Spotify’ı kurun (Android TV kutularında “Spotify - Music and Podcasts” TV sürümü) ve panele bağlayacağınız hesapla giriş yapın. Müzik bu uygulamadan çalar; kutuda açık kalsın.', ['https://play.google.com/store/apps/details?id=com.spotify.tv.android', 'Play Store sayfası']],
+    ['login', 'Hesabı bağlayın', 'Hesaplar sayfasında “Spotify ile bağlan”a basın, Spotify hesabınızla giriş yapıp izin verin.', ['#music/accounts', 'Hesaplar sayfasına git']],
+    ['device', 'TV kutusunu seçin', 'Hesaplar › “Çalınacak TV kutusu” listesinden kutunuzu seçin; tek kutu varsa kendiliğinden seçilir. Görünmüyorsa kutuda Spotify’ı açıp Yenile’ye basın. Telefon ve bilgisayar listelenmez.'],
+    ['play', 'Listeden çalın', 'Spotify listenizi açıp “Oynat”a basın. Çalan şarkı TV’de ve panelde görünür; kumandadaki Menü, oynat/duraklat ve ileri/geri tuşlarıyla da yönetilir.'],
+  ];
   return `<div class="ytm-sh"><div><small>Adım adım</small><h2>Müzik kurulumu</h2></div></div>`
-    + (!SPMODE() || !srcAvail('yt') ? flow('yt', 'YouTube Music', 'Ücretsiz • 4 adım', [
-      ['login', 'Hesabı bağlayın', 'Hesaplar sayfasında “YouTube ile bağlan”a basın. Google hesabınızı seçin ve “İzin ver”e tıklayın; yalnız okuma izni istenir.', ['#music/accounts', 'Hesaplar sayfasına git']],
-      ['list', 'Listenizi seçin', 'Listeleriniz Kitaplık’ta görünür. Listeniz yoksa YouTube Music’te oluşturun; “Özel” listeler görünmez, “Liste dışı” ya da “Herkese açık” yapın.', ['https://music.youtube.com/library/playlists', 'YouTube Music listelerim']],
-      ['play', 'TV’de çalın', 'Listeyi açıp “Oynat”a basın. Müzik birkaç saniye içinde TV kutusunda başlar.'],
-      ['remote', 'Telefondan yönetin', 'Alttaki çalar çubuğundan duraklatın, şarkı değiştirin, sesi ayarlayın.'],
-    ]) : '')
-    + (SPMODE() || !srcAvail('spotify') ? flow('sp', 'Spotify', 'Spotify Premium • 5 adım', [
-      ['premium', 'Premium hesap', 'Panelden çalma ve kumanda için Spotify Premium gerekir. Ücretsiz hesapta listeler görünür ama kumanda edilemez.', ['https://www.spotify.com/premium/', 'Premium sayfasını aç']],
-      ['box', 'Spotify’ı TV kutusuna kurun', 'Kutunun Google Play mağazasından Spotify’ı kurun ve aynı hesapla bir kez giriş yapın.', ['https://play.google.com/store/apps/details?id=com.spotify.tv.android', 'Play Store sayfası']],
-      ['login', 'Hesabı bağlayın', 'Hesaplar sayfasında “Spotify ile bağlan”a basın. Spotify hesabınızla giriş yapıp “Kabul ediyorum”a tıklayın.', ['#music/accounts', 'Hesaplar sayfasına git']],
-      ['device', 'Cihazı seçin', 'Hesaplar › “Çalınacak TV kutusu” listesinden kutunuzu seçin (tek kutu varsa kendiliğinden seçilir). Görünmüyorsa kutuda Spotify’ı açıp Yenile’ye basın.'],
-      ['play', 'Listeden çalın', 'Spotify listenizi açıp “Oynat”a basın. Çalan şarkı TV’de ve panelde görünür.'],
-    ]) : '')
+    + (!SPMODE() || !srcAvail('yt') ? flow('yt', 'YouTube Music', `Ücretsiz • ${ytSteps.length} adım`, ytSteps) : '')
+    + (SPMODE() || !srcAvail('spotify') ? flow('sp', 'Spotify', `Spotify Premium • ${spSteps.length} adım`, spSteps) : '')
     + `<p class="ytm-muted" style="margin-top:6px">${ic('info')} Ses TV kutusundan gelir: TV’nin ya da ses sisteminin sesi açık olmalı. Spotify ve YouTube hesap kuralları kişisel kullanım içindir; mekanda ticari yayın için ilgili lisansları kontrol edin.</p>`;
 }
 
