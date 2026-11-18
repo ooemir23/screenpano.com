@@ -131,6 +131,10 @@ app.get('/sw.js', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); re
 app.get('/q/:code', require('./qrtrack').handler);
 // Tek QR ile açılan sayfa (menü, Wi-Fi, bağlantı butonları)
 app.get('/h/:code', require('./hubpage').page);
+// Tahmin Ligi müşteri sayfası ve API'si (QR ile açılır; ayrıntı: server/predict.js)
+app.get('/lig/:code', require('./routes-predict').page);
+app.use('/api/lig', require('./routes-predict').pub);
+require('./predict').start();
 app.get('/h/:code/wifi.mobileconfig', require('./hubpage').profile);
 // Reklam verene gönderilen rapor (giriş istemez, adres tahmin edilemez)
 app.get('/ra/:token', require('./platformads').page); // reklam verene açık rapor (platform reklamları)

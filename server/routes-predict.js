@@ -1,0 +1,225 @@
+// Tahmin Ligi yolları: müşteri sayfası (/lig/:kod), müşteri API'si (/api/lig/:kod/...) ve panel API'si (/api/admin/predict...).
+// Müşteri girişi: e-postaya 6 haneli kod; doğrulanınca rastgele oturum anahtarı (yalnız özeti saklanır).
+const express = require('express');
+const crypto = require('crypto');
+const P = require('./predict');
+const tenants = require('./tenants');
+const { clientIp } = require('./auth');
+
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const col = (v, d) => (/^#[0-9a-f]{6}$/i.test(v || '') ? v : d);
+const EMAIL = /^[^\s@<>()[\]\\,;:"]{1,64}@[a-z0-9.-]{1,190}\.[a-z]{2,24}$/i;
+const NICK = /^[\p{L}\p{N} ._-]{3,20}$/u;
+const now = () => Date.now();
+
+// ---- basit hız sınırı (bellekte) ----
+const hits = new Map();
+function limited(key, max, winMs) {
+  const t = now(), h = hits.get(key) || [];
+  const recent = h.filter(x => t - x < winMs);
+  if (recent.length >= max) { hits.set(key, recent); return true; }
+  recent.push(t); hits.set(key, recent);
+  if (hits.size > 20000) for (const [k, v] of hits) if (!v.length || t - v[v.length - 1] > 3600e3) hits.delete(k);
+  return false;
+}
+// bekleyen e-posta kodları: tid|e-posta → { h (kod özeti), exp, tries, nick }
+const pending = new Map();
+
+// ---- müşteri isteği: işletme ve (varsa) oturumdaki kullanıcı ----
+function ctx(req, res) {
+  const t = P.byCode(req.params.code);
+  if (!t || !P.isOn(t)) { res.status(404).json({ error: 'Bu tahmin ligi şu an kapalı' }); return null; }
+  const d = P.cfg(t);
+  const tk = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+  let uid = null;
+  if (/^[a-f0-9]{64}$/.test(tk)) { const h = P.sha(tk); for (const [id, u] of Object.entries(d.users)) if (!u.off && (u.tk || []).includes(h)) { uid = id; break; } }
+  return { t, d, uid, user: uid ? d.users[uid] : null };
+}
+
+// maç → müşteriye giden görünüm (kendi tahmini ve puanı ile)
+function matchView(m, pick) {
+  const locked = m.st !== 'pre' || m.at <= now();
+  const o = pick ? P.pointsFor(pick, m) : null;
+  return { id: m.id, at: m.at, st: m.st, locked, home: m.home, away: m.away, sc: m.st === 'pre' ? null : m.sc,
+    res: m.res ? { yc: m.res.yc, rc: m.res.rc } : null, pick: pick || null, pts: o };
+}
+
+const pub = express.Router();
+pub.use((req, res, next) => { res.set({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow' }); next(); });
+
+// Durum: haftanın maçları, kendi tahminleri, puan durumu (haftalık + genel), geçen haftanın birincisi
+pub.get('/:code/state', async (req, res) => {
+  const c = ctx(req, res); if (!c) return;
+  P.refreshFixtures().catch(() => {});
+  const { t, d, uid, user } = c, key = P.weekKey(now()), picks = (uid && d.picks[uid]) || {};
+  const nextKey = P.weekKey(now() + 7 * 86400e3);
+  let ms = P.weekMatches(key);
+  // bu haftanın tüm maçları başladıysa gelecek haftanınkiler de açılır (Salı'dan önce tahmin girilebilsin)
+  const openNow = ms.some(m => m.st === 'pre' && m.at > now());
+  const next = openNow ? [] : P.weekMatches(nextKey);
+  const wk = P.board(t, key), all = P.board(t, null);
+  const mine = r => r.find(x => x.uid === uid) || null;
+  const strip = r => r && { rank: r.rank, nick: r.nick, pts: r.pts, me: r.uid === uid };
+  const lastKey = P.weekKey(now() - 7 * 86400e3), lw = d.awards[lastKey];
+  res.json({
+    biz: t.name, prize: d.prize || '', pts: P.PTS,
+    me: user ? { nick: user.nick, email: user.email.replace(/^(.).*?(.)?@/, (m, a, b) => a + '•••' + (b || '') + '@') } : null,
+    week: { key, label: P.weekLabel(key) }, matches: ms.map(m => matchView(m, picks[m.id])),
+    next: next.length ? { key: nextKey, label: P.weekLabel(nextKey), matches: next.map(m => matchView(m, picks[m.id])) } : null,
+    board: { week: wk.slice(0, 20).map(strip), weekMe: strip(mine(wk)), all: all.slice(0, 20).map(strip), allMe: strip(mine(all)), players: wk.length },
+    last: lw && !lw.none ? { nick: lw.nick, pts: lw.pts, week: P.weekLabel(lastKey) } : null,
+  });
+});
+
+// Maçın iki takımının kadrosu (golcü / asist seçimi)
+pub.get('/:code/squad/:mid', async (req, res) => {
+  const c = ctx(req, res); if (!c) return;
+  const m = P.matches[String(req.params.mid)]; if (!m) return res.status(404).json({ error: 'Maç bulunamadı' });
+  const [h, a] = await Promise.all([P.squad(m.home.id), P.squad(m.away.id)]);
+  res.set('Cache-Control', 'private, max-age=600');
+  res.json({ home: { name: m.home.name, players: h }, away: { name: m.away.name, players: a } });
+});
+
+// Kayıt / giriş 1: e-postaya kod
+pub.post('/:code/start', async (req, res) => {
+  const c = ctx(req, res); if (!c) return;
+  const b = req.body || {}, email = String(b.email || '').trim().toLowerCase().slice(0, 200), nick = String(b.nick || '').trim().replace(/\s+/g, ' ');
+  if (!EMAIL.test(email)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi yazın' });
+  const ex = Object.values(c.d.users).find(u => u.email === email);
+  if (!ex) {
+    if (!NICK.test(nick)) return res.status(400).json({ error: 'Takma ad 3–20 karakter olmalı (harf, rakam, boşluk, . _ -)' });
+    if (Object.values(c.d.users).some(u => !u.off && u.nick.toLocaleLowerCase('tr') === nick.toLocaleLowerCase('tr'))) return res.status(409).json({ error: 'Bu takma ad alınmış; başka bir tane deneyin' });
+    if (b.consent !== true) return res.status(400).json({ error: 'Devam etmek için aydınlatma metnini onaylayın' });
+  } else if (ex.off) return res.status(403).json({ error: 'Bu hesap işletme tarafından kapatıldı' });
+  const ip = clientIp(req);
+  if (limited('ip|' + ip, 10, 3600e3) || limited('em|' + email, 5, 3600e3) || limited('em1|' + email, 1, 50e3)) return res.status(429).json({ error: 'Çok sık kod istendi; biraz sonra tekrar deneyin' });
+  const otp = String(crypto.randomInt(0, 1e6)).padStart(6, '0');
+  pending.set(c.t.id + '|' + email, { h: P.sha(otp + email), exp: now() + 15 * 60e3, tries: 0, nick: ex ? ex.nick : nick, consentAt: ex ? ex.consentAt : now() });
+  try {
+    const T = require('./mailtpl');
+    await require('./mailer').send({ to: email, subject: `${c.t.name} tahmin ligi giriş kodunuz: ${otp}`,
+      text: `${c.t.name} tahmin ligine giriş kodunuz: ${otp}\nKod 15 dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı yok sayın.`,
+      html: T.html({ title: 'Giriş kodunuz', preheader: `${c.t.name} tahmin ligi`, body: `<p>${esc(c.t.name)} tahmin ligine giriş kodunuz:</p><p style="font-size:30px;font-weight:800;letter-spacing:6px">${otp}</p><p>Kod 15 dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı yok sayın.</p>` }) });
+  } catch (e) { pending.delete(c.t.id + '|' + email); return res.status(503).json({ error: 'E-posta gönderilemedi; biraz sonra tekrar deneyin' }); }
+  res.json({ ok: true, known: !!ex });
+});
+
+// Kayıt / giriş 2: kodu doğrula → oturum anahtarı
+pub.post('/:code/verify', (req, res) => {
+  const c = ctx(req, res); if (!c) return;
+  const b = req.body || {}, email = String(b.email || '').trim().toLowerCase(), otp = String(b.otp || '').replace(/\D/g, '');
+  const k = c.t.id + '|' + email, p = pending.get(k);
+  if (!p || p.exp < now()) { pending.delete(k); return res.status(400).json({ error: 'Kodun süresi doldu; yeni kod isteyin' }); }
+  if (++p.tries > 5) { pending.delete(k); return res.status(429).json({ error: 'Çok fazla hatalı deneme; yeni kod isteyin' }); }
+  if (P.sha(otp + email) !== p.h) return res.status(400).json({ error: 'Kod hatalı' });
+  pending.delete(k);
+  const d = c.d;
+  let uid = Object.keys(d.users).find(id => d.users[id].email === email);
+  if (!uid) {
+    if (Object.values(d.users).some(u => !u.off && u.nick.toLocaleLowerCase('tr') === p.nick.toLocaleLowerCase('tr'))) return res.status(409).json({ error: 'Bu takma ad az önce alındı; başka bir tane deneyin' });
+    if (Object.keys(d.users).length >= 5000) return res.status(403).json({ error: 'Lig dolu' });
+    uid = P.rnd(10); d.users[uid] = { nick: p.nick, email, at: now(), consentAt: p.consentAt, tk: [] };
+  }
+  const tk = crypto.randomBytes(32).toString('hex'), u = d.users[uid];
+  u.tk = [P.sha(tk), ...(u.tk || [])].slice(0, 5); u.seen = now();
+  tenants.save(c.t);
+  res.json({ ok: true, token: tk, nick: u.nick });
+});
+
+// Tahmin kaydet (maç başlayana kadar değiştirilebilir). Boş alanlar tahmin edilmemiş sayılır.
+pub.post('/:code/pick', (req, res) => {
+  const c = ctx(req, res); if (!c) return;
+  if (!c.uid) return res.status(401).json({ error: 'Önce giriş yapın' });
+  if (limited('pk|' + c.t.id + '|' + c.uid, 60, 60e3)) return res.status(429).json({ error: 'Çok hızlı; biraz bekleyin' });
+  const b = req.body || {}, m = P.matches[String(b.mid || '')];
+  if (!m) return res.status(404).json({ error: 'Maç bulunamadı' });
+  const nowWk = P.weekKey(now()), nextWk = P.weekKey(now() + 7 * 86400e3);
+  if (m.wk !== nowWk && m.wk !== nextWk) return res.status(400).json({ error: 'Bu maça tahmin girilemez' });
+  if (m.st !== 'pre' || m.at <= now()) return res.status(409).json({ error: 'Maç başladı; tahmin değiştirilemez' });
+  const int = (v, lo, hi) => (v === '' || v == null ? undefined : Number.isInteger(+v) && +v >= lo && +v <= hi ? +v : NaN);
+  const h = int(b.h, 0, 20), a = int(b.a, 0, 20), yc = int(b.yc, 0, 20);
+  if ([h, a, yc].some(Number.isNaN)) return res.status(400).json({ error: 'Geçersiz sayı' });
+  if ((h === undefined) !== (a === undefined)) return res.status(400).json({ error: 'Skor için iki takımın golünü de yazın' });
+  const pid = v => (v == null || v === '' ? undefined : /^\d{1,12}$/.test(String(v)) ? String(v) : NaN);
+  const g = pid(b.g), as = pid(b.as);
+  if ([g, as].some(Number.isNaN)) return res.status(400).json({ error: 'Geçersiz oyuncu' });
+  const rc = typeof b.rc === 'boolean' ? b.rc : undefined;
+  const p = { at: now() };
+  if (h !== undefined) { p.h = h; p.a = a; }
+  if (g) { p.g = g; p.gn = String(b.gn || '').slice(0, 60); }
+  if (as) { p.as = as; p.asn = String(b.asn || '').slice(0, 60); }
+  if (yc !== undefined) p.yc = yc;
+  if (rc !== undefined) p.rc = rc;
+  const picks = c.d.picks[c.uid] || (c.d.picks[c.uid] = {});
+  if (Object.keys(p).length === 1) delete picks[m.id]; else picks[m.id] = p; // hepsi boş: tahmin silinir
+  tenants.save(c.t);
+  res.json({ ok: true, pick: picks[m.id] || null });
+});
+
+pub.post('/:code/logout', (req, res) => {
+  const c = ctx(req, res); if (!c) return;
+  if (c.user) { const h = P.sha(String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim()); c.user.tk = (c.user.tk || []).filter(x => x !== h); tenants.save(c.t); }
+  res.json({ ok: true });
+});
+// KVKK: hesabı ve tahminleri sil
+pub.delete('/:code/me', (req, res) => {
+  const c = ctx(req, res); if (!c) return;
+  if (!c.uid) return res.status(401).json({ error: 'Önce giriş yapın' });
+  delete c.d.users[c.uid]; delete c.d.picks[c.uid];
+  tenants.save(c.t);
+  res.json({ ok: true });
+});
+
+// ---- müşteri sayfası ----
+function page(req, res) {
+  const t = P.byCode(req.params.code);
+  res.set({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' });
+  if (!t || !P.isOn(t)) return res.status(404).type('text/plain; charset=utf-8').send('Bu tahmin ligi şu an kapalı');
+  const th = t.db.theme || {}, bg = col(th.bg, '#151717'), ac = col(th.accent, '#906538'), ac2 = col(th.accent2, '#c9955c'), tx = col(th.text, '#fbfbfb');
+  const logo = t.db.logo ? t.upBase + t.db.logo : '';
+  const code = P.cfg(t).code;
+  res.type('html').send(require('./predict-page').html({ name: t.name, logo, code, bg, ac, ac2, tx, esc }));
+}
+
+// ---- panel ----
+function admin(r, { changed, ownerOnly }) {
+  const view = t => {
+    const d = P.cfg(t), key = P.weekKey(now()), lastKey = P.weekKey(now() - 7 * 86400e3);
+    const mask = e => String(e || '').replace(/^(.{1,2}).*?@/, (m, a) => a + '•••@');
+    return {
+      on: !!d.on, pro: require('./plans').plan(t).pro, prize: d.prize || '', every: Number(d.every) || 8, url: P.urlOf(t), pts: P.PTS,
+      week: { key, label: P.weekLabel(key), board: P.board(t, key).slice(0, 50).map(({ uid, nick, pts, exact, n }) => ({ uid, nick, pts, exact, n })) },
+      all: P.board(t, null).slice(0, 50).map(({ uid, nick, pts, exact, n }) => ({ uid, nick, pts, exact, n })),
+      last: { key: lastKey, label: P.weekLabel(lastKey), done: P.weekDone(lastKey) },
+      awards: Object.entries(d.awards).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12).map(([k, a]) => ({ key: k, label: P.weekLabel(k), ...(a.none ? { none: true } : { nick: a.nick, pts: a.pts, given: !!a.given, prize: a.prize || '', email: mask((d.users[a.uid] || {}).email) }) })),
+      users: Object.entries(d.users).map(([uid, u]) => ({ uid, nick: u.nick, email: mask(u.email), at: u.at, off: !!u.off })).sort((a, b) => b.at - a.at).slice(0, 500),
+      userCount: Object.keys(d.users).length,
+    };
+  };
+  r.get('/predict', (req, res) => res.json(view(req.t)));
+  r.put('/predict', ownerOnly, (req, res) => {
+    const d = P.cfg(req.t), b = req.body || {};
+    if (typeof b.on === 'boolean') d.on = b.on;
+    if (typeof b.prize === 'string') d.prize = b.prize.trim().slice(0, 120);
+    if (b.every != null) d.every = Math.max(3, Math.min(30, Math.round(Number(b.every)) || 8));
+    if (d.on) P.start();
+    changed(req.t);
+    res.json(view(req.t));
+  });
+  // ödül verildi işareti
+  r.post('/predict/award/:key', (req, res) => {
+    const d = P.cfg(req.t), a = d.awards[String(req.params.key)];
+    if (!a || a.none) return res.status(404).json({ error: 'Bu hafta için kazanan yok' });
+    a.given = !!(req.body || {}).given; a.givenAt = a.given ? now() : undefined;
+    changed(req.t); res.json(view(req.t));
+  });
+  // kural dışı katılımcıyı kapat / aç (puan durumundan çıkar)
+  r.post('/predict/user/:uid', ownerOnly, (req, res) => {
+    const d = P.cfg(req.t), u = d.users[String(req.params.uid)];
+    if (!u) return res.status(404).json({ error: 'Katılımcı bulunamadı' });
+    u.off = !!(req.body || {}).off; if (u.off) u.tk = [];
+    changed(req.t); res.json(view(req.t));
+  });
+}
+
+module.exports = { pub, page, admin };

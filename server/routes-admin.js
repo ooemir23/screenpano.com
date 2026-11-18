@@ -1025,4 +1025,5 @@ function startJobs() {
 
 require('./billing/routes')(r, { ownerOnly }); // çevrimiçi ödeme (varsayılan kapalı)
 require('./routes-ext')(r, { changed, sendTo, upload, quota, postQuota, ownerOnly, rmUpload, backupNow });
+require('./routes-predict').admin(r, { changed, ownerOnly }); // Tahmin Ligi
 module.exports = { router: r, startJobs, activeTenantId };

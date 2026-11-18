@@ -4769,7 +4769,7 @@ const posterEl = (() => { const e = document.createElement('div'); e.id = 'poste
 let posterCur = null;
 // APK 3.9+: afiş yerel katmanda (PosterView) çizilir; hazır olunca fotoğraftaki gibi sayfa şeffaflaşır. 6 sn içinde gelmezse web afişi gösterilir.
 function showPoster(it) {
-  if (window.__nativePoster && window.__N && window.__N.showPoster && NPHOTO()) {
+  if (it.tpl !== 'tahmin' && window.__nativePoster && window.__N && window.__N.showPoster && NPHOTO()) { // Tahmin Ligi afişi yerelde yok: web çizer
     posterCur = it; window.__exoEnded = null; playStartedAt = Date.now();
     posterEl.classList.remove('on'); posterEl.innerHTML = '';
     const tk = ++exoTok; let done = false;

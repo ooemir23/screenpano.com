@@ -148,7 +148,7 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 const NAV = [
   'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'], ['agenda', 'calendar-clock', 'Yayın Ajandası'],
   'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik', 1], ['menu', 'receipt-text', 'Fiyat Listesi'], ['happy', 'sparkles', 'İndirim Saatleri', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
-  'Canlı veri', ['sport', 'trophy', 'Spor'], ['info', 'newspaper', 'Bilgi Bandı'],
+  'Canlı veri', ['sport', 'trophy', 'Spor'], ['predict', 'target', 'Tahmin Ligi', 1], ['info', 'newspaper', 'Bilgi Bandı'],
   'Takip', ['stats', 'chart-column', 'İstatistik'],
   null, ['settings', 'settings', 'Ayarlar'], ['help', 'circle-help', 'Yardım & SSS'],
 ];
@@ -2103,6 +2103,39 @@ async function saveTimes() { if (await act('PUT', '/schedule', { times: TIMES, d
 async function upCeleb(day, inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const fd = new FormData(); fd.append('day', day); fd.append('file', f); try { await req('POST', '/celebrate/photos', fd); toast('Fotoğraf eklendi'); render(true); } catch (e) { toast(e.message, true); } }
 
 /* ================= BİLGİ BANDI ================= */
+/* ================= Tahmin Ligi ================= */
+let PRED = null, PRED_V = 'week';
+SECTIONS.predict = {
+  html() {
+    return head('Tahmin Ligi', 'Süper Lig tahmin oyunu: müşteriler ekrandaki QR\'ı okutup e-postalarıyla katılır, haftanın maçlarına skor, golcü, asist ve kart tahmini girer. Haftanın birincisine ikram verirsiniz; puan durumu ekranda döngü arasında görünür.')
+      + '<div id="pdv"><div class="loading">Yükleniyor…</div></div>';
+  },
+  async after() { try { PRED = await req('GET', '/predict'); } catch (e) { $('pdv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; } drawPredict(); },
+};
+function drawPredict() {
+  const p = PRED; if (!p || !$('pdv')) return;
+  const P = p.pts, list = PRED_V === 'week' ? p.week.board : p.all;
+  const rows = list.length ? list.map((r, i) => `<div class="it"><div class="b"><b>${i + 1}. ${esc(r.nick)}</b><span>${r.n} maça tahmin · ${r.exact} tam skor</span></div><b>${r.pts} puan</b></div>`).join('') : '<div class="empty">Henüz puan yok.</div>';
+  const aw = p.awards.length ? p.awards.map(a => a.none ? `<div class="it"><div class="b"><b>${esc(a.label)}</b><span>Puan alan olmadı</span></div></div>`
+    : `<div class="it"><div class="b"><b>${esc(a.label)} · ${esc(a.nick)}</b><span>${a.pts} puan · ${esc(a.email)}${a.prize ? ' · ' + esc(a.prize) : ''}</span></div><label class="row" style="gap:8px;align-items:center"><span class="muted">Ödül verildi</span>${sw(a.given, `predAward('${a.key}',this.checked)`)}</label></div>`).join('') : '<div class="empty">Henüz biten hafta yok. Hafta Salı başlar; haftanın maçları bitince birinci kesinleşir ve kendisine e-posta gider.</div>';
+  const us = p.users.length ? p.users.slice(0, 200).map(u => `<div class="it"><div class="b"><b>${esc(u.nick)}${u.off ? ' <span class="muted">· kapatıldı</span>' : ''}</b><span>${esc(u.email)} · ${new Date(u.at).toLocaleDateString(I18N.locale)}</span></div><button class="btn g s" onclick="predUser('${u.uid}',${!u.off})">${u.off ? 'Geri aç' : 'Ligden çıkar'}</button></div>`).join('') : '<div class="empty">Henüz katılımcı yok.</div>';
+  $('pdv').innerHTML = (!p.pro ? `<div class="card"><p class="muted">Tahmin Ligi Pro pakete dahildir.</p></div>` : '')
+    + card('Tahmin Ligi', p.on ? 'Açık: ekranda döngü arasında puan durumu ve katılım QR\'ı görünür.' : 'Kapalı. Açınca ekranda katılım QR\'ı ve puan durumu görünmeye başlar.',
+      `<div class="f">${fl('Haftanın birincisine ikram', `<input type="text" id="pd-prize" maxlength="120" placeholder="örn. 1 adet büyük boy pizza" value="${esc(p.prize)}">`)}
+       ${fl('Ekranda ne sıklıkla', `<select id="pd-every">${[4, 6, 8, 12, 20].map(n => `<option value="${n}" ${p.every === n ? 'selected' : ''}>Her ${n} içerikte bir</option>`).join('')}</select>`)}</div>
+       <div class="row mt" style="gap:10px;flex-wrap:wrap"><a class="btn g s" href="${esc(p.url)}" target="_blank" rel="noopener">Müşteri sayfasını aç ↗</a><span class="muted" style="font-size:12px;word-break:break-all">${esc(p.url)}</span><span style="flex:1"></span><button class="btn" data-save onclick="predSave()">Kaydet</button></div>`,
+      sw(p.on, "predSet({on:this.checked})"), p.on ? '' : 'off')
+    + card(`Puan durumu · ${esc(p.week.label)}`, `${p.userCount} katılımcı`, `<div class="tabs" style="margin:0 0 10px"><button class="${PRED_V === 'week' ? 'on' : ''}" onclick="PRED_V='week';drawPredict()">Bu hafta</button><button class="${PRED_V === 'all' ? 'on' : ''}" onclick="PRED_V='all';drawPredict()">Genel</button></div><div class="list">${rows}</div>`)
+    + card('Haftanın birincileri', 'Ödülü verince işaretleyin. Kazanan, ödülü alırken takma adını ve kendisine gelen e-postayı gösterir.', `<div class="list">${aw}</div>`)
+    + card('Kurallar ve puanlar', '', `<p class="muted" style="margin:0 0 8px">Tam skor ${P.exact} · doğru sonuç ${P.result} · golcünün her golü ${P.goal} · asistin her asisti ${P.assist} · sarı kart sayısı tam ${P.yellow} · kırmızı kart çıkar/çıkmaz ${P.red} puan. Müşteri istediği maçlara tahmin girer; maç başlayınca tahmin kilitlenir. Hafta Salı–Pazartesi; eşitlikte daha çok tam skor, sonra daha erken tahmin öne geçer. Katılım ücretsizdir, kura yoktur.</p>
+       <p class="muted" style="margin:0">Ödüllü yarışmalar mevzuata tabidir: katılım ücretsiz ve alışveriş şartsız olmalı, ödül nakit olmamalı. Emin değilseniz bir hukukçuya danışın.</p>`)
+    + card('Katılımcılar', 'Kural dışı davranan (ör. birden çok hesap açan) katılımcıyı ligden çıkarabilirsiniz; puan durumunda görünmez.', `<div class="list">${us}</div>`);
+}
+async function predSet(b) { try { PRED = await req('PUT', '/predict', b); toast(b.on === false ? 'Tahmin Ligi kapatıldı' : b.on ? 'Tahmin Ligi açıldı' : 'Kaydedildi'); drawPredict(); } catch (e) { toast(e.message, true); } }
+const predSave = () => predSet({ prize: $('pd-prize').value, every: +$('pd-every').value });
+async function predAward(k, given) { try { PRED = await req('POST', '/predict/award/' + k, { given }); drawPredict(); } catch (e) { toast(e.message, true); } }
+async function predUser(uid, off) { if (off && !confirm('Bu katılımcı ligden çıkarılsın mı? Puan durumunda görünmez.')) return; try { PRED = await req('POST', '/predict/user/' + uid, { off }); drawPredict(); } catch (e) { toast(e.message, true); } }
+
 SECTIONS.info = {
   html() {
     const db = S.db, ph = db.pharmacy || {}, nw = db.news || {}, mv = db.movies || {}, bk = db.breaking || {}, ic = db.infoCfg || {}, idur = ic.dur || {}, imax = ic.max || {};

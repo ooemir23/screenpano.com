@@ -90,7 +90,16 @@ function mediaItem0(t, v) {
   return { id: v.id, name: v.name, url: t.upBase + v.file, type: v.type || 'video', dur: v.dur || (v.type === 'image' ? null : require('./vidlen').get(t, v.file, () => { try { require('./hub').pushTenant(t.id); } catch (e) {} })) || null, sch: v.sch || null, sound: !!v.sound };
 }
 // Platform reklamları (server/platformads.js) son hâlin arasına serpiştirilir
-const mediaList = (t, screenId) => require('./platformads').inject(t, baseMediaList(t, screenId));
+const mediaList = (t, screenId) => withPredict(t, require('./platformads').inject(t, baseMediaList(t, screenId)));
+// Tahmin Ligi: açıkken döngüde her N içerikte bir "puan durumu + katıl QR" afişi (tpl 'tahmin'; TV'de web olarak çizilir)
+function withPredict(t, list) {
+  const v = require('./predict').tvView(t); if (!v) return list;
+  const slide = { id: 'tahmin-' + require('crypto').createHash('sha1').update(JSON.stringify([v.top, v.prize, v.week, v.last, !!v.qr])).digest('hex').slice(0, 10), name: 'Tahmin Ligi', type: 'poster', tpl: 'tahmin', fields: {}, predict: v, dur: 15 };
+  if (!list.length) return [slide];
+  const out = []; list.forEach((x, i) => { out.push(x); if ((i + 1) % v.every === 0) out.push(slide); });
+  if (list.length < v.every) out.push(slide);
+  return out;
+}
 function baseMediaList(t, screenId) {
   const db = t.db, out = [];
   for (const v of db.videos) {

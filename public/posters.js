@@ -12,6 +12,7 @@
     etkinlik: { name: 'Etkinlik', fields: { badge: 'Bu akşam', title: 'Maç Gecesi', sub: 'Dev ekranda canlı yayın', note: 'Masanızı ayırtın' }, image: true },
     wifi:     { name: 'Wi-Fi', fields: { title: 'Ücretsiz Wi-Fi', sub: 'Ağ: Kafe_Misafir', note: 'Şifre: hosgeldiniz' } },
     tesekkur: { name: 'Teşekkür', fields: { title: 'Bizi tercih ettiğiniz için teşekkürler', sub: '@isletmeniz', note: 'Paylaşımlarınızda bizi etiketleyin' } },
+    tahmin:   { name: 'Tahmin Ligi', hidden: true, fields: {} },
     kitap:    { name: 'Yeni kitap', hidden: true, fields: { badge: 'Yeni çıkan kitap', title: '', sub: '', note: '' }, image: true },
     insta:    { name: 'Instagram', hidden: true, fields: { title: '', sub: '', note: '' }, image: true },
   };
@@ -103,7 +104,26 @@
 .spp.vert.t-insta .in{margin-left:0;margin-top:auto;height:38%;width:100%}
 .spp.vert.t-kitap:not(.multi) .ph{left:12%;right:12%;top:5%;bottom:50%;width:auto}
 .spp.vert.t-kitap:not(.multi) .in{margin-left:0;margin-top:auto;height:48%;width:100%;padding:5% 7%}
-.spp.vert.t-kitap.multi .gr{grid-template-columns:1fr}`;
+.spp.vert.t-kitap.multi .gr{grid-template-columns:1fr}
+/* Tahmin Ligi: solda başlık, ödül ve katıl QR'ı; sağda haftanın ilk 5'i */
+.spp.t-tahmin{display:grid;grid-template-columns:1fr 1.1fr;gap:4%;padding:5% 5.5%;align-items:center;background:radial-gradient(90% 120% at 0 0,color-mix(in srgb,var(--accent2) 30%,transparent),transparent 60%),var(--bg,#151717);text-align:left}
+.spp.t-tahmin .l{display:flex;flex-direction:column;gap:.55em;min-width:0}
+.spp.t-tahmin .k{font-size:.8em;font-weight:800;letter-spacing:.16em;color:var(--accent2)}
+.spp.t-tahmin h1{font-size:2.6em;line-height:1;margin:0}
+.spp.t-tahmin .wk{font-size:.95em;opacity:.75}
+.spp.t-tahmin .pz{display:flex;align-items:center;gap:.5em;font-size:1.05em;font-weight:700;padding:.5em .7em;border-radius:.5em;background:color-mix(in srgb,var(--accent2) 22%,transparent);border:.06em solid color-mix(in srgb,var(--accent2) 50%,transparent)}
+.spp.t-tahmin .pz b{color:var(--accent2)}
+.spp.t-tahmin .jn{display:flex;align-items:center;gap:.8em;margin-top:.3em}
+.spp.t-tahmin .qr{width:8em;height:8em;flex:none;background:#fff;border-radius:.35em;padding:.25em}.spp.t-tahmin .qr svg{width:100%;height:100%;display:block}
+.spp.t-tahmin .jn p{margin:0;font-size:.95em;line-height:1.3}.spp.t-tahmin .jn p b{display:block;font-size:1.15em}
+.spp.t-tahmin .r{background:color-mix(in srgb,var(--white,#fff) 6%,transparent);border:.05em solid color-mix(in srgb,var(--white,#fff) 14%,transparent);border-radius:.6em;padding:.8em 1em;min-width:0}
+.spp.t-tahmin .r h2{margin:0 0 .4em;font-size:1.05em;letter-spacing:.06em;opacity:.8}
+.spp.t-tahmin .rw{display:grid;grid-template-columns:1.6em 1fr auto;gap:.6em;align-items:center;padding:.42em 0;border-bottom:.05em solid color-mix(in srgb,var(--white,#fff) 12%,transparent);font-size:1.1em}
+.spp.t-tahmin .rw:last-child{border:0}.spp.t-tahmin .rw .n{font-weight:900;text-align:center;opacity:.7}.spp.t-tahmin .rw:nth-child(2) .n{color:#f5c542;opacity:1}
+.spp.t-tahmin .rw .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.spp.t-tahmin .rw .p{font-weight:900;color:var(--accent2)}
+.spp.t-tahmin .em{opacity:.75;font-size:1em;padding:.8em 0}
+.spp.t-tahmin .lw{margin-top:.6em;font-size:.85em;opacity:.8}
+.spp.vert.t-tahmin{grid-template-columns:1fr;align-content:center;gap:5%}`;
   function ensureCss() { if (document.getElementById('spp-css')) return; const s = document.createElement('style'); s.id = 'spp-css'; s.textContent = css; document.head.appendChild(s); }
 
   // item: { tpl, fields, i18n:{en:{...}}, image:url }
@@ -115,6 +135,14 @@
     const img = item.image ? `<div class="ph" style="background-image:url('${esc(item.image)}')"></div>${tpl === 'insta' || tpl === 'kitap' ? '' : '<div class="shade"></div>'}` : '';
     const dir = lang === 'ar' ? ' dir="rtl"' : '';
     const cls = `spp t-${tpl}${item.image ? ' has-img' : ''}`;
+    if (tpl === 'tahmin') { // Tahmin Ligi (veri sunucudan: item.predict)
+      const p = item.predict || {}, top = p.top || [];
+      const rows = top.length ? top.map((r, i) => `<div class="rw"><span class="n">${i + 1}</span><span class="nm">${esc(r.nick)}</span><span class="p">${r.pts}</span></div>`).join('') : '<div class="em">Bu hafta henüz puan yok — ilk tahmini sen gir!</div>';
+      return `<div class="${cls}"${dir}><div class="l"><div class="k">SÜPER LİG</div><h1>Tahmin Ligi</h1><div class="wk">${esc(p.week || '')} haftası</div>`
+        + (p.prize ? `<div class="pz">🏆 <span>Haftanın birincisine: <b>${esc(p.prize)}</b></span></div>` : '')
+        + `<div class="jn">${p.qr ? `<div class="qr">${p.qr}</div>` : ''}<p><b>Okut, ücretsiz katıl</b>Skoru, golcüyü, asisti ve kartları tahmin et</p></div></div>`
+        + `<div class="r"><h2>BU HAFTANIN İLK 5'İ</h2>${rows}${p.last ? `<div class="lw">🏆 Geçen hafta: <b>${esc(p.last.nick)}</b> · ${p.last.pts} puan</div>` : ''}</div></div>`;
+    }
     if (tpl === 'insta') {
       const ig = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>';
       return `<div class="${cls}"${dir}>${img}<div class="in"><div class="ig">${ig}${f('sub')}</div><div class="cap">${f('title')}</div></div></div>`;
