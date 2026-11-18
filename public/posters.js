@@ -105,25 +105,56 @@
 .spp.vert.t-kitap:not(.multi) .ph{left:12%;right:12%;top:5%;bottom:50%;width:auto}
 .spp.vert.t-kitap:not(.multi) .in{margin-left:0;margin-top:auto;height:48%;width:100%;padding:5% 7%}
 .spp.vert.t-kitap.multi .gr{grid-template-columns:1fr}
-/* Tahmin Ligi: solda başlık, ödül ve katıl QR'ı; sağda haftanın ilk 5'i */
-.spp.t-tahmin{display:grid;grid-template-columns:1fr 1.1fr;gap:4%;padding:5% 5.5%;align-items:center;background:radial-gradient(90% 120% at 0 0,color-mix(in srgb,var(--accent2) 30%,transparent),transparent 60%),var(--bg,#151717);text-align:left}
-.spp.t-tahmin .l{display:flex;flex-direction:column;gap:.55em;min-width:0}
-.spp.t-tahmin .k{font-size:.8em;font-weight:800;letter-spacing:.16em;color:var(--accent2)}
-.spp.t-tahmin h1{font-size:2.6em;line-height:1.02;margin:0;overflow-wrap:anywhere}.spp.t-tahmin h1.lg{font-size:2.05em}.spp.t-tahmin h1.xl{font-size:1.65em}.spp.t-tahmin h1 em{font-style:normal;color:var(--accent2)}
-.spp.t-tahmin .wk{font-size:.95em;opacity:.75}
-.spp.t-tahmin .pz{display:flex;align-items:center;gap:.5em;font-size:1.05em;font-weight:700;padding:.5em .7em;border-radius:.5em;background:color-mix(in srgb,var(--accent2) 22%,transparent);border:.06em solid color-mix(in srgb,var(--accent2) 50%,transparent)}
-.spp.t-tahmin .pz b{color:var(--accent2)}
-.spp.t-tahmin .jn{display:flex;align-items:center;gap:.8em;margin-top:.3em}
-.spp.t-tahmin .qr{width:8em;height:8em;flex:none;background:#fff;border-radius:.35em;padding:.25em}.spp.t-tahmin .qr svg{width:100%;height:100%;display:block}
-.spp.t-tahmin .jn p{margin:0;font-size:.95em;line-height:1.3}.spp.t-tahmin .jn p b{display:block;font-size:1.15em}.spp.t-tahmin .jn p i{display:block;font-style:normal;font-weight:700;font-size:.85em;margin-top:.35em;color:var(--accent2);overflow-wrap:anywhere}
-.spp.t-tahmin .r{background:color-mix(in srgb,var(--white,#fff) 6%,transparent);border:.05em solid color-mix(in srgb,var(--white,#fff) 14%,transparent);border-radius:.6em;padding:.8em 1em;min-width:0}
-.spp.t-tahmin .r h2{margin:0 0 .4em;font-size:1.05em;letter-spacing:.06em;opacity:.8}
-.spp.t-tahmin .rw{display:grid;grid-template-columns:1.6em 1fr auto;gap:.6em;align-items:center;padding:.42em 0;border-bottom:.05em solid color-mix(in srgb,var(--white,#fff) 12%,transparent);font-size:1.1em}
-.spp.t-tahmin .rw:last-child{border:0}.spp.t-tahmin .rw .n{font-weight:900;text-align:center;opacity:.7}.spp.t-tahmin .rw:nth-child(2) .n{color:#f5c542;opacity:1}
-.spp.t-tahmin .rw .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.spp.t-tahmin .rw .p{font-weight:900;color:var(--accent2)}
-.spp.t-tahmin .em{opacity:.75;font-size:1em;padding:.8em 0}
-.spp.t-tahmin .lw{margin-top:.6em;font-size:.85em;opacity:.8}
-.spp.vert.t-tahmin{grid-template-columns:1fr;align-content:center;gap:5%}`;
+/* Tahmin Ligi: stadyum gecesi havası (ışık hüzmeleri + saha çizgileri), solda başlık/ödül/adımlar, sağda QR ve ilk 5. Animasyon yok. */
+.spp.t-tahmin{--g:#f5c542;--tc:var(--accent2,#c9955c);display:grid;grid-template-columns:1.32fr 1fr;gap:2.2em;padding:2.4em 2.8em;align-items:stretch;
+  background:radial-gradient(38% 60% at 8% -8%,color-mix(in srgb,var(--tc) 38%,transparent),transparent 70%),radial-gradient(34% 55% at 96% -6%,rgba(255,255,255,.10),transparent 70%),
+  radial-gradient(70% 70% at 70% 120%,color-mix(in srgb,#1f7a4a 34%,transparent),transparent 70%),linear-gradient(160deg,color-mix(in srgb,var(--bg,#151717) 88%,#0d3a24) 0%,color-mix(in srgb,var(--bg,#151717) 92%,#000) 100%)}
+.spp.t-tahmin .pitch{position:absolute;inset:0;width:100%;height:100%;opacity:.07;pointer-events:none}
+.spp.t-tahmin .l,.spp.t-tahmin .r{position:relative;z-index:1;min-width:0;display:flex;flex-direction:column}
+.spp.t-tahmin .l{gap:1.05em;justify-content:center}
+.spp.t-tahmin .top{display:flex;gap:.6em;align-items:center;flex-wrap:wrap}
+.spp.t-tahmin .pill{display:inline-flex;align-items:center;gap:.45em;font-size:.82em;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:.45em .9em;border-radius:99em;background:rgba(255,255,255,.08);border:.06em solid rgba(255,255,255,.16)}
+.spp.t-tahmin .pill svg{width:1.25em;height:1.25em}
+.spp.t-tahmin .pill.hot{background:var(--tc);color:#111;border-color:transparent}
+.spp.t-tahmin .biz{font-size:1.9em;font-weight:700;line-height:1.05;opacity:.95;overflow-wrap:anywhere;margin-top:.25em}
+.spp.t-tahmin .biz.lg{font-size:1.55em}.spp.t-tahmin .biz.xl{font-size:1.25em}
+.spp.t-tahmin h1{margin:-.05em 0 0;font-size:4.9em;font-weight:900;line-height:.98;letter-spacing:-.03em;text-transform:uppercase;
+  background:linear-gradient(180deg,#fff 0%,#fff 45%,color-mix(in srgb,var(--tc) 70%,#fff) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .06em .12em rgba(0,0,0,.45))}
+.spp.t-tahmin h1 em{font-style:normal;display:block;margin-top:.04em;color:var(--tc);-webkit-text-fill-color:var(--tc)}
+.spp.t-tahmin .prz{display:flex;align-items:center;gap:.9em;padding:.85em 1.1em;border-radius:.8em;
+  background:linear-gradient(100deg,color-mix(in srgb,var(--g) 26%,transparent),color-mix(in srgb,var(--g) 6%,transparent));border:.09em solid color-mix(in srgb,var(--g) 65%,transparent);box-shadow:0 .5em 1.6em rgba(0,0,0,.35),inset 0 0 1.4em color-mix(in srgb,var(--g) 14%,transparent)}
+.spp.t-tahmin .prz svg{width:3em;height:3em;flex:none;filter:drop-shadow(0 .1em .3em rgba(0,0,0,.4))}
+.spp.t-tahmin .prz small{display:block;font-size:.78em;font-weight:800;letter-spacing:.16em;color:var(--g);margin-bottom:.2em}
+.spp.t-tahmin .prz b{display:block;font-size:1.75em;font-weight:800;line-height:1.05;overflow-wrap:anywhere}
+.spp.t-tahmin .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:.6em}
+.spp.t-tahmin .st{display:flex;align-items:center;gap:.6em;padding:.65em .75em;border-radius:.65em;background:rgba(255,255,255,.06);border:.06em solid rgba(255,255,255,.12);font-size:.92em;font-weight:700;line-height:1.15}
+.spp.t-tahmin .st i{flex:none;width:1.9em;height:1.9em;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:900;background:var(--tc);color:#111}
+.spp.t-tahmin .lw{display:flex;align-items:center;gap:.5em;font-size:.95em;opacity:.85}.spp.t-tahmin .lw b{color:var(--g)}
+.spp.t-tahmin .r{gap:1em;padding:1.3em;border-radius:1.1em;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.035));border:.07em solid rgba(255,255,255,.14);box-shadow:0 1em 3em rgba(0,0,0,.4)}
+.spp.t-tahmin .scan{display:flex;align-items:center;gap:1.1em}
+.spp.t-tahmin .qrw{position:relative;flex:none;width:10.4em;height:10.4em;padding:.55em;background:#fff;border-radius:.7em;box-shadow:0 0 0 .22em var(--tc),0 .6em 1.6em rgba(0,0,0,.45)}
+.spp.t-tahmin .qrw svg{width:100%;height:100%;display:block}
+.spp.t-tahmin .cta{min-width:0}
+.spp.t-tahmin .cta b{display:block;font-size:1.65em;font-weight:900;line-height:1;text-transform:uppercase;letter-spacing:-.01em}
+.spp.t-tahmin .cta b span{color:var(--tc)}
+.spp.t-tahmin .cta p{margin:.45em 0 0;font-size:.95em;line-height:1.3;opacity:.85}
+.spp.t-tahmin .cta .free{display:inline-block;margin-top:.6em;font-size:.78em;font-weight:800;letter-spacing:.12em;padding:.3em .7em;border-radius:99em;background:color-mix(in srgb,#2ecc71 22%,transparent);color:#7dffb0;border:.06em solid color-mix(in srgb,#2ecc71 45%,transparent)}
+.spp.t-tahmin .bd{flex:1;display:flex;flex-direction:column;min-height:0}
+.spp.t-tahmin .bd h2{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 .45em;font-size:.95em;font-weight:800;letter-spacing:.14em;opacity:.9}
+.spp.t-tahmin .bd h2 span{font-size:.85em;letter-spacing:.04em;opacity:.7;font-weight:600}
+.spp.t-tahmin .rw{display:grid;grid-template-columns:2em 1fr auto;gap:.7em;align-items:center;padding:.38em .5em;border-radius:.55em;font-size:1.08em}
+.spp.t-tahmin .rw+.rw{margin-top:.28em}
+.spp.t-tahmin .rw .n{width:1.75em;height:1.75em;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:.9em;background:rgba(255,255,255,.1)}
+.spp.t-tahmin .rw.p1{background:linear-gradient(90deg,color-mix(in srgb,var(--g) 30%,transparent),transparent)}.spp.t-tahmin .rw.p1 .n{background:linear-gradient(160deg,#ffe58a,#d9a514);color:#3a2a00}
+.spp.t-tahmin .rw.p2 .n{background:linear-gradient(160deg,#f1f3f5,#9aa4ae);color:#222}.spp.t-tahmin .rw.p3 .n{background:linear-gradient(160deg,#f0b07a,#a8642c);color:#2a1504}
+.spp.t-tahmin .rw .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spp.t-tahmin .rw .p{font-weight:900;font-variant-numeric:tabular-nums;color:var(--tc)}.spp.t-tahmin .rw .p small{font-size:.62em;font-weight:700;opacity:.7;margin-left:.2em;color:var(--white,#fff)}
+.spp.t-tahmin .rw.ghost{opacity:.38}.spp.t-tahmin .rw.ghost .nm{font-weight:600;letter-spacing:.2em}
+.spp.t-tahmin .emp{margin-top:.5em;font-size:.95em;font-weight:700;color:var(--tc);text-align:center}
+.spp.t-tahmin .url{font-size:.78em;opacity:.6;text-align:center;overflow-wrap:anywhere}
+.spp.vert.t-tahmin{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:1.4em;padding:2.6em 2.2em}
+.spp.vert.t-tahmin .l{justify-content:flex-start;gap:.9em}.spp.vert.t-tahmin h1{font-size:4.3em}
+.spp.vert.t-tahmin .qrw{width:13em;height:13em}.spp.vert.t-tahmin .bd{flex:none}.spp.vert.t-tahmin .r{justify-content:center}`;
   function ensureCss() { if (document.getElementById('spp-css')) return; const s = document.createElement('style'); s.id = 'spp-css'; s.textContent = css; document.head.appendChild(s); }
 
   // item: { tpl, fields, i18n:{en:{...}}, image:url }
@@ -136,13 +167,23 @@
     const dir = lang === 'ar' ? ' dir="rtl"' : '';
     const cls = `spp t-${tpl}${item.image ? ' has-img' : ''}`;
     if (tpl === 'tahmin') { // Tahmin Ligi (veri sunucudan: item.predict)
-      const p = item.predict || {}, top = p.top || [], biz = String(p.biz || '').trim(), tl = biz.length + 12;
+      const p = item.predict || {}, top = (p.top || []).slice(0, 5), biz = String(p.biz || '').trim();
       const short = String(p.url || '').replace(/^https?:\/\//, '').replace(/^www\./, '');
-      const rows = top.length ? top.map((r, i) => `<div class="rw"><span class="n">${i + 1}</span><span class="nm">${esc(r.nick)}</span><span class="p">${r.pts}</span></div>`).join('') : '<div class="em">Bu hafta henüz puan yok — ilk tahmini sen gir!</div>';
-      return `<div class="${cls}"${dir}><div class="l"><div class="k">SÜPER LİG</div><h1${tl > 26 ? ' class="xl"' : tl > 14 ? ' class="lg"' : ''}>${biz ? esc(biz) + ' ' : ''}<em>Tahmin Ligi</em></h1><div class="wk">${esc(p.week || '')} haftası</div>`
-        + (p.prize ? `<div class="pz">🏆 <span>Haftanın birincisine: <b>${esc(p.prize)}</b></span></div>` : '')
-        + `<div class="jn">${p.qr ? `<div class="qr">${p.qr}</div>` : ''}<p><b>Okut, ücretsiz katıl</b>Skoru, golcüyü, asisti ve kartları tahmin et${short ? `<i>${esc(short)}</i>` : ''}</p></div></div>`
-        + `<div class="r"><h2>BU HAFTANIN İLK 5'İ</h2>${rows}${p.last ? `<div class="lw">🏆 Geçen hafta: <b>${esc(p.last.nick)}</b> · ${p.last.pts} puan</div>` : ''}</div></div>`;
+      const ball = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.2l3.6 2.6-1.4 4.3H9.8L8.4 9.8z" fill="currentColor" stroke="none"/><path d="M12 7.2V2.5M15.6 9.8l4.4-1.6M14.2 14.1l2.8 3.9M9.8 14.1L7 18M8.4 9.8L4 8.2"/></svg>';
+      const cup = '<svg viewBox="0 0 64 64"><defs><linearGradient id="spg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe58a"/><stop offset="1" stop-color="#d49a10"/></linearGradient></defs><path fill="url(#spg)" d="M18 6h28v14c0 9-5.6 15.6-14 17-8.4-1.4-14-8-14-17z"/><path fill="none" stroke="url(#spg)" stroke-width="4" d="M18 11H9c0 8 4 12 10 13M46 11h9c0 8-4 12-10 13"/><path fill="url(#spg)" d="M28 36h8v9h-8zM20 46h24l2 9H18z"/><rect x="15" y="54" width="34" height="5" rx="1.5" fill="#b8860b"/><path fill="#fff" opacity=".35" d="M23 9h4v12c0 4 1.5 7 3.5 9-4.5-1.5-7.5-5-7.5-10z"/></svg>';
+      const pitch = '<svg class="pitch" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#fff" stroke-width="4"><rect x="40" y="40" width="1520" height="820"/><path d="M800 40v820"/><circle cx="800" cy="450" r="130"/><circle cx="800" cy="450" r="6" fill="#fff"/><rect x="40" y="250" width="200" height="400"/><rect x="1360" y="250" width="200" height="400"/><rect x="40" y="350" width="70" height="200"/><rect x="1490" y="350" width="70" height="200"/></svg>';
+      const bl = biz.length, bcls = bl > 30 ? ' xl' : bl > 18 ? ' lg' : '';
+      const rows = top.length ? top.map((r, i) => `<div class="rw${i < 3 ? ' p' + (i + 1) : ''}"><span class="n">${i + 1}</span><span class="nm">${esc(r.nick)}</span><span class="p">${r.pts}<small>puan</small></span></div>`).join('')
+        : [1, 2, 3].map(i => `<div class="rw ghost p${i}"><span class="n">${i}</span><span class="nm">? ? ?</span><span class="p">0</span></div>`).join('') + '<div class="emp">Liste boş — ilk puanı sen al!</div>';
+      const open = +p.open || 0;
+      return `<div class="${cls}" lang="tr">${pitch}<div class="l">`
+        + `<div class="top"><span class="pill">${ball}Süper Lig</span><span class="pill hot">${esc(p.week || '')}</span>${open ? `<span class="pill">${open} maç tahmine açık</span>` : ''}</div>`
+        + (biz ? `<div class="biz${bcls}">${esc(biz)}</div>` : '') + `<h1>Tahmin <em>Ligi</em></h1>`
+        + `<div class="prz">${cup}<div><small>HAFTANIN BİRİNCİSİNE</small><b>${p.prize ? esc(p.prize) : 'İşletmeden ikram'}</b></div></div>`
+        + `<div class="steps"><div class="st"><i>1</i>QR'ı okut, Google ile katıl</div><div class="st"><i>2</i>Skor, golcü, asist, kart tahmin et</div><div class="st"><i>3</i>Puanı topla, ikramı kap</div></div>`
+        + (p.last ? `<div class="lw">🏆 Geçen haftanın birincisi: <b>${esc(p.last.nick)}</b> · ${p.last.pts} puan</div>` : '')
+        + `</div><div class="r"><div class="scan">${p.qr ? `<div class="qrw">${p.qr}</div>` : ''}<div class="cta"><b>Okut, <span>katıl</span></b><p>Telefonunun kamerasıyla QR'ı okut, saniyeler içinde ligdesin.</p><span class="free">ÜCRETSİZ</span></div></div>`
+        + `<div class="bd"><h2>BU HAFTANIN İLK 5'İ<span>${esc(p.week || '')}</span></h2>${rows}</div>${short ? `<div class="url">${esc(short)}</div>` : ''}</div></div>`;
     }
     if (tpl === 'insta') {
       const ig = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>';
