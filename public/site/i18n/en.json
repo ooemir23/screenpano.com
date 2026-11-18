@@ -195,6 +195,9 @@
   "s.vatIncl": "Prices include VAT",
   "s.extraBox": "Extra TV box",
   "s.extraBranch": "Extra branch",
+  "s.tahminLigi": "Prediction League (add-on)",
+  "s.addon": "ADD-ON",
+  "s.addonCell": "As add-on",
   "s.yes": "Included",
   "s.no": "Not included",
 

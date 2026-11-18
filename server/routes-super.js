@@ -32,7 +32,7 @@ r.get('/overview', (req, res) => {
   const online = hub.onlineDeviceIds();
   const list = tenants.all().map(t => {
     const devs = store.q.devicesOf.all(t.id), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
-    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, canPay: !!t.db.canPay, email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0, charges: (t.db.charges || []).slice(-50) };
+    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, canPay: !!t.db.canPay, addons: require('./addons').summary(t), email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0, charges: (t.db.charges || []).slice(-50) };
   });
   const settings = Object.fromEntries(SETTINGS.map(k => [k, SECRET_KEYS.includes(k) ? maskKey(store.setting(k)) : store.setting(k)]));
   settings.traffic_secret = maskKey(require('./feeds').trafficSecret());
@@ -107,6 +107,15 @@ r.put('/tenants/:id', (req, res) => {
   const ids = b.applyOrg && t.org_id ? store.q.orgTenants.all(t.org_id).map(x => x.id) : [t.id];
   // sınırsız (kendi işletmem): süre ve limit yok; zincirde istenirse tüm şubelere
   if (typeof b.canPay === 'boolean') { if (b.canPay) t.db.canPay = true; else delete t.db.canPay; tenants.save(t); hub.pushTenant(t.id); } // çevrimiçi ödeme pilotu
+  // ek abonelikler (Tahmin Ligi): { tahmin_ligi: { on: true, until: ms|null } } — zincire uygula seçiliyse tüm şubelere
+  if (b.addons && typeof b.addons === 'object') {
+    const A = require('./addons');
+    for (const [aid, v] of Object.entries(b.addons)) {
+      if (!A.ADDONS[aid] || !v || typeof v !== 'object') continue;
+      if (v.until != null && v.until !== '' && !Number.isFinite(Number(v.until))) return res.status(400).json({ error: 'Geçersiz ek abonelik tarihi' });
+      for (const id of ids) { const x = tenants.get(id); if (!x) continue; if (v.on) A.grant(x, aid, { until: v.until ? Number(v.until) : null, source: 'admin', force: true }); else A.revoke(x, aid); tenants.save(x); hub.pushTenant(id); }
+    }
+  }
   if (typeof b.canTest === 'boolean') { if (b.canTest) t.db.canTest = true; else delete t.db.canTest; tenants.save(t); hub.pushTenant(t.id); }
   if (b.superAccess !== undefined && !req.user.trueSuper) return res.status(403).json({ error: 'superAccess yetkisi yalnız süper yönetici hesabıyla değiştirilir' });
   if (typeof b.superAccess === 'boolean') for (const id of [t.id]) { const x = tenants.get(id); if (x) { if (b.superAccess) x.db.superAccess = true; else delete x.db.superAccess; tenants.save(x); } }
@@ -185,6 +194,24 @@ r.get('/billing', (req, res) => { const bc = require('./billing/core'); res.json
 r.put('/billing', trueOnly, (req, res) => {
   try { res.json({ ok: true, mode: require('./billing/core').setMode(String((req.body || {}).mode || '')) }); } catch (e) { res.status(400).json({ error: e.message }); }
 });
+// Google Play: servis hesabı (JSON, yalnız yazılır), paket adı, RTDN adresi
+r.get('/play', trueOnly, (req, res) => {
+  const P = require('./play'), raw = store.setting('play_service_account', ''); let email = '';
+  try { email = raw ? JSON.parse(raw).client_email || '' : ''; } catch (e) {}
+  res.json({ configured: P.configured(), email, package: P.PKG(), rtdn: `${require('./config').BASE_URL}/api/play/rtdn?k=${P.rtdnKey()}`, products: P.PRODUCTS });
+});
+r.put('/play', trueOnly, (req, res) => {
+  const b = req.body || {};
+  if (typeof b.serviceAccount === 'string' && b.serviceAccount.trim()) {
+    let j; try { j = JSON.parse(b.serviceAccount); } catch (e) { return res.status(400).json({ error: 'Servis hesabı JSON dosyası okunamadı' }); }
+    if (!j.client_email || !j.private_key || j.type !== 'service_account') return res.status(400).json({ error: 'Bu bir Google servis hesabı anahtarı değil' });
+    store.setSetting('play_service_account', JSON.stringify({ type: j.type, client_email: j.client_email, private_key: j.private_key, project_id: j.project_id || '' }));
+  }
+  if (b.serviceAccount === null) store.setSetting('play_service_account', '');
+  if (typeof b.package === 'string' && /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/i.test(b.package.trim())) store.setSetting('play_package', b.package.trim());
+  res.json({ ok: true });
+});
+r.post('/play/sweep', trueOnly, async (req, res) => { try { await require('./play').sweep(); res.json({ ok: true }); } catch (e) { res.status(502).json({ error: e.message }); } });
 r.put('/ticker-brand', trueOnly, (req, res) => res.json({ ok: true, tickerBrand: require('./tickerbrand').set(req.body || {}) }));
 r.put('/pricing', trueOnly, (req, res) => {
   const p = require('./pricing').set(req.body || {});

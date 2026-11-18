@@ -195,6 +195,9 @@
   "s.vatIncl": "Fiyatlara KDV dahildir",
   "s.extraBox": "Ek TV kutusu",
   "s.extraBranch": "Ek şube",
+  "s.tahminLigi": "Tahmin Ligi (ek abonelik)",
+  "s.addon": "EK ABONELİK",
+  "s.addonCell": "Ek abonelikle",
   "s.yes": "Var",
   "s.no": "Yok",
 

@@ -108,4 +108,14 @@ r.get('/weather', async (req, res) => {
   res.json(wx);
 });
 
+// Google Play satın alması (Play sürümü): kutu belirteci gönderir, sunucu Google'dan doğrular ve yetkiyi verir
+r.post('/play-verify', async (req, res) => {
+  const b = req.body || {}, d = store.q.deviceByHash.get(auth.hashToken(b.deviceToken || ''));
+  if (!d) return res.status(401).json({ error: 'Cihaz tanınmadı' });
+  const P = require('./play');
+  if (!P.configured()) return res.status(503).json({ error: 'Google Play doğrulaması henüz ayarlanmadı; satın alma kaydedildi, kısa süre içinde işlenecek' });
+  try { res.json({ ok: true, ...(await P.verifyAndApply(b.purchaseToken, d.tenant_id)) }); }
+  catch (e) { console.error('[Play] doğrulama:', e.message); res.status(e.status && e.status < 500 ? e.status : 502).json({ error: e.message }); }
+});
+
 module.exports = { router: r, claimPair };

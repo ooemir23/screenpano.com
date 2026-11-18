@@ -1,11 +1,11 @@
 // Fiyatlandırma: süper yönetimden değiştirilir, tek yerde saklanır (ayar anahtarı "pricing", JSON).
 // Site (paket kartları, karşılaştırma), işletme paneli (Paketler kartı) ve ek şube ücreti buradan okur.
-// Kalemler: Başlangıç, Pro, ek TV kutusu, ek şube; her biri aylık ve yıllık. Tutarlar tam sayı (kuruş yok).
+// Kalemler: Başlangıç, Pro, ek TV kutusu, ek şube, Tahmin Ligi (ek abonelik); her biri aylık ve yıllık. Tutarlar tam sayı (kuruş yok).
 // Boş (0) aylık fiyat sitede "Fiyat için bize ulaşın" olarak görünür. Yıllık boşsa yıllık satırı çıkmaz.
 const store = require('./store');
 
 const KEY = 'pricing';
-const ITEMS = ['baslangic', 'pro', 'extraBox', 'extraBranch'];
+const ITEMS = ['baslangic', 'pro', 'extraBox', 'extraBranch', 'tahminLigi'];
 const CURRENCIES = { TRY: '₺', USD: '$', EUR: '€' };
 const LOCALE = { tr: 'tr-TR', en: 'en-GB', de: 'de-DE', ar: 'ar-u-nu-latn' };
 
@@ -25,6 +25,7 @@ function legacy() {
     pro: { monthly: amount(store.setting('site_price_pro', '')), yearly: 0 },
     extraBox: { monthly: 0, yearly: 0 },
     extraBranch: { monthly: fee, yearly: 0 },
+    tahminLigi: { monthly: 0, yearly: 0 },
   };
 }
 

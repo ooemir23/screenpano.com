@@ -150,6 +150,14 @@ app.use('/api/auth', require('./routes-auth'));
 app.get('/api/oauth/google/callback', require('./youtube').callback); // YouTube hesabı bağlantısı dönüşü
 app.get('/api/oauth/spotify/callback', require('./spotify').callback); // Spotify hesabı bağlantısı dönüşü
 app.use('/api/tv', require('./routes-tv').router);
+// Google Play gerçek zamanlı geliştirici bildirimleri (Pub/Sub push). Adresteki gizli anahtar süper yönetimde görünür.
+app.post('/api/play/rtdn', async (req, res) => {
+  const P = require('./play');
+  if (String(req.query.k || '') !== P.rtdnKey()) return res.status(403).end();
+  try { await P.rtdn(req.body || {}); res.status(204).end(); }
+  catch (e) { console.error('[Play] RTDN:', e.message); res.status(500).end(); } // Pub/Sub yeniden dener
+});
+require('./play').start();
 app.use('/api/admin', require('./routes-admin').router);
 app.use('/api/transfer', require('./transfer').pub);
 app.use('/api/super', require('./routes-super'));

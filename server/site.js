@@ -73,7 +73,7 @@ function visual(f, t) {
 const EMO = { '🎧': 'headphones', '🚨': 'siren', '🎞': 'film', '🧾': 'receipt-text', '⚽': 'trophy', '📣': 'megaphone', '🎉': 'party-popper', '📰': 'newspaper', '⏱': 'timer', '📡': 'radio-tower', '📊': 'chart-column', '🏬': 'store', '💼': 'briefcase', '📷': 'camera', '🎨': 'palette', '💻': 'monitor', '🔒': 'lock', '💾': 'hard-drive', '📺': 'tv', '⚡': 'zap', '🔑': 'key-round', '🧩': 'puzzle', '🌐': 'globe', '📚': 'book-open', '🔥': 'flame', '📥': 'download', '🏟': 'trophy', '🔳': 'scan-line', '🧭': 'compass', '🔎': 'search', '🎯': 'target', '🍹': 'clock' };
 const ico = em => { const k = String(em || '').replace(/\uFE0F/g, ''); return EMO[k] ? `<svg class="si" aria-hidden="true"><use href="/icons.svg#i-${EMO[k]}"></use></svg>` : e(em || ''); };
 const isNew = f => f.added && (Date.now() - Date.parse(f.added)) / 864e5 < NEW_DAYS;
-const badges = (f, t) => (isNew(f) ? `<span class="nb">${e(t('s.new'))}</span>` : '') + (f.plan === 'pro' ? '<span class="pb">PRO</span>' : '');
+const badges = (f, t) => (isNew(f) ? `<span class="nb">${e(t('s.new'))}</span>` : '') + (f.plan === 'pro' ? '<span class="pb">PRO</span>' : f.plan === 'addon' ? `<span class="pb">${e(t('s.addon'))}</span>` : '');
 
 // özellikler: kart ortada, sekmeler sol/sağ kolonlara eşit bölünür (alt satır yok)
 function features(data, lang, t) {
@@ -103,7 +103,7 @@ function compare(data, lang, t) {
     row(t('s.cmp.devices'), b.devices, p.devices), row(t('s.cmp.storage'), gb(b.storageMB), gb(p.storageMB)), row(t('s.cmp.users'), b.users, p.users),
     row(t('s.cmp.branches'), false, t('s.cmp.branchesPro').replace('{n}', p.includedBranches || p.branches)),
     // compareB: Başlangıç hücresinde evet/hayır yerine sınır metni ({cats}, {items} plans.js'ten gelir)
-    ...data.features.filter(f => f.compare).map(f => loc(f, lang)).map(f => row(f.compare, f.compareB ? String(f.compareB).replace('{cats}', b.menuCats).replace('{items}', b.menuItems) : f.plan !== 'pro', true)),
+    ...data.features.filter(f => f.compare).map(f => loc(f, lang)).map(f => f.plan === 'addon' ? row(f.compare, t('s.addonCell'), t('s.addonCell')) : row(f.compare, f.compareB ? String(f.compareB).replace('{cats}', b.menuCats).replace('{items}', b.menuItems) : f.plan !== 'pro', true)), // ek abonelik: iki pakette de ayrıca alınır
     row(t('s.cmp.ads'), !b.ads, !p.ads), // Başlangıç reklamlı, Pro reklamsız (plans.js 'ads')
     row(t('s.cmp.badge'), b.badge ? t('s.cmp.badgeSmall') : t('s.no'), p.badge ? t('s.cmp.badgeSmall') : t('s.no')),
   ].join('');
@@ -130,7 +130,7 @@ function render(store, tenants, access, lang = 'tr') {
     : `<small>${e(t('s.priceAsk'))}</small><a class="ask" href="#contact">${e(t('s.quote'))} →</a>`;
   const extraTxt = x => PR.fmt(x.monthly, pr, lang) + ' ' + t('s.perMonth') + (x.yearly ? ` (${t('s.yearly').replace('{p}', PR.fmt(x.yearly, pr, lang))})` : '');
   const anyPrice = pr.baslangic.monthly || pr.pro.monthly;
-  const prExtras = [pr.extraBox.monthly && `${t('s.extraBox')}: ${extraTxt(pr.extraBox)}`, pr.extraBranch.monthly && `${t('s.extraBranch')}: ${extraTxt(pr.extraBranch)}`, anyPrice && t(pr.vat === 'incl' ? 's.vatIncl' : 's.vatExcl'), anyPrice && pr.annualNote].filter(Boolean);
+  const prExtras = [pr.extraBox.monthly && `${t('s.extraBox')}: ${extraTxt(pr.extraBox)}`, pr.extraBranch.monthly && `${t('s.extraBranch')}: ${extraTxt(pr.extraBranch)}`, pr.tahminLigi && pr.tahminLigi.monthly && `${t('s.tahminLigi')}: ${extraTxt(pr.tahminLigi)}`, anyPrice && t(pr.vat === 'incl' ? 's.vatIncl' : 's.vatExcl'), anyPrice && pr.annualNote].filter(Boolean);
   const priceExtras = prExtras.length ? `<p class="pextra">${prExtras.map(e).join(' · ')}</p>` : '';
   const phone = st('site_phone'), wa = st('site_whatsapp').replace(/\D/g, ''), mail = st('site_email') || st('legal_email');
   const contact = [wa && `<a class="btn" href="https://wa.me/${wa}" rel="noopener">${e(t('contact.wa'))}</a>`, phone && `<a class="btn ghost" href="tel:${e(phone.replace(/\s/g, ''))}" dir="ltr">${e(phone)}</a>`, mail && `<a class="btn ghost" href="mailto:${e(mail)}">${e(mail)}</a>`].filter(Boolean).join('');

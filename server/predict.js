@@ -192,7 +192,8 @@ function byCode(code) {
   }
   const tid = codeIdx.get(code); return tid ? tenants.get(tid) : null;
 }
-const isOn = t => { const p = t && t.db.predict; return !!(p && p.on && require('./plans').plan(t).pro && require('./plans').access(t).ok); };
+// lig çalışır: açık + Tahmin Ligi ek aboneliği etkin + işletmenin erişimi açık (paket fark etmez)
+const isOn = t => { const p = t && t.db.predict; return !!(p && p.on && require('./addons').active(t, 'tahmin_ligi') && require('./plans').access(t).ok); };
 
 // Haftalık puan durumu (ve genel): eşitlikte daha çok tam skor, sonra son tahmini erken giren önde
 function board(t, key) {

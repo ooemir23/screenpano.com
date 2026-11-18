@@ -272,7 +272,7 @@ function admin(r, { changed, ownerOnly }) {
     const d = P.cfg(t), key = P.weekKey(now()), lastKey = P.weekKey(now() - 7 * 86400e3);
     const mask = e => String(e || '').replace(/^(.{1,2}).*?@/, (m, a) => a + '•••@');
     return {
-      on: !!d.on, pro: require('./plans').plan(t).pro, prize: d.prize || '', every: Number(d.every) || 8, url: P.urlOf(t), pts: P.PTS,
+      on: !!d.on, addon: require('./addons').summary(t).tahmin_ligi, price: require('./pricing').get().tahminLigi, prize: d.prize || '', every: Number(d.every) || 8, url: P.urlOf(t), pts: P.PTS,
       week: { key, label: P.weekLabel(key), board: P.board(t, key).slice(0, 50).map(({ uid, nick, pts, exact, n }) => ({ uid, nick, pts, exact, n })) },
       all: P.board(t, null).slice(0, 50).map(({ uid, nick, pts, exact, n }) => ({ uid, nick, pts, exact, n })),
       last: { key: lastKey, label: P.weekLabel(lastKey), done: P.weekDone(lastKey) },

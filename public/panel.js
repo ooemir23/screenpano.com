@@ -81,11 +81,155 @@ async function refresh() { [S.db, S.scr] = await Promise.all([req('GET', '/db'),
 const sw = (on, js, attrs = '') => `<label class="sw"><input type="checkbox" ${on ? 'checked' : ''} onchange="${js}" ${attrs}><i></i></label>`;
 // A7: başlığında aç/kapat anahtarı olan kart "Yayında / Kapalı" etiketi taşır; kapalıyken içerik soluk görünür (düzenlenebilir)
 const stPill = on => `<span class="stp ${on ? 'on' : ''}">${on ? 'Yayında' : 'Kapalı'}</span>`;
-const card = (title, desc, body, right = '', cls = '') => { const sw1 = /class="sw"/.test(right), on = sw1 && /type="checkbox" checked/.test(right); return `<div class="card ${cls}${sw1 ? (on ? ' swon' : ' swoff') : ''}"><div class="ch"><div><h3>${title}${sw1 ? stPill(on) : ''}</h3>${desc ? `<p>${desc}</p>` : ''}</div>${right}</div><div class="cb">${body}</div></div>`; };
+const card = (title, desc, body, right = '', cls = '', attrs = '') => { const sw1 = /class="sw"/.test(right), on = sw1 && /type="checkbox" checked/.test(right); return `<div class="card ${cls}${sw1 ? (on ? ' swon' : ' swoff') : ''}"${attrs ? ' ' + attrs : ''}><div class="ch"><div><h3>${title}${sw1 ? stPill(on) : ''}</h3>${desc ? `<p>${desc}</p>` : ''}</div>${right}</div><div class="cb">${body}</div></div>`; };
 const fl = (label, input) => `<label class="fl"><span>${label}</span>${input}</label>`;
 const head = (t, d, right = '') => `<div class="head"><div><h1>${t}</h1>${d ? `<p>${d}</p>` : ''}</div><div class="row">${right}</div></div>`;
 const tabs = (key, items) => `<div class="tabs">${items.map(([k, l]) => `<button class="${(SUB[key] || items[0][0]) === k ? 'on' : ''}" onclick="SUB['${key}']='${k}';go('${TAB}/${k}')">${l}</button>`).join('')}</div>`;
-const lock = what => pro() ? '' : `<div class="bn lock">🔒 <span><b>${what}</b> Pro pakette. Ayarlarınızı şimdiden yapabilirsiniz; ekranda görünmesi için paketinizi yükseltin.</span><a class="btn s g" href="#settings/plan">Paketler</a></div>`;
+// Paket ve ek abonelik altyapısı. Fiyatlar sunucudan (süper yönetim → Fiyatlandırma; Play sürümünde Google Play'in fiyatı),
+// yetki sunucudan (S.me.addons). Ücretsiz deneme yalnız gerçekten varsa yazılır: Google Play teklifinde ücretsiz dönem varsa.
+const ADDONS = {
+  tahmin_ligi: {
+    id: 'tahmin_ligi', name: 'Tahmin Ligi', priceKey: 'tahminLigi', productType: 'subs', basePlanId: 'aylik',
+    desc: 'Müşterileriniz ekrandaki QR ile katılıp Süper Lig maçlarına skor, golcü, asist ve kart tahmini yapar; haftanın birincisine ikram verirsiniz.',
+  },
+};
+const playBridge = () => (window.SPPlayBilling && SPPlayBilling.isPlayStore && SPPlayBilling.isPlayStore() ? window.SPPlayBilling : null);
+// ek abonelik etkin mi: sunucunun kaydı esastır (Play satın alması da sunucuda doğrulanıp buraya yansır)
+const hasAddon = id => !!(S.me && S.me.addons && S.me.addons[id] && S.me.addons[id].active);
+const isAddonLocked = addonId => (addonId ? !hasAddon(addonId) : !pro());
+const proBadge = (feat, addonId = '') => `<button type="button" class="pro-pill" data-allow-locked="1" onclick="event.stopPropagation();warnUpgrade('${esc(feat)}','${esc(addonId)}')">${addonId ? '🔒 Ek abonelikle açılır' : '🔒 Sadece Pro aboneliklerde geçerli'}</button>`;
+const lockAttrs = (feat, addonId = '') => isAddonLocked(addonId) ? `data-pro-feature="${esc(feat)}"${addonId ? ` data-addon-feature="${esc(addonId)}"` : ''}` : '';
+const cardPro = (feat, title, desc, body, right = '', cls = '', addonId = '') => {
+  if (!isAddonLocked(addonId)) return card(title, desc, body, right, cls);
+  const badge = proBadge(feat, addonId);
+  const r = right ? `<div class="row" style="gap:8px;flex-wrap:wrap;justify-content:flex-end">${badge}${right}</div>` : badge;
+  return card(title, desc, body, r, (cls ? cls + ' ' : '') + 'pro-card-locked', lockAttrs(feat, addonId));
+};
+// Google Play kataloğundan ürünün fiyat ve ücretsiz deneme bilgisi (yalnız Play sürümünde)
+function playOffer(playId) {
+  const pb = playBridge(), item = playId && pb && pb.subs && pb.subs[playId]; if (!item) return null;
+  const offs = item.offers || [], paid = offs.flatMap(o => o.phases || []).find(p => p.priceMicros > 0);
+  const free = offs.flatMap(o => o.phases || []).find(p => !(p.priceMicros > 0) && /^P\d+[DW]$/.test(p.billingPeriod || ''));
+  const days = free ? (+free.billingPeriod.slice(1, -1)) * (free.billingPeriod.endsWith('W') ? 7 : 1) : 0;
+  return { price: paid && paid.formattedPrice || '', trialDays: days };
+}
+// "3.500 ₺ / ay" — fiyat yoksa boş (sitede "Fiyat için bize ulaşın" gibi)
+function priceLine(key, playId) {
+  const po = playOffer(playId); if (po && po.price) return `${po.price} / ${I18N.t('ay')}`;
+  const P = S.me && S.me.pricing, x = P && P[key]; if (!x || !x.monthly) return '';
+  const v = Number(x.monthly).toLocaleString(I18N.locale);
+  return (P.currency === 'USD' ? '$' + v : P.currency === 'EUR' ? '€' + v : v + ' ₺') + ' / ' + I18N.t('ay') + (P.vat === 'incl' ? '' : ' + KDV');
+}
+const trialLine = playId => { const po = playOffer(playId); return po && po.trialDays ? I18N.t(po.trialDays + ' gün ücretsiz deneme') : ''; };
+const lock = (what, addonId = '') => {
+  if (!isAddonLocked(addonId)) return '';
+  const a = addonId ? ADDONS[addonId] : null, pr = a ? priceLine(a.priceKey, a.id) : '', tr = trialLine(a ? a.id : 'pro');
+  const msg = a ? `<b>${esc(what)}</b> pakete dahil değil; ek abonelik${pr ? ' (' + esc(pr) + ')' : ''} ile açılır. Ayarlarınızı görebilirsiniz; ekranda çalışması için aboneliği başlatın.`
+    : `<b>${esc(what)}</b> Pro pakette. Ayarlarınızı görebilirsiniz; ekranda görünmesi için paketinizi yükseltin.`;
+  return `<div class="bn lock">${proBadge(what, addonId)}<span>${msg}${tr ? ' ' + esc(tr) + '.' : ''}</span><button type="button" class="btn s" data-allow-locked="1" onclick="openUpgradeModal('${esc(what)}','${esc(addonId)}')">${a ? 'Aboneliği başlat' : 'Pro Pakete Yükselt'}</button></div>`;
+};
+function warnUpgrade(feat = 'Bu özellik', addonId = '') {
+  toast(addonId ? `${feat}: ek abonelikle açılır.` : `${feat}: Sadece Pro aboneliklerde geçerlidir.`, true);
+  openUpgradeModal(feat, addonId);
+}
+function openUpgradeModal(feat = 'Pro Özellikler', addonId = '') {
+  const a = ADDONS[addonId] || ADDONS.tahmin_ligi, isPlay = !!playBridge();
+  const proPr = priceLine('pro', 'pro'), startPr = priceLine('baslangic', 'baslangic'), adPr = priceLine(a.priceKey, a.id);
+  const proTr = trialLine('pro'), adTr = trialLine(a.id), adOn = hasAddon(a.id), P = S.me.tenant.plan;
+  const addonBox = `<div class="upg-card${addonId ? ' hi' : ''}">
+      <h4><span>⚽ ${esc(a.name)}</span><span class="pro-pill" style="cursor:default">Ek abonelik</span></h4>
+      ${adPr ? `<div class="upg-price">${esc(adPr)}</div>` : '<div class="muted">Fiyat için bizimle iletişime geçin</div>'}
+      ${adTr ? `<span class="upg-trial">🎁 ${esc(adTr)}</span>` : ''}
+      <p class="muted" style="margin:0;font-size:13px">${esc(a.desc)} Pakete dahil değildir; Başlangıç ve Pro'da ayrıca alınır.</p>
+      <div class="row mt" style="margin-top:auto">
+        ${adOn ? '<span class="pill ok">✓ Aktif</span>' : `<button type="button" class="btn${addonId ? '' : ' g'}" onclick="startPlanUpgrade('${esc(a.id)}',true)">${esc(a.name)}'ni başlat</button>`}
+      </div>
+    </div>`;
+  openModal(`<div id="pro-upg">
+    <div class="upg-head">
+      <div>
+        <span class="pro-pill" style="cursor:default">${addonId ? '🔒 Ek abonelikle açılır' : '🔒 Sadece Pro aboneliklerde geçerli'}</span>
+        <h3 style="margin:8px 0 4px">${esc(feat)}</h3>
+        <p class="muted" style="margin:0">${addonId ? 'Bu özellik pakete dahil değil; isteyen işletme ek abonelik olarak alır.' : `${esc(P.name)} paketindesiniz${startPr && P.id === 'baslangic' ? ' (' + esc(startPr) + ')' : ''}. Gelişmiş özellikler için Pro pakete geçin.`}</p>
+      </div>
+      <button type="button" class="btn g xs" onclick="closeModal()">✕</button>
+    </div>
+    <div class="upg-grid">
+      ${addonId ? '' : `<div class="upg-card hi">
+        <h4><span>ScreenPano Pro</span><span class="pill ok">Önerilen</span></h4>
+        ${proPr ? `<div class="upg-price">${esc(proPr)}</div>` : '<div class="muted">Fiyat için bizimle iletişime geçin</div>'}
+        ${proTr ? `<span class="upg-trial">🎁 ${esc(proTr)}</span>` : ''}
+        <ul class="upg-list">
+          <li>${S.me.plans.pro.devices} TV kutusu, ${Math.round(S.me.plans.pro.storageMB / 1024)} GB depolama, ${S.me.plans.pro.users} kullanıcı, ${S.me.plans.pro.includedBranches} lokasyon</li>
+          <li>Reklamsız yayın, logo rozeti yok</li>
+          <li>Müzik (YouTube Müzik ve Spotify), İndirim Saatleri (Happy Hour)</li>
+          <li>Google yorumları, Instagram, doğum günü kutlamaları, sınırsız fiyat listesi</li>
+        </ul>
+        <div class="row mt" style="margin-top:auto">
+          ${pro() ? '<span class="pill ok">✓ Mevcut paketiniz</span>' : `<button type="button" class="btn" onclick="startPlanUpgrade('pro',false)">🚀 Pro Pakete Yükselt</button>`}
+        </div>
+      </div>`}
+      ${addonBox}
+    </div>
+    <div class="row end mt">
+      ${isPlay ? '' : '<a class="btn g s" href="#settings/plan" onclick="closeModal()">Paketler ve ödeme</a>'}
+      <button type="button" class="btn g s" onclick="closeModal()">Kapat</button>
+    </div>
+  </div>`);
+}
+async function startPlanUpgrade(targetId = 'pro', isAddon = false) {
+  const pb = playBridge(), tid = (S.me && S.me.tenant && S.me.tenant.id) || '';
+  if (pb) { // Play sürümü: ödeme Google Play'de, yetki sunucuda doğrulanınca açılır
+    const ok = isAddon ? pb.buyAddon(targetId, (ADDONS[targetId] && ADDONS[targetId].basePlanId) || 'aylik', 'subs', tid, targetId) : pb.buyPlan(targetId, 'aylik', tid);
+    if (ok) { closeModal(); toast('Google Play ödeme ekranı açılıyor…'); return; }
+  }
+  closeModal();
+  if (!isAddon && targetId === 'pro') { // çevrimiçi ödeme açıksa doğrudan ödeme adımına
+    go('settings/plan');
+    try {
+      const b = await req('GET', '/billing'); BILL = b;
+      if (b && b.enabled && (b.quotes || []).some(q => q.plan === 'pro')) { setTimeout(() => { const pl = $('p-plan'); if (pl) { pl.value = 'pro'; payQuote(); } payStart(); }, 180); return; }
+    } catch (e) {}
+  }
+  const name = isAddon && ADDONS[targetId] ? ADDONS[targetId].name : 'Pro paket', pr = isAddon && ADDONS[targetId] ? priceLine(ADDONS[targetId].priceKey, targetId) : priceLine('pro', 'pro');
+  UI.ask(`${name}${pr ? ' (' + pr + ')' : ''} için bizimle iletişime geçin; hesabınızda hemen açalım. Google Play'den indirdiğiniz ScreenPano TV uygulamasında kutunun menüsündeki Abonelik bölümünden de satın alabilirsiniz.`, { title: name, ok: 'Paketler sayfası', cancel: 'Kapat' })
+    .then(ok => { if (ok) go('settings/plan'); });
+}
+function tahminCard() {
+  const a = ADDONS.tahmin_ligi, active = hasAddon(a.id), pr = priceLine(a.priceKey, a.id), tr = trialLine(a.id), rec = (S.me.addons || {})[a.id] || {};
+  const badge = active ? '<span class="pill ok">✓ Aktif</span>' : (pr ? `<span class="addon-price-tag">${esc(pr)}</span>` : '');
+  const btn = active ? `<span class="muted">${rec.until ? I18N.t(new Date(rec.until).toLocaleDateString(I18N.locale) + ' tarihine kadar açık') : 'İşletmenizde açık'}</span> <a class="btn s g" href="#predict">Tahmin Ligi'ne git</a>`
+    : `<button type="button" class="btn s" data-allow-locked="1" onclick="openUpgradeModal('${esc(a.name)}','${esc(a.id)}')">⚡ ${esc(a.name)}'ni başlat</button>`;
+  const body = `<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div>${tr && !active ? `<span class="upg-trial">🎁 ${esc(tr)}</span>` : ''}<p class="muted" style="margin:6px 0 0;font-size:13px">${esc(a.desc)} Pakete dahil değildir; ek abonelik olarak alınır.</p></div>
+    ${btn}</div>`;
+  return card(`⚽ ${a.name} <span class="muted" style="font-weight:500;font-size:13px">· Ek abonelik</span>`, '', body, badge, !active ? 'pro-card-locked' : '', lockAttrs(a.name, a.id));
+}
+// Başlangıç kullanıcıları kilitli Pro veya ek abonelik alanına tıklayıp/değiştirdiğinde uyarı + yükseltme açılır
+document.addEventListener('click', e => {
+  const box = e.target && e.target.closest && e.target.closest('[data-pro-feature],[data-addon-feature]');
+  if (!box) return;
+  if (e.target.closest('[data-allow-locked], summary, a[href="#settings/plan"]')) return;
+  const feat = box.dataset.proFeature || 'Pro Özellik';
+  const aid = box.dataset.addonFeature || '';
+  if (aid ? (hasAddon(aid) && pro()) : pro()) return;
+  if (e.target.closest('button, input, select, textarea, label, .chip, .hh-cat, .ytm-open, .ytm-cplay, .ytm-ct, .ytm-tth, .ytm-tb, .ytm-bar-ctl button')) {
+    e.preventDefault();
+    e.stopPropagation();
+    warnUpgrade(feat, aid);
+  }
+}, true);
+document.addEventListener('change', e => {
+  const box = e.target && e.target.closest && e.target.closest('[data-pro-feature],[data-addon-feature]');
+  if (!box || e.target.closest('[data-allow-locked]')) return;
+  const feat = box.dataset.proFeature || 'Pro Özellik';
+  const aid = box.dataset.addonFeature || '';
+  if (aid ? (hasAddon(aid) && pro()) : pro()) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.target.type === 'checkbox') e.target.checked = !e.target.checked;
+  warnUpgrade(feat, aid);
+}, true);
 const curOrient = draft => { const l = draft && EDIT.dirty && EDIT.layout ? EDIT.layout : (S.scr && S.scr.layout); return l && [90, 270].includes(Number(l.orient)) ? Number(l.orient) : 0; };
 function scalePv() {
   document.querySelectorAll('.pv').forEach(b => {
@@ -148,7 +292,7 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 const NAV = [
   'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'], ['agenda', 'calendar-clock', 'Yayın Ajandası'],
   'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik', 1], ['menu', 'receipt-text', 'Fiyat Listesi'], ['happy', 'sparkles', 'İndirim Saatleri', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
-  'Canlı veri', ['sport', 'trophy', 'Spor'], ['predict', 'target', 'Tahmin Ligi', 1], ['info', 'newspaper', 'Bilgi Bandı'],
+  'Canlı veri', ['sport', 'trophy', 'Spor'], ['predict', 'target', 'Tahmin Ligi', 'addon'], ['info', 'newspaper', 'Bilgi Bandı'],
   'Takip', ['stats', 'chart-column', 'İstatistik'],
   null, ['settings', 'settings', 'Ayarlar'], ['help', 'circle-help', 'Yardım & SSS'],
 ];
@@ -179,7 +323,7 @@ function drawNav() {
     document.title = 'ScreenPano Müzik'; $('toptitle').textContent = v === 'spotify' ? 'Spotify' : 'YouTube Music';
     return;
   }
-  $('nav').innerHTML = NV.map(n => typeof n === 'string' ? `<div class="grp">${n}</div>` : n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}">${ic(n[1])}${n[2]}${n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
+  $('nav').innerHTML = NV.map(n => typeof n === 'string' ? `<div class="grp">${n}</div>` : n ? `<a href="#${n[0]}" class="${TAB === n[0] ? 'on' : ''}">${ic(n[1])}${n[2]}${n[3] === 'addon' ? (hasAddon('tahmin_ligi') ? '' : '<span class="pro">EK</span>') : n[3] && !pro() ? '<span class="pro">PRO</span>' : ''}</a>` : '<div class="sep"></div>').join('');
   if (window.__ONLY === 'music') document.title = 'ScreenPano Müzik';
   const cur = NAV.find(n => Array.isArray(n) && n[0] === TAB); $('toptitle').textContent = cur ? cur[2] : '';
 }
@@ -319,7 +463,7 @@ SECTIONS.home = {
       + `</div>`
       + card('Hızlı işlemler', 'Ekranda anında bir gösterim başlatır; ayarlarınızı değiştirmez.', `<div class="row">
           <button class="btn g" onclick="act('POST','/goal/test',undefined,'Gol animasyonu gönderildi',false)">⚽ Gol animasyonunu dene</button>
-          <button class="btn g" onclick="act('POST','/birthday/fire',undefined,'Doğum günü kutlaması gönderildi (seçili kişi yoksa görünmez)',false)" ${pro() ? '' : 'disabled'}>🎂 Doğum günü kutlamasını göster</button>
+          <button class="btn g ${pro() ? '' : 'pro-btn-lock'}" onclick="${pro() ? "act('POST','/birthday/fire',undefined,'Doğum günü kutlaması gönderildi (seçili kişi yoksa görünmez)',false)" : "warnUpgrade('Doğum günü kutlaması')"}">🎂 Doğum günü kutlamasını göster${pro() ? '' : ' <span class="pro-mini">Sadece Pro aboneliklerde geçerli</span>'}</button>
           <button class="btn g" onclick="bigTest()">🏟 Büyük maç görselini dene</button>
           ${camp ? `<button class="btn g" onclick="act('POST','/campaigns/${camp.id}/test',undefined,'Kampanya kartı gönderildi',false)">🎁 Kampanya kartını göster</button>` : ''}
         </div>`)
@@ -556,7 +700,7 @@ function drawCanvas() {
     const isFl = w.type === 'qr' || w.type === 'text';
     const txtPrev = w.type === 'text' ? (p.title || p.body ? esc((p.title || '') + (p.title && p.body ? ' ' : '') + (p.body || '')).slice(0, 34) : 'Yazı kutusu')
       : (w.type === 'weather' && p.city ? esc(p.city) + ' · Hava' : (w.type === 'rates' && p.city ? esc(p.city) + ' · ' + esc(d.name) : esc(d.name)));
-    const sub = d.pro && !pro() ? '🔒 Pro · ekranda saat'
+    const sub = d.pro && !pro() ? '🔒 Sadece Pro aboneliklerde geçerli'
       : w.type === 'qr' ? esc(((S.db.qrs || []).find(q => q.id === p.qr) || { label: 'Tümü' }).label) + ' · ' + w.w + '×' + w.h
       : w.type === 'text' ? (p.size ? p.size.toUpperCase() + ' · ' : '') + w.w + '×' + w.h
       : w.w + '×' + w.h;
@@ -576,7 +720,7 @@ function gridSet(n, quiet) {
 function drawPal() {
   const used = new Set(EDIT.layout.widgets.map(w => w.type));
   const n = k => EDIT.layout.widgets.filter(w => w.type === k).length;
-  $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} <span>${esc(d.name)}</span>${d.pro && !pro() ? ' 🔒' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
+  $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} <span>${esc(d.name)}</span>${d.pro && !pro() ? ' <span class="pro-mini">🔒 Sadece Pro aboneliklerde geçerli</span>' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
 }
 const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Google ve Instagram yorumları <a href="#promo">Kampanya ve yorumlar</a> sayfasından bağlanır.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
 const BOXES = [['accent', 'Düz (vurgu rengi tonlu)'], ['glass', 'Cam (yarı saydam koyu)'], ['dark', 'Koyu dolgu'], ['outline', 'Yalnız çerçeve'], ['none', 'Kutusuz']];
@@ -810,7 +954,7 @@ function addW(type) {
   const d = S.cat.widgets[type];
   const cnt = EDIT.layout.widgets.filter(w => w.type === type).length;
   if (d.multi ? cnt >= d.multi : cnt) return toast(d.multi ? `En fazla ${d.multi} tane eklenebilir` : 'Bu widget düzende zaten var', true);
-  if (d.pro && !pro()) toast('Bu kutu Pro pakette; paketinizde yerinde saat görünür', true);
+  if (d.pro && !pro()) { warnUpgrade(d.name); return; }
   const G = EDIT.layout.cols || 24, [mw, mh] = (d.min || [3, 2]).map(v => v * G / 24); let spot = null;
   for (let y = 0; y <= G - mh && !spot; y++) for (let x = 0; x <= G - mw && !spot; x++) { const c = { x, y, w: mw, h: mh }; if (!EDIT.layout.widgets.some(w => overlap(w, c))) spot = c; }
   if (!spot && (type === 'qr' || type === 'text')) {
@@ -1483,10 +1627,10 @@ SECTIONS.happy = {
   html() {
     hdInit();
     const hs = HD.hours, c = HC, d = hs.length ? hdc() : null;
-    const top = `<div class="card hh-top"><div class="hh-tabs2" id="hh-tabs" role="group" aria-label="İndirim saatleri">${hdTabsHtml()}</div>`
+    const top = `<div class="card hh-top${pro() ? '' : ' pro-card-locked'}" ${lockAttrs('İndirim Saatleri')}><div class="hh-tabs2" id="hh-tabs" role="group" aria-label="İndirim saatleri">${hdTabsHtml()}${pro() ? '' : proBadge('İndirim Saatleri')}</div>`
       + (d ? `<div class="row hh-row"><div class="hh-st ${hdState(d).k}" id="hh-sum" aria-live="polite">${hdState(d).html}</div><button type="button" class="btn xs d" onclick="hdDel()">Kaldır</button></div>${hdClash(d) ? '<p class="hh-clash">Bu saat başka bir indirim saatiyle çakışıyor; ortak kategorilerde daha yüksek indirim uygulanır.</p>' : ''}`
         : `<p class="muted" style="margin:12px 0 0">Henüz indirim saati yok. Örneğin hafta içi 17:00–19:00 arası kategorilerde %20 indirim ekleyin; saat gelince fiyatlar kendiliğinden düşer, bitince eski hâline döner.</p>`) + `</div>`;
-    const base = head('İndirim Saatleri (Happy Hour)', 'Belirli gün ve saatlerde otomatik indirim; isterseniz ekranda fotoğraflı duyuru kartı.', `<button class="btn" data-save onclick="saveHappy()">Kaydet</button>`) + lock('İndirim Saatleri') + top;
+    const base = head('İndirim Saatleri (Happy Hour)', 'Belirli gün ve saatlerde otomatik indirim; isterseniz ekranda fotoğraflı duyuru kartı.', `<button class="btn" data-save ${pro() ? 'onclick="saveHappy()"' : 'onclick="warnUpgrade(\'İndirim Saatleri\')"'}>Kaydet</button>`) + lock('İndirim Saatleri') + top;
     if (!d) return base;
     const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
     const dayChips = DAYS.map((n, i) => hchip(d.days.includes(i + 1), `hdDay(${i + 1})`, n)).join('');
@@ -1509,7 +1653,7 @@ SECTIONS.happy = {
       <div class="row mt" style="justify-content:flex-end"><button class="btn g" type="button" onclick="testHappy()">📺 TV'de dene</button></div>` : '';
     const open = HP_OPEN === null ? !!c.image : HP_OPEN;
     const tabs = [['menu', 'Fiyat listesi'], ['card', 'Ekran kartı']].map(([k, n]) => `<button type="button" role="tab" id="hhtab-${k}" aria-selected="${HP_TAB === k}" class="${HP_TAB === k ? 'on' : ''}" onclick="HP_TAB='${k}';render(true)">${n}</button>`).join('');
-    return base + `<div class="hh-grid"><div class="hh-steps hh-form">`
+    return base + `<div class="hh-grid${pro() ? '' : ' pro-lock-area'}" ${lockAttrs('İndirim Saatleri')}><div class="hh-steps hh-form">`
       + hsec('Hangi gün, saat kaçta?', 'Bu saatlerde fiyat listesinde fiyatlar düşer; saat bitince eski hâline döner.', when)
       + hsec('İndirim ne kadar, nerede?', 'Seçtiğiniz kategorilerdeki tüm ürünlere uygulanır. Tek ürüne özel fiyat için Fiyat Listesi\'nde ürünün yanındaki küçük kutuyu kullanın.', howMuch)
       + hsec('Hangi ürünlerde?', '', hdCatRows(d))
@@ -1558,11 +1702,13 @@ async function removeHappyImg() {
 }
 async function testHappy() { await act('POST', '/happy-card/test', undefined, 'Kart TV\'de gösteriliyor', false); }
 
-// Paket fiyatı (süper yönetim → Fiyatlandırma): "2.000 ₺ / ay · yıllık 20.000 ₺"; girilmemişse boş
+// Paket fiyatı: Play sürümünde Google Play'in fiyatı, değilse süper yönetim → Fiyatlandırma ("2.000 ₺ / ay · yıllık 20.000 ₺"); girilmemişse boş
 function planPrice(id) {
-  const P = S.me && S.me.pricing, x = P && P[id]; if (!x || !x.monthly) return '';
+  const P = S.me && S.me.pricing, x = P && P[id], po = playOffer(id);
   const f = n => { const v = n.toLocaleString(I18N.locale); return P.currency === 'TRY' ? v + ' ₺' : (P.currency === 'USD' ? '$' : '€') + v; };
-  return `<span class="muted" style="display:block;font-weight:600;color:var(--accent2);margin:2px 0 6px">${f(x.monthly)} / ay${x.yearly ? ' · yıllık ' + f(x.yearly) : ''}${P.vat === 'incl' ? '' : ' + KDV'}</span>`;
+  const main = po && po.price ? `${po.price} / ay` : x && x.monthly ? `${f(x.monthly)} / ay${x.yearly ? ' · yıllık ' + f(x.yearly) : ''}${P.vat === 'incl' ? '' : ' + KDV'}` : '';
+  if (!main) return '';
+  return `<span class="muted" style="display:block;font-weight:600;color:var(--accent2);margin:2px 0 6px">${esc(main)}${po && po.trialDays ? ' · ' + esc(I18N.t(po.trialDays + ' gün ücretsiz deneme')) : ''}</span>`;
 }
 /* ================= ÇEVRİMİÇİ ÖDEME ================= */
 // Sunucuda mod kapalıysa ya da işletme pilotta değilse enabled:false döner: kart hiç çizilmez, "bizimle iletişime geçin" metni kalır.
@@ -1630,9 +1776,9 @@ function menuLimitNote(m) {
   if (!mc && !mi) return '';
   const cats = (m && m.categories) || [], items = cats.reduce((n, c) => n + (c.items || []).length, 0);
   const over = (mc && cats.length > mc) || (mi && items > mi);
-  return `<div class="bn ${over ? 'bad' : 'lock'}"><span>${over
+  return `<div class="bn ${over ? 'bad' : 'lock'}">${proBadge('Sınırsız Fiyat Listesi')}<span>${over
     ? `<b>Listenin bir kısmı ekranda görünmüyor.</b> Paketinizde ekranda ilk ${mc} kategori ve toplam ${mi} ürün gösterilir (şu an ${cats.length} kategori, ${items} ürün). Sırayı değiştirerek hangilerinin görüneceğini seçebilir ya da Pro'ya geçebilirsiniz.`
-    : `Paketinizde ekranda en çok <b>${mc} kategori ve ${mi} ürün</b> gösterilir (şu an ${cats.length} kategori, ${items} ürün). Sınırsız liste ve indirim saatleri Pro pakette.`}</span><a class="btn s g" href="#settings/plan">Paketler</a></div>`;
+    : `Paketinizde ekranda en çok <b>${mc} kategori ve ${mi} ürün</b> gösterilir (şu an ${cats.length} kategori, ${items} ürün). Sınırsız liste ve indirim saatleri Pro pakette.`}</span><button type="button" class="btn s" onclick="openUpgradeModal('Sınırsız Fiyat Listesi')">Pro Pakete Yükselt</button></div>`;
 }
 let MENU = null;
 SECTIONS.menu = {
@@ -1820,7 +1966,7 @@ SECTIONS.sport = {
         sw(bc.enabled, "act('PUT','/bigmatch',{enabled:this.checked},this.checked?'Açıldı':'Kapatıldı')"), bc.enabled ? '' : 'off')
 ) }[sec]();
     return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.', `<button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button>`)
-      + `<div class="spsum" id="sp-sum"></div>` + tabs('sport', TABS) + body;
+      + `<div class="spsum" id="sp-sum"></div>` + tabs('sport', TABS) + body + `<div class="mt">${tahminCard()}</div>`;
   },
   async after() {
     const n = S.lg.enabled.length;
@@ -2071,12 +2217,12 @@ SECTIONS.celeb = {
     return head('Kutlamalar', 'Müşterilerinize doğum günü mesajları ve resmî bayramlarda bayrak, Atatürk sözleri ve fotoğraflar.')
       + lock('Doğum günü kutlaması')
       + `<div class="grid g2" style="margin-bottom:18px">`
-      + card('🎂 Doğum günü', 'Seçili kişiler için belirlenen saatlerde ekranın altında kutlama yazısı kayar.',
+      + cardPro('Doğum günü kutlaması', '🎂 Doğum günü', 'Seçili kişiler için belirlenen saatlerde ekranın altında kutlama yazısı kayar.',
         `${db.birthdays.length ? `<div class="list">${db.birthdays.map(b => `<div class="it">${sw(b.selected, `act('PATCH','/birthdays/${b.id}',{selected:this.checked},this.checked?'Kutlamaya eklendi':'Kutlamadan çıkarıldı',false)`)}<div class="b"><b>${esc(b.name)}</b><span>${esc(b.text)}</span></div><button class="btn xs d" onclick="act('DELETE','/birthdays/${b.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : '<div class="empty">Henüz kişi yok</div>'}
          <hr class="sep2">${fl('Kişi', '<input type="text" id="b-n" maxlength="60" placeholder="Ad Soyad">')}<div class="mt">${fl('Ekranda kayacak yazı', '<input type="text" id="b-t" maxlength="200" placeholder="🎉 Sevgili Ahmet, nice mutlu yıllara! 🎂">')}</div>
          <label class="ckl mt"><input type="checkbox" id="b-ok"> Bu kişi adının ekranda gösterilmesine izin verdi (KVKK)</label>
          <div class="row end mt"><button class="btn" onclick="addBday()">Ekle</button></div>`)
-      + card('Gösterim saatleri', 'Kutlama her gün bu saatlerde başlar.',
+      + cardPro('Doğum günü kutlaması', 'Gösterim saatleri', 'Kutlama her gün bu saatlerde başlar.',
         `<div class="row" id="times">${TIMES.map((t, i) => `<span class="time">${t}<button onclick="TIMES.splice(${i},1);render(true)">×</button></span>`).join('') || '<span class="muted">Saat yok</span>'}</div>
          <div class="row mt"><input type="time" id="b-time" style="max-width:150px"><button class="btn g s" onclick="const v=$('b-time').value;if(v&&!TIMES.includes(v)){TIMES.push(v);TIMES.sort();render(true)}">＋ Saat ekle</button></div>
          <div class="f mt">${fl('Ekranda kalma süresi (saniye)', `<input type="number" id="b-dur" min="5" max="300" value="${db.duration}">`)}</div>
@@ -2138,13 +2284,13 @@ function drawPredict() {
   const q = (PRED_Q || '').toLocaleLowerCase('tr');
   const ul = p.users.filter(u => !q || u.nick.toLocaleLowerCase('tr').includes(q) || (u.name || '').toLocaleLowerCase('tr').includes(q) || u.email.toLocaleLowerCase('tr').includes(q));
   const us = ul.length ? ul.slice(0, 200).map(u => `<div class="it"><div class="b"><b>${esc(u.nick)}${u.off ? ' <span class="muted">· kapatıldı</span>' : ''}</b><span>${u.name ? esc(u.name) + ' · ' : ''}${esc(u.email)}${u.tel ? ' · ' + esc(u.tel) : ''}${u.mail ? '' : ' · ' + I18N.t('e-posta kapalı')}${u.age != null ? ' · ' + I18N.t(u.age + ' yaş') : ''} · ${I18N.t(u.n + ' maça tahmin')} · ${new Date(u.at).toLocaleDateString(I18N.locale)}</span></div><div class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn g s" onclick="predEdit('${u.uid}')">Düzenle</button><button class="btn g s" onclick="predUser('${u.uid}',${!u.off})">${u.off ? 'Geri aç' : 'Ligden çıkar'}</button><button class="btn g s" style="color:var(--bad,#e5484d)" onclick="predDel('${u.uid}')">Sil</button></div></div>`).join('') : `<div class="empty">${p.users.length ? 'Eşleşen katılımcı yok.' : 'Henüz katılımcı yok.'}</div>`;
-  $('pdv').innerHTML = (!p.google ? `<div class="card"><p style="margin:0"><b>Google girişi ayarlı değil.</b> <span class="muted">Müşteriler yalnız Google hesabıyla katılabildiği için Tahmin Ligi şu an kayıt alamaz. Süper yönetimden Google OAuth anahtarlarını girin.</span></p></div>` : '') + (!p.pro ? `<div class="card"><p class="muted">Tahmin Ligi Pro pakete dahildir.</p></div>` : '')
+  $('pdv').innerHTML = (!p.google ? `<div class="card"><p style="margin:0"><b>Google girişi ayarlı değil.</b> <span class="muted">Müşteriler yalnız Google hesabıyla katılabildiği için Tahmin Ligi şu an kayıt alamaz. Süper yönetimden Google OAuth anahtarlarını girin.</span></p></div>` : '') + (!(p.addon && p.addon.active) ? lock('Tahmin Ligi', 'tahmin_ligi') : '')
     + card('Tahmin Ligi', p.on ? 'Açık: ekranda döngü arasında puan durumu ve katılım QR\'ı görünür.' : 'Kapalı. Açınca ekranda katılım QR\'ı ve puan durumu görünmeye başlar.',
       `<div class="f">${fl('Haftanın birincisine ikram', `<input type="text" id="pd-prize" maxlength="120" placeholder="örn. 1 adet büyük boy pizza" value="${esc(p.prize)}">`)}
        ${fl('Yaş sınırı', `<select id="pd-age"><option value="0" ${!p.minAge ? 'selected' : ''}>Yok</option><option value="18" ${p.minAge === 18 ? 'selected' : ''}>18 yaş ve üzeri</option></select>`)}
        ${fl('Ekranda ne sıklıkla', `<select id="pd-every">${[4, 6, 8, 12, 20].map(n => `<option value="${n}" ${p.every === n ? 'selected' : ''}>Her ${n} içerikte bir</option>`).join('')}</select>`)}</div>
        <div class="row mt" style="gap:10px;flex-wrap:wrap"><a class="btn g s" href="${esc(p.url)}" target="_blank" rel="noopener">Müşteri sayfasını aç ↗</a><span class="muted" style="font-size:12px;word-break:break-all">${esc(p.url)}</span><span style="flex:1"></span><button class="btn" data-save onclick="predSave()">Kaydet</button></div>`,
-      sw(p.on, "predSet({on:this.checked})"), p.on ? '' : 'off')
+      sw(p.on && !!(p.addon && p.addon.active), "predSet({on:this.checked})"), p.on && p.addon && p.addon.active ? '' : 'off')
     + card(`Puan durumu · ${esc(p.week.label)}`, `${p.userCount} katılımcı`, `<div class="tabs" style="margin:0 0 10px"><button class="${PRED_V === 'week' ? 'on' : ''}" onclick="PRED_V='week';drawPredict()">Bu hafta</button><button class="${PRED_V === 'all' ? 'on' : ''}" onclick="PRED_V='all';drawPredict()">Genel</button></div><div class="list">${rows}</div>`)
     + card('Haftanın birincileri', 'Ödülü verince işaretleyin. Kazanan, ödülü alırken kullanıcı adını ve kendisine gelen e-postayı gösterir.', `<div class="list">${aw}</div>`)
     + card('Kurallar ve puanlar', '', `<p class="muted" style="margin:0 0 8px">Tam skor ${P.exact} · doğru sonuç ${P.result} · golcünün her golü ${P.goal} · asistin her asisti ${P.assist} · sarı kart sayısı tam ${P.yellow} · kırmızı kart çıkar/çıkmaz ${P.red} · sarı kart görecek her doğru oyuncu ${P.ycp} · kırmızı kart görecek her doğru oyuncu ${P.rcp} puan. Müşteri istediği maçlara tahmin girer; maç başlayınca tahmin kilitlenir. Hafta Salı–Pazartesi; eşitlikte daha çok tam skor, sonra daha erken tahmin öne geçer. Katılım ücretsizdir, kura yoktur.</p>
@@ -2286,7 +2432,7 @@ SECTIONS.settings = {
       const m = (l, used, lim, f = x => x) => `<div class="row" style="justify-content:space-between;font-size:14px"><span>${l}</span><span class="muted">${f(used)} / ${lim >= 999 || (p.id === 'sinirsiz' && l !== 'Cihaz') ? '∞' : f(lim)}</span></div><div class="meter" style="margin-bottom:12px"><i style="width:${Math.max(2, Math.min(100, lim >= 999 ? 0 : used / lim * 100))}%"></i></div>`;
       h += `<div class="grid g2">` + card('Paketiniz', '', `<div style="font-size:24px;font-weight:700;color:var(--accent2)">${esc(p.name)}</div><p class="muted" style="margin:2px 0 16px">${acc.kind === 'unlimited' ? 'Süresiz · tüm özellikler açık, sınır yok' : !acc.ok ? 'Süresi doldu' : (acc.kind === 'trial' ? 'Deneme · ' : 'Aktif · ') + fmtDate(acc.until) + ' tarihine kadar'}</p>
           ${m('Cihaz', u.devices, p.devices)}${m('Depolama', Math.round(u.storageBytes / 1048576), p.storageMB, x => x >= 1024 ? (x / 1024).toFixed(1) + ' GB' : x + ' MB')}${m('Kullanıcı', u.users, p.users)}`)
-        + card('Paketler', 'Paket değişikliği ve ödeme için bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div><div id="paycard" style="grid-column:1/-1"></div>`;
+        + card('Paketler', playBridge() ? 'Paket değişikliği için yükseltme düğmesini kullanın; ödeme Google Play üzerinden yapılır.' : 'Paket değişikliği ve ödeme için yükseltme düğmesini kullanın ya da bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' + (!pro() ? `<div class="mt"><button type="button" class="btn s" onclick="openUpgradeModal('Pro Paket')">🚀 Pro Pakete Yükselt</button></div>` : '') : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div><div class="mt">${tahminCard()}</div><div id="paycard" style="grid-column:1/-1"></div>`;
     } else if (sub === 'branches') {
       h += branchesHtml();
     } else if (sub === 'privacy') {
@@ -2539,7 +2685,7 @@ function googleCard() {
         <button class="btn g s" onclick="act('POST','/google/refresh',undefined,'Yorumlar yenilendi')">Yenile</button><button class="btn d s" onclick="UI.ask('Google bağlantısı kaldırılsın mı?', { ok: 'Kaldır', danger: true }).then(ok=>{if(ok)act('DELETE','/google',undefined,'Kaldırıldı')})">Kaldır</button></div>
        ${(g.reviews || []).length ? `<div class="list mt">${g.reviews.slice(0, 5).map(r => `<div class="it"><div class="b"><b>${esc(r.author)} <span class="stars">${'★'.repeat(r.rating)}</span> <span class="muted" style="font-weight:400">${esc(r.when || '')}</span></b><span>${esc(r.text)}</span></div></div>`).join('')}</div><p class="muted" style="font-size:12.5px">Google en fazla 5 yorum verir; 12 saatte bir yenilenir. Yalnız 4 ve 5 yıldızlılar ekranda görünür.</p>` : ''}`
     : `<div class="row"><input type="text" id="g-q" placeholder="İşletme adı ve semt, ya da Google Haritalar bağlantısı" style="flex:1" onkeydown="if(event.key==='Enter')gSearch()"><button class="btn" onclick="gSearch()">Ara</button></div><div id="g-res" class="list mt"></div>`;
-  return card('★ Google yorumları', 'Google Haritalar\'daki yorumlarınız otomatik gelir ve medyanın altındaki şeritte döner (düzende "Google yorumları" widget\'ı olmalı).', body,
+  return cardPro('Google yorumları', '★ Google yorumları', 'Google Haritalar\'daki yorumlarınız otomatik gelir ve medyanın altındaki şeritte döner (düzende "Google yorumları" widget\'ı olmalı).', body,
     g && g.placeId ? sw(g.show !== false, "act('PUT','/google',{show:this.checked},this.checked?'Ekranda':'Ekrandan kaldırıldı')") : '');
 }
 async function gSearch() {
@@ -2553,7 +2699,7 @@ async function gSearch() {
 async function gPick(i) { const p = window.__gres[i]; if (await act('PUT', '/google', { placeId: p.id, name: p.name }, 'Google işletmeniz bağlandı')) {} }
 function instaCard() {
   const ig = S.db.instagram || {};
-  return card('📷 Instagram paylaşımları', 'Son paylaşımlarınızın fotoğrafları medya döngüsüne kendiliğinden girer; yeni paylaşım yaptığınızda bir saat içinde ekrana gelir.',
+  return cardPro('Instagram paylaşımları', '📷 Instagram paylaşımları', 'Son paylaşımlarınızın fotoğrafları medya döngüsüne kendiliğinden girer; yeni paylaşım yaptığınızda bir saat içinde ekrana gelir.',
     ig.connected
       ? `<div class="it" style="display:flex;gap:12px;align-items:center"><div class="b" style="flex:1"><b>@${esc(ig.user || '…')}</b><span id="ig-st">${(ig.posts || []).length} paylaşım · ${ig.updated ? 'güncellendi ' + ago(ig.updated) : 'henüz alınmadı'}</span>${ig.error ? `<span style="color:var(--bad)">${esc(ig.error)}</span>` : ''}</div>
           <button class="btn g s" onclick="act('POST','/instagram/refresh',undefined,'Paylaşımlar yenilendi')">Yenile</button><button class="btn d s" onclick="UI.ask('Instagram bağlantısı kaldırılsın mı?', { ok: 'Kaldır', danger: true }).then(ok=>{if(ok)act('DELETE','/instagram',undefined,'Kaldırıldı')})">Kaldır</button></div>
@@ -3036,7 +3182,7 @@ SECTIONS.music = {
     if (!['home', 'explore', 'lib', 'search', 'accounts', 'setup'].includes(sub)) sub = 'home';
     if (SPMODE() && sub === 'explore') sub = 'home'; // Keşfet YouTube hazır listeleridir; Spotify görünümünde yok
     const body = MV ? detailHtml() : { home: homeHtml, explore: exploreHtml, lib: libHtml, search: searchHtml, accounts: accountsHtml, setup: setupHtml }[sub]();
-    return lock('Müzik') + `<div class="ytm${SPMODE() ? ' sp' : ''}"><div id="merrbox">${merrHtml()}</div>${ytmTop(sub)}<div class="ytm-body">${body}</div></div><div id="mnowbox">${nowBar()}</div>`;
+    return lock('Müzik') + `<div class="ytm${SPMODE() ? ' sp' : ''}${pro() ? '' : ' pro-lock-area'}" ${lockAttrs('Müzik')}><div id="merrbox">${merrHtml()}</div>${ytmTop(sub)}<div class="ytm-body">${body}</div></div><div id="mnowbox" ${lockAttrs('Müzik')}>${nowBar()}</div>`;
   },
 };
 const goM = k => { MV = null; go('music/' + k); };
@@ -3649,8 +3795,11 @@ async function drawBranches() {
       ${b.id !== j.current ? `<button class="btn xs" onclick="switchBranch('${b.id}')">Bu şubeye geç</button>` : ''}${owner() ? `<button class="btn xs g" data-nm="${esc(b.name)}" onclick="renBranch('${b.id}', this.dataset.nm)">Adlandır</button>` : ''}${owner() && !b.home && b.id !== j.current ? `<button class="btn xs d" data-nm="${esc(b.name)}" onclick="delBranch('${b.id}', this.dataset.nm)">Sil</button>` : ''}</div>`).join('');
   const others = j.list.filter(b => b.id !== j.current);
   const inc = j.included || j.limit, quota = j.limit <= 1 ? 'Şube açmak Pro pakettedir.' : `Paketinizde ${inc} lokasyon (ana işletme + ${inc - 1} şube) dahildir; ${j.list.length}/${inc} kullanıldı.${j.extraFee ? ` Dahil olanları aşan her yeni şube faturanıza +${j.extraFee} TL olarak yansıtılır.` : ''}`;
-  $('brmore').innerHTML = (owner() ? `<div class="grid g2">` + card('Yeni şube', `${quota} Yeni şube bu şubenin düzeni, renkleri ve logosuyla açılır; süresi ana hesabınızla aynıdır.`,
-      `<div class="row"><input type="text" id="br-n" maxlength="80" placeholder="örn. Kadıköy şubesi" style="flex:1"><button class="btn" onclick="addBranch()" ${j.list.length >= j.limit ? 'disabled' : ''}>Şube aç</button></div>`)
+  $('brmore').innerHTML = (owner() ? `<div class="grid g2">` + (!pro()
+      ? cardPro('Şube yönetimi', 'Yeni şube', `${quota} Yeni şube açmak için Pro pakete yükseltin.`,
+        `<div class="row"><input type="text" id="br-n" maxlength="80" placeholder="örn. Kadıköy şubesi" style="flex:1"><button class="btn" onclick="addBranch()">Şube aç</button></div>`)
+      : card('Yeni şube', `${quota} Yeni şube bu şubenin düzeni, renkleri ve logosuyla açılır; süresi ana hesabınızla aynıdır.`,
+        `<div class="row"><input type="text" id="br-n" maxlength="80" placeholder="örn. Kadıköy şubesi" style="flex:1"><button class="btn" onclick="addBranch()" ${j.list.length >= j.limit ? 'disabled' : ''}>Şube aç</button></div>`))
     + card('Diğer şubelere kopyala', others.length ? 'Bu şubedeki içeriği seçtiğiniz şubelere kopyalar. Kopyalanan bölümler hedef şubede bununla değişir; medya eklenir.' : 'Kopyalamak için önce bir şube daha açın.',
       others.length ? `<div class="fl"><span>Hedef şubeler</span><div class="chips" id="cp-t">${others.map(b => `<span class="chip on" data-id="${b.id}" onclick="this.classList.toggle('on')">${esc(b.name)}</span>`).join('')}</div></div>
         <div class="fl mt"><span>Kopyalanacaklar</span><div class="chips" id="cp-p">${PARTS_TR.map(([k, l]) => `<span class="chip ${['menu', 'promo'].includes(k) ? 'on' : ''}" data-k="${k}" onclick="this.classList.toggle('on')">${l}</span>`).join('')}</div></div>
@@ -3964,6 +4113,7 @@ function drawBrand() {
     setTimeout(() => toast(ok ? 'Ödeme alındı. Süreniz birkaç dakika içinde uzar.' : 'Ödeme tamamlanamadı.', !ok), 400);
   }
   setInterval(async () => { if (document.hidden) return; try { S.scr = await req('GET', '/screen'); } catch (e) {} }, 30000);
+  addEventListener('sp:play-billing', () => { if (TAB === 'settings' || TAB === 'sport') render(true); });
 })();
 addEventListener('beforeunload', e => { if (EDIT.dirty || (MENU && MENU.__dirty) || (HD && HD.__dirty) || (HC && HC.__dirty) || document.querySelector('#view .card.dirty')) { e.preventDefault(); e.returnValue = ''; } });
 /* A2: ortak kayıt çubuğu. Kaydedilmemiş değişiklik olunca altta çıkar; "Kaydet" ilgili bölümü kaydeder, "Vazgeç" son kaydı geri getirir. */

@@ -718,6 +718,17 @@ function openTenant(id) {
         </tr>`).join('')}</tbody></table></div>
       </div>` : ''}
 
+      <!-- Kart 2c: Ek abonelikler (pakete dahil değil) -->
+      <div class="d-card">
+        <h4>${ic('receipt-text')} Ek Abonelikler</h4>
+        ${Object.entries(x.addons || {}).map(([k, a]) => `<div class="row" style="align-items:flex-end">
+          <label class="check-box-label" style="flex:1.4;margin:0"><input type="checkbox" id="e-ad-${k}" ${a.active || (a.source && a.until == null) ? 'checked' : ''}><span><b>${esc(a.name)}</b><br><small class="hint" style="margin:0">${a.active ? (a.until ? 'Açık · ' + fmt(a.until) + ' tarihine kadar' : 'Açık · süresiz') : a.until ? 'Süresi doldu · ' + fmt(a.until) : 'Kapalı'}${a.source === 'play' ? ' · Google Play aboneliği' : a.source === 'admin' ? ' · süper yönetimden' : ''}</small></span></label>
+          <div><label>Bitiş (boş: süresiz)</label><input id="e-adu-${k}" type="date" value="${d(a.until)}">
+            <div style="display:flex;gap:4px;margin-top:5px"><button type="button" class="quick-date-btn" onclick="addInputDays('e-adu-${k}',30)">+30g</button><button type="button" class="quick-date-btn" onclick="addInputDays('e-adu-${k}',365)">+1 yıl</button></div></div>
+        </div>`).join('')}
+        <small class="hint" style="margin:0">Google Play'den alınan abonelikler kendiliğinden işlenir; buradan elle açıp kapatabilirsiniz.</small>
+      </div>
+
       <!-- Kart 3: Özel Yetkiler -->
       <div class="d-card">
         <h4>${ic('shield-check')} Özel Yetkiler & Şube Ayarları</h4>
@@ -836,6 +847,17 @@ function openTenant(id) {
 }
 
 const dateMs = v => v ? Date.parse(v + 'T23:59:00+03:00') : null;
+const x0addons = id => ((D.tenants.find(t => t.id === id) || {}).addons || {});
+function adChanges(id) {
+  const out = {}, loc = ms => { if (!ms) return ''; const t = new Date(ms); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); };
+  for (const [k, a] of Object.entries(x0addons(id))) {
+    const cb = $('e-ad-' + k), du = $('e-adu-' + k); if (!cb) continue;
+    const wasOn = !!(a.active || (a.source && a.until == null)), until = du && du.value ? dateMs(du.value) : null;
+    const dateChanged = (du ? du.value : '') !== loc(a.until);
+    if (cb.checked !== wasOn || (cb.checked && dateChanged)) out[k] = { on: cb.checked, until };
+  }
+  return out;
+}
 async function saveT(id) {
   try {
     await api('PUT', '/tenants/' + id, {
@@ -852,6 +874,7 @@ async function saveT(id) {
       unlimited: $('e-unl').checked,
       superAccess: $('e-sup').checked,
       canTest: $('e-test').checked,
+      addons: adChanges(id), // yalnız değiştirilen ek abonelikler gönderilir (Play kaydının kaynağı boşuna değişmesin)
       applyOrg: !!($('e-org') && $('e-org').checked)
     });
     closeDrawer();
@@ -997,7 +1020,7 @@ async function saveKeys(keys, btn) {
   if (btn) btn.disabled = false;
 }
 /* ---- Fiyatlandırma: paketler, ek kutu, ek şube (aylık + yıllık). Site, işletme paneli ve şube ücreti buradan okur. ---- */
-const PR_ITEMS = [['baslangic', 'Başlangıç paketi', '1 TV kutusu'], ['pro', 'Pro paketi', '2 TV kutusu dahil'], ['extraBox', 'Ek TV kutusu', 'Pro\'da dahil kutuların üstündeki her kutu'], ['extraBranch', 'Ek şube', 'Pro\'daki 3 dahil lokasyonu aşan her şube; şube açılınca bu tutar istenir (boşsa 500)']];
+const PR_ITEMS = [['baslangic', 'Başlangıç paketi', '1 TV kutusu'], ['pro', 'Pro paketi', '2 TV kutusu dahil'], ['extraBox', 'Ek TV kutusu', 'Pro\'da dahil kutuların üstündeki her kutu'], ['tahminLigi', 'Tahmin Ligi (ek abonelik)', 'Pakete dahil değil; isteyen işletme alır'], ['extraBranch', 'Ek şube', 'Pro\'daki 3 dahil lokasyonu aşan her şube; şube açılınca bu tutar istenir (boşsa 500)']];
 const prNum = v => { const n = Math.round(Number(String(v || '').replace(/[^\d]/g, ''))); return n > 0 ? n : 0; };
 const prFmt = n => n ? n.toLocaleString('tr-TR') : '';
 function prHint(k) {
@@ -1040,6 +1063,22 @@ async function savePricing(btn) {
   try { const r = await api('PUT', '/pricing', b); D.pricing = r.pricing; toast('Fiyatlar kaydedildi'); PR_ITEMS.forEach(([k]) => prHint(k)); } catch (e) { toast(e.message, true); }
   if (btn) btn.disabled = false;
 }
+// Google Play abonelikleri: servis hesabı (Play Console → Kullanıcılar ve izinler'de "Finansal verileri görüntüle" + "Siparişleri ve abonelikleri yönet" yetkisi), RTDN adresi
+async function playCard() {
+  const el = $('playc'); if (!el) return; let p;
+  try { p = await api('GET', '/play'); } catch (e) { el.innerHTML = ''; return; }
+  el.innerHTML = card('Google Play abonelikleri', `Play Store sürümündeki (${esc(p.package)}) abonelikler sunucuda Google'dan doğrulanır. Google Cloud'da bir servis hesabı oluşturup JSON anahtarını buraya yükleyin, ardından Play Console → Kullanıcılar ve izinler'den bu hesaba <b>Finansal verileri görüntüleme</b> ve <b>Siparişleri ve abonelikleri yönetme</b> izni verin. Play Console'da ürün kimlikleri: <code>${p.products.map(esc).join('</code>, <code>')}</code>. Yenileme ve iptallerin anında gelmesi için Play Console → Gelir elde etme ayarları → Gerçek zamanlı bildirimler'e bir Pub/Sub konusu bağlayıp push aboneliğini şu adrese yönlendirin:<br><code style="word-break:break-all">${esc(p.rtdn)}</code>`,
+    `<div class="row"><div style="flex:2"><label>Servis hesabı JSON anahtarı ${p.configured ? `· <span class="tag ok">yüklü: ${esc(p.email)}</span>` : ''}</label><input type="file" id="pl-sa" accept="application/json,.json"></div>
+      <div><label>Paket adı</label><input id="pl-pkg" value="${esc(p.package)}" autocomplete="off"></div></div>`,
+    `<button class="btn" onclick="savePlay(this)">Kaydet</button>${p.configured ? ' <button class="btn ghost" onclick="api(\'POST\',\'/play/sweep\').then(()=>toast(\'Abonelikler yeniden okundu\')).catch(e=>toast(e.message,true))">Şimdi doğrula</button>' : ''}`, badge(p.configured));
+}
+async function savePlay(btn) {
+  const f = $('pl-sa').files[0], b = { package: $('pl-pkg').value };
+  if (f) { if (f.size > 20000) return toast('Dosya çok büyük; servis hesabı JSON anahtarını seçin', true); b.serviceAccount = await f.text(); }
+  btn.disabled = true;
+  try { await api('PUT', '/play', b); toast('Kaydedildi'); playCard(); } catch (e) { toast(e.message, true); }
+  btn.disabled = false;
+}
 const saveBtn = keys => `<button class="btn" onclick="saveKeys(${esc(JSON.stringify(keys))},this)">Kaydet</button>`;
 PAGES.sources = {
   html() {
@@ -1053,9 +1092,10 @@ PAGES.sources = {
       + card('Google Places', 'Google yorumları için. Anahtar write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('Google Places API anahtarı', 'google_places_key', 'type="password" autocomplete="off"')}${setting('Google aylık çağrı sınırı', 'google_monthly_cap', 'type="number" min="0" placeholder="900 (boş = 900)"')}</div><div id="g-use"></div>`, saveBtn(['google_places_key', 'google_monthly_cap']), badge(s.google_places_key))
       + card('TMDB', 'Sinema (vizyona girecek filmler) için. Anahtar write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('TMDB API anahtarı', 'tmdb_key', 'type="password" autocomplete="off"')}</div>`, saveBtn(['tmdb_key']), badge(s.tmdb_key))
       + card('İBB trafik', 'İsteğe bağlı: canlı trafik değeri bir Cloudflare Worker üzerinden gelir. İmza anahtarı sunucuda tutulur ve panele düz metin gelmez; yenileme yeni değer üretip bir kez gösterir.', `<div class="row">${setting('İBB trafik Worker adresi', 'traffic_api', 'placeholder="https://trafik.kullanici.workers.dev"')}</div><div class="row"><div>${setting('Worker imza anahtarı (TRAFFIC_SECRET)', 'traffic_secret', 'readonly')}<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="btn ghost sm" onclick="regenTraffic()">Yenile ve göster</button><small class="hint" style="margin:0">Yeniledikten sonra Cloudflare Worker’daki TRAFFIC_SECRET değerini de güncelleyin.</small></div></div></div>`, saveBtn(['traffic_api']), badge(s.traffic_api))
-      + card('Google ile giriş', 'İşletmeler giriş sayfasında "Google ile giriş" düğmesiyle tek tıkla açılır. Google Cloud → Credentials → OAuth Client ID (Web application) oluşturun; Yetkili yeniden yönlendirme URI\'lerine şu iki adresi ekleyin:<br><code style="word-break:break-all">https://screenpano.com/api/auth/google/callback</code><br><code style="word-break:break-all">https://test.screenpano.com/api/auth/google/callback</code><br>İki anahtar da girilmeden düğme gösterilmez. İşletme girişi bildirim e-postasıyla, süper yönetim ise aşağıdaki e-posta listesiyle eşleştirilir. Client Secret write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('OAuth Client ID', 'google_oauth_client_id', 'autocomplete="off"')}${setting('OAuth Client Secret', 'google_oauth_secret', 'type="password" autocomplete="off"')}</div><div style="margin-top:10px">${setting('Süper yönetici Google e-postaları', 'google_super_emails', 'placeholder="admin@ornek.com" autocomplete="off"')}</div>`, saveBtn(['google_oauth_client_id', 'google_oauth_secret', 'google_super_emails']), badge(s.google_oauth_client_id && s.google_oauth_secret));
+      + card('Google ile giriş', 'İşletmeler giriş sayfasında "Google ile giriş" düğmesiyle tek tıkla açılır. Google Cloud → Credentials → OAuth Client ID (Web application) oluşturun; Yetkili yeniden yönlendirme URI\'lerine şu iki adresi ekleyin:<br><code style="word-break:break-all">https://screenpano.com/api/auth/google/callback</code><br><code style="word-break:break-all">https://test.screenpano.com/api/auth/google/callback</code><br>İki anahtar da girilmeden düğme gösterilmez. İşletme girişi bildirim e-postasıyla, süper yönetim ise aşağıdaki e-posta listesiyle eşleştirilir. Client Secret write-only: kaydedildikten sonra yalnız ••••ipucu görünür; boş bırakılırsa eski değer korunur.', `<div class="row">${setting('OAuth Client ID', 'google_oauth_client_id', 'autocomplete="off"')}${setting('OAuth Client Secret', 'google_oauth_secret', 'type="password" autocomplete="off"')}</div><div style="margin-top:10px">${setting('Süper yönetici Google e-postaları', 'google_super_emails', 'placeholder="admin@ornek.com" autocomplete="off"')}</div>`, saveBtn(['google_oauth_client_id', 'google_oauth_secret', 'google_super_emails']), badge(s.google_oauth_client_id && s.google_oauth_secret))
+      + '<div id="playc"></div>';
   },
-  after() { const c = document.querySelectorAll('#main .card'); [['k-collect', 1], ['k-places', 3], ['k-tmdb', 4], ['k-traffic', 5], ['k-gauth', 6]].forEach(([id, i]) => { if (c[i]) c[i].id = id; }); liveSources(); },
+  after() { const c = document.querySelectorAll('#main .card'); [['k-collect', 1], ['k-places', 3], ['k-tmdb', 4], ['k-traffic', 5], ['k-gauth', 6]].forEach(([id, i]) => { if (c[i]) c[i].id = id; }); liveSources(); playCard(); },
 };
 function liveSources() {
   if (D.books && $('bk-info')) {

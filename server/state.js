@@ -234,6 +234,8 @@ function publicState(t, screenId) {
     city: (db.location || {}).city || '',
     blocked: acc.ok ? null : acc.reason,
     app: appVersion(),
+    // abonelik özeti (Play sürümündeki kutu menüsü için): paket, süre, ek abonelikler
+    sub: { tid: t.id, plan: p.id, planName: p.name, kind: acc.kind || acc.reason || '', until: acc.until || null, addons: require('./addons').summary(t) },
   };
   if (!acc.ok) return { ...base, videos: [], matches: [], standings: {}, qrs: [], campaigns: [], bigMatches: [], reviews: [], rates: {}, weather: null };
   const enabled = F.enabledLeagues(t);

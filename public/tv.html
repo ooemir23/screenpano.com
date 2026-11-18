@@ -399,7 +399,7 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .mus>*{grid-column:1}#menu .mus>.mlib{grid-column:2;grid-row:1 / -1;border-top:0;padding-top:0;border-left:max(1px,.1vh) solid rgba(255,255,255,.08);padding-left:2.4vw;min-height:0}
 #menu .mus .ctl{margin-top:1.4vh}#menu .mus .vol{margin-top:1.4vh}
 #menu .mc:not(.mus){display:none}
-#menu.set .mgrid{grid-template-columns:1fr 1fr}#menu.set .mus{display:none}#menu.set .mc:not(.mus){display:flex}#menu.set .mc.dev{grid-row:span 2}
+#menu.set .mgrid{grid-template-columns:1fr 1fr}#menu.set .mus{display:none}#menu.set .mc:not(.mus){display:flex}#menu .mc[hidden]{display:none!important}#menu.set .mc.dev{grid-row:span 2}
 #menu .hb{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.6vh;text-align:center;flex:none}
 #menu .hb.on{background:rgba(255,255,255,.22)}
 #menu #mhupd{display:none;height:5.6vh;padding:0 1.6vw;border-radius:5vh;align-items:center;gap:.6vw;white-space:nowrap;font-size:1.9vh}#menu #mhupd.on{display:inline-flex}
@@ -1337,6 +1337,11 @@ html.theme-glass .pill.live::before {
         <button id="mout" type="button" data-nav>🚪 Oturumu kapat</button>
         <button id="mcls" type="button" data-nav>✕ Kapat</button>
       </div>
+    </section>
+    <section class="mc" id="msub" hidden><h4>Abonelik (Google Play)</h4>
+      <div class="row"><span>Paket</span><span id="msplan">-</span></div>
+      <div class="row"><span>Tahmin Ligi</span><span id="msadd">-</span></div>
+      <div class="acts" id="msbtn"></div>
     </section>
   </div>
   <div id="mst"></div>
@@ -3517,12 +3522,80 @@ window.__updateStatus = msg => {
   else { bar.style.display = 'none'; upd.busy = false; }
   if (/^(İndirilemedi|Yükleyici|Geçersiz|İzin verilmedi)/.test(msg || '')) { try { checkUpdate(upd.last); } catch (e) {} }
 };
+// ---- Abonelik kartı (yalnız Play Store sürümü): paket ve Tahmin Ligi durumu, Google Play ile satın alma ----
+window.__SUB = null;
+function subRender() {
+  const B = window.SPPlayBilling, box = $m('msub'); if (!box) return;
+  const play = B && B.isPlayStore(), s = window.__SUB;
+  box.hidden = !play || !s; if (box.hidden) return;
+  const d = ms => new Date(ms).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  $m('msplan').textContent = s.planName + (s.until ? (s.kind === 'trial' ? ' · deneme, ' : ' · ') + d(s.until) + "'e kadar" : '');
+  const ad = (s.addons || {}).tahmin_ligi || {};
+  $m('msadd').textContent = ad.active ? (ad.until ? d(ad.until) + "'e kadar açık" : 'Açık') : 'Kapalı';
+  const price = id => { const it = B.subs[id], ph = it && (it.offers || []).flatMap(o => o.phases || []).find(p => p.priceMicros > 0); return ph ? ph.formattedPrice : ''; };
+  const btn = (id, label, kind) => `<button type="button" data-nav data-buy="${id}" data-kind="${kind}">${label}${price(id) ? ' · ' + price(id) + ' / ay' : ''}</button>`;
+  $m('msbtn').innerHTML = (s.plan !== 'pro' || s.kind !== 'paid' ? btn('pro', '⭐ Pro paket', 'plan') : '') + (s.plan === 'baslangic' && s.kind !== 'paid' ? btn('baslangic', 'Başlangıç paketi', 'plan') : '') + (ad.active ? '' : btn('tahmin_ligi', '⚽ Tahmin Ligi', 'addon'));
+  for (const b of $m('msbtn').querySelectorAll('[data-buy]')) attachTap(b, () => {
+    const id = b.dataset.buy, ok = b.dataset.kind === 'addon' ? B.buyAddon(id, 'aylik', 'subs', s.tid, id) : B.buyPlan(id, 'aylik', s.tid);
+    menuSt(ok ? 'Google Play ödeme ekranı açılıyor…' : 'Google Play ödeme şu an kullanılamıyor');
+  });
+}
+window.addEventListener('sp:play-billing', () => subRender());
+// ---- Google Play Billing & Modüler Ek Özellik (Add-on) Satın Alma Altyapısı (yalnız Play Store sürümü) ----
+window.SPPlayBilling = {
+  subs: {},
+  inapp: {},
+  entitlements: { keys: [], items: [] },
+  isPlayStore: () => !!(window.__N && window.__N.isPlayStore && window.__N.isPlayStore()),
+  hasFeature(productId) {
+    if (this.entitlements && Array.isArray(this.entitlements.keys) && this.entitlements.keys.includes(productId)) return true;
+    try {
+      const raw = window.__N && window.__N.playActiveEntitlements && window.__N.playActiveEntitlements();
+      if (raw) { const j = JSON.parse(raw); this.entitlements = j; return Array.isArray(j.keys) && j.keys.includes(productId); }
+    } catch (e) {}
+    return false;
+  },
+  queryCatalog(extraSubs = [], extraInApp = []) {
+    if (!this.isPlayStore() || !window.__N.playQueryCatalog) return;
+    const s = ['baslangic', 'pro', 'tahmin_ligi', ...(Array.isArray(extraSubs) ? extraSubs : [extraSubs])].filter(Boolean).join(',');
+    const i = (Array.isArray(extraInApp) ? extraInApp : [extraInApp]).filter(Boolean).join(',');
+    window.__N.playQueryCatalog(s, i);
+  },
+  buyPlan(planId, basePlanId = 'aylik', tenantId = '') {
+    if (!this.isPlayStore() || !window.__N.playBuy) return false;
+    window.__N.playBuy(String(planId || 'pro'), String(basePlanId || 'aylik'), String(tenantId || ''));
+    return true;
+  },
+  buyAddon(productId, basePlanId = 'aylik', productType = 'subs', tenantId = '', addonKey = '') {
+    if (!this.isPlayStore() || !window.__N.playBuyAddon) return false;
+    window.__N.playBuyAddon(String(productId), String(basePlanId || ''), String(productType || 'subs'), String(tenantId || ''), String(addonKey || ''));
+    return true;
+  },
+};
+window.__onPlayBilling = (ev, payload) => {
+  try {
+    const B = window.SPPlayBilling, d = payload || {};
+    if (ev === 'products' && Array.isArray(d.items)) d.items.forEach(x => { B.subs[x.productId] = x; });
+    else if (ev === 'inapp_products' && Array.isArray(d.items)) d.items.forEach(x => { B.inapp[x.productId] = x; });
+    else if (ev === 'entitlements') B.entitlements = d;
+    else if (ev === 'purchase' && d.purchaseToken) {
+      // yetki sunucuda Google'dan doğrulanınca verilir; sonuç durum güncellemesiyle (state) ekrana ve panele yansır
+      menuSt('Satın alma doğrulanıyor…');
+      fetch('/api/tv/play-verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceToken: tokenGet(), purchaseToken: d.purchaseToken, productId: d.productId || '' }) })
+        .then(r => r.json().then(j => ({ ok: r.ok, j })))
+        .then(({ ok, j }) => menuSt(ok ? (j.entitled ? 'Aboneliğiniz açıldı. Teşekkürler!' : 'Satın alma alındı; Google onayı bekleniyor.') : (j.error || 'Satın alma doğrulanamadı')))
+        .catch(() => menuSt('Satın alma doğrulanamadı; bağlantı sonrası yeniden denenecek.'));
+    }
+    window.dispatchEvent(new CustomEvent('sp:play-billing', { detail: { event: ev, data: d } }));
+  } catch (e) {}
+};
 function checkUpdate(a) {
   const n = window.__N;
   if (a) upd.last = a;
+  const isPlay = !!(n && n.isPlayStore && n.isPlayStore());
   const curCode = (n && n.versionCode) ? Number(n.versionCode()) : 0;
   const srvCode = (a && a.versionCode) ? Number(a.versionCode) : 0;
-  upd.avail = (n && !n.desktop && curCode > 0 && srvCode > curCode) ? a : null;
+  upd.avail = (n && !n.desktop && !isPlay && curCode > 0 && srvCode > curCode) ? a : null;
   $m('updot').classList.toggle('on', !!(upd.avail && n.versionName));
   if ($m('menu').classList.contains('on')) {
     menuInfo();
@@ -3547,6 +3620,7 @@ function attachTap(target, fn) {
 }
 
 attachTap('mchk', async () => {
+  if (window.__N && window.__N.isPlayStore && window.__N.isPlayStore()) { menuSt('Güncellemeler Google Play Store üzerinden otomatik yapılır.'); return; }
   menuSt('Kontrol ediliyor…');
   if (window.__N && window.__N.desktop && window.__N.checkUpdate) { window.__N.checkUpdate(); return; } // Windows: sonuç __updateStatus ile gelir
   try {
@@ -3575,6 +3649,7 @@ attachTap('mrel', () => location.reload());
 attachTap('mhrel', () => { menuSt('Yenileniyor…'); location.reload(); });
 // ⚙ Ayarlar: cihaz bilgisi, güncelleme ve işlemler ayrı görünümde (menü varsayılan olarak müzikle açılır)
 function menuSet(on) {
+  if (on) { try { window.SPPlayBilling && window.SPPlayBilling.isPlayStore() && window.SPPlayBilling.queryCatalog(); subRender(); } catch (e) {} }
   $m('menu').classList.toggle('set', on); $m('mhset').classList.toggle('on', on);
   requestAnimationFrame(() => { const b = on ? ($m('mupd').style.display !== 'none' ? $m('mupd') : $m('mchk')) : $m('mmplay'); if (b) b.focus({ preventScroll: true }); });
 }
@@ -4476,6 +4551,7 @@ function showMenuPage(anim) {
 // ---- durumun ilk adımı: tema, marka, düzen, abonelik ----
 function applyState0(s) {
   CITY = s.city || '';
+  window.__SUB = s.sub || null; try { subRender(); } catch (e) {}
   window.__savedLayout = s.layout;
   applyTheme(s.theme); applyBrand(s.brand); applyLayout(window.__draft || s.layout); setBlocked(s.blocked);
 }
