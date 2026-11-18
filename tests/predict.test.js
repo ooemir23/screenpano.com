@@ -99,3 +99,15 @@ test('QR anahtarı: şimdiki ve bir önceki 2 saatlik pencere geçerli, başka i
   assert.ok(P.qrValid(a, P.qrKey(a, w - 1)), 'önceki pencere'); assert.ok(!P.qrValid(a, P.qrKey(a, w - 2)), 'daha eski geçersiz');
   assert.match(P.joinUrl(a), /\/lig\/[a-z0-9]{8}\?k=[a-f0-9]{10}$/);
 });
+
+test('doğum günü eşleşmesi (TR günü) ve 29 Şubat; telefon biçimi', () => {
+  const at = s => Date.parse(s + '+03:00');
+  assert.ok(P.bornOn('1990-11-18', at('2026-11-18T00:05:00')), 'TR gece yarısından sonra yeni gün');
+  assert.ok(!P.bornOn('1990-11-18', at('2026-11-17T23:55:00')));
+  assert.ok(P.bornOn('2000-02-29', at('2027-02-28T12:00:00')), 'artık olmayan yılda 28 Şubat');
+  assert.ok(!P.bornOn('2000-02-29', at('2028-02-28T12:00:00')), 'artık yılda 29 Şubat beklenir');
+  assert.ok(P.bornOn('2000-02-29', at('2028-02-29T12:00:00')));
+  const { phone } = require('../server/routes-predict');
+  assert.equal(phone('0532 123 45 67'), '+905321234567'); assert.equal(phone('5321234567'), '+905321234567'); assert.equal(phone('+90 (532) 123-45-67'), '+905321234567');
+  assert.equal(phone('+44 7700 900123'), '+447700900123'); assert.equal(phone('0212 123 45 67'), null); assert.equal(phone('123'), null); assert.equal(phone(''), null);
+});

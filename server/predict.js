@@ -267,10 +267,14 @@ function prune(t) {
   if (ch) tenants.save(t);
 }
 
-let started = false, lastWin = null;
+let started = false, lastWin = null, lastDay = null;
 function start() {
   if (started) return; started = true;
   const tick = async () => {
+    // gün değişti: "Bugün doğanlar" afişi yenilensin (lig kapalı olsa da)
+    const day = mdOf().join('-');
+    if (lastDay !== null && day !== lastDay) for (const t of tenants.all()) if (bdayCfg(t).on) { try { require('./hub').pushTenant(t.id); } catch (e) {} }
+    lastDay = day;
     const any = tenants.all().some(t => t.db.predict && t.db.predict.on);
     if (!any) return;
     const w = qrWin(); // QR anahtarı değişti: ekranlara yeni QR gitsin
@@ -282,6 +286,34 @@ function start() {
   setInterval(tick, 5 * 60e3).unref();
   setInterval(() => { for (const t of tenants.all()) if (t.db.predict) prune(t); }, 6 * 3600e3).unref();
 }
+
+// ---------- doğum günleri ----------
+// Türkiye tarihine göre ay-gün; 29 Şubat doğumlular artık olmayan yıllarda 28 Şubat'ta kutlanır
+const trDate = (ms = Date.now()) => new Date(ms + TZ_MS);
+function mdOf(ms = Date.now()) { const d = trDate(ms); return [d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCFullYear()]; }
+const leap = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+function bornOn(bd, ms = Date.now()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bd || ''); if (!m) return false;
+  const [mo, da, y] = mdOf(ms), bm = +m[2], bdd = +m[3];
+  if (bm === mo && bdd === da) return true;
+  return bm === 2 && bdd === 29 && !leap(y) && mo === 2 && da === 28;
+}
+// bugün (ya da verilen gün) doğan katılımcılar; ekranda yalnız izin verenler gösterilir
+function bdayList(t, ms = Date.now()) {
+  const d = cfg(t), y = mdOf(ms)[2], out = [];
+  for (const [uid, u] of Object.entries(d.users)) if (u && !u.off && bornOn(u.bd, ms)) out.push({ uid, u, age: y - +u.bd.slice(0, 4) });
+  return out.sort((a, b) => a.u.nick.localeCompare(b.u.nick, 'tr'));
+}
+const bdayCfg = t => t.db.bdayShow || {};
+// TV: "Bugün doğanlar" afişi (izin veren, bugün doğan müşteriler; Pro)
+function bdayView(t) {
+  const c = bdayCfg(t); if (!c.on || !t.db.predict || !require('./plans').plan(t).pro || !require('./plans').access(t).ok) return null;
+  const names = bdayList(t).filter(x => x.u.showBday).map(x => x.u.nick);
+  if (!names.length) return null;
+  return { names, biz: t.name || '', day: weekLabelDay(), every: Math.max(3, Math.min(30, Number(c.every) || 6)) };
+}
+const AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const weekLabelDay = (ms = Date.now()) => { const [mo, da] = mdOf(ms); return da + ' ' + AYLAR[mo - 1]; };
 
 // ---------- TV ----------
 const qrCache = new Map();
@@ -307,5 +339,5 @@ function tvView(t) {
     last: lw && !lw.none ? { nick: lw.nick, pts: lw.pts, week: weekLabel(lastKey) } : null, every: Math.max(3, Math.min(30, Number(d.every) || 8)) };
 }
 
-module.exports = { PTS, LEAGUE, qrKey, qrValid, joinUrl, unsubSig, mailWeek, start, cfg, urlOf, byCode, isOn, board, pointsFor, weekKey, weekLabel, weekRange, weekStart, weekMatches, weekDone,
+module.exports = { bornOn, bdayList, bdayView, PTS, LEAGUE, qrKey, qrValid, joinUrl, unsubSig, mailWeek, start, cfg, urlOf, byCode, isOn, board, pointsFor, weekKey, weekLabel, weekRange, weekStart, weekMatches, weekDone,
   squad, refreshFixtures, refreshResults, settle, tvView, qrSvg, sha, rnd, prune, get matches() { return C.matches; }, _cache: C };

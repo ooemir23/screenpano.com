@@ -1238,6 +1238,60 @@
           ]
         }
       }
+    },
+    {
+      "id": "bugun-doganlar",
+      "icon": "🎂",
+      "title": "Bugün doğanlar ekranda",
+      "short": "Bugün doğanlar",
+      "text": "Tahmin Ligi'ne kayıtlı müşterilerinizden bugün doğum günü olanlar, ekranda konfetili ve balonlu bir kutlama afişinde kullanıcı adlarıyla gösterilir. Yalnız izin veren müşteriler görünür. Panelde bugün ve önümüzdeki 7 gün doğum günü olanları telefonlarıyla görür, müşteri listesini Excel'e indirebilirsiniz.",
+      "points": [
+        "Bugün doğan müşteriler ekranda kutlama afişinde",
+        "Yalnız izin verenler gösterilir",
+        "Bugün ve önümüzdeki 7 günün listesi, telefonla",
+        "Müşteri listesi Excel'e indirilebilir"
+      ],
+      "plan": "pro",
+      "compare": "Bugün doğanlar",
+      "added": "2026-11-18",
+      "i18n": {
+        "en": {
+          "title": "Today's birthdays on screen",
+          "short": "Today's birthdays",
+          "compare": "Today's birthdays",
+          "text": "Prediction League customers whose birthday is today are shown on screen by username on a festive poster with confetti and balloons. Only customers who agreed are shown. In the panel you see today's and the next 7 days' birthdays with phone numbers, and can download the customer list to Excel.",
+          "points": [
+            "Today's birthday customers on a celebration poster",
+            "Only customers who agreed are shown",
+            "Today and next 7 days, with phone numbers",
+            "Customer list downloadable to Excel"
+          ]
+        },
+        "de": {
+          "title": "Heutige Geburtstage auf dem Bildschirm",
+          "short": "Heutige Geburtstage",
+          "compare": "Heutige Geburtstage",
+          "text": "Tippspiel-Gäste, die heute Geburtstag haben, erscheinen mit Benutzernamen auf einem festlichen Plakat mit Konfetti und Ballons. Nur Gäste mit Einwilligung werden gezeigt. Im Panel sehen Sie die Geburtstage von heute und den nächsten 7 Tagen mit Telefonnummer und können die Kundenliste als Excel herunterladen.",
+          "points": [
+            "Geburtstagsgäste von heute auf einem Feierplakat",
+            "Nur Gäste mit Einwilligung",
+            "Heute und die nächsten 7 Tage, mit Telefon",
+            "Kundenliste als Excel herunterladen"
+          ]
+        },
+        "ar": {
+          "title": "مواليد اليوم على الشاشة",
+          "short": "مواليد اليوم",
+          "compare": "مواليد اليوم",
+          "text": "يظهر عملاء دوري التوقعات الذين يصادف عيد ميلادهم اليوم باسم المستخدم على ملصق احتفالي بالقصاصات الملونة والبالونات. لا يظهر إلا من وافق. وفي اللوحة ترى أعياد ميلاد اليوم والأيام السبعة القادمة مع أرقام الهواتف، ويمكنك تنزيل قائمة العملاء بصيغة Excel.",
+          "points": [
+            "عملاء عيد ميلادهم اليوم على ملصق احتفالي",
+            "يظهر من وافق فقط",
+            "اليوم والأيام السبعة القادمة مع الهاتف",
+            "تنزيل قائمة العملاء بصيغة Excel"
+          ]
+        }
+      }
     }
   ],
   "extras": [

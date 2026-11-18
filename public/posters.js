@@ -13,6 +13,7 @@
     wifi:     { name: 'Wi-Fi', fields: { title: 'Ücretsiz Wi-Fi', sub: 'Ağ: Kafe_Misafir', note: 'Şifre: hosgeldiniz' } },
     tesekkur: { name: 'Teşekkür', fields: { title: 'Bizi tercih ettiğiniz için teşekkürler', sub: '@isletmeniz', note: 'Paylaşımlarınızda bizi etiketleyin' } },
     tahmin:   { name: 'Tahmin Ligi', hidden: true, fields: {} },
+    dogan:    { name: 'Bugün doğanlar', hidden: true, fields: {} },
     kitap:    { name: 'Yeni kitap', hidden: true, fields: { badge: 'Yeni çıkan kitap', title: '', sub: '', note: '' }, image: true },
     insta:    { name: 'Instagram', hidden: true, fields: { title: '', sub: '', note: '' }, image: true },
   };
@@ -154,7 +155,23 @@
 .spp.t-tahmin .url{font-size:.78em;opacity:.6;text-align:center;overflow-wrap:anywhere}
 .spp.vert.t-tahmin{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:1.4em;padding:2.6em 2.2em}
 .spp.vert.t-tahmin .l{justify-content:flex-start;gap:.9em}.spp.vert.t-tahmin h1{font-size:4.3em}
-.spp.vert.t-tahmin .qrw{width:13em;height:13em}.spp.vert.t-tahmin .bd{flex:none}.spp.vert.t-tahmin .r{justify-content:center}`;
+.spp.vert.t-tahmin .qrw{width:13em;height:13em}.spp.vert.t-tahmin .bd{flex:none}.spp.vert.t-tahmin .r{justify-content:center}
+/* Bugün doğanlar: sabit konfeti ve balonlar, ortada büyük kutlama başlığı ve isim kartları. Animasyon yok. */
+.spp.t-dogan{--g:#f5c542;--tc:var(--accent2,#c9955c);flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.1em;padding:2.4em 9em;
+  background:radial-gradient(60% 70% at 50% 45%,color-mix(in srgb,var(--tc) 30%,transparent),transparent 70%),radial-gradient(40% 50% at 0 100%,rgba(229,72,77,.22),transparent 70%),radial-gradient(40% 50% at 100% 0,rgba(62,99,221,.22),transparent 70%),linear-gradient(160deg,color-mix(in srgb,var(--bg,#151717) 85%,#2a0f2e),color-mix(in srgb,var(--bg,#151717) 92%,#000))}
+.spp.t-dogan .cf{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.spp.t-dogan .cf.v,.spp.vert.t-dogan .cf.h{display:none}.spp.vert.t-dogan .cf.v{display:block}
+.spp.t-dogan .bl{position:absolute;top:6%;height:78%;width:auto;pointer-events:none;filter:drop-shadow(0 .4em 1em rgba(0,0,0,.4))}.spp.t-dogan .bl.l{left:1.6%}.spp.t-dogan .bl.r{right:1.6%}
+.spp.t-dogan>*:not(.cf):not(.bl){position:relative;z-index:1}
+.spp.t-dogan .k{display:inline-flex;align-items:center;gap:.6em;font-size:.95em;font-weight:800;letter-spacing:.18em;text-transform:uppercase;padding:.5em 1.1em;border-radius:99em;background:rgba(255,255,255,.08);border:.06em solid rgba(255,255,255,.18)}
+.spp.t-dogan .k b{color:var(--g)}
+.spp.t-dogan h1{margin:0;font-size:5.4em;font-weight:900;line-height:.95;letter-spacing:-.025em;background:linear-gradient(180deg,#fff 20%,color-mix(in srgb,var(--g) 85%,#fff) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .06em .14em rgba(0,0,0,.5))}
+.spp.t-dogan .nm{display:flex;flex-wrap:wrap;justify-content:center;gap:.7em;max-width:100%}
+.spp.t-dogan .n{display:inline-flex;align-items:center;gap:.45em;font-weight:800;padding:.42em .95em;border-radius:.6em;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06));border:.08em solid color-mix(in srgb,var(--g) 55%,transparent);box-shadow:0 .4em 1.2em rgba(0,0,0,.35);white-space:nowrap}
+.spp.t-dogan .n i{font-style:normal}
+.spp.t-dogan .nm.c1 .n{font-size:3.4em;padding:.3em .8em}.spp.t-dogan .nm.c2 .n{font-size:2.5em}.spp.t-dogan .nm.c3 .n{font-size:1.9em}.spp.t-dogan .nm.c4 .n{font-size:1.45em}
+.spp.t-dogan .more{font-size:1.1em;font-weight:700;opacity:.8}
+.spp.t-dogan .ft{font-size:1.35em;font-weight:600;opacity:.92}.spp.t-dogan .ft b{color:var(--tc)}
+.spp.vert.t-dogan{padding:6em 2.4em}.spp.vert.t-dogan h1{font-size:4.4em}.spp.vert.t-dogan .bl{height:30%;top:auto;bottom:2%}`;
   function ensureCss() { if (document.getElementById('spp-css')) return; const s = document.createElement('style'); s.id = 'spp-css'; s.textContent = css; document.head.appendChild(s); }
 
   // item: { tpl, fields, i18n:{en:{...}}, image:url }
@@ -184,6 +201,33 @@
         + (p.last ? `<div class="lw">🏆 Geçen haftanın birincisi: <b>${esc(p.last.nick)}</b> · ${p.last.pts} puan</div>` : '')
         + `</div><div class="r"><div class="scan">${p.qr ? `<div class="qrw">${p.qr}</div>` : ''}<div class="cta"><b>Okut, <span>katıl</span></b><p>Telefonunun kamerasıyla QR'ı okut, saniyeler içinde ligdesin.</p><span class="free">ÜCRETSİZ</span></div></div>`
         + `<div class="bd"><h2>BU HAFTANIN İLK 5'İ<span>${esc(p.week || '')}</span></h2>${rows}</div>${short ? `<div class="url">${esc(short)}</div>` : ''}</div></div>`;
+    }
+    if (tpl === 'dogan') { // Bugün doğanlar (veri sunucudan: item.dogan)
+      const p = item.dogan || {}, all = (p.names || []).filter(Boolean), names = all.slice(0, 10), more = all.length - names.length;
+      const c = names.length <= 1 ? 'c1' : names.length <= 3 ? 'c2' : names.length <= 6 ? 'c3' : 'c4';
+      // sabit konfeti: tohumlu sözde rastgele (her çizimde aynı yerleşim)
+      let sd = 7; const rn = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+      const COL = ['#f5c542', '#e5484d', '#3e63dd', '#30a46c', '#ff7ac6', '#ffffff', '#c9955c'];
+      const conf = (W, H, cx0, cx1, cy0, cy1) => { let o = ''; sd = 7;
+        for (let k = 0; k < 110; k++) {
+          const x = rn() * W, y = rn() * H; if (x > cx0 && x < cx1 && y > cy0 && y < cy1) continue; // yazıların arkası boş kalır
+          const col = COL[Math.floor(rn() * COL.length)], r = Math.floor(rn() * 180), t = rn(), X = x.toFixed(0), Y = y.toFixed(0);
+          o += t < .45 ? `<rect x="${X}" y="${Y}" width="${(8 + rn() * 10).toFixed(0)}" height="${(4 + rn() * 5).toFixed(0)}" rx="1.5" fill="${col}" transform="rotate(${r} ${X} ${Y})" opacity=".85"/>`
+            : t < .8 ? `<circle cx="${X}" cy="${Y}" r="${(3 + rn() * 4).toFixed(1)}" fill="${col}" opacity=".8"/>`
+            : `<path d="M${X} ${Y}q8 -10 16 0t16 0" stroke="${col}" stroke-width="3" fill="none" stroke-linecap="round" transform="rotate(${r} ${X} ${Y})" opacity=".8"/>`;
+        }
+        return o; };
+      const cf = `<svg class="cf h" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">${conf(1600, 900, 300, 1300, 100, 820)}</svg><svg class="cf v" viewBox="0 0 900 1600" preserveAspectRatio="xMidYMid slice">${conf(900, 1600, 60, 840, 430, 1150)}</svg>`;
+      const balloon = (cx, cy, col, rx) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${rx * 1.22}" fill="${col}"/><ellipse cx="${cx - rx * .35}" cy="${cy - rx * .45}" rx="${rx * .22}" ry="${rx * .34}" fill="#fff" opacity=".35"/><path d="M${cx - 5} ${cy + rx * 1.22}l5 7 5-7z" fill="${col}"/><path d="M${cx} ${cy + rx * 1.22 + 7}c-10 40 14 70 -4 120 -12 34 6 60 0 100" stroke="rgba(255,255,255,.55)" stroke-width="1.6" fill="none"/>`;
+      const bl = (cls, a, b, c2) => `<svg class="bl ${cls}" viewBox="0 0 160 420">${balloon(56, 70, a, 42)}${balloon(112, 128, b, 36)}${balloon(64, 186, c2, 30)}</svg>`;
+      const one = names.length === 1;
+      return `<div class="${cls}" lang="tr">${cf}`
+        + bl('l', '#e5484d', '#f5c542', '#3e63dd') + bl('r', '#30a46c', '#ff7ac6', '#f5c542')
+        + `<div class="k">🎂 Bugün doğanlar · <b>${esc(p.day || '')}</b></div>`
+        + `<h1>${one ? 'İyi ki doğdun!' : 'İyi ki doğdunuz!'}</h1>`
+        + `<div class="nm ${c}">${names.map(n => `<span class="n"><i>🎉</i>${esc(n)}</span>`).join('')}</div>`
+        + (more > 0 ? `<div class="more">ve ${more} kişi daha</div>` : '')
+        + `<div class="ft">${p.biz ? `<b>${esc(p.biz)}</b> ailesi olarak` : 'Hep birlikte'} nice mutlu yıllar dileriz 🎈</div></div>`;
     }
     if (tpl === 'insta') {
       const ig = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>';

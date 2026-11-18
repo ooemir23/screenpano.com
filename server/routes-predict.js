@@ -25,12 +25,21 @@ function birth(v) {
 // ad / soyad: harf, boşluk, kesme ve tire; 2–30 karakter
 const NAME = /^[\p{L}][\p{L} '’.-]{1,29}$/u;
 const cap = v => String(v || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr').replace(/(^|[\s'’-])(\p{L})/gu, (m, a, b) => a + b.toLocaleUpperCase('tr'));
+// telefon: Türkiye cep (05xx…) +90 biçimine çevrilir; yurt dışı numaralar + ile 10–15 hane
+function phone(v) {
+  const raw = String(v || '').replace(/[\s().-]/g, '');
+  let m = /^(?:\+?90|0)?(5\d{9})$/.exec(raw); if (m) return '+90' + m[1];
+  m = /^(?:\+|00)(\d{10,15})$/.exec(raw); if (m && !m[1].startsWith('90')) return '+' + m[1];
+  return null;
+}
+const telFmt = t => { const m = /^\+90(\d{3})(\d{3})(\d{2})(\d{2})$/.exec(t || ''); return m ? `0${m[1]} ${m[2]} ${m[3]} ${m[4]}` : (t || ''); };
 // yeni katılımcı bilgileri: hata metni ya da null
-function newUserError(d, { ad, soyad, bd, consent }) {
+function newUserError(d, { ad, soyad, bd, tel, consent }) {
   if (!NAME.test(ad)) return 'Adınızı yazın';
   if (!NAME.test(soyad)) return 'Soyadınızı yazın';
   const b = birth(bd); if (!b) return bd ? 'Geçerli bir doğum tarihi girin' : 'Doğum tarihinizi girin';
   if (d.minAge && b.age < d.minAge) return `Bu lige ${d.minAge} yaş ve üzeri katılabilir`;
+  if (!phone(tel)) return tel ? 'Geçerli bir cep telefonu numarası yazın (05xx xxx xx xx)' : 'Telefon numaranızı yazın';
   if (consent !== true) return 'Devam etmek için aydınlatma metnini onaylayın';
   return null;
 }
@@ -42,9 +51,10 @@ function makeNick(d, ad, soyad) {
   for (let i = 2; i < 10000; i++) { const n = `${base} ${i}`; if (!nickTaken(d, n)) return n; }
   return base + ' ' + P.rnd(4);
 }
-function newUser(d, { email, ad, soyad, bd, consentAt, via }) {
+function newUser(d, { email, ad, soyad, bd, tel, showBday, consentAt, via }) {
   if (Object.keys(d.users).length >= 5000) return null;
-  const uid = P.rnd(10); d.users[uid] = { nick: makeNick(d, ad, soyad), ad, soyad, email, bd, via, at: now(), consentAt, tk: [] };
+  const uid = P.rnd(10); d.users[uid] = { nick: makeNick(d, ad, soyad), ad, soyad, email, bd, tel, via, at: now(), consentAt, tk: [] };
+  if (showBday) d.users[uid].showBday = true;
   return uid;
 }
 function issue(t, u) {
@@ -129,9 +139,9 @@ pub.post('/:code/gsignup', (req, res) => {
   let uid = Object.keys(d.users).find(id => d.users[id].email === email);
   if (!uid) {
     const ad = cap(b.ad), soyad = cap(b.soyad);
-    const er = newUserError(d, { ad, soyad, bd: b.bd, consent: b.consent });
+    const er = newUserError(d, { ad, soyad, bd: b.bd, tel: b.tel, consent: b.consent });
     if (er) return res.status(400).json({ error: er });
-    uid = newUser(d, { email, ad, soyad, bd: birth(b.bd).bd, consentAt: now(), via: 'google' });
+    uid = newUser(d, { email, ad, soyad, bd: birth(b.bd).bd, tel: phone(b.tel), showBday: b.showBday === true, consentAt: now(), via: 'google' });
     if (!uid) return res.status(403).json({ error: 'Lig dolu' });
   } else if (d.users[uid].off) return res.status(403).json({ error: 'Bu hesap işletme tarafından kapatıldı' });
   const u = d.users[uid];
@@ -269,7 +279,7 @@ function admin(r, { changed, ownerOnly }) {
       awards: Object.entries(d.awards).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 12).map(([k, a]) => ({ key: k, label: P.weekLabel(k), ...(a.none ? { none: true } : { nick: a.nick, pts: a.pts, given: !!a.given, prize: a.prize || '', email: mask((d.users[a.uid] || {}).email) }) })),
       minAge: d.minAge || 0,
       google: googleOn(),
-      users: Object.entries(d.users).map(([uid, u]) => { const b = birth(u.bd); return { uid, nick: u.nick, name: [u.ad, u.soyad].filter(Boolean).join(' '), mail: !u.noMail, email: mask(u.email), at: u.at, off: !!u.off, age: b ? b.age : null, via: u.via || 'email', n: Object.keys(d.picks[uid] || {}).length }; }).sort((a, b) => b.at - a.at).slice(0, 500),
+      users: Object.entries(d.users).map(([uid, u]) => { const b = birth(u.bd); return { uid, nick: u.nick, name: [u.ad, u.soyad].filter(Boolean).join(' '), mail: !u.noMail, tel: u.tel ? telFmt(u.tel).replace(/\d{2} \d{2}$/, '•• ••') : '', showBday: !!u.showBday, email: mask(u.email), at: u.at, off: !!u.off, age: b ? b.age : null, via: u.via || 'email', n: Object.keys(d.picks[uid] || {}).length }; }).sort((a, b) => b.at - a.at).slice(0, 500),
       userCount: Object.keys(d.users).length,
     };
   };
@@ -295,7 +305,7 @@ function admin(r, { changed, ownerOnly }) {
   r.get('/predict/user/:uid', ownerOnly, (req, res) => {
     const d = P.cfg(req.t), uid = String(req.params.uid), u = d.users[uid];
     if (!u) return res.status(404).json({ error: 'Katılımcı bulunamadı' });
-    res.json({ uid, nick: u.nick, ad: u.ad || '', soyad: u.soyad || '', mail: !u.noMail, email: u.email, bd: u.bd || '', via: u.via || 'email', at: u.at, off: !!u.off, picks: Object.keys(d.picks[uid] || {}).length });
+    res.json({ uid, nick: u.nick, ad: u.ad || '', soyad: u.soyad || '', mail: !u.noMail, tel: telFmt(u.tel), showBday: !!u.showBday, email: u.email, bd: u.bd || '', via: u.via || 'email', at: u.at, off: !!u.off, picks: Object.keys(d.picks[uid] || {}).length });
   });
   r.put('/predict/user/:uid', ownerOnly, (req, res) => {
     const d = P.cfg(req.t), uid = String(req.params.uid), u = d.users[uid], b = req.body || {};
@@ -311,13 +321,43 @@ function admin(r, { changed, ownerOnly }) {
     const ad = b.ad == null ? u.ad : cap(b.ad), soyad = b.soyad == null ? u.soyad : cap(b.soyad);
     if (ad && !NAME.test(ad)) return res.status(400).json({ error: 'Ad geçersiz' });
     if (soyad && !NAME.test(soyad)) return res.status(400).json({ error: 'Soyad geçersiz' });
+    let tel = u.tel;
+    if (b.tel != null) { if (b.tel === '') tel = undefined; else { tel = phone(b.tel); if (!tel) return res.status(400).json({ error: 'Telefon numarası geçersiz' }); } }
     if (email !== u.email) u.tk = []; // e-posta değişince eski oturumlar kapanır
+    if (tel) u.tel = tel; else delete u.tel;
+    if (typeof b.showBday === 'boolean') { if (b.showBday) u.showBday = true; else delete u.showBday; }
     if (ad) u.ad = ad; if (soyad) u.soyad = soyad;
     if (typeof b.mail === 'boolean') { if (b.mail) delete u.noMail; else u.noMail = true; }
     u.nick = nick; u.email = email; if (bd) u.bd = bd; else delete u.bd;
     // kesinleşmiş haftalık birincilik kayıtlarındaki takma ad da güncellensin
     for (const a of Object.values(d.awards)) if (a && a.uid === uid) a.nick = nick;
     changed(req.t); res.json(view(req.t));
+  });
+  // Bugün doğanlar: ekran ayarı ve listeler (bugün + önümüzdeki 7 gün)
+  const bdayView = t => {
+    const c = t.db.bdayShow || {}, row = x => ({ uid: x.uid, nick: x.u.nick, name: [x.u.ad, x.u.soyad].filter(Boolean).join(' '), age: x.age, tel: telFmt(x.u.tel), ok: !!x.u.showBday });
+    const next = []; for (let i = 1; i <= 7; i++) { const ms = now() + i * 86400e3; for (const x of P.bdayList(t, ms)) next.push({ ...row(x), in: i }); }
+    return { on: !!c.on, every: Number(c.every) || 6, pro: require('./plans').plan(t).pro, today: P.bdayList(t).map(row), next, users: Object.keys(P.cfg(t).users).length };
+  };
+  r.get('/predict/bday', (req, res) => res.json(bdayView(req.t)));
+  r.put('/predict/bday', ownerOnly, (req, res) => {
+    const b = req.body || {}, c = req.t.db.bdayShow || (req.t.db.bdayShow = {});
+    if (typeof b.on === 'boolean') c.on = b.on;
+    if (b.every != null) c.every = Math.max(3, Math.min(30, Math.round(Number(b.every)) || 6));
+    changed(req.t); res.json(bdayView(req.t));
+  });
+  // müşteri listesi (Excel uyumlu CSV: ; ayraçlı, UTF-8 BOM) — yalnız işletme sahibi
+  r.get('/predict/export.csv', ownerOnly, (req, res) => {
+    const d = P.cfg(req.t), q = v => { const x = String(v == null ? '' : v); return /[";\n\r]|^[=+\-@]/.test(x) ? '"' + x.replace(/^([=+\-@])/, "'$1").replace(/"/g, '""') + '"' : x; };
+    const day = ms => (ms ? new Date(ms + 3 * 3600e3).toISOString().slice(0, 10) : '');
+    const rows = [['Kullanıcı adı', 'Ad', 'Soyad', 'E-posta', 'Telefon', 'Doğum tarihi', 'Yaş', 'Kayıt tarihi', 'Haftalık e-posta', 'Doğum gününde ekranda', 'Durum']];
+    for (const u of Object.values(d.users).sort((a, b) => (a.at || 0) - (b.at || 0))) {
+      const bb = birth(u.bd);
+      rows.push([u.nick, u.ad || '', u.soyad || '', u.email, telFmt(u.tel), u.bd || '', bb ? bb.age : '', day(u.at), u.noMail ? 'Hayır' : 'Evet', u.showBday ? 'Evet' : 'Hayır', u.off ? 'Ligden çıkarıldı' : 'Aktif']);
+    }
+    const name = 'musteriler-' + day(now()) + '.csv';
+    res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'no-store' });
+    res.send('\ufeff' + rows.map(r => r.map(q).join(';')).join('\r\n'));
   });
   // katılımcıyı ve tahminlerini sil (geçmiş birincilik kaydı takma adla kalır)
   r.delete('/predict/user/:uid', ownerOnly, (req, res) => {
@@ -335,4 +375,4 @@ function admin(r, { changed, ownerOnly }) {
   });
 }
 
-module.exports = { pub, page, admin, googleDone, birth };
+module.exports = { pub, page, admin, googleDone, birth, phone };

@@ -91,10 +91,12 @@ details{font-size:12.5px;color:var(--mut)}details summary{cursor:pointer;color:v
     <b>Son adım</b><p class="note" id="gTo"></p>
     <div class="two"><div><label for="gad">Ad</label><input id="gad" maxlength="30" autocomplete="given-name"></div><div><label for="gsy">Soyad</label><input id="gsy" maxlength="30" autocomplete="family-name"></div></div>
     <label for="gbd">Doğum tarihi</label><input id="gbd" type="date" min="1900-01-01" autocomplete="bday">
+    <label for="gtel">Cep telefonu</label><input id="gtel" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="05xx xxx xx xx">
     <p class="note" id="nkP"></p>
-    <div class="chk"><input type="checkbox" id="gok"><label for="gok" style="margin:0">Adımın, soyadımın, e-postamın ve doğum tarihimin tahmin ligi için işlenmesini kabul ediyorum. <details><summary>Aydınlatma metni</summary>
-    <p>Veri sorumlusu: ${esc(name)}. İşlenen veriler: adınız, soyadınız, Google hesabınızın e-posta adresi, doğum tarihiniz ve tahminleriniz. Puan durumunda yalnız adınız ve soyadınızın baş harfinden oluşan kullanıcı adı görünür. Amaç: tahmin ligine katılımınız, puan durumunun gösterilmesi, haftanın birincisine ödül bildirimi, yaş sınırı varsa uygunluğun kontrolü. E-posta adresinize yalnız haftalık puan durumu ve birincilik bildirimi gönderilir (dilediğiniz an kapatabilirsiniz); reklam, kampanya veya tanıtım e-postası gönderilmez. Verileriniz bu amaç dışında kullanılmaz, üçüncü kişilere satılmaz; hizmet altyapısı ScreenPano tarafından sağlanır. Tahminler yaklaşık bir sezon saklanır. Hesabınızı ve tahminlerinizi bu sayfadan dilediğiniz an silebilirsiniz. KVKK kapsamındaki haklarınız için işletmeye başvurabilirsiniz.</p></details></label></div>
-    <div class="noad"><span>🔒</span><span>Sana hiçbir reklam, kampanya veya tanıtım e-postası gönderilmez. E-postana yalnız haftalık puan durumu gelir; istediğin an kapatabilirsin.</span></div>
+    <div class="chk"><input type="checkbox" id="gok"><label for="gok" style="margin:0">Adımın, soyadımın, e-postamın, telefonumun ve doğum tarihimin tahmin ligi için işlenmesini kabul ediyorum. <details><summary>Aydınlatma metni</summary>
+    <p>Veri sorumlusu: ${esc(name)}. İşlenen veriler: adınız, soyadınız, Google hesabınızın e-posta adresi, cep telefonunuz, doğum tarihiniz ve tahminleriniz. Puan durumunda yalnız adınız ve soyadınızın baş harfinden oluşan kullanıcı adı görünür. Amaç: tahmin ligine katılımınız, puan durumunun gösterilmesi, haftanın birincisine ödül bildirimi, yaş sınırı varsa uygunluğun kontrolü, işletmenin size ulaşabilmesi (ör. ödül bildirimi) ve izin verirseniz doğum gününüzde adınızın işletme ekranında kutlanması. Telefonunuza reklam veya kampanya mesajı gönderilmez. E-posta adresinize yalnız haftalık puan durumu ve birincilik bildirimi gönderilir (dilediğiniz an kapatabilirsiniz); reklam, kampanya veya tanıtım e-postası gönderilmez. Verileriniz bu amaç dışında kullanılmaz, üçüncü kişilere satılmaz; hizmet altyapısı ScreenPano tarafından sağlanır. Tahminler yaklaşık bir sezon saklanır. Hesabınızı ve tahminlerinizi bu sayfadan dilediğiniz an silebilirsiniz. KVKK kapsamındaki haklarınız için işletmeye başvurabilirsiniz.</p></details></label></div>
+    <div class="chk"><input type="checkbox" id="gbday"><label for="gbday" style="margin:0">🎂 Doğum günümde kullanıcı adımın (ör. Ahmet Y.) işletme ekranında kutlanmasını istiyorum. <span style="opacity:.75">(isteğe bağlı)</span></label></div>
+    <div class="noad"><span>🔒</span><span>Sana hiçbir reklam, kampanya veya tanıtım e-postası ya da SMS'i gönderilmez. E-postana yalnız haftalık puan durumu gelir; istediğin an kapatabilirsin.</span></div>
     <button class="btn" id="gsv">Katıl</button><div class="err" id="eg"></div>
   </div>
 </section>
@@ -336,7 +338,7 @@ addEventListener('hashchange', () => { if (onHash()) load().catch(() => {}); });
 $('gg').onclick = e => { e.preventDefault(); gStart(); };
 $('gsv').onclick = async () => {
   $('eg').textContent = ''; $('gsv').disabled = true;
-  try { const j = await api('POST', '/gsignup', { gt: gTok, ad: $('gad').value, soyad: $('gsy').value, bd: $('gbd').value, consent: $('gok').checked }); tok = j.token; gTok = ''; try { localStorage.setItem(KEY, tok); } catch (e) {} tab = 'm'; await load(); }
+  try { const j = await api('POST', '/gsignup', { gt: gTok, ad: $('gad').value, soyad: $('gsy').value, bd: $('gbd').value, tel: $('gtel').value, showBday: $('gbday').checked, consent: $('gok').checked }); tok = j.token; gTok = ''; try { localStorage.setItem(KEY, tok); } catch (e) {} tab = 'm'; await load(); }
   catch (e) { $('eg').textContent = e.message; if (/süresi doldu/.test(e.message)) gTok = ''; }
   $('gsv').disabled = false;
 };
