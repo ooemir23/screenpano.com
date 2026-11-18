@@ -5,6 +5,7 @@ function report(tid, deviceId, m) {
   now.set(tid, {
     at: Date.now(), deviceId, playing: m.playing !== false, provider: s(m.provider, 12), listId: s(m.listId, 64), itemId: s(m.itemId, 40),
     title: s(m.title, 140), artist: s(m.artist, 100), thumb: /^https:\/\//.test(m.thumb || '') ? s(m.thumb, 300) : '', videoId: s(m.videoId, 20), index: Number.isInteger(m.index) ? m.index : -1, err: s(m.err, 140),
+    progress: Number.isFinite(+m.progress) ? Math.max(0, Math.min(36000, Math.round(+m.progress))) : 0, dur: Number.isFinite(+m.dur) ? Math.max(0, Math.min(36000, Math.round(+m.dur))) : 0, // YouTube: panelin ilerleme çubuğu
   });
 }
 const get = tid => { const n = now.get(tid); return n && Date.now() - n.at < 15 * 60000 ? n : null; };

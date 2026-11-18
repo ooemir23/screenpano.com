@@ -3000,7 +3000,7 @@ function nowBar() {
   const title = n && n.title ? n.title : act ? act.title : 'Henüz liste seçilmedi';
   const sub = err ? err : !on ? 'Müzik kapalı' : n && n.artist ? `${n.artist}${act ? ' • ' + act.title : ''}` : act ? `${kindName(act)} • ${PROV(act.provider)}` : 'Kitaplığınızdan bir liste seçin';
   const thumb = (n && n.thumb) || (act && act.thumb) || '';
-  const prog = n && n.dur ? Math.min(100, Math.round((n.progress || 0) / n.dur * 100)) : 0;
+  const prog = n && n.dur ? Math.min(100, nowPos(n) / n.dur * 100) : 0;
   if (SPMODE()) {
     const el = n && n.dur ? nowPos(n) : 0, p2 = n && n.dur ? Math.min(100, el / n.dur * 100) : 0;
     return `<div class="ytm-bar sp3 ${err ? 'err' : ''} ${on ? '' : 'off'}">
@@ -3017,7 +3017,7 @@ function nowBar() {
       <span class="ytm-onoff" title="Müzik açık / kapalı">${sw(on, "musicOpt({enabled:this.checked,playing:true})")}</span>
     </div></div>`;
   }
-  return `<div class="ytm-bar ${err ? 'err' : ''} ${on ? '' : 'off'}">${prog ? `<i class="ytm-prog" style="width:${prog}%"></i>` : ''}
+  return `<div class="ytm-bar ${err ? 'err' : ''} ${on ? '' : 'off'}">${n && n.dur ? `<i class="ytm-prog" style="width:${prog.toFixed(2)}%"></i>` : ''}
     <div class="ytm-bar-ctl">
       <button type="button" title="Önceki" onclick="musicCmd('prev')">${ic('skip-back-f')}</button>
       <button type="button" class="big" title="${playing ? 'Duraklat' : 'TV\'de oynat'}" onclick="musicCmd(${on ? "'toggle'" : "'play'"})">${ic(playing ? 'pause-f' : 'play-f')}</button>
@@ -3036,7 +3036,7 @@ function nowPos(n) { if (!n || !n.dur) return 0; const p = (n.progress || 0) + (
 // ilerleme çubuğu saniyede bir yerinde güncellenir (tüm çubuk yeniden çizilmez)
 setInterval(() => {
   if (TAB !== 'music' || !MNOW || !MNOW.dur) return;
-  const f = document.querySelector('.ytm-pt.f'); if (!f) return;
+  const f = document.querySelector('.ytm-pt.f') || document.querySelector('.ytm-prog'); if (!f) return; // Spotify görünümü ya da YouTube çubuğu
   const el = nowPos(MNOW), e = document.querySelector('.ytm-pt.e');
   f.style.width = Math.min(100, el / MNOW.dur * 100).toFixed(2) + '%'; if (e) e.textContent = fmtDur(Math.floor(el)) || '0:00';
   if (el >= MNOW.dur && MNOW.playing !== false && Date.now() - (MNOW.reAt || 0) > 4000) { MNOW.reAt = Date.now(); musicNowLoad(); } // şarkı bitti: yenisini sor

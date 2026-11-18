@@ -3240,7 +3240,8 @@ function menuMusic() {
   const m = MUS.cfg, it = activeMusicItem(m), has = !!(m && (m.playlists || []).length), on = !!(m && m.enabled && it);
   const opt = mmOpt && Date.now() - mmOpt.at < 2500 ? mmOpt : null;
   const sp0 = m && m.spotify && m.spotify.ext && it && it.provider === 'spotify' ? MUS.spConnectTrack : null; // kutudaki Spotify'ın bildirdiği gerçek durum
-  const playing = opt && opt.playing != null ? opt.playing : sp0 ? !!(on && !sp0.paused) : !!(on && m.playing && !MUS.err);
+  const yt0 = !sp0 && on ? ytNow(it) : null; // YouTube oynatıcısının gerçek durumu (duraklatılmış, ses engelli…)
+  const playing = opt && opt.playing != null ? opt.playing : sp0 ? !!(on && !sp0.paused) : yt0 ? !!(m.playing && !MUS.err && !MUS.needUnlock && yt0.st !== 2) : !!(on && m.playing && !MUS.err);
   const vol = Math.max(0, Math.min(100, Math.round(opt && opt.vol != null ? opt.vol : (MUS.vol != null ? MUS.vol : (m && m.volume) || 0))));
   const sp = MUS.spConnectTrack;
   $m('mmc').classList.toggle('off', !has);
@@ -3251,10 +3252,9 @@ function menuMusic() {
   $m('mmplay').textContent = playing ? '⏸' : '▶';
   // şarkı ilerlemesi: kutudaki Spotify'ın bildirdiği konum + bildirimden beri geçen süre
   const pr = $m('mmpr');
-  if (sp0 && sp0.dur) {
-    const el = Math.min(sp0.dur, sp0.progress + (!sp0.paused ? (Date.now() - sp0.t0) / 1000 : 0));
-    pr.style.visibility = ''; $m('mmpe').textContent = mlDur(Math.floor(el)) || '0:00'; $m('mmpd').textContent = mlDur(sp0.dur); $m('mmpf').style.width = (el / sp0.dur * 100).toFixed(1) + '%';
-  } else pr.style.visibility = 'hidden';
+  const pg = sp0 && sp0.dur ? { el: Math.min(sp0.dur, sp0.progress + (!sp0.paused ? (Date.now() - sp0.t0) / 1000 : 0)), dur: sp0.dur } : yt0 && yt0.dur > 0 && yt0.dur < 36000 ? { el: Math.min(yt0.dur, yt0.cur), dur: yt0.dur } : null;
+  if (pg) { pr.style.visibility = ''; $m('mmpe').textContent = mlDur(Math.floor(pg.el)) || '0:00'; $m('mmpd').textContent = mlDur(Math.round(pg.dur)); $m('mmpf').style.width = (pg.el / pg.dur * 100).toFixed(1) + '%'; }
+  else pr.style.visibility = 'hidden';
   $m('mmbar').style.width = vol + '%'; $m('mmvol').textContent = '%' + vol;
   $m('mmus').textContent = on ? `${(it && it.title) || ''} (Ses: %${vol})` : 'Kapalı';
   mlRender();
@@ -3314,13 +3314,23 @@ $m('mml').addEventListener('click', e => {
   const a = b.dataset.a;
   if (a === 'back') { const id = ML.id; ML.view = 'lib'; ML.id = ''; ML.items = null; ML.err = ''; mlRender(true); const t = $m('mml').querySelector(`[data-k="l:${CSS.escape(id)}"]`); if (t) { t.focus(); t.scrollIntoView({ block: 'nearest' }); } return; }
   if (a === 'open') return mlOpen(b.dataset.id);
-  if (a === 'play') { menuSt('Çalınıyor…'); mmOpt = { playing: true, at: Date.now() }; menuMusicCmd('select', { id: b.dataset.id }); return; }
+  if (a === 'play') {
+    const x = ((MUS.cfg || {}).playlists || []).find(y => y.id === b.dataset.id), ytl = x && (x.provider === 'ytmix' || ((x.provider === 'yt' || x.provider === 'ytm') && x.listId));
+    menuSt('Çalınıyor…'); mmOpt = { playing: true, at: Date.now() };
+    menuMusicCmd('select', ytl ? { id: b.dataset.id, index: 0 } : { id: b.dataset.id }); // YouTube listesi ilk şarkıdan başlar
+    return;
+  }
   if (a === 'track') {
     const it = ((MUS.cfg || {}).playlists || []).find(x => x.id === ML.id), i = +b.dataset.i, x = ML.items && ML.items[i]; if (!it || !x) return;
     menuSt('Çalınıyor: ' + x.t); mmOpt = { playing: true, at: Date.now() };
     menuMusicCmd('select', it.provider === 'spotify' ? { id: it.id, uri: x.k } : { id: it.id, index: i, videoId: x.k });
   }
 });
+// YouTube oynatıcısının o anki durumu (yalnız YouTube listesi çalarken): { st, cur, dur } (sn)
+function ytNow(it) {
+  if (!it || !['yt', 'ytm', 'ytmix'].includes(it.provider) || !MUS.ytPlayer || !MUS.ytReady) return null;
+  try { return { st: MUS.ytPlayer.getPlayerState(), cur: MUS.ytPlayer.getCurrentTime() || 0, dur: MUS.ytPlayer.getDuration() || 0 }; } catch (e) { return null; }
+}
 function menuMusicCmd(cmd, extra) {
   if (PREVIEW) { menuSt('Önizlemede müzik kontrolü kapalı'); return; }
   wsSend({ type: 'music_ctl', cmd, ...(extra || {}) });
@@ -4794,11 +4804,13 @@ let NOW_SIG = '', NOW_AT = 0;
 function reportNow(o = {}) {
   if (IN_IFRAME) return;
   const it = activeMusicItem(MUS.cfg) || {};
+  const y = ytNow(it); // YouTube: konum/süre (panelin ilerleme çubuğu); imzaya girmesin diye aşağıda eklenir
   const n = { type: 'music_now', provider: it.provider || '', itemId: it.id || '', listId: it.listId || '', title: MUS.trackTitle || it.title || '', artist: MUS.trackSub || '', thumb: MUS.trackThumb || it.thumb || '', videoId: '', index: -1, playing: !!(MUS.cfg && MUS.cfg.enabled && MUS.cfg.playing), err: MUS.err || '', ...o };
+  delete n.progress; delete n.dur; // önceki imzadan taşınan konum yeni imzaya karışmasın
   const sig = JSON.stringify(n);
   if (sig === NOW_SIG && Date.now() - NOW_AT < 60000) return;
   NOW_SIG = sig; NOW_AT = Date.now();
-  try { wsSend(n); } catch (e) {}
+  try { wsSend(y && y.dur > 0 && y.dur < 36000 ? { ...n, progress: Math.round(y.cur), dur: Math.round(y.dur) } : n); } catch (e) {}
 }
 setInterval(() => { if (MUS.cfg && MUS.cfg.enabled) { NOW_AT = 0; reportNow(JSON.parse(NOW_SIG || '{}')); } }, 60000);
 function musicOk() { if (MUS.err) { MUS.err = ''; renderMusicBar(); } }
@@ -4938,6 +4950,13 @@ function loadYtMusicEngine(cb) {
   };
   const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
 }
+// şarkının listedeki yeri videoId ile bulunur: sunucunun verdiği sıra (çalma listesindeki konum) gizli/silinmiş şarkılar
+// atlandığı için TV'deki dizideki yerle aynı olmayabilir
+function ytIdxOf(vid, fallback) {
+  const l = MUS.ytTracks; if (!l || !l.length) return fallback || 0;
+  const i = vid ? l.findIndex(x => x.v === vid) : -1;
+  return i >= 0 ? i : Math.max(0, Math.min(l.length - 1, fallback || 0));
+}
 function onMusicTracks(msg) {
   const it = activeMusicItem(MUS.cfg);
   if (!it || it.listId !== msg.listId || !Array.isArray(msg.items) || !msg.items.length) return;
@@ -4951,10 +4970,13 @@ function onMusicTracks(msg) {
       const vd = MUS.ytPlayer.getVideoData && MUS.ytPlayer.getVideoData();
       curVid = (vd && vd.video_id) || '';
     } catch (e) {}
-    const alreadyPlayingTrack = st === 1 && curVid && MUS.ytTracks.some(x => x.v === curVid);
+    // seçilen şarkı yükleniyor/çalıyorsa (ya da listeden bir şarkı zaten çalıyorsa) yeniden başlatılmaz; yalnız konum eşitlenir
+    const curIx = curVid ? MUS.ytTracks.findIndex(x => x.v === curVid) : -1;
+    const alreadyPlayingTrack = curIx >= 0 && (st === 1 || st === 3 || curVid === MUS.wantVid);
+    if (alreadyPlayingTrack) MUS.ytIdx = curIx;
     if (!alreadyPlayingTrack) {
       MUS.err = ''; MUS.errRun = 0;
-      const ix = Math.max(0, Math.min(MUS.ytTracks.length - 1, MUS.ytIdx || 0));
+      const ix = ytIdxOf(MUS.wantVid, MUS.ytIdx || 0);
       MUS.ytIdx = ix;
       const tr = MUS.ytTracks[ix];
       if (tr) {
@@ -4980,8 +5002,10 @@ function playYtItem(it, m) {
   MUS.errRun = 0; MUS.ytTracks = null;
   // kendi listesi (ytmix): şarkılar öğenin içinde gelir; sunucudan liste çekmeye gerek yok
   if (it.provider === 'ytmix' && Array.isArray(it.tracks) && it.tracks.length) MUS.ytTracks = it.tracks.map(t => ({ v: t.v, t: t.t, c: t.c }));
-  const st0 = it.listId && MUS.startAt ? MUS.startAt : null; MUS.startAt = null; // panelde seçilen şarkıdan başla
-  MUS.ytIdx = st0 ? (st0.index || 0) : 0;
+  // panelde/menüde seçilen şarkıdan başla (YouTube listesi ya da kendi listem)
+  const st0 = (it.listId || (MUS.ytTracks && MUS.ytTracks.length)) && MUS.startAt ? MUS.startAt : null; MUS.startAt = null;
+  MUS.wantVid = st0 && st0.videoId || '';
+  MUS.ytIdx = st0 ? ytIdxOf(st0.videoId, st0.index || 0) : 0;
   if (it.listId) wsSend({ type: 'music_tracks', listId: it.listId });
   // Kapanmış canlı yayın ID'lerini (jfKfPfyJRdk, 5qap5aO4i9A) aktif Lofi yayınına yönlendir
   const rawVid = (st0 && st0.videoId) || it.videoId || '';
@@ -5091,6 +5115,9 @@ function playYtItem(it, m) {
         MUS.ytPlayer.setVolume(MUS.vol);
         if (st0 && st0.videoId) {
           MUS.ytPlayer.loadVideoById(st0.videoId);
+          if (m.playing) { MUS.ytPlayer.playVideo(); checkYtStarted(it, m); }
+        } else if (MUS.ytTracks && MUS.ytTracks.length) { // kendi listem: oynatıcı zaten varsa (başka listeden geçiş) şarkılar buradan başlar
+          MUS.ytPlayer.loadVideoById(MUS.ytTracks[Math.max(0, Math.min(MUS.ytTracks.length - 1, MUS.ytIdx || 0))].v);
           if (m.playing) { MUS.ytPlayer.playVideo(); checkYtStarted(it, m); }
         } else if (it.listId && !vid) {
           startPlaylistFallback();
@@ -5292,6 +5319,7 @@ function setMusic(m) {
   }
   if (itemChanged) {
     MUS.curId = it.id; MUS.provider = it.provider; MUS.err = '';
+    if (it.provider !== 'spotify' && !MUS.spPlayer) MUS.spConnectTrack = null; // kutudaki Spotify'ın son şarkısı YouTube/radyo çalarken ekranda kalmasın
     MUS.trackTitle = it.title || ''; MUS.trackSub = it.category || ''; MUS.trackThumb = it.thumb || '';
     renderMusicBar();
     if (it.provider === 'yt' || it.provider === 'ytm' || it.provider === 'ytmix') playYtItem(it, m);
@@ -5347,7 +5375,7 @@ function onMusicCmd(msg) {
     const it = activeMusicItem(MUS.cfg), st = MUS.startAt, ytList = it && (it.listId && (it.provider === 'yt' || it.provider === 'ytm') || it.provider === 'ytmix' && (it.tracks || []).length);
     if (!ytList) MUS.startAt = null;
     else if (MUS.ytPlayer && MUS.ytReady && MUS.curId === it.id) {
-      MUS.startAt = null; MUS.err = ''; MUS.errRun = 0; MUS.ytIdx = st.index || 0;
+      MUS.startAt = null; MUS.err = ''; MUS.errRun = 0; MUS.wantVid = st.videoId || ''; MUS.ytIdx = ytIdxOf(st.videoId, st.index || 0);
       try {
         if (st.videoId) MUS.ytPlayer.loadVideoById(st.videoId);
         else if (MUS.ytTracks && MUS.ytTracks[MUS.ytIdx]) MUS.ytPlayer.loadVideoById(MUS.ytTracks[MUS.ytIdx].v);

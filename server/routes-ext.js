@@ -509,8 +509,12 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
   const spNowSig = new Map(), spKick = new Map();
   // force: komuttan hemen sonra (Spotify'dan taze okunur, imza aynı olsa da gönderilir: konum da düzelir)
   async function spNowSend(t, force) {
-    const m = t.db.music; if (!plan(t).pro || !m || !m.enabled || !SP.external(t)) { spNowSig.delete(t.id); return; }
-    const cur = (m.playlists || []).find(x => x.id === m.activeId); if (!cur || cur.provider !== 'spotify') return;
+    const m = t.db.music, cur = m && (m.playlists || []).find(x => x.id === m.activeId);
+    if (!plan(t).pro || !m || !m.enabled || !SP.external(t) || !cur || cur.provider !== 'spotify') {
+      // Spotify artık çalınan kaynak değil: TV'lerdeki son Spotify şarkısı bir kez temizlenir (YouTube/radyo çalarken ekranda kalmasın)
+      if (spNowSig.has(t.id)) { spNowSig.delete(t.id); sendTo(t, { type: 'music_now', now: null }); }
+      return;
+    }
     const n = await SP.nowPlaying(t, force).catch(() => null), now = n && n.title ? { title: n.title, artist: n.artist, thumb: n.thumb, playing: n.playing } : null;
     // konum imzaya girmez (her turda değişir); gönderilirken eklenir, TV aradaki süreyi kendisi sayar
     const sig = JSON.stringify(now), last = spNowSig.get(t.id); // değişince, değişmese de dakikada bir (yeni açılan TV de görsün)
