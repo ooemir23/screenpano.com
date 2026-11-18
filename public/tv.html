@@ -3932,10 +3932,21 @@ function findMergeNeighbor(emptyW, allWidgets, isEmptyFn) {
   return candidates[0] || null;
 }
 
+// Müzik kutusu müzik çalmıyorken gizlensin mi (kutu ayarı 'hide', varsayılan açık). Duraklatınca hemen değil 8 sn sonra gizlenir
+// (kısa duraklatmada düzen oynamasın); çalmaya başlayınca hemen görünür.
+function musicIdleHidden() {
+  try { MUS; } catch (e) { return false; } // sayfa açılışında müzik motoru henüz tanımlı değil
+  if ((WPROPS.music || {}).hide === false) { MUS.offAt = 0; return false; }
+  if (musicHasAudio()) { MUS.offAt = 0; clearTimeout(MUS.offT); return false; }
+  const now = Date.now(); if (!MUS.offAt) MUS.offAt = now;
+  const left = 8000 - (now - MUS.offAt);
+  if (left > 0) { clearTimeout(MUS.offT); MUS.offT = setTimeout(fillEmpty, left + 50); return false; }
+  return true;
+}
 function fillEmpty() {
   let l; try { l = JSON.parse(layoutSig); } catch (e) { return; }
   if (!l || !Array.isArray(l.widgets)) return;
-  const musicOff = !musicHasAudio();
+  const musicOff = musicIdleHidden();
   const reviewsOff = !reviews.length;
   const isWidgetEmpty = w => (w.type === 'music' && musicOff) || (w.type === 'reviews' && reviewsOff);
 
@@ -3956,8 +3967,8 @@ function fillEmpty() {
       const ew = l.widgets.find(w => w.type === emptyType);
       if (!ew || !isWidgetEmpty(ew)) continue;
       const merge = findMergeNeighbor(ew, l.widgets, isWidgetEmpty);
-      if (!merge) continue;
       const ec = document.querySelector(`.cell[data-w="${emptyType}"]`);
+      if (!merge) { if (emptyType === 'music' && ec) ec.style.display = 'none'; continue; } // müzik: yanında genişleyecek kutu yoksa yalnız gizlenir
       if (ec) ec.style.display = 'none';
       const nc = [...$id('app').querySelectorAll('.cell')].find(c => c.dataset.w === merge.w.type && +c.dataset.wx === merge.w.x && +c.dataset.wy === merge.w.y) || document.querySelector(`.cell[data-w="${merge.w.type}"]`);
       if (nc) nc.style.gridArea = `${merge.y + 1} / ${merge.x + 1} / span ${merge.h_} / span ${merge.w_}`;
