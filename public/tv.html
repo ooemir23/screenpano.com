@@ -5003,16 +5003,20 @@ function unlockAudioNow() {
   MUS.unlocked = true;
   showUnlockPrompt(false);
   if (!MUS.cfg || !MUS.cfg.enabled || !MUS.cfg.playing) return;
-  if (MUS.ytPlayer && MUS.ytReady) {
+  // yalnız seçili kaynağın motoru sürer: Spotify seçiliyken eski YouTube videosu (ya da radyo) yeniden başlamasın
+  const pv = (activeMusicItem(MUS.cfg) || {}).provider || '';
+  if (MUS.ytPlayer && MUS.ytReady && ['yt', 'ytm', 'ytmix'].includes(pv)) {
     try { MUS.ytPlayer.unMute(); MUS.ytPlayer.setVolume(MUS.vol); MUS.ytPlayer.playVideo(); } catch (e) {}
   }
-  if (MUS.radioEl && MUS.radioEl.src) {
+  if (MUS.radioEl && MUS.radioEl.src && pv === 'radio') {
     try { MUS.radioEl.muted = false; MUS.radioEl.volume = Math.max(0, Math.min(1, MUS.vol / 100)); MUS.radioEl.play().catch(() => {}); } catch (e) {}
   }
-  if (MUS.spPlayer) {
+  if (MUS.spPlayer && pv === 'spotify') {
     try { if (MUS.spPlayer.activateElement) MUS.spPlayer.activateElement(); MUS.spPlayer.resume(); } catch (e) {}
   }
 }
+// tek kaynak kuralı: seçili liste o motora ait değilse motor çalmaya başladığı anda susturulur (geç yüklenen oynatıcı, yarış)
+const ytIsActive = () => ['yt', 'ytm', 'ytmix'].includes(((activeMusicItem(MUS.cfg) || {}).provider) || '') && !!(MUS.cfg && MUS.cfg.enabled);
 ['click', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => {
   if (!MUS.unlocked || MUS.needUnlock) unlockAudioNow();
 }, { passive: true }));
@@ -5252,6 +5256,7 @@ function playYtItem(it, m) {
         events: {
           onReady: e => {
             MUS.ytReady = true;
+            if (!ytIsActive()) { try { e.target.stopVideo(); } catch (x) {} return; } // yüklenirken başka kaynağa geçildi
             const cur = activeMusicItem(MUS.cfg) || it;
             try {
               const ifr = e.target.getIframe && e.target.getIframe();
@@ -5276,6 +5281,7 @@ function playYtItem(it, m) {
           },
           onStateChange: e => {
             const cur = activeMusicItem(MUS.cfg) || it;
+            if (e.data === 1 && !ytIsActive()) { try { e.target.stopVideo(); } catch (x) {} return; } // seçili kaynak YouTube değil
             if (e.data === 1) { // PLAYING
               MUS.errRun = 0; clearTimeout(MUS.ytCheckTimer); clearTimeout(MUS.errTimer); clearTimeout(MUS.listFallbackTimer); musicOk();
               if (!(MUS.ytTracks && MUS.ytTracks.length) && cur.listId && !MUS.ytModesSet) { MUS.ytModesSet = 1; ytApplyModes(); } // YouTube'un liste kipi
@@ -5362,7 +5368,7 @@ function playRadioItem(it, m) {
   if (!MUS.radioEl) MUS.radioEl = $id('radio-audio');
   const streamUrl = it.url && /^https?:\/\//i.test(it.url) && !/spotify\.com|youtube\.com|youtu\.be/i.test(it.url) ? it.url : '';
   if (!streamUrl) return musicFail('Geçerli bir radyo yayın adresi değil');
-  if (!MUS.radioEl.__err) { MUS.radioEl.__err = 1; MUS.radioEl.addEventListener('error', () => { if (MUS.radioEl.getAttribute('src')) musicFail('Radyo yayınına ulaşılamadı'); }); MUS.radioEl.addEventListener('playing', () => { musicOk(); reportNow({ playing: true }); }); }
+  if (!MUS.radioEl.__err) { MUS.radioEl.__err = 1; MUS.radioEl.addEventListener('error', () => { if (MUS.radioEl.getAttribute('src')) musicFail('Radyo yayınına ulaşılamadı'); }); MUS.radioEl.addEventListener('playing', () => { if (((activeMusicItem(MUS.cfg) || {}).provider) !== 'radio') { try { MUS.radioEl.pause(); } catch (e) {} return; } musicOk(); reportNow({ playing: true }); }); }
   if (MUS.radioEl.src !== streamUrl) MUS.radioEl.src = streamUrl;
   MUS.radioEl.muted = false;
   MUS.radioEl.volume = Math.max(0, Math.min(1, MUS.vol / 100));

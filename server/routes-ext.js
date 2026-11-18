@@ -682,7 +682,13 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     let warn = '';
     const curIt = m.playlists.find(x => x.id === m.activeId);
     // başka bir listeye geçilince Spotify uygulaması susturulur (iki müzik üst üste çalmasın)
-    if (SP.external(req.t) && ['select', 'play', 'toggle', 'enabled', 'next', 'prev'].includes(cmd) && m.playing && curIt && curIt.provider !== 'spotify') { try { await SP.control(req.t, 'pause'); } catch (e) { warn = 'Spotify durdurulamadı: ' + e.message; } }
+    // tek kaynak: YouTube/radyo çalarken kutudaki Spotify susturulur. Yalnız gerçekten çalıyorsa (zaten duraklatılmışsa Spotify hata
+    // döner ve panelde gereksiz uyarı çıkıyordu); durum okunamazsa yine de denenir, hata sessizce geçilir
+    if (SP.external(req.t) && ['select', 'play', 'toggle', 'enabled', 'next', 'prev', 'source'].includes(String(b.cmd)) && m.enabled && m.playing && curIt && curIt.provider !== 'spotify') {
+      const n = await SP.nowPlaying(req.t, true).catch(() => null);
+      if (!n || n.err || n.playing) { try { await SP.control(req.t, 'pause'); } catch (e) {} }
+      if (n && n.title) spNowKick(req.t); // TV'deki eski Spotify şarkısı temizlensin
+    }
     if (SP.external(req.t) && curIt && curIt.provider === 'spotify') {
       const spStart = cmd === 'select' && typeof b.uri === 'string' && /^spotify:track:[A-Za-z0-9]{10,40}$/.test(b.uri) ? { uri: b.uri } : null;
       try {
