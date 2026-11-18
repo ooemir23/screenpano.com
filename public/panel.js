@@ -2976,17 +2976,20 @@ function mcard(o) {
       ${o.on && o.playing ? '<em class="meq"><b></b><b></b><b></b></em>' : ''}${o.play ? `<button type="button" class="ytm-cplay" title="TV'de çal" onclick="${o.play}">${ic(o.on && o.playing ? 'pause-f' : 'play-f')}</button>` : ''}</div>
     <button type="button" class="ytm-ct" onclick="${o.open}"><b>${esc(o.title)}</b><span>${o.sub || ''}</span></button></div>`;
 }
+// numaralı şarkı tablosunun başlığı (Spotify görünümü): # · Başlık · Albüm · süre
+const trHead = () => `<div class="ytm-th"><span>#</span><span></span><span>Başlık</span><span>Albüm</span><span class="d">${ic('clock')}</span><span></span></div>`;
 const shelf = (title, cards, more = '', sub = '') => cards.length ? `<section class="ytm-shelf"><div class="ytm-sh"><div>${sub ? `<small>${sub}</small>` : ''}<h2>${title}</h2></div>${more}</div><div class="ytm-row">${cards.join('')}</div></section>` : '';
 const moreBtn = (k, l = 'Tümü') => `<button type="button" class="ytm-more" onclick="goM('${k}')">${l}</button>`;
 function libCard(it) {
   const m = musicData(), act = musicActive(), on = !!(act && act.id === it.id);
   return mcard({ thumb: it.thumb, ic: provIc(it.provider), title: it.title, sub: `${kindName(it)} • ${PROV(it.provider)}${isPriv(it.listId) ? ' • 🔒' : ''}`, open: `openList('lib','${it.id}')`, play: on && m.enabled && m.playing ? "musicCmd('pause')" : `musicSelect('${it.id}')`, on, playing: m.enabled && m.playing });
 }
-function trow(o) { // YouTube Music şarkı satırı: kapak (üstünde oynat), ad, sanatçı, süre, işlemler
-  return `<div class="ytm-tr ${o.on ? 'on' : ''}" ${o.v ? `data-v="${esc(o.v)}"` : ''} ${o.uri ? `data-u="${esc(o.uri)}"` : ''}>
-    <button type="button" class="ytm-tth" title="TV'de çal" onclick="${o.play}">${o.thumb ? `<img src="${esc(o.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<i></i>'}<span>${ic('play-f')}</span>${o.on ? '<em class="meq"><b></b><b></b><b></b></em>' : ''}</button>
+function trow(o) { // şarkı satırı: [sıra no] kapak (üstünde oynat), ad (+ sanatçı), sanatçı ya da albüm, süre, işlemler
+  const num = o.n != null;
+  return `<div class="ytm-tr ${o.on ? 'on' : ''} ${num ? 'num' : ''}" ${o.v ? `data-v="${esc(o.v)}"` : ''} ${o.uri ? `data-u="${esc(o.uri)}"` : ''}>
+    ${num ? `<button type="button" class="ytm-tn" title="TV'de çal" onclick="${o.play}"><span class="i">${o.n}</span><span class="p">${ic('play-f')}</span><em class="meq"><b></b><b></b><b></b></em></button>` : ''}<button type="button" class="ytm-tth" title="TV'de çal" onclick="${o.play}">${o.thumb ? `<img src="${esc(o.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<i></i>'}<span>${ic('play-f')}</span>${o.on ? '<em class="meq"><b></b><b></b><b></b></em>' : ''}</button>
     <button type="button" class="ytm-tb" onclick="${o.play}"><b>${esc(o.title)}</b><span class="m">${esc(o.artist || '')}</span></button>
-    <span class="ytm-ta">${esc(o.artist || '')}</span><span class="ytm-td">${fmtDur(o.dur)}</span><span class="ytm-tx">${o.acts || ''}</span></div>`;
+    <span class="ytm-ta">${esc(o.album != null && o.album !== '' ? o.album : (o.artist || ''))}</span><span class="ytm-td">${fmtDur(o.dur)}</span><span class="ytm-tx">${o.acts || ''}</span></div>`;
 }
 
 // ---- Alt çalar çubuğu ----
@@ -2998,6 +3001,22 @@ function nowBar() {
   const sub = err ? err : !on ? 'Müzik kapalı' : n && n.artist ? `${n.artist}${act ? ' • ' + act.title : ''}` : act ? `${kindName(act)} • ${PROV(act.provider)}` : 'Kitaplığınızdan bir liste seçin';
   const thumb = (n && n.thumb) || (act && act.thumb) || '';
   const prog = n && n.dur ? Math.min(100, Math.round((n.progress || 0) / n.dur * 100)) : 0;
+  if (SPMODE()) {
+    const el = n && n.dur ? nowPos(n) : 0, p2 = n && n.dur ? Math.min(100, el / n.dur * 100) : 0;
+    return `<div class="ytm-bar sp3 ${err ? 'err' : ''} ${on ? '' : 'off'}">
+    <button type="button" class="ytm-bar-np" onclick="${act ? `openList('lib','${act.id}')` : "goM('lib')"}">
+      <span class="c">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer">` : ic('music')}</span>
+      <span class="t"><b>${esc(title)}</b><span>${esc(sub)}</span></span></button>
+    <div class="sp-mid"><div class="ytm-bar-ctl">
+      <button type="button" title="Önceki" onclick="musicCmd('prev')">${ic('skip-back-f')}</button>
+      <button type="button" class="big" title="${playing ? 'Duraklat' : 'TV\'de oynat'}" onclick="musicCmd(${on ? "'toggle'" : "'play'"})">${ic(playing ? 'pause-f' : 'play-f')}</button>
+      <button type="button" title="Sonraki" onclick="musicCmd('next')">${ic('skip-forward-f')}</button></div>
+      <div class="sp-pr ${n && n.dur ? '' : 'none'}"><span class="ytm-pt e">${n && n.dur ? fmtDur(Math.floor(el)) || '0:00' : ''}</span><span class="tr"><i class="ytm-pt f" style="width:${p2.toFixed(2)}%"></i></span><span class="ytm-pt d">${n && n.dur ? fmtDur(n.dur) : ''}</span></div></div>
+    <div class="ytm-bar-r">
+      <label class="ytm-vol" title="Ses">${ic('volume-2')}<input type="range" min="0" max="100" value="${m.volume ?? 75}" onchange="musicCmd('volume',{volume:+this.value})"></label>
+      <span class="ytm-onoff" title="Müzik açık / kapalı">${sw(on, "musicOpt({enabled:this.checked,playing:true})")}</span>
+    </div></div>`;
+  }
   return `<div class="ytm-bar ${err ? 'err' : ''} ${on ? '' : 'off'}">${prog ? `<i class="ytm-prog" style="width:${prog}%"></i>` : ''}
     <div class="ytm-bar-ctl">
       <button type="button" title="Önceki" onclick="musicCmd('prev')">${ic('skip-back-f')}</button>
@@ -3012,6 +3031,16 @@ function nowBar() {
       <span class="ytm-onoff" title="Müzik açık / kapalı">${sw(on, "musicOpt({enabled:this.checked,playing:true})")}</span>
     </div></div>`;
 }
+// çalan şarkının şu anki konumu (sn): sunucunun bildirdiği konum + o andan beri geçen süre (çalıyorsa)
+function nowPos(n) { if (!n || !n.dur) return 0; const p = (n.progress || 0) + (n.playing !== false && n.at ? Math.max(0, (Date.now() - n.at) / 1000) : 0); return Math.min(n.dur, p); }
+// ilerleme çubuğu saniyede bir yerinde güncellenir (tüm çubuk yeniden çizilmez)
+setInterval(() => {
+  if (TAB !== 'music' || !MNOW || !MNOW.dur) return;
+  const f = document.querySelector('.ytm-pt.f'); if (!f) return;
+  const el = nowPos(MNOW), e = document.querySelector('.ytm-pt.e');
+  f.style.width = Math.min(100, el / MNOW.dur * 100).toFixed(2) + '%'; if (e) e.textContent = fmtDur(Math.floor(el)) || '0:00';
+  if (el >= MNOW.dur && MNOW.playing !== false && Date.now() - (MNOW.reAt || 0) > 4000) { MNOW.reAt = Date.now(); musicNowLoad(); } // şarkı bitti: yenisini sor
+}, 1000);
 async function musicNowLoad() {
   try {
     const n = await req('GET', '/music/now'), k = JSON.stringify(n);
@@ -3092,7 +3121,8 @@ function detailHtml() {
   const inLib = v.src === 'lib' ? m.playlists.find(x => x.id === v.id) : v.provider === 'spotify' ? libBySp(v.spId) : libByList(v.listId);
   const cur = inLib && act && act.id === inLib.id, playingNow = cur && m.enabled && m.playing;
   const playJs = inLib ? (playingNow ? "musicCmd('pause')" : `musicSelect('${inLib.id}')`) : v.provider === 'spotify' ? `spAdd('${esc(v.spId)}',true)` : `ytAccAdd('${esc(v.listId)}',true)`;
-  const acts = `<button class="ytm-btn w" onclick="${playJs}">${ic(playingNow ? 'pause-f' : 'play-f')}${playingNow ? 'Duraklat' : 'Oynat'}</button>`
+  const acts = (SPMODE() ? `<button type="button" class="sp-big" title="${playingNow ? 'Duraklat' : 'Oynat'}" aria-label="${playingNow ? 'Duraklat' : 'Oynat'}" onclick="${playJs}">${ic(playingNow ? 'pause-f' : 'play-f')}</button>`
+      : `<button class="ytm-btn w" onclick="${playJs}">${ic(playingNow ? 'pause-f' : 'play-f')}${playingNow ? 'Duraklat' : 'Oynat'}</button>`)
     + (!inLib ? `<button class="ytm-btn" onclick="${v.provider === 'spotify' ? `spAdd('${esc(v.spId)}',false)` : `ytAccAdd('${esc(v.listId)}',false)`}">${ic('plus')}Kitaplığa ekle</button>` : '')
     + (v.provider === 'ytmix' && inLib ? `<button class="ytm-ib" title="Düzenle" onclick="editCustom('${inLib.id}')">${ic('pencil')}</button>` : '')
     + ((v.url || (inLib && inLib.url)) ? `<a class="ytm-ib" title="Uygulamada aç" href="${esc(v.url || inLib.url)}" target="_blank" rel="noopener">${ic('external-link')}</a>` : '')
@@ -3112,7 +3142,7 @@ function detailHtml() {
   const kind = inLib ? kindName(inLib) : 'Çalma listesi';
   return `<button type="button" class="ytm-back" onclick="MV=null;render()">${ic('chevron-left')}Geri</button>
     <div class="ytm-head"><div class="c">${v.thumb ? `<img src="${esc(v.thumb)}" alt="" referrerpolicy="no-referrer">` : ic(provIc(v.provider))}</div>
-      <div class="b"><h1>${esc(v.title)}</h1><p class="meta">${kind} • ${PROV(v.provider)}${v.owner ? ' • ' + esc(v.owner) : ''}</p><p class="meta" id="mcount">${v.count ? `${v.count} şarkı` : ''}</p><div class="row">${acts}</div></div></div>
+      <div class="b">${SPMODE() ? `<small class="sp-kind">${kind}</small>` : ''}<h1>${esc(v.title)}</h1><p class="meta">${SPMODE() ? '' : kind + ' • '}${PROV(v.provider)}${v.owner ? ' • ' + esc(v.owner) : ''}</p><p class="meta" id="mcount">${v.count ? `${v.count} şarkı` : ''}</p><div class="row">${acts}</div></div></div>
     ${privW}${spW}<div class="ytm-tracks">${body}</div>`;
 }
 function spWarn() { // Spotify listesinin TV'de çalabilmesi için eksik adım
@@ -3163,7 +3193,7 @@ async function loadSpTracks(type, id) {
   if (c.err) { box.innerHTML = `<div class="ytm-empty sm">${esc(c.err)}${c.reconnect ? ` <a href="#music/accounts">Hesaplar</a>` : ''}</div>`; return; }
   const items = c.items || [];
   if ($('mcount')) $('mcount').textContent = `${items.length} şarkı • ${fmtLong(items.reduce((a, x) => a + x.dur, 0))}`;
-  box.innerHTML = items.length ? items.map((t, i) => trow({ uri: t.uri, thumb: t.thumb, title: t.title, artist: t.artist, dur: t.dur, on: MNOW && MNOW.uri === t.uri, play: `playSpTrack(${i})` })).join('') : '<div class="ytm-empty sm">Bu listede şarkı yok.</div>';
+  box.innerHTML = items.length ? trHead() + items.map((t, i) => trow({ n: i + 1, uri: t.uri, thumb: t.thumb, title: t.title, artist: t.artist, album: t.album || '', dur: t.dur, on: MNOW && MNOW.uri === t.uri, play: `playSpTrack(${i})` })).join('') : '<div class="ytm-empty sm">Bu listede şarkı yok.</div>';
 }
 async function playSpTrack(i) {
   const v = MV, t = ((SPTRK.get((v.spType || 'playlist') + ':' + v.spId) || {}).items || [])[i]; if (!t) return;
@@ -3189,8 +3219,10 @@ function searchHtml() {
     if (r.busy) return out + '<div class="ytm-empty sm">Aranıyor…</div>';
     if (r.err) return out + `<div class="ytm-empty sm">${esc(r.err)}</div>`;
     if (!r.r) return out;
-    const tr = r.r.tracks || [], pl = r.r.playlists || [];
-    return out + (tr.length ? `<section class="ytm-shelf"><div class="ytm-sh"><div><h2>Şarkılar</h2></div></div><div class="ytm-tracks">${tr.map((t, i) => trow({ uri: t.uri, thumb: t.thumb, title: t.title, artist: t.artist, dur: t.dur, on: MNOW && MNOW.uri === t.uri, play: `spPlayHit(${i})`, acts: `<button class="ytm-ib sm" title="Kitaplığa ekle" onclick="spAddHit(${i})">${ic('plus')}</button>` })).join('')}</div></section>` : '')
+    const tr = r.r.tracks || [], pl = r.r.playlists || [], b0 = tr[0];
+    // en iyi sonuç: ilk şarkı büyük kartta (kapak, ad, sanatçı, oynat); yanında şarkılar
+    const best = b0 ? `<section class="sp-best"><div class="ytm-sh"><div><h2>En iyi sonuç</h2></div></div><div class="sp-bestc ${MNOW && MNOW.uri === b0.uri ? 'on' : ''}"><div class="c">${b0.thumb ? `<img src="${esc(b0.thumb.replace(/ab67616d00004851/, 'ab67616d00001e02'))}" alt="" referrerpolicy="no-referrer">` : ic('music')}</div><b>${esc(b0.title)}</b><span><em>Şarkı</em> • ${esc(b0.artist || '')}</span><button type="button" class="sp-big" title="TV'de çal" aria-label="TV'de çal" onclick="spPlayHit(0)">${ic('play-f')}</button></div></section>` : '';
+    return out + (tr.length ? `<div class="sp-top">${best}<section class="ytm-shelf"><div class="ytm-sh"><div><h2>Şarkılar</h2></div></div><div class="ytm-tracks">${tr.map((t, i) => trow({ uri: t.uri, thumb: t.thumb, title: t.title, artist: t.artist, dur: t.dur, on: MNOW && MNOW.uri === t.uri, play: `spPlayHit(${i})`, album: t.album || '', acts: `<button class="ytm-ib sm" title="Kitaplığa ekle" onclick="spAddHit(${i})">${ic('plus')}</button>` })).join('')}</div></section></div>` : '')
       + shelf('Listeler', pl.map(p => mcard({ thumb: p.thumb, ic: 'headphones', title: p.title, sub: `Çalma listesi • ${esc(p.owner || 'Spotify')}`, open: `openList('sp','${esc(p.id)}')`, play: `spAdd('${esc(p.id)}',true)` })))
       + (!tr.length && !pl.length ? '<div class="ytm-empty sm">Sonuç bulunamadı.</div>' : '');
   }

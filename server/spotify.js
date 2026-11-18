@@ -106,7 +106,7 @@ async function access(t) {
 }
 
 const img = (imgs, prefer = 300) => { const l = (imgs || []).filter(Boolean); if (!l.length) return ''; const best = l.slice().sort((x, y) => Math.abs((x.width || prefer) - prefer) - Math.abs((y.width || prefer) - prefer))[0]; return String(best.url || '').slice(0, 300); };
-const track = (tr, i) => tr && tr.uri && !tr.is_local ? { idx: i, uri: tr.uri, title: String(tr.name || '').slice(0, 120), artist: (tr.artists || []).map(x => x.name).join(', ').slice(0, 100), thumb: img(tr.album && tr.album.images, 64), dur: Math.round((tr.duration_ms || 0) / 1000) } : null;
+const track = (tr, i) => tr && tr.uri && !tr.is_local ? { idx: i, uri: tr.uri, title: String(tr.name || '').slice(0, 120), artist: (tr.artists || []).map(x => x.name).join(', ').slice(0, 100), thumb: img(tr.album && tr.album.images, 64), album: String((tr.album && tr.album.name) || '').slice(0, 100), dur: Math.round((tr.duration_ms || 0) / 1000) } : null;
 
 // Hesaptaki çalma listeleri (+ "Beğenilen şarkılar" yerine geçen kayıtlı albümler değil, yalnız listeler); 2 dk önbellek
 const cache = new Map();

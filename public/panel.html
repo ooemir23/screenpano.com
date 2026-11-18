@@ -689,6 +689,51 @@ body.sp-on,body.sp-on main{background:#121212}
 .sp-tile .p{position:absolute;right:12px;top:12px;width:40px;height:40px;border-radius:50%;border:0;background:var(--sp);color:#000;display:grid;place-items:center;cursor:pointer;opacity:0;box-shadow:0 8px 8px rgba(0,0,0,.3)}
 .sp-tile:hover .p,.sp-tile.on .p,.sp-tile:focus-within .p{opacity:1}.sp-tile.on .o b{color:var(--sp)}
 body.sp-on .ytm-bar{background:#000}body.sp-on .ytm-prog{background:var(--sp)}
+/* numaralı şarkı tablosu: # (üstüne gelince oynat, çalarken dalga) · kapak · başlık+sanatçı · albüm · süre */
+.ytm-tr.num{grid-template-columns:32px 44px minmax(0,1.4fr) minmax(0,1fr) 64px auto}
+.ytm-th{display:grid;grid-template-columns:32px 44px minmax(0,1.4fr) minmax(0,1fr) 64px auto;gap:14px;align-items:center;padding:0 8px 8px;margin:0 0 8px;border-bottom:1px solid rgba(255,255,255,.1);color:var(--y-t2);font-size:13px}
+.ytm-th span:first-child{text-align:right}.ytm-th span:last-child{min-width:34px}.ytm-th .d{display:flex;justify-content:flex-end}.ytm-th .ic{width:16px;height:16px}
+.ytm-tn{all:unset;position:relative;display:grid;place-items:center end;height:40px;cursor:pointer;color:var(--y-t2);font-size:15px;font-variant-numeric:tabular-nums}
+.ytm-tn .p,.ytm-tn .meq{display:none}.ytm-tn .p .ic{width:16px;height:16px;color:#fff}
+.ytm-tr.num:hover .ytm-tn .i,.ytm-tr.num.on .ytm-tn .i{display:none}.ytm-tr.num:hover .ytm-tn .p{display:block}
+.ytm-tr.num.on:not(:hover) .ytm-tn .meq{display:flex;position:static}
+.ytm-tr.num .ytm-tth{width:40px;height:40px}.ytm-tr.num .ytm-tth span{display:none}
+.ytm.sp .ytm-tb .m{display:block}.ytm.sp .ytm-tb b{font-weight:500}.ytm.sp .ytm-tr:hover .ytm-tb .m{color:#fff}
+.ytm.sp .ytm-tr{border-bottom:0;min-height:56px}
+/* liste başlığı: tür etiketi + büyük yeşil oynat */
+.sp-kind{display:block;margin:0 0 6px;font-size:14px;font-weight:600;color:#fff}
+.sp-big{width:56px;height:56px;flex:none;border-radius:50%;border:0;background:var(--sp,#1ed760);color:#000;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 8px rgba(0,0,0,.3);transition:transform .1s,background .1s}
+.sp-big:hover{transform:scale(1.05);background:#3be477}.sp-big .ic{width:26px;height:26px}
+/* arama: en iyi sonuç kartı + şarkılar yan yana */
+.sp-top{display:grid;grid-template-columns:minmax(300px,.8fr) minmax(0,1.6fr);gap:24px;align-items:start;margin:0 0 28px}
+.sp-top .ytm-shelf{margin:0;min-width:0}
+.sp-bestc{position:relative;display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:8px;background:#181818;transition:background .2s;min-height:236px}
+.sp-bestc:hover{background:#282828}
+.sp-bestc .c{width:96px;height:96px;border-radius:6px;overflow:hidden;background:#282828;display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.5);margin:0 0 14px}
+.sp-bestc .c img{width:100%;height:100%;object-fit:cover}
+.sp-bestc b{font-size:30px;font-weight:800;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sp-bestc>span{color:var(--y-t2);font-size:14px}.sp-bestc em{font-style:normal;display:inline-block;padding:3px 10px;border-radius:999px;background:#121212;color:#fff;font-weight:700;font-size:13px}
+.sp-bestc.on b{color:var(--sp)}
+.sp-bestc .sp-big{position:absolute;right:20px;bottom:20px;width:48px;height:48px;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s}
+.sp-bestc:hover .sp-big,.sp-bestc:focus-within .sp-big{opacity:1;transform:none}
+/* alt çubuk (Spotify görünümü): çalan | kumanda + ilerleme | ses */
+.ytm-bar.sp3{grid-template-columns:minmax(180px,1fr) minmax(0,1.4fr) minmax(180px,1fr);height:80px}
+.ytm-bar.sp3 .ytm-bar-np{justify-self:start;max-width:none}
+.ytm-bar.sp3 .ytm-bar-np .c{width:56px;height:56px;border-radius:4px}
+.ytm-bar.sp3 .ytm-bar-r{justify-self:end}
+.sp-mid{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;width:100%;max-width:720px;justify-self:center}
+.sp-mid .ytm-bar-ctl .big{width:36px;height:36px;background:#fff;color:#000}.sp-mid .ytm-bar-ctl .big:hover{transform:scale(1.06);background:#fff}.sp-mid .ytm-bar-ctl .big .ic{width:20px;height:20px}
+.sp-pr{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;width:100%;font-size:12px;color:#b3b3b3;font-variant-numeric:tabular-nums}
+.sp-pr.none{visibility:hidden}.sp-pr .e{text-align:right}
+.sp-pr .tr{height:4px;border-radius:2px;background:#4d4d4d;overflow:hidden}.sp-pr .tr i{display:block;height:100%;background:#fff;border-radius:2px}
+.ytm-bar.sp3:hover .sp-pr .tr i{background:var(--sp)}
+@media(max-width:1100px){.sp-top{grid-template-columns:1fr}.sp-bestc{min-height:0}}
+@media(max-width:900px){
+  .ytm-tr.num{grid-template-columns:24px 40px minmax(0,1fr) auto}.ytm-th{display:none}
+  .ytm-bar.sp3{grid-template-columns:minmax(0,1fr) auto auto;height:64px}.sp-pr{display:none}.ytm-bar.sp3 .ytm-bar-np .c{width:44px;height:44px}
+  .sp-best .ytm-sh{display:none}.sp-bestc{display:grid;grid-template-columns:64px minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:14px;row-gap:4px;align-items:center;padding:12px}.sp-bestc .c{grid-row:1/3;width:64px;height:64px;margin:0}.sp-bestc b{font-size:19px;-webkit-line-clamp:1;align-self:end}.sp-bestc>span{align-self:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sp-bestc .sp-big{grid-row:1/3;grid-column:3;position:static;opacity:1;transform:none}
+  .ytm-bar.sp3 .sp-mid{order:2;width:auto}.ytm-bar.sp3 .ytm-bar-np{order:1}.ytm-bar.sp3 .ytm-bar-r{order:3}
+}
 @media(max-width:900px){.ytm.sp .ytm-head{padding:18px}.ytm.sp .ytm-head h1{font-size:30px}.sp-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sp-tile{height:56px}.sp-tile .o img,.sp-tile .o i{width:56px;height:56px}.sp-tile .o{gap:10px;font-size:13px}.sp-tile .o b{padding-right:8px}.sp-tile .p{display:none}.sp-hi h1{font-size:26px}}
 @media(max-width:900px){
   .ytm{padding:0 0 150px}

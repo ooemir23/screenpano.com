@@ -724,12 +724,13 @@
       "text": "Kumandadaki Menü tuşuyla ekranın yönetimine girin: müziği oynatın, duraklatın, şarkı ve sesi değiştirin, yeni sürümü tek adımda indirip kurun. Okla gezilen, büyük ve net bir ekran.",
       "points": [
         "Müzik: önceki, oynat/duraklat, sonraki, ses",
+        "Kitaplıktaki listeleri gezin, listeden istediğiniz şarkıyı çalın",
         "Yeni sürüm tek seferde indirilir ve kurulur",
         "Oturum kapatma yanlışlıkla yapılmasın diye onay ister"
       ],
       "plan": "pro",
       "compare": "Kumandadan müzik kontrolü",
-      "added": "2026-11-06",
+      "added": "2026-11-18",
       "visual": {
         "type": "win",
         "img": "p-cihaz"
@@ -742,6 +743,7 @@
           "text": "Press the Menu key on the remote to manage the screen: play, pause, change the track and volume, and download and install a new version in one step. A large, clear screen you navigate with the arrow keys.",
           "points": [
             "Music: previous, play/pause, next, volume",
+            "Browse the playlists in your library and play any song from a list",
             "A new version downloads and installs in one go",
             "Signing out asks for confirmation so it can't happen by accident"
           ]
@@ -753,6 +755,7 @@
           "text": "Mit der Menü-Taste der Fernbedienung steuern Sie den Bildschirm: Musik abspielen, pausieren, Titel und Lautstärke ändern und eine neue Version in einem Schritt laden und installieren. Ein großer, klarer Bildschirm, per Pfeiltasten bedienbar.",
           "points": [
             "Musik: zurück, Wiedergabe/Pause, weiter, Lautstärke",
+            "Playlists der Bibliothek durchsuchen und jeden Titel daraus abspielen",
             "Eine neue Version wird in einem Zug geladen und installiert",
             "Abmelden fragt nach, damit es nicht versehentlich passiert"
           ]
@@ -764,6 +767,7 @@
           "text": "اضغط زر القائمة في جهاز التحكم لإدارة الشاشة: شغّل الموسيقى أو أوقفها مؤقتًا، غيّر المقطع والصوت، ونزّل الإصدار الجديد وثبّته بخطوة واحدة. شاشة كبيرة وواضحة تتنقل فيها بالأسهم.",
           "points": [
             "الموسيقى: السابق، تشغيل/إيقاف مؤقت، التالي، الصوت",
+            "تصفّح قوائم التشغيل في مكتبتك وشغّل أي أغنية منها",
             "يُنزَّل الإصدار الجديد ويُثبَّت دفعة واحدة",
             "تسجيل الخروج يطلب تأكيدًا حتى لا يحدث بالخطأ"
           ]

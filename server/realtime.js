@@ -127,11 +127,39 @@ function onMessage(ws, raw) {
   // TV menüsünden müzik kontrolü (oynat/duraklat/sonraki/önceki/ses): panelle aynı komut yolu; cihaz başına saniyede birkaç komutla sınırlı
   if (m.type === 'music_ctl') {
     const k = 'mc' + (ws.deviceId || ws.tid), now = Date.now();
-    if (!ws.preview && ['toggle', 'next', 'prev', 'volume'].includes(m.cmd) && now - (onMessage.mc.get(k) || 0) > 350) {
+    if (!ws.preview && ['toggle', 'next', 'prev', 'volume', 'select'].includes(m.cmd) && now - (onMessage.mc.get(k) || 0) > 350) {
       onMessage.mc.set(k, now);
       const t = tenants.get(ws.tid), hub = require('./hub');
-      if (t && hub.musicCmd) hub.musicCmd(t, { cmd: m.cmd, volume: m.volume }).catch(() => {});
+      const b = { cmd: m.cmd, volume: m.volume };
+      // menüden liste/şarkı seçimi: yalnız işletmenin kitaplığındaki bir liste; şarkı başlangıcı biçimi musicCmd'de ayrıca doğrulanır
+      if (m.cmd === 'select') {
+        const lib = t && t.db.music && Array.isArray(t.db.music.playlists) ? t.db.music.playlists : [];
+        if (typeof m.id !== 'string' || !lib.some(x => x.id === m.id)) return;
+        Object.assign(b, { id: m.id, uri: m.uri, index: m.index, videoId: m.videoId });
+      }
+      if (t && hub.musicCmd) hub.musicCmd(t, b).catch(() => {});
     }
+    return;
+  }
+  // TV menüsündeki müzik çalar: kitaplıktaki bir listenin şarkıları (Spotify ya da YouTube); cihaz başına saniyede bir sorgu
+  if (m.type === 'music_list' && typeof m.itemId === 'string') {
+    const k = 'ml' + (ws.deviceId || ws.tid), now = Date.now();
+    if (now - (onMessage.mc.get(k) || 0) < 900) return;
+    onMessage.mc.set(k, now);
+    const t = tenants.get(ws.tid), it = t && t.db.music && (t.db.music.playlists || []).find(x => x.id === m.itemId);
+    const reply = (items, err) => sendRaw(ws, { type: 'music_list', itemId: m.itemId, items: (items || []).slice(0, 200), err: err || '' });
+    if (!it) return reply([], 'Liste bulunamadı');
+    if (it.provider === 'spotify') {
+      require('./spotify').tracks(t, it.spotifyType || 'playlist', String(it.spotifyId || ''))
+        .then(l => reply(l.map(x => ({ k: x.uri, t: x.title, c: x.artist, th: x.thumb, d: x.dur }))))
+        .catch(e => reply([], e.message));
+    } else if (it.provider === 'ytmix') {
+      reply((it.tracks || []).map(x => ({ k: x.v, t: x.t, c: x.c, th: x.th || '', d: 0 })));
+    } else if ((it.provider === 'yt' || it.provider === 'ytm') && it.listId) {
+      require('./youtube').tracks(t, String(it.listId))
+        .then(l => reply((l || []).map(x => ({ k: x.videoId, t: x.title, c: x.channel, th: x.thumb || '', d: x.dur || 0 }))))
+        .catch(e => reply([], e.message));
+    } else reply([]);
     return;
   }
   if (m.type === 'music_now') { require('./musicnow').report(ws.tid, ws.deviceId || 'preview', m); return; }

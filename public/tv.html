@@ -377,8 +377,9 @@ html.lite #big .yemb{display:none!important}
 #updot i{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--accent2);animation:updotp 1.6s ease-in-out infinite}
 @keyframes updotp{50%{opacity:.25}}
 #touch-menu-btn{display:none !important}
-#menu{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 70% at 50% 30%,#14181d 0%,#07080a 100%);touch-action:manipulation;cursor:pointer}
-#menu.on{display:flex}
+#menu{position:fixed;inset:0;z-index:70;display:flex;visibility:hidden;pointer-events:none;contain:strict;align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 70% at 50% 30%,#14181d 0%,#07080a 100%);touch-action:manipulation;cursor:pointer}
+#menu.on{visibility:visible;pointer-events:auto}
+html.lite #menu{background:#090b0e}
 html.menu-open #brk,html.menu-open #updot{display:none!important}
 html.full-media #app>.cell:not([data-w=media]){visibility:hidden}
 html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
@@ -393,7 +394,21 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .mgrid{display:grid;grid-template-columns:1.15fr 1fr;grid-auto-rows:min-content;gap:2vh 1.6vw;overflow-y:auto;min-height:0;padding:.4vh .4vh 1vh}
 #menu .mc{background:rgba(255,255,255,.045);border:max(1px,.1vh) solid rgba(255,255,255,.08);border-radius:2vh;padding:2.2vh 1.5vw;display:flex;flex-direction:column;gap:1.4vh;min-width:0}
 #menu .mc>h4{margin:0;font-size:1.5vh;letter-spacing:.12em;text-transform:uppercase;color:#8d96a0;font-weight:700}
-#menu .mus{grid-row:span 1}
+#menu .mus{grid-column:1;grid-row:1 / span 3;min-height:0;overflow:hidden}
+#menu .mc:not(.mus){grid-column:2}
+#menu .mlib{display:flex;flex-direction:column;gap:1vh;flex:1 1 0;min-height:24vh;border-top:max(1px,.1vh) solid rgba(255,255,255,.08);padding-top:1.4vh}
+#menu .mlh{display:flex;align-items:baseline;gap:1vw;min-width:0}#menu .mlh b{font-size:2.1vh;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#menu .mlh span{font-size:1.6vh;color:#8d96a0;white-space:nowrap}
+#menu .mll{display:flex;flex-direction:column;gap:.6vh;flex:1 1 0;min-height:0;overflow-y:auto;padding:.5vh;margin:-.5vh;contain:content}
+#menu .mll .mtop{display:grid;grid-template-columns:auto 1fr;gap:.8vw;margin-bottom:.4vh}
+#menu .mll button.mli{display:grid;grid-template-columns:6vh 1fr auto;align-items:center;gap:1vw;padding:.8vh .8vw;border-radius:1.2vh;background:rgba(255,255,255,.04);border-color:transparent}
+#menu .mll button.mli.tr{grid-template-columns:3.4vh 5vh 1fr auto}
+#menu .mll .n{font-size:1.7vh;color:#8d96a0;text-align:right;font-variant-numeric:tabular-nums}
+#menu .mll .c{width:100%;aspect-ratio:1;border-radius:.8vh;background:rgba(255,255,255,.08) center/cover no-repeat;display:grid;place-items:center;font-size:2.4vh}
+#menu .mll .t{min-width:0;display:flex;flex-direction:column}#menu .mll .t b{font-size:1.95vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#menu .mll .t span{font-size:1.6vh;font-weight:500;color:#9aa3ad;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#menu .mll .d{font-size:1.6vh;color:#8d96a0;font-weight:600;font-variant-numeric:tabular-nums}
+#menu .mll .on .t b,#menu .mll .on .n{color:var(--accent2)}
+#menu .mll button:focus{transform:none}
+#menu .mll .msg{font-size:1.8vh;color:#9aa3ad;padding:1vh .4vw}
 #menu .np{display:flex;align-items:center;gap:1.2vw;min-width:0}
 #menu .np .cv{flex:none;width:8vh;height:8vh;border-radius:1.4vh;background:rgba(var(--a2),.18) center/cover no-repeat;display:grid;place-items:center;font-size:3.6vh}
 #menu .np .tx{min-width:0;display:flex;flex-direction:column}
@@ -426,7 +441,9 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu button#mout:focus{background:#b3261e;color:#fff;border-color:#ff4d4d;box-shadow:0 0 0 .35vh #ff4d4d,0 0 1.6vh rgba(255,0,0,.5)}
 #menu #mtopcls{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.4vh;text-align:center}
 #menu .hint{font-size:1.6vh;color:#7d8791;text-align:center;letter-spacing:.02em}
-@media (max-aspect-ratio:1/1){#menu .mgrid{grid-template-columns:1fr}#menu .mx{width:94vw}}
+@media (max-aspect-ratio:1/1){#menu .mgrid{grid-template-columns:1fr}#menu .mx{width:94vw}#menu .mus,#menu .mc:not(.mus){grid-column:auto;grid-row:auto}#menu .mlib{flex:none}#menu .mll{flex:none;max-height:34vh}}
+/* zayıf kutularda odak: bulanık gölge ve büyütme yerine düz çerçeve (her ok basışında yeniden boyama ucuz kalsın) */
+html.lite #menu button:focus{box-shadow:none;transform:none;outline:.35vh solid #fff;outline-offset:0}html.lite #menu button.pri:focus{outline-color:#a5d6a7}html.lite #menu button#mout:focus{outline-color:#ff4d4d}
 /* kampanya kartı ve etkileşimli bilgi kartı */
 #poster{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .8s ease-in-out;pointer-events:none}#poster.on{opacity:1}
 #trivia{position:absolute;inset:.6vh;z-index:6;border-radius:1.30vh;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .55s ease-in-out}#trivia.on{opacity:1}
@@ -1215,6 +1232,7 @@ html.theme-glass .pill.live::before {
       <div class="np"><div class="cv" id="mmcv">♪</div><div class="tx"><b id="mmtitle">-</b><span id="mmsub">-</span></div></div>
       <div class="ctl"><button id="mmprev" type="button" data-nav aria-label="Önceki">⏮</button><button id="mmplay" class="big" type="button" data-nav aria-label="Oynat / duraklat">▶</button><button id="mmnext" type="button" data-nav aria-label="Sonraki">⏭</button></div>
       <div class="vol"><button id="mmvolm" type="button" data-nav aria-label="Sesi kıs">−</button><span class="bar"><i id="mmbar"></i></span><button id="mmvolp" type="button" data-nav aria-label="Sesi aç">+</button><b id="mmvol">-</b></div>
+      <div class="mlib"><div class="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span></div><div class="mll" id="mml"></div></div>
       <span id="mmus" style="display:none"></span>
     </section>
     <section class="mc"><h4>Cihaz bilgisi</h4>
@@ -3218,7 +3236,70 @@ function menuMusic() {
   $m('mmplay').textContent = playing ? '⏸' : '▶';
   $m('mmbar').style.width = vol + '%'; $m('mmvol').textContent = '%' + vol;
   $m('mmus').textContent = on ? `${(it && it.title) || ''} (Ses: %${vol})` : 'Kapalı';
+  mlRender();
 }
+// ---- Menüdeki kitaplık: listeler → listenin şarkıları. Seçim panelle aynı komut yolundan (sunucu) gider; tüm ekranlar aynı müziği çalar.
+// Yalnız içerik değişince yeniden çizilir (menü 1,5 sn'de bir tazelenir; odak ve kaydırma korunur).
+const ML = { view: 'lib', id: '', items: null, err: '', sig: '', ask: 0 };
+const ML_MAX = 120; // kumandayla gezilen listede çok fazla düğme ok tuşlarını yavaşlatır
+const mlSrc = x => x.provider === 'spotify' ? 'Spotify' : x.provider === 'radio' ? 'Radyo' : x.provider === 'ytmix' ? 'Kendi listem' : 'YouTube';
+const mlDur = s => s > 0 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : '';
+const mlHasTracks = x => x.provider === 'spotify' ? !!x.spotifyId && x.spotifyType !== 'track' : x.provider === 'ytmix' ? (x.tracks || []).length > 0 : (x.provider === 'yt' || x.provider === 'ytm') && !!x.listId;
+const mlCv = th => th ? ` style="background-image:url('${esc(th).replace(/'/g, '%27')}')"` : '';
+function mlRender(force) {
+  const box = $m('mml'); if (!box) return;
+  const m = MUS.cfg || {}, lib = m.playlists || [], cur = activeMusicItem(m), on = !!(m.enabled && m.playing);
+  const nowT = (MUS.spConnectTrack && MUS.spConnectTrack.title) || MUS.trackTitle || '';
+  if (ML.view === 'list' && !lib.some(x => x.id === ML.id)) { ML.view = 'lib'; ML.id = ''; ML.items = null; }
+  const it = ML.view === 'list' ? lib.find(x => x.id === ML.id) : null;
+  const sig = ML.view + '|' + ML.id + '|' + (cur && cur.id) + '|' + on + '|' + nowT + '|' + (ML.items ? ML.items.length : -1) + '|' + ML.err + '|' + lib.map(x => x.id + x.title + (x.thumb || '')).join(',');
+  if (!force && sig === ML.sig) return;
+  ML.sig = sig;
+  const fk = document.activeElement && box.contains(document.activeElement) ? document.activeElement.dataset.k : '', st = box.scrollTop;
+  let h = '';
+  if (!it) {
+    $m('mlhead').textContent = 'Kitaplık'; $m('mlsub').textContent = lib.length ? lib.length + ' liste' : '';
+    h = lib.length ? lib.map(x => { const a = cur && cur.id === x.id;
+      return `<button type="button" data-nav class="mli${a ? ' on' : ''}" data-a="${mlHasTracks(x) ? 'open' : 'play'}" data-id="${esc(x.id)}" data-k="l:${esc(x.id)}"><span class="c"${mlCv(x.thumb)}>${x.thumb ? '' : '♪'}</span><span class="t"><b>${esc(x.title || 'Liste')}</b><span>${mlSrc(x)}${a ? (on ? ' · çalıyor' : ' · duraklatıldı') : ''}</span></span><span class="d">${mlHasTracks(x) ? '›' : '▶'}</span></button>`; }).join('')
+      : '<div class="msg">Kitaplık boş. Panelde Müzik sayfasından liste ekleyin.</div>';
+  } else {
+    $m('mlhead').textContent = it.title || 'Liste'; $m('mlsub').textContent = ML.items ? ML.items.length + ' şarkı' : mlSrc(it);
+    h = `<div class="mtop"><button type="button" data-nav data-a="back" data-k="back">‹ Kitaplık</button><button type="button" data-nav data-a="play" data-id="${esc(it.id)}" data-k="playall">▶ Listeyi çal</button></div>`;
+    if (ML.err) h += `<div class="msg">${esc(ML.err)}</div>`;
+    else if (!ML.items) h += '<div class="msg">Şarkılar yükleniyor…</div>';
+    else if (!ML.items.length) h += '<div class="msg">Bu listenin şarkıları gösterilemiyor; “Listeyi çal” ile yine de çalabilirsiniz.</div>';
+    else h += ML.items.slice(0, ML_MAX).map((x, i) => { const a = cur && cur.id === it.id && nowT && x.t === nowT;
+      return `<button type="button" data-nav class="mli tr${a ? ' on' : ''}" data-a="track" data-i="${i}" data-k="t:${i}"><span class="n">${a && on ? '♫' : i + 1}</span><span class="c"${mlCv(x.th)}></span><span class="t"><b>${esc(x.t)}</b><span>${esc(x.c || '')}</span></span><span class="d">${mlDur(x.d)}</span></button>`; }).join('')
+      + (ML.items.length > ML_MAX ? `<div class="msg">İlk ${ML_MAX} şarkı gösteriliyor</div>` : '');
+  }
+  box.innerHTML = h; box.scrollTop = st;
+  if (fk) { const b = box.querySelector(`[data-k="${CSS.escape(fk)}"]`); if (b) b.focus({ preventScroll: true }); }
+}
+function mlOpen(id) {
+  ML.view = 'list'; ML.id = id; ML.items = null; ML.err = '';
+  const it = ((MUS.cfg || {}).playlists || []).find(x => x.id === id);
+  if (it && it.provider === 'ytmix') ML.items = (it.tracks || []).map(x => ({ k: x.v, t: x.t, c: x.c, th: x.th || '', d: 0 })); // kendi listesi TV'de zaten var
+  else { ML.ask = Date.now(); wsSend({ type: 'music_list', itemId: id }); clearTimeout(ML.to); ML.to = setTimeout(() => { if (ML.view === 'list' && ML.id === id && !ML.items) { ML.err = 'Şarkılar alınamadı (bağlantı yok)'; mlRender(true); } }, 12000); }
+  mlRender(true);
+  const b = $m('mml').querySelector('[data-k="playall"]'); if (b) b.focus();
+}
+function onMusicList(msg) {
+  if (ML.view !== 'list' || msg.itemId !== ML.id) return;
+  clearTimeout(ML.to); ML.items = Array.isArray(msg.items) ? msg.items : []; ML.err = msg.err && !ML.items.length ? msg.err : ''; mlRender(true);
+}
+$m('mml').addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('button[data-a]'); if (!b) return;
+  e.stopPropagation(); menuIdle(90000);
+  const a = b.dataset.a;
+  if (a === 'back') { const id = ML.id; ML.view = 'lib'; ML.id = ''; ML.items = null; ML.err = ''; mlRender(true); const t = $m('mml').querySelector(`[data-k="l:${CSS.escape(id)}"]`); if (t) { t.focus(); t.scrollIntoView({ block: 'nearest' }); } return; }
+  if (a === 'open') return mlOpen(b.dataset.id);
+  if (a === 'play') { menuSt('Çalınıyor…'); mmOpt = { playing: true, at: Date.now() }; menuMusicCmd('select', { id: b.dataset.id }); return; }
+  if (a === 'track') {
+    const it = ((MUS.cfg || {}).playlists || []).find(x => x.id === ML.id), i = +b.dataset.i, x = ML.items && ML.items[i]; if (!it || !x) return;
+    menuSt('Çalınıyor: ' + x.t); mmOpt = { playing: true, at: Date.now() };
+    menuMusicCmd('select', it.provider === 'spotify' ? { id: it.id, uri: x.k } : { id: it.id, index: i, videoId: x.k });
+  }
+});
 function menuMusicCmd(cmd, extra) {
   if (PREVIEW) { menuSt('Önizlemede müzik kontrolü kapalı'); return; }
   wsSend({ type: 'music_ctl', cmd, ...(extra || {}) });
@@ -3237,17 +3318,17 @@ async function checkUpdateSilently() {
 }
 let lastMenuToggle = 0;
 function menuOpen() {
-  upd.openedAt = Date.now(); document.documentElement.classList.add('menu-open'); try { clearTimeout(brkTimer); brkEl.classList.remove('on'); window.__N && window.__N.brkHide && window.__N.brkHide(); } catch (e) {} $m('menu').classList.add('on'); try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} menuInfo(); menuSt('');
+  upd.openedAt = Date.now(); try { menuInfo(); } catch (e) {} document.documentElement.classList.add('menu-open'); try { clearTimeout(brkTimer); brkEl.classList.remove('on'); window.__N && window.__N.brkHide && window.__N.brkHide(); } catch (e) {} $m('menu').classList.add('on'); try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} menuInfo(); menuSt('');
   $m('menu').scrollTop = 0;
-  checkUpdateSilently();
+  setTimeout(checkUpdateSilently, 400);
   const pickFirst = () => upd.avail && $m('mupd').style.display !== 'none' ? $m('mupd') : (MUS.cfg && (MUS.cfg.playlists || []).length ? $m('mmplay') : $m('mchk'));
-  setTimeout(() => { const b = pickFirst(); if (b && b.focus) b.focus(); }, 50);
+  requestAnimationFrame(() => { const b = pickFirst(); if (b && b.focus) b.focus({ preventScroll: true }); });
   menuIdle(90000);
   clearInterval(upd.live); upd.live = setInterval(() => { if ($m('menu').classList.contains('on')) menuInfo(); }, 1500);
 }
 // menü işlem yapılmazsa kapanır; güncelleme sürerken kapanmaz
 function menuIdle(ms) { clearTimeout(upd.timer); upd.timer = setTimeout(() => { if (upd.busy) return menuIdle(60000); menuClose(); }, ms); }
-function menuClose() { clearTimeout(upd.timer); clearInterval(upd.live); upd.busy = false; document.documentElement.classList.remove('menu-open'); $m('menu').classList.remove('on'); try { window.__N && window.__N.overlay && window.__N.overlay(false); } catch (e) {}  if (fullOn) { try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} } }
+function menuClose() { clearTimeout(upd.timer); clearInterval(upd.live); upd.busy = false; /* menü artık display:none değil, gizlenip duruyor: odak içinde kalmasın */ try { const f = document.activeElement; if (f && $m('menu').contains(f)) f.blur(); } catch (e) {} document.documentElement.classList.remove('menu-open'); $m('menu').classList.remove('on'); try { window.__N && window.__N.overlay && window.__N.overlay(false); } catch (e) {}  if (fullOn) { try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} } }
 window.__menu = () => {
   const now = Date.now();
   if (now - lastMenuToggle < 300) return;
@@ -4345,6 +4426,7 @@ function connect() {
     else if (m.type === 'music_cmd') onMusicCmd(m);
     else if (m.type === 'music_now') { const n = m.now; MUS.spConnectTrack = n && n.title ? { title: n.title, artist: n.artist || '', thumb: n.thumb || '', paused: !n.playing } : null; renderMusicBar(); }
     else if (m.type === 'music_tracks') onMusicTracks(m);
+    else if (m.type === 'music_list') onMusicList(m);
   };
   ws.onclose = () => { clearInterval(wsDog); if (!authFail && !dead) wsRetry(); };
 }
