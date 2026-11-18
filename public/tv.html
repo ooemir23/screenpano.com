@@ -3489,7 +3489,7 @@ document.addEventListener('keydown', e => {
 
 // Kumanda: Menü tuşu (veya ContextMenu / Settings / Info / Escape / Kırmızı tuş) menüyü açar/kapatır
 document.addEventListener('keydown', e => {
-  if (window.__auth) return;
+  if (window.__auth || /^Media/.test(e.key || '')) return; // 176 = MediaTrackNext: medya tuşu menüyü açmasın
   const isMenuKey = e.key === 'Escape' || e.key === 'ContextMenu' || e.key === 'Menu' || e.key === 'Settings' ||
                     e.keyCode === 82 || e.keyCode === 165 || e.keyCode === 176 || e.keyCode === 183;
   if (isMenuKey) {
@@ -3497,6 +3497,33 @@ document.addEventListener('keydown', e => {
     window.__menu();
   }
 });
+// Kumandanın medya tuşları: ScreenPano'nun müzik komutu (panelle aynı yol; tüm ekranlar ve panel aynı durumu görür).
+// Yeni APK tuşları yerelde yakalayıp __mediaKey'i çağırır; eski APK'da tuş sayfaya gelir ve burada tüketilir
+// (preventDefault: Android tuşu kutudaki Spotify uygulamasına iletmez — "durdur" şarkıyı başa sarıyordu).
+const MEDIA_KEYS = { MediaPlayPause: 'toggle', MediaPlay: 'play', MediaPause: 'pause', MediaStop: 'pause', MediaTrackNext: 'next', MediaFastForward: 'next', MediaTrackPrevious: 'prev', MediaRewind: 'prev' };
+const MEDIA_CODES = { 179: 'toggle', 178: 'pause', 228: 'next', 227: 'prev' };
+let lastMediaKey = 0;
+window.__mediaKey = cmd => {
+  if (window.__auth || !['toggle', 'play', 'pause', 'next', 'prev'].includes(cmd)) return;
+  const now = Date.now(); if (now - lastMediaKey < 300) return; lastMediaKey = now;
+  const m = MUS.cfg;
+  if (!m || !(m.playlists || []).length) { musicToast('Müzik ayarlanmamış'); return; }
+  // art arda basışta sunucunun yanıtı gelmeden önceki basışın sonucu esas alınır (iyimser durum, 2,5 sn)
+  const playingNow = mmOpt && now - mmOpt.at < 2500 && mmOpt.playing != null ? mmOpt.playing : !!(m.enabled && m.playing);
+  if (cmd === 'toggle') cmd = playingNow ? 'pause' : 'play';
+  if (cmd === 'play' && playingNow) return musicToast('▶ Zaten çalıyor');
+  if (cmd === 'pause' && !playingNow) return musicToast('⏸ Zaten duraklatıldı');
+  musicToast(cmd === 'play' ? '▶ Oynat' : cmd === 'pause' ? '⏸ Duraklatıldı' : cmd === 'next' ? 'Sonraki parça ⏭' : '⏮ Önceki parça');
+  if (cmd === 'play' || cmd === 'pause') { mmOpt = { playing: cmd === 'play', at: now }; if ($m('menu').classList.contains('on')) menuMusic(); }
+  // sunucuda 'play' listeyi baştan başlatır: açık ama duraklatılmış müzik 'toggle' ile kaldığı yerden sürer
+  menuMusicCmd(cmd === 'play' && m.enabled ? 'toggle' : cmd);
+};
+document.addEventListener('keydown', e => {
+  const cmd = MEDIA_KEYS[e.key] || (!e.key || e.key === 'Unidentified' ? MEDIA_CODES[e.keyCode] : '');
+  if (!cmd) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (!e.repeat) window.__mediaKey(cmd);
+}, true);
 // Kumanda, müzik çalarken (menü kapalı): sağ/sol = sonraki/önceki parça, yukarı/aşağı = ses. Müzik çalmıyorsa oklar eskisi gibi içerik/sayfa geçer.
 let lastMusKey = 0, mkVol = null, mkTimer = 0;
 function musicKeysOn() { const m = MUS.cfg; return !!(m && m.enabled && m.playing && activeMusicItem(m) && !MUS.err); }

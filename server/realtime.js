@@ -127,7 +127,7 @@ function onMessage(ws, raw) {
   // TV menüsünden müzik kontrolü (oynat/duraklat/sonraki/önceki/ses): panelle aynı komut yolu; cihaz başına saniyede birkaç komutla sınırlı
   if (m.type === 'music_ctl') {
     const k = 'mc' + (ws.deviceId || ws.tid), now = Date.now();
-    if (!ws.preview && ['toggle', 'next', 'prev', 'volume', 'select'].includes(m.cmd) && now - (onMessage.mc.get(k) || 0) > 350) {
+    if (!ws.preview && ['toggle', 'play', 'pause', 'next', 'prev', 'volume', 'select'].includes(m.cmd) && now - (onMessage.mc.get(k) || 0) > 350) {
       onMessage.mc.set(k, now);
       const t = tenants.get(ws.tid), hub = require('./hub');
       const b = { cmd: m.cmd, volume: m.volume };

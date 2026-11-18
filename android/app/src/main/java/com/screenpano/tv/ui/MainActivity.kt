@@ -1233,6 +1233,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Kumandanın medya tuşları (oynat/duraklat, durdur, ileri, geri) ScreenPano'nun müzik komutuna gider.
+     * Yakalanmazsa Android bunları o an çalan uygulamaya (kutudaki Spotify) iletir: "durdur" şarkıyı başa sarar,
+     * komut sunucuyu atladığı için panel ve TV yanlış durumu gösterir. Sayfaya gitmeden burada tüketilir (iki kez işlenmesin).
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val cmd = when (event.keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_HEADSETHOOK -> "toggle"
+            KeyEvent.KEYCODE_MEDIA_PLAY -> "play"
+            KeyEvent.KEYCODE_MEDIA_PAUSE, KeyEvent.KEYCODE_MEDIA_STOP -> "pause" // durdur = duraklat: şarkı başa sarılmaz
+            KeyEvent.KEYCODE_MEDIA_NEXT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> "next"
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS, KeyEvent.KEYCODE_MEDIA_REWIND -> "prev"
+            else -> null
+        } ?: return super.dispatchKeyEvent(event)
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0 && pageIsReady) {
+            binding.webView.evaluateJavascript("window.__mediaKey && window.__mediaKey('$cmd');", null)
+        }
+        return true
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_MENU,
