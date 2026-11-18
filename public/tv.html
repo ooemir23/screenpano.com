@@ -5034,7 +5034,8 @@ function initSpotifyConnect(spCfg) {
       }
     });
     // bu ekranın tarayıcısı Spotify oynatıcısını (şifreli ses / DRM) desteklemiyorsa nedenini yaz; sonsuza dek "bağlanıyor" demesin
-    const spBad = msg => { MUS.spUnsupported = msg; renderMusicBar(); musicFail(msg); };
+    // kapatılmış (ya da yerine yenisi kurulmuş) oynatıcının geç gelen olayları yok sayılır: cihaz değişince sahte "anahtar reddedildi" yazmasın
+    const spBad = msg => { if (MUS.spPlayer !== player || !MUS.spToken) return; MUS.spUnsupported = msg; renderMusicBar(); musicFail(msg); };
     player.addListener('initialization_error', () => spBad('Bu ekran Spotify oynatıcısını desteklemiyor. TV kutusuna Spotify uygulamasını kurun, panelde Hesaplar › Çalınacak cihaz olarak onu seçin'));
     player.addListener('authentication_error', () => spBad('Spotify anahtarı reddedildi; panelde Hesaplar sayfasından yeniden bağlanın'));
     player.addListener('account_error', () => spBad('Spotify Premium gerekiyor'));
@@ -5052,7 +5053,7 @@ function initSpotifyConnect(spCfg) {
 function playSpotifyItem(it, m) {
   ensureMusicHosts();
   // Harici Spotify cihazı (TV kutusundaki Spotify uygulaması): çalmayı sunucu Spotify'a yaptırır; TV yalnız çalanı gösterir
-  if (m && m.spotify && m.spotify.ext) { stopAllMusicEngines(''); MUS.err = ''; renderMusicBar(); return; }
+  if (m && m.spotify && m.spotify.ext) { stopAllMusicEngines(''); MUS.spUnsupported = ''; const had = !!MUS.err; MUS.err = ''; renderMusicBar(); if (had) reportNow({ playing: false }); return; }
   const uri = `spotify:${it.spotifyType || 'playlist'}:${it.spotifyId}`;
   // 1) Spotify Connect Web Playback SDK bağlıysa doğrudan tam şarkı/liste çal
   if (MUS.spDeviceId && MUS.spToken) {

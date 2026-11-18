@@ -167,28 +167,44 @@ async function search(t, q) {
   };
 }
 
-// Spotify Connect cihazları (TV kutusundaki Spotify uygulaması, telefon, bilgisayar, ScreenPano oynatıcısı)
+// Spotify Connect cihazları. Müzik yalnız işletmenin TV kutusundan çalar: telefon, bilgisayar ve tarayıcı (Web Player) hedef olamaz.
+// Android TV / Google TV kutusundaki Spotify uygulaması "TV" ya da "STB", Chromecast'li kutular "CastVideo" olarak görünür.
+const BOX_TYPES = new Set(['tv', 'stb', 'castvideo']);
+const isBox = d => !!d && BOX_TYPES.has(String(d.type || '').toLowerCase());
 const devCache = new Map(); // kumanda her komutta cihaz listesini yeniden çekmesin (30 sn)
 async function devices(t, fresh) {
   const c = devCache.get(t.id);
   if (!fresh && c && Date.now() - c.at < 30000) return c.items;
   const j = await call(t, 'GET', 'me/player/devices');
-  const items = (j.devices || []).filter(d => d && d.id).map(d => ({ id: d.id, name: String(d.name || '').slice(0, 60), type: String(d.type || '').slice(0, 20), active: !!d.is_active, volume: d.volume_percent }));
+  const items = (j.devices || []).filter(d => d && d.id).map(d => ({ id: d.id, name: String(d.name || '').slice(0, 60), type: String(d.type || '').slice(0, 20), active: !!d.is_active, volume: d.volume_percent, box: isBox(d) }));
   devCache.set(t.id, { at: Date.now(), items });
   return items;
 }
 
-// Seçili cihazın kimliği: kayıtlı ad ile eşleşen cihaz (kimlik zamanla değişebilir), yoksa kayıtlı kimlik
-async function targetId(t) {
-  const a = sp(t);
-  if (!a.target) return '';
-  try { const l = await devices(t); const d = l.find(x => x.id === a.target) || l.find(x => a.targetName && x.name === a.targetName); if (d) { if (d.id !== a.target) { a.target = d.id; tenants.save(t); } return d.id; } } catch (e) {}
-  return a.target;
+// Kayıtlı hedefi kutu listesinde bul (kimlik zamanla değişebilir: ada göre de eşleşir); yoksa tek kutu ya da o an çalan kutu otomatik seçilir.
+// Eski sürümlerden kalan 'screenpano' ya da kutu olmayan bir hedef geçersiz sayılır.
+function resolveBox(t, list) {
+  const a = sp(t), boxes = list.filter(x => x.box);
+  const saved = a.target && a.target !== 'screenpano' ? (boxes.find(x => x.id === a.target) || boxes.find(x => a.targetName && x.name === a.targetName)) : null;
+  const d = saved || (boxes.length === 1 ? boxes[0] : boxes.find(x => x.active)) || null;
+  if (d && (a.target !== d.id || a.targetName !== d.name)) { a.target = d.id; a.targetName = d.name; tenants.save(t); }
+  else if (!d && a.target === 'screenpano') { a.target = ''; a.targetName = ''; tenants.save(t); }
+  return d;
 }
+// Seçili kutunun kimliği. Liste alınamazsa (ağ hatası) kayıtlı kimlik denenir; kutu kapalıysa Spotify zaten hata döner.
+async function targetId(t, fresh) {
+  const a = sp(t);
+  let list;
+  try { list = await devices(t, fresh); } catch (e) { return a.target && a.target !== 'screenpano' ? a.target : ''; }
+  let d = resolveBox(t, list);
+  if (!d && !fresh) { try { d = resolveBox(t, await devices(t, true)); } catch (e) {} } // 30 sn'lik önbellek kutu açılmadan önceki listeyi tutuyor olabilir
+  return d ? d.id : '';
+}
+const NO_BOX = 'TV kutusunda Spotify uygulaması açık değil. Kutuda Spotify’ı açıp aynı hesapla giriş yapın, sonra tekrar deneyin';
 
 // Kumanda: it = kütüphanedeki Spotify öğesi; start = { uri } belirli şarkıdan başlat
 async function play(t, it, start, volume) {
-  const dev = await targetId(t); if (!dev) throw new Error('Önce çalınacak cihazı seçin');
+  const dev = await targetId(t); if (!dev) throw new Error(NO_BOX);
   const uri = `spotify:${it.spotifyType || 'playlist'}:${it.spotifyId}`;
   const body = (it.spotifyType || 'playlist') === 'track' ? { uris: [uri] } : { context_uri: uri, ...(start && start.uri ? { offset: { uri: start.uri } } : {}) };
   await call(t, 'PUT', 'me/player/play?device_id=' + encodeURIComponent(dev), body);
@@ -196,10 +212,15 @@ async function play(t, it, start, volume) {
 }
 async function control(t, cmd, opt = {}) {
   const dev = await targetId(t);
+  // kutu yoksa kimliksiz komut Spotify'ın o an etkin cihazına (telefon, bilgisayar) giderdi: yalnız "durdur" buna izinli (müzik nerede çalıyorsa sussun)
+  if (!dev && cmd !== 'pause') throw new Error(NO_BOX);
   try { return await control1(t, cmd, opt, dev); }
   catch (e) {
-    // kayıtlı cihaz kimliği eskimiş olabilir: kimliksiz dene (Spotify o an etkin cihaza uygular); özellikle "durdur" bu yüzden kaçmasın
-    if (dev && e.status && e.status !== 401 && e.reason !== 'PREMIUM_REQUIRED') return control1(t, cmd, opt, '');
+    // kayıtlı kutu kimliği eskimiş olabilir: listeyi tazeleyip kutuyu yeniden bul; "durdur" ise son çare kimliksiz gönderilir
+    if (!e.status || e.status === 401 || e.reason === 'PREMIUM_REQUIRED') throw e;
+    const d2 = await targetId(t, true);
+    if (d2 && d2 !== dev) return control1(t, cmd, opt, d2);
+    if (cmd === 'pause' && dev) return control1(t, cmd, opt, '');
     throw e;
   }
 }
@@ -232,9 +253,9 @@ async function disconnect(t) {
   cache.delete(t.id); nowCache.delete(t.id); tenants.save(t); onChange(t);
 }
 
-const status = t => { const a = sp(t); return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', connected: !!(a.refreshToken && !a.expired), expired: !!a.expired, name: a.name || '', premium: a.product === 'premium' || !a.product, product: a.product || '', target: a.target || '', targetName: a.targetName || '', at: a.connectedAt || 0 }; };
+const status = t => { const a = sp(t); return { configured: configured(t), own: !!own(t), appId: (own(t) || {}).id || '', connected: !!(a.refreshToken && !a.expired), expired: !!a.expired, name: a.name || '', premium: a.product === 'premium' || !a.product, product: a.product || '', target: a.target && a.target !== 'screenpano' ? a.target : '', targetName: a.targetName || '', at: a.connectedAt || 0 }; };
 const connected = t => { const a = (t.db.music || {}).spotify || {}; return !!(a.refreshToken && !a.expired); };
-// Cihaz seçimi "app" (Spotify uygulaması/başka Connect cihazı) ise müziği Spotify çalar, ScreenPano çalmaz
-const external = t => { const a = (t.db.music || {}).spotify || {}; return connected(t) && !!a.target && a.target !== 'screenpano'; };
+// Müziği her zaman TV kutusundaki Spotify uygulaması çalar (ScreenPano'nun tarayıcı oynatıcısı Android kutularda DRM yüzünden çalışmadığı için kaldırıldı)
+const external = t => connected(t);
 
-module.exports = { configured, authUrl, callback, access, playlists, tracks, search, devices, play, control, nowPlaying, disconnect, status, connected, external, redirectUri, setOnChange, sp };
+module.exports = { isBox, resolveBox, configured, authUrl, callback, access, playlists, tracks, search, devices, play, control, nowPlaying, disconnect, status, connected, external, redirectUri, setOnChange, sp };

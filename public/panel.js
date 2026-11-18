@@ -3118,7 +3118,7 @@ function detailHtml() {
 function spWarn() { // Spotify listesinin TV'de çalabilmesi için eksik adım
   const st = SPACC.st || {};
   if (!st.connected) return `<div class="ytm-warn">${ic('info')}<span>Spotify listelerini TV'de çalmak için Spotify hesabınızı bağlayın.</span><button class="ytm-btn sm" onclick="goM('accounts')">Bağla</button></div>`;
-  if (!st.target) return `<div class="ytm-warn">${ic('speaker')}<span>Müziğin hangi cihazda çalacağını seçin (TV kutusundaki Spotify uygulaması önerilir).</span><button class="ytm-btn sm" onclick="goM('accounts')">Cihaz seç</button></div>`;
+  if (!st.target) return `<div class="ytm-warn">${ic('speaker')}<span>Müzik işletmenin TV kutusundan çalar: kutuda Spotify uygulamasını açın, sonra Hesaplar'dan kutuyu seçin.</span><button class="ytm-btn sm" onclick="goM('accounts')">Kutuyu seç</button></div>`;
   if (!st.premium) return `<div class="ytm-warn">${ic('triangle-alert')}<span>Spotify'ı panelden yönetmek için Spotify Premium gerekir.</span></div>`;
   return '';
 }
@@ -3311,11 +3311,11 @@ async function spAccLoad(force) {
 }
 async function spDevLoad() {
   SPACC.devErr = '';
-  try { SPACC.devs = (await req('GET', '/music/spotify/devices')).items; } catch (e) { SPACC.devs = []; SPACC.devErr = e.message; }
+  try { const j = await req('GET', '/music/spotify/devices'); SPACC.devs = j.items || []; SPACC.devOthers = j.others || 0; if (j.status) SPACC.st = j.status; } catch (e) { SPACC.devs = []; SPACC.devOthers = 0; SPACC.devErr = e.message; }
   if (TAB === 'music' && (SUB.music || '') === 'accounts') render(true);
 }
 async function spSetDevice(id, name) {
-  const j = await act('PUT', '/music/spotify/device', { id, name }, 'Çalınacak cihaz kaydedildi', false);
+  const j = await act('PUT', '/music/spotify/device', { id, name }, 'TV kutusu seçildi', false);
   if (j && j.music) { S.db.music = j.music; SPACC.st = j.status; render(true); }
 }
 async function spOff() {
@@ -3383,14 +3383,12 @@ function accountsHtml() {
     const devs = SPACC.devs, tgt = sst.target;
     const opt = (id, name, sub, icn, on) => `<button type="button" class="ytm-dev ${on ? 'on' : ''}" onclick="spSetDevice('${esc(id)}','${esc(name).replace(/'/g, '')}')"><span class="i">${ic(icn)}</span><span class="t"><b>${esc(name)}</b><span>${sub}</span></span>${on ? ic('circle-check') : ''}</button>`;
     const devList = devs == null ? '<p class="ytm-muted">Cihazlar yükleniyor…</p>'
-      : (devs.map(d => opt(d.id, d.name, `${d.type === 'TV' ? 'TV' : d.type === 'Smartphone' ? 'Telefon' : d.type === 'Computer' ? 'Bilgisayar' : d.type || 'Cihaz'}${d.active ? ' • şu an çalıyor' : ''}`, d.type === 'Smartphone' ? 'smartphone' : d.type === 'Computer' ? 'monitor' : 'tv', tgt === d.id || !devs.some(x => x.id === tgt) && sst.targetName === d.name)).join('')
-        + opt('screenpano', 'ScreenPano oynatıcısı', 'Deneme: Spotify uygulaması kurulamayan ekranlar için (her kutuda çalışmayabilir)', 'monitor', tgt === 'screenpano'))
+      : devs.map(d => opt(d.id, d.name, `TV kutusu${d.active ? ' • şu an çalıyor' : ''}`, 'tv', tgt === d.id || !devs.some(x => x.id === tgt) && sst.targetName === d.name)).join('')
         + (SPACC.devErr ? `<p class="ytm-muted">${esc(SPACC.devErr)}</p>` : '')
-        + (devs && !devs.length ? '<p class="ytm-muted">Spotify cihazı görünmüyor: TV kutusunda Spotify uygulamasını açıp aynı hesapla giriş yapın, sonra Yenile\'ye basın.</p>' : '');
+        + (devs && !devs.length ? `<p class="ytm-muted">TV kutusu görünmüyor: kutuda Spotify uygulamasını açıp aynı hesapla giriş yapın, sonra Yenile'ye basın.</p>${SPACC.devOthers ? '<p class="ytm-muted">Telefon ve bilgisayarlar listelenmez; müzik yalnız işletmenin TV kutusundan çalar.</p>' : ''}` : '');
     spBody = `<p class="ytm-ok">${ic('circle-check')}Bağlı: <b>${esc(sst.name || 'Spotify')}</b> • ${sst.product ? (sst.premium ? 'Premium' : 'Ücretsiz') + ' • ' : ''}${(SPACC.items || []).length} liste</p>
-      ${tgt === 'screenpano' ? `<div class="ytm-warn">${ic('triangle-alert')}<span>“ScreenPano oynatıcısı” çoğu TV kutusunda çalışmaz. Kutuya Spotify uygulamasını kurup yukarıdaki listeden onu seçin.</span></div>` : ''}
       ${!sst.premium ? `<div class="ytm-warn">${ic('triangle-alert')}<span>Hesap Premium değil: listeleriniz görünür ama Spotify, panelden çalma/duraklatma kumandasına yalnız Premium hesaplarda izin verir.</span></div>` : ''}
-      <div class="ytm-sh sm"><div><h3>Çalınacak cihaz</h3></div><button class="ytm-more" onclick="SPACC.devs=null;render(true);spDevLoad()">${ic('refresh-cw')}Yenile</button></div>
+      <div class="ytm-sh sm"><div><h3>Çalınacak TV kutusu</h3></div><button class="ytm-more" onclick="SPACC.devs=null;render(true);spDevLoad()">${ic('refresh-cw')}Yenile</button></div>
       <div class="ytm-devs">${devList}</div>
       ${SPACC.err ? `<p class="ytm-muted">${esc(SPACC.err)}</p>` : ''}
       <div class="row"><button class="ytm-btn" onclick="spAccLoad(true)">${ic('refresh-cw')}Listeleri yenile</button>${own ? `<button class="ytm-btn" onclick="spOff()">Bağlantıyı kes</button>` : ''}</div>${sst.own ? appOwn('spotify', sst) : ''}`;
@@ -3467,7 +3465,7 @@ function setupHtml() {
       ['premium', 'Premium hesap', 'Panelden çalma ve kumanda için Spotify Premium gerekir. Ücretsiz hesapta listeler görünür ama kumanda edilemez.', ['https://www.spotify.com/premium/', 'Premium sayfasını aç']],
       ['box', 'Spotify’ı TV kutusuna kurun', 'Kutunun Google Play mağazasından Spotify’ı kurun ve aynı hesapla bir kez giriş yapın.', ['https://play.google.com/store/apps/details?id=com.spotify.tv.android', 'Play Store sayfası']],
       ['login', 'Hesabı bağlayın', 'Hesaplar sayfasında “Spotify ile bağlan”a basın. Spotify hesabınızla giriş yapıp “Kabul ediyorum”a tıklayın.', ['#music/accounts', 'Hesaplar sayfasına git']],
-      ['device', 'Cihazı seçin', '“Çalınacak cihaz” listesinden TV kutusunu seçin. Görünmüyorsa kutuda Spotify’ı açıp Yenile’ye basın.'],
+      ['device', 'Cihazı seçin', 'Hesaplar › “Çalınacak TV kutusu” listesinden kutunuzu seçin (tek kutu varsa kendiliğinden seçilir). Görünmüyorsa kutuda Spotify’ı açıp Yenile’ye basın.'],
       ['play', 'Listeden çalın', 'Spotify listenizi açıp “Oynat”a basın. Çalan şarkı TV’de ve panelde görünür.'],
     ]) : '')
     + `<p class="ytm-muted" style="margin-top:6px">${ic('info')} Ses TV kutusundan gelir: TV’nin ya da ses sisteminin sesi açık olmalı. Spotify ve YouTube hesap kuralları kişisel kullanım içindir; mekanda ticari yayın için ilgili lisansları kontrol edin.</p>`;

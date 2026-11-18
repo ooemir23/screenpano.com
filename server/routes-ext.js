@@ -775,12 +775,24 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     searchHits.set('sp' + req.t.id, h);
     try { res.json(await SP.search(req.t, req.query.q)); } catch (e) { spErr(res, e); }
   });
-  r.get('/music/spotify/devices', async (req, res) => { try { res.json({ items: await SP.devices(req.t, true) }); } catch (e) { spErr(res, e); } });
-  // çalınacak cihaz: 'screenpano' = ScreenPano'nun kendi oynatıcısı; diğerleri Spotify Connect cihaz kimliği
-  r.put('/music/spotify/device', (req, res) => {
+  // yalnız TV kutuları listelenir; tek kutu varsa (ya da kayıtlı kutu yeni kimlikle görünüyorsa) otomatik seçilir
+  r.get('/music/spotify/devices', async (req, res) => {
+    try {
+      const all = await SP.devices(req.t, true), before = SP.sp(req.t).target;
+      SP.resolveBox(req.t, all);
+      if (SP.sp(req.t).target !== before) changed(req.t);
+      res.json({ items: all.filter(d => d.box), others: all.filter(d => !d.box).length, status: SP.status(req.t) });
+    } catch (e) { spErr(res, e); }
+  });
+  // çalınacak cihaz: yalnız Spotify'ın o an gördüğü bir TV kutusu seçilebilir (telefon, bilgisayar, Web Player reddedilir)
+  r.put('/music/spotify/device', async (req, res) => {
     const b = req.body || {}, a = SP.sp(req.t), id = s(b.id, 80);
-    if (id && id !== 'screenpano' && !/^[A-Za-z0-9_-]{6,80}$/.test(id)) return res.status(400).json({ error: 'Geçersiz cihaz' });
-    a.target = id; a.targetName = id === 'screenpano' ? '' : s(b.name, 60);
+    if (!/^[A-Za-z0-9_-]{6,80}$/.test(id)) return res.status(400).json({ error: 'Geçersiz cihaz' });
+    let d;
+    try { d = (await SP.devices(req.t, true)).find(x => x.id === id); } catch (e) { return spErr(res, e); }
+    if (!d) return res.status(404).json({ error: 'Cihaz artık görünmüyor; kutuda Spotify’ı açıp Yenile’ye basın' });
+    if (!d.box) return res.status(400).json({ error: 'Müzik yalnız işletmenin TV kutusundan çalabilir; telefon ya da bilgisayar seçilemez' });
+    a.target = d.id; a.targetName = d.name;
     changed(req.t);
     res.json({ ok: true, music: ensureMusic(req.t.db), status: SP.status(req.t) });
   });

@@ -185,9 +185,10 @@ function menuView(m) {
 function tvMusic(m) {
   const x = fixMusic(m);
   if (!x || !x.spotify) return x;
-  const { refreshToken, ...sp } = x.spotify;
-  // ext: müziği TV kutusundaki Spotify uygulaması (ya da başka bir Spotify cihazı) çalar; TV yalnız çalanı gösterir
-  sp.ext = !!(refreshToken && !sp.expired && sp.target && sp.target !== 'screenpano');
+  // erişim anahtarı da kutuya gitmez: çalmayı sunucu Spotify Web API ile kutudaki Spotify uygulamasına yaptırır, TV yalnız çalanı gösterir
+  const { refreshToken, accessToken, expiresAt, ...sp } = x.spotify;
+  sp.ext = !!(refreshToken && !sp.expired);
+  if (sp.target === 'screenpano') { sp.target = ''; sp.targetName = ''; }
   return { ...x, spotify: sp };
 }
 // Özel yayın: seçili gün/saatlerde yalnız seçilen içerikler oynar; kampanya, kutlama, maç, fragman, haber bandı ve reklam çıkmaz.
