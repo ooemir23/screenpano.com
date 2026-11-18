@@ -403,6 +403,20 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .hb{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.6vh;text-align:center;flex:none}
 #menu .hb.on{background:rgba(255,255,255,.22)}
 #menu #mhupd{display:none;height:5.6vh;padding:0 1.6vw;border-radius:5vh;align-items:center;gap:.6vw;white-space:nowrap;font-size:1.9vh}#menu #mhupd.on{display:inline-flex}
+#menu #mmsrc{display:flex;align-items:center;gap:.7vw}#menu #mmsrc i{display:none;width:1.4vh;height:1.4vh;border-radius:50%}
+#menu .mlh #mlsw{margin-left:auto;padding:.6vh 1vw;border-radius:5vh;font-size:1.6vh;font-weight:700}
+#menu .mus.sp{background:linear-gradient(180deg,#1f1f1f 0%,#121212 60%);border-color:rgba(255,255,255,.06);--ma:#1ed760;--mb:#000}
+#menu .mus.yt{background:linear-gradient(180deg,#212121 0%,#030303 60%);border-color:rgba(255,255,255,.06);--ma:#ff0033;--mb:#fff}
+#menu .mus.sp #mmsrc,#menu .mus.yt #mmsrc{color:#fff;letter-spacing:.04em;text-transform:none;font-size:1.8vh}
+#menu .mus.sp #mmsrc i,#menu .mus.yt #mmsrc i{display:block;background:var(--ma)}
+#menu .mus.sp .ctl button.big{background:var(--ma);color:#000}#menu .mus.sp .ctl button.big:focus{background:#3be477;color:#000;box-shadow:0 0 0 .35vh #fff}
+#menu .mus.yt .ctl button.big{background:#fff;color:#000}#menu .mus.yt .ctl button.big:focus{background:#fff;color:#000;box-shadow:0 0 0 .35vh var(--ma)}
+#menu .mus.sp .ctl button:not(.big),#menu .mus.yt .ctl button:not(.big){background:transparent;border-color:transparent}
+#menu .mus.sp .vol .bar i,#menu .mus.sp .mpr .tr i{background:var(--ma)}
+#menu .mus.yt .vol .bar i,#menu .mus.yt .mpr .tr i{background:var(--ma)}
+#menu .mus.sp .mll .on .t b,#menu .mus.sp .mll .on .n,#menu .mus.yt .mll .on .t b,#menu .mus.yt .mll .on .n{color:var(--ma)}
+#menu .mus.sp .mll button.mli{border-radius:.8vh}#menu .mus.sp .np .cv{border-radius:.6vh}
+#menu .mus.yt .mll button.mli{background:transparent}#menu .mus.yt .np .cv{border-radius:.4vh}
 #menu .mpr{display:grid;grid-template-columns:5vh 1fr 5vh;align-items:center;gap:.8vw;font-size:1.6vh;color:#9aa3ad;font-variant-numeric:tabular-nums;margin-top:-.4vh}#menu .mpr span:first-child{text-align:right}
 #menu .mpr .tr{height:.6vh;border-radius:.6vh;background:rgba(255,255,255,.14);overflow:hidden}#menu .mpr .tr i{display:block;height:100%;width:0;background:#fff;border-radius:.6vh}
 #menu .mlib{display:flex;flex-direction:column;gap:1vh;border-top:max(1px,.1vh) solid rgba(255,255,255,.08);padding-top:1.4vh}
@@ -1240,12 +1254,12 @@ html.theme-glass .pill.live::before {
     <button id="mtopcls" type="button" data-nav title="Kapat" aria-label="Kapat">✕</button>
   </div>
   <div class="mgrid">
-    <section class="mc mus" id="mmc"><h4>Müzik</h4>
+    <section class="mc mus" id="mmc"><h4 id="mmsrc"><i></i><span>Müzik</span></h4>
       <div class="np"><div class="cv" id="mmcv">♪</div><div class="tx"><b id="mmtitle">-</b><span id="mmsub">-</span></div></div>
       <div class="mpr" id="mmpr" style="visibility:hidden"><span id="mmpe">0:00</span><span class="tr"><i id="mmpf"></i></span><span id="mmpd"></span></div>
       <div class="ctl"><button id="mmprev" type="button" data-nav aria-label="Önceki">⏮</button><button id="mmplay" class="big" type="button" data-nav aria-label="Oynat / duraklat">▶</button><button id="mmnext" type="button" data-nav aria-label="Sonraki">⏭</button></div>
       <div class="vol"><button id="mmvolm" type="button" data-nav aria-label="Sesi kıs">−</button><span class="bar"><i id="mmbar"></i></span><button id="mmvolp" type="button" data-nav aria-label="Sesi aç">+</button><b id="mmvol">-</b></div>
-      <div class="mlib"><div class="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span></div><div class="mll" id="mml"></div></div>
+      <div class="mlib"><div class="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span><button id="mlsw" type="button" data-nav style="display:none"></button></div><div class="mll" id="mml"></div></div>
       <span id="mmus" style="display:none"></span>
     </section>
     <section class="mc dev"><h4>Cihaz bilgisi</h4>
@@ -3245,6 +3259,9 @@ function menuMusic() {
   const vol = Math.max(0, Math.min(100, Math.round(opt && opt.vol != null ? opt.vol : (MUS.vol != null ? MUS.vol : (m && m.volume) || 0))));
   const sp = MUS.spConnectTrack;
   $m('mmc').classList.toggle('off', !has);
+  // kart çalan kaynağa göre görünür: Spotify ya da YouTube Music (radyo/boş: genel görünüm)
+  const src = it && it.provider === 'spotify' ? 'sp' : it && ['yt', 'ytm', 'ytmix'].includes(it.provider) ? 'yt' : '';
+  const mc = $m('mmc'); if (mc.dataset.src !== src) { mc.dataset.src = src; mc.classList.toggle('sp', src === 'sp'); mc.classList.toggle('yt', src === 'yt'); $m('mmsrc').lastChild.textContent = src === 'sp' ? 'Spotify' : src === 'yt' ? 'YouTube Music' : 'Müzik'; }
   $m('mmtitle').textContent = !has ? 'Müzik ayarlanmamış' : sp && sp.title ? sp.title : (on && MUS.trackTitle) || (it && it.title) || 'Müzik kapalı';
   $m('mmsub').textContent = !has ? 'Panelde Müzik sayfasından bir liste ekleyin' : !on ? 'Kapalı: ▶ ile açın' : sp0 ? (sp0.artist || 'Spotify') + (playing ? '' : ' · duraklatıldı') : MUS.err ? MUS.err : sp && sp.artist ? sp.artist : (MUS.trackSub || '') + (playing ? '' : (MUS.trackSub ? ' · ' : '') + 'duraklatıldı');
   const th = (sp && sp.thumb) || (on && MUS.trackThumb) || (it && it.thumb) || '', cv = $m('mmcv');
@@ -3261,7 +3278,8 @@ function menuMusic() {
 }
 // ---- Menüdeki kitaplık: listeler → listenin şarkıları. Seçim panelle aynı komut yolundan (sunucu) gider; tüm ekranlar aynı müziği çalar.
 // Yalnız içerik değişince yeniden çizilir (menü 1,5 sn'de bir tazelenir; odak ve kaydırma korunur).
-const ML = { view: 'lib', id: '', items: null, err: '', sig: '', ask: 0 };
+const ML = { view: 'lib', id: '', items: null, err: '', sig: '', ask: 0, grp: '' };
+const mlGrp = x => x && x.provider === 'spotify' ? 'sp' : 'yt'; // kitaplık panelle aynı ayrılır: Spotify | YouTube, kendi listem, radyo
 const ML_MAX = 120; // kumandayla gezilen listede çok fazla düğme ok tuşlarını yavaşlatır
 const mlSrc = x => x.provider === 'spotify' ? 'Spotify' : x.provider === 'radio' ? 'Radyo' : x.provider === 'ytmix' ? 'Kendi listem' : 'YouTube';
 const mlDur = s => s > 0 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : '';
@@ -3273,16 +3291,19 @@ function mlRender(force) {
   const nowT = (MUS.spConnectTrack && MUS.spConnectTrack.title) || MUS.trackTitle || '';
   if (ML.view === 'list' && !lib.some(x => x.id === ML.id)) { ML.view = 'lib'; ML.id = ''; ML.items = null; }
   const it = ML.view === 'list' ? lib.find(x => x.id === ML.id) : null;
-  const sig = ML.view + '|' + ML.id + '|' + (cur && cur.id) + '|' + on + '|' + nowT + '|' + (ML.items ? ML.items.length : -1) + '|' + ML.err + '|' + lib.map(x => x.id + x.title + (x.thumb || '')).join(',');
+  // kitaplıkta çalan kaynağın listeleri; diğer kaynağın listeleri düğmeyle açılır
+  const grp = ML.grp || mlGrp(cur), shown = lib.filter(x => mlGrp(x) === grp), other = lib.length - shown.length;
+  const sw = $m('mlsw'); sw.style.display = !it && other ? '' : 'none'; sw.textContent = (grp === 'sp' ? 'YouTube' : 'Spotify') + ' (' + other + ') ⇄';
+  const sig = ML.view + '|' + ML.id + '|' + grp + '|' + (cur && cur.id) + '|' + on + '|' + nowT + '|' + (ML.items ? ML.items.length : -1) + '|' + ML.err + '|' + lib.map(x => x.id + x.title + (x.thumb || '')).join(',');
   if (!force && sig === ML.sig) return;
   ML.sig = sig;
   const fk = document.activeElement && box.contains(document.activeElement) ? document.activeElement.dataset.k : '', st = box.scrollTop;
   let h = '';
   if (!it) {
-    $m('mlhead').textContent = 'Kitaplık'; $m('mlsub').textContent = lib.length ? lib.length + ' liste' : '';
-    h = lib.length ? lib.map(x => { const a = cur && cur.id === x.id;
+    $m('mlhead').textContent = grp === 'sp' ? 'Spotify listeleri' : 'Kitaplık'; $m('mlsub').textContent = shown.length ? shown.length + ' liste' : '';
+    h = shown.length ? shown.map(x => { const a = cur && cur.id === x.id;
       return `<button type="button" data-nav class="mli${a ? ' on' : ''}" data-a="${mlHasTracks(x) ? 'open' : 'play'}" data-id="${esc(x.id)}" data-k="l:${esc(x.id)}"><span class="c"${mlCv(x.thumb)}>${x.thumb ? '' : '♪'}</span><span class="t"><b>${esc(x.title || 'Liste')}</b><span>${mlSrc(x)}${a ? (on ? ' · çalıyor' : ' · duraklatıldı') : ''}</span></span><span class="d">${mlHasTracks(x) ? '›' : '▶'}</span></button>`; }).join('')
-      : '<div class="msg">Kitaplık boş. Panelde Müzik sayfasından liste ekleyin.</div>';
+      : `<div class="msg">${lib.length ? 'Bu kaynakta liste yok.' : 'Kitaplık boş. Panelde Müzik sayfasından liste ekleyin.'}</div>`;
   } else {
     $m('mlhead').textContent = it.title || 'Liste'; $m('mlsub').textContent = ML.items ? ML.items.length + ' şarkı' : mlSrc(it);
     h = `<div class="mtop"><button type="button" data-nav data-a="back" data-k="back">‹ Kitaplık</button><button type="button" data-nav data-a="play" data-id="${esc(it.id)}" data-k="playall">▶ Listeyi çal</button></div>`;
@@ -3308,6 +3329,7 @@ function onMusicList(msg) {
   if (ML.view !== 'list' || msg.itemId !== ML.id) return;
   clearTimeout(ML.to); ML.items = Array.isArray(msg.items) ? msg.items : []; ML.err = msg.err && !ML.items.length ? msg.err : ''; mlRender(true);
 }
+attachTap('mlsw', () => { const cur = activeMusicItem(MUS.cfg); ML.grp = (ML.grp || mlGrp(cur)) === 'sp' ? 'yt' : 'sp'; mlRender(true); });
 $m('mml').addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button[data-a]'); if (!b) return;
   e.stopPropagation(); menuIdle(90000);
@@ -3352,7 +3374,7 @@ function menuOpen() {
   upd.openedAt = Date.now(); try { menuInfo(); } catch (e) {} document.documentElement.classList.add('menu-open'); try { clearTimeout(brkTimer); brkEl.classList.remove('on'); window.__N && window.__N.brkHide && window.__N.brkHide(); } catch (e) {} $m('menu').classList.add('on'); try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} menuInfo(); menuSt('');
   $m('menu').scrollTop = 0;
   setTimeout(checkUpdateSilently, 400);
-  $m('menu').classList.remove('set'); $m('mhset').classList.remove('on'); // her açılış müzikle başlar
+  $m('menu').classList.remove('set'); $m('mhset').classList.remove('on'); ML.grp = ''; // her açılış müzikle ve çalan kaynağın kitaplığıyla başlar
   const pickFirst = () => upd.avail && $m('mhupd').classList.contains('on') ? $m('mhupd') : (MUS.cfg && (MUS.cfg.playlists || []).length ? $m('mmplay') : $m('mhset'));
   requestAnimationFrame(() => { const b = pickFirst(); if (b && b.focus) b.focus({ preventScroll: true }); });
   menuIdle(90000);
