@@ -235,9 +235,9 @@ async function control1(t, cmd, opt, dev) {
 
 // O an çalan (panel ve TV'deki "şu an çalıyor" için); 5 sn önbellek
 const nowCache = new Map();
-async function nowPlaying(t) {
+async function nowPlaying(t, fresh) {
   const c = nowCache.get(t.id);
-  if (c && Date.now() - c.at < 5000) return c.v;
+  if (!fresh && c && Date.now() - c.at < 5000) return c.v;
   let v = null;
   try {
     const j = await call(t, 'GET', 'me/player/currently-playing?additional_types=track');

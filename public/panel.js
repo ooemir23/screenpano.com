@@ -2880,7 +2880,7 @@ const kindName = it => it.provider === 'radio' ? 'Radyo' : it.provider === 'spot
 const fmtDur = s => !s ? '' : (s >= 3600 ? Math.floor(s / 3600) + ':' + String(Math.floor(s % 3600 / 60)).padStart(2, '0') : Math.floor(s / 60)) + ':' + String(s % 60).padStart(2, '0');
 const fmtLong = s => !s ? '' : s >= 3600 ? `${Math.floor(s / 3600)} sa ${Math.floor(s % 3600 / 60)} dk` : `${Math.max(1, Math.round(s / 60))} dk`;
 let MV = null;               // açık liste: { src: 'lib'|'yt'|'sp', id, provider, title, thumb, url, listId, spType, spId, count, tracks }
-let MNOW = null, MNOW_T = 0; // o an çalan (TV'nin bildirdiği ya da Spotify'ın verdiği)
+let MNOW = null, MNOW_T = 0, MNOW_K1 = 0, MNOW_K2 = 0; // o an çalan (TV'nin bildirdiği ya da Spotify'ın verdiği)
 const TRK = new Map();       // YouTube listId -> { items, err, reconnect }
 const SPTRK = new Map();     // 'tür:kimlik' -> { items, err, hidden }
 let LF = 'all';              // kitaplık süzgeci
@@ -3506,6 +3506,7 @@ function setupHtml() {
 // ---- Komutlar ----
 async function musicCmd(cmd, extra = {}) {
   const j = await act('POST', '/music/cmd', { cmd, ...extra }, '', false);
+  if (j && cmd !== 'volume') { clearTimeout(MNOW_K1); clearTimeout(MNOW_K2); MNOW_K1 = setTimeout(musicNowLoad, 1000); MNOW_K2 = setTimeout(musicNowLoad, 2600); } // Spotify komutu ~1 sn'de uygular
   if (!j) MERR = LASTERR; else if (j.warn) { MERR = j.warn; toast(j.warn, true); } else if (cmd !== 'volume') MERR = '';
   drawMerr();
   if (j && j.music) { S.db.music = j.music; if (TAB === 'music') { const box = $('mnowbox'); if (box) box.innerHTML = nowBar(); if (cmd === 'source' || cmd === 'select' || (!MV && ['home', 'lib', 'explore'].includes(MSUB[SUB.music] || SUB.music || 'home'))) render(true); else if (MV) render(true); } setTimeout(musicNowLoad, 1500); }

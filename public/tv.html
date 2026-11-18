@@ -5312,6 +5312,13 @@ function applyMusicPlayState(playing) {
   renderMusicBar();
 }
 function onMusicCmd(msg) {
+  { // kutudaki Spotify: oynat/duraklat komutu ekranda hemen görünsün (gerçek durum ~1 sn sonra music_now ile gelir)
+    const sp = MUS.spConnectTrack;
+    if (sp && typeof msg.playing === 'boolean' && ['play', 'pause', 'toggle', 'enabled'].includes(msg.cmd) && sp.paused === msg.playing) {
+      const now = Date.now(); sp.progress = Math.min(sp.dur || 1e9, sp.progress + (!sp.paused ? (now - sp.t0) / 1000 : 0)); sp.t0 = now; sp.paused = !msg.playing;
+      if ($m('menu').classList.contains('on')) menuMusic();
+    }
+  }
   if (msg.start && !IN_IFRAME) MUS.startAt = msg.start; // liste değişirse playYtItem kullanır
   if (msg.music) { setMusic(msg.music); }
   if (MUS.startAt && !IN_IFRAME) { // aynı liste zaten çalıyorsa yalnız şarkı değişir

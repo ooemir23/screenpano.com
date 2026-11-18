@@ -506,18 +506,24 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     }
   }, 5 * 60000).unref();
   // Harici Spotify cihazında çalan şarkı TV'lerdeki "şu an çalıyor" çubuğuna gider (değişince)
-  const spNowSig = new Map();
-  setInterval(async () => {
-    for (const t of tenants.all()) {
-      const m = t.db.music; if (!plan(t).pro || !m || !m.enabled || !SP.external(t)) { spNowSig.delete(t.id); continue; }
-      const cur = (m.playlists || []).find(x => x.id === m.activeId); if (!cur || cur.provider !== 'spotify') continue;
-      const n = await SP.nowPlaying(t).catch(() => null), now = n && n.title ? { title: n.title, artist: n.artist, thumb: n.thumb, playing: n.playing } : null;
-      // konum imzaya girmez (her turda değişir); gönderilirken eklenir, TV aradaki süreyi kendisi sayar
-      const sig = JSON.stringify(now), last = spNowSig.get(t.id); // değişince, değişmese de dakikada bir (yeni açılan TV de görsün)
-      if (last && last.sig === sig && Date.now() - last.at < 60000) continue;
-      spNowSig.set(t.id, { sig, at: Date.now() }); sendTo(t, { type: 'music_now', now: now && { ...now, progress: n.progress || 0, dur: n.dur || 0 } });
-    }
-  }, 8000).unref();
+  const spNowSig = new Map(), spKick = new Map();
+  // force: komuttan hemen sonra (Spotify'dan taze okunur, imza aynı olsa da gönderilir: konum da düzelir)
+  async function spNowSend(t, force) {
+    const m = t.db.music; if (!plan(t).pro || !m || !m.enabled || !SP.external(t)) { spNowSig.delete(t.id); return; }
+    const cur = (m.playlists || []).find(x => x.id === m.activeId); if (!cur || cur.provider !== 'spotify') return;
+    const n = await SP.nowPlaying(t, force).catch(() => null), now = n && n.title ? { title: n.title, artist: n.artist, thumb: n.thumb, playing: n.playing } : null;
+    // konum imzaya girmez (her turda değişir); gönderilirken eklenir, TV aradaki süreyi kendisi sayar
+    const sig = JSON.stringify(now), last = spNowSig.get(t.id); // değişince, değişmese de dakikada bir (yeni açılan TV de görsün)
+    if (!force && last && last.sig === sig && Date.now() - last.at < 60000) return;
+    spNowSig.set(t.id, { sig, at: Date.now() }); sendTo(t, { type: 'music_now', now: now && { ...now, progress: n.progress || 0, dur: n.dur || 0 } });
+  }
+  setInterval(async () => { for (const t of tenants.all()) await spNowSend(t, false); }, 8000).unref();
+  // kumanda/panel komutundan sonra TV'ler ve panel 8 sn'lik turu beklemesin: Spotify uygulaması komutu ~0,5-1,5 sn'de uygular,
+  // iki kez taze okunup gönderilir (art arda basışta öncekiler iptal edilir)
+  function spNowKick(t) {
+    for (const h of spKick.get(t.id) || []) clearTimeout(h);
+    spKick.set(t.id, [700, 2200].map(ms => setTimeout(() => spNowSend(t, true).catch(() => {}), ms)));
+  }
   function ensureMusic(db) {
     if (!db.music || typeof db.music !== 'object') {
       db.music = { enabled: false, playing: true, volume: 75, muteVideo: true, showNowPlaying: true, activeId: '', playlists: [], spotify: {} };
@@ -662,6 +668,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
         else if (cmd === 'next' || cmd === 'prev') await SP.control(req.t, cmd);
         else if (cmd === 'volume') await SP.control(req.t, 'volume', { volume: m.volume });
       } catch (e) { warn = e.message; }
+      if (!warn && cmd !== 'volume') spNowKick(req.t);
     }
     tenants.save(req.t);
     sendTo(req.t, { type: 'music_cmd', cmd, rotated, start, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: tvMusic(m) });
