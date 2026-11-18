@@ -140,6 +140,27 @@ r.get('/google/start', (req, res) => {
   });
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${q}`);
 });
+// Tahmin Ligi müşterisi: Google ile giriş/kayıt (aynı geri çağrı adresi; Google Console'a yeni adres eklemek gerekmez)
+r.get('/google/lig/:code', (req, res) => {
+  const code = String(req.params.code || '');
+  const back = h => res.redirect(`${baseOrigin(req)}/lig/${encodeURIComponent(code)}#${h}`);
+  if (!/^[a-z0-9]{4,16}$/i.test(code)) return res.status(404).end();
+  const g = gCfg();
+  if (!g.id || !g.secret) return back('gerr=1');
+  const ip = auth.clientIp(req), now = Date.now();
+  const sr = gStarts.get(ip);
+  if (sr && now - sr.at < G_START_WIN && sr.n >= G_START_LIMIT) return back('gerr=limit');
+  if (!sr || now - sr.at >= G_START_WIN) gStarts.set(ip, { n: 1, at: now }); else sr.n++;
+  if (gNonces.size > 1000) pruneGState();
+  if (gNonces.size > 5000) return back('gerr=limit');
+  const n = crypto.randomBytes(16).toString('hex');
+  gNonces.set(n, now + 10 * 60 * 1000);
+  const q = new URLSearchParams({
+    client_id: g.id, redirect_uri: `${baseOrigin(req)}/api/auth/google/callback`, response_type: 'code',
+    scope: 'openid email', state: auth.sign({ kind: 'g_state', n, lig: code, exp: now + 10 * 60 * 1000 }), prompt: 'select_account',
+  });
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${q}`);
+});
 let gJwks = null, gJwksAt = 0; // Google imza anahtarları (1 saat önbellek)
 async function gFetchJwks() {
   const r = await fetch('https://www.googleapis.com/oauth2/v3/certs', { signal: AbortSignal.timeout(8000) });
@@ -174,15 +195,18 @@ async function gVerifyIdToken(idToken, clientId) {
 r.get('/google/callback', async (req, res) => {
   const g = gCfg();
   const ip = auth.clientIp(req);
+  let lig = ''; // Tahmin Ligi müşterisi ise hatada kendi sayfasına döner
   const fail = (msg, code = '1', countFail = true) => {
     console.error('[Google OAuth]', msg);
-    if (countFail) auth.noteFail(ip);
+    if (countFail && !lig) auth.noteFail(ip);
+    if (lig) return res.redirect(`${baseOrigin(req)}/lig/${encodeURIComponent(lig)}#gerr=${code}`);
     return gHome(req, res, `#gerr=${code}`);
   };
   try {
     if (!g.id || !g.secret) return fail('anahtar yok', '1', false);
     const st = auth.verify(String(req.query.state || ''));
     if (!st || st.kind !== 'g_state' || !st.n) return fail('state geçersiz');
+    if (st.lig) lig = String(st.lig);
     const nb = gNonces.get(st.n);
     gNonces.delete(st.n);
     if (!nb || nb < Date.now()) return fail('state süresi dolmuş');
@@ -201,6 +225,7 @@ r.get('/google/callback', async (req, res) => {
     const c = await gVerifyIdToken(tj.id_token, g.id);
     if (!c.email || c.email_verified !== true) return fail('e-posta doğrulanmamış', 'unverified');
     const emLow = String(c.email).toLowerCase();
+    if (lig) return require('./routes-predict').googleDone(req, res, lig, emLow); // panel oturumu açılmaz
     if (gSuperEmails().includes(emLow)) {
       const su = store.sql.prepare("SELECT * FROM users WHERE role = 'super' ORDER BY created ASC LIMIT 1").get();
       if (su) {
@@ -405,4 +430,5 @@ r.post('/reset', (req, res) => {
 });
 
 module.exports = r;
+module.exports.gCfg = gCfg;
 module.exports.baseOrigin = baseOrigin; // routes-tv gibi başka modüller de yetkili kaynak adresini kullanır

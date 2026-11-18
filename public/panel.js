@@ -2118,10 +2118,13 @@ function drawPredict() {
   const rows = list.length ? list.map((r, i) => `<div class="it"><div class="b"><b>${i + 1}. ${esc(r.nick)}</b><span>${r.n} maça tahmin · ${r.exact} tam skor</span></div><b>${r.pts} puan</b></div>`).join('') : '<div class="empty">Henüz puan yok.</div>';
   const aw = p.awards.length ? p.awards.map(a => a.none ? `<div class="it"><div class="b"><b>${esc(a.label)}</b><span>Puan alan olmadı</span></div></div>`
     : `<div class="it"><div class="b"><b>${esc(a.label)} · ${esc(a.nick)}</b><span>${a.pts} puan · ${esc(a.email)}${a.prize ? ' · ' + esc(a.prize) : ''}</span></div><label class="row" style="gap:8px;align-items:center"><span class="muted">Ödül verildi</span>${sw(a.given, `predAward('${a.key}',this.checked)`)}</label></div>`).join('') : '<div class="empty">Henüz biten hafta yok. Hafta Salı başlar; haftanın maçları bitince birinci kesinleşir ve kendisine e-posta gider.</div>';
-  const us = p.users.length ? p.users.slice(0, 200).map(u => `<div class="it"><div class="b"><b>${esc(u.nick)}${u.off ? ' <span class="muted">· kapatıldı</span>' : ''}</b><span>${esc(u.email)} · ${new Date(u.at).toLocaleDateString(I18N.locale)}</span></div><button class="btn g s" onclick="predUser('${u.uid}',${!u.off})">${u.off ? 'Geri aç' : 'Ligden çıkar'}</button></div>`).join('') : '<div class="empty">Henüz katılımcı yok.</div>';
+  const q = (PRED_Q || '').toLocaleLowerCase('tr');
+  const ul = p.users.filter(u => !q || u.nick.toLocaleLowerCase('tr').includes(q) || u.email.toLocaleLowerCase('tr').includes(q));
+  const us = ul.length ? ul.slice(0, 200).map(u => `<div class="it"><div class="b"><b>${esc(u.nick)}${u.off ? ' <span class="muted">· kapatıldı</span>' : ''}</b><span>${esc(u.email)}${u.via === 'google' ? ' · Google' : ''}${u.age != null ? ' · ' + I18N.t(u.age + ' yaş') : ''} · ${I18N.t(u.n + ' maça tahmin')} · ${new Date(u.at).toLocaleDateString(I18N.locale)}</span></div><div class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn g s" onclick="predEdit('${u.uid}')">Düzenle</button><button class="btn g s" onclick="predUser('${u.uid}',${!u.off})">${u.off ? 'Geri aç' : 'Ligden çıkar'}</button><button class="btn g s" style="color:var(--bad,#e5484d)" onclick="predDel('${u.uid}')">Sil</button></div></div>`).join('') : `<div class="empty">${p.users.length ? 'Eşleşen katılımcı yok.' : 'Henüz katılımcı yok.'}</div>`;
   $('pdv').innerHTML = (!p.pro ? `<div class="card"><p class="muted">Tahmin Ligi Pro pakete dahildir.</p></div>` : '')
     + card('Tahmin Ligi', p.on ? 'Açık: ekranda döngü arasında puan durumu ve katılım QR\'ı görünür.' : 'Kapalı. Açınca ekranda katılım QR\'ı ve puan durumu görünmeye başlar.',
       `<div class="f">${fl('Haftanın birincisine ikram', `<input type="text" id="pd-prize" maxlength="120" placeholder="örn. 1 adet büyük boy pizza" value="${esc(p.prize)}">`)}
+       ${fl('Yaş sınırı', `<select id="pd-age"><option value="0" ${!p.minAge ? 'selected' : ''}>Yok</option><option value="18" ${p.minAge === 18 ? 'selected' : ''}>18 yaş ve üzeri</option></select>`)}
        ${fl('Ekranda ne sıklıkla', `<select id="pd-every">${[4, 6, 8, 12, 20].map(n => `<option value="${n}" ${p.every === n ? 'selected' : ''}>Her ${n} içerikte bir</option>`).join('')}</select>`)}</div>
        <div class="row mt" style="gap:10px;flex-wrap:wrap"><a class="btn g s" href="${esc(p.url)}" target="_blank" rel="noopener">Müşteri sayfasını aç ↗</a><span class="muted" style="font-size:12px;word-break:break-all">${esc(p.url)}</span><span style="flex:1"></span><button class="btn" data-save onclick="predSave()">Kaydet</button></div>`,
       sw(p.on, "predSet({on:this.checked})"), p.on ? '' : 'off')
@@ -2129,10 +2132,31 @@ function drawPredict() {
     + card('Haftanın birincileri', 'Ödülü verince işaretleyin. Kazanan, ödülü alırken takma adını ve kendisine gelen e-postayı gösterir.', `<div class="list">${aw}</div>`)
     + card('Kurallar ve puanlar', '', `<p class="muted" style="margin:0 0 8px">Tam skor ${P.exact} · doğru sonuç ${P.result} · golcünün her golü ${P.goal} · asistin her asisti ${P.assist} · sarı kart sayısı tam ${P.yellow} · kırmızı kart çıkar/çıkmaz ${P.red} puan. Müşteri istediği maçlara tahmin girer; maç başlayınca tahmin kilitlenir. Hafta Salı–Pazartesi; eşitlikte daha çok tam skor, sonra daha erken tahmin öne geçer. Katılım ücretsizdir, kura yoktur.</p>
        <p class="muted" style="margin:0">Ödüllü yarışmalar mevzuata tabidir: katılım ücretsiz ve alışveriş şartsız olmalı, ödül nakit olmamalı. Emin değilseniz bir hukukçuya danışın.</p>`)
-    + card('Katılımcılar', 'Kural dışı davranan (ör. birden çok hesap açan) katılımcıyı ligden çıkarabilirsiniz; puan durumunda görünmez.', `<div class="list">${us}</div>`);
+    + card('Katılımcılar', 'Katılımcının bilgilerini düzenleyebilir, kural dışı davrananı (ör. birden çok hesap açan) ligden çıkarabilir ya da tamamen silebilirsiniz.', `${p.users.length > 8 ? `<input type="search" id="pd-q" style="margin:0 0 10px;width:100%" placeholder="Takma ad veya e-posta ara" value="${esc(PRED_Q || '')}" oninput="PRED_Q=this.value;drawPredict();const i=$('pd-q');i.focus();i.setSelectionRange(i.value.length,i.value.length)">` : ''}<div class="list">${us}</div>`);
 }
 async function predSet(b) { try { PRED = await req('PUT', '/predict', b); toast(b.on === false ? 'Tahmin Ligi kapatıldı' : b.on ? 'Tahmin Ligi açıldı' : 'Kaydedildi'); drawPredict(); } catch (e) { toast(e.message, true); } }
-const predSave = () => predSet({ prize: $('pd-prize').value, every: +$('pd-every').value });
+const predSave = () => predSet({ prize: $('pd-prize').value, every: +$('pd-every').value, minAge: +$('pd-age').value });
+var PRED_Q = '';
+// katılımcıyı düzenle (tam e-posta yalnız bu pencerede, sahibe gösterilir)
+async function predEdit(uid) {
+  let u; try { u = await req('GET', '/predict/user/' + uid); } catch (e) { return toast(e.message, true); }
+  openModal(`<h3 style="margin:0 0 10px">Katılımcıyı düzenle</h3>
+    <div class="f">${fl('Takma ad', `<input type="text" id="pe-nick" maxlength="20" value="${esc(u.nick)}">`)}
+    ${fl('E-posta', `<input type="email" id="pe-email" maxlength="200" value="${esc(u.email)}">`)}
+    ${fl('Doğum tarihi', `<input type="date" id="pe-bd" min="1900-01-01" value="${esc(u.bd)}">`)}</div>
+    <p class="muted" style="font-size:12px;margin:4px 0 0;text-align:left">${u.via === 'google' ? 'Google ile katıldı' : 'E-posta koduyla katıldı'} · ${I18N.t(u.picks + ' maça tahmin')}. E-posta değişirse katılımcının açık oturumları kapanır.</p>
+    <div class="row mt" style="gap:8px;justify-content:flex-end"><button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" onclick="predEditSave('${uid}',this)">Kaydet</button></div>`);
+}
+async function predEditSave(uid, b) {
+  b.disabled = true;
+  try { PRED = await req('PUT', '/predict/user/' + uid, { nick: $('pe-nick').value, email: $('pe-email').value, bd: $('pe-bd').value }); closeModal(); toast('Kaydedildi'); drawPredict(); }
+  catch (e) { toast(e.message, true); b.disabled = false; }
+}
+async function predDel(uid) {
+  const u = (PRED.users || []).find(x => x.uid === uid);
+  if (!confirm(I18N.t((u ? u.nick : '') + ' adlı katılımcı ve tüm tahminleri silinsin mi? Bu işlem geri alınamaz.'))) return;
+  try { PRED = await req('DELETE', '/predict/user/' + uid); toast('Katılımcı silindi'); drawPredict(); } catch (e) { toast(e.message, true); }
+}
 async function predAward(k, given) { try { PRED = await req('POST', '/predict/award/' + k, { given }); drawPredict(); } catch (e) { toast(e.message, true); } }
 async function predUser(uid, off) { if (off && !confirm('Bu katılımcı ligden çıkarılsın mı? Puan durumunda görünmez.')) return; try { PRED = await req('POST', '/predict/user/' + uid, { off }); drawPredict(); } catch (e) { toast(e.message, true); } }
 

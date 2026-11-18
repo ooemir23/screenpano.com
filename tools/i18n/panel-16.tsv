@@ -159,3 +159,19 @@ Tahmin Ligi açıldı ¦ Prediction League turned on ¦ Tippspiel eingeschaltet 
 Tahmin Ligi kapatıldı ¦ Prediction League turned off ¦ Tippspiel ausgeschaltet ¦ تم إيقاف دوري التوقعات
 örn. 1 adet büyük boy pizza ¦ e.g. 1 large pizza ¦ z. B. 1 große Pizza ¦ مثلًا: بيتزا كبيرة واحدة
 Bu hafta ¦ This week ¦ Diese Woche ¦ هذا الأسبوع
+Yaş sınırı ¦ Age limit ¦ Altersgrenze ¦ حد العمر
+18 yaş ve üzeri ¦ 18 and over ¦ Ab 18 Jahren ¦ 18 عامًا فأكثر
+{} yaş ¦ {} years old ¦ {} Jahre ¦ {} عامًا
+{} maça tahmin ¦ {} matches predicted ¦ {} Spiele getippt ¦ توقّع {} مباريات
+Eşleşen katılımcı yok. ¦ No matching participants. ¦ Keine passenden Teilnehmer. ¦ لا يوجد مشارك مطابق.
+Katılımcının bilgilerini düzenleyebilir, kural dışı davrananı (ör. birden çok hesap açan) ligden çıkarabilir ya da tamamen silebilirsiniz. ¦ You can edit a participant's details, remove a rule-breaker (e.g. someone with several accounts) from the league, or delete them entirely. ¦ Sie können Teilnehmerdaten bearbeiten, Regelverstöße (z. B. mehrere Konten) aus dem Spiel entfernen oder Teilnehmer ganz löschen. ¦ يمكنك تعديل بيانات المشارك، أو إخراج المخالف (مثل من يفتح عدة حسابات) من الدوري، أو حذفه نهائيًا.
+Takma ad veya e-posta ara ¦ Search nickname or email ¦ Spitzname oder E-Mail suchen ¦ ابحث بالاسم المستعار أو البريد
+Katılımcıyı düzenle ¦ Edit participant ¦ Teilnehmer bearbeiten ¦ تعديل المشارك
+Takma ad ¦ Nickname ¦ Spitzname ¦ الاسم المستعار
+Doğum tarihi ¦ Date of birth ¦ Geburtsdatum ¦ تاريخ الميلاد
+Google ile katıldı ¦ Joined with Google ¦ Mit Google beigetreten ¦ انضم عبر Google
+E-posta koduyla katıldı ¦ Joined with email code ¦ Mit E-Mail-Code beigetreten ¦ انضم برمز البريد الإلكتروني
+E-posta değişirse katılımcının açık oturumları kapanır. ¦ If the email changes, the participant's open sessions are signed out. ¦ Ändert sich die E-Mail, werden offene Sitzungen des Teilnehmers beendet. ¦ إذا تغيّر البريد تُغلق جلسات المشارك المفتوحة.
+Katılımcı silindi ¦ Participant deleted ¦ Teilnehmer gelöscht ¦ تم حذف المشارك
+{} adlı katılımcı ve tüm tahminleri silinsin mi? Bu işlem geri alınamaz. ¦ Delete participant {} and all their predictions? This cannot be undone. ¦ Teilnehmer {} und alle Tipps löschen? Dies kann nicht rückgängig gemacht werden. ¦ حذف المشارك {} وجميع توقعاته؟ لا يمكن التراجع عن ذلك.
+Google ¦ Google ¦ Google ¦ Google

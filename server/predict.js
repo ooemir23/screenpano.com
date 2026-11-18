@@ -240,9 +240,13 @@ function start() {
 
 // ---------- TV ----------
 const qrCache = new Map();
-async function qrSvg(url) {
+// Eşzamanlı SVG: ilk yayında da QR hazır olsun (önbellek ısınmasını beklemek ilk afişi QR'sız bırakıyordu)
+function qrSvg(url) {
   if (qrCache.has(url)) return qrCache.get(url);
-  const s = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#111111', light: '#ffffff' } });
+  const q = QRCode.create(url, { errorCorrectionLevel: 'M' }), n = q.modules.size, data = q.modules.data, m = 1, W = n + 2 * m;
+  let d = '';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (data[y * n + x]) d += `M${x + m} ${y + m}h1v1h-1z`;
+  const s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${W}" shape-rendering="crispEdges"><rect width="${W}" height="${W}" fill="#fff"/><path d="${d}" fill="#111"/></svg>`;
   qrCache.set(url, s); if (qrCache.size > 500) qrCache.delete(qrCache.keys().next().value);
   return s;
 }
@@ -250,11 +254,11 @@ async function qrSvg(url) {
 function tvView(t) {
   if (!isOn(t)) return null;
   const d = cfg(t), key = weekKey(Date.now()), url = urlOf(t);
-  if (!qrCache.has(url)) qrSvg(url).catch(() => {});
   const top = board(t, key).slice(0, 5).map(r => ({ nick: r.nick, pts: r.pts }));
   const lastKey = weekKey(Date.now() - 7 * DAY), lw = d.awards[lastKey];
   const left = weekMatches(key).filter(m => m.st === 'pre' && m.at > Date.now()).length;
-  return { url, qr: qrCache.get(url) || '', prize: d.prize || '', week: weekLabel(key), top, open: left,
+  let qr = ''; try { qr = qrSvg(url); } catch (e) {}
+  return { url, qr, biz: t.name || '', prize: d.prize || '', week: weekLabel(key), top, open: left,
     last: lw && !lw.none ? { nick: lw.nick, pts: lw.pts, week: weekLabel(lastKey) } : null, every: Math.max(3, Math.min(30, Number(d.every) || 8)) };
 }
 

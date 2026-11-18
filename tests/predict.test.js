@@ -69,3 +69,12 @@ test('hafta kapanınca birinci kesinleşir, bir kez e-posta gider; puan alan yok
   assert.ok(empty.db.predict.awards[prev].none);
   assert.equal(MAILS.filter(m => m.to === 'w@x.co').length, 1, 'kazanana tek e-posta');
 });
+
+test('doğum tarihi doğrulama ve yaş', () => {
+  const { birth } = require('../server/routes-predict');
+  assert.equal(birth('1990-02-30'), null);
+  assert.equal(birth('1899-12-31'), null);
+  assert.equal(birth('3000-01-01'), null);
+  assert.equal(birth('abc'), null);
+  const b = birth('2000-01-01'); assert.equal(b.bd, '2000-01-01'); assert.ok(b.age >= 26);
+});

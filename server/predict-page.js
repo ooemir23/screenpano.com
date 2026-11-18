@@ -2,7 +2,7 @@
 // Tek dosya: işletmenin tema renkleriyle sunucuda oluşturulur, veriyi /api/lig/:kod/... uçlarından alır.
 function html({ name, logo, code, bg, ac, ac2, tx, esc }) {
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta name="theme-color" content="${bg}">
-<title>${esc(name)} · Tahmin Ligi</title>
+<title>${esc(name)} Tahmin Ligi</title>
 <style>
 :root{--bg:${bg};--a:${ac};--a2:${ac2};--tx:${tx};--mut:color-mix(in srgb,var(--tx) 62%,transparent);--card:color-mix(in srgb,var(--tx) 7%,transparent);--bd:color-mix(in srgb,var(--tx) 14%,transparent);--ok:#3ecf8e;--bad:#ff6b6b}
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;min-height:100vh;background:radial-gradient(120% 50% at 50% 0,color-mix(in srgb,var(--a) 45%,transparent),transparent 70%),var(--bg);color:var(--tx);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -40,20 +40,37 @@ input:focus,select:focus{border-color:var(--a2)}select option{color:#111}
 table{width:100%;border-collapse:collapse;font-size:14px}td{padding:7px 4px;border-bottom:1px solid var(--bd)}td:last-child{text-align:right;font-weight:800}
 .empty{text-align:center;color:var(--mut);padding:18px 6px}
 .acc{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--mut);margin:-4px 2px 12px}
+input[type=date]{min-height:46px;-webkit-appearance:none;appearance:none}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1px solid var(--bd);border-radius:12px;padding:12px;font:700 15px inherit;background:#fff;color:#1f1f1f;margin:12px 0 0;cursor:pointer;text-decoration:none}.gbtn svg{width:20px;height:20px}
+.or{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12px;margin:14px 0 2px}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--bd)}
+.noad{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--tx);background:color-mix(in srgb,var(--ok) 14%,transparent);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);border-radius:10px;padding:8px 10px;margin:12px 0 0}
 details{font-size:12.5px;color:var(--mut)}details summary{cursor:pointer;color:var(--a2)}
 [hidden]{display:none!important}
 </style></head><body><main>
-<header>${logo ? `<img src="${esc(logo)}" alt="">` : ''}<h1>${esc(name)} · Tahmin Ligi</h1><p id="wk">Süper Lig</p></header>
+<header>${logo ? `<img src="${esc(logo)}" alt="">` : ''}<h1>${esc(name)} Tahmin Ligi</h1><p id="wk">Süper Lig</p></header>
 <div class="prize" id="prize" hidden><span class="i">🏆</span><div>Haftanın birincisine: <b id="prizeT"></b></div></div>
 <section id="auth" hidden>
   <div class="card" id="a1">
     <b>Katıl, tahmin et, haftanın birincisi ol</b>
-    <p class="note">Katılım ücretsizdir. İstediğin maçlara tahmin gir; skor, golcü, asist ve kartlardan puan topla.</p>
+    <p class="note">Katılım ücretsizdir. İstediğin maçlara tahmin gir; skor, golcü, asist ve kartlardan puan topla.<span id="ageN"></span></p>
+    <a class="gbtn" id="gg" href="#" hidden><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Google ile devam et</a><div class="or" id="ggOr" hidden>ya da e-posta ile</div>
     <label for="em">E-posta</label><input id="em" type="email" inputmode="email" autocomplete="email" placeholder="ornek@eposta.com">
-    <div id="newF"><label for="nk">Takma ad (puan durumunda görünür)</label><input id="nk" maxlength="20" autocomplete="nickname" placeholder="Örn. Aslan10">
-    <div class="chk"><input type="checkbox" id="ok"><label for="ok" style="margin:0">Takma adım ve e-postamın tahmin ligi ve ödül bildirimi için işlenmesini kabul ediyorum. <details><summary>Aydınlatma metni</summary>
-    <p>Veri sorumlusu: ${esc(name)}. İşlenen veriler: takma adınız, e-posta adresiniz ve tahminleriniz. Amaç: tahmin ligine katılımınız, puan durumunun gösterilmesi (yalnız takma ad), haftanın birincisine ödül bildirimi. Verileriniz bu amaç dışında kullanılmaz, üçüncü kişilere satılmaz; hizmet altyapısı ScreenPano tarafından sağlanır. Tahminler yaklaşık bir sezon saklanır. Hesabınızı ve tahminlerinizi bu sayfadan dilediğiniz an silebilirsiniz. KVKK kapsamındaki haklarınız için işletmeye başvurabilirsiniz.</p></details></label></div></div>
+    <div id="newF"><p class="note">İlk kez katılıyorsan aşağıdakileri de doldur; daha önce katıldıysan e-posta yeter.</p>
+    <label for="nk">Takma ad (puan durumunda görünür)</label><input id="nk" maxlength="20" autocomplete="nickname" placeholder="Örn. Aslan10">
+    <label for="bd">Doğum tarihi</label><input id="bd" type="date" min="1900-01-01" autocomplete="bday">
+    <div class="chk"><input type="checkbox" id="ok"><label for="ok" style="margin:0">Takma adım, e-postam ve doğum tarihimin tahmin ligi ve ödül bildirimi için işlenmesini kabul ediyorum. <details><summary>Aydınlatma metni</summary>
+    <p>Veri sorumlusu: ${esc(name)}. İşlenen veriler: takma adınız, e-posta adresiniz, doğum tarihiniz ve tahminleriniz. Amaç: tahmin ligine katılımınız, puan durumunun gösterilmesi (yalnız takma ad), haftanın birincisine ödül bildirimi, yaş sınırı varsa uygunluğun kontrolü. E-posta adresinize yalnız giriş kodu ve birincilik bildirimi gönderilir; reklam, kampanya veya tanıtım e-postası gönderilmez. Verileriniz bu amaç dışında kullanılmaz, üçüncü kişilere satılmaz; hizmet altyapısı ScreenPano tarafından sağlanır. Tahminler yaklaşık bir sezon saklanır. Hesabınızı ve tahminlerinizi bu sayfadan dilediğiniz an silebilirsiniz. KVKK kapsamındaki haklarınız için işletmeye başvurabilirsiniz.</p></details></label></div></div>
+    <div class="noad"><span>🔒</span><span>Sana hiçbir reklam, kampanya veya tanıtım e-postası gönderilmez. E-postan yalnız giriş kodu ve birincilik bildirimi için kullanılır.</span></div>
     <button class="btn" id="go">Kod gönder</button><div class="err" id="e1"></div>
+  </div>
+  <div class="card" id="ag" hidden>
+    <b>Son adım</b><p class="note" id="gTo"></p>
+    <label for="gnk">Takma ad (puan durumunda görünür)</label><input id="gnk" maxlength="20" autocomplete="nickname" placeholder="Örn. Aslan10">
+    <label for="gbd">Doğum tarihi</label><input id="gbd" type="date" min="1900-01-01" autocomplete="bday">
+    <div class="chk"><input type="checkbox" id="gok"><label for="gok" style="margin:0">Takma adım, e-postam ve doğum tarihimin tahmin ligi ve ödül bildirimi için işlenmesini kabul ediyorum. <details><summary>Aydınlatma metni</summary>
+    <p>Veri sorumlusu: ${esc(name)}. İşlenen veriler: takma adınız, e-posta adresiniz, doğum tarihiniz ve tahminleriniz. Amaç: tahmin ligine katılımınız, puan durumunun gösterilmesi (yalnız takma ad), haftanın birincisine ödül bildirimi, yaş sınırı varsa uygunluğun kontrolü. E-posta adresinize yalnız giriş kodu ve birincilik bildirimi gönderilir; reklam, kampanya veya tanıtım e-postası gönderilmez. Verileriniz bu amaç dışında kullanılmaz, üçüncü kişilere satılmaz; hizmet altyapısı ScreenPano tarafından sağlanır. Tahminler yaklaşık bir sezon saklanır. Hesabınızı ve tahminlerinizi bu sayfadan dilediğiniz an silebilirsiniz. KVKK kapsamındaki haklarınız için işletmeye başvurabilirsiniz.</p></details></label></div>
+    <div class="noad"><span>🔒</span><span>Sana hiçbir reklam, kampanya veya tanıtım e-postası gönderilmez. E-postan yalnız giriş kodu ve birincilik bildirimi için kullanılır.</span></div>
+    <button class="btn" id="gsv">Katıl</button><button class="btn ghost" id="gcx">Vazgeç</button><div class="err" id="eg"></div>
   </div>
   <div class="card" id="a2" hidden>
     <b>E-postana gelen 6 haneli kodu yaz</b><p class="note" id="sentTo"></p>
@@ -76,7 +93,7 @@ const CODE = ${JSON.stringify(code)}, API = '/api/lig/' + CODE, KEY = 'lig_' + C
 const $ = id => document.getElementById(id);
 const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let tok = ''; try { tok = localStorage.getItem(KEY) || ''; } catch (e) {}
-let S = null, tab = 'm', bView = 'week', email = '';
+let S = null, tab = 'm', bView = 'week', email = '', gTok = '';
 const SQ = {}, draft = {};
 async function api(method, p, body) {
   const r = await fetch(API + p, { method, headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: body ? JSON.stringify(body) : undefined });
@@ -92,6 +109,9 @@ function render() {
   $('prize').hidden = !S.prize; $('prizeT').textContent = S.prize;
   const inn = !!S.me;
   $('auth').hidden = inn; $('tabs').hidden = !inn; $('acc').hidden = !inn; $('del').hidden = !inn;
+  $('gg').hidden = $('ggOr').hidden = !S.google;
+  $('ageN').textContent = S.minAge ? ' ' + S.minAge + ' yaş ve üzeri katılabilir.' : '';
+  if (!inn && gTok) { $('a1').hidden = true; $('a2').hidden = true; $('ag').hidden = false; }
   if (inn) $('accT').textContent = S.me.nick + ' · ' + S.me.email;
   for (const b of $('tabs').children) b.classList.toggle('on', b.dataset.t === tab);
   $('t-m').hidden = !inn || tab !== 'm'; $('t-b').hidden = inn ? tab !== 'b' : false; $('t-k').hidden = inn ? tab !== 'k' : false;
@@ -157,10 +177,31 @@ async function load() {
   render();
 }
 // --- giriş ---
+const today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); $('bd').max = $('gbd').max = today;
+// Google dönüşü: #tk= oturum, #gs= kayıt belirteci, #gerr= hata (adres çubuğundan hemen silinir)
+function onHash() {
+  const h = new URLSearchParams(location.hash.slice(1)); if (!/(^|&)(tk|gs|gerr)=/.test(location.hash.slice(1))) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  if (/^[a-f0-9]{64}$/.test(h.get('tk') || '')) { tok = h.get('tk'); try { localStorage.setItem(KEY, tok); } catch (e) {} }
+  if (h.get('gs')) { gTok = h.get('gs'); $('gTo').textContent = (h.get('ge') || '') + ' ile katılıyorsun.'; }
+  const ge = h.get('gerr');
+  if (ge) setTimeout(() => { $('e1').textContent = { cancel: 'Google girişi iptal edildi.', unverified: 'Google hesabının e-postası doğrulanmamış.', kapatildi: 'Bu hesap işletme tarafından kapatıldı.', limit: 'Çok fazla deneme; biraz sonra tekrar dene.' }[ge] || 'Google ile giriş yapılamadı; e-posta ile devam edebilirsin.'; }, 0);
+  return true;
+}
+onHash();
+addEventListener('hashchange', () => { if (onHash()) load().catch(() => {}); });
+$('gg').onclick = e => { e.preventDefault(); location.href = '/api/auth/google/lig/' + encodeURIComponent(CODE); };
+$('gsv').onclick = async () => {
+  $('eg').textContent = ''; $('gsv').disabled = true;
+  try { const j = await api('POST', '/gsignup', { gt: gTok, nick: $('gnk').value.trim(), bd: $('gbd').value, consent: $('gok').checked }); tok = j.token; gTok = ''; try { localStorage.setItem(KEY, tok); } catch (e) {} $('ag').hidden = true; $('a1').hidden = false; tab = 'm'; await load(); }
+  catch (e) { $('eg').textContent = e.message; if (/süresi doldu/.test(e.message)) { gTok = ''; } }
+  $('gsv').disabled = false;
+};
+$('gcx').onclick = () => { gTok = ''; $('ag').hidden = true; $('a1').hidden = false; };
 $('em').addEventListener('input', () => { $('e1').textContent = ''; });
 $('go').onclick = async () => {
   email = $('em').value.trim(); $('e1').textContent = ''; $('go').disabled = true;
-  try { const j = await api('POST', '/start', { email, nick: $('nk').value.trim(), consent: $('ok').checked }); $('a1').hidden = true; $('a2').hidden = false; $('sentTo').textContent = email + ' adresine gönderildi. Gelen kutunda yoksa istenmeyen klasörüne bak.'; $('otp').focus(); }
+  try { const j = await api('POST', '/start', { email, nick: $('nk').value.trim(), bd: $('bd').value, consent: $('ok').checked }); $('a1').hidden = true; $('a2').hidden = false; $('sentTo').textContent = email + ' adresine gönderildi. Gelen kutunda yoksa istenmeyen klasörüne bak.'; $('otp').focus(); }
   catch (e) { $('e1').textContent = e.message; }
   $('go').disabled = false;
 };
