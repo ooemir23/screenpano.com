@@ -3001,16 +3001,19 @@ function nowBar() {
   const sub = err ? err : !on ? 'Müzik kapalı' : n && n.artist ? `${n.artist}${act ? ' • ' + act.title : ''}` : act ? `${kindName(act)} • ${PROV(act.provider)}` : 'Kitaplığınızdan bir liste seçin';
   const thumb = (n && n.thumb) || (act && act.thumb) || '';
   const prog = n && n.dur ? Math.min(100, nowPos(n) / n.dur * 100) : 0;
+  const rp = ['all', 'one', 'off'].includes(m.repeat) ? m.repeat : 'all';
+  const shufB = `<button type="button" class="md ${m.shuffle ? 'on' : ''}" title="${m.shuffle ? 'Karışık çal: açık' : 'Karışık çal: kapalı'}" aria-pressed="${!!m.shuffle}" onclick="musicCmd('shuffle',{on:${!m.shuffle}})">${ic('shuffle')}</button>`;
+  const repB = `<button type="button" class="md ${rp !== 'off' ? 'on' : ''}" title="${rp === 'one' ? 'Tekrar: tek şarkı' : rp === 'off' ? 'Tekrar: kapalı' : 'Tekrar: liste'}" onclick="musicCmd('repeat')">${ic(rp === 'one' ? 'repeat-1' : 'repeat')}</button>`;
   if (SPMODE()) {
     const el = n && n.dur ? nowPos(n) : 0, p2 = n && n.dur ? Math.min(100, el / n.dur * 100) : 0;
     return `<div class="ytm-bar sp3 ${err ? 'err' : ''} ${on ? '' : 'off'}">
     <button type="button" class="ytm-bar-np" onclick="${act ? `openList('lib','${act.id}')` : "goM('lib')"}">
       <span class="c">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer">` : ic('music')}</span>
       <span class="t"><b>${esc(title)}</b><span>${esc(sub)}</span></span></button>
-    <div class="sp-mid"><div class="ytm-bar-ctl">
+    <div class="sp-mid"><div class="ytm-bar-ctl">${shufB}
       <button type="button" title="Önceki" onclick="musicCmd('prev')">${ic('skip-back-f')}</button>
       <button type="button" class="big" title="${playing ? 'Duraklat' : 'TV\'de oynat'}" onclick="musicCmd(${on ? "'toggle'" : "'play'"})">${ic(playing ? 'pause-f' : 'play-f')}</button>
-      <button type="button" title="Sonraki" onclick="musicCmd('next')">${ic('skip-forward-f')}</button></div>
+      <button type="button" title="Sonraki" onclick="musicCmd('next')">${ic('skip-forward-f')}</button>${repB}</div>
       <div class="sp-pr ${n && n.dur ? '' : 'none'}"><span class="ytm-pt e">${n && n.dur ? fmtDur(Math.floor(el)) || '0:00' : ''}</span><span class="tr"><i class="ytm-pt f" style="width:${p2.toFixed(2)}%"></i></span><span class="ytm-pt d">${n && n.dur ? fmtDur(n.dur) : ''}</span></div></div>
     <div class="ytm-bar-r">
       <label class="ytm-vol" title="Ses">${ic('volume-2')}<input type="range" min="0" max="100" value="${m.volume ?? 75}" onchange="musicCmd('volume',{volume:+this.value})"></label>
@@ -3018,10 +3021,10 @@ function nowBar() {
     </div></div>`;
   }
   return `<div class="ytm-bar ${err ? 'err' : ''} ${on ? '' : 'off'}">${n && n.dur ? `<i class="ytm-prog" style="width:${prog.toFixed(2)}%"></i>` : ''}
-    <div class="ytm-bar-ctl">
+    <div class="ytm-bar-ctl">${shufB}
       <button type="button" title="Önceki" onclick="musicCmd('prev')">${ic('skip-back-f')}</button>
       <button type="button" class="big" title="${playing ? 'Duraklat' : 'TV\'de oynat'}" onclick="musicCmd(${on ? "'toggle'" : "'play'"})">${ic(playing ? 'pause-f' : 'play-f')}</button>
-      <button type="button" title="Sonraki" onclick="musicCmd('next')">${ic('skip-forward-f')}</button>
+      <button type="button" title="Sonraki" onclick="musicCmd('next')">${ic('skip-forward-f')}</button>${repB}
     </div>
     <button type="button" class="ytm-bar-np" onclick="${act ? `openList('lib','${act.id}')` : "goM('lib')"}">
       <span class="c">${thumb ? `<img src="${esc(thumb)}" alt="" referrerpolicy="no-referrer">` : ic('music')}</span>
@@ -3513,6 +3516,7 @@ function setupHtml() {
 // ---- Komutlar ----
 async function musicCmd(cmd, extra = {}) {
   const j = await act('POST', '/music/cmd', { cmd, ...extra }, '', false);
+  if (j && j.music && (cmd === 'shuffle' || cmd === 'repeat')) { S.db.music = j.music; const box = $('mnowbox'); if (box) box.innerHTML = nowBar(); if (j.warn) toast(j.warn, true); return; }
   if (j && cmd !== 'volume') { clearTimeout(MNOW_K1); clearTimeout(MNOW_K2); MNOW_K1 = setTimeout(musicNowLoad, 1000); MNOW_K2 = setTimeout(musicNowLoad, 2600); } // Spotify komutu ~1 sn'de uygular
   if (!j) MERR = LASTERR; else if (j.warn) { MERR = j.warn; toast(j.warn, true); } else if (cmd !== 'volume') MERR = '';
   drawMerr();

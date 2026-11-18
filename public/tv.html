@@ -403,12 +403,17 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .hb{width:5.6vh;height:5.6vh;padding:0;border-radius:50%;display:grid;place-items:center;font-size:2.6vh;text-align:center;flex:none}
 #menu .hb.on{background:rgba(255,255,255,.22)}
 #menu #mhupd{display:none;height:5.6vh;padding:0 1.6vw;border-radius:5vh;align-items:center;gap:.6vw;white-space:nowrap;font-size:1.9vh}#menu #mhupd.on{display:inline-flex}
-#menu #mmsrc{display:flex;align-items:center;gap:.7vw}#menu #mmsrc i{display:none;width:1.4vh;height:1.4vh;border-radius:50%}
-#menu .mlh #mlsw{margin-left:auto;padding:.6vh 1vw;border-radius:5vh;font-size:1.6vh;font-weight:700}
+#menu .msrc{display:flex;align-items:center;gap:.6vw}
+#menu .msrc>span{font-size:1.5vh;letter-spacing:.12em;text-transform:uppercase;color:#8d96a0;font-weight:700}
+#menu .msrc button{display:none;align-items:center;gap:.6vw;padding:.8vh 1.2vw;border-radius:5vh;font-size:1.7vh;font-weight:700;background:rgba(255,255,255,.07);border-color:transparent;color:#cfd5db}
+#menu .msrc.two button{display:inline-flex}#menu .msrc.two>span{display:none}
+#menu .msrc button i{width:1.2vh;height:1.2vh;border-radius:50%;background:#1ed760}#menu .msrc #msyt i{background:#ff0033}
+#menu .msrc button.on{background:#fff;color:#000}
+#menu .ctl button svg{width:3.4vh;height:3.4vh;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#menu .ctl button.sm{width:7vh;height:7vh;color:#9aa3ad}#menu .ctl button.sm.on{color:var(--ma,var(--accent2))}#menu .ctl button.sm.on::after{content:'';position:absolute;bottom:.9vh;width:.6vh;height:.6vh;border-radius:50%;background:currentColor}
+#menu .ctl button.sm{position:relative}#menu #mmrep:not(.one) .one{display:none}
 #menu .mus.sp{background:linear-gradient(180deg,#1f1f1f 0%,#121212 60%);border-color:rgba(255,255,255,.06);--ma:#1ed760;--mb:#000}
 #menu .mus.yt{background:linear-gradient(180deg,#212121 0%,#030303 60%);border-color:rgba(255,255,255,.06);--ma:#ff0033;--mb:#fff}
-#menu .mus.sp #mmsrc,#menu .mus.yt #mmsrc{color:#fff;letter-spacing:.04em;text-transform:none;font-size:1.8vh}
-#menu .mus.sp #mmsrc i,#menu .mus.yt #mmsrc i{display:block;background:var(--ma)}
 #menu .mus.sp .ctl button.big{background:var(--ma);color:#000}#menu .mus.sp .ctl button.big:focus{background:#3be477;color:#000;box-shadow:0 0 0 .35vh #fff}
 #menu .mus.yt .ctl button.big{background:#fff;color:#000}#menu .mus.yt .ctl button.big:focus{background:#fff;color:#000;box-shadow:0 0 0 .35vh var(--ma)}
 #menu .mus.sp .ctl button:not(.big),#menu .mus.yt .ctl button:not(.big){background:transparent;border-color:transparent}
@@ -1254,12 +1259,12 @@ html.theme-glass .pill.live::before {
     <button id="mtopcls" type="button" data-nav title="Kapat" aria-label="Kapat">✕</button>
   </div>
   <div class="mgrid">
-    <section class="mc mus" id="mmc"><h4 id="mmsrc"><i></i><span>Müzik</span></h4>
+    <section class="mc mus" id="mmc"><div class="msrc" id="mmsrc"><button id="mssp" type="button" data-nav><i></i>Spotify</button><button id="msyt" type="button" data-nav><i></i>YouTube Music</button><span>Müzik</span></div>
       <div class="np"><div class="cv" id="mmcv">♪</div><div class="tx"><b id="mmtitle">-</b><span id="mmsub">-</span></div></div>
       <div class="mpr" id="mmpr" style="visibility:hidden"><span id="mmpe">0:00</span><span class="tr"><i id="mmpf"></i></span><span id="mmpd"></span></div>
-      <div class="ctl"><button id="mmprev" type="button" data-nav aria-label="Önceki">⏮</button><button id="mmplay" class="big" type="button" data-nav aria-label="Oynat / duraklat">▶</button><button id="mmnext" type="button" data-nav aria-label="Sonraki">⏭</button></div>
+      <div class="ctl"><button id="mmshuf" class="sm" type="button" data-nav aria-label="Karışık çal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></svg></button><button id="mmprev" type="button" data-nav aria-label="Önceki">⏮</button><button id="mmplay" class="big" type="button" data-nav aria-label="Oynat / duraklat">▶</button><button id="mmnext" type="button" data-nav aria-label="Sonraki">⏭</button><button id="mmrep" class="sm" type="button" data-nav aria-label="Tekrarla"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/><path class="one" d="M11 10h1v4"/></svg></button></div>
       <div class="vol"><button id="mmvolm" type="button" data-nav aria-label="Sesi kıs">−</button><span class="bar"><i id="mmbar"></i></span><button id="mmvolp" type="button" data-nav aria-label="Sesi aç">+</button><b id="mmvol">-</b></div>
-      <div class="mlib"><div class="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span><button id="mlsw" type="button" data-nav style="display:none"></button></div><div class="mll" id="mml"></div></div>
+      <div class="mlib"><div class="mlh"><b id="mlhead">Kitaplık</b><span id="mlsub"></span></div><div class="mll" id="mml"></div></div>
       <span id="mmus" style="display:none"></span>
     </section>
     <section class="mc dev"><h4>Cihaz bilgisi</h4>
@@ -3261,7 +3266,16 @@ function menuMusic() {
   $m('mmc').classList.toggle('off', !has);
   // kart çalan kaynağa göre görünür: Spotify ya da YouTube Music (radyo/boş: genel görünüm)
   const src = it && it.provider === 'spotify' ? 'sp' : it && ['yt', 'ytm', 'ytmix'].includes(it.provider) ? 'yt' : '';
-  const mc = $m('mmc'); if (mc.dataset.src !== src) { mc.dataset.src = src; mc.classList.toggle('sp', src === 'sp'); mc.classList.toggle('yt', src === 'yt'); $m('mmsrc').lastChild.textContent = src === 'sp' ? 'Spotify' : src === 'yt' ? 'YouTube Music' : 'Müzik'; }
+  const mc = $m('mmc'); if (mc.dataset.src !== src) { mc.dataset.src = src; mc.classList.toggle('sp', src === 'sp'); mc.classList.toggle('yt', src === 'yt'); }
+  // müzik ya Spotify'dan ya YouTube Music'ten çalar: iki kaynakta da liste varsa seçici görünür, basınca kaynak değişir
+  const pl = (m && m.playlists) || [], hasSp = pl.some(x => x.provider === 'spotify'), hasYt = pl.some(x => x.provider !== 'spotify');
+  const ms = $m('mmsrc'); ms.classList.toggle('two', hasSp && hasYt);
+  ms.lastChild.textContent = src === 'sp' ? 'Spotify' : src === 'yt' ? 'YouTube Music' : 'Müzik';
+  $m('mssp').classList.toggle('on', src === 'sp'); $m('msyt').classList.toggle('on', !!it && src !== 'sp');
+  const sh = !!(m && m.shuffle), rp = (m && m.repeat) || 'all';
+  $m('mmshuf').classList.toggle('on', sh); $m('mmrep').classList.toggle('on', rp !== 'off'); $m('mmrep').classList.toggle('one', rp === 'one');
+  $m('mmshuf').setAttribute('aria-label', sh ? 'Karışık çal: açık' : 'Karışık çal: kapalı');
+  $m('mmrep').setAttribute('aria-label', rp === 'one' ? 'Tekrar: tek şarkı' : rp === 'off' ? 'Tekrar: kapalı' : 'Tekrar: liste');
   $m('mmtitle').textContent = !has ? 'Müzik ayarlanmamış' : sp && sp.title ? sp.title : (on && MUS.trackTitle) || (it && it.title) || 'Müzik kapalı';
   $m('mmsub').textContent = !has ? 'Panelde Müzik sayfasından bir liste ekleyin' : !on ? 'Kapalı: ▶ ile açın' : sp0 ? (sp0.artist || 'Spotify') + (playing ? '' : ' · duraklatıldı') : MUS.err ? MUS.err : sp && sp.artist ? sp.artist : (MUS.trackSub || '') + (playing ? '' : (MUS.trackSub ? ' · ' : '') + 'duraklatıldı');
   const th = (sp && sp.thumb) || (on && MUS.trackThumb) || (it && it.thumb) || '', cv = $m('mmcv');
@@ -3278,7 +3292,7 @@ function menuMusic() {
 }
 // ---- Menüdeki kitaplık: listeler → listenin şarkıları. Seçim panelle aynı komut yolundan (sunucu) gider; tüm ekranlar aynı müziği çalar.
 // Yalnız içerik değişince yeniden çizilir (menü 1,5 sn'de bir tazelenir; odak ve kaydırma korunur).
-const ML = { view: 'lib', id: '', items: null, err: '', sig: '', ask: 0, grp: '' };
+const ML = { view: 'lib', id: '', items: null, err: '', sig: '', ask: 0 };
 const mlGrp = x => x && x.provider === 'spotify' ? 'sp' : 'yt'; // kitaplık panelle aynı ayrılır: Spotify | YouTube, kendi listem, radyo
 const ML_MAX = 120; // kumandayla gezilen listede çok fazla düğme ok tuşlarını yavaşlatır
 const mlSrc = x => x.provider === 'spotify' ? 'Spotify' : x.provider === 'radio' ? 'Radyo' : x.provider === 'ytmix' ? 'Kendi listem' : 'YouTube';
@@ -3292,8 +3306,7 @@ function mlRender(force) {
   if (ML.view === 'list' && !lib.some(x => x.id === ML.id)) { ML.view = 'lib'; ML.id = ''; ML.items = null; }
   const it = ML.view === 'list' ? lib.find(x => x.id === ML.id) : null;
   // kitaplıkta çalan kaynağın listeleri; diğer kaynağın listeleri düğmeyle açılır
-  const grp = ML.grp || mlGrp(cur), shown = lib.filter(x => mlGrp(x) === grp), other = lib.length - shown.length;
-  const sw = $m('mlsw'); sw.style.display = !it && other ? '' : 'none'; sw.textContent = (grp === 'sp' ? 'YouTube' : 'Spotify') + ' (' + other + ') ⇄';
+  const grp = mlGrp(cur), shown = lib.filter(x => mlGrp(x) === grp); // kitaplık çalan kaynağın listeleri (kaynak üstteki seçiciyle değişir)
   const sig = ML.view + '|' + ML.id + '|' + grp + '|' + (cur && cur.id) + '|' + on + '|' + nowT + '|' + (ML.items ? ML.items.length : -1) + '|' + ML.err + '|' + lib.map(x => x.id + x.title + (x.thumb || '')).join(',');
   if (!force && sig === ML.sig) return;
   ML.sig = sig;
@@ -3329,7 +3342,10 @@ function onMusicList(msg) {
   if (ML.view !== 'list' || msg.itemId !== ML.id) return;
   clearTimeout(ML.to); ML.items = Array.isArray(msg.items) ? msg.items : []; ML.err = msg.err && !ML.items.length ? msg.err : ''; mlRender(true);
 }
-attachTap('mlsw', () => { const cur = activeMusicItem(MUS.cfg); ML.grp = (ML.grp || mlGrp(cur)) === 'sp' ? 'yt' : 'sp'; mlRender(true); });
+attachTap('mssp', () => { if ($m('mssp').classList.contains('on')) return; menuSt('Spotify açılıyor…'); ML.view = 'lib'; menuMusicCmd('source', { source: 'spotify' }); });
+attachTap('msyt', () => { if ($m('msyt').classList.contains('on')) return; menuSt('YouTube Music açılıyor…'); ML.view = 'lib'; menuMusicCmd('source', { source: 'yt' }); });
+attachTap('mmshuf', () => { const on = !(MUS.cfg && MUS.cfg.shuffle); menuSt(on ? 'Karışık çal açık' : 'Karışık çal kapalı'); menuMusicCmd('shuffle', { on }); });
+attachTap('mmrep', () => { const R = ['all', 'one', 'off'], c = (MUS.cfg && MUS.cfg.repeat) || 'all', n = R[(R.indexOf(c) + 1) % 3]; menuSt(n === 'one' ? 'Tekrar: tek şarkı' : n === 'off' ? 'Tekrar kapalı' : 'Tekrar: liste'); menuMusicCmd('repeat', { mode: n }); });
 $m('mml').addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button[data-a]'); if (!b) return;
   e.stopPropagation(); menuIdle(90000);
@@ -3374,7 +3390,7 @@ function menuOpen() {
   upd.openedAt = Date.now(); try { menuInfo(); } catch (e) {} document.documentElement.classList.add('menu-open'); try { clearTimeout(brkTimer); brkEl.classList.remove('on'); window.__N && window.__N.brkHide && window.__N.brkHide(); } catch (e) {} $m('menu').classList.add('on'); try { window.__N && window.__N.overlay && window.__N.overlay(true); } catch (e) {} menuInfo(); menuSt('');
   $m('menu').scrollTop = 0;
   setTimeout(checkUpdateSilently, 400);
-  $m('menu').classList.remove('set'); $m('mhset').classList.remove('on'); ML.grp = ''; // her açılış müzikle ve çalan kaynağın kitaplığıyla başlar
+  $m('menu').classList.remove('set'); $m('mhset').classList.remove('on'); // her açılış müzikle başlar
   const pickFirst = () => upd.avail && $m('mhupd').classList.contains('on') ? $m('mhupd') : (MUS.cfg && (MUS.cfg.playlists || []).length ? $m('mmplay') : $m('mhset'));
   requestAnimationFrame(() => { const b = pickFirst(); if (b && b.focus) b.focus({ preventScroll: true }); });
   menuIdle(90000);
@@ -4974,6 +4990,19 @@ function loadYtMusicEngine(cb) {
 }
 // şarkının listedeki yeri videoId ile bulunur: sunucunun verdiği sıra (çalma listesindeki konum) gizli/silinmiş şarkılar
 // atlandığı için TV'deki dizideki yerle aynı olmayabilir
+// sıradaki şarkı (YouTube listesi/kendi listem): karışıkta rastgele (son çalınanlar tekrar gelmesin), değilse sırayla.
+// dönüş -1: tekrar kapalı ve liste bitti
+function ytStep(dir, auto) {
+  const l = MUS.ytTracks, n = l ? l.length : 0, m = MUS.cfg || {}, cur = MUS.ytIdx || 0; if (!n) return -1;
+  MUS.ytHist = MUS.ytHist || [];
+  if (dir < 0) { const h = MUS.ytHist.pop(); return h != null && h < n ? h : (cur - 1 + n) % n; } // önceki: geçmişten
+  if (m.shuffle && n > 1) { const recent = new Set(MUS.ytHist.slice(-Math.min(n - 1, 20))); recent.add(cur); let i, k = 0; do { i = Math.floor(Math.random() * n); } while (recent.has(i) && ++k < 30); return i; }
+  if (cur + 1 >= n && auto && m.repeat === 'off') return -1;
+  return (cur + 1) % n;
+}
+function ytGo(i) { if (i < 0 || !MUS.ytTracks || !MUS.ytTracks[i]) return false; if (i !== MUS.ytIdx) { MUS.ytHist = (MUS.ytHist || []).concat(MUS.ytIdx || 0).slice(-50); } MUS.ytIdx = i; MUS.ytPlayer.loadVideoById(MUS.ytTracks[i].v); return true; }
+// YouTube'un kendi çalma listesi kipinde (şarkı dizisi henüz yokken) karışık/tekrar oynatıcıya verilir
+function ytApplyModes() { const m = MUS.cfg || {}; if (!MUS.ytPlayer || !MUS.ytReady) return; try { MUS.ytPlayer.setShuffle && MUS.ytPlayer.setShuffle(!!m.shuffle); MUS.ytPlayer.setLoop && MUS.ytPlayer.setLoop(m.repeat !== 'off'); } catch (e) {} }
 function ytIdxOf(vid, fallback) {
   const l = MUS.ytTracks; if (!l || !l.length) return fallback || 0;
   const i = vid ? l.findIndex(x => x.v === vid) : -1;
@@ -5021,7 +5050,7 @@ function playYtItem(it, m) {
   ensureMusicHosts();
   clearTimeout(MUS.errTimer);
   clearTimeout(MUS.listFallbackTimer);
-  MUS.errRun = 0; MUS.ytTracks = null;
+  MUS.errRun = 0; MUS.ytTracks = null; MUS.ytHist = []; MUS.ytModesSet = 0; // yeni liste: önceki/karışık geçmişi sıfırlanır
   // kendi listesi (ytmix): şarkılar öğenin içinde gelir; sunucudan liste çekmeye gerek yok
   if (it.provider === 'ytmix' && Array.isArray(it.tracks) && it.tracks.length) MUS.ytTracks = it.tracks.map(t => ({ v: t.v, t: t.t, c: t.c }));
   // panelde/menüde seçilen şarkıdan başla (YouTube listesi ya da kendi listem)
@@ -5085,6 +5114,7 @@ function playYtItem(it, m) {
             const cur = activeMusicItem(MUS.cfg) || it;
             if (e.data === 1) { // PLAYING
               MUS.errRun = 0; clearTimeout(MUS.ytCheckTimer); clearTimeout(MUS.errTimer); clearTimeout(MUS.listFallbackTimer); musicOk();
+              if (!(MUS.ytTracks && MUS.ytTracks.length) && cur.listId && !MUS.ytModesSet) { MUS.ytModesSet = 1; ytApplyModes(); } // YouTube'un liste kipi
               showUnlockPrompt(false);
               try {
                 e.target.unMute(); e.target.setVolume(MUS.vol);
@@ -5100,13 +5130,13 @@ function playYtItem(it, m) {
               } catch (x) {}
             } else if (e.data === 2) { // PAUSED
               reportNow({ ...JSON.parse(NOW_SIG || '{}'), playing: false });
-            } else if (e.data === 0) { // ENDED
+            } else if (e.data === 0) { // ENDED: tekrar (tek şarkı / liste / kapalı) ve karışık çal
               try {
-                if (MUS.ytTracks && MUS.ytTracks.length) {
-                  MUS.ytIdx = ((MUS.ytIdx || 0) + 1) % MUS.ytTracks.length;
-                  e.target.loadVideoById(MUS.ytTracks[MUS.ytIdx].v);
-                } else if (cur.listId) e.target.nextVideo();
-                else { e.target.seekTo(0); e.target.playVideo(); }
+                const rp = (MUS.cfg && MUS.cfg.repeat) || 'all';
+                if (rp === 'one') { e.target.seekTo(0); e.target.playVideo(); }
+                else if (MUS.ytTracks && MUS.ytTracks.length) { const i = ytStep(1, true); if (i < 0) reportNow({ playing: false }); else ytGo(i); }
+                else if (cur.listId) { ytApplyModes(); e.target.nextVideo(); }
+                else if (rp !== 'off') { e.target.seekTo(0); e.target.playVideo(); }
               } catch (x) {}
             }
           },
@@ -5408,6 +5438,7 @@ function onMusicCmd(msg) {
   }
   if (IN_IFRAME) return;
   const cmd = msg.cmd;
+  if (cmd === 'shuffle' || cmd === 'repeat') { ytApplyModes(); if ($m('menu').classList.contains('on')) menuMusic(); return; }
   if (msg.rotated) return; // sunucu sıradaki listeyi zaten seçti (tüm ekranlar aynı listeye geçer)
   if (cmd === 'next' || cmd === 'prev') {
     if (MUS.spConnectTrack && MUS.spPlayer) {
@@ -5418,8 +5449,7 @@ function onMusicCmd(msg) {
     if (it && (it.provider === 'ytmix' || (it.provider === 'yt' || it.provider === 'ytm') && it.listId) && MUS.ytPlayer && MUS.ytReady) {
       try {
         if (MUS.ytTracks && MUS.ytTracks.length) {
-          MUS.ytIdx = ((MUS.ytIdx || 0) + (cmd === 'next' ? 1 : MUS.ytTracks.length - 1)) % MUS.ytTracks.length;
-          MUS.ytPlayer.loadVideoById(MUS.ytTracks[MUS.ytIdx].v);
+          ytGo(ytStep(cmd === 'next' ? 1 : -1, false));
         } else if (it.provider === 'ytmix' && (it.tracks || []).length) {
           MUS.ytTracks = it.tracks.map(t => ({ v: t.v, t: t.t, c: t.c })); MUS.ytIdx = 0;
           MUS.ytPlayer.loadVideoById(MUS.ytTracks[0].v);

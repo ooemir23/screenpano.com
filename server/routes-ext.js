@@ -630,7 +630,7 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
   // Müzik komutu (panelden HTTP ile, TV menüsünden WebSocket ile gelir; aynı mantık)
   const musicCmd = async (t, b) => {
     const req = { t }, m = ensureMusic(t.db); b = b || {}; let cmd = String(b.cmd || '');
-    if (!['play', 'pause', 'toggle', 'next', 'prev', 'volume', 'select', 'enabled', 'source'].includes(cmd)) return { code: 400, body: { error: 'Geçersiz komut' } };
+    if (!['play', 'pause', 'toggle', 'next', 'prev', 'volume', 'select', 'enabled', 'source', 'shuffle', 'repeat'].includes(cmd)) return { code: 400, body: { error: 'Geçersiz komut' } };
     // Kaynak değiştir (YouTube ↔ Spotify): o kaynağın son çalan ya da ilk listesi seçilir; diğer kaynak aşağıda susturulur
     if (cmd === 'source') {
       const want = b.source === 'spotify', grp = x => (x.provider === 'spotify') === want, key = want ? 'spotify' : 'yt';
@@ -643,6 +643,9 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
     else if (cmd === 'pause') { m.playing = false; }
     else if (cmd === 'toggle') { m.enabled = true; m.playing = !m.playing; }
     else if (cmd === 'enabled') { m.enabled = !!b.enabled; if (m.enabled) m.playing = true; }
+    // karışık çal: aç/kapat (on verilmezse tersine çevrilir); tekrar: tümü → tek şarkı → kapalı → tümü (verilmezse sıradaki)
+    else if (cmd === 'shuffle') { m.shuffle = typeof b.on === 'boolean' ? b.on : !m.shuffle; }
+    else if (cmd === 'repeat') { const R = ['all', 'one', 'off'], cur = R.includes(m.repeat) ? m.repeat : 'all'; m.repeat = R.includes(b.mode) ? b.mode : R[(R.indexOf(cur) + 1) % 3]; }
     else if (cmd === 'volume' && b.volume !== undefined) { m.volume = Math.max(0, Math.min(100, Math.round(Number(b.volume)) || 0)); }
     else if (cmd === 'select' && typeof b.id === 'string') {
       m.activeId = b.id; m.enabled = true; m.playing = true;
@@ -671,8 +674,10 @@ module.exports = function (r, { changed, sendTo, upload, quota, postQuota, owner
         else if (cmd === 'toggle' && m.playing) await SP.control(req.t, 'resume');
         else if (cmd === 'next' || cmd === 'prev') await SP.control(req.t, cmd);
         else if (cmd === 'volume') await SP.control(req.t, 'volume', { volume: m.volume });
+        else if (cmd === 'shuffle') await SP.control(req.t, 'shuffle', { on: !!m.shuffle });
+        else if (cmd === 'repeat') await SP.control(req.t, 'repeat', { mode: m.repeat });
       } catch (e) { warn = e.message; }
-      if (!warn && cmd !== 'volume') spNowKick(req.t);
+      if (!warn && !['volume', 'shuffle', 'repeat'].includes(cmd)) spNowKick(req.t);
     }
     tenants.save(req.t);
     sendTo(req.t, { type: 'music_cmd', cmd, rotated, start, volume: m.volume, id: m.activeId, playing: m.playing, enabled: m.enabled, music: tvMusic(m) });

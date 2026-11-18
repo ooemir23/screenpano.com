@@ -594,7 +594,7 @@ body.ytm-on,body.ytm-on main{background:#030303}
 .ytm-bar-ctl{display:flex;align-items:center;gap:6px}
 .ytm-bar-ctl button{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:0;background:none;color:#fff;cursor:pointer}
 .ytm-bar-ctl button:hover{background:rgba(255,255,255,.1)}.ytm-bar-ctl .ic{width:22px;height:22px}
-.ytm-bar-ctl .big{width:48px;height:48px}.ytm-bar-ctl .big .ic{width:30px;height:30px}
+.ytm-bar-ctl .big{width:48px;height:48px}.ytm-bar-ctl .md{color:#aaa;position:relative}.ytm-bar-ctl .md .ic{width:18px;height:18px}.ytm-bar-ctl .md.on{color:#fff}body.sp-on .ytm-bar-ctl .md.on{color:#1ed760}.ytm-bar-ctl .md.on::after{content:'';position:absolute;bottom:4px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:currentColor}.ytm-bar-ctl .big .ic{width:30px;height:30px}
 .ytm-bar-np{all:unset;display:flex;align-items:center;gap:14px;min-width:0;cursor:pointer;justify-self:center;max-width:520px;width:100%}
 .ytm-bar-np .c{width:40px;height:40px;border-radius:2px;overflow:hidden;background:#3a3a3a;display:grid;place-items:center;flex:none}
 .ytm-bar-np .c img{width:100%;height:100%;object-fit:cover}.ytm-bar-np .c .ic{width:20px;height:20px;color:#aaa}
@@ -737,6 +737,7 @@ body.sp-on .ytm-bar{background:#000}body.sp-on .ytm-prog{background:var(--sp)}
 @media(max-width:900px){.ytm.sp .ytm-head{padding:18px}.ytm.sp .ytm-head h1{font-size:30px}.sp-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sp-tile{height:56px}.sp-tile .o img,.sp-tile .o i{width:56px;height:56px}.sp-tile .o{gap:10px;font-size:13px}.sp-tile .o b{padding-right:8px}.sp-tile .p{display:none}.sp-hi h1{font-size:26px}}
 @media(max-width:900px){
   .ytm{padding:0 0 150px}
+  .ytm-bar-ctl .md{display:none}
   .ytm-top{margin:-8px -14px 0;padding:10px 14px 8px;top:56px}.ytm-chips{top:114px;margin:0 -14px 6px;padding:4px 14px 12px}
   .ytm-sh h2{font-size:22px}.ytm-row{grid-auto-columns:144px;gap:14px}.ytm-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 14px}
   .ytm-hero{gap:14px;padding:14px}.ytm-hero .c{width:88px;height:88px}.ytm-hero h2{font-size:20px}

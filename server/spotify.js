@@ -209,6 +209,9 @@ async function play(t, it, start, volume) {
   const body = (it.spotifyType || 'playlist') === 'track' ? { uris: [uri] } : { context_uri: uri, ...(start && start.uri ? { offset: { uri: start.uri } } : {}) };
   await call(t, 'PUT', 'me/player/play?device_id=' + encodeURIComponent(dev), body);
   if (volume != null) { try { await call(t, 'PUT', `me/player/volume?volume_percent=${Math.max(0, Math.min(100, Math.round(volume)))}&device_id=${encodeURIComponent(dev)}`); } catch (e) {} }
+  const m = t.db.music || {};
+  try { await control1(t, 'shuffle', { on: !!m.shuffle }, dev); } catch (e) {}
+  try { await control1(t, 'repeat', { mode: m.repeat || 'all' }, dev); } catch (e) {}
 }
 async function control(t, cmd, opt = {}) {
   const dev = await targetId(t);
@@ -231,6 +234,9 @@ async function control1(t, cmd, opt, dev) {
   if (cmd === 'next') return call(t, 'POST', 'me/player/next?' + q);
   if (cmd === 'prev') return call(t, 'POST', 'me/player/previous?' + q);
   if (cmd === 'volume') return call(t, 'PUT', `me/player/volume?volume_percent=${Math.max(0, Math.min(100, Math.round(opt.volume)))}&${q}`);
+  // karışık çal ve tekrar: ScreenPano 'all' → Spotify 'context' (liste başa döner), 'one' → 'track'
+  if (cmd === 'shuffle') return call(t, 'PUT', `me/player/shuffle?state=${opt.on ? 'true' : 'false'}&${q}`);
+  if (cmd === 'repeat') return call(t, 'PUT', `me/player/repeat?state=${opt.mode === 'one' ? 'track' : opt.mode === 'off' ? 'off' : 'context'}&${q}`);
 }
 
 // O an çalan (panel ve TV'deki "şu an çalıyor" için); 5 sn önbellek

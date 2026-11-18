@@ -127,10 +127,10 @@ function onMessage(ws, raw) {
   // TV menüsünden müzik kontrolü (oynat/duraklat/sonraki/önceki/ses): panelle aynı komut yolu; cihaz başına saniyede birkaç komutla sınırlı
   if (m.type === 'music_ctl') {
     const k = 'mc' + (ws.deviceId || ws.tid), now = Date.now();
-    if (!ws.preview && ['toggle', 'play', 'pause', 'next', 'prev', 'volume', 'select'].includes(m.cmd) && now - (onMessage.mc.get(k) || 0) > 350) {
+    if (!ws.preview && ['toggle', 'play', 'pause', 'next', 'prev', 'volume', 'select', 'source', 'shuffle', 'repeat'].includes(m.cmd) && now - (onMessage.mc.get(k) || 0) > 350) {
       onMessage.mc.set(k, now);
       const t = tenants.get(ws.tid), hub = require('./hub');
-      const b = { cmd: m.cmd, volume: m.volume };
+      const b = { cmd: m.cmd, volume: m.volume, source: m.source === 'spotify' ? 'spotify' : 'yt', on: typeof m.on === 'boolean' ? m.on : undefined, mode: m.mode };
       // menüden liste/şarkı seçimi: yalnız işletmenin kitaplığındaki bir liste; şarkı başlangıcı biçimi musicCmd'de ayrıca doğrulanır
       if (m.cmd === 'select') {
         const lib = t && t.db.music && Array.isArray(t.db.music.playlists) ? t.db.music.playlists : [];
