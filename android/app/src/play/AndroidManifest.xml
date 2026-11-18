@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Google Play Store abonelik ve uygulama içi satın alma izni -->
+    <uses-permission android:name="com.android.vending.BILLING" />
+
+    <!-- Yatay sabitleme çalışsın ancak donanım özelliği Play Store'da cihaz filtresi olarak zorunlu sayılmasın -->
+    <uses-feature
+        android:name="android.hardware.screen.landscape"
+        android:required="false" />
+
+    <!-- Play Store politikası gereği dışarıdan APK kurma izni yalnızca play sürümünden çıkarılır (direct sürümde korunur) -->
+    <uses-permission
+        android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:node="remove" />
+
+    <queries>
+        <intent tools:node="remove">
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/vnd.android.package-archive" />
+        </intent>
+    </queries>
+
+    <application>
+        <provider
+            android:name=".receiver.UpdateProvider"
+            android:authorities="${applicationId}.update"
+            tools:node="remove" />
+        <receiver
+            android:name=".receiver.InstallResultReceiver"
+            tools:node="remove" />
+    </application>
+</manifest>

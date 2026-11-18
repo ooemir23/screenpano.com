@@ -7,6 +7,11 @@
 #   ANDROID_KEYSTORE_PASSWORD anahtar deposu şifresi
 #   ANDROID_KEY_ALIAS         anahtar adı (alias)
 #   ANDROID_KEY_PASSWORD      anahtar şifresi
+# Google Play sürümü (com.screenpano.play, AAB) için isteğe bağlı:
+#   PLAY_UPLOAD_KEYSTORE_B64  play-upload.jks dosyasının base64 hâli
+#   PLAY_UPLOAD_KEYSTORE_PASSWORD, PLAY_UPLOAD_KEY_ALIAS, PLAY_UPLOAD_KEY_PASSWORD
+# Yoksa AAB de kutulardaki APK anahtarıyla imzalanır (Play Console'daki yükleme anahtarıyla eşleşmezse Play kabul etmez).
+# İki sürüm derlenir: direct (kutulardaki /app.apk, sitedeki ödeme) ve play (Google Play, Play Billing).
 #
 # Güvenlik: derlenen APK'nın imzası aşağıdaki parmak iziyle (2.0 ve 2.4–3.0'ı imzalayan anahtar) eşleşmezse
 # APK sunucuya konmaz — yanlış anahtarla imzalanan sürüm kurulu kutularda güncellenemez.
@@ -68,19 +73,35 @@ jobs:
             echo "keyPassword=$KEY_PASS"
           } > android/keystore.properties
 
+      - name: Play yükleme anahtarını yerleştir
+        env:
+          PKS: ${{ secrets.PLAY_UPLOAD_KEYSTORE_B64 }}
+          PKS_PASS: ${{ secrets.PLAY_UPLOAD_KEYSTORE_PASSWORD }}
+          PKEY_ALIAS: ${{ secrets.PLAY_UPLOAD_KEY_ALIAS }}
+          PKEY_PASS: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -z "$PKS" ]; then echo "::notice::PLAY_UPLOAD_KEYSTORE_B64 yok; Play sürümü release anahtarıyla imzalanacak."; exit 0; fi
+          echo "$PKS" | base64 -d > android/app/play-upload.jks
+          {
+            echo "storeFile=play-upload.jks"
+            echo "storePassword=$PKS_PASS"
+            echo "keyAlias=$PKEY_ALIAS"
+            echo "keyPassword=$PKEY_PASS"
+          } > android/play-keystore.properties
+
       - name: Derle
         working-directory: android
-        run: gradle --no-daemon assembleRelease
+        run: gradle --no-daemon assembleDirectRelease
 
       - name: Play paketi (AAB) derle
         working-directory: android
-        run: gradle --no-daemon bundleRelease
-        continue-on-error: true   # Play yayını hazırlığı: AAB hatası APK akışını (kutuların güncellemesi) durdurmasın
+        run: gradle --no-daemon bundlePlayRelease
+        continue-on-error: true   # AAB hatası APK akışını (kutuların güncellemesi) durdurmasın; Play'e yükleme "Canlıya al"da yapılır
 
       - name: İmzayı ve sürümü denetle
         id: check
         run: |
-          APK=android/app/build/outputs/apk/release/app-release.apk
+          APK=android/app/build/outputs/apk/direct/release/app-direct-release.apk
           test -f "$APK" || { echo "::error::İmzalı APK oluşmadı (keystore.properties okunamadı mı?)"; exit 1; }
           SHA=$(keytool -printcert -jarfile "$APK" | grep -m1 'SHA256:' | awk '{print $2}')
           if [ "$SHA" != "$CERT_SHA256" ]; then
@@ -115,7 +136,7 @@ jobs:
         if: always()
         with:
           name: ScreenPano-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          path: android/app/build/outputs/apk/direct/release/*.apk
           retention-days: 14
           if-no-files-found: ignore
 
@@ -123,10 +144,10 @@ jobs:
         if: always()
         with:
           name: ScreenPano-aab
-          path: android/app/build/outputs/bundle/release/*.aab
+          path: android/app/build/outputs/bundle/playRelease/*.aab
           retention-days: 14
           if-no-files-found: ignore
 
       - name: Anahtarı sil
         if: always()
-        run: rm -f android/app/release.keystore android/keystore.properties
+        run: rm -f android/app/release.keystore android/keystore.properties android/app/play-upload.jks android/play-keystore.properties

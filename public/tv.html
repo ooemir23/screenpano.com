@@ -3581,7 +3581,7 @@ window.__onPlayBilling = (ev, payload) => {
     else if (ev === 'purchase' && d.purchaseToken) {
       // yetki sunucuda Google'dan doğrulanınca verilir; sonuç durum güncellemesiyle (state) ekrana ve panele yansır
       menuSt('Satın alma doğrulanıyor…');
-      fetch('/api/tv/play-verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceToken: tokenGet(), purchaseToken: d.purchaseToken, productId: d.productId || '' }) })
+      fetch('/api/tv/play-verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceToken: tokenGet(), purchaseToken: d.purchaseToken, productId: d.productId || (Array.isArray(d.products) && d.products[0]) || '' }) })
         .then(r => r.json().then(j => ({ ok: r.ok, j })))
         .then(({ ok, j }) => menuSt(ok ? (j.entitled ? 'Aboneliğiniz açıldı. Teşekkürler!' : 'Satın alma alındı; Google onayı bekleniyor.') : (j.error || 'Satın alma doğrulanamadı')))
         .catch(() => menuSt('Satın alma doğrulanamadı; bağlantı sonrası yeniden denenecek.'));

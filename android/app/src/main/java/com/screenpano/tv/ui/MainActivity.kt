@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
     private val trafficService = TrafficService()
 
     private var exoPlayer: ExoPlayer? = null
+    private var playBilling: com.screenpano.tv.billing.PlayBillingManager? = null
     private val handler = Handler(Looper.getMainLooper())
     private var trafficJob: Job? = null
     private var lastTrafficJson: String? = null
@@ -129,6 +130,16 @@ class MainActivity : AppCompatActivity() {
 
         initExoPlayer()
         setupWebView()
+        if (BuildConfig.IS_PLAY_STORE) {
+            playBilling = com.screenpano.tv.billing.PlayBillingManager(this) { ev, payload ->
+                handler.post {
+                    binding.webView.evaluateJavascript(
+                        "window.__onPlayBilling && window.__onPlayBilling(${JSONObject.quote(ev)}, $payload);",
+                        null
+                    )
+                }
+            }.also { it.start() }
+        }
         startTrafficPolling()
         startNativeChannel()
 
@@ -1112,6 +1123,50 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun bootStatus(): String = if (Build.VERSION.SDK_INT < 29 || android.provider.Settings.canDrawOverlays(this@MainActivity)) "ok" else "izin-yok"
 
+        /** Play Store sürümü mü: true ise /app.apk manuel güncelleme kapatılır, güncellemeleri mağaza yönetir. */
+        @JavascriptInterface
+        fun isPlayStore(): Boolean = BuildConfig.IS_PLAY_STORE
+
+        /** Play Store abonelik planlarını sorgular (sonuç window.__onPlayBilling('products', ...) ile döner). */
+        @JavascriptInterface
+        fun playQuery() {
+            playBilling?.queryProducts(listOf("baslangic", "pro"))
+        }
+
+        /**
+         * İleride eklenecek modüler aylık abonelikleri (subsCsv, örn: "baslangic,pro,addon_kutu,addon_sube")
+         * ve tek seferlik satın alımları (inAppCsv) dinamik olarak kaydedip Google Play'den sorgular.
+         */
+        @JavascriptInterface
+        fun playQueryCatalog(subsCsv: String, inAppCsv: String) {
+            playBilling?.registerAndQueryCatalog(subsCsv, inAppCsv)
+        }
+
+        /** Play Store abonelik satın alma ekranını başlatır (productId: "baslangic" | "pro" | "addon_*", basePlanId: "aylik" | "yillik"). */
+        @JavascriptInterface
+        fun playBuy(productId: String, basePlanId: String, tenantId: String) {
+            playBilling?.launchSubscription(productId, basePlanId, tenantId)
+        }
+
+        /**
+         * Modüler ek özellik (aylık abonelik "subs" veya tek seferlik "inapp") satın alma ekranını başlatır.
+         * addonKey ile hangi ek özelliğin veya hangi şube/kutunun alındığı Google Play makbuzuna işlenir.
+         */
+        @JavascriptInterface
+        fun playBuyAddon(productId: String, basePlanId: String, productType: String, tenantId: String, addonKey: String) {
+            playBilling?.launchPurchase(productId, basePlanId, productType, tenantId, addonKey)
+        }
+
+        /** Cihazda aktif olan tüm abonelik ve ek özellik satın alımlarını JSON olarak döner. */
+        @JavascriptInterface
+        fun playActiveEntitlements(): String = playBilling?.activeEntitlementsJson() ?: "{\"keys\":[],\"items\":[]}"
+
+        /** Tekrar satın alınabilir (tüketilebilir) uygulama içi ürünü tüketir. */
+        @JavascriptInterface
+        fun playConsume(purchaseToken: String) {
+            playBilling?.consumePurchase(purchaseToken)
+        }
+
         @JavascriptInterface
         fun installUpdate(url: String) {
             runOnUiThread {
@@ -1149,6 +1204,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startUpdate(url: String, wantCode: Int) {
+        if (BuildConfig.IS_PLAY_STORE) {
+            updateStatus("Güncellemeler Google Play Store üzerinden otomatik yapılır")
+            return
+        }
         if (isUpdating) return
         val curHost = binding.webView.url?.split("/tv")?.getOrNull(0) ?: baseUrl
         if (!url.startsWith("$baseUrl/") && !url.startsWith("$curHost/")) {
@@ -1323,6 +1382,8 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         trafficJob?.cancel()
         tvSocket?.stop()
+        playBilling?.release()
+        playBilling = null
         handler.removeCallbacksAndMessages(null)
         exoPlayer?.release()
         exoPlayer = null

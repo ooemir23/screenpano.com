@@ -10,21 +10,42 @@ def appName = (project.findProperty('APP_NAME') ?: 'ScreenPano').toString()
 def ksFile = rootProject.file('keystore.properties')
 def ks = new Properties()
 if (ksFile.exists()) ksFile.withInputStream { ks.load(it) }
+// Google Play yükleme anahtarı (play-upload.jks): yalnız Play sürümünü (AAB) imzalar. Yoksa Play sürümü de release anahtarıyla imzalanır.
+def playKsFile = rootProject.file('play-keystore.properties')
+def playKs = new Properties()
+if (playKsFile.exists()) playKsFile.withInputStream { playKs.load(it) }
 
 android {
     namespace 'com.screenpano.tv'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId 'com.screenpano.tv'
         minSdk 21
-        targetSdk 34
-        versionCode 106
-        versionName '3.24.18'
+        targetSdk 36
+        versionCode 107
+        versionName '3.24.19'
         buildConfigField 'String', 'BUILD_DATE', "\"${new Date().format('yyyy-MM-dd', TimeZone.getTimeZone('Europe/Istanbul'))}\""
         buildConfigField 'String', 'BASE_URL', "\"${baseUrl}\""
         buildConfigField 'String', 'TEST_URL', "\"${testUrl}\""
         resValue 'string', 'app_name', appName
+    }
+
+    flavorDimensions += 'dist'
+    productFlavors {
+        // Web / PayTR / iyzico sürümü: mevcut paket adı ve /app.apk üzerinden manuel güncelleme korunur
+        direct {
+            dimension 'dist'
+            applicationId 'com.screenpano.tv'
+            buildConfigField 'boolean', 'IS_PLAY_STORE', 'false'
+        }
+        // Google Play Store sürümü: ayrı paket adı, Play Billing ve mağaza üzerinden otomatik güncelleme
+        play {
+            dimension 'dist'
+            applicationId 'com.screenpano.play'
+            minSdk 24
+            buildConfigField 'boolean', 'IS_PLAY_STORE', 'true'
+        }
     }
 
     buildFeatures {
@@ -39,6 +60,19 @@ android {
                 storePassword ks['storePassword']
                 keyAlias ks['keyAlias']
                 keyPassword ks['keyPassword']
+            } else if (project.hasProperty('STORE_FILE')) {
+                storeFile file(project.property('STORE_FILE').toString())
+                storePassword project.property('STORE_PASSWORD').toString()
+                keyAlias project.property('KEY_ALIAS').toString()
+                keyPassword project.property('KEY_PASSWORD').toString()
+            }
+        }
+        if (playKsFile.exists()) {
+            playUpload {
+                storeFile file(playKs['storeFile'])
+                storePassword playKs['storePassword']
+                keyAlias playKs['keyAlias']
+                keyPassword playKs['keyPassword']
             }
         }
     }
@@ -48,9 +82,15 @@ android {
             // R8: kullanılmayan kütüphane kodu atılır (daha küçük DEX: zayıf kutuda daha hızlı açılış, daha az bellek)
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (ksFile.exists()) signingConfig signingConfigs.release
         }
     }
+    // İmza: release derlemeleri varsayılan olarak kutulardaki APK'nın anahtarıyla; Play sürümü kendi yükleme anahtarıyla
+    // (Play App Signing). Ürün çeşidindeki imza varsayılanı ezer; build type'ta imza tanımlanmaz (tanımlansa çeşidinkini ezerdi).
+    if (ksFile.exists() || project.hasProperty('STORE_FILE')) {
+        productFlavors.direct.signingConfig signingConfigs.release
+        if (!playKsFile.exists()) productFlavors.play.signingConfig signingConfigs.release
+    }
+    if (playKsFile.exists()) productFlavors.play.signingConfig signingConfigs.playUpload
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -86,4 +126,7 @@ dependencies {
 
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+
+    // Google Play Billing (yalnız Play Store sürümünde derlenir)
+    playImplementation 'com.android.billingclient:billing-ktx:8.0.0'
 }
