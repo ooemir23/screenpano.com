@@ -126,7 +126,7 @@ jobs:
         if: steps.cfg.outputs.ok == 'true'
         run: |
           CODE=$(grep -m1 -E '^\s*versionCode ' android/app/build.gradle | awk '{print $2}')
-          if [ "${{ steps.up.outcome }}" = "success" ]; then echo "::notice::Google Play'e yüklendi (versionCode $CODE, kanal ${{ vars.PLAY_TRACK || 'production' }}). Google incelemesinden sonra yayına çıkar."
+          if [ "${{ steps.up.outcome }}" = "success" ]; then echo "::notice::Google Play'e yüklendi (versionCode $CODE, kanal ${{ vars.PLAY_TRACK || 'alpha' }}). Google incelemesinden sonra yayına çıkar."
           else echo "::warning::Google Play yüklemesi yapılamadı (versionCode $CODE daha önce yüklenmiş olabilir ya da izin eksik). Ayrıntı yukarıdaki adımda."; fi
 
       - uses: actions/upload-artifact@v4
