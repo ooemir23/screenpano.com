@@ -381,10 +381,26 @@ function render(keepScroll) {
   $('view').innerHTML = sec.html();
   if (sec.after) sec.after();
   drawJump();
+  veilPro();
   requestAnimationFrame(() => setTimeout(() => { iconize(); iconize($('banner')); }, 0));
   setTimeout(scalePv, 30);
   if (keepScroll) scrollTo(0, y);
 }
+// Pro/ek abonelik gerektiren bölümler (lockAttrs ile işaretli): hafif bulanık + üstte Pro kartı; düğme yükseltme akışını açar.
+// Bölümler sonradan yeniden çizilebildiği için (müzik, indirim saatleri) #view değişince yeniden uygulanır.
+function veilPro() {
+  for (const el of document.querySelectorAll('#view [data-pro-feature]')) {
+    if (el.querySelector(':scope > .pro-ov')) continue;
+    const feat = el.dataset.proFeature || 'Pro özellik', aid = el.dataset.addonFeature || '', a = aid && ADDONS[aid];
+    const ov = document.createElement('div'); ov.className = 'pro-ov' + (el.offsetHeight > 520 ? ' tall' : '');
+    ov.innerHTML = a
+      ? `<b>⚽ ${esc(I18N.t(a.name))} · ${esc(I18N.t('Ek abonelik'))}</b><span>${esc(I18N.t('Pakete dahil değildir; ek abonelikle açılır.'))}${priceLine(a.priceKey, a.id) ? ' ' + esc(priceLine(a.priceKey, a.id)) : ''}</span><button type="button" class="btn s" data-allow-locked="1">${esc(I18N.t('Aboneliği başlat'))}</button>`
+      : `<b>⭐ ${esc(I18N.t(feat))} · ${esc(I18N.t('Pro pakette'))}</b><span>${esc(I18N.t('Pro pakete geçin; bu bölüm hemen açılır.'))}${priceLine('pro', 'pro') ? ' ' + esc(priceLine('pro', 'pro')) : ''}</span><button type="button" class="btn s" data-allow-locked="1">${esc(I18N.t('Pro pakete geç'))}</button>`;
+    ov.querySelector('button').onclick = e => { e.stopPropagation(); openUpgradeModal(feat, aid); };
+    el.classList.add('pro-veil'); el.appendChild(ov);
+  }
+}
+new MutationObserver(() => { clearTimeout(veilPro.t); veilPro.t = setTimeout(veilPro, 60); }).observe(document.getElementById('view'), { childList: true, subtree: true });
 // Sayfa içi hızlı erişim: kart başlıkları üstte sabit bir şeritte; tıklayınca ekran o karta kayar ve kart kısa süre vurgulanır
 function drawJump() {
   const v = $('view'), cards = [...v.querySelectorAll('.card')].filter(c => { const h = c.querySelector(':scope > .ch h3'); return h && h.textContent.trim(); });
