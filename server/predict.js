@@ -1,5 +1,5 @@
 // Tahmin Ligi (Süper Lig): müşteri ekrandaki QR'ı okutur, e-postasına gelen kodla kaydolur ve haftanın maçlarından
-// istediklerine tahmin girer (maç sayısı zorunlu değil): skor, golcü, asist yapan, sarı kart sayısı, kırmızı kart çıkar mı.
+// istediklerine tahmin girer (maç sayısı zorunlu değil): skor, golcü, kırmızı kart çıkar mı.
 // Puanlar sabittir (PTS). Haftanın lideri işletmeden ikram kazanır; puan durumu ekranlarda döngü arasında gösterilir.
 //
 // Veri: ESPN'in açık (resmi olmayan) Süper Lig verisi — fikstür, kadrolar ve maç sonu oyuncu istatistikleri (gol, asist, kart).
@@ -15,7 +15,7 @@ const tenants = require('./tenants');
 
 const LEAGUE = 'tur.1';
 const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/soccer/' + LEAGUE;
-const PTS = Object.freeze({ exact: 5, result: 2, goal: 3, assist: 2, yellow: 2, red: 2, ycp: 2, rcp: 4 }); // ycp/rcp: sarı/kırmızı kart görecek oyuncuyu bilme
+const PTS = Object.freeze({ exact: 5, result: 2, goal: 3, red: 2 });
 const TZ_MS = 3 * 3600e3; // Türkiye UTC+3 (yaz saati yok)
 const DAY = 86400e3;
 const CACHE_FILE = path.join(config.DATA_DIR, 'predict-cache.json');
@@ -135,28 +135,22 @@ async function squad(teamId) {
 const sign = (h, a) => Math.sign(h - a);
 function pointsFor(p, m) {
   if (!p || !m || m.st !== 'post' || !m.res || !m.sc) return null;
-  const r = m.res, o = { score: 0, goal: 0, assist: 0, yellow: 0, red: 0, ycp: 0, rcp: 0, exact: false };
+  const r = m.res, o = { score: 0, goal: 0, red: 0, exact: false };
   if (Number.isInteger(p.h) && Number.isInteger(p.a)) {
     if (p.h === m.sc[0] && p.a === m.sc[1]) { o.score = PTS.exact; o.exact = true; }
     else if (sign(p.h, p.a) === sign(m.sc[0], m.sc[1])) o.score = PTS.result;
   }
-  // gol kutuları: her kutu bir golün golcüsü (g) ve asisti (a). Aynı oyuncu birden çok kutuda olabilir; oyuncunun
-  // maçtaki gol/asist sayısını aşan kutular puan almaz. Eski biçim (tek g / as) de okunur.
-  const slots = Array.isArray(p.gl) ? p.gl : [{ g: p.g, a: p.as }].filter(x => x.g || x.a);
-  const gl = { ...(r.goals || {}) }, al = { ...(r.assists || {}) };
+  // gol kutuları: her kutu bir golün golcüsü (g). Aynı oyuncu birden çok kutuda olabilir; oyuncunun maçtaki gol
+  // sayısını aşan kutular puan almaz. Eski biçim (tek g) ve eski tahminlerdeki asist / sarı kart alanları okunur ama puanlanmaz.
+  const slots = Array.isArray(p.gl) ? p.gl : [{ g: p.g }].filter(x => x.g);
+  const gl = { ...(r.goals || {}) };
   o.slots = slots.map(x => {
-    const v = { g: 0, a: 0 };
+    const v = { g: 0 };
     if (x.g && gl[x.g] > 0) { gl[x.g]--; v.g = PTS.goal; }
-    if (x.a && al[x.a] > 0) { al[x.a]--; v.a = PTS.assist; }
-    o.goal += v.g; o.assist += v.a; return v;
+    o.goal += v.g; return v;
   });
-  if (Number.isInteger(p.yc) && p.yc === r.yc) o.yellow = PTS.yellow;
   if (typeof p.rc === 'boolean' && p.rc === r.rc > 0) o.red = PTS.red;
-  // kart görecek oyuncular: her doğru oyuncu ayrı puan (oyuncu başına bir kez)
-  o.ycps = (Array.isArray(p.ycl) ? p.ycl : []).map(x => (x && r.ycp && r.ycp[x.id] > 0 ? PTS.ycp : 0));
-  o.rcps = (Array.isArray(p.rcl) ? p.rcl : []).map(x => (x && r.rcp && r.rcp[x.id] > 0 ? PTS.rcp : 0));
-  o.ycp = o.ycps.reduce((a, b) => a + b, 0); o.rcp = o.rcps.reduce((a, b) => a + b, 0);
-  o.total = o.score + o.goal + o.assist + o.yellow + o.red + o.ycp + o.rcp;
+  o.total = o.score + o.goal + o.red;
   return o;
 }
 

@@ -90,7 +90,7 @@ const tabs = (key, items) => `<div class="tabs">${items.map(([k, l]) => `<button
 const ADDONS = {
   tahmin_ligi: {
     id: 'tahmin_ligi', name: 'Tahmin Ligi', priceKey: 'tahminLigi', productType: 'subs', basePlanId: 'aylik',
-    desc: 'Müşterileriniz ekrandaki QR ile katılıp Süper Lig maçlarına skor, golcü, asist ve kart tahmini yapar; haftanın birincisine ikram verirsiniz.',
+    desc: 'Müşterileriniz ekrandaki QR ile katılıp Süper Lig maçlarına skor, golcü ve kırmızı kart tahmini yapar; haftanın birincisine ikram verirsiniz.',
   },
 };
 const playBridge = () => (window.SPPlayBilling && SPPlayBilling.isPlayStore && SPPlayBilling.isPlayStore() ? window.SPPlayBilling : null);
@@ -2270,7 +2270,7 @@ async function upCeleb(day, inp) { const f = inp.files[0]; inp.value = ''; if (!
 let PRED = null, PRED_V = 'week';
 SECTIONS.predict = {
   html() {
-    return head('Tahmin Ligi', 'Süper Lig tahmin oyunu: müşteriler işletmedeki ekranda çıkan QR\'ı okutup Google hesaplarıyla katılır, haftanın maçlarına skor, golcü, asist ve kart tahmini girer. Haftanın birincisine ikram verirsiniz; puan durumu ekranda döngü arasında görünür ve katılımcılara her hafta e-postayla gider.')
+    return head('Tahmin Ligi', 'Süper Lig tahmin oyunu: müşteriler işletmedeki ekranda çıkan QR\'ı okutup Google hesaplarıyla katılır, haftanın maçlarına skor, golcü ve kırmızı kart tahmini girer. Haftanın birincisine ikram verirsiniz; puan durumu ekranda döngü arasında görünür ve katılımcılara her hafta e-postayla gider.')
       + '<div id="pdv"><div class="loading">Yükleniyor…</div></div>';
   },
   async after() { try { PRED = await req('GET', '/predict'); } catch (e) { $('pdv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; } drawPredict(); },
@@ -2293,7 +2293,7 @@ function drawPredict() {
       sw(p.on && !!(p.addon && p.addon.active), "predSet({on:this.checked})"), p.on && p.addon && p.addon.active ? '' : 'off')
     + card(`Puan durumu · ${esc(p.week.label)}`, `${p.userCount} katılımcı`, `<div class="tabs" style="margin:0 0 10px"><button class="${PRED_V === 'week' ? 'on' : ''}" onclick="PRED_V='week';drawPredict()">Bu hafta</button><button class="${PRED_V === 'all' ? 'on' : ''}" onclick="PRED_V='all';drawPredict()">Genel</button></div><div class="list">${rows}</div>`)
     + card('Haftanın birincileri', 'Ödülü verince işaretleyin. Kazanan, ödülü alırken kullanıcı adını ve kendisine gelen e-postayı gösterir.', `<div class="list">${aw}</div>`)
-    + card('Kurallar ve puanlar', '', `<p class="muted" style="margin:0 0 8px">Tam skor ${P.exact} · doğru sonuç ${P.result} · golcünün her golü ${P.goal} · asistin her asisti ${P.assist} · sarı kart sayısı tam ${P.yellow} · kırmızı kart çıkar/çıkmaz ${P.red} · sarı kart görecek her doğru oyuncu ${P.ycp} · kırmızı kart görecek her doğru oyuncu ${P.rcp} puan. Müşteri istediği maçlara tahmin girer; maç başlayınca tahmin kilitlenir. Hafta Salı–Pazartesi; eşitlikte daha çok tam skor, sonra daha erken tahmin öne geçer. Katılım ücretsizdir, kura yoktur.</p>
+    + card('Kurallar ve puanlar', '', `<p class="muted" style="margin:0 0 8px">Tam skor ${P.exact} · doğru sonuç ${P.result} · golcünün her golü ${P.goal} · kırmızı kart çıkar/çıkmaz ${P.red} puan. Müşteri istediği maçlara tahmin girer; maç başlayınca tahmin kilitlenir. Hafta Salı–Pazartesi; eşitlikte daha çok tam skor, sonra daha erken tahmin öne geçer. Katılım ücretsizdir, kura yoktur.</p>
        <p class="muted" style="margin:0">Ödüllü yarışmalar mevzuata tabidir: katılım ücretsiz ve alışveriş şartsız olmalı, ödül nakit olmamalı. Emin değilseniz bir hukukçuya danışın.</p>`)
     + card('Katılımcılar', 'Kayıtlı müşterilerin adı, e-postası, telefonu ve doğum tarihi burada tutulur. Bilgileri düzenleyebilir, kural dışı davrananı (ör. birden çok hesap açan) ligden çıkarabilir ya da tamamen silebilirsiniz.', `${owner() && p.users.length ? `<div class="row" style="margin:0 0 10px;justify-content:flex-end"><a class="btn g s" href="/api/admin/predict/export.csv" download>⬇ Müşteri listesini indir (Excel)</a></div>` : ''}${p.users.length > 8 ? `<input type="search" id="pd-q" style="margin:0 0 10px;width:100%" placeholder="Ad, kullanıcı adı veya e-posta ara" value="${esc(PRED_Q || '')}" oninput="PRED_Q=this.value;drawPredict();const i=$('pd-q');i.focus();i.setSelectionRange(i.value.length,i.value.length)">` : ''}<div class="list">${us}</div>`);
 }

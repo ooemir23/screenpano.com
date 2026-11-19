@@ -23,20 +23,19 @@ test('hafta Salı 00:00 (TR) başlar; Cuma–Pazartesi maçları aynı haftadad�
 });
 
 const M = { id: '1', st: 'post', sc: [2, 1], res: { goals: { '10': 2, '11': 0 }, assists: { '20': 1 }, yc: 4, rc: 1 } };
-test('puanlama: tam skor 5 (sonuç puanı ayrıca eklenmez), sonuç 2, golcü her gol 3, asist 2, sarı 2, kırmızı 2', () => {
-  assert.deepEqual(P.PTS, { exact: 5, result: 2, goal: 3, assist: 2, yellow: 2, red: 2, ycp: 2, rcp: 4 });
-  const full = P.pointsFor({ h: 2, a: 1, gl: [{ s: 'h', g: '10', a: '20' }, { s: 'h', g: '10' }, { s: 'a', g: '11' }], yc: 4, rc: true }, M);
-  assert.deepEqual(full.slots, [{ g: 3, a: 2 }, { g: 3, a: 0 }, { g: 0, a: 0 }], 'kutu başına puan');
-  assert.equal(full.score, 5); assert.equal(full.goal, 6); assert.equal(full.assist, 2); assert.equal(full.yellow, 2); assert.equal(full.red, 2); assert.equal(full.total, 17); assert.ok(full.exact);
+test('puanlama: tam skor 5 (sonuç puanı ayrıca eklenmez), sonuç 2, golcü her gol 3, kırmızı 2', () => {
+  assert.deepEqual(P.PTS, { exact: 5, result: 2, goal: 3, red: 2 });
+  const full = P.pointsFor({ h: 2, a: 1, gl: [{ s: 'h', g: '10' }, { s: 'h', g: '10' }, { s: 'a', g: '11' }], rc: true }, M);
+  assert.deepEqual(full.slots, [{ g: 3 }, { g: 3 }, { g: 0 }], 'kutu başına puan');
+  assert.equal(full.score, 5); assert.equal(full.goal, 6); assert.equal(full.red, 2); assert.equal(full.total, 13); assert.ok(full.exact);
   assert.equal(P.pointsFor({ h: 2, a: 1, gl: [{ s: 'h', g: '10' }] }, M).goal, 3, 'tek kutu: 2 gol atan oyuncu için bir gol puanı');
   assert.equal(P.pointsFor({ h: 3, a: 0, gl: [{ s: 'h', g: '10' }, { s: 'h', g: '10' }, { s: 'h', g: '10' }] }, M).goal, 6, 'gerçek gol sayısını aşan kutu puan almaz');
-  assert.equal(P.pointsFor({ h: 2, a: 1, g: '10', as: '20' }, M).goal, 3, 'eski biçim (tek golcü) okunur');
-  const MC = { ...M, res: { ...M.res, ycp: { '10': 1, '30': 2 }, rcp: { '30': 1 } } };
-  const cd = P.pointsFor({ yc: 4, ycl: [{ id: '10' }, { id: '30' }, { id: '99' }], rc: true, rcl: [{ id: '30' }, { id: '10' }] }, MC);
-  assert.deepEqual(cd.ycps, [2, 2, 0]); assert.deepEqual(cd.rcps, [4, 0]); assert.equal(cd.total, 2 + 4 + 2 + 4, 'sarı sayısı + kırmızı var + oyuncular');
+  assert.equal(P.pointsFor({ h: 2, a: 1, g: '10' }, M).goal, 3, 'eski biçim (tek golcü) okunur');
+  const old = P.pointsFor({ gl: [{ s: 'h', g: '10', a: '20' }], yc: 4, ycl: [{ id: '10' }], rcl: [{ id: '30' }] }, M);
+  assert.equal(old.total, 3, 'eski tahmindeki asist / sarı kart alanları puanlanmaz');
   assert.equal(P.pointsFor({ h: 3, a: 0 }, M).total, 2, 'yalnız sonuç');
   assert.equal(P.pointsFor({ h: 1, a: 1 }, M).total, 0, 'yanlış sonuç');
-  assert.equal(P.pointsFor({ g: '99', yc: 3, rc: false }, M).total, 0, 'tutmayan golcü / kart');
+  assert.equal(P.pointsFor({ g: '99', rc: false }, M).total, 0, 'tutmayan golcü / kart');
   assert.equal(P.pointsFor({ rc: false }, { ...M, res: { ...M.res, rc: 0 } }).red, 2, 'kırmızı çıkmaz bildi');
   assert.equal(P.pointsFor({ h: 2, a: 1 }, { ...M, st: 'pre' }), null, 'bitmemiş maç puanlanmaz');
   assert.equal(P.pointsFor({ h: 2, a: 1 }, { ...M, res: null }), null, 'istatistik gelmeden puan yok');
@@ -53,7 +52,7 @@ test('puan durumu: puan, sonra tam skor, sonra erken tahmin; kapatılan katılı
     picks: {
       u1: { a: { h: 2, a: 1, at: 3 }, b: { h: 0, a: 0, at: 3 } },          // 2 + 2 = 4, tam skor 0
       u2: { a: { h: 1, a: 0, at: 5 } },                                    // 5 = tam skor
-      u3: { a: { h: 3, a: 0, at: 1 }, b: { yc: 5, at: 1 } },                // 2 + 2 = 4, tam skor 0, daha erken
+      u3: { a: { h: 3, a: 0, at: 1 }, b: { rc: false, at: 1 } },                // 2 + 2 = 4, tam skor 0, daha erken
       u4: { a: { h: 1, a: 0, at: 0 }, b: { h: 2, a: 2, at: 0 } },
     }, awards: {} } } };
   T.push(t);
@@ -68,7 +67,7 @@ test('hafta kapanınca birinci kesinleşir, bir kez e-posta gider; puan alan yok
   Object.assign(P.matches, { p1: { id: 'p1', at, wk: prev, st: 'post', sc: [0, 0], res: { goals: {}, assists: {}, yc: 1, rc: 0 } }, p2: { id: 'p2', at, wk: prev, st: 'off', sc: null, res: null } });
   const t = { id: 't2', name: 'Kafe', db: { predict: { on: true, prize: 'Tatlı', users: { w: { nick: 'Kazanan', email: 'w@x.co' }, l: { nick: 'Diğer', email: 'l@x.co' }, n: { nick: 'Kapalı', email: 'n@x.co', noMail: true } },
     picks: { w: { p1: { h: 0, a: 0, at: 1 } }, l: { p1: { h: 1, a: 0, at: 1 } } }, awards: {} } } };
-  const empty = { id: 't3', name: 'Boş', db: { predict: { on: true, users: { z: { nick: 'Z', email: 'z@x.co' } }, picks: { z: { p1: { h: 1, a: 0, yc: 4, at: 1 } } }, awards: {} } } };
+  const empty = { id: 't3', name: 'Boş', db: { predict: { on: true, users: { z: { nick: 'Z', email: 'z@x.co' } }, picks: { z: { p1: { h: 1, a: 0, rc: true, at: 1 } } }, awards: {} } } };
   T.push(t, empty);
   assert.ok(P.weekDone(prev), 'ertelenen maç haftayı bekletmez');
   await P.settle(); await P.settle();

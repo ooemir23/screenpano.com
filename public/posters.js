@@ -197,7 +197,7 @@
         + `<div class="top"><span class="pill">${ball}Süper Lig</span><span class="pill hot">${esc(p.week || '')}</span>${open ? `<span class="pill">${open} maç tahmine açık</span>` : ''}</div>`
         + (biz ? `<div class="biz${bcls}">${esc(biz)}</div>` : '') + `<h1>Tahmin <em>Ligi</em></h1>`
         + `<div class="prz">${cup}<div><small>HAFTANIN BİRİNCİSİNE</small><b>${p.prize ? esc(p.prize) : 'İşletmeden ikram'}</b></div></div>`
-        + `<div class="steps"><div class="st"><i>1</i>QR'ı okut, Google ile katıl</div><div class="st"><i>2</i>Skor, golcü, asist, kart tahmin et</div><div class="st"><i>3</i>Puanı topla, ikramı kap</div></div>`
+        + `<div class="steps"><div class="st"><i>1</i>QR'ı okut, Google ile katıl</div><div class="st"><i>2</i>Skor, golcü, kırmızı kart tahmin et</div><div class="st"><i>3</i>Puanı topla, ikramı kap</div></div>`
         + (p.last ? `<div class="lw">🏆 Geçen haftanın birincisi: <b>${esc(p.last.nick)}</b> · ${p.last.pts} puan</div>` : '')
         + `</div><div class="r"><div class="scan">${p.qr ? `<div class="qrw">${p.qr}</div>` : ''}<div class="cta"><b>Okut, <span>katıl</span></b><p>Telefonunun kamerasıyla QR'ı okut, saniyeler içinde ligdesin.</p><span class="free">ÜCRETSİZ</span></div></div>`
         + `<div class="bd"><h2>BU HAFTANIN İLK 5'İ<span>${esc(p.week || '')}</span></h2>${rows}</div>${short ? `<div class="url">${esc(short)}</div>` : ''}</div></div>`;

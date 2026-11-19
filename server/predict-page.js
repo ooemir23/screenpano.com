@@ -107,7 +107,7 @@ details{font-size:12.5px;color:var(--mut)}details summary{cursor:pointer;color:v
 <section id="t-k" hidden><div class="card"><b>Puanlar</b><table id="ptsT"></table>
   <p class="note">İstediğin maçlara tahmin girersin; maç sayısı zorunlu değildir. Her maçta alanların hepsini doldurman gerekmez, yalnız doldurduklarından puan alırsın. Tahminler maç başlayana kadar değiştirilebilir.</p>
   <p class="note">Hafta Salı'dan Pazartesi'ye kadardır. Haftanın birincisi, o haftanın maçlarından en çok puanı toplayandır. Eşitlikte daha çok tam skor bilen, o da eşitse tahminlerini daha önce tamamlayan öne geçer. Kura veya çekiliş yoktur; katılım ücretsizdir ve alışveriş şartı yoktur.</p>
-  <p class="note">Skoru kaç gol tahmin edersen o kadar golcü ve asist seçebilirsin; her golün golcüsü ve asisti yalnız o golü atan takımdan seçilir. Aynı oyuncuyu birden çok gole yazabilirsin; oyuncu maçta kaç gol attıysa (asist yaptıysa) o kadarı puan alır. Kendi kalesine atılan gol sayılmaz. Sarı kart sayısını kaç yazarsan o kadar oyuncu, kırmızı kart "Çıkar" dersen en fazla 3 oyuncu seçebilirsin; seçtiğin oyuncu o kartı görürse puan alırsın (ikinci sarıdan gelen kırmızı da sayılır). Maç sonuçları ve istatistikler maçtan sonra otomatik işlenir. Ertelenen maçtan puan çıkmaz.</p>
+  <p class="note">Skoru kaç gol tahmin edersen o kadar golcü seçebilirsin; her golün golcüsü yalnız o golü atan takımdan seçilir. Aynı oyuncuyu birden çok gole yazabilirsin; oyuncu maçta kaç gol attıysa o kadarı puan alır. Kendi kalesine atılan gol sayılmaz. Kırmızı kart için yalnız "Çıkar" ya da "Çıkmaz" dersin (ikinci sarıdan gelen kırmızı da sayılır). Maç sonuçları ve istatistikler maçtan sonra otomatik işlenir. Ertelenen maçtan puan çıkmaz.</p>
   <button class="btn ghost" id="del" hidden>Hesabımı ve tahminlerimi sil</button></div></section>
 </main>
 <script>
@@ -138,7 +138,7 @@ function render() {
   for (const b of $('tabs').children) b.classList.toggle('on', b.dataset.t === tab);
   $('t-m').hidden = !inn || tab !== 'm'; $('t-b').hidden = inn ? tab !== 'b' : false; $('t-k').hidden = inn ? tab !== 'k' : false;
   const P = S.pts;
-  $('ptsT').innerHTML = [['Tam skor', P.exact], ['Doğru sonuç (1 / X / 2)', P.result], ['Her doğru golcü', P.goal], ['Her doğru asist', P.assist], ['Sarı kart sayısı tam', P.yellow], ['Kırmızı kart çıkar / çıkmaz', P.red], ['Sarı kart görecek her doğru oyuncu', P.ycp], ['Kırmızı kart görecek her doğru oyuncu', P.rcp]].map(([a, b]) => '<tr><td>' + a + '</td><td>' + b + ' puan</td></tr>').join('');
+  $('ptsT').innerHTML = [['Tam skor', P.exact], ['Doğru sonuç (1 / X / 2)', P.result], ['Her doğru golcü', P.goal], ['Kırmızı kart çıkar / çıkmaz', P.red]].map(([a, b]) => '<tr><td>' + a + '</td><td>' + b + ' puan</td></tr>').join('');
   if (inn) renderMatches();
   renderBoard();
 }
@@ -149,37 +149,33 @@ function pickRows(m) {
   const pp = v => o ? '<span class="p' + (v ? '' : ' z') + '">' + (v ? '+' + v : '0') + '</span>' : '<span class="p z">–</span>';
   let h = '<div class="mine">';
   if (p.h != null) h += '<div><span>Skor: ' + p.h + ' – ' + p.a + '</span>' + pp(o && o.score) + '</div>';
-  const gl = p.gl || (p.g || p.as ? [{ g: p.g, gn: p.gn, a: p.as, an: p.asn }] : []);
+  const gl = p.gl || (p.g ? [{ g: p.g, gn: p.gn }] : []);
   gl.forEach((x, i) => {
     const sl = o && o.slots ? o.slots[i] : null, tm = x.s ? (x.s === 'h' ? m.home.name : m.away.name) : '';
     if (x.g) h += '<div><span>⚽ ' + E(x.gn || '') + (tm ? ' <small style="color:var(--mut)">(' + E(tm) + ')</small>' : '') + '</span>' + pp(sl && sl.g) + '</div>';
-    if (x.a) h += '<div><span>👟 Asist: ' + E(x.an || '') + '</span>' + pp(sl && sl.a) + '</div>';
   });
-  if (p.yc != null) h += '<div><span>Sarı kart: ' + p.yc + (m.res ? ' (maçta ' + m.res.yc + ')' : '') + '</span>' + pp(o && o.yellow) + '</div>';
-  (p.ycl || []).forEach((x, i) => { h += '<div><span><span class="cdi y"></span> ' + E(x.n || '') + '</span>' + pp(o && o.ycps && o.ycps[i]) + '</div>'; });
   if (p.rc != null) h += '<div><span>Kırmızı kart: ' + (p.rc ? 'çıkar' : 'çıkmaz') + (m.res ? ' (maçta ' + m.res.rc + ')' : '') + '</span>' + pp(o && o.red) + '</div>';
-  (p.rcl || []).forEach((x, i) => { h += '<div><span><span class="cdi r"></span> ' + E(x.n || '') + '</span>' + pp(o && o.rcps && o.rcps[i]) + '</div>'; });
   if (o) h += '<div><b>Bu maçtan</b><span class="tot">' + o.total + ' puan</span></div>';
   return h + '</div>';
 }
 const allM = () => [...S.matches, ...(S.next ? S.next.matches : [])];
 const plOf = (mid, side, id) => { const sq = SQ[mid]; if (!sq || !id) return null; return (sq[side === 'h' ? 'home' : 'away'].players || []).find(x => x.id === id) || null; };
-// skor kadar gol kutusu: her kutuda golcü + asist; yalnız golü atan takımın oyuncuları
+// skor kadar gol kutusu: her kutuda golcü; yalnız golü atan takımın oyuncuları
 function goalsHtml(m, d) {
   const n = { h: d.h || 0, a: d.a || 0 };
   d.gl = (d.gl || []).filter(x => x && (x.s === 'h' || x.s === 'a'));
   for (const side of ['h', 'a']) { const k = d.gl.filter(x => x.s === side); if (k.length > n[side]) d.gl = d.gl.filter(x => x.s !== side || k.indexOf(x) < n[side]); }
-  if (d.h == null || d.a == null) return '<div class="hint">Golcü ve asist seçmek için önce skoru yaz.</div>';
-  if (!n.h && !n.a) return '<div class="hint">Golsüz tahminde golcü ve asist seçilmez.</div>';
+  if (d.h == null || d.a == null) return '<div class="hint">Golcü seçmek için önce skoru yaz.</div>';
+  if (!n.h && !n.a) return '<div class="hint">Golsüz tahminde golcü seçilmez.</div>';
   let h = '';
   for (const side of ['h', 'a']) {
     if (!n[side]) continue;
     const tm = side === 'h' ? m.home : m.away, own = d.gl.filter(x => x.s === side);
     h += '<div class="gsd"><h4>' + (tm.logo ? '<img src="' + E(tm.logo) + '" alt="">' : '') + E(tm.name) + ' golleri<span>' + n[side] + ' gol</span></h4>';
     for (let i = 0; i < n[side]; i++) {
-      const x = own[i] || {}, gp = plOf(m.id, side, x.g), ap = plOf(m.id, side, x.a);
-      const btn = (k, pl, nm, ph, ic) => '<button type="button" class="pkb' + (k === 'a' ? ' a' : '') + (nm ? ' on' : '') + '" data-pk="' + k + '" data-sd="' + side + '" data-i="' + i + '"><span class="ic">' + ic + '</span>' + (nm ? '<span class="tx"><small>' + (k === 'g' ? 'GOLCÜ' : 'ASİST') + '</small>' + E(nm) + '</span><span style="flex:1"></span>' + (pl && pl.no ? '<span class="nr">#' + E(pl.no) + '</span>' : '') + (pl ? psChip(pl.pos) : '') : '<span class="tx">' + ph + '</span>') + '</button>';
-      h += '<div class="gsl"><span class="no">' + (i + 1) + '</span><div class="bt">' + btn('g', gp, x.gn, 'Golcüyü seç', '⚽') + btn('a', ap, x.an, 'Asist yapanı seç (isteğe bağlı)', '👟') + '</div></div>';
+      const x = own[i] || {}, gp = plOf(m.id, side, x.g);
+      const btn = (k, pl, nm, ph, ic) => '<button type="button" class="pkb' + (nm ? ' on' : '') + '" data-pk="' + k + '" data-sd="' + side + '" data-i="' + i + '"><span class="ic">' + ic + '</span>' + (nm ? '<span class="tx"><small>' + 'GOLCÜ' + '</small>' + E(nm) + '</span><span style="flex:1"></span>' + (pl && pl.no ? '<span class="nr">#' + E(pl.no) + '</span>' : '') + (pl ? psChip(pl.pos) : '') : '<span class="tx">' + ph + '</span>') + '</button>';
+      h += '<div class="gsl"><span class="no">' + (i + 1) + '</span><div class="bt">' + btn('g', gp, x.gn, 'Golcüyü seç', '⚽') + '</div></div>';
     }
     h += '</div>';
   }
@@ -187,7 +183,7 @@ function goalsHtml(m, d) {
 }
 function matchCard(m) {
   const d = draft[m.id] || (draft[m.id] = m.pick ? JSON.parse(JSON.stringify(m.pick)) : {});
-  if (!d.gl && (d.g || d.as)) d.gl = [];
+  if (!d.gl && d.g) d.gl = [];
   const st = m.st === 'in' ? '<span class="badge live">Canlı</span>' : m.st === 'post' ? '<span class="badge">Bitti</span>' : m.st === 'off' ? '<span class="badge">Ertelendi</span>' : '';
   const mid = m.sc ? '<div class="s">' + m.sc[0] + ' – ' + m.sc[1] + '</div>' + st : '<div class="t">' + when(m.at) + '</div>' + (m.pick ? '<span class="badge ok">Tahmin var</span>' : '');
   let h = '<div class="card" data-m="' + m.id + '"><div class="m-top"><div class="tm">' + (m.home.logo ? '<img src="' + E(m.home.logo) + '" alt="">' : '') + '<span>' + E(m.home.name) + '</span></div><div class="mid">' + mid + '</div><div class="tm">' + (m.away.logo ? '<img src="' + E(m.away.logo) + '" alt="">' : '') + '<span>' + E(m.away.name) + '</span></div></div>';
@@ -195,34 +191,11 @@ function matchCard(m) {
   const stp = (k, v) => '<div class="step"><button type="button" data-st="' + k + '" data-d="-1">−</button><input data-f="' + k + '" inputmode="numeric" value="' + (v == null ? '' : v) + '" placeholder="–" maxlength="2"><button type="button" data-st="' + k + '" data-d="1">+</button></div>';
   h += '<label>Skor</label><div class="sc">' + stp('h', d.h) + '<span class="x">–</span>' + stp('a', d.a) + '</div>';
   h += '<div class="gls" data-gls>' + goalsHtml(m, d) + '</div>';
-  h += '<div class="two"><div><label>Sarı kart (toplam)</label>' + stp('yc', d.yc) + '</div><div><label>Kırmızı kart</label><div class="seg"><button type="button" data-rc="1" class="' + (d.rc === true ? 'on' : '') + '">Çıkar</button><button type="button" data-rc="0" class="' + (d.rc === false ? 'on' : '') + '">Çıkmaz</button></div></div></div>';
-  h += '<div data-cds>' + cardsHtml(m, d) + '</div>';
+  h += '<div class="two"><div><label>Kırmızı kart</label><div class="seg"><button type="button" data-rc="1" class="' + (d.rc === true ? 'on' : '') + '">Çıkar</button><button type="button" data-rc="0" class="' + (d.rc === false ? 'on' : '') + '">Çıkmaz</button></div></div></div>';
   h += '<button class="btn" data-save="' + m.id + '">' + (m.pick ? 'Tahmini güncelle' : 'Tahmini kaydet') + '</button><div class="saved" data-ok="' + m.id + '"></div><div class="err" data-er="' + m.id + '"></div></div>';
   if (!SQ[m.id]) loadSquad(m.id);
   return h;
 }
-// kart görecek oyuncular: sarıda tahmin edilen sarı kart sayısı kadar kutu, kırmızıda "Çıkar" seçiliyse 1 kutu (+ ekle, en fazla 3)
-function cardsHtml(m, d) {
-  d.ycl = (d.ycl || []).filter(x => x && x.id).slice(0, d.yc || 0);
-  if (d.rc !== true) d.rcl = []; else d.rcl = (d.rcl || []).filter(x => x && x.id).slice(0, 3);
-  const tmOf = x => (x.s === 'a' ? m.away : m.home);
-  const btn = (k, x, i, ph) => { const pl = x && plOf(m.id, x.s, x.id), tm = x && tmOf(x);
-    return '<button type="button" class="pkb' + (x ? ' on' : '') + '" data-ck="' + k + '" data-i="' + i + '">' + (x ? (tm && tm.logo ? '<img src="' + E(tm.logo) + '" alt="">' : '') + '<span class="tx">' + E(x.n || '') + '</span><span style="flex:1"></span>' + (pl ? psChip(pl.pos) : '') : '<span class="cdi ' + k + '"></span><span class="tx">' + ph + '</span>') + '</button>'; };
-  let h = '';
-  if (d.yc > 0) {
-    h += '<div class="cds"><h4><span class="cdi y"></span> Sarı kart görecekler<span>her doğru oyuncu ' + S.pts.ycp + ' puan</span></h4><div class="cl">';
-    for (let i = 0; i < d.yc; i++) h += btn('y', d.ycl[i], i, 'Oyuncu seç');
-    h += '</div></div>';
-  }
-  if (d.rc === true) {
-    h += '<div class="cds"><h4><span class="cdi r"></span> Kırmızı kart görecek<span>doğru oyuncu ' + S.pts.rcp + ' puan</span></h4><div class="cl">';
-    for (let i = 0; i < Math.max(1, d.rcl.length); i++) h += btn('r', d.rcl[i], i, 'Oyuncu seç');
-    if (d.rcl.length && d.rcl.length < 3) h += '<button type="button" class="addb" data-ck="r" data-i="' + d.rcl.length + '">+ Oyuncu ekle</button>';
-    h += '</div></div>';
-  }
-  return h;
-}
-function refreshCards(card, id) { const m = allM().find(x => x.id === id), el = card.querySelector('[data-cds]'); if (m && el) el.innerHTML = cardsHtml(m, draft[id]); }
 function refreshGoals(card, id) { const m = allM().find(x => x.id === id), el = card.querySelector('[data-gls]'); if (m && el) el.innerHTML = goalsHtml(m, draft[id]); }
 async function loadSquad(id) {
   if (SQ[id] === 0) return; SQ[id] = 0;
@@ -232,11 +205,10 @@ async function loadSquad(id) {
 // oyuncu seçme paneli (alttan açılır): mevkiye göre gruplu, forma numarası, arama
 let SH = null;
 function openSheet(mid, side, i, k) {
-  const m = allM().find(x => x.id === mid), d = draft[mid], card = k === 'y' || k === 'r';
-  if (card) { SH = { mid, side: 'both', list: k === 'y' ? d.ycl : d.rcl, i, k, q: '' }; }
-  else { const own = d.gl.filter(x => x.s === side); while (own.length <= i) { const n = { s: side }; d.gl.push(n); own.push(n); } SH = { mid, side, slot: own[i], k, q: '' }; }
+  const m = allM().find(x => x.id === mid), d = draft[mid], card = false;
+  { const own = d.gl.filter(x => x.s === side); while (own.length <= i) { const n = { s: side }; d.gl.push(n); own.push(n); } SH = { mid, side, slot: own[i], k, q: '' }; }
   const tm = side === 'h' ? m.home : m.away;
-  const title = k === 'g' ? (i + 1) + '. golü kim atar?' : k === 'a' ? (i + 1) + '. gole kim asist yapar?' : k === 'y' ? 'Kim sarı kart görür?' : 'Kim kırmızı kart görür?';
+  const title = (i + 1) + '. golü kim atar?';
   const sub = card ? E(m.home.name) + ' – ' + E(m.away.name) : E(tm.name) + ' oyuncuları';
   const el = document.createElement('div'); el.id = 'sheet';
   el.innerHTML = '<div class="sh" role="dialog" aria-modal="true"><div class="hd"><div class="grab"></div><div class="tt">' + (card ? '<span class="cdi ' + k + '" style="width:22px;height:30px;border-radius:4px"></span>' : tm.logo ? '<img src="' + E(tm.logo) + '" alt="">' : '') + '<div><b>' + title + '</b><small>' + sub + '</small></div><button class="x" data-shx aria-label="Kapat">×</button></div><input type="search" id="shq" placeholder="Oyuncu ara" autocomplete="off"></div><div class="ls" id="shl"></div></div>';
@@ -272,7 +244,7 @@ document.addEventListener('click', e => {
   const id = b.dataset.pl, sd = b.dataset.sd || SH.side, pl = id ? plOf(SH.mid, sd, id) : null, k = SH.k, mid = SH.mid;
   if (SH.side === 'both') { if (id) SH.list[SH.i] = { id, n: pl ? pl.name : '', s: sd }; else SH.list.splice(SH.i, 1); }
   else if (id) { SH.slot[k] = id; SH.slot[k + 'n'] = pl ? pl.name : ''; } else { delete SH.slot[k]; delete SH.slot[k + 'n']; }
-  const card = document.querySelector('[data-m="' + mid + '"]'); closeSheet(); if (card) { refreshGoals(card, mid); refreshCards(card, mid); }
+  const card = document.querySelector('[data-m="' + mid + '"]'); closeSheet(); if (card) { refreshGoals(card, mid); }
 });
 addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 function renderMatches() {
@@ -322,7 +294,7 @@ function authView() {
   if (reg) return;
   const inStore = !!S.qr;
   $('a1T').textContent = inStore ? 'Katıl, tahmin et, haftanın birincisi ol' : 'Tahmin ligine giriş';
-  $('a1N').textContent = inStore ? 'Katılım ücretsizdir. Google hesabınla tek dokunuşla katıl; istediğin maçlara tahmin gir, skor, golcü, asist ve kartlardan puan topla.' + (S.minAge ? ' ' + S.minAge + ' yaş ve üzeri katılabilir.' : '')
+  $('a1N').textContent = inStore ? 'Katılım ücretsizdir. Google hesabınla tek dokunuşla katıl; istediğin maçlara tahmin gir, skor, golcü ve kırmızı karttan puan topla.' + (S.minAge ? ' ' + S.minAge + ' yaş ve üzeri katılabilir.' : '')
     : 'Daha önce katıldıysan Google ile giriş yap. Yeni katılım yalnız işletmede, ekrandaki QR kod okutularak yapılır.';
   $('ggT').textContent = inStore ? 'Google ile katıl' : 'Google ile giriş yap';
   $('gg').hidden = !S.google;
@@ -351,18 +323,17 @@ document.addEventListener('click', async e => {
   const bv = e.target.closest('[data-bv]'); if (bv) { bView = bv.dataset.bv; renderBoard(); return; }
   const card = e.target.closest('[data-m]'); if (!card) return; const id = card.dataset.m, d = draft[id] || (draft[id] = {});
   const st = e.target.closest('[data-st]');
-  if (st) { const k = st.dataset.st, inp = card.querySelector('[data-f="' + k + '"]'); let v = inp.value === '' ? (+st.dataset.d > 0 ? -1 : 1) : +inp.value; v = Math.max(0, Math.min(k === 'yc' ? 15 : 10, v + +st.dataset.d)); inp.value = v; d[k] = v; if (k !== 'yc') { if (d.h == null && k === 'a') { d.h = 0; card.querySelector('[data-f="h"]').value = 0; } if (d.a == null && k === 'h') { d.a = 0; card.querySelector('[data-f="a"]').value = 0; } refreshGoals(card, id); } else refreshCards(card, id); return; }
+  if (st) { const k = st.dataset.st, inp = card.querySelector('[data-f="' + k + '"]'); let v = inp.value === '' ? (+st.dataset.d > 0 ? -1 : 1) : +inp.value; v = Math.max(0, Math.min(10, v + +st.dataset.d)); inp.value = v; d[k] = v; { if (d.h == null && k === 'a') { d.h = 0; card.querySelector('[data-f="h"]').value = 0; } if (d.a == null && k === 'h') { d.a = 0; card.querySelector('[data-f="a"]').value = 0; } refreshGoals(card, id); } return; }
   const pk = e.target.closest('[data-pk]'); if (pk) { openSheet(id, pk.dataset.sd, +pk.dataset.i, pk.dataset.pk); return; }
-  const ck = e.target.closest('[data-ck]'); if (ck) { d.ycl = d.ycl || []; d.rcl = d.rcl || []; openSheet(id, 'both', +ck.dataset.i, ck.dataset.ck); return; }
   const rc = e.target.closest('[data-rc]');
-  if (rc) { const v = rc.dataset.rc === '1'; d.rc = d.rc === v ? undefined : v; for (const b of card.querySelectorAll('[data-rc]')) b.classList.toggle('on', d.rc === (b.dataset.rc === '1')); refreshCards(card, id); return; }
+  if (rc) { const v = rc.dataset.rc === '1'; d.rc = d.rc === v ? undefined : v; for (const b of card.querySelectorAll('[data-rc]')) b.classList.toggle('on', d.rc === (b.dataset.rc === '1')); return; }
   const sv = e.target.closest('[data-save]');
   if (sv) {
     const er = card.querySelector('[data-er]'), ok = card.querySelector('[data-ok]'); er.textContent = ''; ok.textContent = '';
     if ((d.h == null) !== (d.a == null)) { er.textContent = 'Skor için iki takımın golünü de yaz'; return; }
     sv.disabled = true;
     try {
-      const j = await api('POST', '/pick', { mid: id, h: d.h, a: d.a, gl: (d.gl || []).filter(x => x.g || x.a), yc: d.yc, rc: d.rc, ycl: (d.ycl || []).filter(x => x && x.id), rcl: d.rc === true ? (d.rcl || []).filter(x => x && x.id) : [] });
+      const j = await api('POST', '/pick', { mid: id, h: d.h, a: d.a, gl: (d.gl || []).filter(x => x.g), rc: d.rc });
       const m = allM().find(x => x.id === id); if (m) m.pick = j.pick;
       ok.textContent = j.pick ? 'Kaydedildi ✓' : 'Tahmin silindi'; sv.textContent = j.pick ? 'Tahmini güncelle' : 'Tahmini kaydet';
     } catch (x) { er.textContent = x.message; if (x.status === 409) setTimeout(load, 1200); }
@@ -373,7 +344,7 @@ document.addEventListener('input', e => {
   const f = e.target.closest('[data-f]'), card = e.target.closest('[data-m]'); if (!f || !card) return;
   const d = draft[card.dataset.m] || (draft[card.dataset.m] = {}), k = f.dataset.f;
   if (f.tagName === 'SELECT') d[k] = f.value || undefined;
-  else { const v = f.value.replace(/\\D/g, '').slice(0, 2); f.value = v; d[k] = v === '' ? undefined : Math.min(k === 'yc' ? 15 : 10, +v); if (k !== 'yc') refreshGoals(card, card.dataset.m); else refreshCards(card, card.dataset.m); }
+  else { const v = f.value.replace(/\\D/g, '').slice(0, 2); f.value = v; d[k] = v === '' ? undefined : Math.min(10, +v); refreshGoals(card, card.dataset.m); }
 });
 document.addEventListener('change', e => { const f = e.target.closest('select[data-f]'), card = e.target.closest('[data-m]'); if (f && card) { (draft[card.dataset.m] || (draft[card.dataset.m] = {}))[f.dataset.f] = f.value || undefined; } });
 load().catch(e => { document.body.insertAdjacentHTML('beforeend', '<p class="err" style="text-align:center">' + E(e.message) + '</p>'); });

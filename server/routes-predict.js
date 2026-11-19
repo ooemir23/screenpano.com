@@ -121,7 +121,7 @@ pub.get('/:code/state', async (req, res) => {
   });
 });
 
-// Maçın iki takımının kadrosu (golcü / asist seçimi)
+// Maçın iki takımının kadrosu (golcü seçimi)
 pub.get('/:code/squad/:mid', async (req, res) => {
   const c = ctx(req, res); if (!c) return;
   const m = P.matches[String(req.params.mid)]; if (!m) return res.status(404).json({ error: 'Maç bulunamadı' });
@@ -187,53 +187,32 @@ pub.post('/:code/pick', async (req, res) => {
   if (m.wk !== nowWk && m.wk !== nextWk) return res.status(400).json({ error: 'Bu maça tahmin girilemez' });
   if (m.st !== 'pre' || m.at <= now()) return res.status(409).json({ error: 'Maç başladı; tahmin değiştirilemez' });
   const int = (v, lo, hi) => (v === '' || v == null ? undefined : Number.isInteger(+v) && +v >= lo && +v <= hi ? +v : NaN);
-  const h = int(b.h, 0, 20), a = int(b.a, 0, 20), yc = int(b.yc, 0, 20);
-  if ([h, a, yc].some(Number.isNaN)) return res.status(400).json({ error: 'Geçersiz sayı' });
+  const h = int(b.h, 0, 20), a = int(b.a, 0, 20);
+  if ([h, a].some(Number.isNaN)) return res.status(400).json({ error: 'Geçersiz sayı' });
   if ((h === undefined) !== (a === undefined)) return res.status(400).json({ error: 'Skor için iki takımın golünü de yazın' });
   const rc = typeof b.rc === 'boolean' ? b.rc : undefined;
-  // gol kutuları: tahmin edilen skordan fazla olamaz; golcü ve asist yalnız golü atan takımdan, asist golcünün kendisi olamaz
+  // gol kutuları: tahmin edilen skordan fazla olamaz; golcü yalnız golü atan takımdan seçilir
   const raw = Array.isArray(b.gl) ? b.gl.slice(0, 41) : [];
   const want = { h: h || 0, a: a || 0 }, cnt = { h: 0, a: 0 }, gl = [];
-  const ycr = Array.isArray(b.ycl) ? b.ycl.slice(0, 21) : [], rcr = Array.isArray(b.rcl) ? b.rcl.slice(0, 6) : [];
   const sq = {};
-  for (const side of ['h', 'a']) if (raw.some(x => x && x.s === side) || ycr.length || rcr.length) {
+  for (const side of ['h', 'a']) if (raw.some(x => x && x.s === side)) {
     const list = await P.squad((side === 'h' ? m.home : m.away).id); sq[side] = new Map(list.map(x => [x.id, x]));
   }
   for (const x of raw) {
     if (!x || (x.s !== 'h' && x.s !== 'a')) return res.status(400).json({ error: 'Geçersiz gol seçimi' });
-    const g = x.g ? String(x.g) : '', as = x.a ? String(x.a) : '';
-    if (!g && !as) continue;
-    if (h === undefined) return res.status(400).json({ error: 'Golcü ve asist seçmek için önce skoru yazın' });
-    if (++cnt[x.s] > want[x.s]) return res.status(400).json({ error: 'Golcü ve asist sayısı tahmin ettiğiniz gol sayısını geçemez' });
+    const g = x.g ? String(x.g) : '';
+    if (!g) continue;
+    if (h === undefined) return res.status(400).json({ error: 'Golcü seçmek için önce skoru yazın' });
+    if (++cnt[x.s] > want[x.s]) return res.status(400).json({ error: 'Golcü sayısı tahmin ettiğiniz gol sayısını geçemez' });
     const M = sq[x.s], team = x.s === 'h' ? m.home.name : m.away.name;
-    for (const id of [g, as]) if (id && (!/^\d{1,12}$/.test(id) || (M.size && !M.has(id)))) return res.status(400).json({ error: `Golcü ve asist yalnız ${team} oyuncularından seçilebilir` });
-    if (g && g === as) return res.status(400).json({ error: 'Oyuncu kendi golüne asist yapamaz' });
+    if (!/^\d{1,12}$/.test(g) || (M.size && !M.has(g))) return res.status(400).json({ error: `Golcü yalnız ${team} oyuncularından seçilebilir` });
     const nm = (id, v) => (M.get(id) || {}).name || String(v || '').slice(0, 60);
-    const o = { s: x.s }; if (g) { o.g = g; o.gn = nm(g, x.gn); } if (as) { o.a = as; o.an = nm(as, x.an); }
+    const o = { s: x.s, g, gn: nm(g, x.gn) };
     gl.push(o);
   }
-  // kart görecek oyuncular: sarıda en fazla tahmin edilen sarı kart sayısı kadar, kırmızıda "çıkar" denmişse en fazla 3; iki takımdan da seçilebilir
-  const cardList = (list, max, what) => {
-    const out = [], seen = new Set();
-    for (const x of list) {
-      const id = String((x && x.id) || ''); if (!id) continue;
-      if (seen.has(id)) return { error: `Aynı oyuncu ${what} listesinde iki kez seçilemez` };
-      if (!/^\d{1,12}$/.test(id)) return { error: 'Geçersiz oyuncu' };
-      const side = sq.h && sq.h.has(id) ? 'h' : sq.a && sq.a.has(id) ? 'a' : (sq.h && sq.h.size) || (sq.a && sq.a.size) ? null : (x.s === 'a' ? 'a' : 'h');
-      if (!side) return { error: 'Oyuncu bu maçın takımlarında değil' };
-      seen.add(id); out.push({ id, n: ((sq[side] && sq[side].get(id)) || {}).name || String(x.n || '').slice(0, 60), s: side });
-    }
-    if (out.length > max) return { error: max ? `En fazla ${max} oyuncu seçebilirsiniz` : (what === 'sarı kart' ? 'Sarı kart görecek oyuncu seçmek için önce sarı kart sayısını yazın' : 'Kırmızı kart görecek oyuncu seçmek için "Çıkar" seçin') };
-    return { out };
-  };
-  const yr = cardList(ycr, yc || 0, 'sarı kart'); if (yr.error) return res.status(400).json({ error: yr.error });
-  const rr = cardList(rcr, rc === true ? 3 : 0, 'kırmızı kart'); if (rr.error) return res.status(400).json({ error: rr.error });
   const p = { at: now() };
   if (h !== undefined) { p.h = h; p.a = a; }
-  if (yr.out.length) p.ycl = yr.out;
-  if (rr.out.length) p.rcl = rr.out;
   if (gl.length) p.gl = gl;
-  if (yc !== undefined) p.yc = yc;
   if (rc !== undefined) p.rc = rc;
   const picks = c.d.picks[c.uid] || (c.d.picks[c.uid] = {});
   if (Object.keys(p).length === 1) delete picks[m.id]; else picks[m.id] = p; // hepsi boş: tahmin silinir
