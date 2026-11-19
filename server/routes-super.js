@@ -211,6 +211,21 @@ r.put('/play', trueOnly, (req, res) => {
   if (typeof b.package === 'string' && /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/i.test(b.package.trim())) store.setSetting('play_package', b.package.trim());
   res.json({ ok: true });
 });
+// Google Play Türkiye fiyatları (KDV dahil): okuma Google'dan canlı; yazma yalnız değişen ürünleri günceller
+r.get('/play/prices', trueOnly, async (req, res) => {
+  const P = require('./play'); if (!P.configured()) return res.json({ configured: false, prices: {} });
+  try { res.json({ configured: true, prices: await P.prices() }); } catch (e) { res.status(502).json({ error: e.message }); }
+});
+r.put('/play/prices', trueOnly, async (req, res) => {
+  const P = require('./play'), b = req.body || {};
+  if (!P.configured()) return res.status(400).json({ error: 'Google Play servis hesabı tanımlı değil' });
+  const ids = Object.keys(b).filter(id => P.PRODUCTS.includes(id));
+  if (!ids.length) return res.status(400).json({ error: 'Değişen Play fiyatı yok' });
+  const results = [];
+  for (const id of ids) { try { results.push(await P.setPrice(id, b[id])); } catch (e) { results.push({ id, error: e.message }); } }
+  const failed = results.filter(x => x.error);
+  res.status(failed.length === ids.length ? 502 : 200).json({ ok: !failed.length, results });
+});
 r.post('/play/sweep', trueOnly, async (req, res) => { try { await require('./play').sweep(); res.json({ ok: true }); } catch (e) { res.status(502).json({ error: e.message }); } });
 r.put('/ticker-brand', trueOnly, (req, res) => res.json({ ok: true, tickerBrand: require('./tickerbrand').set(req.body || {}) }));
 r.put('/pricing', trueOnly, (req, res) => {

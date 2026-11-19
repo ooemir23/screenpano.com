@@ -36,3 +36,12 @@ test('Google Play abonelik durumu: etkin / iptal (süre sonuna kadar) / süresi 
   assert.equal(P.readSub(sub('SUBSCRIPTION_STATE_ON_HOLD', 86400e3)).entitled, false, 'ödeme askıda');
   assert.equal(P.readSub(sub('SUBSCRIPTION_STATE_ACTIVE', 86400e3, 'baska')).product, '');
 });
+
+test('Play fiyatı: Türkçe/İngilizce yazımlar kuruşa doğru çevrilir, Google para nesnesi gidiş-dönüş bozulmaz', () => {
+  const P = require('../server/play');
+  for (const [v, k] of [['1199,99', 119999], ['1.199,99', 119999], ['1199.99', 119999], ['1,199.99', 119999], ['1.199', 119900], ['1000', 100000], [1199.99, 119999], ['999.999', 99999900], ['1.000.001', 0], ['1199,9', 119990]]) assert.equal(P._parseTry(v), k, String(v));
+  for (const v of ['', '0', '-5', 'abc', '2000000']) assert.equal(P._parseTry(v), 0, v);
+  assert.deepEqual(P._fromKurus(119999), { currencyCode: 'TRY', units: '1199', nanos: 990000000 });
+  assert.equal(P._toKurus({ units: '1199', nanos: 990000000 }), 119999);
+  assert.equal(P._toKurus(P._fromKurus(250000)), 250000);
+});

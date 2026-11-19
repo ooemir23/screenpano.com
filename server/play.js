@@ -133,4 +133,47 @@ function status(t) {
   return store.sql.prepare('SELECT product, state, until, test, updated FROM play_purchases WHERE tenant_id = ? ORDER BY updated DESC LIMIT 20').all(t.id);
 }
 
-module.exports = { PKG, PRODUCTS, configured, verifyAndApply, rtdn, rtdnKey, sweep, start, status, readSub, _apply: apply };
+// ---- Play fiyatları (Türkiye, KDV dahil) ----
+// Doğru kaynak Google Play'dir: süper yönetim fiyatı her açılışta buradan okur, değiştirilince yalnız 'aylik' temel planının
+// TR fiyatı güncellenir (diğer ülkeler ve 3 günlük deneme teklifi olduğu gibi kalır). Yeni fiyat yeni abonelere uygulanır.
+const PRICE_REGION = 'TR', BASE_PLAN = 'aylik';
+const REGION_VERSIONS = ['2025/03', '2022/02']; // shortcut: Google yeni bölge sürümü çıkarıp eskisini reddederse başa ekleyin
+const toKurus = p => p ? Number(p.units || 0) * 100 + Math.round((p.nanos || 0) / 1e7) : 0;
+const fromKurus = k => ({ currencyCode: 'TRY', units: String(Math.floor(k / 100)), nanos: (k % 100) * 1e7 });
+// "1.199,99", "1199.99", 1199.99 → 119999 kuruş; geçersizse 0
+function parseTry(v) {
+  if (/^\s*-/.test(String(v ?? ''))) return 0; // eksi tutar yok
+  let s = String(v ?? '').trim().replace(/[^\d.,]/g, '');
+  if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else s = s.replace(/,/g, '');
+  if ((s.match(/\./g) || []).length > 1 || /\.\d{3}$/.test(s)) s = s.replace(/\./g, ''); // 1.199 → 1199 (binlik ayırıcı)
+  const k = Math.round(Number(s) * 100);
+  return Number.isFinite(k) && k > 0 && k <= 100000000 ? k : 0;
+}
+const trConfig = s => { const bp = (s.basePlans || []).find(b => b.basePlanId === BASE_PLAN); return bp && (bp.regionalConfigs || []).find(c => c.regionCode === PRICE_REGION); };
+async function prices() {
+  const out = {};
+  for (const id of PRODUCTS) {
+    const rc = trConfig(await api('GET', '/subscriptions/' + id));
+    out[id] = rc && rc.price.currencyCode === 'TRY' ? toKurus(rc.price) / 100 : null;
+  }
+  return out;
+}
+async function setPrice(id, value) {
+  if (!PRODUCTS.includes(id)) throw new Error('Bilinmeyen Play ürünü: ' + id);
+  const k = parseTry(value); if (!k) throw new Error(`${id}: geçersiz tutar`);
+  const s = await api('GET', '/subscriptions/' + id), rc = trConfig(s);
+  if (!rc || rc.price.currencyCode !== 'TRY') throw new Error(`${id}: Play'de "${BASE_PLAN}" planının Türkiye (TRY) fiyatı yok`);
+  if (toKurus(rc.price) === k) return { id, price: k / 100, changed: false };
+  rc.price = fromKurus(k); // s.basePlans içindeki nesne yerinde değişir
+  let last;
+  for (const v of REGION_VERSIONS) {
+    try {
+      await api('PATCH', `/subscriptions/${encodeURIComponent(id)}?updateMask=basePlans&regionsVersion.version=${encodeURIComponent(v)}`, { packageName: s.packageName, productId: s.productId, basePlans: s.basePlans, listings: s.listings });
+      console.log(`[Play] ${id} TR fiyatı ${k / 100} TRY yapıldı`);
+      return { id, price: k / 100, changed: true };
+    } catch (e) { last = e; if (e.status !== 400 || !/region/i.test(e.message)) throw e; }
+  }
+  throw last;
+}
+
+module.exports = { PKG, PRODUCTS, configured, verifyAndApply, rtdn, rtdnKey, sweep, start, status, readSub, prices, setPrice, _apply: apply, _parseTry: parseTry, _toKurus: toKurus, _fromKurus: fromKurus };

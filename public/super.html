@@ -1040,8 +1040,22 @@ function pricingCard() {
   return card('Fiyatlandırma', 'Tanıtım sitesindeki paket fiyatları, işletme panelindeki Paketler kartı ve şube açarken istenen ücret buradan gelir. Tutarları rakamla girin (örn. 2000). Değişiklik sitede hemen görünür; mevcut ödemeleri etkilemez.',
     rows + `<div class="row"><div><label>Para birimi</label><select id="pr-cur">${[['TRY', '₺ Türk lirası'], ['USD', '$ ABD doları'], ['EUR', '€ Euro']].map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
       <div><label>KDV</label><select id="pr-vat"><option value="excl"${P.vat !== 'incl' ? ' selected' : ''}>Fiyatlara KDV dahil değil</option><option value="incl"${P.vat === 'incl' ? ' selected' : ''}>Fiyatlara KDV dahil</option></select></div>
-      <div style="flex:1.5"><label>Ek not (isteğe bağlı)</label><input id="pr-note" maxlength="60" value="${esc(P.annualNote || '')}" placeholder="örn. İlk ay %50 indirim"></div></div>`,
+      <div style="flex:1.5"><label>Ek not (isteğe bağlı)</label><input id="pr-note" maxlength="60" value="${esc(P.annualNote || '')}" placeholder="örn. İlk ay %50 indirim"></div></div>
+      <div id="pr-play" class="mt"></div>`,
     `<button class="btn" onclick="savePricing(this)">Fiyatları kaydet</button>`);
+}
+// Google Play fiyatları: Google'dan canlı okunur; "Fiyatları kaydet" yalnız değişenleri Play'e yazar
+const PLAY_PR = [['baslangic', 'Başlangıç paketi'], ['pro', 'Pro paketi'], ['tahmin_ligi', 'Tahmin Ligi']];
+let PLAY_PRICES = null;
+const plFmt = n => n ? n.toLocaleString('tr-TR', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }) : '';
+const plNum = v => { let s = String(v || '').trim().replace(/[^\d.,]/g, ''); if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else if (/^\d+\.\d{1,2}$/.test(s.replace(/,/g, ''))) s = s.replace(/,/g, ''); else s = s.replace(/[.,]/g, ''); const n = Math.round(Number(s) * 100) / 100; return n > 0 ? n : 0; };
+async function playPrices() {
+  const el = $('pr-play'); if (!el) return; PLAY_PRICES = null;
+  let r; try { r = await api('GET', '/play/prices'); } catch (e) { el.innerHTML = `<small class="hint">Google Play fiyatları okunamadı: ${esc(e.message)}</small>`; return; }
+  if (!r.configured) { el.innerHTML = '<small class="hint">Google Play fiyatları için önce Veri kaynakları → Google Play abonelikleri kartını bağlayın.</small>'; return; }
+  PLAY_PRICES = r.prices;
+  el.innerHTML = `<h4 style="margin:0 0 4px">Google Play fiyatları (Türkiye, KDV dahil)</h4><small class="hint" style="margin:0 0 8px;display:block">Play uygulamasından abone olanların ödediği tutar; Google'dan okunur ve kaydedince Google Play'e yazılır. Yeni fiyat yeni abonelere uygulanır, mevcut aboneler eski fiyattan devam eder. Test ortamında da gerçek Play fiyatı değişir.</small>`
+    + `<div class="row">${PLAY_PR.map(([id, n]) => `<div><label>${esc(n)}</label><input id="pp-${id}" inputmode="decimal" value="${plFmt(r.prices[id])}" placeholder="${r.prices[id] == null ? 'Play\'de TR fiyatı yok' : ''}"${r.prices[id] == null ? ' disabled' : ''}></div>`).join('')}</div>`;
 }
 function tickerBrandCard() {
   const T = D.tickerBrand || {}, al = T.align || 'center';
@@ -1060,7 +1074,17 @@ async function savePricing(btn) {
   const b = { currency: $('pr-cur').value, vat: $('pr-vat').value, annualNote: $('pr-note').value };
   for (const [k] of PR_ITEMS) b[k] = { monthly: prNum($('pr-' + k + '-m').value), yearly: prNum($('pr-' + k + '-y').value) };
   if (btn) btn.disabled = true;
-  try { const r = await api('PUT', '/pricing', b); D.pricing = r.pricing; toast('Fiyatlar kaydedildi'); PR_ITEMS.forEach(([k]) => prHint(k)); } catch (e) { toast(e.message, true); }
+  try { const r = await api('PUT', '/pricing', b); D.pricing = r.pricing; toast('Fiyatlar kaydedildi'); PR_ITEMS.forEach(([k]) => prHint(k)); } catch (e) { toast(e.message, true); if (btn) btn.disabled = false; return; }
+  // Play: yalnız değişen fiyatlar gönderilir
+  const pb = {};
+  if (PLAY_PRICES) for (const [id] of PLAY_PR) { const inp = $('pp-' + id); if (!inp || inp.disabled) continue; const v = plNum(inp.value); if (v && v !== PLAY_PRICES[id]) pb[id] = v; }
+  if (Object.keys(pb).length) {
+    try {
+      const r = await api('PUT', '/play/prices', pb), bad = r.results.filter(x => x.error);
+      if (bad.length) toast('Google Play: ' + bad.map(x => x.error).join(' · '), true); else toast('Google Play fiyatları güncellendi');
+    } catch (e) { toast('Google Play: ' + e.message, true); }
+    await playPrices();
+  }
   if (btn) btn.disabled = false;
 }
 // Google Play abonelikleri: servis hesabı (Play Console → Kullanıcılar ve izinler'de "Finansal verileri görüntüle" + "Siparişleri ve abonelikleri yönet" yetkisi), RTDN adresi
@@ -1141,7 +1165,7 @@ async function regenTraffic() {
 
 /* ================= YASAL VE SİTE ================= */
 PAGES.legal = {
-  after() { PR_ITEMS.forEach(([k]) => prHint(k)); },
+  after() { PR_ITEMS.forEach(([k]) => prHint(k)); playPrices(); },
   html() {
     return head('Yasal ve site', 'KVKK ve sözleşme sayfalarında görünen şirket bilgileri ile tanıtım sitesindeki fiyat ve iletişim bilgileri.')
       + card('Yasal bilgiler', 'Metinler başlangıç taslağıdır; yayına almadan önce bir avukata kontrol ettirin. Sayfalar: <a href="/kvkk" target="_blank">/kvkk</a> · <a href="/kosullar" target="_blank">/kosullar</a> · <a href="/gizlilik" target="_blank">/gizlilik</a>',
