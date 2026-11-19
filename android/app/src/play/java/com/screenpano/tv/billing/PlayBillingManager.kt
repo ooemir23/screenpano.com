@@ -36,6 +36,7 @@ class PlayBillingManager(
     private val registeredSubs = linkedSetOf("baslangic", "pro", "tahmin_ligi")
     private val registeredInApps = linkedSetOf<String>()
     private val activeEntitlements = ConcurrentHashMap<String, JSONObject>()
+    private val PLAN_PRODUCTS = listOf("baslangic", "pro")
 
     fun start() {
         if (billingClient?.isReady == true) return
@@ -224,6 +225,20 @@ class PlayBillingManager(
         if (tenantId.isNotBlank()) {
             flowBuilder.setObfuscatedAccountId(tenantId)
         }
+        // Paket değişimi (Başlangıç ↔ Pro): aynı işletmenin etkin paket aboneliği varsa ikinci abonelik açılmaz,
+        // eskisi yenisiyle değiştirilir (kalan süre orantılı hesaplanır). Ek abonelikler (Tahmin Ligi) ayrı kalır.
+        if (!isInApp && productId in PLAN_PRODUCTS) {
+            val old = PLAN_PRODUCTS.filter { it != productId }.firstNotNullOfOrNull { activeEntitlements[it] }
+            val oldToken = old?.optString("purchaseToken").orEmpty()
+            if (oldToken.isNotEmpty() && (tenantId.isBlank() || old?.optString("accountId").orEmpty() == tenantId)) {
+                flowBuilder.setSubscriptionUpdateParams(
+                    BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+                        .setOldPurchaseToken(oldToken)
+                        .setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.WITH_TIME_PRORATION)
+                        .build()
+                )
+            }
+        }
         if (addonKey.isNotBlank()) {
             flowBuilder.setObfuscatedProfileId(addonKey)
         }
@@ -322,7 +337,9 @@ class PlayBillingManager(
         }
         onEvent("purchase", payload)
 
-        if (!purchase.isAcknowledged) {
+        // Abonelikler (SUBS) burada ONAYLANMAZ: onayı yalnız sunucu verir (play.js verifyAndApply). Sunucu reddederse
+        // (ör. işletmeye tanımlı olmayan indirim) ya da hiç doğrulayamazsa Google 3 gün içinde ücreti iade eder.
+        if (!purchase.isAcknowledged && sourceType == "inapp") {
             val ack = AcknowledgePurchaseParams.newBuilder()
                 .setPurchaseToken(purchase.purchaseToken)
                 .build()

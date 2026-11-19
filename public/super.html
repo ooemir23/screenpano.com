@@ -628,6 +628,7 @@ function addInputDays(id, days) {
 
 function openTenant(id) {
   const x = D.tenants.find(t => t.id === id); if (!x) return;
+  $('pane').dataset.id = id; // extend(): zincir kutusu yalnız bu işletmenin çekmecesinden okunur
   const d = ms => {
     if (!ms) return '';
     const dt = new Date(ms);
@@ -900,7 +901,7 @@ async function saveT(id) {
       username: $('e-user').value,
       email: $('e-mail').value,
       unlimited: $('e-unl').checked,
-      superAccess: $('e-sup').checked,
+      superAccess: $('e-sup').checked !== !!(D.tenants.find(t => t.id === id) || {}).superAccess ? $('e-sup').checked : undefined, // yalnız değiştiyse (gerçek süper gerekir)
       canTest: $('e-test').checked,
       canPay: $('e-pay').checked,
       addons: adChanges(id), // yalnız değiştirilen ek abonelikler gönderilir (Play kaydının kaynağı boşuna değişmesin)
@@ -915,7 +916,9 @@ async function saveT(id) {
 
 async function extend(id, days) {
   try {
-    await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: !!($('e-org') && $('e-org').checked) });
+    // "zincire uygula" yalnız bu işletmenin çekmecesi açıkken okunur (kapalı çekmecede eski işletmenin kutusu kalabilir)
+    const drawerOpen = $('drawer').classList.contains('on') && $('pane').dataset.id === id;
+    await api('PUT', '/tenants/' + id, { extendDays: days, applyOrg: drawerOpen && !!($('e-org') && $('e-org').checked) });
     closeDrawer();
     toast(`${days} gün eklendi`);
     await load();

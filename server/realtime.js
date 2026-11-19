@@ -80,6 +80,7 @@ const vgapOf = t => { const g = Number(t.db.videoGapSec); return Math.max(0, Mat
 const listSig = (ml, imgSec, gap) => imgSec + '|' + (gap || 0) + '|' + ml.map(x => x.id + ':' + (x.dur || '')).join(',');
 // listeyi yeniden okur; liste değiştiyse o an oynayan içerik yeni listede hâlâ varsa kaldığı yerden sürer
 function syncFor(t, now) {
+  if (!require('./plans').access(t).ok) { tenantSync.delete(t.id); return null; } // süresi dolmuş/askıda: ekran kapalı, içerik eşitlenmez
   const ml = getActiveMediaList(t);
   if (!ml.length) { tenantSync.delete(t.id); return null; }
   const imgSec = t.db.imageSeconds || 10, gap = vgapOf(t), sig = listSig(ml, imgSec, gap);

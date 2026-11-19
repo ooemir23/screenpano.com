@@ -377,7 +377,7 @@ html.lite #big .yemb{display:none!important}
 #updot i{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--accent2);animation:updotp 1.6s ease-in-out infinite}
 @keyframes updotp{50%{opacity:.25}}
 #touch-menu-btn{display:none !important}
-#menu{position:fixed;inset:0;z-index:70;display:flex;visibility:hidden;pointer-events:none;contain:strict;align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 70% at 50% 30%,#14181d 0%,#07080a 100%);touch-action:manipulation;cursor:pointer}
+#menu{position:fixed;inset:0;z-index:85;display:flex;visibility:hidden;pointer-events:none;contain:strict;align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 70% at 50% 30%,#14181d 0%,#07080a 100%);touch-action:manipulation;cursor:pointer}
 #menu.on{visibility:visible;pointer-events:auto}
 html.lite #menu{background:#090b0e}
 html.menu-open #brk,html.menu-open #updot{display:none!important}
@@ -1846,8 +1846,9 @@ const ytRepMode = it => !!(it && it.type === 'youtube' && it.rep && it.dur0 == n
 let coverTok = 0;
 // yeni medyanın ilk karesi görününce önceki YouTube/afiş katmanı kaldırılır
 function coverRelease() { coverTok++; hideYt(); hidePoster(); }
+const isBlocked = () => $id('blocked').classList.contains('on'); // süre doldu / askı: hiçbir içerik oynamaz
 function play() {
-  if (NMED()) return;
+  if (NMED() || isBlocked()) return;
   clearTimeout(timer); fadeTok++;
   if (!videos.length || !MEDIA_ON) return;
   idx %= videos.length;
@@ -1884,7 +1885,7 @@ function play() {
 }
 
 function syncToMedia(m) {
-  if (!MEDIA_ON || !m || window.__perfHold || NMED()) return;
+  if (!MEDIA_ON || !m || window.__perfHold || NMED() || isBlocked()) return;
   if (trailerOn || big.showing || camp.showing || triviaOn) return; // Fragman veya büyük duyurular oynarken sunucu senkronuyla kesilmez!
   if (!videos || !videos.length) {
     if (typeof ALLV !== 'undefined' && ALLV.length) applyVideos();
@@ -3529,7 +3530,7 @@ function subRender() {
   const play = B && B.isPlayStore(), s = window.__SUB;
   box.hidden = !play || !s; if (box.hidden) return;
   const d = ms => new Date(ms).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-  $m('msplan').textContent = s.planName + (s.until ? (s.kind === 'trial' ? ' · deneme, ' : ' · ') + d(s.until) + "'e kadar" : '');
+  $m('msplan').textContent = s.planName + (s.kind === 'expired' ? ' · süresi doldu' : s.kind === 'suspended' ? ' · askıda' : s.until ? (s.kind === 'trial' ? ' · deneme, ' : ' · ') + d(s.until) + "'e kadar" : '');
   const ad = (s.addons || {}).tahmin_ligi || {};
   $m('msadd').textContent = ad.active ? (ad.until ? d(ad.until) + "'e kadar açık" : 'Açık') : 'Kapalı';
   // işletmeye özel indirim: sunucu hangi Play teklifinin kullanılacağını söyler (s.discount.offerId)
@@ -3537,7 +3538,8 @@ function subRender() {
   const price = id => B.priceOf(id, off);
   const btn = (id, label, kind) => `<button type="button" data-nav data-buy="${id}" data-kind="${kind}">${label}${price(id) ? ' · ' + price(id) + ' / ay' : ''}</button>`;
   $m('msbtn').innerHTML = (s.discount ? `<p style="margin:0 0 6px;width:100%;color:#f5c26b;font-weight:600">Size özel %${s.discount.pct} indirim${B.canOffer() ? '' : ' · uygulamayı Google Play\'den güncelleyin'}</p>` : '')
-    + (s.plan !== 'pro' || s.kind !== 'paid' ? btn('pro', '⭐ Pro paket', 'plan') : '') + (s.plan === 'baslangic' && s.kind !== 'paid' ? btn('baslangic', 'Başlangıç paketi', 'plan') : '') + (ad.active ? '' : btn('tahmin_ligi', '⚽ Tahmin Ligi', 'addon'));
+    // sınırsız lisansta satın alma yok; ücretli Pro'da paket düğmesi yok; deneme/süresi dolmuşta iki paket de seçilebilir
+    + (s.kind === 'unlimited' ? '' : (s.plan !== 'pro' || s.kind !== 'paid' ? btn('pro', '⭐ Pro paket', 'plan') : '') + (s.plan === 'baslangic' && s.kind === 'paid' ? '' : s.plan === 'pro' && s.kind === 'paid' ? '' : btn('baslangic', 'Başlangıç paketi', 'plan'))) + (ad.active ? '' : btn('tahmin_ligi', '⚽ Tahmin Ligi', 'addon'));
   for (const b of $m('msbtn').querySelectorAll('[data-buy]')) attachTap(b, () => {
     const id = b.dataset.buy, ok = b.dataset.kind === 'addon' ? B.buyAddon(id, 'aylik', 'subs', s.tid, id, off) : B.buyPlan(id, 'aylik', s.tid, off);
     menuSt(ok ? 'Google Play ödeme ekranı açılıyor…' : 'Google Play ödeme şu an kullanılamıyor');
@@ -4130,10 +4132,11 @@ function applyBrand(b, scr) {
 // ---- abonelik bitti / askıda ----
 function setBlocked(reason) {
   const el = $id('blocked');
-  if (!reason) { el.classList.remove('on'); return; }
+  if (!reason) { if (el.classList.contains('on')) { el.classList.remove('on'); vSig = ''; } return; } // açılınca liste yeniden kurulup oynatma başlasın
   $id('b-title').textContent = reason === 'suspended' ? 'Hesap askıya alındı' : 'Abonelik süresi doldu';
-  $id('b-text').textContent = reason === 'suspended' ? 'Bu işletmenin ekranları geçici olarak durduruldu. Ayrıntı için destek ile iletişime geçin.' : 'Ekranlar aboneliğiniz yenilenince kendiliğinden geri gelir. Panelden paketinizi yenileyebilirsiniz.';
+  $id('b-text').textContent = reason === 'suspended' ? 'Bu işletmenin ekranları geçici olarak durduruldu. Ayrıntı için destek ile iletişime geçin.' : 'Ekranlar aboneliğiniz yenilenince kendiliğinden geri gelir. Panelden paketinizi yenileyebilirsiniz.' + (window.SPPlayBilling && SPPlayBilling.isPlayStore() ? ' Kumandadan OK tuşuna basıp Abonelik bölümünden hemen yenileyebilirsiniz.' : '');
   el.classList.add('on'); els.forEach(v => v.pause()); clearTimeout(timer);
+  try { exoStop(true); } catch (e) {} try { stopAllMusicEngines(''); } catch (e) {} // yerel oynatıcı ve müzik de durur
 }
 
 // ---- yazıyı kutuya sığdır (saat, logo yazısı, duyuru başlığı) ----
@@ -5731,7 +5734,10 @@ function onMusicCmd(msg) {
 }
 
 // açılışta son durumu hemen göster: internet yoksa da ekran boş kalmaz (müzik motoru tanımlandıktan sonra: setState → setMusic MUS'u kullanır)
-if (!PREVIEW && tokenGet()) { try { const last = JSON.parse(localStorage.getItem('lastState') || 'null'); if (last) setState(last); } catch (e) {} }
+// İnternetsiz kutu: son bilinen abonelik bitişinden 1 gün sonra ekran kapanır (sunucuya bağlanınca güncel durum gelir ve açılır)
+const offlineExpired = s => !!(s && s.sub && s.sub.until && (s.sub.kind === 'trial' || s.sub.kind === 'paid') && Date.now() > s.sub.until + 86400e3);
+if (!PREVIEW && tokenGet()) { try { const last = JSON.parse(localStorage.getItem('lastState') || 'null'); if (last) { if (offlineExpired(last)) last.blocked = 'expired'; setState(last); } } catch (e) {} }
+if (!PREVIEW) setInterval(() => { try { if (!isBlocked() && offlineExpired(JSON.parse(localStorage.getItem('lastState') || 'null'))) setBlocked('expired'); } catch (e) {} }, 10 * 60e3);
 
 // Yönetici önizleme modu: filigran rozeti ve 10 dakikalık oturum sayacı
 if (PREVIEW) {

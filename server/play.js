@@ -112,7 +112,11 @@ function apply(t, v, token, prevUntil = 0) {
     tenants.save(t); hub.pushTenant(t.id);
     return;
   }
-  if (PLAN_PRODUCTS[v.product]) require('./billing/core').settlePlay({ tenantId: t.id, plan: PLAN_PRODUCTS[v.product], until: v.until, entitled: v.entitled, ref: th(token), state: v.state, prevUntil });
+  if (!PLAN_PRODUCTS[v.product]) return;
+  let plan = PLAN_PRODUCTS[v.product];
+  // eski uygulamada Pro ayrı abonelik olarak alınmış olabilir: etkin bir Pro belirteci varken Başlangıç yenilemesi paketi düşürmesin
+  if (plan === 'baslangic' && store.sql.prepare("SELECT 1 FROM play_purchases WHERE tenant_id = ? AND product = 'pro' AND token_hash != ? AND state IN ('SUBSCRIPTION_STATE_ACTIVE','SUBSCRIPTION_STATE_IN_GRACE_PERIOD','SUBSCRIPTION_STATE_CANCELED') AND until > ?").get(t.id, th(token), Date.now())) plan = 'pro';
+  require('./billing/core').settlePlay({ tenantId: t.id, plan, until: v.until, entitled: v.entitled, ref: th(token), state: v.state, prevUntil });
 }
 
 // RTDN: Pub/Sub push gövdesi. Güvenlik: adres gizli anahtar (?k=) içerir; içerik yine Google API'den doğrulanır.

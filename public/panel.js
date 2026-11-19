@@ -189,16 +189,31 @@ async function startPlanUpgrade(targetId = 'pro', isAddon = false) {
     if (ok) { closeModal(); toast('Google Play ödeme ekranı açılıyor…'); return; }
   }
   closeModal();
-  if (!isAddon && targetId === 'pro') { // çevrimiçi ödeme açıksa doğrudan ödeme adımına
+  if (!isAddon && S.me.plans[targetId]) { // çevrimiçi ödeme açıksa doğrudan ödeme adımına
     go('settings/plan');
     try {
       const b = await req('GET', '/billing'); BILL = b;
-      if (b && b.enabled && (b.quotes || []).some(q => q.plan === 'pro')) { setTimeout(() => { const pl = $('p-plan'); if (pl) { pl.value = 'pro'; payQuote(); } payStart(); }, 180); return; }
+      if (b && b.enabled && (b.quotes || []).some(q => q.plan === targetId)) { setTimeout(() => { const pl = $('p-plan'); if (!pl) return; pl.value = targetId; payQuote(); payStart(); }, 180); return; }
     } catch (e) {}
   }
   const name = isAddon && ADDONS[targetId] ? ADDONS[targetId].name : 'Pro paket', pr = isAddon && ADDONS[targetId] ? priceLine(ADDONS[targetId].priceKey, targetId) : priceLine('pro', 'pro');
-  UI.ask(`${name}${pr ? ' (' + pr + ')' : ''} için bizimle iletişime geçin; hesabınızda hemen açalım. Google Play'den indirdiğiniz ScreenPano TV uygulamasında kutunun menüsündeki Abonelik bölümünden de satın alabilirsiniz.`, { title: name, ok: 'Paketler sayfası', cancel: 'Kapat' })
-    .then(ok => { if (ok) go('settings/plan'); });
+  return contactSales(`${name}${pr ? ' (' + pr + ')' : ''}`);
+}
+// Satın alma: Play sürümünde Google Play, web ödemesi açıksa ödeme adımı, değilse iletişim (WhatsApp / e-posta / telefon)
+const buyPlan = id => startPlanUpgrade(id, false);
+// deneme ya da süresi dolmuş (askı hariç): satın alma düğmeleri her pakette görünür
+const mustBuy = () => { const a = S.me.tenant.access || {}; return a.kind !== 'unlimited' && a.reason !== 'suspended' && (!a.ok || a.kind === 'trial'); };
+function contactButtons(subject) {
+  const c = S.me.contact || {}, tag = `${subject} — ${S.me.tenant.name} (${S.me.tenant.slug})`, out = [];
+  if (c.whatsapp) out.push(`<a class="btn s" href="https://wa.me/${esc(c.whatsapp)}?text=${encodeURIComponent('Merhaba, ' + tag + ': ')}" target="_blank" rel="noopener">💬 WhatsApp</a>`);
+  if (c.email) out.push(`<a class="btn ${out.length ? 'g ' : ''}s" href="mailto:${esc(c.email)}?subject=${encodeURIComponent('ScreenPano: ' + tag)}">✉️ ${esc(c.email)}</a>`);
+  if (c.phone) out.push(`<a class="btn g s" href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}">📞 ${esc(c.phone)}</a>`);
+  return out.length ? out.join(' ') : '<span class="muted">İletişim bilgisi henüz eklenmedi.</span>';
+}
+function contactSales(what) {
+  openModal(`<div class="upg"><h3 style="margin:0 0 6px">${esc(what)}</h3><p class="muted" style="margin:0 0 14px">Ödemeyi hızlıca birlikte yapalım ve paketinizi hemen açalım. İşletme kodunuz: <code>${esc(S.me.tenant.slug)}</code></p>
+    <div class="row" style="gap:8px;flex-wrap:wrap">${contactButtons(what)}</div>
+    <div class="row mt" style="justify-content:flex-end"><button type="button" class="btn g s" onclick="closeModal()">Kapat</button></div></div>`);
 }
 function tahminCard() {
   const a = ADDONS.tahmin_ligi, active = hasAddon(a.id), pr = priceLine(a.priceKey, a.id), tr = trialLine(a.id), rec = (S.me.addons || {})[a.id] || {};
@@ -404,11 +419,11 @@ function drawBanner() {
   // S6: süper yönetici görünümü: en üstte ince, sabit şerit (her sayfada yer kaplamaz)
   let ib = $('impbar'); if (S.me.user.impersonating && !ib) { ib = document.createElement('div'); ib.id = 'impbar'; document.body.prepend(ib); document.body.classList.add('imp'); }
   if (ib) ib.innerHTML = `<span>Süper yönetici olarak <b>${esc(t.name)}</b> işletmesini görüntülüyorsunuz.</span><button type="button" onclick="unimp()">Süper yönetime dön</button>`;
-  if (!acc.ok) h += `<div class="bn bad"><span><b>${acc.reason === 'suspended' ? 'Hesabınız askıya alındı.' : 'Abonelik süreniz doldu.'}</b> Ekranınız şu an kapalı; paketiniz yenilenince kendiliğinden açılır.</span></div>`;
+  if (!acc.ok) h += `<div class="bn bad"><span><b>${acc.reason === 'suspended' ? 'Hesabınız askıya alındı.' : 'Abonelik süreniz doldu.'}</b> Ekranınız şu an kapalı; paketiniz yenilenince kendiliğinden açılır.</span>${acc.reason === 'suspended' ? `<button class="btn s" onclick="contactSales('Hesap askıda')">Bize ulaşın</button>` : `<button class="btn s" onclick="buyPlan('${esc(t.plan.id)}')">Paketi yenile</button>`}</div>`;
   if (S.db && S.db.deletion) h += `<div class="bn bad"><span><b>Hesap silme talebi var.</b> ${fmtDate(S.db.deletion.executeAt)} tarihinde tüm veriler kalıcı olarak silinecek.</span><a class="btn s g" href="#settings/privacy">Vazgeç</a></div>`;
   const off = S.scr && S.scr.devices.filter(d => !d.online && d.last_seen && Date.now() - d.last_seen > (S.scr.offlineMin || 10) * 60000 && Date.now() - d.last_seen < 7 * 86400000);
   if (acc.ok && off && off.length) h += `<div class="bn trial"><span><b>${esc(off[0].name || 'TV kutusu')}</b> ${offSince(off[0].last_seen)} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin.</span><a class="btn s g" href="#settings/devices">Cihazlar</a></div>`;
-  if (!acc.ok) {} else if (acc.kind === 'trial') h += `<div class="bn trial${days > 1 ? ' soft' : ''}"><span>Deneme süreniz <b>${days} gün</b> sonra (${fmtDate(acc.until)}) bitiyor. Deneme boyunca tüm Pro özellikler açık.</span></div>`;
+  if (!acc.ok) {} else if (acc.kind === 'trial') h += `<div class="bn trial${days > 1 ? ' soft' : ''}"><span>Deneme süreniz <b>${days} gün</b> sonra (${fmtDate(acc.until)}) bitiyor. Deneme boyunca tüm Pro özellikler açık.</span><a class="btn s" href="#settings/plan">Paket seç</a></div>`;
   if (t.notifyEmail && !t.emailVerified) h += `<div class="bn trial soft"><span>E-posta adresiniz (<b>${esc(t.notifyEmail)}</b>) henüz doğrulanmadı. Ekran durumu uyarıları ve şifre sıfırlama için doğrulayın.</span><button class="btn s g" onclick="resendVerifyEmail(this)">Doğrulama e-postası gönder</button></div>`;
   $('banner').innerHTML = h;
 }
@@ -435,6 +450,7 @@ function attention(db, t, devs) {
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
   for (const d of devs.filter(d => !d.online && d.last_seen && now - d.last_seen > 10 * 60000 && now - d.last_seen < 7 * day))
     out.push({ lv: 'bad', t: esc(d.name || 'TV kutusu'), s: `<span>Çevrimdışı, son görülme</span>: <span>${ago(d.last_seen)}</span>`, href: '#settings/devices' });
+  if (!acc.ok && acc.reason !== 'suspended') out.push({ lv: 'bad', t: 'Abonelik süreniz doldu', s: 'Ekranınız kapalı; paketinizi yenileyin', href: '#settings/plan' });
   if (acc.ok && acc.until && acc.until - now <= (acc.kind === 'trial' ? 3 : 7) * day)
     out.push({ lv: 'warn', t: acc.kind === 'trial' ? 'Deneme süreniz bitiyor' : 'Aboneliğiniz bitiyor', s: `<span>Bitiş tarihi</span>: ${fmtDate(acc.until)}`, href: '#settings/plan' });
   if (!(db.notify || {}).email) out.push({ lv: 'warn', t: 'E-posta adresi eklenmemiş', s: 'Ekran durumu uyarıları (çevrimdışı, yeniden bağlandı) için bir e-posta ekleyin', href: '#settings/notify' });
@@ -2438,7 +2454,7 @@ SECTIONS.settings = {
       const m = (l, used, lim, f = x => x) => `<div class="row" style="justify-content:space-between;font-size:14px"><span>${l}</span><span class="muted">${f(used)} / ${lim >= 999 || (p.id === 'sinirsiz' && l !== 'Cihaz') ? '∞' : f(lim)}</span></div><div class="meter" style="margin-bottom:12px"><i style="width:${Math.max(2, Math.min(100, lim >= 999 ? 0 : used / lim * 100))}%"></i></div>`;
       h += `<div class="grid g2">` + card('Paketiniz', '', `<div style="font-size:24px;font-weight:700;color:var(--accent2)">${esc(p.name)}</div><p class="muted" style="margin:2px 0 16px">${acc.kind === 'unlimited' ? 'Süresiz · tüm özellikler açık, sınır yok' : !acc.ok ? 'Süresi doldu' : (acc.kind === 'trial' ? 'Deneme · ' : 'Aktif · ') + fmtDate(acc.until) + ' tarihine kadar'}</p>
           ${m('Cihaz', u.devices, p.devices)}${m('Depolama', Math.round(u.storageBytes / 1048576), p.storageMB, x => x >= 1024 ? (x / 1024).toFixed(1) + ' GB' : x + ' MB')}${m('Kullanıcı', u.users, p.users)}`)
-        + card('Paketler', playBridge() ? 'Paket değişikliği için yükseltme düğmesini kullanın; ödeme Google Play üzerinden yapılır.' : 'Paket değişikliği ve ödeme için yükseltme düğmesini kullanın ya da bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' + (!pro() ? `<div class="mt"><button type="button" class="btn s" onclick="openUpgradeModal('Pro Paket')">🚀 Pro Pakete Yükselt</button></div>` : '') : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}</div>`).join('')}</div>`) + `</div><div class="mt">${tahminCard()}</div><div id="paycard" style="grid-column:1/-1"></div>`;
+        + card('Paketler', playBridge() ? 'Paket değişikliği için yükseltme düğmesini kullanın; ödeme Google Play üzerinden yapılır.' : 'Paket değişikliği ve ödeme için yükseltme düğmesini kullanın ya da bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' + (!pro() && !mustBuy() ? `<div class="mt"><button type="button" class="btn s" onclick="openUpgradeModal('Pro Paket')">🚀 Pro Pakete Yükselt</button></div>` : '') : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}${mustBuy() ? `<div class="mt"><button type="button" class="btn s${x.pro ? '' : ' g'}" onclick="buyPlan('${esc(x.id)}')">${esc(x.name)} — satın al</button></div>` : ''}</div>`).join('')}</div>`) + `</div><div class="mt">${tahminCard()}</div><div id="paycard" style="grid-column:1/-1"></div>`;
     } else if (sub === 'branches') {
       h += branchesHtml();
     } else if (sub === 'privacy') {
@@ -4082,8 +4098,7 @@ SECTIONS.help = {
         `<p class="muted" style="margin-top:0">Destek ekibimiz işletme kodunuzla ekranlarınızın durumunu uzaktan kontrol edebilir.</p>
          <div class="it"><div class="b"><b>İşletme Kodunuz</b><span>Destek isterken bu kodu paylaşın: <code>${esc(S.me.tenant.slug)}</code></span></div></div>
          <div class="row mt" style="gap:8px;flex-wrap:wrap">
-           <a class="btn s" href="mailto:destek@screenpano.com?subject=${encodeURIComponent('ScreenPano Destek — ' + S.me.tenant.name + ' (' + S.me.tenant.slug + ')')}">✉️ E-posta Gönder</a>
-           <a class="btn g s" href="https://wa.me/?text=${encodeURIComponent('Merhaba, ScreenPano destek talebi (' + S.me.tenant.slug + '): ')}" target="_blank" rel="noopener">💬 WhatsApp Destek</a>
+           ${contactButtons('ScreenPano destek talebi')}
          </div>`)
       + `</div>`;
   }

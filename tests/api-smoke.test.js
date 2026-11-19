@@ -199,6 +199,10 @@ test('superAccess yetkisi gizli anahtar ve işletme yönetimine yetmez', async (
   r = await req('PUT', '/api/super/settings', { tmdb_key: 'deneme' }); assert.equal(r.status, 403);
   r = await req('DELETE', `/api/super/tenants/${tid}`, { confirm: 'SupAcc Kafe' }); assert.equal(r.status, 403);
   r = await req('POST', `/api/super/tenants/${tid}/password`, {}); assert.equal(r.status, 403);
+  // reddedilen istek yarım kayıt bırakmaz: superAccess ile birlikte gelen indirim yazılmamalı
+  r = await req('PUT', `/api/super/tenants/${tid}`, { superAccess: false, discount: { pct: 20 } }); assert.equal(r.status, 403);
+  r = await req('GET', '/api/super/overview');
+  assert.equal(((r.j.tenants || []).find(x => x.id === tid) || {}).discount, null);
 });
 
 test('süper parola sıfırlama: düz parola dönmez, bağlantı tek kullanımlık, eski oturum düşer', async () => {

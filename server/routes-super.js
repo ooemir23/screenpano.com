@@ -74,6 +74,8 @@ r.post('/tenants', trueOnly, (req, res) => {
 r.put('/tenants/:id', (req, res) => {
   const t = tenants.get(req.params.id); if (!t) return res.status(404).json({ error: 'bulunamadı' });
   const b = req.body || {}, f = {};
+  // yetki denetimi her yazmadan ÖNCE: reddedilen istek yarım kayıt bırakmasın
+  if (b.superAccess !== undefined && !req.user.trueSuper) return res.status(403).json({ error: 'superAccess yetkisi yalnız süper yönetici hesabıyla değiştirilir' });
   if (typeof b.name === 'string' && b.name.trim()) f.name = b.name.trim().slice(0, 80);
   if (PLANS[b.plan]) f.plan = b.plan;
   if (['trial', 'active', 'suspended'].includes(b.status)) f.status = b.status;
@@ -125,7 +127,6 @@ r.put('/tenants/:id', (req, res) => {
     for (const id of ids) { const x = tenants.get(id); if (!x) continue; if (val) x.db.discount = val; else delete x.db.discount; tenants.save(x); hub.pushTenant(id); }
   }
   if (typeof b.canTest === 'boolean') { if (b.canTest) t.db.canTest = true; else delete t.db.canTest; tenants.save(t); hub.pushTenant(t.id); }
-  if (b.superAccess !== undefined && !req.user.trueSuper) return res.status(403).json({ error: 'superAccess yetkisi yalnız süper yönetici hesabıyla değiştirilir' });
   if (typeof b.superAccess === 'boolean') for (const id of [t.id]) { const x = tenants.get(id); if (x) { if (b.superAccess) x.db.superAccess = true; else delete x.db.superAccess; tenants.save(x); } }
   if (typeof b.unlimited === 'boolean') for (const id of ids) { const x = tenants.get(id); if (x) { if (b.unlimited) x.db.unlimited = true; else delete x.db.unlimited; tenants.save(x); } }
   if (b.devices !== undefined && b.devices !== '') {
