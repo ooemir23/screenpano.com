@@ -148,6 +148,18 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+      # APK yayınından sonra: AAB yanlış anahtarla imzalıysa iş kırmızı olsun ama kutuların güncellemesi engellenmesin
+      - name: AAB imzasını denetle (Play yükleme anahtarı)
+        env:
+          PLAY_UPLOAD_SHA1: 'F7:09:54:87:D4:6D:68:F3:5C:64:6C:EE:21:AC:49:9A:15:71:28:8C'
+        run: |
+          AAB=android/app/build/outputs/bundle/playRelease/app-play-release.aab
+          test -f "$AAB" || { echo "::error::AAB oluşmadı (bundlePlayRelease hatası)"; exit 1; }
+          test -f android/play-keystore.properties || { echo "::error::PLAY_UPLOAD_* secret'ları yok; AAB Play'in kabul etmeyeceği anahtarla imzalandı"; exit 1; }
+          SHA1=$(keytool -printcert -jarfile "$AAB" | grep -m1 'SHA1:' | awk '{print $2}')
+          [ "$SHA1" = "$PLAY_UPLOAD_SHA1" ] || { echo "::error::AAB beklenmeyen anahtarla imzalı ($SHA1)"; exit 1; }
+          echo "::notice::AAB Play yükleme anahtarıyla imzalı ($SHA1)"
+
       - name: Anahtarı sil
         if: always()
         run: rm -f android/app/release.keystore android/keystore.properties android/app/play-upload.jks android/play-keystore.properties
