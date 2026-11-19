@@ -189,7 +189,7 @@ async function call(method, url, body) {
   const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({}));
   if (r.status === 401) location.href = '/login';
-  if (!r.ok) throw new Error(j.error || 'Hata ' + r.status);
+  if (!r.ok) { const e = new Error(j.error || 'Hata ' + r.status); e.status = r.status; throw e; }
   return j;
 }
 const api = (m, u, b) => call(m, '/api/super' + u, b);
@@ -1051,7 +1051,7 @@ const plFmt = n => n ? n.toLocaleString('tr-TR', { minimumFractionDigits: n % 1 
 const plNum = v => { let s = String(v || '').trim().replace(/[^\d.,]/g, ''); if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else if (/^\d+\.\d{1,2}$/.test(s.replace(/,/g, ''))) s = s.replace(/,/g, ''); else s = s.replace(/[.,]/g, ''); const n = Math.round(Number(s) * 100) / 100; return n > 0 ? n : 0; };
 async function playPrices() {
   const el = $('pr-play'); if (!el) return; PLAY_PRICES = null;
-  let r; try { r = await api('GET', '/play/prices'); } catch (e) { el.innerHTML = `<small class="hint">Google Play fiyatları okunamadı: ${esc(e.message)}</small>`; return; }
+  let r; try { r = await api('GET', '/play/prices'); } catch (e) { if (e.status === 403) { el.innerHTML = ''; return; } el.innerHTML = `<small class="hint">Google Play fiyatları okunamadı: ${esc(e.message)}</small>`; return; }
   if (!r.configured) { el.innerHTML = '<small class="hint">Google Play fiyatları için önce Veri kaynakları → Google Play abonelikleri kartını bağlayın.</small>'; return; }
   PLAY_PRICES = r.prices;
   el.innerHTML = `<h4 style="margin:0 0 4px">Google Play fiyatları (Türkiye, KDV dahil)</h4><small class="hint" style="margin:0 0 8px;display:block">Play uygulamasından abone olanların ödediği tutar; Google'dan okunur ve kaydedince Google Play'e yazılır. Yeni fiyat yeni abonelere uygulanır, mevcut aboneler eski fiyattan devam eder. Test ortamında da gerçek Play fiyatı değişir.</small>`
