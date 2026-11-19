@@ -193,6 +193,15 @@ test('otomatik ödeme: süre yeterliyse, mod kapalıysa, askıdaysa tahsilat yok
   core.setMode('all'); store.updateTenant(t.id, { status: 'suspended' }); tenants.refreshRow(t.id);
   const before2 = calls; await recurring.tick(); assert.equal(row(t.id).paid_until < Date.now() + DAY, true); core.setMode('off'); void nearBefore; void before2;
 });
+test('otomatik ödeme: tutar kurulumdakinden farklıysa (indirim bitti/eklendi, fiyat değişti) çekilmez, past_due olur', async () => {
+  core.setMode('all'); const charged = [];
+  paytr.chargeStored = async ({ order }) => { charged.push(order.tenant_id); return { status: 'success' }; };
+  const t = await activeSub(Date.now() + 3600 * 1000), until = row(t.id).paid_until;
+  tenants.get(t.id).db.discount = { pct: 20, until: null }; // kurulumdan sonra indirim tanımlandı: güncel tutar farklı
+  await recurring.tick();
+  assert.equal(charged.includes(t.id), false); assert.equal(recurring.getSub(t.id).status, 'past_due'); assert.equal(row(t.id).paid_until, until);
+  core.setMode('off');
+});
 test('otomatik ödeme: kesin ret 1-2-3 gün arayla denenir, 3. retten sonra past_due', async () => {
   core.setMode('all'); paytr.chargeStored = async () => ({ status: 'failed', tryAgain: false, reason: 'kart kapalı' });
   const t = await activeSub(Date.now() + 3600 * 1000); const until = row(t.id).paid_until;
@@ -220,4 +229,50 @@ test('otomatik ödeme: iptal edilen abonelik tahsil edilmez; CVV isteyen kart ba
   const t2 = mk(), o2 = order(t2); recurring.begin({ tenantId: t2.id, q: core.quote('pro', 'monthly'), orderId: o2.id, ip: '1.1.1.1', customer: CUST });
   paytr.listCards = async () => [{ ctoken: 'c', last4: '1111', month: '1', year: '30', requireCvv: true }];
   assert.equal(await recurring.onFirstPayment(o2, 'u'), false); assert.equal(recurring.getSub(t2.id).status, 'canceled'); core.setMode('off');
+});
+
+// ---- Google Play: iade, yetkisiz indirim teklifi; yedekten geri yükleme ----
+test('Play iadesi: bu aboneliğin yazdığı süre geri alınır, elle uzatılmış süreye dokunulmaz', () => {
+  const now = Date.now(), t = mk(), m = mk();
+  core.settlePlay({ tenantId: t.id, plan: 'pro', until: now + 30 * DAY, entitled: true, ref: 'tokA' });
+  assert.equal(row(t.id).paid_until, now + 30 * DAY);
+  // iade: Google bitişi iade anına çeker (geçmiş), önceki bitiş 30 gün sonrası
+  core.settlePlay({ tenantId: t.id, plan: 'pro', until: now - 1000, entitled: false, ref: 'tokA', prevUntil: now + 30 * DAY });
+  assert.ok(row(t.id).paid_until <= Date.now(), 'iade sonrası süre bitmeli');
+  core.settlePlay({ tenantId: m.id, plan: 'pro', until: now + 30 * DAY, entitled: true, ref: 'tokB' });
+  store.updateTenant(m.id, { paid_until: now + 60 * DAY }); tenants.refreshRow(m.id); // süper yönetim elle uzattı
+  core.settlePlay({ tenantId: m.id, plan: 'pro', until: now - 1000, entitled: false, ref: 'tokB', prevUntil: now + 30 * DAY });
+  assert.equal(row(m.id).paid_until, now + 60 * DAY);
+});
+test('Play: indirim teklifi indirimi tanımlı olmayan işletmede onaylanmaz ve süre vermez; tanımlıysa verir', async () => {
+  const P = require('../server/play'), real = global.fetch;
+  const { privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 1024 });
+  store.setSetting('play_service_account', JSON.stringify({ type: 'service_account', client_email: 'sa@x.iam', private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }) }));
+  const t = mk(); let acked = 0;
+  const sub = () => ({ subscriptionState: 'SUBSCRIPTION_STATE_ACTIVE', acknowledgementState: 'ACKNOWLEDGEMENT_STATE_PENDING', externalAccountIdentifiers: { obfuscatedExternalAccountId: t.id },
+    lineItems: [{ productId: 'pro', expiryTime: new Date(Date.now() + 30 * DAY).toISOString(), offerDetails: { basePlanId: 'aylik', offerId: 'indirim-20' } }] });
+  global.fetch = async (url, o) => {
+    const u = String(url);
+    if (u.includes('oauth2.googleapis.com')) return new Response(JSON.stringify({ access_token: 'x' }));
+    if (u.includes(':acknowledge')) { acked++; return new Response('{}'); }
+    if (u.includes('/purchases/subscriptionsv2/')) return new Response(JSON.stringify(sub()));
+    return real(url, o);
+  };
+  try {
+    const before = row(t.id).paid_until;
+    await assert.rejects(P.verifyAndApply('tok-indirim-1', t.id), e => e.status === 403);
+    assert.equal(acked, 0); assert.equal(row(t.id).paid_until, before);
+    tenants.get(t.id).db.discount = { pct: 20, until: null };
+    const r = await P.verifyAndApply('tok-indirim-1', t.id);
+    assert.equal(r.entitled, true); assert.equal(acked, 1); assert.ok(row(t.id).paid_until > Date.now() + 29 * DAY);
+  } finally { global.fetch = real; store.setSetting('play_service_account', ''); }
+});
+test('yedekten geri yükleme: ödeme/yetki alanları yedekteki değere dönmez', () => {
+  const { restoreDb } = require('../server/routes-admin');
+  const cur = { videos: [], name: 'yeni', addons: undefined, charges: [{ id: 'c1', status: 'unpaid' }], devices: 1 };
+  const old = { videos: [{ id: 'v' }], name: 'eski', addons: { tahmin_ligi: { until: Date.now() + 9e9 } }, discount: { pct: 30 }, charges: [], devices: 5, canPay: true, superAccess: true };
+  const out = restoreDb(cur, old);
+  assert.equal(out.name, 'eski'); assert.equal(out.videos.length, 1);
+  for (const k of ['addons', 'discount', 'canPay', 'superAccess']) assert.equal(out[k], undefined, k);
+  assert.equal(out.devices, 1); assert.deepEqual(out.charges, cur.charges);
 });

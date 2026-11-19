@@ -87,7 +87,7 @@ function clearSession(res, req) {
 // ep (token_epoch) uyuşmazsa çerez reddedilir: parola değişimi/askıya alma eski oturumları düşürür.
 function sessionUser(req) {
   const p = verify(parseCookies(req)[COOKIE]);
-  if (!p) return null;
+  if (!p || p.kind !== undefined) return null; // kind'lı imzalı değerler (şifre sıfırlama, e-posta doğrulama…) oturum değildir
   const u = store.q.userGet.get(p.uid);
   if (!u || (p.ep || 0) !== (u.token_epoch || 0)) return null;
   return { ...u, imp: p.imp || null, br: p.br || null };

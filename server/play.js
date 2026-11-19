@@ -95,7 +95,7 @@ async function verifyAndApply(purchaseToken, tenantHint) {
     .run(th(token), token, t.id, v.product, v.state, v.until, v.test ? 1 : 0, now, now);
   // linkedPurchaseToken: yükseltme/yeniden abonelikte eski belirteç artık geçersiz (yetkiyi yeni belirteç taşır)
   if (s.linkedPurchaseToken) store.sql.prepare("UPDATE play_purchases SET state = 'REPLACED', updated = ? WHERE token_hash = ?").run(now, th(s.linkedPurchaseToken));
-  apply(t, v, token);
+  apply(t, v, token, row ? row.until : 0); // önceki bitiş: iadede bu belirtecin yazdığı süre geri alınır
   if (v.entitled && !v.acked && v.state === 'SUBSCRIPTION_STATE_ACTIVE') {
     try { await api('POST', `/purchases/subscriptions/${encodeURIComponent(v.product)}/tokens/${encodeURIComponent(token)}:acknowledge`, {}); }
     catch (e) { console.error('[Play] onaylanamadı:', e.message); } // bir sonraki doğrulamada yeniden denenir
@@ -103,7 +103,7 @@ async function verifyAndApply(purchaseToken, tenantHint) {
   return { tenantId: t.id, product: v.product, until: v.until, state: v.state, entitled: v.entitled, test: v.test };
 }
 
-function apply(t, v, token) {
+function apply(t, v, token, prevUntil = 0) {
   const hub = require('./hub');
   if (ADDON_PRODUCTS[v.product]) {
     const A = require('./addons'), id = ADDON_PRODUCTS[v.product], cur = (t.db.addons || {})[id];
@@ -112,7 +112,7 @@ function apply(t, v, token) {
     tenants.save(t); hub.pushTenant(t.id);
     return;
   }
-  if (PLAN_PRODUCTS[v.product]) require('./billing/core').settlePlay({ tenantId: t.id, plan: PLAN_PRODUCTS[v.product], until: v.until, entitled: v.entitled, ref: th(token), state: v.state });
+  if (PLAN_PRODUCTS[v.product]) require('./billing/core').settlePlay({ tenantId: t.id, plan: PLAN_PRODUCTS[v.product], until: v.until, entitled: v.entitled, ref: th(token), state: v.state, prevUntil });
 }
 
 // RTDN: Pub/Sub push gövdesi. Güvenlik: adres gizli anahtar (?k=) içerir; içerik yine Google API'den doğrulanır.

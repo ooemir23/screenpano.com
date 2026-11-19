@@ -70,6 +70,13 @@ async function charge(s) {
   const t = tenants.get(s.tenant_id);
   const dueAt = Date.now() + 15 * 60 * 1000;
   setSub(s.tenant_id, { next_try: dueAt }); // talep: çöküş/çift tetik durumunda aynı abonelik 15 dk tekrar denenmez
+  // güncel tutar (fiyat ya da işletmeye özel indirim değiştiyse) kurulumda onaylanandan farklıysa çekilmez: işletme yeniden onaylar
+  let now$ = 0; try { now$ = core.quote(s.plan, 'monthly', t).amount; } catch (e) { /* fiyat kaldırıldı */ }
+  if (now$ !== s.amount) {
+    setSub(s.tenant_id, { status: 'past_due', next_try: 0 });
+    notify(s.tenant_id, 'ScreenPano: aylık tutarınız değişti', `Paket fiyatınız ya da size özel indiriminiz değiştiği için otomatik ödeme durduruldu (onaylanan ${(s.amount / 100).toLocaleString('tr-TR')} TL${now$ ? `, güncel ${(now$ / 100).toLocaleString('tr-TR')} TL` : ''}). Hizmetiniz süre sonunda durur; panelden Paketler bölümünde yeni tutarla ödeme yapabilirsiniz.`);
+    return { ok: false, reason: 'price_changed' };
+  }
   const q = { plan: s.plan, period: 'monthly', amount: s.amount, currency: 'TRY' };
   const order = core.createOrder({ tenantId: s.tenant_id, provider: 'paytr', kind: 'recurring', q });
   let r;

@@ -139,7 +139,8 @@ function settleFailed({ provider, eventId, paymentId }) {
 // Google Play aboneliği (paket): süre Google'ın bildirdiği bitiş tarihidir (play.js doğrular). Yetkili olduğu sürece
 // paid_until = max(mevcut, bitiş); iade/askı/iptal sonrası süre bittiyse YALNIZ bu aboneliğin yazdığı süre geri alınır
 // (elle ya da başka ödemeyle uzatılmış süreye dokunulmaz). Her bitiş tarihi bir kez işlenir (payment_events) ve geçmişe yazılır.
-function settlePlay({ tenantId, plan, until, entitled, ref, state }) {
+// prevUntil: bu belirtecin daha önce yazdığı bitiş (iadede Google bitişi iade anına çeker; yazılan süre bundan uzundur).
+function settlePlay({ tenantId, plan, until, entitled, ref, state, prevUntil = 0 }) {
   if (!plans.PLANS[plan]) return { ok: false, code: 'plan' };
   const out = sql.transaction(() => {
     const rowOf = id => sql.prepare('SELECT id, status, paid_until, org_id FROM tenants WHERE id = ?').get(id);
@@ -154,8 +155,9 @@ function settlePlay({ tenantId, plan, until, entitled, ref, state }) {
       if (!getPay(pid)) sql.prepare('INSERT INTO payments (id, tenant_id, provider, kind, plan, period, amount, currency, status, provider_ref, created, updated) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
         .run(pid, t.id, 'play', 'sub', plan, 'monthly', 0, 'TRY', 'paid', String(ref).slice(0, 64), Date.now(), Date.now()); // tutar Google Play'de (vergi ve komisyon dahil)
     } else {
-      // yetki bitti: bu aboneliğin yazdığı süreyi (until'den uzun olmayan) şimdiye çek
-      for (const id of ids) { const x = rowOf(id); if (x && x.paid_until && x.paid_until <= until && x.paid_until > Date.now()) store.updateTenant(id, { paid_until: Date.now() }); }
+      // yetki bitti: bu aboneliğin yazdığı süreyi (önceki ya da yeni bitişten uzun olmayan) şimdiye çek; daha uzun süre elle/başka ödemeyle verilmiştir
+      const now = Date.now(), mine = Math.max(until || 0, prevUntil || 0);
+      for (const id of ids) { const x = rowOf(id); if (x && x.paid_until && x.paid_until <= mine && x.paid_until > now) store.updateTenant(id, { paid_until: now }); }
     }
     return { ok: true, ids, state };
   })();

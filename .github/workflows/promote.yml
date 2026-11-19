@@ -46,6 +46,9 @@ jobs:
           # birleşme sonrası kalan çakışma işareti kalmadığından emin ol
           if git grep -nE '^(<<<<<<<|>>>>>>>) ' -- server public android .github >/dev/null 2>&1; then echo "::error::Çakışma işareti kaldı"; exit 1; fi
           for i in 1 2 3; do git push origin HEAD:main && break; git pull --rebase -q origin main; sleep 5; done
+          # üç deneme de reddedildiyse döngü başarılı biter: canlının gerçekten bu koda geçtiğini doğrula
+          git fetch -q origin main
+          [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "::error::main'e gönderilemedi; canlı güncellenmedi"; exit 1; }
 
       # Canlıdaki koda göre Google Play'e gönderilmeyi bekleyen uygulama (android/) değişikliği var mı: son "play-*" etiketinden beri
       - name: Google Play güncellemesi gerekiyor mu

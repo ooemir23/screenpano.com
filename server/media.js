@@ -53,7 +53,9 @@ async function optimizeItem(tid, id) {
   let src = path.join(t.dirs.uploads, srcFile);
   if (!fs.existsSync(src)) { try { src = await require('./storage').ensureLocal(t, srcFile); } catch (e) {} }
   const done = patch => { const c = cur(); if (c && c.file === srcFile) { Object.assign(c, { status: 'ready', reopt: false, optimized: true }, patch); tenants.save(t); hub.pushTenant(tid); } };
-  if (!fs.existsSync(src)) return done({ optError: 'dosya bulunamadı' });
+  // işlenemeyen yeni dosya TV'ye gitmez (status 'error', panelde uyarı); daha önce çalışan dosyanın yeniden küçültülmesi başarısızsa eskisi kalır
+  const fail = msg => { const c = cur(); return done({ optError: msg, optimized: false, ...(c && (!c.reopt || c.optError) ? { status: 'error' } : {}) }); };
+  if (!fs.existsSync(src)) return fail('dosya bulunamadı');
   if (!ffmpegOk) return done({ optimized: false, optError: 'ffmpeg yok' });
   const isImg = v.type === 'image';
   if (isImg && /\.(gif|svg)$/i.test(srcFile)) return done({});
@@ -94,7 +96,7 @@ async function optimizeItem(tid, id) {
   } catch (e) {
     fs.rmSync(out, { force: true });
     console.error('Optimizasyon başarısız:', v.name, e.message);
-    done({ optError: String(e.message).slice(0, 200), optimized: false });
+    fail(String(e.message).slice(0, 200));
   }
 }
 function enqueue(tid, id) { if (!queue.some(q => q.tid === tid && q.id === id)) queue.push({ tid, id, addedAt: Date.now() }); run(); }

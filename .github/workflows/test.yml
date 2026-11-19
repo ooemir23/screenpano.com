@@ -1,0 +1,21 @@
+# Sunucu testleri (node --test): staging ve main'e her push'ta ve elle.
+name: Testler
+
+on:
+  push:
+    branches: [main, staging]
+    paths: ['server/**', 'public/**', 'tests/**', 'tools/i18n/**', 'package.json', 'package-lock.json', '.github/workflows/test.yml']
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund --omit=dev
+      - run: npm test

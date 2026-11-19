@@ -113,7 +113,7 @@ function withPredict(t, list) {
 function baseMediaList(t, screenId) {
   const db = t.db, out = [];
   for (const v of db.videos) {
-    if (v.status === 'processing' && !v.reopt) continue;
+    if ((v.status === 'processing' && !v.reopt) || v.status === 'error') continue; // işlenemeyen dosya ekrana gitmez
     if (v.hidden || v.quotaOver || SCH.expired(v.sch)) continue; // quotaOver: küçültme sonrası kotaya sığmadı
     if (screenId && Array.isArray(v.screens) && v.screens.length && !v.screens.includes(screenId)) continue;
     out.push(mediaItem(t, v));
@@ -215,7 +215,7 @@ function tvMusic(m) {
 function activeSpecial(t) {
   for (const r of (t.db.special || [])) {
     if (!r.on || !r.sch || !SCH.active(r.sch) || (r.stopUntil && Date.now() < r.stopUntil)) continue; // stopUntil: "şimdi durdur" ile bu yayın dilimi bitene dek susturuldu
-    const items = (r.items || []).map(id => (t.db.videos || []).find(v => v.id === id)).filter(v => v && !(v.status === 'processing' && !v.reopt)).map(v => ({ ...mediaItem(t, v), sch: null }));
+    const items = (r.items || []).map(id => (t.db.videos || []).find(v => v.id === id)).filter(v => v && !(v.status === 'processing' && !v.reopt) && v.status !== 'error').map(v => ({ ...mediaItem(t, v), sch: null }));
     if (items.length) return { rule: r, items };
   }
   return null;

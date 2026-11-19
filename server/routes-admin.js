@@ -649,6 +649,14 @@ r.get('/system', (req, res) => res.json({ ffmpeg: media.ffmpegOk, queue: media.q
 
 // ---- yedekler: işletmenin kendi klasöründe, en yeni 30 ----
 const BACKUP_NAME = /^db-[A-Za-z0-9_.-]+\.json$/;
+// Yedekten geri yüklemede işletmenin kendisinin değiştiremeyeceği alanlar hep mevcut değerinde kalır (yedekteki yok sayılır):
+// yetkiler, ödeme/abonelik kayıtları (Play ve süper yönetim), indirim, özel TV sınırı, ek şube ücretleri, KVKK kayıtları.
+const RESTORE_KEEP = ['superAccess', 'unlimited', 'canTest', 'canPay', 'addons', 'discount', 'devices', 'charges', 'deletion', 'consent'];
+function restoreDb(cur, parsed) {
+  const out = { ...cur, ...parsed };
+  for (const k of RESTORE_KEEP) { if (cur[k] !== undefined) out[k] = cur[k]; else delete out[k]; }
+  return out;
+}
 function listBackups(t) {
   return fs.readdirSync(t.dirs.backups).filter(n => BACKUP_NAME.test(n)).map(n => { const st = fs.statSync(path.join(t.dirs.backups, n)); return { name: n, size: st.size, time: st.mtimeMs }; }).sort((a, b) => b.time - a.time);
 }
@@ -691,10 +699,8 @@ r.post('/backups/:name/restore', ownerOnly, (req, res) => {
     const parsed = JSON.parse(fs.readFileSync(path.join(t.dirs.backups, req.params.name), 'utf8'));
     if (!parsed || !Array.isArray(parsed.videos)) throw new Error('yedek dosyası geçerli değil');
     backupNow(t, 'geri-yukleme-oncesi');
-    const keep = {}; for (const k of ['superAccess', 'unlimited', 'canTest', 'deletion', 'consent']) { if (t.db[k] !== undefined) keep[k] = t.db[k]; }
-    for (const k of ['superAccess', 'unlimited', 'canTest']) delete parsed[k]; // yetki alanları yedekten geri gelmez
     const lay = parsed._screenLayout; delete parsed._screenLayout;
-    t.db = { ...t.db, ...parsed, ...keep };
+    t.db = restoreDb(t.db, parsed);
     // düzen de yedekteyse (yeni yedekler) geri gelir; eski yedeklerde mevcut düzen korunur
     if (lay && Array.isArray(lay.widgets)) store.updateScreen(tenants.mainScreen(t).id, t.id, { layout: JSON.stringify(W.cleanLayout(lay)) });
     const missing = t.db.videos.filter(v => (v.file || v.image) && !require('./storage').exists(t, v.file || v.image)).length;
@@ -1026,4 +1032,4 @@ function startJobs() {
 require('./billing/routes')(r, { ownerOnly }); // çevrimiçi ödeme (varsayılan kapalı)
 require('./routes-ext')(r, { changed, sendTo, upload, quota, postQuota, ownerOnly, rmUpload, backupNow });
 require('./routes-predict').admin(r, { changed, ownerOnly }); // Tahmin Ligi
-module.exports = { router: r, startJobs, activeTenantId };
+module.exports = { router: r, startJobs, activeTenantId, restoreDb };
