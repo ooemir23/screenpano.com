@@ -128,8 +128,8 @@ const trialLine = playId => { const po = playOffer(playId); return po && po.tria
 const lock = (what, addonId = '') => {
   if (!isAddonLocked(addonId)) return '';
   const a = addonId ? ADDONS[addonId] : null, pr = a ? priceLine(a.priceKey, a.id) : '', tr = trialLine(a ? a.id : 'pro');
-  const msg = a ? `<b>${esc(what)}</b> pakete dahil değil; ek abonelik${pr ? ' (' + esc(pr) + ')' : ''} ile açılır. Ayarlarınızı görebilirsiniz; ekranda çalışması için aboneliği başlatın.`
-    : `<b>${esc(what)}</b> Pro pakette. Ayarlarınızı görebilirsiniz; ekranda görünmesi için paketinizi yükseltin.`;
+  const msg = a ? `<b>${esc(what)}</b> pakete dahil değil; ek abonelik${pr ? ' (' + esc(pr) + ')' : ''} ile açılır; aboneliği başlatınca bu bölüm açılır.`
+    : `<b>${esc(what)}</b> Pro pakette; paketinizi yükseltince bu bölüm hemen açılır.`;
   return `<div class="bn lock">${proBadge(what, addonId)}<span>${msg}${tr ? ' ' + esc(tr) + '.' : ''}</span><button type="button" class="btn s" data-allow-locked="1" onclick="openUpgradeModal('${esc(what)}','${esc(addonId)}')">${a ? 'Aboneliği başlat' : 'Pro Pakete Yükselt'}</button></div>`;
 };
 function warnUpgrade(feat = 'Bu özellik', addonId = '') {
@@ -394,8 +394,8 @@ function veilPro() {
     const feat = el.dataset.proFeature || 'Pro özellik', aid = el.dataset.addonFeature || '', a = aid && ADDONS[aid];
     const ov = document.createElement('div'); ov.className = 'pro-ov' + (el.offsetHeight > 520 ? ' tall' : '');
     ov.innerHTML = a
-      ? `<b>⚽ ${esc(I18N.t(a.name))} · ${esc(I18N.t('Ek abonelik'))}</b><span>${esc(I18N.t('Pakete dahil değildir; ek abonelikle açılır.'))}${priceLine(a.priceKey, a.id) ? ' ' + esc(priceLine(a.priceKey, a.id)) : ''}</span><button type="button" class="btn s" data-allow-locked="1">${esc(I18N.t('Aboneliği başlat'))}</button>`
-      : `<b>⭐ ${esc(I18N.t(feat))} · ${esc(I18N.t('Pro pakette'))}</b><span>${esc(I18N.t('Pro pakete geçin; bu bölüm hemen açılır.'))}${priceLine('pro', 'pro') ? ' ' + esc(priceLine('pro', 'pro')) : ''}</span><button type="button" class="btn s" data-allow-locked="1">${esc(I18N.t('Pro pakete geç'))}</button>`;
+      ? `<div class="box"><b>⚽ ${esc(I18N.t(a.name))} · ${esc(I18N.t('Ek abonelik'))}</b><span>${esc(I18N.t('Pakete dahil değildir; ek abonelikle açılır.'))}${priceLine(a.priceKey, a.id) ? ' ' + esc(priceLine(a.priceKey, a.id)) : ''}</span><button type="button" class="btn s" data-allow-locked="1">${esc(I18N.t('Aboneliği başlat'))}</button></div>`
+      : `<div class="box"><b>⭐ ${esc(I18N.t(feat))} · ${esc(I18N.t('Pro pakette'))}</b><span>${esc(I18N.t('Pro pakete geçin; bu bölüm hemen açılır.'))}${priceLine('pro', 'pro') ? ' ' + esc(priceLine('pro', 'pro')) : ''}</span><button type="button" class="btn s" data-allow-locked="1">${esc(I18N.t('Pro pakete geç'))}</button></div>`;
     ov.querySelector('button').onclick = e => { e.stopPropagation(); openUpgradeModal(feat, aid); };
     el.classList.add('pro-veil'); el.appendChild(ov);
   }
