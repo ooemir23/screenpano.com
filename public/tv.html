@@ -3532,11 +3532,14 @@ function subRender() {
   $m('msplan').textContent = s.planName + (s.until ? (s.kind === 'trial' ? ' · deneme, ' : ' · ') + d(s.until) + "'e kadar" : '');
   const ad = (s.addons || {}).tahmin_ligi || {};
   $m('msadd').textContent = ad.active ? (ad.until ? d(ad.until) + "'e kadar açık" : 'Açık') : 'Kapalı';
-  const price = id => { const it = B.subs[id], ph = it && (it.offers || []).flatMap(o => o.phases || []).find(p => p.priceMicros > 0); return ph ? ph.formattedPrice : ''; };
+  // işletmeye özel indirim: sunucu hangi Play teklifinin kullanılacağını söyler (s.discount.offerId)
+  const off = s.discount && B.canOffer() ? s.discount.offerId : '';
+  const price = id => B.priceOf(id, off);
   const btn = (id, label, kind) => `<button type="button" data-nav data-buy="${id}" data-kind="${kind}">${label}${price(id) ? ' · ' + price(id) + ' / ay' : ''}</button>`;
-  $m('msbtn').innerHTML = (s.plan !== 'pro' || s.kind !== 'paid' ? btn('pro', '⭐ Pro paket', 'plan') : '') + (s.plan === 'baslangic' && s.kind !== 'paid' ? btn('baslangic', 'Başlangıç paketi', 'plan') : '') + (ad.active ? '' : btn('tahmin_ligi', '⚽ Tahmin Ligi', 'addon'));
+  $m('msbtn').innerHTML = (s.discount ? `<p style="margin:0 0 6px;width:100%;color:#f5c26b;font-weight:600">Size özel %${s.discount.pct} indirim${B.canOffer() ? '' : ' · uygulamayı Google Play\'den güncelleyin'}</p>` : '')
+    + (s.plan !== 'pro' || s.kind !== 'paid' ? btn('pro', '⭐ Pro paket', 'plan') : '') + (s.plan === 'baslangic' && s.kind !== 'paid' ? btn('baslangic', 'Başlangıç paketi', 'plan') : '') + (ad.active ? '' : btn('tahmin_ligi', '⚽ Tahmin Ligi', 'addon'));
   for (const b of $m('msbtn').querySelectorAll('[data-buy]')) attachTap(b, () => {
-    const id = b.dataset.buy, ok = b.dataset.kind === 'addon' ? B.buyAddon(id, 'aylik', 'subs', s.tid, id) : B.buyPlan(id, 'aylik', s.tid);
+    const id = b.dataset.buy, ok = b.dataset.kind === 'addon' ? B.buyAddon(id, 'aylik', 'subs', s.tid, id, off) : B.buyPlan(id, 'aylik', s.tid, off);
     menuSt(ok ? 'Google Play ödeme ekranı açılıyor…' : 'Google Play ödeme şu an kullanılamıyor');
   });
 }
@@ -3561,14 +3564,27 @@ window.SPPlayBilling = {
     const i = (Array.isArray(extraInApp) ? extraInApp : [extraInApp]).filter(Boolean).join(',');
     window.__N.playQueryCatalog(s, i);
   },
-  buyPlan(planId, basePlanId = 'aylik', tenantId = '') {
+  // indirim teklifiyle satın alma yerel köprüde var mı (3.24.21+)
+  canOffer: () => !!(window.__N && window.__N.playBuyOffer),
+  // ürünün aylık fiyatı: offerId verilirse o teklifin ilk ücretli dönemi; yoksa indirim teklifleri (indirim-*) hariç tutulur
+  priceOf(id, offerId = '') {
+    const it = this.subs[id]; if (!it) return '';
+    const offs = (it.offers || []).filter(o => offerId ? o.offerId === offerId : !/^indirim-/.test(o.offerId || ''));
+    const ph = offs.flatMap(o => o.phases || []).find(p => p.priceMicros > 0);
+    return ph ? ph.formattedPrice : '';
+  },
+  buyPlan(planId, basePlanId = 'aylik', tenantId = '', offerId = '') {
+    if (offerId) return this.buyAddon(planId, basePlanId, 'subs', tenantId, '', offerId);
     if (!this.isPlayStore() || !window.__N.playBuy) return false;
     window.__N.playBuy(String(planId || 'pro'), String(basePlanId || 'aylik'), String(tenantId || ''));
     return true;
   },
-  buyAddon(productId, basePlanId = 'aylik', productType = 'subs', tenantId = '', addonKey = '') {
-    if (!this.isPlayStore() || !window.__N.playBuyAddon) return false;
-    window.__N.playBuyAddon(String(productId), String(basePlanId || ''), String(productType || 'subs'), String(tenantId || ''), String(addonKey || ''));
+  buyAddon(productId, basePlanId = 'aylik', productType = 'subs', tenantId = '', addonKey = '', offerId = '') {
+    if (!this.isPlayStore()) return false;
+    const a = [String(productId), String(basePlanId || ''), String(productType || 'subs'), String(tenantId || ''), String(addonKey || '')];
+    if (offerId) { if (!this.canOffer()) return false; window.__N.playBuyOffer(...a, String(offerId)); return true; }
+    if (!window.__N.playBuyAddon) return false;
+    window.__N.playBuyAddon(...a);
     return true;
   },
 };

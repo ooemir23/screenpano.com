@@ -33,7 +33,7 @@ module.exports = function mount(r, { ownerOnly }) {
   r.get('/billing', (req, res) => {
     const enabled = core.enabledFor(req.t) && accounts.isHome(req.t) && req.user.role !== 'super';
     const out = { enabled, providers: providers(), autoPay: paytr.recurringEnabled(), recurring: recurring.publicView(req.t.id), paidUntil: req.t.paid_until || null, history: core.history(req.t.id), quotes: [] };
-    if (enabled) for (const plan of ['baslangic', 'pro']) for (const period of Object.keys(core.PERIODS)) { try { out.quotes.push(core.quote(plan, period)); } catch (e) { /* fiyat tanımsız */ } }
+    if (enabled) for (const plan of ['baslangic', 'pro']) for (const period of Object.keys(core.PERIODS)) { try { out.quotes.push(core.quote(plan, period, req.t)); } catch (e) { /* fiyat tanımsız */ } }
     res.json(out);
   });
 
@@ -42,7 +42,7 @@ module.exports = function mount(r, { ownerOnly }) {
     const b = req.body || {}, prov = providers();
     const provider = b.provider === 'paytr' || b.provider === 'iyzico' ? b.provider : (prov.paytr ? 'paytr' : 'iyzico');
     if (!prov[provider]) return res.status(503).json({ error: 'Seçilen ödeme yöntemi yapılandırılmadı' });
-    let q; try { q = core.quote(String(b.plan || ''), String(b.period || '')); } catch (e) { return res.status(400).json({ error: e.message }); }
+    let q; try { q = core.quote(String(b.plan || ''), String(b.period || ''), req.t); } catch (e) { return res.status(400).json({ error: e.message }); }
     const cu = customerOf(b.customer || {}); if (cu.error) return res.status(400).json({ error: cu.error });
     // otomatik aylık ödeme: yalnız PayTR + aylık dönem + PayTR'de kart saklama/Non3D izni açık (PAYTR_RECURRING=1)
     const auto = b.recurring === true && provider === 'paytr';

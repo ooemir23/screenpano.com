@@ -65,4 +65,16 @@ function monthsFree(x) {
 // Ek şube ücreti (aylık): şube açarken ücret kaydı için. Ayar yoksa 500 (şube ücretsiz açılmasın).
 const extraBranchFee = () => get().extraBranch.monthly || amount(store.setting('fee_extra_branch', '')) || 500;
 
-module.exports = { ITEMS, CURRENCIES, get, set, clean, fmt, monthsFree, extraBranchFee };
+// İşletmeye özel indirim (süper yönetim → işletme): t.db.discount = { pct, until: ms|null, note }.
+// Oranlar sabittir: Google Play'de her oran için "indirim-<oran>" teklifi vardır (play.js), web'de aynı oran uygulanır.
+const DISCOUNTS = [10, 20, 30];
+const DISCOUNT_OFFER = pct => 'indirim-' + pct;
+function discountOf(t) {
+  const d = t && t.db && t.db.discount;
+  return d && DISCOUNTS.includes(d.pct) && (d.until == null || d.until > Date.now()) ? d.pct : 0;
+}
+const discounted = (n, pct) => pct ? Math.round(n * (100 - pct) / 100) : n;
+// Panel/TV için özet: etkin değilse null
+const discountView = t => { const pct = discountOf(t); return pct ? { pct, until: t.db.discount.until ?? null, offerId: DISCOUNT_OFFER(pct) } : null; };
+
+module.exports = { ITEMS, CURRENCIES, get, set, clean, fmt, monthsFree, extraBranchFee, DISCOUNTS, DISCOUNT_OFFER, discountOf, discounted, discountView };

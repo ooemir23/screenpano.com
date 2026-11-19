@@ -55,16 +55,18 @@ function enabledFor(t) {
 }
 
 // Tahsil edilecek tutar: pricing.js'ten, KDV dahil, kuruş. Yalnız TL ve yalnız tanımlı (>0) fiyatlar satılır.
-function quote(planKey, period) {
+// t verilirse işletmeye özel indirim (pricing.discountOf) liste fiyatına uygulanır.
+function quote(planKey, period, t) {
   if (!plans.PLANS[planKey]) throw new Error('Geçersiz paket');
   if (!PERIODS[period]) throw new Error('Geçersiz dönem');
   const p = pricing.get();
   if (p.currency !== 'TRY') throw new Error('Çevrimiçi ödeme yalnız TL fiyatlarla çalışır');
-  const net = (p[planKey] || {})[period] || 0;
-  if (!(net > 0)) throw new Error('Bu paket/dönem için fiyat tanımlı değil');
+  const list = (p[planKey] || {})[period] || 0;
+  if (!(list > 0)) throw new Error('Bu paket/dönem için fiyat tanımlı değil');
+  const discount = pricing.discountOf(t), net = pricing.discounted(list, discount);
   const vat = env().VAT;
   const gross = p.vat === 'incl' ? net : Math.round(net * (100 + vat) / 100);
-  return { plan: planKey, period, net, gross, amount: gross * 100, vat: p.vat === 'incl' ? null : vat, currency: 'TRY' };
+  return { plan: planKey, period, list, discount, net, gross, amount: gross * 100, vat: p.vat === 'incl' ? null : vat, currency: 'TRY' };
 }
 
 // Takvim ayı ekler; ayın sonunu taşırmaz (31 Ocak + 1 ay = 28/29 Şubat)

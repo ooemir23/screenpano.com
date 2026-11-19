@@ -106,9 +106,13 @@ const cardPro = (feat, title, desc, body, right = '', cls = '', addonId = '') =>
   return card(title, desc, body, r, (cls ? cls + ' ' : '') + 'pro-card-locked', lockAttrs(feat, addonId));
 };
 // Google Play kataloğundan ürünün fiyat ve ücretsiz deneme bilgisi (yalnız Play sürümünde)
+// işletmeye özel indirim (süper yönetim): Play'de "indirim-<oran>" teklifi, web'de aynı oran
+const discPct = () => (S.me && S.me.discount && S.me.discount.pct) || 0;
+const dsc = n => discPct() ? Math.round(n * (100 - discPct()) / 100) : n;
+const discOffer = () => { const pb = playBridge(); return discPct() && pb && pb.canOffer && pb.canOffer() ? S.me.discount.offerId : ''; };
 function playOffer(playId) {
   const pb = playBridge(), item = playId && pb && pb.subs && pb.subs[playId]; if (!item) return null;
-  const offs = item.offers || [], paid = offs.flatMap(o => o.phases || []).find(p => p.priceMicros > 0);
+  const off = discOffer(), offs = (item.offers || []).filter(o => off ? o.offerId === off : !/^indirim-/.test(o.offerId || '')), paid = offs.flatMap(o => o.phases || []).find(p => p.priceMicros > 0);
   const free = offs.flatMap(o => o.phases || []).find(p => !(p.priceMicros > 0) && /^P\d+[DW]$/.test(p.billingPeriod || ''));
   const days = free ? (+free.billingPeriod.slice(1, -1)) * (free.billingPeriod.endsWith('W') ? 7 : 1) : 0;
   return { price: paid && paid.formattedPrice || '', trialDays: days };
@@ -117,8 +121,8 @@ function playOffer(playId) {
 function priceLine(key, playId) {
   const po = playOffer(playId); if (po && po.price) return `${po.price} / ${I18N.t('ay')}`;
   const P = S.me && S.me.pricing, x = P && P[key]; if (!x || !x.monthly) return '';
-  const v = Number(x.monthly).toLocaleString(I18N.locale);
-  return (P.currency === 'USD' ? '$' + v : P.currency === 'EUR' ? '€' + v : v + ' ₺') + ' / ' + I18N.t('ay') + (P.vat === 'incl' ? '' : ' + KDV');
+  const v = Number(dsc(x.monthly)).toLocaleString(I18N.locale);
+  return (P.currency === 'USD' ? '$' + v : P.currency === 'EUR' ? '€' + v : v + ' ₺') + ' / ' + I18N.t('ay') + (P.vat === 'incl' ? '' : ' + KDV') + (discPct() ? ` (%${discPct()} ${I18N.t('indirimli')})` : '');
 }
 const trialLine = playId => { const po = playOffer(playId); return po && po.trialDays ? I18N.t(po.trialDays + ' gün ücretsiz deneme') : ''; };
 const lock = (what, addonId = '') => {
@@ -180,7 +184,8 @@ function openUpgradeModal(feat = 'Pro Özellikler', addonId = '') {
 async function startPlanUpgrade(targetId = 'pro', isAddon = false) {
   const pb = playBridge(), tid = (S.me && S.me.tenant && S.me.tenant.id) || '';
   if (pb) { // Play sürümü: ödeme Google Play'de, yetki sunucuda doğrulanınca açılır
-    const ok = isAddon ? pb.buyAddon(targetId, (ADDONS[targetId] && ADDONS[targetId].basePlanId) || 'aylik', 'subs', tid, targetId) : pb.buyPlan(targetId, 'aylik', tid);
+    const off = discOffer();
+    const ok = isAddon ? pb.buyAddon(targetId, (ADDONS[targetId] && ADDONS[targetId].basePlanId) || 'aylik', 'subs', tid, targetId, off) : pb.buyPlan(targetId, 'aylik', tid, off);
     if (ok) { closeModal(); toast('Google Play ödeme ekranı açılıyor…'); return; }
   }
   closeModal();
@@ -1706,9 +1711,10 @@ async function testHappy() { await act('POST', '/happy-card/test', undefined, 'K
 function planPrice(id) {
   const P = S.me && S.me.pricing, x = P && P[id], po = playOffer(id);
   const f = n => { const v = n.toLocaleString(I18N.locale); return P.currency === 'TRY' ? v + ' ₺' : (P.currency === 'USD' ? '$' : '€') + v; };
-  const main = po && po.price ? `${po.price} / ay` : x && x.monthly ? `${f(x.monthly)} / ay${x.yearly ? ' · yıllık ' + f(x.yearly) : ''}${P.vat === 'incl' ? '' : ' + KDV'}` : '';
+  const main = po && po.price ? `${po.price} / ay` : x && x.monthly ? `${f(dsc(x.monthly))} / ay${x.yearly ? ' · yıllık ' + f(dsc(x.yearly)) : ''}${P.vat === 'incl' ? '' : ' + KDV'}` : '';
+  const dl = discPct() ? ` · ${I18N.t('size özel')} %${discPct()} ${I18N.t('indirim')}` : '';
   if (!main) return '';
-  return `<span class="muted" style="display:block;font-weight:600;color:var(--accent2);margin:2px 0 6px">${esc(main)}${po && po.trialDays ? ' · ' + esc(I18N.t(po.trialDays + ' gün ücretsiz deneme')) : ''}</span>`;
+  return `<span class="muted" style="display:block;font-weight:600;color:var(--accent2);margin:2px 0 6px">${esc(main)}${esc(dl)}${po && po.trialDays ? ' · ' + esc(I18N.t(po.trialDays + ' gün ücretsiz deneme')) : ''}</span>`;
 }
 /* ================= ÇEVRİMİÇİ ÖDEME ================= */
 // Sunucuda mod kapalıysa ya da işletme pilotta değilse enabled:false döner: kart hiç çizilmez, "bizimle iletişime geçin" metni kalır.
@@ -1740,7 +1746,7 @@ function payQuote() {
   const yr = [...pe.options].find(o => o.value === 'yearly'), hasYr = BILL.quotes.some(x => x.plan === pl.value && x.period === 'yearly');
   if (yr) yr.disabled = !hasYr; if (pe.value === 'yearly' && !hasYr) pe.value = 'monthly';
   const q2 = BILL.quotes.find(x => x.plan === pl.value && x.period === pe.value);
-  $('p-total').textContent = q2 ? money(q2.gross) : '—'; $('p-go').disabled = !q2; void q;
+  $('p-total').textContent = q2 ? money(q2.gross) + (q2.discount ? ` (%${q2.discount} ${I18N.t('indirimli')})` : '') : '—'; $('p-go').disabled = !q2; void q;
   const aw = $('p-autow'); if (aw) { aw.style.display = pe.value === 'monthly' ? '' : 'none'; if (pe.value !== 'monthly') $('p-auto').checked = false; }
 }
 function payStart() {

@@ -29,7 +29,8 @@ class PlayBillingManager(
         @Suppress("UNUSED_PARAMETER") basePlanId: String,
         @Suppress("UNUSED_PARAMETER") productType: String,
         @Suppress("UNUSED_PARAMETER") tenantId: String,
-        @Suppress("UNUSED_PARAMETER") addonKey: String = ""
+        @Suppress("UNUSED_PARAMETER") addonKey: String = "",
+        @Suppress("UNUSED_PARAMETER") offerId: String = ""
     ) {}
     fun consumePurchase(@Suppress("UNUSED_PARAMETER") purchaseToken: String) {}
     fun activeEntitlementsJson(): String = JSONObject().put("keys", JSONArray()).put("items", JSONArray()).toString()

@@ -59,6 +59,8 @@ async function api(method, path, body) {
   return j;
 }
 
+// "indirim-20" → 20; indirim teklifi değilse 0
+const discountPctOf = offerId => { const m = /^indirim-(\d+)$/.exec(String(offerId || '')); return m ? Number(m[1]) : 0; };
 // Aboneliğin anlamı: hangi ürün, hangi tarihe kadar, yetki var mı
 const ENTITLED = new Set(['SUBSCRIPTION_STATE_ACTIVE', 'SUBSCRIPTION_STATE_IN_GRACE_PERIOD', 'SUBSCRIPTION_STATE_CANCELED']); // iptal: süre sonuna kadar geçerli
 function readSub(s) {
@@ -66,7 +68,8 @@ function readSub(s) {
   const until = li && li.expiryTime ? Date.parse(li.expiryTime) : 0;
   const state = String(s.subscriptionState || '');
   return { product: li ? li.productId : '', until: Number.isFinite(until) ? until : 0, state, entitled: !!li && ENTITLED.has(state) && until > Date.now(),
-    acked: s.acknowledgementState === 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED', account: ((s.externalAccountIdentifiers || {}).obfuscatedExternalAccountId) || '', test: !!s.testPurchase };
+    acked: s.acknowledgementState === 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED', account: ((s.externalAccountIdentifiers || {}).obfuscatedExternalAccountId) || '', test: !!s.testPurchase,
+    offerId: (li && li.offerDetails && li.offerDetails.offerId) || '' };
 }
 
 // Belirteci doğrula ve uygula. tenantHint: isteği yapan cihazın işletmesi (belirteçte işletme yoksa / ilk kez görülüyorsa)
@@ -81,6 +84,11 @@ async function verifyAndApply(purchaseToken, tenantHint) {
   const tid = (row && row.tenant_id) || (v.account && tenants.get(v.account) ? v.account : '') || tenantHint || '';
   const t = tid && tenants.get(tid);
   if (!t) throw Object.assign(new Error('Satın almanın ait olduğu işletme bulunamadı'), { status: 404 });
+  // indirim teklifi (indirim-<oran>) yalnız o oran tanımlı işletmeye: değilse kayıt ve onay yok → Google 3 gün içinde iade eder.
+  // Onaylanmış (eski) satın almalar dokunulmaz: indirim sonradan kalksa da yenilemeler sürer.
+  const offPct = discountPctOf(v.offerId);
+  if (offPct && !v.acked && require('./pricing').discountOf(t) !== offPct)
+    throw Object.assign(new Error('Bu indirim işletmenize tanımlı değil; ödeme onaylanmadı, Google Play tarafından iade edilecek'), { status: 403 });
   const now = Date.now();
   store.sql.prepare(`INSERT INTO play_purchases (token_hash, token, tenant_id, product, state, until, test, created, updated) VALUES (?,?,?,?,?,?,?,?,?)
     ON CONFLICT(token_hash) DO UPDATE SET product = excluded.product, state = excluded.state, until = excluded.until, test = excluded.test, updated = excluded.updated`)
@@ -115,7 +123,7 @@ async function rtdn(body) {
   const sn = n.subscriptionNotification; if (!sn || !sn.purchaseToken) return { ok: true, skip: n.testNotification ? 'test' : 'yok' };
   const row = getRow(sn.purchaseToken);
   try { return { ok: true, ...(await verifyAndApply(sn.purchaseToken, row ? row.tenant_id : '')) }; }
-  catch (e) { if (e.status === 404) return { ok: true, skip: 'işletme yok' }; throw e; }
+  catch (e) { if (e.status === 404) return { ok: true, skip: 'işletme yok' }; if (e.status === 403) return { ok: true, skip: 'indirim reddi' }; throw e; }
 }
 const rtdnKey = () => { let k = store.setting('play_rtdn_key', ''); if (!k) { k = crypto.randomBytes(18).toString('base64url'); store.setSetting('play_rtdn_key', k); } return k; };
 
@@ -176,4 +184,38 @@ async function setPrice(id, value) {
   throw last;
 }
 
-module.exports = { PKG, PRODUCTS, configured, verifyAndApply, rtdn, rtdnKey, sweep, start, status, readSub, prices, setPrice, _apply: apply, _parseTry: parseTry, _toKurus: toKurus, _fromKurus: fromKurus };
+// ---- İşletmeye özel indirim teklifleri ----
+// Her ürünün 'aylik' planında oran başına bir "geliştirici belirlemeli" teklif: indirim-10/20/30. Google bu teklifleri herkese
+// listeler; hangisinin kullanılacağına uygulama sunucunun söylediği indirime göre karar verir (yetkisiz kullanım verifyAndApply'da reddedilir).
+const DISCOUNT_MONTHS = 12; // indirimli dönem sayısı; sonrasında normal fiyat
+const offersPath = id => `/subscriptions/${encodeURIComponent(id)}/basePlans/${BASE_PLAN}/offers`;
+async function discountOffers() {
+  const { DISCOUNTS, DISCOUNT_OFFER } = require('./pricing'), out = {};
+  for (const id of PRODUCTS) {
+    const list = (await api('GET', offersPath(id))).subscriptionOffers || [];
+    out[id] = Object.fromEntries(DISCOUNTS.map(p => { const o = list.find(x => x.offerId === DISCOUNT_OFFER(p)); return [p, o ? o.state : 'MISSING']; }));
+  }
+  return out;
+}
+async function ensureDiscountOffers() {
+  const { DISCOUNTS, DISCOUNT_OFFER } = require('./pricing'), done = [];
+  const cur = await discountOffers();
+  for (const id of PRODUCTS) for (const p of DISCOUNTS) {
+    const offerId = DISCOUNT_OFFER(p), st = cur[id][p], key = { packageName: PKG(), productId: id, basePlanId: BASE_PLAN, offerId };
+    if (st === 'MISSING') {
+      const body = { ...key, offerTags: [{ tag: 'indirim' }], regionalConfigs: [{ regionCode: PRICE_REGION, newSubscriberAvailability: true }],
+        phases: [{ recurrenceCount: DISCOUNT_MONTHS, duration: 'P1M', regionalConfigs: [{ regionCode: PRICE_REGION, relativeDiscount: p / 100 }] }] };
+      let last;
+      for (const v of REGION_VERSIONS) {
+        try { await api('POST', `${offersPath(id)}?offerId=${offerId}&regionsVersion.version=${encodeURIComponent(v)}`, body); last = null; break; }
+        catch (e) { last = e; if (e.status !== 400 || !/region/i.test(e.message)) break; }
+      }
+      if (last) throw new Error(`${id} ${offerId}: ${last.message}`);
+    }
+    if (st !== 'ACTIVE') { await api('POST', `${offersPath(id)}/${offerId}:activate`, key); done.push(`${id}/${offerId}`); }
+  }
+  console.log('[Play] indirim teklifleri:', done.length ? done.join(', ') : 'hepsi zaten etkin');
+  return { activated: done, offers: await discountOffers() };
+}
+
+module.exports = { PKG, PRODUCTS, DISCOUNT_MONTHS, discountOffers, ensureDiscountOffers, configured, verifyAndApply, rtdn, rtdnKey, sweep, start, status, readSub, prices, setPrice, _apply: apply, _parseTry: parseTry, _toKurus: toKurus, _fromKurus: fromKurus };

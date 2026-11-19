@@ -178,7 +178,8 @@ class PlayBillingManager(
         basePlanId: String,
         productType: String,
         tenantId: String,
-        addonKey: String = ""
+        addonKey: String = "",
+        offerId: String = ""
     ) {
         val client = billingClient
         if (client == null || !client.isReady) {
@@ -200,12 +201,18 @@ class PlayBillingManager(
             .setProductDetails(details)
 
         if (!isInApp) {
-            val offer = details.subscriptionOfferDetails?.firstOrNull {
-                basePlanId.isEmpty() || it.basePlanId == basePlanId
-            } ?: details.subscriptionOfferDetails?.firstOrNull()
+            // İşletmeye özel indirim teklifleri (indirim-*) Google'ca herkese listelenir: yalnız sunucu o teklifi
+            // istediğinde (offerId) seçilir; aksi halde normal/deneme teklifi kullanılır.
+            val all = details.subscriptionOfferDetails.orEmpty()
+            val plan = all.filter { basePlanId.isEmpty() || it.basePlanId == basePlanId }.ifEmpty { all }
+            val isDiscount = { o: ProductDetails.SubscriptionOfferDetails -> (o.offerId ?: "").startsWith("indirim-") }
+            val offer = if (offerId.isNotEmpty()) plan.firstOrNull { it.offerId == offerId }
+                else plan.firstOrNull { !isDiscount(it) }
 
             if (offer == null) {
-                onEvent("error", JSONObject().put("message", "Uygun abonelik planı bulunamadı: $productId ($basePlanId)"))
+                val msg = if (offerId.isNotEmpty()) "İndirim teklifi Google Play'de bulunamadı: $productId ($offerId)"
+                    else "Uygun abonelik planı bulunamadı: $productId ($basePlanId)"
+                onEvent("error", JSONObject().put("message", msg))
                 return
             }
             productParamsBuilder.setOfferToken(offer.offerToken)

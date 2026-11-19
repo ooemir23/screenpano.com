@@ -1157,6 +1157,15 @@ class MainActivity : AppCompatActivity() {
             playBilling?.launchPurchase(productId, basePlanId, productType, tenantId, addonKey)
         }
 
+        /**
+         * İşletmeye özel indirim teklifiyle (offerId: "indirim-20" vb.) satın alma. Teklifi sunucu belirler;
+         * yetkisiz kullanım sunucuda reddedilir (onaylanmayan satın alma Google'ca iade edilir).
+         */
+        @JavascriptInterface
+        fun playBuyOffer(productId: String, basePlanId: String, productType: String, tenantId: String, addonKey: String, offerId: String) {
+            playBilling?.launchPurchase(productId, basePlanId, productType, tenantId, addonKey, offerId)
+        }
+
         /** Cihazda aktif olan tüm abonelik ve ek özellik satın alımlarını JSON olarak döner. */
         @JavascriptInterface
         fun playActiveEntitlements(): String = playBilling?.activeEntitlementsJson() ?: "{\"keys\":[],\"items\":[]}"

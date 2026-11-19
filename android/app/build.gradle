@@ -23,8 +23,8 @@ android {
         applicationId 'com.screenpano.tv'
         minSdk 21
         targetSdk 36
-        versionCode 108
-        versionName '3.24.20'
+        versionCode 109
+        versionName '3.24.21'
         buildConfigField 'String', 'BUILD_DATE', "\"${new Date().format('yyyy-MM-dd', TimeZone.getTimeZone('Europe/Istanbul'))}\""
         buildConfigField 'String', 'BASE_URL', "\"${baseUrl}\""
         buildConfigField 'String', 'TEST_URL', "\"${testUrl}\""

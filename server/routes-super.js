@@ -32,7 +32,7 @@ r.get('/overview', (req, res) => {
   const online = hub.onlineDeviceIds();
   const list = tenants.all().map(t => {
     const devs = store.q.devicesOf.all(t.id), owner = store.q.usersOf.all(t.id).find(u => u.role === 'owner');
-    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, canPay: !!t.db.canPay, addons: require('./addons').summary(t), email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0, charges: (t.db.charges || []).slice(-50) };
+    return { org: t.org_id || null, deletion: t.db.deletion ? t.db.deletion.executeAt : null, consent: t.db.consent ? t.db.consent.at : null, id: t.id, name: t.name, plan: t.plan, status: t.status, trialUntil: t.trial_until, paidUntil: t.paid_until, unlimited: !!t.db.unlimited, superAccess: !!t.db.superAccess, canTest: !!t.db.canTest, canPay: !!t.db.canPay, discount: t.db.discount || null, addons: require('./addons').summary(t), email: (t.db.notify || {}).email || '', phone: t.phone, note: t.note, created: t.created, access: access(t), owner: owner ? owner.username : '', lastLogin: owner ? owner.last_login : null, devices: devs.length, deviceLimit: plan(t).devices, customDevices: (t.db && t.db.devices) || null, online: devs.filter(d => online.has(d.id)).length, storageMB: Math.round(media.usedBytes(t) / 1048576), storageLimitMB: plan(t).storageMB || 0, charges: (t.db.charges || []).slice(-50) };
   });
   const settings = Object.fromEntries(SETTINGS.map(k => [k, SECRET_KEYS.includes(k) ? maskKey(store.setting(k)) : store.setting(k)]));
   settings.traffic_secret = maskKey(require('./feeds').trafficSecret());
@@ -115,6 +115,14 @@ r.put('/tenants/:id', (req, res) => {
       if (v.until != null && v.until !== '' && !Number.isFinite(Number(v.until))) return res.status(400).json({ error: 'Geçersiz ek abonelik tarihi' });
       for (const id of ids) { const x = tenants.get(id); if (!x) continue; if (v.on) A.grant(x, aid, { until: v.until ? Number(v.until) : null, source: 'admin', force: true }); else A.revoke(x, aid); tenants.save(x); hub.pushTenant(id); }
     }
+  }
+  // işletmeye özel indirim: { pct: 0|10|20|30, until: ms|null, note } — pct 0 kaldırır; zincire uygula seçiliyse tüm şubelere
+  if (b.discount && typeof b.discount === 'object') {
+    const P = require('./pricing'), pct = Number(b.discount.pct) || 0, du = b.discount.until;
+    if (pct && !P.DISCOUNTS.includes(pct)) return res.status(400).json({ error: 'İndirim oranı ' + P.DISCOUNTS.map(x => '%' + x).join(', ') + ' olabilir' });
+    if (du != null && du !== '' && !Number.isFinite(Number(du))) return res.status(400).json({ error: 'Geçersiz indirim bitiş tarihi' });
+    const val = pct ? { pct, until: du ? Number(du) : null, note: String(b.discount.note || '').slice(0, 120), by: req.user.username || '', at: Date.now() } : null;
+    for (const id of ids) { const x = tenants.get(id); if (!x) continue; if (val) x.db.discount = val; else delete x.db.discount; tenants.save(x); hub.pushTenant(id); }
   }
   if (typeof b.canTest === 'boolean') { if (b.canTest) t.db.canTest = true; else delete t.db.canTest; tenants.save(t); hub.pushTenant(t.id); }
   if (b.superAccess !== undefined && !req.user.trueSuper) return res.status(403).json({ error: 'superAccess yetkisi yalnız süper yönetici hesabıyla değiştirilir' });
@@ -225,6 +233,15 @@ r.put('/play/prices', trueOnly, async (req, res) => {
   for (const id of ids) { try { results.push(await P.setPrice(id, b[id])); } catch (e) { results.push({ id, error: e.message }); } }
   const failed = results.filter(x => x.error);
   res.status(failed.length === ids.length ? 502 : 200).json({ ok: !failed.length, results });
+});
+// İşletmeye özel indirim teklifleri (Play): durum ve eksikleri kurma
+r.get('/play/offers', trueOnly, async (req, res) => {
+  const P = require('./play'); if (!P.configured()) return res.json({ configured: false });
+  try { res.json({ configured: true, months: P.DISCOUNT_MONTHS, offers: await P.discountOffers() }); } catch (e) { res.status(502).json({ error: e.message }); }
+});
+r.post('/play/offers', trueOnly, async (req, res) => {
+  const P = require('./play'); if (!P.configured()) return res.status(400).json({ error: 'Google Play servis hesabı tanımlı değil' });
+  try { res.json({ ok: true, months: P.DISCOUNT_MONTHS, ...(await P.ensureDiscountOffers()) }); } catch (e) { res.status(502).json({ error: e.message }); }
 });
 r.post('/play/sweep', trueOnly, async (req, res) => { try { await require('./play').sweep(); res.json({ ok: true }); } catch (e) { res.status(502).json({ error: e.message }); } });
 r.put('/ticker-brand', trueOnly, (req, res) => res.json({ ok: true, tickerBrand: require('./tickerbrand').set(req.body || {}) }));

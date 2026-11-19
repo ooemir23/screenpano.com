@@ -50,6 +50,15 @@ test('tutar: KDV hariç fiyata KDV eklenir, kuruş olarak döner', () => {
   assert.equal(core.quote('pro', 'monthly').amount, 300000);
   pricing.set({ currency: 'TRY', vat: 'excl', baslangic: { monthly: 2000, yearly: 20000 }, pro: { monthly: 3000, yearly: 30000 } });
 });
+test('tutar: işletmeye özel indirim yalnız geçerli oranda ve süresi içinde uygulanır', () => {
+  const t = { db: { discount: { pct: 20, until: null } } };
+  const q = core.quote('pro', 'monthly', t); // 3000 × 0,8 = 2400 + %20 KDV
+  assert.equal(q.list, 3000); assert.equal(q.discount, 20); assert.equal(q.net, 2400); assert.equal(q.amount, 288000);
+  t.db.discount.until = Date.now() - 1; assert.equal(core.quote('pro', 'monthly', t).net, 3000, 'süresi bitmiş indirim');
+  t.db.discount = { pct: 15, until: null }; assert.equal(core.quote('pro', 'monthly', t).net, 3000, 'Play teklifi olmayan oran');
+  assert.equal(core.quote('pro', 'monthly').discount, 0);
+  assert.equal(pricing.discountView({ db: { discount: { pct: 30, until: null } } }).offerId, 'indirim-30');
+});
 test('tutar: tanımsız fiyat, geçersiz paket/dönem ve TL dışı para birimi reddedilir', () => {
   assert.throws(() => core.quote('pro', 'daily')); assert.throws(() => core.quote('yok', 'monthly'));
   pricing.set({ currency: 'TRY', vat: 'excl', baslangic: { monthly: 2000 }, pro: { monthly: 3000 } });
