@@ -397,6 +397,12 @@ html.full-media #app>.cell[data-w=media]{grid-area:1/1/-1/-1!important}
 #menu .mgrid{grid-template-columns:1fr}
 #menu .mus{height:70vh;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-template-rows:repeat(5,auto) 1fr;column-gap:2.6vw;align-content:start}
 #menu .mus>*{grid-column:1}#menu .mus>.mlib{grid-column:2;grid-row:1 / -1;border-top:0;padding-top:0;border-left:max(1px,.1vh) solid rgba(255,255,255,.08);padding-left:2.4vw;min-height:0}
+#menu .mus{position:relative}#menu .mlock{display:none}
+#menu .mus.locked>*:not(.mlock){filter:blur(.35vh);opacity:.5;pointer-events:none}
+#menu .mus.locked .mlock{display:flex;position:absolute;inset:0;z-index:2;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh;text-align:center;padding:0 3vw;background:rgba(8,10,14,.35)}
+#menu .mlock b{font-size:3.2vh;color:#ffd27a}#menu .mlock span{font-size:2vh;color:rgba(255,255,255,.8);max-width:34vw;line-height:1.4}
+#menu .mlock button{font-size:2.2vh;padding:1.4vh 2.6vw;border-radius:1.4vh;background:#ffd27a;color:#1a1300;border:0;font-weight:700}
+#menu .mlock button:focus{box-shadow:0 0 0 .4vh #fff;outline:0}
 #menu .mus .ctl{margin-top:1.4vh}#menu .mus .vol{margin-top:1.4vh}
 #menu .mc:not(.mus){display:none}
 #menu.set .mgrid{grid-template-columns:1fr 1fr}#menu.set .mus{display:none}#menu.set .mc:not(.mus){display:flex}#menu .mc[hidden]{display:none!important}#menu.set .mc.dev{grid-row:span 2}
@@ -1310,7 +1316,7 @@ html.theme-glass .pill.live::before {
     <button id="mtopcls" type="button" data-nav title="Kapat" aria-label="Kapat">✕</button>
   </div>
   <div class="mgrid">
-    <section class="mc mus" id="mmc"><div class="msrc" id="mmsrc"><button id="mssp" type="button" data-nav><i></i>Spotify</button><button id="msyt" type="button" data-nav><i></i>YouTube Music</button><span>Müzik</span></div>
+    <section class="mc mus" id="mmc"><div class="mlock" id="mmlock"><b>⭐ Müzik Pro pakette</b><span id="mmlocks">YouTube Music ve Spotify listelerinizi ekranda çalın, kumandadan yönetin.</span><button id="mmlockb" type="button" data-nav>Pro pakete geç</button></div><div class="msrc" id="mmsrc"><button id="mssp" type="button" data-nav><i></i>Spotify</button><button id="msyt" type="button" data-nav><i></i>YouTube Music</button><span>Müzik</span></div>
       <div class="np"><div class="cv" id="mmcv">♪</div><div class="tx"><b id="mmtitle">-</b><span id="mmsub">-</span></div></div>
       <div class="mpr" id="mmpr" style="visibility:hidden"><span id="mmpe">0:00</span><span class="tr"><i id="mmpf"></i></span><span id="mmpd"></span></div>
       <div class="ctl"><button id="mmshuf" class="sm" type="button" data-nav aria-label="Karışık çal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></svg></button><button id="mmprev" type="button" data-nav aria-label="Önceki">⏮</button><button id="mmplay" class="big" type="button" data-nav aria-label="Oynat / duraklat">▶</button><button id="mmnext" type="button" data-nav aria-label="Sonraki">⏭</button><button id="mmrep" class="sm" type="button" data-nav aria-label="Tekrarla"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/><path class="one" d="M11 10h1v4"/></svg></button></div>
@@ -3321,6 +3327,10 @@ function menuMusic() {
   const vol = Math.max(0, Math.min(100, Math.round(opt && opt.vol != null ? opt.vol : (MUS.vol != null ? MUS.vol : (m && m.volume) || 0))));
   const sp = MUS.spConnectTrack;
   $m('mmc').classList.toggle('off', !has);
+  // Pro değilse müzik bölümü bulanık ve kilitli: içindeki düğmeler kumandayla seçilemez, yalnız "Pro pakete geç" seçilir
+  const sub = window.__SUB, locked = !!(sub && sub.pro === false);
+  $m('mmc').classList.toggle('locked', locked);
+  if (locked) { const B = window.SPPlayBilling, off = sub.discount && B && B.canOffer && B.canOffer() ? sub.discount.offerId : '', pr = B && B.priceOf ? B.priceOf('pro', off) : ''; $m('mmlockb').textContent = 'Pro pakete geç' + (pr ? ' · ' + pr + ' / ay' : ''); }
   // kart çalan kaynağa göre görünür: Spotify ya da YouTube Music (radyo/boş: genel görünüm)
   const src = it && it.provider === 'spotify' ? 'sp' : it && ['yt', 'ytm', 'ytmix'].includes(it.provider) ? 'yt' : '';
   const mc = $m('mmc'); if (mc.dataset.src !== src) { mc.dataset.src = src; mc.classList.toggle('sp', src === 'sp'); mc.classList.toggle('yt', src === 'yt'); }
@@ -3684,6 +3694,14 @@ attachTap('mtest', () => {
   b.dataset.arm = String(setTimeout(() => { b.dataset.arm = ''; menuSt(''); }, 5000));
 });
 attachTap('mcls', menuClose);
+// Pro değilken müzik kilidi: Play sürümünde Pro satın alma, değilse panel yönlendirmesi
+attachTap('mmlockb', () => {
+  const B = window.SPPlayBilling, s = window.__SUB || {};
+  if (B && B.isPlayStore()) {
+    const off = s.discount && B.canOffer() ? s.discount.offerId : '';
+    menuSt(B.buyPlan('pro', 'aylik', s.tid || '', off) ? 'Google Play ödeme ekranı açılıyor…' : 'Google Play ödeme şu an kullanılamıyor');
+  } else menuSt('Müzik Pro pakette. Panelden Pro pakete geçebilirsiniz: Ayarlar → Paket');
+});
 attachTap('mtopcls', menuClose);
 
 // Menü kutusuna dokunulduğunda arka plan tıklamasının tetiklenmesini engelle
@@ -3722,7 +3740,7 @@ document.addEventListener('touchend', e => {
 
 // Kumanda: Menü açıkken ▲▼◀▶ ile en yakın düğmeye geçilir (ızgara düzeni), OK seçer, Geri kapatır
 function menuNav(dir) {
-  const btns = [...$m('menu').querySelectorAll('[data-nav]')].filter(b => b.offsetParent !== null && getComputedStyle(b).display !== 'none');
+  const btns = [...$m('menu').querySelectorAll('[data-nav]')].filter(b => b.offsetParent !== null && getComputedStyle(b).display !== 'none' && !(b.closest('.mus.locked') && !b.closest('.mlock')));
   if (!btns.length) return;
   const cur = btns.indexOf(document.activeElement);
   if (cur < 0) { btns[0].focus(); return; }
@@ -4570,7 +4588,7 @@ function showMenuPage(anim) {
 // ---- durumun ilk adımı: tema, marka, düzen, abonelik ----
 function applyState0(s) {
   CITY = s.city || '';
-  window.__SUB = s.sub || null; try { subRender(); } catch (e) {}
+  window.__SUB = s.sub || null; try { subRender(); if ($m('menu').classList.contains('on')) menuMusic(); } catch (e) {}
   window.__savedLayout = s.layout;
   applyTheme(s.theme); applyBrand(s.brand); applyLayout(window.__draft || s.layout); setBlocked(s.blocked);
 }

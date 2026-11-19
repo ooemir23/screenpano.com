@@ -235,7 +235,7 @@ function publicState(t, screenId) {
     blocked: acc.ok ? null : acc.reason,
     app: appVersion(),
     // abonelik özeti (Play sürümündeki kutu menüsü için): paket, süre, ek abonelikler
-    sub: { tid: t.id, plan: p.id, planName: p.name, kind: acc.kind || acc.reason || '', until: acc.until || null, addons: require('./addons').summary(t), discount: require('./pricing').discountView(t) },
+    sub: { tid: t.id, plan: p.id, planName: p.name, pro: !!p.pro, kind: acc.kind || acc.reason || '', until: acc.until || null, addons: require('./addons').summary(t), discount: require('./pricing').discountView(t) },
   };
   if (!acc.ok) return { ...base, videos: [], matches: [], standings: {}, qrs: [], campaigns: [], bigMatches: [], reviews: [], rates: {}, weather: null };
   const enabled = F.enabledLeagues(t);
