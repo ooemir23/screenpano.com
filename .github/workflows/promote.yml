@@ -49,7 +49,7 @@ jobs:
 
   # Google Play sürümü (com.screenpano.play): canlıya alınan koddan AAB derlenip Play'e yüklenir.
   # Gerekli gizli değerler: PLAY_SERVICE_ACCOUNT_JSON (Play Console'da yayın izni olan servis hesabının JSON anahtarı),
-  # ANDROID_KEYSTORE_* ve (varsa) PLAY_UPLOAD_KEYSTORE_*. Kanal: depo değişkeni PLAY_TRACK (varsayılan production).
+  # ANDROID_KEYSTORE_* ve (varsa) PLAY_UPLOAD_KEYSTORE_*. Kanal: depo değişkeni PLAY_TRACK (varsayılan alpha = kapalı test).
   # İlk sürüm Play Console'dan elle yüklenmiş olmalı (Google, uygulamayı API ile oluşturmaya izin vermez).
   # Aynı versionCode daha önce yüklendiyse Play reddeder; bu durumda adım uyarı verip geçer (yeni sürüm için versionCode artırılır).
   play:
@@ -119,7 +119,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.screenpano.play
           releaseFiles: android/app/build/outputs/bundle/playRelease/app-play-release.aab
-          track: ${{ vars.PLAY_TRACK || 'production' }}
+          track: ${{ vars.PLAY_TRACK || 'alpha' }}  # shortcut: kapalı test (Alpha) varsayılan; Play production'a izin verince depo değişkeni PLAY_TRACK=production yapın
           status: completed
 
       - name: Sonuç
