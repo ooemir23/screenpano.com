@@ -1,0 +1,128 @@
+# "Play'e gönder": canlıdaki (main) sürümden Google Play paketi (AAB) derler ve Google Play'e yükler.
+# "Canlıya al" Play'e dokunmaz; birkaç kez canlıya alıp denedikten sonra Play'e bu iş akışıyla bir kez gönderilir.
+# Web, panel ve TV ekranı değişiklikleri Play uygulamasına sunucudan zaten ulaşır: Play'e yalnız Android kodu değişince gitmek gerekir.
+# Son gönderim "play-<versionCode>" etiketiyle işaretlenir; o etiketten beri android/ değişmediyse iş "gönderilecek bir şey yok" der ve durur.
+# Çalıştırma: GitHub → Actions → "Play'e gönder" → Run workflow → onay: play-e-gonder, kanal: alpha (kapalı test) | production (herkes).
+# Gerekli gizli değerler: PLAY_SERVICE_ACCOUNT_JSON, ANDROID_KEYSTORE_*, PLAY_UPLOAD_KEYSTORE_*.
+name: Play'e gönder
+
+on:
+  workflow_dispatch:
+    inputs:
+      onay:
+        description: 'Onaylamak için play-e-gonder yazın'
+        required: true
+      kanal:
+        description: 'Google Play kanalı (alpha = kapalı test, production = herkes)'
+        type: choice
+        options: [alpha, production]
+        default: alpha
+
+permissions:
+  contents: write
+
+concurrency:
+  group: play
+  cancel-in-progress: false
+
+jobs:
+  play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Onay
+        env:
+          ONAY: ${{ github.event.inputs.onay }}
+        run: '[ "$ONAY" = "play-e-gonder" ] || { echo "::error::Onay metni yanlış (play-e-gonder yazın)"; exit 1; }'
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Gönderilecek yeni sürüm var mı
+        id: chk
+        run: |
+          CODE=$(grep -m1 -E '^\s*versionCode ' android/app/build.gradle | awk '{print $2}')
+          NAME=$(grep -m1 -E "^\s*versionName " android/app/build.gradle | sed -E "s/.*versionName ['\"]([^'\"]+)['\"].*/\1/")
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"; echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          LAST=$(git tag -l 'play-*' --sort=-v:refname | head -1)
+          if [ -n "$LAST" ]; then
+            if git diff --quiet "$LAST" HEAD -- android/; then
+              echo "::notice::Son Play gönderiminden ($LAST) beri Android kodu değişmedi; gönderilecek yeni bir şey yok. Web, panel ve TV değişiklikleri Play uygulamasına sunucudan zaten ulaşır."
+              echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            if [ "$CODE" -le "${LAST#play-}" ]; then
+              echo "::error::Android kodu $LAST'ten beri değişti ama versionCode ($CODE) artırılmamış. android/app/build.gradle'da versionCode'u artırıp önce canlıya alın."
+              exit 1
+            fi
+          fi
+          echo "go=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        if: steps.chk.outputs.go == 'true'
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.chk.outputs.go == 'true'
+        with:
+          gradle-version: '8.9'
+
+      - name: Anahtarları yerleştir
+        if: steps.chk.outputs.go == 'true'
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PKS: ${{ secrets.PLAY_UPLOAD_KEYSTORE_B64 }}
+          PKS_PASS: ${{ secrets.PLAY_UPLOAD_KEYSTORE_PASSWORD }}
+          PKEY_ALIAS: ${{ secrets.PLAY_UPLOAD_KEY_ALIAS }}
+          PKEY_PASS: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
+          SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          [ -n "$SA" ] && [ -n "$KS" ] && [ -n "$PKS" ] || { echo "::error::PLAY_SERVICE_ACCOUNT_JSON, ANDROID_KEYSTORE_B64 ya da PLAY_UPLOAD_KEYSTORE_B64 eksik"; exit 1; }
+          echo "$KS" | base64 -d > android/app/release.keystore
+          printf 'storeFile=release.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$KS_PASS" "$KEY_ALIAS" "$KEY_PASS" > android/keystore.properties
+          echo "$PKS" | base64 -d > android/app/play-upload.jks
+          printf 'storeFile=play-upload.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$PKS_PASS" "$PKEY_ALIAS" "$PKEY_PASS" > android/play-keystore.properties
+
+      - name: Play paketini (AAB) derle ve imzayı denetle
+        if: steps.chk.outputs.go == 'true'
+        env:
+          PLAY_UPLOAD_SHA1: 'F7:09:54:87:D4:6D:68:F3:5C:64:6C:EE:21:AC:49:9A:15:71:28:8C'
+        run: |
+          (cd android && gradle --no-daemon bundlePlayRelease)
+          AAB=android/app/build/outputs/bundle/playRelease/app-play-release.aab
+          SHA1=$(keytool -printcert -jarfile "$AAB" | grep -m1 'SHA1:' | awk '{print $2}')
+          [ "$SHA1" = "$PLAY_UPLOAD_SHA1" ] || { echo "::error::AAB beklenmeyen anahtarla imzalı ($SHA1)"; exit 1; }
+
+      - name: Google Play'e yükle
+        if: steps.chk.outputs.go == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.screenpano.play
+          releaseFiles: android/app/build/outputs/bundle/playRelease/app-play-release.aab
+          track: ${{ github.event.inputs.kanal }}
+          status: completed
+
+      - name: Gönderimi işaretle
+        if: steps.chk.outputs.go == 'true'
+        run: |
+          git tag "play-${{ steps.chk.outputs.code }}" && git push origin "play-${{ steps.chk.outputs.code }}"
+          echo "::notice::Google Play'e gönderildi: ${{ steps.chk.outputs.name }} (${{ steps.chk.outputs.code }}), kanal ${{ github.event.inputs.kanal }}. Google incelemesinden sonra yayına çıkar."
+
+      - uses: actions/upload-artifact@v4
+        if: steps.chk.outputs.go == 'true'
+        with:
+          name: ScreenPano-play-aab
+          path: android/app/build/outputs/bundle/playRelease/*.aab
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Anahtarları sil
+        if: always()
+        run: rm -f android/app/release.keystore android/keystore.properties android/app/play-upload.jks android/play-keystore.properties

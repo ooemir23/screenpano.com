@@ -1,6 +1,6 @@
 # "Canlıya al": test (staging) dalında denenmiş her şeyi canlıya (main) taşır.
 # Taşınan APK, test sunucusunda denenenin AYNISIDIR (yeniden derlenmez); main'e girince Dokploy canlı sunucuyu
-# günceller, kutular yeni APK'yı menüden/bildirimle alır.
+# günceller, kutular yeni APK'yı menüden/bildirimle alır. Google Play'e DOKUNMAZ: Play için ayrı "Play'e gönder" (play.yml).
 # Çalıştırma: GitHub → Actions → "Canlıya al" → Run workflow → onay kutusuna  canliya-al  yazın.
 name: Canlıya al
 
@@ -46,97 +46,3 @@ jobs:
           # birleşme sonrası kalan çakışma işareti kalmadığından emin ol
           if git grep -nE '^(<<<<<<<|>>>>>>>) ' -- server public android .github >/dev/null 2>&1; then echo "::error::Çakışma işareti kaldı"; exit 1; fi
           for i in 1 2 3; do git push origin HEAD:main && break; git pull --rebase -q origin main; sleep 5; done
-
-  # Google Play sürümü (com.screenpano.play): canlıya alınan koddan AAB derlenip Play'e yüklenir.
-  # Gerekli gizli değerler: PLAY_SERVICE_ACCOUNT_JSON (Play Console'da yayın izni olan servis hesabının JSON anahtarı),
-  # ANDROID_KEYSTORE_* ve (varsa) PLAY_UPLOAD_KEYSTORE_*. Kanal: depo değişkeni PLAY_TRACK (varsayılan alpha = kapalı test).
-  # İlk sürüm Play Console'dan elle yüklenmiş olmalı (Google, uygulamayı API ile oluşturmaya izin vermez).
-  # Aynı versionCode daha önce yüklendiyse Play reddeder; bu durumda adım uyarı verip geçer (yeni sürüm için versionCode artırılır).
-  play:
-    needs: promote
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Play ayarları var mı
-        id: cfg
-        env:
-          SA: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-        run: |
-          if [ -z "$SA" ] || [ -z "$KS" ]; then
-            echo "::warning::PLAY_SERVICE_ACCOUNT_JSON ya da imza anahtarı yok — Google Play sürümü güncellenmedi (canlı site ve kutular güncellendi)."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - uses: actions/checkout@v4
-        if: steps.cfg.outputs.ok == 'true'
-        with:
-          ref: main
-
-      - uses: actions/setup-java@v4
-        if: steps.cfg.outputs.ok == 'true'
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - uses: gradle/actions/setup-gradle@v4
-        if: steps.cfg.outputs.ok == 'true'
-        with:
-          gradle-version: '8.9'
-
-      - name: Anahtarları yerleştir
-        if: steps.cfg.outputs.ok == 'true'
-        env:
-          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
-          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          PKS: ${{ secrets.PLAY_UPLOAD_KEYSTORE_B64 }}
-          PKS_PASS: ${{ secrets.PLAY_UPLOAD_KEYSTORE_PASSWORD }}
-          PKEY_ALIAS: ${{ secrets.PLAY_UPLOAD_KEY_ALIAS }}
-          PKEY_PASS: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
-        run: |
-          echo "$KS" | base64 -d > android/app/release.keystore
-          printf 'storeFile=release.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$KS_PASS" "$KEY_ALIAS" "$KEY_PASS" > android/keystore.properties
-          if [ -n "$PKS" ]; then
-            echo "$PKS" | base64 -d > android/app/play-upload.jks
-            printf 'storeFile=play-upload.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$PKS_PASS" "$PKEY_ALIAS" "$PKEY_PASS" > android/play-keystore.properties
-          fi
-
-      - name: Play paketini (AAB) derle
-        if: steps.cfg.outputs.ok == 'true'
-        working-directory: android
-        run: gradle --no-daemon bundlePlayRelease
-
-      - name: Google Play'e yükle
-        if: steps.cfg.outputs.ok == 'true'
-        id: up
-        continue-on-error: true
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.screenpano.play
-          releaseFiles: android/app/build/outputs/bundle/playRelease/app-play-release.aab
-          track: ${{ vars.PLAY_TRACK || 'alpha' }}  # shortcut: kapalı test (Alpha) varsayılan; Play production'a izin verince depo değişkeni PLAY_TRACK=production yapın
-          status: completed
-
-      - name: Sonuç
-        if: steps.cfg.outputs.ok == 'true'
-        run: |
-          CODE=$(grep -m1 -E '^\s*versionCode ' android/app/build.gradle | awk '{print $2}')
-          if [ "${{ steps.up.outcome }}" = "success" ]; then echo "::notice::Google Play'e yüklendi (versionCode $CODE, kanal ${{ vars.PLAY_TRACK || 'alpha' }}). Google incelemesinden sonra yayına çıkar."
-          else echo "::warning::Google Play yüklemesi yapılamadı (versionCode $CODE daha önce yüklenmiş olabilir ya da izin eksik). Ayrıntı yukarıdaki adımda."; fi
-
-      - uses: actions/upload-artifact@v4
-        if: steps.cfg.outputs.ok == 'true'
-        with:
-          name: ScreenPano-play-aab
-          path: android/app/build/outputs/bundle/playRelease/*.aab
-          retention-days: 30
-          if-no-files-found: ignore
-
-      - name: Anahtarları sil
-        if: always()
-        run: rm -f android/app/release.keystore android/keystore.properties android/app/play-upload.jks android/play-keystore.properties
