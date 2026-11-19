@@ -204,14 +204,14 @@ const buyPlan = id => startPlanUpgrade(id, false);
 // deneme ya da süresi dolmuş (askı hariç): satın alma düğmeleri her pakette görünür
 const mustBuy = () => { const a = S.me.tenant.access || {}; return a.kind !== 'unlimited' && a.reason !== 'suspended' && (!a.ok || a.kind === 'trial'); };
 function contactButtons(subject) {
-  const c = S.me.contact || {}, tag = `${subject} — ${S.me.tenant.name} (${S.me.tenant.slug})`, out = [];
+  const c = S.me.contact || {}, tag = `${subject} — ${S.me.tenant.name} (${(S.me.tenant.slug || S.me.tenant.id)})`, out = [];
   if (c.whatsapp) out.push(`<a class="btn s" href="https://wa.me/${esc(c.whatsapp)}?text=${encodeURIComponent('Merhaba, ' + tag + ': ')}" target="_blank" rel="noopener">💬 WhatsApp</a>`);
   if (c.email) out.push(`<a class="btn ${out.length ? 'g ' : ''}s" href="mailto:${esc(c.email)}?subject=${encodeURIComponent('ScreenPano: ' + tag)}">✉️ ${esc(c.email)}</a>`);
   if (c.phone) out.push(`<a class="btn g s" href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}">📞 ${esc(c.phone)}</a>`);
   return out.length ? out.join(' ') : '<span class="muted">İletişim bilgisi henüz eklenmedi.</span>';
 }
 function contactSales(what) {
-  openModal(`<div class="upg"><h3 style="margin:0 0 6px">${esc(what)}</h3><p class="muted" style="margin:0 0 14px">Ödemeyi hızlıca birlikte yapalım ve paketinizi hemen açalım. İşletme kodunuz: <code>${esc(S.me.tenant.slug)}</code></p>
+  openModal(`<div class="upg"><h3 style="margin:0 0 6px">${esc(what)}</h3><p class="muted" style="margin:0 0 14px">Ödemeyi hızlıca birlikte yapalım ve paketinizi hemen açalım. İşletme kodunuz: <code>${esc((S.me.tenant.slug || S.me.tenant.id))}</code></p>
     <div class="row" style="gap:8px;flex-wrap:wrap">${contactButtons(what)}</div>
     <div class="row mt" style="justify-content:flex-end"><button type="button" class="btn g s" onclick="closeModal()">Kapat</button></div></div>`);
 }
@@ -4096,7 +4096,7 @@ SECTIONS.help = {
         </div>`)
       + card('💬 Destek ve İletişim', 'Sorununuz devam ediyorsa teknik ekibimize doğrudan ulaşabilirsiniz.',
         `<p class="muted" style="margin-top:0">Destek ekibimiz işletme kodunuzla ekranlarınızın durumunu uzaktan kontrol edebilir.</p>
-         <div class="it"><div class="b"><b>İşletme Kodunuz</b><span>Destek isterken bu kodu paylaşın: <code>${esc(S.me.tenant.slug)}</code></span></div></div>
+         <div class="it"><div class="b"><b>İşletme Kodunuz</b><span>Destek isterken bu kodu paylaşın: <code>${esc((S.me.tenant.slug || S.me.tenant.id))}</code></span></div></div>
          <div class="row mt" style="gap:8px;flex-wrap:wrap">
            ${contactButtons('ScreenPano destek talebi')}
          </div>`)
