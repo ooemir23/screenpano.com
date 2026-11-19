@@ -46,3 +46,14 @@ jobs:
           # birleşme sonrası kalan çakışma işareti kalmadığından emin ol
           if git grep -nE '^(<<<<<<<|>>>>>>>) ' -- server public android .github >/dev/null 2>&1; then echo "::error::Çakışma işareti kaldı"; exit 1; fi
           for i in 1 2 3; do git push origin HEAD:main && break; git pull --rebase -q origin main; sleep 5; done
+
+      # Canlıdaki koda göre Google Play'e gönderilmeyi bekleyen uygulama (android/) değişikliği var mı: son "play-*" etiketinden beri
+      - name: Google Play güncellemesi gerekiyor mu
+        run: |
+          git fetch -q origin main --tags
+          LAST=$(git tag -l 'play-*' --sort=-v:refname | head -1)
+          [ -n "$LAST" ] || { echo "::notice::Henüz işaretlenmiş Play gönderimi yok (play-* etiketi)."; exit 0; }
+          N=$(git rev-list --no-merges --count "$LAST"..origin/main -- android/)
+          if [ "$N" -eq 0 ]; then echo "::notice::Google Play güncellemesi GEREKMİYOR: son Play gönderiminden ($LAST) beri uygulama kodu değişmedi."; exit 0; fi
+          LIST=$(git log --no-merges --format='• %s' "$LAST"..origin/main -- android/ | head -8 | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::warning::Google Play güncellemesi GEREKİYOR: son Play gönderiminden ($LAST) beri uygulama kodunda $N değişiklik var; hazır olunca \"play'e gönder\" deyin.%0A$LIST"
