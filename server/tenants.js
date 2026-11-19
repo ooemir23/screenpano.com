@@ -83,4 +83,13 @@ function mainScreen(t) {
   return row;
 }
 
-module.exports = { defaultDoc, get, all, refreshRow, save, saveNow, flushAll, remove, dirsFor, mainScreen };
+// Yedekten geri yüklemede işletmenin kendisinin değiştiremeyeceği alanlar hep mevcut değerinde kalır (yedekteki yok sayılır):
+// yetkiler, ödeme/abonelik kayıtları (Play ve süper yönetim), indirim, özel TV sınırı, ek şube ücretleri, KVKK kayıtları.
+const RESTORE_KEEP = ['superAccess', 'unlimited', 'canTest', 'canPay', 'addons', 'discount', 'devices', 'charges', 'deletion', 'consent'];
+function restoreDb(cur, parsed) {
+  const out = { ...cur, ...parsed };
+  for (const k of RESTORE_KEEP) { if (cur[k] !== undefined) out[k] = cur[k]; else delete out[k]; }
+  return out;
+}
+
+module.exports = { restoreDb, defaultDoc, get, all, refreshRow, save, saveNow, flushAll, remove, dirsFor, mainScreen };

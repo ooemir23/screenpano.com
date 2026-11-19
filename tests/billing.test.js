@@ -268,7 +268,7 @@ test('Play: indirim teklifi indirimi tanımlı olmayan işletmede onaylanmaz ve 
   } finally { global.fetch = real; store.setSetting('play_service_account', ''); }
 });
 test('yedekten geri yükleme: ödeme/yetki alanları yedekteki değere dönmez', () => {
-  const { restoreDb } = require('../server/routes-admin');
+  const { restoreDb } = tenants;
   const cur = { videos: [], name: 'yeni', addons: undefined, charges: [{ id: 'c1', status: 'unpaid' }], devices: 1 };
   const old = { videos: [{ id: 'v' }], name: 'eski', addons: { tahmin_ligi: { until: Date.now() + 9e9 } }, discount: { pct: 30 }, charges: [], devices: 5, canPay: true, superAccess: true };
   const out = restoreDb(cur, old);
