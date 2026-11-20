@@ -96,7 +96,7 @@ test('QR anahtarı: şimdiki ve bir önceki 2 saatlik pencere geçerli, başka i
   assert.ok(P.qrValid(a, k)); assert.ok(!P.qrValid(b, k)); assert.ok(!P.qrValid(a, '')); assert.ok(!P.qrValid(a, 'zzzzzzzzzz'));
   const w = Math.floor(Date.now() / 7200e3);
   assert.ok(P.qrValid(a, P.qrKey(a, w - 1)), 'önceki pencere'); assert.ok(!P.qrValid(a, P.qrKey(a, w - 2)), 'daha eski geçersiz');
-  assert.match(P.joinUrl(a), /\/lig\/[a-z0-9]{8}\?k=[a-f0-9]{10}$/);
+  assert.match(P.joinUrl(a), P.LIG_HOST ? /^https:\/\/tahmin\.[^/]+\/[a-z0-9]{8}\?k=[a-f0-9]{10}$/ : /\/lig\/[a-z0-9]{8}\?k=[a-f0-9]{10}$/);
 });
 
 test('doğum günü eşleşmesi (TR günü) ve 29 Şubat; telefon biçimi', () => {
