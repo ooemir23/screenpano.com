@@ -84,6 +84,13 @@ const page = (file, only) => (req, res) => {
     res.type('html').send(String(html).replace('<head>', '<head><script>window.__pageBuild="' + require('./realtime').build + '";</script>'));
   });
 };
+// tahmin.<taban>: kök ana siteye gider, /<kod> lig sayfasıdır (kod yoksa diğer yollar olduğu gibi çalışır)
+app.get(['/', '/:code'], (req, res, next) => {
+  if (String(req.headers['x-forwarded-host'] || req.headers.host || '').split(':')[0].toLowerCase() !== 'tahmin.' + baseHost) return next();
+  if (req.path === '/') return res.redirect(config.BASE_URL);
+  if (!require('./predict').byCode(req.params.code)) return next();
+  require('./routes-predict').page(req, res);
+});
 app.get('/', (req, res, next) => {
   const sub = subOf(req);
   if (sub) {

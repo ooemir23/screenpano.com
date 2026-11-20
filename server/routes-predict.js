@@ -150,7 +150,7 @@ pub.post('/:code/gsignup', (req, res) => {
 // Google dönüşü (routes-auth geri çağrısından): kayıtlıysa oturum aç; değilse QR anahtarı geçerliyse kayıt formuna imzalı e-posta taşı.
 // Oturum anahtarı adres çubuğunda # içinde taşınır (sunucuya ve günlüklere gitmez), sayfa hemen siler.
 function googleDone(req, res, code, email, k, gn) {
-  const t = P.byCode(code), back = h => res.redirect(`/lig/${encodeURIComponent(String(code))}#${h}`);
+  const t = P.byCode(code), back = h => res.redirect(`${P.ligUrl(String(code))}#${h}`);
   if (!t || !P.isOn(t)) return back('gerr=kapali');
   const d = P.cfg(t), uid = Object.keys(d.users).find(id => d.users[id].email === email);
   if (uid) {
@@ -235,6 +235,15 @@ pub.delete('/:code/me', (req, res) => {
 });
 
 // ---- müşteri sayfası ----
+const hostOf = req => String(req.headers['x-forwarded-host'] || req.headers.host || '').split(':')[0].toLowerCase();
+// Eski adres (<taban>/lig/<kod>) yeni alt alana gider; oturum anahtarı eski adresin localStorage'ındadır,
+// # ile taşınır (sunucuya gitmez) ki oyuncu yeniden giriş yapmasın.
+function moved(res, t, code, k) {
+  const to = P.urlOf(t) + (/^[a-f0-9]{10}$/.test(String(k || '')) ? '?k=' + k : '');
+  res.type('html').send(`<!doctype html><html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tahmin Ligi</title>`
+    + `<script>var u=${JSON.stringify(to)};try{var t=localStorage.getItem(${JSON.stringify('lig_' + code)});if(/^[a-f0-9]{64}$/.test(t||''))u+='#tk='+t}catch(e){}location.replace(u)</script>`
+    + `<p><a href="${esc(to)}">Tahmin Ligi yeni adresinde açılıyor…</a></p></html>`);
+}
 function page(req, res) {
   const t = P.byCode(req.params.code);
   res.set({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' });
@@ -242,6 +251,7 @@ function page(req, res) {
   const th = t.db.theme || {}, bg = col(th.bg, '#151717'), ac = col(th.accent, '#906538'), ac2 = col(th.accent2, '#c9955c'), tx = col(th.text, '#fbfbfb');
   const logo = t.db.logo ? t.upBase + t.db.logo : '';
   const code = P.cfg(t).code;
+  if (P.LIG_HOST && hostOf(req) !== P.LIG_HOST) return moved(res, t, code, req.query.k);
   res.type('html').send(require('./predict-page').html({ name: t.name, logo, code, bg, ac, ac2, tx, esc }));
 }
 

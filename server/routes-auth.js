@@ -143,7 +143,7 @@ r.get('/google/start', (req, res) => {
 // Tahmin Ligi müşterisi: Google ile giriş/kayıt (aynı geri çağrı adresi; Google Console'a yeni adres eklemek gerekmez)
 r.get('/google/lig/:code', (req, res) => {
   const code = String(req.params.code || '');
-  const back = h => res.redirect(`${baseOrigin(req)}/lig/${encodeURIComponent(code)}#${h}`);
+  const back = h => res.redirect(`${require('./predict').ligUrl(code)}#${h}`);
   if (!/^[a-z0-9]{4,16}$/i.test(code)) return res.status(404).end();
   const g = gCfg();
   if (!g.id || !g.secret) return back('gerr=1');
@@ -199,7 +199,7 @@ r.get('/google/callback', async (req, res) => {
   const fail = (msg, code = '1', countFail = true) => {
     console.error('[Google OAuth]', msg);
     if (countFail && !lig) auth.noteFail(ip);
-    if (lig) return res.redirect(`${baseOrigin(req)}/lig/${encodeURIComponent(lig)}#gerr=${code}`);
+    if (lig) return res.redirect(`${require('./predict').ligUrl(lig)}#gerr=${code}`);
     return gHome(req, res, `#gerr=${code}`);
   };
   try {

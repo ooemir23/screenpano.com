@@ -166,7 +166,10 @@ function cfg(t) {
   if (typeof d.prize !== 'string') d.prize = '';
   return d;
 }
-const urlOf = t => `${config.BASE_URL}/lig/${cfg(t).code}`;
+// Canlıda Tahmin Ligi kendi alt alanındadır (tahmin.<taban>/<kod>); test ortamında alt alan yok: <taban>/lig/<kod>
+const LIG_HOST = (() => { try { const h = new URL(config.BASE_URL).hostname.toLowerCase(); return config.APP_ENV === 'live' && h.includes('.') ? 'tahmin.' + h : ''; } catch (e) { return ''; } })();
+const ligUrl = code => LIG_HOST ? `https://${LIG_HOST}/${encodeURIComponent(code)}` : `${config.BASE_URL}/lig/${encodeURIComponent(code)}`;
+const urlOf = t => ligUrl(cfg(t).code);
 // Ekrandaki QR'da 2 saatte bir değişen anahtar (k): yeni kayıt yalnız bununla yapılır; işletmede olmayan,
 // eski/paylaşılmış bağlantıyla gelen kişi kayıt olamaz. Geçerlilik: içinde bulunulan ve bir önceki pencere (2–4 saat).
 const QR_WIN = 2 * 3600e3;
@@ -334,5 +337,5 @@ function tvView(t) {
     last: lw && !lw.none ? { nick: lw.nick, pts: lw.pts, week: weekLabel(lastKey) } : null, every: Math.max(3, Math.min(30, Number(d.every) || 8)) };
 }
 
-module.exports = { bornOn, bdayList, bdayView, PTS, LEAGUE, qrKey, qrValid, joinUrl, unsubSig, mailWeek, start, cfg, urlOf, byCode, isOn, board, pointsFor, weekKey, weekLabel, weekRange, weekStart, weekMatches, weekDone,
+module.exports = { LIG_HOST, ligUrl, bornOn, bdayList, bdayView, PTS, LEAGUE, qrKey, qrValid, joinUrl, unsubSig, mailWeek, start, cfg, urlOf, byCode, isOn, board, pointsFor, weekKey, weekLabel, weekRange, weekStart, weekMatches, weekDone,
   squad, refreshFixtures, refreshResults, settle, tvView, qrSvg, sha, rnd, prune, get matches() { return C.matches; }, _cache: C };
