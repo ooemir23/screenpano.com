@@ -1368,6 +1368,7 @@ html.theme-glass .pill.live::before {
       <button id="a-go" type="button">Giriş yap</button>
     </div>
     <div id="a-err"></div>
+    <button id="a-live" class="sec" type="button" style="display:none">🔙 Canlı ortama dön</button>
   </div>
   <div class="aor"><span>ya da</span></div>
   <div class="ar"><h2>Telefonla eşleştirin</h2><div id="a-qr"></div><div id="a-code">······</div>
@@ -4667,6 +4668,14 @@ async function doLogin() {
   $id('a-go').textContent = 'Giriş yap';
 }
 $id('a-go').addEventListener('click', doLogin);
+// Test ortamında cihaz eşleşmemiş açılır ve giriş ekranı menünün üstünde kalır: geri dönüş düğmesi burada da olsun
+try {
+  const n = window.__N;
+  if (n && n.switchEnv && n.env && n.env() === 'test') {
+    $id('a-live').style.display = '';
+    $id('a-live').addEventListener('click', () => { $id('a-live').textContent = 'Geçiliyor…'; n.switchEnv(); });
+  }
+} catch (e) {}
 $id('a-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 $id('a-user').addEventListener('keydown', e => { if (e.key === 'Enter') $id('a-pass').focus(); });
 // kumanda: yukarı/aşağı ile alanlar arasında gezin
