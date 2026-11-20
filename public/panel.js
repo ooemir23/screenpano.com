@@ -94,6 +94,8 @@ const ADDONS = {
   },
 };
 const playBridge = () => (window.SPPlayBilling && SPPlayBilling.isPlayStore && SPPlayBilling.isPlayStore() ? window.SPPlayBilling : null);
+// Google Play ödemesi yalnız TV'deki Play sürümünün menüsünde (tv.html, Abonelik kartı); web panelinde oraya yol tarifi
+const playHint = () => (playBridge() ? '' : `<p class="muted" style="font-size:13px;margin:12px 0 0">Google Play ile ödemek için TV'de kumandadan OK'a basın, sonra <b>⚙ Ayarlar → Abonelik (Google Play)</b>. Uygulamanın Google Play'den kurulmuş olması gerekir.</p>`);
 // ek abonelik etkin mi: sunucunun kaydı esastır (Play satın alması da sunucuda doğrulanıp buraya yansır)
 const hasAddon = id => !!(S.me && S.me.addons && S.me.addons[id] && S.me.addons[id].active);
 const isAddonLocked = addonId => (addonId ? !hasAddon(addonId) : !pro());
@@ -175,6 +177,7 @@ function openUpgradeModal(feat = 'Pro Özellikler', addonId = '') {
       </div>`}
       ${addonBox}
     </div>
+    ${playHint()}
     <div class="row end mt">
       ${isPlay ? '' : '<a class="btn g s" href="#settings/plan" onclick="closeModal()">Paketler ve ödeme</a>'}
       <button type="button" class="btn g s" onclick="closeModal()">Kapat</button>
@@ -213,6 +216,7 @@ function contactButtons(subject) {
 function contactSales(what) {
   openModal(`<div class="upg"><h3 style="margin:0 0 6px">${esc(what)}</h3><p class="muted" style="margin:0 0 14px">Ödemeyi hızlıca birlikte yapalım ve paketinizi hemen açalım. İşletme kodunuz: <code>${esc((S.me.tenant.slug || S.me.tenant.id))}</code></p>
     <div class="row" style="gap:8px;flex-wrap:wrap">${contactButtons(what)}</div>
+    ${playHint()}
     <div class="row mt" style="justify-content:flex-end"><button type="button" class="btn g s" onclick="closeModal()">Kapat</button></div></div>`);
 }
 function tahminCard() {
@@ -2591,7 +2595,7 @@ SECTIONS.settings = {
       const m = (l, used, lim, f = x => x) => `<div class="row" style="justify-content:space-between;font-size:14px"><span>${l}</span><span class="muted">${f(used)} / ${lim >= 999 || (p.id === 'sinirsiz' && l !== 'Cihaz') ? '∞' : f(lim)}</span></div><div class="meter" style="margin-bottom:12px"><i style="width:${Math.max(2, Math.min(100, lim >= 999 ? 0 : used / lim * 100))}%"></i></div>`;
       h += `<div class="grid g2">` + card('Paketiniz', '', `<div style="font-size:24px;font-weight:700;color:var(--accent2)">${esc(p.name)}</div><p class="muted" style="margin:2px 0 16px">${acc.kind === 'unlimited' ? 'Süresiz · tüm özellikler açık, sınır yok' : !acc.ok ? 'Süresi doldu' : (acc.kind === 'trial' ? 'Deneme · ' : 'Aktif · ') + fmtDate(acc.until) + ' tarihine kadar'}</p>
           ${m('Cihaz', u.devices, p.devices)}${m('Depolama', Math.round(u.storageBytes / 1048576), p.storageMB, x => x >= 1024 ? (x / 1024).toFixed(1) + ' GB' : x + ' MB')}${m('Kullanıcı', u.users, p.users)}`)
-        + card('Paketler', playBridge() ? 'Paket değişikliği için yükseltme düğmesini kullanın; ödeme Google Play üzerinden yapılır.' : 'Paket değişikliği ve ödeme için yükseltme düğmesini kullanın ya da bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' + (!pro() && !mustBuy() ? `<div class="mt"><button type="button" class="btn s" onclick="openUpgradeModal('Pro Paket')">🚀 Pro Pakete Yükselt</button></div>` : '') : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}${mustBuy() ? `<div class="mt"><button type="button" class="btn s${x.pro ? '' : ' g'}" onclick="buyPlan('${esc(x.id)}')">${esc(x.name)} — satın al</button></div>` : ''}</div>`).join('')}</div>`) + `</div><div class="mt">${tahminCard()}</div><div id="paycard" style="grid-column:1/-1"></div>`;
+        + card('Paketler', playBridge() ? 'Paket değişikliği için yükseltme düğmesini kullanın; ödeme Google Play üzerinden yapılır.' : 'Paket değişikliği ve ödeme için yükseltme düğmesini kullanın ya da bizimle iletişime geçin.', `${playHint()}<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' + (!pro() && !mustBuy() ? `<div class="mt"><button type="button" class="btn s" onclick="openUpgradeModal('Pro Paket')">🚀 Pro Pakete Yükselt</button></div>` : '') : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}${mustBuy() ? `<div class="mt"><button type="button" class="btn s${x.pro ? '' : ' g'}" onclick="buyPlan('${esc(x.id)}')">${esc(x.name)} — satın al</button></div>` : ''}</div>`).join('')}</div>`) + `</div><div class="mt">${tahminCard()}</div><div id="paycard" style="grid-column:1/-1"></div>`;
     } else if (sub === 'branches') {
       h += branchesHtml();
     } else if (sub === 'data') {
