@@ -1,0 +1,77 @@
+/* Tanıtım sitesi, telefon görünümü (c): paketler, SSS, iletişim, altbilgi. Yalnız @media (max-width:760px) içinde kural; masaüstü site2.css.
+   Seçiciler #id / html body ile güçlendirildi: sonra yüklenen eski site-m4.css (≤960px) bunları ezmesin. */
+@media (max-width:760px){
+  /* ---- ortak: bölüm ritmi ---- */
+  #paketler,#sss{padding:40px 0}
+  #sss{padding-top:12px}  /* paketlerle aynı zemin: arada çift boşluk olmasın */
+  #contact{padding:0 0 40px}
+  #paketler>.wrap,#sss>.wrap,#contact>.wrap,html body footer.sf>.wrap{padding-inline:20px}
+  #paketler h2,#sss h2{font-size:30px;line-height:1.08;margin:0 0 12px}
+  #paketler .eyebrow,#sss .eyebrow{margin-bottom:12px}
+  #paketler .intro,#sss .intro{font-size:16px;line-height:1.55;margin:0 0 20px}
+
+  /* ---- paketler ---- */
+  #paketler .plans{display:flex;flex-direction:column;gap:20px}
+  #paketler .plan.pro{order:-1}
+  #paketler .plan.rv{opacity:1;transform:none;transition:none}
+  #paketler .plan{padding:22px 20px 18px;border-radius:18px}
+  #paketler .plan .badge{top:-12px;inset-inline-end:16px;font-size:13px}
+  #paketler .plan h3{font-size:26px;line-height:1.05}
+  #paketler .plan .pnote{font-size:14px;line-height:1.45;margin:4px 0 14px}
+  #paketler .plan .price{font-size:36px;min-height:0;margin:0 0 16px}
+  #paketler .plan .price small{font-size:15px}
+  #paketler .plan .price:has(.ask){font-size:16px;line-height:1.3}
+  #paketler .plan .price .ask{display:flex;align-items:center;inline-size:max-content;min-height:44px;margin:0;font-size:15px}
+  #paketler .plan .price .yr{font-size:14px;margin-top:6px}
+  #paketler .plan .btn.wide{min-height:48px;padding:12px 18px}
+  #paketler .plan ul{margin:16px 0 0}
+  #paketler .plan li{padding:9px 0;padding-inline-start:26px;font-size:15px;line-height:1.4}
+  #paketler .plan li::before{top:15px}
+  /* uzun liste: ilk 5 madde, gerisi "Tümünü gör" ile */
+  #paketler .pextra{font-size:14px;margin-top:16px}
+
+  /* karşılaştırma: taşmasız 3 dar sütun, var/yok yalnız işaretle */
+  #paketler .cmp-w{margin-top:24px;overflow:hidden;border-radius:14px}
+  #paketler .cmp-w>summary{min-height:52px;padding:12px 16px;font-size:16px;gap:12px}
+  #paketler .cmp{min-width:0;table-layout:fixed;font-size:14px;line-height:1.4}
+  #paketler .cmp th,#paketler .cmp td{padding:10px 6px;vertical-align:top;overflow-wrap:anywhere;hyphens:auto}
+  #paketler .cmp tr>:first-child{inline-size:46%;padding-inline-start:16px}
+  #paketler .cmp td{inline-size:auto;text-align:center}
+  #paketler .cmp thead th{font-size:13px;letter-spacing:.02em;text-align:center}
+  #paketler .cmp thead th:first-child{text-align:start}
+  #paketler .cmp tr>:last-child{padding-inline-end:12px}
+  #paketler .cmp td.y,#paketler .cmp td.n{font-size:0}
+  #paketler .cmp td.y::before{content:'✓';font-size:17px}
+  #paketler .cmp td.n::before{content:'–';font-size:17px}
+
+  /* ---- SSS: akordeon ---- */
+  #sss .faq-g{display:block}
+  #sss .faq-g .intro{margin-bottom:24px}
+  #sss .faq summary{display:flex;align-items:center;min-height:52px;padding-block:12px;padding-inline:0 48px;font-size:16px;line-height:1.35}
+  #sss .faq summary::after{content:'+';top:50%;inset-inline-end:0;margin-top:-16px;inline-size:32px;block-size:32px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line2);border-radius:50%;font-size:22px;line-height:1}
+  #sss .faq details[open] summary::after{transform:none;content:'–';border-color:var(--accent)}
+  #sss .faq details p{font-size:16px;line-height:1.55;margin:0 0 18px}
+
+  /* ---- iletişim çağrısı ---- */
+  #contact .contact{display:flex;flex-direction:column;align-items:stretch;gap:20px;padding:28px 20px;border-radius:18px}
+  #contact .contact h2{font-size:28px;line-height:1.08;margin:0 0 10px}
+  #contact .contact p{font-size:16px;line-height:1.55}
+  #contact .contact .ways{display:flex;flex-direction:column;gap:10px;inline-size:100%}
+  #contact .contact .ways .btn{inline-size:100%;min-height:48px;padding:12px 18px}
+
+  /* ---- altbilgi ---- */
+  html body footer.sf{padding:40px 0 24px;font-size:15px}
+  html body footer.sf .sf-g{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 16px}
+  html body footer.sf .sf-b{grid-column:1/-1}
+  html body footer.sf .sf-b img{height:28px;margin-bottom:10px}
+  html body footer.sf .sf-b p{font-size:15px;line-height:1.5}
+  /* "Ürün" grubu üst menünün tekrarı: telefonda gizli, Hesap ve Yasal yan yana */
+  html body footer.sf .sf-g nav:nth-of-type(n){display:flex;flex-direction:column;gap:0;grid-column:auto}
+  html body footer.sf .sf-g nav:nth-of-type(1){display:none}
+  html body footer.sf nav b{font-size:14px;margin:0 0 4px}
+  html body footer.sf nav a{display:flex;align-items:center;min-height:44px;padding:4px 0;font-size:15px;line-height:1.3}
+  html body footer.sf .sf-c{margin-top:24px;padding-top:16px;flex-direction:column;align-items:stretch;gap:12px}
+  html body footer.sf .sf-l{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  html body footer.sf .sf-l a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:0 4px;border:1px solid var(--line);border-radius:10px;font-size:14px;text-decoration:none;white-space:nowrap}
+  html body footer.sf .sf-l a[aria-current]{border-color:var(--line2)}
+}

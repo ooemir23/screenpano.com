@@ -1,0 +1,74 @@
+/* Tanıtım sitesi, telefon görünümü (b): #ekran, #ozellikler, #panel. Yalnız @media (max-width:760px) içinde kural; masaüstü site2.css. */
+@media (max-width:760px){
+  /* ortak ölçüler */
+  #ekran,#ozellikler,#panel{padding:40px 0}
+  /* TV görselinin ışıması (.tvf::before) kenardan taşıp sayfayı yana kaydırıyordu */
+  #ekran,#ozellikler,#panel{overflow-x:clip}
+  #ekran .wrap,#ozellikler .wrap,#panel .wrap{padding-inline:20px}
+  #ekran h2,#ozellikler h2,#panel h2{font-size:30px;line-height:1.08;margin-bottom:14px}
+  #ekran .intro,#ozellikler .intro,#panel .intro{font-size:16px;line-height:1.55;margin-bottom:20px}
+  #ekran .nb,#ekran .pb,#ozellikler .nb,#ozellikler .pb{font-size:13px;padding:2px 7px;vertical-align:2px}
+
+  /* ---- ekran tasarımı: önce seçili düzenin görseli, altında 2x2 seçici ---- */
+  #gal{gap:12px}
+  #gal .gal-view{order:-1}
+  #gal .gal-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0;padding:0;overflow:visible}
+  #gal .gal-tabs button{width:auto;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--glass);display:flex;align-items:center}
+  #gal .gal-tabs button b{font-size:14.5px;line-height:1.25;margin:0}
+  #gal .gal-tabs button span{display:none}
+  #gal .gal-tabs button[aria-selected=true]{background:var(--card);border-color:var(--accent);box-shadow:none}
+  #ekran .design-g{margin-top:28px;padding-top:24px;gap:24px}
+  #ekran .design-g h3{font-size:18px;margin-bottom:12px}
+  /* kutular: hap bulutu yerine iki sütunlu düzenli liste, solda çizgi ikon */
+  #ekran .wlist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #ekran .wlist li{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.25;color:var(--ink)}
+  #ekran .wlist li .si{width:18px;height:18px;flex:none;color:var(--accent)}
+  #ekran .wlist li.pro::after{margin-inline-start:auto;font-size:11px}
+  /* renk temaları: kısa kutular, "Aa" ve renk noktası üst satırda, ad altta */
+  #ekran .themes{gap:8px}
+  #ekran .themes li{padding:34px 10px 8px;font-size:13px;line-height:1.3;border-radius:11px}
+  #ekran .themes li::before{top:11px;inset-inline-start:10px;font-size:17px}
+  #ekran .themes li::after{top:13px;inset-inline-start:auto;inset-inline-end:10px;width:16px;height:16px;filter:none}
+  #ekran .note{font-size:14px;line-height:1.5;margin:12px 0 0}
+
+  /* ---- özellikler: tek yatay çip şeridi + seçili kart + önceki/sonraki ---- */
+  #fx{gap:14px;align-items:stretch}
+  #fx .fx-rail{display:flex!important;align-self:stretch;min-width:0;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding-inline:20px;scrollbar-width:none;margin-inline:-20px;padding:2px 20px 4px}
+  #fx .fx-rail::-webkit-scrollbar{display:none}
+  #fx .fx-nav{position:static;flex:none;flex-wrap:nowrap;gap:6px}
+  #fx .fx-nav button{flex:none;flex-wrap:nowrap;min-height:44px;padding:0 14px;border-radius:999px;font-size:14px;scroll-snap-align:start}
+  #fx .fx-nav .n{white-space:nowrap}
+  #fx .fx-nav .nb{display:none}
+  #fx .fx-nav [aria-selected=true] .si{color:inherit}
+  #fx .fx-p{padding:16px;gap:16px;border-radius:16px}
+  #fx .fx-t h3{font-size:23px}
+  #fx .fx-t p{font-size:16px;line-height:1.55;margin-bottom:12px}
+  #fx .pts{gap:6px}
+  #fx .pts li{font-size:14.5px;line-height:1.45}
+  #fx .tags{margin-top:12px;gap:6px}
+  #fx .tags li{font-size:13px;padding:5px 10px}
+  #fx .fx-step{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  #fx .fx-step button{width:48px;height:48px;border-radius:50%;border:1px solid var(--line2);background:var(--card);color:var(--ink);font:inherit;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  [dir=rtl] #fx .fx-step button span{transform:scaleX(-1)}
+  #fx .fx-c{font-size:14px;color:var(--soft);font-variant-numeric:tabular-nums}
+  /* "Ve dahası": tek sütun liste, başlık + iki satır (alt dolgu yok, satır sınırında kesilsin); ilk 5 kart, gerisi düğmeyle */
+  #ozellikler .more-w{margin-top:28px;border-radius:14px}
+  #ozellikler .more-w>summary{min-height:52px;padding:12px 16px}
+  #ozellikler .more-h{font-size:18px}
+  #ozellikler .more-w>.more{padding:4px 16px 16px}
+  #ozellikler .more{grid-template-columns:1fr;gap:0}
+  #ozellikler .more li{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:14px 0 0;margin-top:14px;font-size:14px;line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;cursor:pointer}
+  #ozellikler .more li:hover{transform:none}
+  #ozellikler .more li:first-child{border-top:0;margin-top:0;padding-top:4px}
+  #ozellikler .more li.full{display:block}
+  #ozellikler .more li b{font-size:15.5px;margin-bottom:2px}
+
+  /* ---- panel: telefon görüntüleri yatay şerit, bir sonrakinin kenarı görünür ---- */
+  #panel .phones{grid-template-columns:repeat(4,44%);gap:14px;margin:0 -20px;padding:0 20px 6px;scroll-padding-inline:20px}
+  #panel .phones figure{scroll-snap-align:start}
+  #panel .phone{border-radius:24px;padding:5px}
+  #panel .phone img{border-radius:20px}
+  #panel .phones figcaption{margin-top:10px;font-size:13px;line-height:1.4}
+  #panel .phones figcaption b{font-size:14.5px}
+  #panel .ui-note{font-size:13.5px;margin-top:20px}
+}

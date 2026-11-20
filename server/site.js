@@ -70,12 +70,13 @@ function visual(f, t) {
 }
 
 // D1: features.json'daki emoji simgeleri tek tip çizgi ikona çevrilir (/icons.svg); eşlemesi olmayan emoji olduğu gibi kalır
-const EMO = { '🎧': 'headphones', '🚨': 'siren', '🎞': 'film', '🧾': 'receipt-text', '⚽': 'trophy', '📣': 'megaphone', '🎉': 'party-popper', '📰': 'newspaper', '⏱': 'timer', '📡': 'radio-tower', '📊': 'chart-column', '🏬': 'store', '💼': 'briefcase', '📷': 'camera', '🎨': 'palette', '💻': 'monitor', '🔒': 'lock', '💾': 'hard-drive', '📺': 'tv', '⚡': 'zap', '🔑': 'key-round', '🧩': 'puzzle', '🌐': 'globe', '📚': 'book-open', '🔥': 'flame', '📥': 'download', '🏟': 'trophy', '🔳': 'scan-line', '🧭': 'compass', '🔎': 'search', '🎯': 'target', '🍹': 'clock' };
+const EMO = { '🎧': 'headphones', '🚨': 'siren', '🎞': 'film', '🧾': 'receipt-text', '⚽': 'trophy', '📣': 'megaphone', '🎉': 'party-popper', '📰': 'newspaper', '⏱': 'timer', '📡': 'radio-tower', '📊': 'chart-column', '🏬': 'store', '💼': 'briefcase', '📷': 'camera', '🎨': 'palette', '💻': 'monitor', '🔒': 'lock', '💾': 'hard-drive', '📺': 'tv', '⚡': 'zap', '🔑': 'key-round', '🧩': 'puzzle', '🌐': 'globe', '📚': 'book-open', '🔥': 'flame', '📥': 'download', '🏟': 'trophy', '🔳': 'scan-line', '🧭': 'compass', '🔎': 'search', '🎯': 'target', '🍹': 'clock', '★': 'star', '▦': 'layout-template', '💱': 'coins', '🗺': 'map-pin', '🗂': 'library', '🖼': 'image', '🕌': 'clock', '🔗': 'link', '💡': 'sparkles', '👟': 'trophy', '🎛': 'settings', '🎂': 'cake', '🌤': 'cloud-sun', '🌍': 'globe', '✨': 'sparkles', '↕': 'arrow-up-to-line', '↔': 'layout-dashboard' };
 const ico = em => { const k = String(em || '').replace(/\uFE0F/g, ''); return EMO[k] ? `<svg class="si" aria-hidden="true"><use href="/icons.svg#i-${EMO[k]}"></use></svg>` : e(em || ''); };
 const isNew = f => f.added && (Date.now() - Date.parse(f.added)) / 864e5 < NEW_DAYS;
 const badges = (f, t) => (isNew(f) ? `<span class="nb">${e(t('s.new'))}</span>` : '') + (f.plan === 'pro' ? '<span class="pb">PRO</span>' : f.plan === 'addon' ? `<span class="pb">${e(t('s.addon'))}</span>` : '');
 
 // özellikler: kart ortada, sekmeler sol/sağ kolonlara eşit bölünür (alt satır yok)
+// .fx-rail masaüstünde görünmez (display:contents, ızgara alanları l/r); telefonda iki listeyi tek yatay kaydırmalı şeride toplar (site-m-b.css)
 function features(data, lang, t) {
   const list = data.features.filter(f => !f.hidden && f.title).map(f => loc(f, lang));
   const chip = (f, i) => `<button role="tab" id="fxt-${e(f.id)}" aria-controls="fx-${e(f.id)}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}"><span class="i" aria-hidden="true">${f.icon ? ico(f.icon) : '•'}</span><span class="n">${e(f.short || f.title)}</span>${badges(f, t)}</button>`;
@@ -88,9 +89,8 @@ function features(data, lang, t) {
   ${visual(f, t)}</article>`).join('\n');
   const navAria = e(t('s.featuresAria'));
   return `<div class="fx" id="fx">
-  <div class="fx-nav fx-n2" role="tablist" aria-label="${navAria}">${groups[0]}</div>
+  <div class="fx-rail" style="display:contents"><div class="fx-nav fx-n2" role="tablist" aria-label="${navAria}">${groups[0]}</div><div class="fx-nav fx-n3" role="tablist" aria-label="${navAria}">${groups[1]}</div></div>
   <div class="fx-panels">${panels}</div>
-  <div class="fx-nav fx-n3" role="tablist" aria-label="${navAria}">${groups[1]}</div>
   <div class="fx-step" hidden><button class="fx-prev" aria-label="${e(t('s.prev'))}"><span>‹</span></button><span class="fx-c" aria-live="polite">1 / ${list.length}</span><button class="fx-next" aria-label="${e(t('s.next'))}"><span>›</span></button></div></div>`;
 }
 
@@ -136,8 +136,11 @@ function render(store, tenants, access, lang = 'tr') {
   const contact = [wa && `<a class="btn" href="https://wa.me/${wa}" rel="noopener">${e(t('contact.wa'))}</a>`, phone && `<a class="btn ghost" href="tel:${e(phone.replace(/\s/g, ''))}" dir="ltr">${e(phone)}</a>`, mail && `<a class="btn ghost" href="mailto:${e(mail)}">${e(mail)}</a>`].filter(Boolean).join('');
   const live = tenants.all().filter(x => access(x).ok).length;
   const data = read(DATA, true);
-  const faq = (t('faq.items') || []).map(([q, a], i) => `<details${i === 0 ? ' open' : ''}><summary>${q}</summary><p>${a}</p></details>`).join('');
-  const widgets = (t('widgets') || []).map(([ic, n, pro]) => `<li${pro ? ' class="pro"' : ''}>${ic} ${e(n)}</li>`).join('');
+  const faq = (t('faq.items') || []).map(([q, a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('');
+  // ekrana konabilen kutular: emoji yerine tek tip çizgi ikon (eşlemesi yoksa emoji kalır)
+  const WICO = { '🎞': 'film', '🏷': 'store', '🕘': 'clock', '⛅': 'cloud-sun', '📜': 'newspaper', '✍': 'type', '🖼': 'image', '🔳': 'qr-code', '⚽': 'trophy', '⭐': 'star', '🧾': 'receipt-text' };
+  const wico = em => { const k = String(em || '').replace(/️/g, ''); return WICO[k] ? `<svg class="si" aria-hidden="true"><use href="/icons.svg#i-${WICO[k]}"></use></svg>` : e(em || ''); };
+  const widgets = (t('widgets') || []).map(([ic, n, pro]) => `<li${pro ? ' class="pro"' : ''}>${wico(ic)} ${e(n)}</li>`).join('');
   const canonical = BASE + PATH(lang);
   const hreflang = LANGS.map(l => `<link rel="alternate" hreflang="${l}" href="${BASE}${PATH(l)}">`).join('\n') + `\n<link rel="alternate" hreflang="x-default" href="${BASE}/">`;
   const ld = { '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'ScreenPano', applicationCategory: 'BusinessApplication', operatingSystem: 'Android, Windows, Web', inLanguage: lang, description: t('ld.desc'), url: canonical, offers: { '@type': 'Offer', price: '0', priceCurrency: 'TRY', description: t('ld.offer') } };

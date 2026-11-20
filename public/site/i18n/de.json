@@ -129,6 +129,8 @@
   "plan.pro.note": "Für alle Unternehmen, Hotels, Einzelhandel und Institutionen",
   "plan.pro.try": "Kostenlos registrieren",
   "plan.pro.list": ["<b>Alles aus Starter</b>", "<b>Werbefreier Bildschirm</b>", "Musik: YouTube Music und Spotify", "2 TV-Boxen (eine als Ersatz)", "{gbPro} GB Speicher für Medien", "Unbegrenzte Preisliste und Happy Hours", "Google-Bewertungen und Instagram", "Geburtstagsgrüße", "3 Standorte inklusive, weitere Filialen kostenpflichtig; 3 Nutzer", "Kein ScreenPano-Hinweis auf dem Bildschirm"],
+  "plans.more": "Alle anzeigen",
+  "plans.less": "Weniger anzeigen",
   "cmp.summary": "Alle Unterschiede vergleichen",
   "cmp.feature": "Funktion",
 

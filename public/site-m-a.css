@@ -1,0 +1,92 @@
+/* Tanıtım sitesi, telefon görünümü (a). Yalnız @media (max-width:760px) içinde kural; masaüstü site2.css. */
+/* Bölümler: üst çubuk + menü, hero, #nasil. */
+/* akış şemasındaki simgeler yalnız telefonda (masaüstünde SVG şema var) */
+.fl-cap .fl-ic{display:none}
+@media (max-width:760px){
+  /* ---- üst çubuk ---- */
+  .top .wrap,.hero .wrap,#nasil .wrap{padding-inline:20px}
+  .top .bar{height:60px;gap:12px}
+  .top .lg{min-height:44px}
+  .top .lg img{height:28px}
+  /* tema düğmesi hamburgerin yanında, sağda */
+  .top .theme{margin-inline-start:auto;width:44px;height:44px;border-radius:11px}
+  .top .burger{margin-inline-start:8px;width:44px;height:44px}
+  /* açılan menü: çubuğun altından ekranın sonuna kadar, büyük satırlar */
+  .top nav{top:100%;height:calc(100vh - 60px);height:calc(100dvh - 60px);padding:8px 20px calc(24px + env(safe-area-inset-bottom))}
+  .top nav>a{display:flex;align-items:center;min-height:56px;padding:0 4px;font-size:20px;font-weight:600}
+  .top .navcta{margin-top:24px;gap:12px}
+  .top .navcta .link,.top .navcta .btn{display:flex;align-items:center;justify-content:center;min-height:52px;padding:0 16px;font-size:16px}
+  .top .navcta .link{color:var(--ink)}
+  .top .prefs-m{gap:8px;margin-top:24px;padding-top:20px}
+  .top .prefs-m a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px}
+  /* açıkken düğme net bir kapatma (X) düğmesi olur */
+  .top.open .burger{background:var(--card2,#171b20);border-color:var(--line2)}
+  .top.open .burger span:first-child{transform:translateY(4px) rotate(45deg)}
+  .top.open .burger span:last-child{transform:translateY(-4px) rotate(-45deg)}
+
+  /* ---- hero ---- */
+  .hero{padding:16px 0 4px}
+  .hero-g{grid-template-columns:minmax(0,1fr);gap:24px}
+  .hero h1{font-size:clamp(32px,9.6vw,44px);line-height:1;margin:0 0 16px}
+  .hero .lead{font-size:16px;line-height:1.55;margin:0 0 20px;max-width:none}
+  .hero .cta{gap:10px}
+  .hero .cta .btn{flex:1 1 auto;min-height:52px;padding:0 20px;font-size:16px;white-space:nowrap}
+  .hero .cta .btn:not(.ghost){flex-basis:100%}
+  .hero .cta .btn.ghost{min-height:48px}
+  .hero .ticks{margin-top:16px;gap:8px 18px;font-size:14px}
+  .hero-v{padding:0;display:flex;flex-direction:column}
+  .hero-phone{display:none}
+  .hero-v .tvf::before{inset:-10% -6%}
+  .hero .tvf .bezel{padding:6px;border-radius:12px}
+  .hero .tvf .scr{border-radius:7px}
+  .hero .tvf .stand{height:8px}
+  /* örnek ekran seçici: TV'nin altında, kenara taşan kaydırmalı hap satırı (sonraki hap kenardan görünür) */
+  .hero .chips{order:2;position:static;inset:auto;transform:none;display:flex;gap:8px;width:auto;max-width:none;margin:16px -20px 0;padding:0 20px;background:none;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding-inline:20px;scrollbar-width:none}
+  [dir=rtl] .hero .chips{transform:none}
+  .hero .chips::-webkit-scrollbar{display:none}
+  .hero .chips button{flex:none;min-height:44px;padding:0 16px;font-size:14px;border:1px solid var(--line2);border-radius:999px;background:var(--glass);color:var(--soft);scroll-snap-align:start}
+  .hero .chips button[aria-selected=true]{border-color:transparent;background:linear-gradient(180deg,#f4b556,#df9425);color:var(--on-accent)}
+  /* olgu kutuları: 2×2, sakin aralıklar */
+  .hero .facts{margin-top:22px;grid-template-columns:1fr 1fr}
+  .hero .facts li{padding:14px 16px}
+  .hero .facts b{font-size:26px}
+  .hero .facts span{font-size:14px;line-height:1.4;margin-top:6px}
+
+  /* ---- nasıl çalışır ---- */
+  #nasil{padding:40px 0}
+  #nasil h2{font-size:30px;margin-bottom:12px}
+  #nasil .intro{font-size:16px;line-height:1.55;margin-bottom:20px}
+  /* akış şeması: telefonda dikey adım listesi; solda simge kutusu, kutuları ince çizgi bağlar */
+  #nasil .flow{margin:0 0 32px;padding:20px 18px;overflow:visible}
+  #nasil .flow > svg{display:none}
+  #nasil .fl-cap{display:block;margin:0;font-size:14px;line-height:1.35;color:var(--mute);text-align:start}
+  #nasil .fl-cap span{position:relative;display:grid;grid-template-columns:44px 1fr;column-gap:14px;align-items:center;min-height:44px;padding:0 0 18px}
+  #nasil .fl-cap span:last-child{padding-bottom:0}
+  /* bağlantı çizgisi: bir simge kutusunun altından bir sonrakine */
+  #nasil .fl-cap span:not(:last-child)::after{content:'';position:absolute;inset-inline-start:21px;top:46px;bottom:2px;width:2px;border-radius:2px;background:var(--line2)}
+  #nasil .fl-cap .fl-ic{grid-row:1 / 3;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--card2,#171b20);color:var(--ink)}
+  /* site2.css .flow svg rengi ve gölgesi şema içindir; simgeler kutunun rengini alır */
+  #nasil .fl-cap .fl-ic svg{color:inherit;filter:none;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  #nasil .fl-cap b{grid-column:2;align-self:end;margin:0;font-size:16px;font-weight:600;color:var(--ink)}
+  /* ScreenPano: vurgulu adım */
+  #nasil .fl-cap span:nth-child(2) .fl-ic{background:var(--accent);border-color:var(--accent);color:#1a1206}
+  #nasil .fl-cap span:nth-child(2) b{color:var(--accent2,var(--accent))}
+  /* HDMI dağıtıcı isteğe bağlı: kesikli çerçeve, kesikli çizgi */
+  #nasil .fl-cap span:nth-child(4) .fl-ic{border-style:dashed;background:transparent;color:var(--mute)}
+  #nasil .fl-cap span:nth-child(3)::after,#nasil .fl-cap span:nth-child(4)::after{background:repeating-linear-gradient(var(--line2) 0 4px,transparent 4px 8px)}
+  /* adımlar: yatay kaydırmalı kartlar, sonraki kartın kenarı görünür */
+  #nasil .steps{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:84%;gap:14px;margin:0 -20px;padding:0 20px 4px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:20px;scrollbar-width:none}
+  #nasil .steps::-webkit-scrollbar{display:none}
+  #nasil .steps li{scroll-snap-align:start;min-width:0}
+  #nasil .steps li::before{top:8px;inset-inline-end:12px;font-size:44px;color:rgba(245,242,236,.2);-webkit-text-stroke:1px rgba(245,242,236,.6);text-shadow:0 2px 12px rgba(0,0,0,.6)}
+  #nasil .steps .shot{aspect-ratio:16/10;margin-bottom:14px;border-radius:12px}
+  #nasil .steps h3{font-size:19px;margin-bottom:6px}
+  #nasil .steps p{font-size:15px;line-height:1.55}
+}
+@media (max-width:360px){
+  .top .wrap,.hero .wrap,#nasil .wrap{padding-inline:16px}
+  .hero .chips{margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px}
+  #nasil .steps{margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px}
+  .hero .facts li{padding:14px 12px}
+  .hero .facts b{font-size:23px}
+}

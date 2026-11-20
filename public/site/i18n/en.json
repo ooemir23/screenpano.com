@@ -129,6 +129,8 @@
   "plan.pro.note": "For all businesses, hotels, retail and organisations",
   "plan.pro.try": "Sign up free",
   "plan.pro.list": ["<b>Everything in Starter</b>", "<b>Ad-free screen</b>", "Music: YouTube Music and Spotify", "2 TV boxes (one as a spare)", "{gbPro} GB media storage", "Unlimited price list and happy hours", "Google reviews and Instagram", "Birthday greetings", "3 locations included, extra branches billed; 3 users", "No ScreenPano badge on screen"],
+  "plans.more": "Show all",
+  "plans.less": "Show less",
   "cmp.summary": "Compare all features",
   "cmp.feature": "Feature",
 
