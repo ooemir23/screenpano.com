@@ -779,6 +779,13 @@ body.sp-on .ytm-bar{background:#000}body.sp-on .ytm-prog{background:var(--sp)}
   .ytm-bar-np{order:1;justify-self:stretch;gap:10px}.ytm-bar-ctl{order:2;gap:0}.ytm-bar-ctl button{width:38px;height:38px}.ytm-bar-ctl .big{width:44px;height:44px}
   .ytm-bar-r{order:3}.ytm-vol{display:none}.ytm-src button span{display:none}.ytm-src button{padding:7px 10px}
 }
+/* Pro kilidi örnek müzik ana sayfası: kaynak seçici üstte net kalır, içerik hafif bulanık önizlenir */
+.ytm-demo{position:relative;border-radius:12px}
+.ytm-demo.pro-veil>*:not(.pro-ov){filter:blur(1.4px);opacity:.64}
+.ytm-demo .ytm-top{position:static;margin:0;padding:6px 0 10px;z-index:auto}
+.ytm-demo .ytm-chips{position:static;margin:0 0 14px;padding:4px 0 8px;z-index:auto}
+.ytm-bar.demo-lock{cursor:pointer}
+.ytm-bar.demo-lock>*{filter:blur(1.4px);opacity:.55;pointer-events:none;user-select:none}
 
 /* Kampanya Canlı Önizleme & Görsel Alanı */
 .camp-grid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:22px;align-items:start}

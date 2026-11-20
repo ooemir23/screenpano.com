@@ -338,7 +338,7 @@ function drawNav() {
       : NAV; // music.* adresi: yalnız Müzik bölümü
   if (window.__ONLY === 'music') { // music.* adresi: sol menüde iki kaynak; seçilen kaynak tüm sayfayı ve çalmayı değiştirir
     const v = typeof srcView === 'function' ? srcView() : 'yt';
-    const it = (k, icn, name) => { const av = srcAvail(k); return `<a href="#music" class="${v === k ? 'on' : ''}${av ? '' : ' off'}" onclick="switchSrc('${k}');return false">${ic(icn)}${name}${av ? '' : '<span class="pro">Pasif</span>'}</a>`; };
+    const it = (k, icn, name) => { const av = !pro() || srcAvail(k); return `<a href="#music" class="${v === k ? 'on' : ''}${av ? '' : ' off'}" onclick="switchSrc('${k}');return false">${ic(icn)}${name}${av ? '' : '<span class="pro">Pasif</span>'}</a>`; };
     $('nav').innerHTML = `<div class="grp">Kaynak</div>` + it('yt', 'music', 'YouTube Music') + it('spotify', 'headphones', 'Spotify');
     document.title = 'ScreenPano Müzik'; $('toptitle').textContent = v === 'spotify' ? 'Spotify' : 'YouTube Music';
     return;
@@ -3162,6 +3162,7 @@ function srcView() {
   let v = MSRCV;
   if (!v) { try { v = localStorage.getItem('mus.src'); } catch (e) { /* kayıt yoksa varsayılan */ } }
   if (v !== 'yt' && v !== 'spotify') { const a = musicActive(); v = a && isSp(a) ? 'spotify' : 'yt'; }
+  if (!pro()) return v;
   const ya = srcAvail('yt'), sa = srcAvail('spotify');
   if (v === 'spotify' && !sa && ya) v = 'yt';
   if (v === 'yt' && !ya && sa) v = 'spotify';
@@ -3169,6 +3170,10 @@ function srcView() {
 }
 const SPMODE = () => srcView() === 'spotify';
 function setSrc(k) {
+  if (!pro()) {
+    MSRCV = k; try { localStorage.setItem('mus.src', k); } catch (e) { /* tarayıcı kaydı kapalıysa yalnız bu oturumda geçerli */ }
+    MV = null; render(true); return;
+  }
   if (!srcAvail(k) && (srcAvail('yt') || srcAvail('spotify'))) { goM('accounts'); return toast(k === 'spotify' ? 'Spotify pasif: önce hesabı bağlayın' : 'YouTube pasif: önce hesabı bağlayın', true); }
   MSRCV = k; try { localStorage.setItem('mus.src', k); } catch (e) { /* tarayıcı kaydı kapalıysa yalnız bu oturumda geçerli */ }
   MV = null; MSEARCH.q = ''; SPS = { q: '', r: null, busy: false, err: '' }; LF = 'all';
@@ -3178,6 +3183,10 @@ function setSrc(k) {
 // music.* sol menüsünden kaynak değişir: sayfa o kaynağa geçer, o kaynağın son listesi TV'de çalmaya başlar, diğer kaynak durur ve sıfırlanır
 let MERR = '';
 async function switchSrc(k) {
+  if (!pro()) {
+    MERR = ''; MSRCV = k; try { localStorage.setItem('mus.src', k); } catch (e) { /* kayıt kapalıysa yalnız bu oturumda */ }
+    MV = null; go('music/home'); render(true); return;
+  }
   MERR = '';
   if (!SPACC.st) await spAccLoad(); if (!YTACC.st) await ytAccLoad(); // durum henüz gelmediyse yanlış "bağlı değil" demesin
   if (!srcAvail(k)) {
@@ -3201,14 +3210,15 @@ function drawMerr() { const b = $('merrbox'); if (b) b.innerHTML = merrHtml(); }
 function spDevLoadIf() { if (SPMODE() && (SUB.music || '') === 'accounts' && SPACC.st && SPACC.st.connected && !SPACC.devs) spDevLoad(); }
 function srcPicker() {
   if (window.__ONLY === 'music') return ''; // kaynak sol menüden seçilir
-  const v = srcView(), none = !srcAvail('yt') && !srcAvail('spotify');
-  const b = (k, name, icn) => { const av = none || srcAvail(k); return `<button type="button" class="${v === k ? 'on' : ''} ${av ? '' : 'off'}" ${av ? '' : 'title="Hesap bağlanana kadar pasif"'} onclick="setSrc('${k}')">${ic(icn)}<span>${name}</span>${av ? '' : `<small>Pasif</small>`}</button>`; };
+  const free = !pro(), v = srcView(), none = !srcAvail('yt') && !srcAvail('spotify');
+  const b = (k, name, icn) => { const av = free || none || srcAvail(k); return `<button type="button" class="${v === k ? 'on' : ''} ${av ? '' : 'off'}" ${av ? '' : 'title="Hesap bağlanana kadar pasif"'} ${free ? 'data-allow-locked="1"' : ''} onclick="setSrc('${k}')">${ic(icn)}<span>${name}</span>${av ? '' : `<small>Pasif</small>`}</button>`; };
   return `<div class="ytm-pick" role="group" aria-label="Müzik kaynağı">${b('yt', 'YouTube Music', 'music')}${b('spotify', 'Spotify', 'headphones')}</div>`;
 }
 const MSUB = { yt: 'accounts', add: 'accounts', presets: 'explore' }; // eski bağlantılar
 
 SECTIONS.music = {
   after() {
+    if (!pro()) { clearInterval(MNOW_T); return; }
     ytAccLoad(); spAccLoad(); musicNowLoad();
     clearInterval(MNOW_T); MNOW_T = setInterval(() => { if (TAB !== 'music') return clearInterval(MNOW_T); musicNowLoad(); }, 6000);
     if (MV && MV.listId && (MV.provider === 'yt' || MV.provider === 'ytm')) loadTracks(MV.listId);
@@ -3216,6 +3226,11 @@ SECTIONS.music = {
     if ((SUB.music || 'home') === 'accounts' && SPACC.st && SPACC.st.connected && !SPACC.devs) spDevLoad();
   },
   html() {
+    if (!pro()) {
+      return lock('Müzik')
+        + `<div class="ytm${SPMODE() ? ' sp' : ''}">${srcPicker()}<div class="ytm-demo pro-lock-area" ${lockAttrs('Müzik')}>${ytmTop('home', true)}<div class="ytm-body">${musicDemoHomeHtml()}</div></div></div>`
+        + `<div id="mnowbox">${musicDemoBar()}</div>`;
+    }
     let sub = MSUB[SUB.music] || SUB.music;
     if (!['home', 'explore', 'lib', 'search', 'accounts', 'setup'].includes(sub)) sub = 'home';
     if (SPMODE() && sub === 'explore') sub = 'home'; // Keşfet YouTube hazır listeleridir; Spotify görünümünde yok
@@ -3226,10 +3241,10 @@ SECTIONS.music = {
 const goM = k => { MV = null; go('music/' + k); };
 
 // ---- Üst şerit: arama + bölüm çipleri ----
-function ytmTop(sub) {
+function ytmTop(sub, noPick) {
   const chips = SPMODE() ? [['home', 'house', 'Ana sayfa'], ['lib', 'library', 'Kitaplığın'], ['accounts', 'link', 'Hesaplar'], ['setup', 'book-open', 'Kurulum']]
     : [['home', 'house', 'Ana sayfa'], ['explore', 'compass', 'Keşfet'], ['lib', 'library', 'Kitaplık'], ['accounts', 'link', 'Hesaplar'], ['setup', 'book-open', 'Kurulum']];
-  return `${srcPicker()}<div class="ytm-top">
+  return `${noPick ? '' : srcPicker()}<div class="ytm-top">
       <form class="ytm-search" onsubmit="musicSearch();return false">${ic('search')}<input type="search" id="ms-q" placeholder="${SPMODE() ? 'Ne çalmak istersin?' : 'Şarkı, sanatçı ya da liste arayın'}" value="${esc(MSEARCH.q)}" autocomplete="off"></form>
       <button class="ytm-ib" type="button" title="Bağlantı ekle" onclick="goM('accounts');setTimeout(()=>{const e=$('m-url');if(e){e.scrollIntoView({block:'center'});e.focus();}},120)">${ic('plus')}</button>
     </div>
@@ -3319,6 +3334,108 @@ async function musicNowLoad() {
     const box = $('mnowbox'); if (box) box.innerHTML = nowBar(); drawMerr();
     document.querySelectorAll('.ytm-tr').forEach(r => r.classList.toggle('on', !!(MNOW && (MNOW.videoId && r.dataset.v === MNOW.videoId || MNOW.uri && r.dataset.u === MNOW.uri))));
   } catch (e) {}
+}
+
+// ---- Pro kilidi örnek ana sayfa (YouTube Music ve Spotify için ayrı, etkileşimsiz önizleme) ----
+const _demoCovCache = new Map();
+function musicDemoCover(c1, c2, acc, style, isSp) {
+  const key = [c1, c2, acc, style, isSp ? 1 : 0].join('|');
+  if (_demoCovCache.has(key)) return _demoCovCache.get(key);
+  let art = '';
+  if (style === 'vinyl') {
+    art = `<circle cx="90" cy="96" r="56" fill="#0d0f12" opacity=".78"/><circle cx="90" cy="96" r="44" fill="none" stroke="${acc}" stroke-opacity=".28" stroke-width="2"/><circle cx="90" cy="96" r="30" fill="none" stroke="${acc}" stroke-opacity=".42" stroke-width="2"/><circle cx="90" cy="96" r="18" fill="${acc}"/><circle cx="90" cy="96" r="5" fill="#111"/>`;
+  } else if (style === 'waves') {
+    art = `<path d="M-10 120 Q35 76 90 112 T190 98 L190 190 L-10 190 Z" fill="${acc}" opacity=".32"/><path d="M-10 142 Q45 104 95 134 T190 124 L190 190 L-10 190 Z" fill="${acc}" opacity=".55"/><circle cx="52" cy="58" r="22" fill="${acc}" opacity=".85"/>`;
+  } else if (style === 'bars') {
+    art = [28, 48, 68, 88, 108, 128].map((x, i) => {
+      const h = [54, 92, 68, 112, 82, 46][i];
+      return `<rect x="${x}" y="${152 - h}" width="14" height="${h}" rx="7" fill="${acc}" opacity="${(0.55 + (i % 3) * 0.18).toFixed(2)}"/>`;
+    }).join('');
+  } else if (style === 'rings') {
+    art = `<circle cx="90" cy="96" r="60" fill="none" stroke="${acc}" stroke-width="8" opacity=".25"/><circle cx="90" cy="96" r="42" fill="none" stroke="${acc}" stroke-width="8" opacity=".48"/><circle cx="90" cy="96" r="24" fill="none" stroke="${acc}" stroke-width="8" opacity=".78"/><circle cx="90" cy="96" r="10" fill="#fff" opacity=".9"/>`;
+  } else if (style === 'prism') {
+    art = `<polygon points="90,32 146,136 34,136" fill="${acc}" opacity=".42"/><polygon points="90,54 132,136 48,136" fill="${acc}" opacity=".72"/><circle cx="90" cy="108" r="16" fill="#fff" opacity=".88"/>`;
+  } else {
+    art = `<circle cx="90" cy="84" r="34" fill="${acc}" opacity=".92"/><rect x="0" y="106" width="180" height="74" fill="#090b0f" opacity=".52"/><path d="M22 122h136M38 136h104M56 150h68" stroke="${acc}" stroke-width="4" stroke-linecap="round" opacity=".7"/>`;
+  }
+  const badge = isSp
+    ? `<g transform="translate(142 14)"><circle cx="12" cy="12" r="12" fill="#1ED760"/><path d="M6.2 9.3c3.9-1.2 8.3-.8 11.6 1.2M6.9 12.6c3.2-.9 6.8-.6 9.6 1M7.6 15.6c2.6-.7 5.3-.4 7.5.8" fill="none" stroke="#000" stroke-width="1.7" stroke-linecap="round"/></g>`
+    : `<g transform="translate(142 14)"><circle cx="12" cy="12" r="12" fill="#FF0033"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="#fff" stroke-width="1.4"/><path d="M10.2 9.2v5.6l4.7-2.8z" fill="#fff"/></g>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient></defs><rect width="180" height="180" fill="url(#g)"/>${art}${badge}</svg>`;
+  const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  _demoCovCache.set(key, url);
+  return url;
+}
+const MUSIC_DEMO_YT = {
+  lib: [
+    { title: 'Kafe & Akustik Mix', sub: 'Çalma listesi • YouTube Music', cov: ['#c85a2b', '#3b160d', '#f5b87a', 'vinyl'], on: true },
+    { title: 'Lofi Chill Beats (7/24)', sub: 'Çalma listesi • YouTube Music', cov: ['#312e81', '#0f172a', '#a78bfa', 'horizon'] },
+    { title: 'Smooth Jazz & Bossa Nova', sub: 'Çalma listesi • YouTube Music', cov: ['#6b1d3a', '#1f0a14', '#f3c969', 'rings'] },
+    { title: 'Türkçe Pop Hitleri', sub: 'Çalma listesi • YouTube Music', cov: ['#be123c', '#2a0a18', '#fda4af', 'waves'] },
+    { title: 'Deep House Lounge', sub: 'Çalma listesi • YouTube Music', cov: ['#0f766e', '#082f49', '#5eead4', 'prism'] },
+    { title: 'Sabah Kahvesi Akustik', sub: 'Çalma listesi • YouTube Music', cov: ['#78350f', '#1c1008', '#fbbf24', 'bars'] },
+  ],
+  ready: [
+    { title: 'Akşam Yemeği Caz', sub: 'Restoran & Caz • YouTube Music', cov: ['#581c87', '#1a0b2e', '#e9d5ff', 'rings'] },
+    { title: 'Enstrümantal Piyano', sub: 'Sakin & Odak • YouTube Music', cov: ['#065f46', '#062019', '#6ee7b7', 'bars'] },
+    { title: 'Gün Batımı Chill', sub: 'Lounge • YouTube Music', cov: ['#c2410c', '#4a044e', '#fdba74', 'horizon'] },
+    { title: 'Yüksek Enerji Spor', sub: 'Spor & Fitness • YouTube Music', cov: ['#dc2626', '#1f1010', '#fde047', 'prism'] },
+    { title: 'Indie & Alternatif', sub: 'Kafe & Modern • YouTube Music', cov: ['#1d4ed8', '#17153b', '#93c5fd', 'waves'] },
+    { title: 'Maç Günü Ritmi', sub: 'Sosyal Mekan • YouTube Music', cov: ['#1e3a8a', '#0c1222', '#fbbf24', 'vinyl'] },
+  ],
+};
+const MUSIC_DEMO_SP = {
+  lib: [
+    { title: 'Chill Hits', sub: 'Çalma listesi • Spotify', cov: ['#0d9488', '#0f172a', '#5eead4', 'waves'], on: true },
+    { title: 'Türkçe Pop', sub: 'Çalma listesi • Spotify', cov: ['#e11d48', '#4c0519', '#fda4af', 'vinyl'] },
+    { title: 'Coffee Table Jazz', sub: 'Çalma listesi • Spotify', cov: ['#78350f', '#1c1008', '#f59e0b', 'rings'] },
+    { title: 'Lounge Soft House', sub: 'Çalma listesi • Spotify', cov: ['#5b21b6', '#0f172a', '#c4b5fd', 'prism'] },
+    { title: 'Akustik Akşam', sub: 'Çalma listesi • Spotify', cov: ['#c2410c', '#2b1106', '#fdba74', 'horizon'] },
+    { title: 'Sabah Kahvesi', sub: 'Çalma listesi • Spotify', cov: ['#15803d', '#052e16', '#86efac', 'bars'] },
+  ],
+  acct: [
+    { title: 'Deep Focus', sub: 'Çalma listesi • 54 şarkı', cov: ['#0369a1', '#0c192c', '#7dd3fc', 'prism'] },
+    { title: 'Akşam Yemeği Caz', sub: 'Çalma listesi • 48 şarkı', cov: ['#6b1d3a', '#1f0a14', '#f3c969', 'rings'] },
+    { title: 'Gün Batımı Chill', sub: 'Çalma listesi • 62 şarkı', cov: ['#be185d', '#2e1065', '#fbcfe8', 'horizon'] },
+    { title: 'Beast Mode', sub: 'Çalma listesi • 55 şarkı', cov: ['#b91c1c', '#111827', '#fca5a5', 'bars'] },
+    { title: 'Lo-Fi Cafe', sub: 'Çalma listesi • 74 şarkı', cov: ['#9a3412', '#1c1917', '#fed7aa', 'vinyl'] },
+    { title: 'Enstrümantal Piyano', sub: 'Çalma listesi • 36 şarkı', cov: ['#047857', '#022c22', '#6ee7b7', 'waves'] },
+  ],
+};
+function musicDemoHomeHtml() {
+  if (SPMODE()) {
+    const h = new Date().getHours();
+    const hi = h < 6 ? 'İyi geceler' : h < 12 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar';
+    const tile = it => `<div class="sp-tile ${it.on ? 'on' : ''}"><button type="button" class="o"><img src="${musicDemoCover(...it.cov, true)}" alt=""><b>${esc(it.title)}</b></button><button type="button" class="p" aria-label="${it.on ? 'Duraklat' : 'Oynat'}">${ic(it.on ? 'pause-f' : 'play-f')}</button></div>`;
+    const card = it => mcard({ thumb: musicDemoCover(...it.cov, true), ic: 'headphones', title: it.title, sub: esc(it.sub), open: '', play: 'void 0', on: !!it.on, playing: !!it.on });
+    return `<div class="sp-hi"><h1>${hi}</h1></div>`
+      + `<div class="sp-tiles">${MUSIC_DEMO_SP.lib.map(tile).join('')}</div>`
+      + shelf('Kitaplığın', MUSIC_DEMO_SP.lib.map(card), '', '')
+      + shelf('Spotify listelerin', MUSIC_DEMO_SP.acct.map(card), moreBtn('accounts', 'Hesap'), 'Spotify');
+  }
+  const h0 = MUSIC_DEMO_YT.lib[0];
+  const hero = `<div class="ytm-hero"><div class="c"><img src="${musicDemoCover(...h0.cov, false)}" alt=""></div><div class="b"><small>TV'de çalıyor</small><h2>${esc(h0.title)}</h2><span>${esc(h0.sub)}</span>
+      <div class="row"><button type="button" class="ytm-btn w">${ic('pause-f')}Duraklat</button><button type="button" class="ytm-btn">${ic('list-music')}Şarkılar</button></div></div></div>`;
+  const card = it => mcard({ thumb: musicDemoCover(...it.cov, false), ic: 'music', title: it.title, sub: esc(it.sub), open: '', play: 'void 0', on: !!it.on, playing: !!it.on });
+  return hero
+    + shelf('Kitaplığınız', MUSIC_DEMO_YT.lib.map(card), '', 'Tekrar dinleyin')
+    + shelf('Mekanınız için hazır listeler', MUSIC_DEMO_YT.ready.map(card), moreBtn('explore', 'Keşfet'), 'YouTube Music');
+}
+function musicDemoBar() {
+  const sp = SPMODE(), it = sp ? MUSIC_DEMO_SP.lib[0] : MUSIC_DEMO_YT.lib[0];
+  const thumb = musicDemoCover(...it.cov, sp);
+  const shufB = `<button type="button" class="md on" title="Karışık çal: açık" aria-label="Karışık çal: açık">${ic('shuffle')}</button>`;
+  const repB = `<button type="button" class="md on" title="Tekrar: liste" aria-label="Tekrar: liste">${ic('repeat')}</button>`;
+  const volCtl = `<div class="ytm-bar-r"><label class="ytm-vol" title="Ses">${ic('volume-2')}<input type="range" min="0" max="100" value="75" disabled></label><span class="ytm-onoff">${sw(true, '')}</span></div>`;
+  if (sp) {
+    return `<div class="ytm-bar sp3 demo-lock" onclick="openUpgradeModal('Müzik')" title="Pro pakette">
+      <button type="button" class="ytm-bar-np"><span class="c"><img src="${thumb}" alt=""></span><span class="t"><b>${esc(it.title)}</b><span>Spotify • TV'de çalıyor</span></span></button>
+      <div class="sp-mid"><div class="ytm-bar-ctl">${shufB}<button type="button" aria-label="Önceki">${ic('skip-back-f')}</button><button type="button" class="big" aria-label="Duraklat">${ic('pause-f')}</button><button type="button" aria-label="Sonraki">${ic('skip-forward-f')}</button>${repB}</div>
+      <div class="sp-pr"><span class="ytm-pt e">1:42</span><span class="tr"><i class="ytm-pt f" style="width:44%"></i></span><span class="ytm-pt d">3:54</span></div></div>${volCtl}</div>`;
+  }
+  return `<div class="ytm-bar demo-lock" onclick="openUpgradeModal('Müzik')" title="Pro pakette"><i class="ytm-prog" style="width:42%"></i>
+    <div class="ytm-bar-ctl">${shufB}<button type="button" aria-label="Önceki">${ic('skip-back-f')}</button><button type="button" class="big" aria-label="Duraklat">${ic('pause-f')}</button><button type="button" aria-label="Sonraki">${ic('skip-forward-f')}</button>${repB}</div>
+    <button type="button" class="ytm-bar-np"><span class="c"><img src="${thumb}" alt=""></span><span class="t"><b>${esc(it.title)}</b><span>YouTube Music • TV'de çalıyor</span></span></button>${volCtl}</div>`;
 }
 
 // ---- Ana sayfa ----
