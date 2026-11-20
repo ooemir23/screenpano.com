@@ -148,9 +148,9 @@ input:focus-visible,select:focus-visible{outline:2px solid transparent}
           <select name="starter" id="starter"><option value="">Boş başlangıç</option></select>
         </div>
 
-        <div class="field">
-          <label for="f-username">Kullanıcı adı</label>
-          <input id="f-username" name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire" placeholder="isletmeadi">
+        <div class="field" id="email-field">
+          <label for="f-email">E-posta <span class="hint">(doğrulama & uyarı)</span></label>
+          <input id="f-email" name="email" type="email" maxlength="120" autocomplete="email" required placeholder="ornek@isletme.com">
         </div>
 
         <div class="field">
@@ -158,9 +158,9 @@ input:focus-visible,select:focus-visible{outline:2px solid transparent}
           <input id="f-pass" name="password" type="password" autocomplete="new-password" minlength="8" required placeholder="••••••••">
         </div>
 
-        <div class="field" id="email-field">
-          <label for="f-email">E-posta <span class="hint">(doğrulama & uyarı)</span></label>
-          <input id="f-email" name="email" type="email" maxlength="120" autocomplete="email" required placeholder="ornek@isletme.com">
+        <div class="field">
+          <label for="f-username">Kullanıcı adı <span class="hint">(otomatik önerilir)</span></label>
+          <input id="f-username" name="username" autocomplete="username" autocapitalize="none" required pattern="[a-zA-Z0-9._\-]{3,32}" title="3-32 karakter; harf, rakam, nokta, tire" placeholder="isletmeadi">
         </div>
 
         <div class="field" id="phone-field">
@@ -190,7 +190,16 @@ input:focus-visible,select:focus-visible{outline:2px solid transparent}
 </div>
 <script>
 const $ = id => document.getElementById(id);
-let canSignup = true, hasGoogle = false, gPair = '';
+let canSignup = true, hasGoogle = false, gPair = '', uTouched = false;
+function slugUser(s) {
+  const tr = { ç: 'c', Ç: 'c', ğ: 'g', Ğ: 'g', ı: 'i', İ: 'i', I: 'i', ö: 'o', Ö: 'o', ş: 's', Ş: 's', ü: 'u', Ü: 'u' };
+  return String(s || '').replace(/[çÇğĞıİIöÖşŞüÜ]/g, c => tr[c] || c).toLowerCase().replace(/[^a-z0-9._-]+/g, '').slice(0, 32);
+}
+$('f-username').addEventListener('input', () => { uTouched = !!$('f-username').value.trim(); });
+$('f-business').addEventListener('input', () => {
+  if (uTouched || ($('g-token').value && $('f-username').value.trim())) return;
+  $('f-username').value = slugUser($('f-business').value);
+});
 function loadCaptcha() {
   fetch('/api/auth/captcha').then(r => r.json()).then(c => {
     if (c && c.question) { $('cap-q').textContent = c.question; $('cap-tok').value = c.token || ''; $('cap-ans').value = ''; }

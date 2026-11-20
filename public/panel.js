@@ -218,7 +218,7 @@ function contactSales(what) {
 function tahminCard() {
   const a = ADDONS.tahmin_ligi, active = hasAddon(a.id), pr = priceLine(a.priceKey, a.id), tr = trialLine(a.id), rec = (S.me.addons || {})[a.id] || {};
   const badge = active ? '<span class="pill ok">✓ Aktif</span>' : (pr ? `<span class="addon-price-tag">${esc(pr)}</span>` : '');
-  const btn = active ? `<span class="muted">${rec.until ? I18N.t(new Date(rec.until).toLocaleDateString(I18N.locale) + ' tarihine kadar açık') : 'İşletmenizde açık'}</span> <a class="btn s g" href="#predict">Tahmin Ligi'ne git</a>`
+  const btn = active ? `<span class="muted">${rec.until ? I18N.t(new Date(rec.until).toLocaleDateString(I18N.locale) + ' tarihine kadar açık') : 'İşletmenizde açık'}</span> <a class="btn s g" href="#sport/predict">Tahmin Ligi'ne git</a>`
     : `<button type="button" class="btn s" data-allow-locked="1" onclick="openUpgradeModal('${esc(a.name)}','${esc(a.id)}')">⚡ ${esc(a.name)}'ni başlat</button>`;
   const body = `<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
     <div>${tr && !active ? `<span class="upg-trial">🎁 ${esc(tr)}</span>` : ''}<p class="muted" style="margin:6px 0 0;font-size:13px">${esc(a.desc)} Pakete dahil değildir; ek abonelik olarak alınır.</p></div>
@@ -310,31 +310,44 @@ const unimp = async () => { await fetch('/api/super/unimpersonate', { method: 'P
 /* ================= gezinme ================= */
 // Metin olan satır grup başlığıdır; null ayraçtır
 const NAV = [
-  'Ekran', ['home', 'layout-dashboard', 'Özet'], ['design', 'palette', 'Tasarım'], ['agenda', 'calendar-clock', 'Yayın Ajandası'],
-  'İçerikler', ['media', 'film', 'Medya'], ['special', 'radio-tower', 'Özel yayın'], ['music', 'music', 'Müzik', 1], ['menu', 'receipt-text', 'Fiyat Listesi'], ['happy', 'sparkles', 'İndirim Saatleri', 1], ['promo', 'megaphone', 'Kampanyalar'], ['qr', 'qr-code', 'QR Kodlar'], ['celeb', 'party-popper', 'Kutlamalar'],
-  'Canlı veri', ['sport', 'trophy', 'Spor'], ['predict', 'target', 'Tahmin Ligi', 'addon'], ['info', 'newspaper', 'Bilgi Bandı'],
-  'Takip', ['stats', 'chart-column', 'İstatistik'],
-  null, ['settings', 'settings', 'Ayarlar'], ['help', 'circle-help', 'Yardım & SSS'],
+  'Genel',
+    ['home', 'layout-dashboard', 'Özet'],
+    ['devices', 'tv', 'Cihazlar'],
+    ['design', 'palette', 'Tasarım'],
+  'İçerik ve Menü',
+    ['media', 'film', 'Medya'],
+    ['menu', 'receipt-text', 'Fiyat Listesi'],
+    ['music', 'music', 'Müzik', 1],
+  'Etkileşim ve Yayın',
+    ['promo', 'megaphone', 'Kampanya & Sosyal'],
+    ['qr', 'qr-code', 'QR Kodlar'],
+    ['sport', 'trophy', 'Spor'],
+    ['info', 'newspaper', 'Bilgi Bandı'],
+  'Yönetim',
+    ['stats', 'chart-column', 'İstatistik & Akış'],
+    ['settings', 'settings', 'Ayarlar'],
+    ['help', 'circle-help', 'Yardım & SSS'],
 ];
+let PREV_SUB = '', TIMES_DIRTY = 0, INFO_DIRTY = 0;
 let SIMPLE_MODE = (() => { try { return localStorage.getItem('sp.simpleMode') === '1'; } catch (e) { return false; } })();
-const SIMPLE_ALLOW = new Set(['home', 'design', 'media', 'menu', 'qr', 'settings', 'help']);
+const SIMPLE_ALLOW = new Set(['home', 'devices', 'design', 'media', 'menu', 'music', 'promo', 'qr', 'settings', 'help']);
 function toggleSimpleMode() {
   SIMPLE_MODE = !SIMPLE_MODE;
   try { localStorage.setItem('sp.simpleMode', SIMPLE_MODE ? '1' : '0'); } catch (e) {}
   document.body.classList.toggle('simple-mode', SIMPLE_MODE);
   const mb = $('mode-btn');
-  if (mb) mb.textContent = SIMPLE_MODE ? '⚙ Gelişmiş Mod' : 'Basit Mod';
+  if (mb) { mb.classList.toggle('on', SIMPLE_MODE); mb.textContent = SIMPLE_MODE ? '✨ Basit Mod · Açık' : '⚙ Gelişmiş Mod'; }
   drawNav();
   toast(SIMPLE_MODE ? 'Basit moda geçildi: yalnız temel bölümler gösteriliyor' : 'Gelişmiş moda geçildi: tüm bölümler ve detaylı ayarlar açık');
 }
 function drawNav() {
   document.body.classList.toggle('simple-mode', SIMPLE_MODE);
   const mb = $('mode-btn');
-  if (mb) mb.textContent = SIMPLE_MODE ? '⚙ Gelişmiş Mod' : 'Basit Mod';
+  if (mb) { mb.classList.toggle('on', SIMPLE_MODE); mb.textContent = SIMPLE_MODE ? '✨ Basit Mod · Açık' : '⚙ Gelişmiş Mod'; }
   const NV = window.__ONLY
     ? NAV.filter(n => Array.isArray(n) && n[0] === window.__ONLY)
     : SIMPLE_MODE
-      ? NAV.filter(n => !Array.isArray(n) ? (n !== 'Canlı veri' && n !== 'Takip') : SIMPLE_ALLOW.has(n[0]))
+      ? NAV.filter((n, i, a) => typeof n !== 'string' ? (n && SIMPLE_ALLOW.has(n[0])) : a.slice(i + 1).some((x, j) => { const idx = i + 1 + j; return typeof a[idx] !== 'string' && a[idx] && SIMPLE_ALLOW.has(a[idx][0]) && !a.slice(i + 1, idx).some(y => typeof y === 'string'); }))
       : NAV; // music.* adresi: yalnız Müzik bölümü
   if (window.__ONLY === 'music') { // music.* adresi: sol menüde iki kaynak; seçilen kaynak tüm sayfayı ve çalmayı değiştirir
     const v = typeof srcView === 'function' ? srcView() : 'yt';
@@ -347,19 +360,46 @@ function drawNav() {
   if (window.__ONLY === 'music') document.title = 'ScreenPano Müzik';
   const cur = NAV.find(n => Array.isArray(n) && n[0] === TAB); $('toptitle').textContent = cur ? cur[2] : '';
 }
+function curSubOf(tab) {
+  if (tab === 'design') return SUB.design || 'layout';
+  if (tab === 'media') return SUB.media || 'files';
+  if (tab === 'menu') return SUB.menu || 'items';
+  if (tab === 'promo') return SUB.promo || 'camp';
+  if (tab === 'sport') return SUB.sport || 'leagues';
+  if (tab === 'stats') return SUB.stats || 'overview';
+  if (tab === 'settings') return SUB.settings || 'business';
+  return '';
+}
 function go(h) { if (location.hash !== '#' + h) location.hash = h; else route(); }
 function route() {
   const h = location.hash.slice(1);
   const pm = /^pair=(\d{6})$/.exec(h);
-  if (pm) { SUB.settings = 'devices'; TAB = 'settings'; window.__pair = pm[1]; history.replaceState(null, '', '#settings/devices'); }
-  else { const [t, s] = h.split('/'); TAB = SECTIONS[t] ? t : 'home'; if (s) SUB[TAB] = s; }
+  if (pm) { TAB = 'devices'; window.__pair = pm[1]; history.replaceState(null, '', '#devices'); }
+  else {
+    const [t, s] = h.split('/');
+    if (t === 'settings' && s === 'devices') { TAB = 'devices'; }
+    else if (t === 'settings' && (s === 'backup' || s === 'privacy')) { TAB = 'settings'; SUB.settings = 'data'; }
+    else if (t === 'special') { TAB = 'media'; SUB.media = 'special'; }
+    else if (t === 'happy') { TAB = 'menu'; SUB.menu = 'happy'; }
+    else if (t === 'celeb') { TAB = 'promo'; SUB.promo = 'celeb'; }
+    else if (t === 'predict') { TAB = 'sport'; SUB.sport = 'predict'; }
+    else if (t === 'agenda') { TAB = 'stats'; SUB.stats = 'agenda'; }
+    else { TAB = SECTIONS[t] ? t : 'home'; if (s) SUB[TAB] = s; }
+  }
   if (window.__ONLY) TAB = window.__ONLY; // yalnız Müzik sayfası: başka bölüme geçilemez
+  const curSub = curSubOf(TAB);
   // kaydedilmemiş değişiklik varsa önce bölümde kalınır; kullanıcı "Kaydetmeden çık" derse hedefe gidilir
-  const leave = (sec, back, msg, clear) => { const to = location.hash.slice(1); TAB = sec; history.replaceState(null, '', '#' + back);
-    UI.ask(msg, { ok: 'Kaydetmeden çık', danger: true }).then(ok => { if (ok) { clear(); location.hash = to; } }); };
-  if (PREV === 'design' && TAB !== 'design' && EDIT.dirty) { leave('design', 'design/layout', 'Düzende kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { EDIT.dirty = false; EDIT.layout = null; }); if (TAB === PREV) return; }
-  if (PREV === 'menu' && TAB !== 'menu' && MENU && MENU.__dirty) { leave('menu', 'menu', 'Fiyat listesinde kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { MENU.__dirty = 0; MENU = null; }); if (TAB === PREV) return; }
-  PREV = TAB; document.body.dataset.tab = TAB; menu(false); if ($('modal').classList.contains('on')) closeModal(); render(); scrollTo(0, 0);
+  const leave = (sec, backSub, back, msg, clear) => {
+    const to = location.hash.slice(1); TAB = sec; if (backSub) SUB[sec] = backSub; history.replaceState(null, '', '#' + back);
+    UI.ask(msg, { ok: 'Kaydetmeden çık', danger: true }).then(ok => { if (ok) { clear(); location.hash = to; } });
+  };
+  if (PREV === 'design' && PREV_SUB === 'layout' && !(TAB === 'design' && curSub === 'layout') && EDIT.dirty) { leave('design', 'layout', 'design/layout', 'Düzende kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { EDIT.dirty = false; EDIT.layout = null; }); return; }
+  if (PREV === 'menu' && (PREV_SUB === 'items' || PREV_SUB === 'lang') && !(TAB === 'menu' && (curSub === 'items' || curSub === 'lang')) && MENU && MENU.__dirty) { leave('menu', PREV_SUB, 'menu/' + PREV_SUB, 'Fiyat listesinde kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { MENU.__dirty = 0; MENU = null; }); return; }
+  if (PREV === 'menu' && PREV_SUB === 'happy' && !(TAB === 'menu' && curSub === 'happy') && ((HD && HD.__dirty) || (HC && HC.__dirty))) { leave('menu', 'happy', 'menu/happy', 'İndirim saatlerinde kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { HD = null; HC = null; MENU = null; }); return; }
+  if (PREV === 'media' && PREV_SUB === 'special' && !(TAB === 'media' && curSub === 'special') && SP && SP.dirty) { leave('media', 'special', 'media/special', 'Özel yayında kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { SP = null; }); return; }
+  if (PREV === 'info' && TAB !== 'info' && INFO_DIRTY) { leave('info', '', 'info', 'Bilgi bandında kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { INFO_DIRTY = 0; }); return; }
+  if (PREV === 'promo' && PREV_SUB === 'celeb' && !(TAB === 'promo' && curSub === 'celeb') && TIMES_DIRTY) { leave('promo', 'celeb', 'promo/celeb', 'Kutlama saatlerinde kaydedilmemiş değişiklikler var. Kaydetmeden çıkılsın mı?', () => { TIMES = null; TIMES_DIRTY = 0; }); return; }
+  PREV = TAB; PREV_SUB = curSub; document.body.dataset.tab = TAB; menu(false); if ($('modal').classList.contains('on')) closeModal(); render(); scrollTo(0, 0);
 }
 addEventListener('hashchange', route);
 // D1: bölüm metinlerinin başındaki emoji simgeleri tek tip çizgi ikona çevrilir (çeviri katmanı işini bitirdikten sonra)
@@ -404,7 +444,7 @@ new MutationObserver(() => { clearTimeout(veilPro.t); veilPro.t = setTimeout(vei
 // Sayfa içi hızlı erişim: kart başlıkları üstte sabit bir şeritte; tıklayınca ekran o karta kayar ve kart kısa süre vurgulanır
 function drawJump() {
   const v = $('view'), cards = [...v.querySelectorAll('.card')].filter(c => { const h = c.querySelector(':scope > .ch h3'); return h && h.textContent.trim(); });
-  if (cards.length < 3) return;
+  if (cards.length < 4) return;
   const bar = document.createElement('div'); bar.className = 'jump';
   cards.forEach((c, i) => {
     if (!c.id) c.id = 'kart-' + i;
@@ -436,9 +476,9 @@ function drawBanner() {
   let ib = $('impbar'); if (S.me.user.impersonating && !ib) { ib = document.createElement('div'); ib.id = 'impbar'; document.body.prepend(ib); document.body.classList.add('imp'); }
   if (ib) ib.innerHTML = `<span>Süper yönetici olarak <b>${esc(t.name)}</b> işletmesini görüntülüyorsunuz.</span><button type="button" onclick="unimp()">Süper yönetime dön</button>`;
   if (!acc.ok) h += `<div class="bn bad"><span><b>${acc.reason === 'suspended' ? 'Hesabınız askıya alındı.' : 'Abonelik süreniz doldu.'}</b> Ekranınız şu an kapalı; paketiniz yenilenince kendiliğinden açılır.</span>${acc.reason === 'suspended' ? `<button class="btn s" onclick="contactSales('Hesap askıda')">Bize ulaşın</button>` : `<button class="btn s" onclick="buyPlan('${esc(t.plan.id)}')">Paketi yenile</button>`}</div>`;
-  if (S.db && S.db.deletion) h += `<div class="bn bad"><span><b>Hesap silme talebi var.</b> ${fmtDate(S.db.deletion.executeAt)} tarihinde tüm veriler kalıcı olarak silinecek.</span><a class="btn s g" href="#settings/privacy">Vazgeç</a></div>`;
+  if (S.db && S.db.deletion) h += `<div class="bn bad"><span><b>Hesap silme talebi var.</b> ${fmtDate(S.db.deletion.executeAt)} tarihinde tüm veriler kalıcı olarak silinecek.</span><a class="btn s g" href="#settings/data">Vazgeç</a></div>`;
   const off = S.scr && S.scr.devices.filter(d => !d.online && d.last_seen && Date.now() - d.last_seen > (S.scr.offlineMin || 10) * 60000 && Date.now() - d.last_seen < 7 * 86400000);
-  if (acc.ok && off && off.length) h += `<div class="bn trial"><span><b>${esc(off[0].name || 'TV kutusu')}</b> ${offSince(off[0].last_seen)} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin.</span><a class="btn s g" href="#settings/devices">Cihazlar</a></div>`;
+  if (acc.ok && off && off.length) h += `<div class="bn trial"><span><b>${esc(off[0].name || 'TV kutusu')}</b> ${offSince(off[0].last_seen)} beri çevrimdışı. Kutunun elektriğini, internetini ve uygulamanın açık olduğunu kontrol edin.</span><a class="btn s g" href="#devices">Cihazlar</a></div>`;
   if (!acc.ok) {} else if (acc.kind === 'trial') h += `<div class="bn trial${days > 1 ? ' soft' : ''}"><span>Deneme süreniz <b>${days} gün</b> sonra (${fmtDate(acc.until)}) bitiyor. Deneme boyunca tüm Pro özellikler açık.</span><a class="btn s" href="#settings/plan">Paket seç</a></div>`;
   if (t.notifyEmail && !t.emailVerified) h += `<div class="bn trial soft"><span>E-posta adresiniz (<b>${esc(t.notifyEmail)}</b>) henüz doğrulanmadı. Ekran durumu uyarıları ve şifre sıfırlama için doğrulayın.</span><button class="btn s g" onclick="resendVerifyEmail(this)">Doğrulama e-postası gönder</button></div>`;
   $('banner').innerHTML = h;
@@ -465,7 +505,7 @@ function attention(db, t, devs) {
   const out = [], acc = t.access, now = Date.now(), day = 86400000;
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
   for (const d of devs.filter(d => !d.online && d.last_seen && now - d.last_seen > 10 * 60000 && now - d.last_seen < 7 * day))
-    out.push({ lv: 'bad', t: esc(d.name || 'TV kutusu'), s: `<span>Çevrimdışı, son görülme</span>: <span>${ago(d.last_seen)}</span>`, href: '#settings/devices' });
+    out.push({ lv: 'bad', t: esc(d.name || 'TV kutusu'), s: `<span>Çevrimdışı, son görülme</span>: <span>${ago(d.last_seen)}</span>`, href: '#devices' });
   if (!acc.ok && acc.reason !== 'suspended') out.push({ lv: 'bad', t: 'Abonelik süreniz doldu', s: 'Ekranınız kapalı; paketinizi yenileyin', href: '#settings/plan' });
   if (acc.ok && acc.until && acc.until - now <= (acc.kind === 'trial' ? 3 : 7) * day)
     out.push({ lv: 'warn', t: acc.kind === 'trial' ? 'Deneme süreniz bitiyor' : 'Aboneliğiniz bitiyor', s: `<span>Bitiş tarihi</span>: ${fmtDate(acc.until)}`, href: '#settings/plan' });
@@ -482,26 +522,27 @@ SECTIONS.home = {
     const steps = [
       [!!t.logo, 'Logo ve renkler', 'Logonuzu yükleyin, renklerinizi seçin', '#design/colors'],
       [db.videos.length > 0, 'Medya ekleyin', 'Tanıtım videoları ve fotoğraflar', '#media'],
-      [devs.length > 0, 'TV kutusunu bağlayın', 'Android kutuya ya da Windows bilgisayara uygulamayı kurun, kodu girin', '#settings/devices'],
+      [devs.length > 0, 'TV kutusunu bağlayın', 'Android kutuya ya da Windows bilgisayara uygulamayı kurun, kodu girin', '#devices'],
       [!!(db.location || {}).custom, 'Şehrinizi seçin', 'Hava durumu için', '#settings/business'],
     ];
     steps.push([(db.menu.categories || []).length > 0, 'Fiyat listesi', 'Ürünlerinizi ve fiyatlarınızı girin', '#menu']);
     const done = steps.filter(s => s[0]).length;
     const camp = (db.campaigns || []).find(c => c.enabled && c.url);
+    const hasSport = !!(S.lg && S.lg.enabled && S.lg.enabled.length);
     const att = attention(db, t, S.scr.devices);
     return head(esc(t.name), 'Ekranınızın durumu, kurulum adımları ve hızlı işlemler.', `<a class="btn g" href="/tv?preview=1" target="_blank">📺 TV ekranını aç</a>`)
       + (att.length ? card('İlgilenmeniz gerekenler', 'Kırmızılar acil, sarılar yakında ilgilenilecek işler.', att.map(a => `<a class="att ${a.lv}" href="${a.href}"><span class="b"><b>${a.t}</b><span>${a.s}</span></span><span>›</span></a>`).join(''), '', 'mb') : '')
       + `<div class="grid g2" style="margin-bottom:18px">`
       + card('Canlı önizleme', 'TV\'lerinizde şu an görünen ekran.', pvFrame() + `<div class="row mt" style="flex-wrap:wrap;gap:6px">${devs.length ? `<span class="pill ${online ? 'ok' : 'warn'}"><span class="dot ${online ? 'on' : ''}"></span>${online ? 'Cihaz bağlı' : 'Cihaz şu an çevrimdışı'}</span>` : '<span class="pill bad">Henüz cihaz bağlanmadı</span>'}<span style="flex:1"></span><button class="btn s g" type="button" onclick="togglePvInteractive(this)">👆 Önizlemeye dokun / test et</button><button class="btn s g" onclick="act('POST','/devices/reload',undefined,'TV\\'lere yenileme komutu gönderildi',false)">↻ TV\'yi yenile</button></div>`)
       + (done === steps.length
-        ? card('Ekranlarınız', `<span class="okline">${ic('circle-check')} Kurulum tamam · ${done}/${steps.length} adım</span>`, devs.length ? `<div class="list">${devs.map(d => `<a class="it devl" href="#settings/devices"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b"><b>${esc(d.name || 'TV kutusu')}</b><span>${d.online ? 'Bağlı · içerik güncel' : 'Çevrimdışı · son görülme ' + ago(d.last_seen || d.lastSeen)}</span></div>${ic('chevron-right')}</a>`).join('')}</div>` : '<div class="empty">Henüz cihaz bağlanmadı</div>')
+        ? card('Ekranlarınız', `<span class="okline">${ic('circle-check')} Kurulum tamam · ${done}/${steps.length} adım</span>`, devs.length ? `<div class="list">${devs.map(d => `<a class="it devl" href="#devices"><span class="dot ${d.online ? 'on' : ''}"></span><div class="b"><b>${esc(d.name || 'TV kutusu')}</b><span>${d.online ? 'Bağlı · içerik güncel' : 'Çevrimdışı · son görülme ' + ago(d.last_seen || d.lastSeen)}</span></div>${ic('chevron-right')}</a>`).join('')}</div>` : '<div class="empty">Henüz cihaz bağlanmadı</div>')
         : card(`Kurulum adımları <span class="muted">· ${done}/${steps.length}</span>`, 'Sırayla tamamlayın; her adım ilgili sayfayı açar.',
         `<div class="steps">${steps.map((s, i) => `<a class="step ${s[0] ? 'done' : ''}" href="${s[3]}"><span class="n">${s[0] ? '✓' : i + 1}</span><span class="b"><b>${s[1]}</b><span>${s[2]}</span></span><span>›</span></a>`).join('')}</div>`))
       + `</div>`
       + card('Hızlı işlemler', 'Ekranda anında bir gösterim başlatır; ayarlarınızı değiştirmez.', `<div class="row">
-          <button class="btn g" onclick="act('POST','/goal/test',undefined,'Gol animasyonu gönderildi',false)">⚽ Gol animasyonunu dene</button>
+          ${hasSport ? `<button class="btn g" onclick="act('POST','/goal/test',undefined,'Gol animasyonu gönderildi',false)">⚽ Gol animasyonunu dene</button>` : ''}
           <button class="btn g ${pro() ? '' : 'pro-btn-lock'}" onclick="${pro() ? "act('POST','/birthday/fire',undefined,'Doğum günü kutlaması gönderildi (seçili kişi yoksa görünmez)',false)" : "warnUpgrade('Doğum günü kutlaması')"}">🎂 Doğum günü kutlamasını göster${pro() ? '' : ' <span class="pro-mini">Sadece Pro aboneliklerde geçerli</span>'}</button>
-          <button class="btn g" onclick="bigTest()">🏟 Büyük maç görselini dene</button>
+          ${hasSport ? `<button class="btn g" onclick="bigTest()">🏟 Büyük maç görselini dene</button>` : ''}
           ${camp ? `<button class="btn g" onclick="act('POST','/campaigns/${camp.id}/test',undefined,'Kampanya kartı gönderildi',false)">🎁 Kampanya kartını göster</button>` : ''}
         </div>`)
       + `<div class="grid g3">
@@ -576,7 +617,7 @@ async function delScreenProfile(id) {
 // Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al + Kaydet görünür
 const layoutBar = () => {
   const o = curOrient(true);
-  return `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><select class="btn g s orsel" onchange="orientSet(+this.value)" title="Ekran yönü: yatay ya da dikey asılı TV"><option value="0" ${!o ? 'selected' : ''}>↔ Yatay (16:9)</option><option value="90" ${o === 90 ? 'selected' : ''}>↕ Dikey · Sağa 90° (9:16)</option><option value="270" ${o === 270 ? 'selected' : ''}>↕ Dikey · Sola 270° (9:16)</option></select><button class="btn g s ${EDIT.locked ? 'on' : ''}" id="lockbtn" onclick="toggleEditLock()" title="Telefondan kullanırken kutuların yanlışlıkla kaymasını önler">${EDIT.locked ? '🔒 Taşıma Kilitli' : '🔓 Taşıma Açık'}</button><button class="btn g s" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
+  return `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><select class="btn g s orsel" onchange="orientSet(+this.value)" title="Ekran yönü: yatay ya da dikey asılı TV"><option value="0" ${!o ? 'selected' : ''}>↔ Yatay (16:9)</option><option value="90" ${o === 90 ? 'selected' : ''}>↕ Dikey · Sağa 90° (9:16)</option><option value="270" ${o === 270 ? 'selected' : ''}>↕ Dikey · Sola 270° (9:16)</option></select><button class="btn g s ${EDIT.locked ? 'on' : ''}" id="lockbtn" onclick="toggleEditLock()" title="Telefondan kullanırken kutuların yanlışlıkla kaymasını önler">${EDIT.locked ? '🔒 Taşıma Kilitli' : '🔓 Taşıma Açık'}</button><button class="btn g s adv-only" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
 };
 const lbarSync = () => { document.querySelectorAll('.lbar').forEach(b => b.classList.toggle('clean', !EDIT.dirty)); pushDraft(); };
 function orientSet(deg) {
@@ -649,8 +690,7 @@ SECTIONS.design = {
   html() {
     const sub = SUB.design || 'layout';
     let h = head('Tasarım', 'Ekranınızın düzeni, renkleri, logosu ve TV ayarları. Kaydedince TV anında güncellenir.',
-      (sub === 'layout' ? `<button class="btn g" onclick="undoL()">↶ Geri al</button><button class="btn" onclick="saveL()">Düzeni kaydet</button>` : '')
-      + `<button class="btn g" onclick="resetDesign('${sub}')">⟲ Varsayılana sıfırla</button>`)
+      (sub !== 'layout' ? `<button class="btn g" onclick="resetDesign('${sub}')">⟲ Varsayılana sıfırla</button>` : ''))
       + tabs('design', [['layout', 'Düzen'], ['colors', 'Renk ve logo'], ['tv', 'TV ayarları']]);
     if (sub === 'layout') {
       const T = S.cat.templates, o = curOrient(true);
@@ -661,17 +701,14 @@ SECTIONS.design = {
       const tplBody = o
         ? `<div class="tpl-sub">↕ Dikey TV düzenleri (9:16)</div><div class="tpls">${vTpls}</div><div class="tpl-sub">↔ Yatay ekran düzenleri (16:9)</div><div class="tpls">${hTpls}</div>`
         : `<div class="tpl-sub">↔ Yatay ekran düzenleri (16:9)</div><div class="tpls">${hTpls}</div><div class="tpl-sub">↕ Dikey TV düzenleri (9:16)</div><div class="tpls">${vTpls}</div>`;
-      h += screensBar()
-        + `<details class="card stx"${fresh ? ' open' : ''}><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
-        + card(`<span onclick="toggleTpls()" style="cursor:pointer;user-select:none;display:inline-flex;align-items:center" title="Gizle / Göster">Hazır düzenler <span id="tpls-arrow" style="font-size:12px;font-weight:500;color:var(--mute);margin-left:8px;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.06)">${window.__hideTpls ? '▸ Göster' : '▾ Gizle'}</span></span>`,
-               `<span onclick="toggleTpls()" style="cursor:pointer;user-select:none">Birini seçin, sonra aşağıda dilediğiniz gibi değiştirin. Dikey TV şablonları ekran yönünü otomatik olarak dikey yapar.</span>`,
-               `<div id="tpls-body" style="${window.__hideTpls ? 'display:none;' : ''}">${tplBody}</div>`,
-               layoutBar(), 'card-tpls')
-        + designsCard()
+      h += ((S.scr && S.scr.limit > 1) || ((S.scr && S.scr.screens) || []).length > 1 ? screensBar() : '')
         + card('Düzen', 'Kutuları sürükleyerek taşıyın, herhangi bir kenar ya da köşesinden tutup boyutlandırın, tıklayınca ayarları sağda açılır.',
           `<div class="editor"><div id="cw" class="${o ? 'vert ' : ''}${EDIT.locked ? 'locked' : ''}"><div id="cv"></div></div><div id="props"></div></div>
            <div class="fl mt"><span>Widget ekle</span><div id="pal" class="chips"></div></div>`, layoutBar())
-        + card('Önizleme', 'Yaptığınız değişiklikler (kaydetmeden önce) burada görünür; beğenince "Düzeni kaydet"e basın.', pvFrame(true), '<button class="btn g s" onclick="openDraft()">↗ Yeni sekmede aç</button>', 'pvcard');
+        + card('Önizleme', 'Yaptığınız değişiklikler (kaydetmeden önce) burada görünür; beğenince "Düzeni kaydet"e basın.', pvFrame(true), '<button class="btn g s" onclick="openDraft()">↗ Yeni sekmede aç</button>', 'pvcard')
+        + `<details class="card stx card-tpls"${fresh ? ' open' : ''}><summary><b>Hazır düzenler</b><span class="muted">Birini seçin, sonra yukarıda dilediğiniz gibi değiştirin</span></summary>` + card('', 'Birini seçin, sonra yukarıda dilediğiniz gibi değiştirin. Dikey TV şablonları ekran yönünü otomatik olarak dikey yapar.', `<div id="tpls-body">${tplBody}</div>`) + `</details>`
+        + `<details class="card stx"><summary><b>${fresh ? 'Başlangıç paketleri' : 'Başlangıç paketiyle baştan kur'}</b><span class="muted">Düzen, renkler ve örnek ürün listesi birlikte değişir</span></summary>` + card('', 'İşletme türünüzü seçin: ekran düzeni, renkler ve örnek ürün listesi birlikte gelir. Medyanız, logonuz ve diğer ayarlarınız silinmez; fiyatları kendiniz girersiniz.', `<div class="tpls">${(S.cat.starters || []).map(v => `<button class="tpl" onclick="applyStarter('${v.key}')"><div class="mini" style="background:${v.theme.bg}">${v.widgets.map(w => `<i style="left:${w.x / 24 * 100}%;top:${w.y / 24 * 100}%;width:${w.w / 24 * 100}%;height:${w.h / 24 * 100}%;background:${v.theme.accent2};opacity:.55"></i>`).join('')}</div><b>${esc(v.name)}</b><span>${esc(v.desc)}</span></button>`).join('')}</div>`) + `</details>`
+        + designsCard();
     } else if (sub === 'colors') {
       const th = S.me.tenant.theme, logo = S.me.tenant.logo;
       const clrIn = (id, val) => `<div class="row" style="gap:8px;align-items:center"><input type="color" id="${id}" value="${val}" oninput="this.nextElementSibling.textContent=this.value"><code style="font-size:12.5px;color:var(--soft)">${esc(val)}</code></div>`;
@@ -759,7 +796,7 @@ function drawPal() {
   const n = k => EDIT.layout.widgets.filter(w => w.type === k).length;
   $('pal').innerHTML = Object.entries(S.cat.widgets).map(([k, d]) => { const full = d.multi ? n(k) >= d.multi : used.has(k); return `<span class="chip ${full ? 'dim' : ''}" title="${esc(d.desc)}" onclick="addW('${k}')">${ICON[k] || ''} <span>${esc(d.name)}</span>${d.pro && !pro() ? ' <span class="pro-mini">🔒 Sadece Pro aboneliklerde geçerli</span>' : d.multi && n(k) ? ` ×${n(k)}` : used.has(k) ? ' ✓' : ''}</span>`; }).join('');
 }
-const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Google ve Instagram yorumları <a href="#promo">Kampanya ve yorumlar</a> sayfasından bağlanır.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
+const HINT = { media: 'Videolar ve fotoğraflar <a href="#media">Medya</a> sayfasından. Kampanya kartı, büyük maç ve fragmanlar da bu kutuda çıkar.', info: 'Maçlar <a href="#sport">Spor</a>, diğer sayfalar <a href="#info">Bilgi Bandı</a> sayfasından açılıp kapanır.', reviews: 'Google ve Instagram yorumları <a href="#promo/social">Kampanya & Sosyal</a> sayfasından bağlanır.', qr: 'QR kodlar <a href="#qr">QR Kodlar</a> sayfasından eklenir.', logo: 'Logo <a href="#design/colors">Renk ve logo</a> sekmesinden yüklenir.', menu: 'Ürünler <a href="#menu">Fiyat Listesi</a> sayfasından girilir.', ticker: 'Skorlar, kurlar, haberler ve bilgiler sırayla kayar.' };
 const BOXES = [['accent', 'Düz (vurgu rengi tonlu)'], ['glass', 'Cam (yarı saydam koyu)'], ['dark', 'Koyu dolgu'], ['outline', 'Yalnız çerçeve'], ['none', 'Kutusuz']];
 // her widget için kutu görünümü: tema stilini izler ya da kutuya özel stil ve renk
 function boxSection(w) {
@@ -1218,8 +1255,9 @@ let mediaPoll = null;
 SECTIONS.media = {
   html() {
     const v = S.db.videos;
-    const mTabs = tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler'], ['trivia', '💡 Bilgi & Mini Quiz']]);
+    const mTabs = tabs('media', [['files', 'Medya ve sıra'], ['posters', 'Hazır içerikler'], ['special', 'Özel yayın'], ['trivia', '💡 Bilgi & Mini Quiz']]);
     if (SUB.media === 'posters') return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler.') + mTabs + postersHtml();
+    if (SUB.media === 'special') return head('Medya', 'Seçtiğiniz gün ve saatlerde ekranda yalnız seçtiğiniz içerikler oynar.', `<button class="btn g" onclick="spNew()">+ Yeni özel yayın</button><button class="btn" data-save onclick="saveSpecial()">Kaydet</button>`) + mTabs + specialHtml();
     if (SUB.media === 'trivia') return head('Medya', 'Medya ekranında videoların ve fotoğrafların arasında dönen etkileşimli bilgi, mini quiz, istatistik ve bilmece kartları.') + mTabs + triviaCardHtml();
     const qo = v.filter(x => x.quotaOver).length;
     return head('Medya', 'Ekranda sırayla oynayan video, fotoğraf ve hazır afişler. Sürükleyerek sıralayın; saat simgesiyle gün ve saat verin.')
@@ -1228,19 +1266,19 @@ SECTIONS.media = {
       + card('Dosya ekle', 'Video (MP4, MOV…) ya da fotoğraf (JPG, PNG). Yüklenen dosyalar TV\'de takılmadan oynayacak şekilde otomatik hazırlanır.',
         `<div id="drop" onclick="$('files').click()"><b>Dosyaları buraya bırakın ya da tıklayın</b><span class="muted">Birden fazla dosya seçebilirsiniz</span></div><input type="file" id="files" multiple accept="video/*,image/*" hidden onchange="upFiles(this.files)"><div id="ups"></div><div class="row mt" style="align-items:center"><span class="muted" style="flex:1;font-size:13px">Tasarımcınız yok mu? Ürün fotoğrafından birkaç saniyede afiş hazırlayın.</span><button class="btn g s" onclick="openStudio()">📷 Fotoğraftan afiş yap</button></div>`)
       + card('YouTube bağlantısı ekle', 'Bir YouTube videosunun bağlantısını yapıştırın; ekranda sırası gelince videonun süresi kadar, belirttiğiniz kez arka arkaya oynar (varsayılan 1 kez). “Kez” 0 olursa saniye alanındaki süre boyunca oynar (video kısaysa baştan döner). İsterseniz sesli oynatabilirsiniz.',
-        `<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><input type="number" id="yt-rep" min="0" max="50" value="1" style="width:70px" title="Kaç kez arka arkaya oynasın (0 = kapalı)""><span class="muted">kez (0 = kapalı)</span><input type="number" id="yt-dur" min="5" max="3600" value="30" style="width:90px" title="Süre (saniye): yazınca kez otomatik 0 olur" oninput="$('yt-rep').value=0"><span class="muted">saniye</span><label class="ckl" style="font-size:13px"><input type="checkbox" id="yt-sound"> Sesli oynat</label><button class="btn" onclick="addYt()">Ekle</button></div>`)
+        `<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><input type="number" id="yt-rep" min="0" max="50" value="1" style="width:70px" title="Kaç kez arka arkaya oynasın (0 = kapalı)"><span class="muted">kez (0 = kapalı)</span><input type="number" id="yt-dur" min="5" max="3600" value="30" style="width:90px" title="Süre (saniye): yazınca kez otomatik 0 olur" oninput="$('yt-rep').value=0"><span class="muted">saniye</span><label class="ckl" style="font-size:13px"><input type="checkbox" id="yt-sound"> Sesli oynat</label><button class="btn" onclick="addYt()">Ekle</button></div>`)
       + card(`Gösterim sırası <span class="muted">· ${v.length} dosya</span>`, '', v.length ? `<div id="mbulk" class="mbulk" hidden></div><div class="mgrid" id="mgrid">${v.map((x, i) => `<div class="tile${MSEL.has(x.id) ? ' picked' : ''}" draggable="true" data-id="${x.id}">
           <div class="th ${x.hidden ? 'off' : ''}" onclick="${x.type === 'poster' ? `editPoster('${x.id}')` : x.design ? `openStudio('${x.id}')` : `pvMedia(${S.db.videos.indexOf(x)})`}">${thumb(x)}${x.full ? '<span class="fbadge">Tam ekran</span>' : ''}${x.quotaOver ? '<span class="fbadge" style="left:6px;right:auto;background:var(--bad)">Alan yok · gösterilmiyor</span>' : ''}${x.status === 'error' ? `<span class="fbadge" style="left:6px;right:auto;background:var(--bad)" title="${esc(x.optError || '')}">${I18N.t('Dosya işlenemedi · gösterilmiyor')}</span>` : ''}<label class="pick" title="Seç" onclick="event.stopPropagation()"><input type="checkbox" ${MSEL.has(x.id) ? 'checked' : ''} onchange="mPick('${x.id}',this.checked)"></label><span class="no">${i + 1}</span><span class="ty">${TYPE_NAMES[x.type] || 'Video'}${durTxt(x) ? `<i class="tyd"> · ${durTxt(x)}</i>` : ''}${x.sound ? ' · 🔊' : ''}</span>${x.sch ? `<span class="sch" title="${esc(schText(x.sch))}">${ic('calendar-clock')} ${esc(schShort(x.sch))}</span>` : ''}${x.hidden ? `<span class="hid">${ic('eye-off')} Kapalı</span>` : ''}${x.status === 'processing' ? `<div class="proc">Hazırlanıyor…${x.job ? `<br><small style="font-weight:400;font-size:11.5px">${x.job.pos > 1 ? 'Sıra #' + x.job.pos + ' · ' : ''}~${x.job.etaSec || 15} sn kaldı</small>` : ''}</div>` : ''}</div>
           <div class="m"><span class="grip" title="Sürükleyerek sıralayın">${ic('grip-vertical')}</span><span title="${esc(x.name)}">${esc(x.name)}</span><button class="btn xs g ib" onclick="openSched('video','${x.id}')" title="Zamanla">${ic('clock')}</button><button class="btn xs g ib" onclick="tileMenu(event,'${x.id}')" title="Diğer işlemler">${ic('ellipsis')}</button></div></div>`).join('')}</div>`
         : '<div class="empty">Henüz dosya yok. Yukarıdan ekleyin.</div>')
-      + triviaCardHtml()
       + `<div class="grid g2">` + card('Fotoğraf süresi', 'Her fotoğraf ekranda kaç saniye kalsın.', `<div class="row"><input type="number" id="imgsec" min="3" max="120" value="${S.db.imageSeconds}" style="max-width:120px"><span class="muted">saniye</span><span style="flex:1"></span><button class="btn" data-save onclick="act('PUT','/settings',{imageSeconds:+$('imgsec').value},'Kaydedildi')">Kaydet</button></div>`)
       + card('Depolama ve Oynatma Akıcılığı', '', `<div id="stor" class="muted">Hesaplanıyor…</div>`) + `</div>`;
   },
   async after() {
     if (SUB.media === 'posters') return drawPosterGallery();
+    if (SUB.media === 'special') return drawThumbs();
     if (SUB.media === 'trivia') return drawTriviaPv();
-    drawThumbs(); drawMBulk(); drawTriviaPv();
+    drawThumbs(); drawMBulk();
     const g = $('mgrid');
     if (g) { let drag = null;
       g.addEventListener('dragstart', e => { drag = e.target.closest('.tile'); e.dataTransfer.effectAllowed = 'move'; });
@@ -1259,8 +1297,8 @@ SECTIONS.media = {
       const pct = Math.min(100, st.uploadsBytes / st.limitBytes * 100), unopt = S.db.videos.filter(v => !v.optimized && v.status !== 'processing').length;
       $('stor').innerHTML = `<div class="row"><b style="color:var(--text)">${fmtSize(st.uploadsBytes)}</b><span>/ ${fmtSize(st.limitBytes)} kullanılıyor</span></div><div class="meter"><i style="width:${Math.max(2, pct)}%"></i></div>`
         + (!sys.ffmpeg ? '<p class="mt">Videolar yüklendiği haliyle doğrudan oynatılır.</p>' :
-          `<div class="row mt" style="align-items:center"><span style="flex:1">Video bitince sonraki içeriğe geçmeden önce bekleme:</span><select style="width:auto;min-width:190px" onchange="opt('videoGapSec',+this.value)">${[[0, 'Hemen'], [2, '2 sn'], [3, '3 sn — önerilen'], [5, '5 sn'], [10, '10 sn'], [20, '20 sn']].map(([v, l]) => `<option value="${v}" ${(S.db.videoGapSec === undefined ? 3 : S.db.videoGapSec) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
-        + `<div class="row mt" style="align-items:center"><span style="flex:1">İçerikler arası geçiş (yumuşak sönme):</span><select style="width:auto;min-width:190px" onchange="opt('xfadeSec',+this.value)">${[[0.4, 'Hızlı'], [1.2, 'Yumuşak — önerilen'], [2.2, 'Çok yumuşak'], [3.5, 'Yavaş']].map(([v, l]) => `<option value="${v}" ${(S.db.xfadeSec === undefined ? 1.2 : S.db.xfadeSec) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
+          `<div class="row mt adv-only" style="align-items:center"><span style="flex:1">Video bitince sonraki içeriğe geçmeden önce bekleme:</span><select style="width:auto;min-width:190px" onchange="opt('videoGapSec',+this.value)">${[[0, 'Hemen'], [2, '2 sn'], [3, '3 sn — önerilen'], [5, '5 sn'], [10, '10 sn'], [20, '20 sn']].map(([v, l]) => `<option value="${v}" ${(S.db.videoGapSec === undefined ? 3 : S.db.videoGapSec) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
+        + `<div class="row mt adv-only" style="align-items:center"><span style="flex:1">İçerikler arası geçiş (yumuşak sönme):</span><select style="width:auto;min-width:190px" onchange="opt('xfadeSec',+this.value)">${[[0.4, 'Hızlı'], [1.2, 'Yumuşak — önerilen'], [2.2, 'Çok yumuşak'], [3.5, 'Yavaş']].map(([v, l]) => `<option value="${v}" ${(S.db.xfadeSec === undefined ? 1.2 : S.db.xfadeSec) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`
         + `<div class="row mt" style="align-items:center"><span style="flex:1">TV'de oynatma akıcılığı — yavaş TV kutusunda takılma olursa "Akıcı" seçin:</span><select style="width:auto;min-width:190px" onchange="opt('videoMaxH',+this.value).then(()=>toast('Yeni yüklemeler bu ayarla hazırlanacak; mevcut videolar için aşağıdaki düğmeye basın'))">${[[1080, 'Yüksek kalite (önerilen)'], [720, 'Akıcı (yavaş TV\'ler için)'], [480, 'En akıcı (eski kutular için)']].map(([v, l]) => `<option value="${v}"${(S.db.videoMaxH || 1080) === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`
           + (unopt ? `<div class="row mt"><span>${unopt} video henüz TV akıcılığına uyarlanmamış.</span><button class="btn s g" onclick="act('POST','/media/optimize-all',undefined,'Videolar TV için hazırlanıyor')">Şimdi TV'ye uyarla</button></div>`
             : (S.db.videos || []).some(v => v.type === 'video') ? `<div class="row mt"><span class="muted" style="flex:1">Mevcut videoları seçilen akıcılık ayarına göre yeniden hazırlamak için:</span><button class="btn s" onclick="reoptAll()">Videoları TV'ye uyarla</button></div>` : ''));
@@ -1379,7 +1417,7 @@ async function addYt() {
   const ok = await act('POST', '/videos/youtube', { url, dur: $('yt-dur').value, rep: $('yt-rep').value, sound }, 'YouTube içeriği eklendi');
   if (ok) refresh();
 }
-function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return openModal(`<iframe src="https://www.youtube.com/embed/${esc(v.yt)}?rel=0" style="width:100%;aspect-ratio:16/9;border:0" allow="encrypted-media"></iframe><div class="muted">${i + 1}. ${esc(v.name)}</div>`); const u = S.me.upBase + v.file; openModal((v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`) + `<div class="muted">${i + 1}. ${esc(v.name)}</div>`); }
+function pvMedia(i) { const v = S.db.videos[i]; if (v.type === 'youtube') return openModal(`<div class="mpv"><iframe src="https://www.youtube.com/embed/${esc(v.yt)}?rel=0" style="width:100%;aspect-ratio:16/9;border:0" allow="encrypted-media"></iframe><div class="muted">${i + 1}. ${esc(v.name)}</div></div>`); const u = S.me.upBase + v.file; openModal(`<div class="mpv">${v.type === 'image' ? `<img src="${u}">` : `<video src="${u}" controls autoplay muted></video>`}<div class="muted">${i + 1}. ${esc(v.name)}</div></div>`); }
 
 /* ================= ETKİLEŞİMLİ BİLGİ, GÖRSEL OYUNLAR & MİNİ QUİZ (MEDYA EKRANI) ================= */
 let TRV_STOP = null, TRV_STEP = Math.floor(Date.now() / 15000), TRV_MODE = null, TRV_CUR = null;
@@ -1454,44 +1492,40 @@ function spDel(i) { UI.ask('Bu özel yayın silinsin mi?', { ok: 'Sil', danger: 
 const spOpen = i => { SP.open = SP.open === i ? -1 : i; SP.yt = -1; render(true); };
 const spYtTog = i => { SP.yt = SP.yt === i ? -1 : i; render(true); if (SP.yt === i) setTimeout(() => { const e = $('sp-yt-' + i); e && e.focus(); }, 0); };
 const spKey = (e, fn) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
-SECTIONS.special = {
-  html() {
-    spInit();
-    const vids = S.db.videos || [];
-    const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
-    const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h2>${t}</h2><p class="muted">${sub}</p>${body}</div></div>`;
-    const ruleHtml = (r, i) => {
-      const s = r.sch || {}, d = spDays(r), stopped = !!(r.stopUntil && r.stopUntil > Date.now()), live = !stopped && r.on && s.from && s.to && schAt(s, new Date());
-      const dayChips = DAYS.map((n, k) => `<button class="chip${d.includes(k + 1) ? ' on' : ''}" aria-pressed="${d.includes(k + 1)}" onclick="spDay(${i},${k + 1})">${n}</button>`).join('');
-      const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => `<button class="chip${same(d, v) ? ' on' : ''}" aria-pressed="${same(d, v)}" onclick="spDayPre(${i},[${v}])">${n}</button>`).join('');
-      const tiles = vids.length ? vids.map(x => { const k = r.items.indexOf(x.id); return `<div class="spx-t${k >= 0 ? ' on' : ''}" role="checkbox" aria-checked="${k >= 0}" aria-label="${esc(x.name)}" tabindex="0" onclick="spItem(${i},'${x.id}')" onkeydown="spKey(event,()=>spItem(${i},'${x.id}'))"><div class="th">${thumb(x)}</div>${k >= 0 ? `<b class="spx-n">${k + 1}</b>` : ''}<span class="spx-m" title="${esc(x.name)}">${esc(x.name)}</span></div>`; }).join('') : '<span class="muted">Henüz içerik yok. Aşağıdaki düğmeyle yeni dosya yükleyin.</span>';
-      if (SP.open !== i) {
-        const its = r.items.map(id => vids.find(v => v.id === id)).filter(Boolean), st = stopped ? 'Durduruldu; sonraki yayında kendiliğinden devam eder' : live ? '● Şu an yayında' : '';
-        return `<div class="card spr${r.on ? '' : ' off'}"><label class="spr-sw" aria-label="${esc(r.name)}">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}</label>
-          <div class="spr-t"><b>${esc(r.name || 'Özel yayın')}</b><span class="muted">${st ? st + ' · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></div>
-          <div class="spr-th">${its.slice(0, 3).map(x => `<div class="th">${thumb(x)}</div>`).join('')}<span class="muted">${its.length} içerik</span></div>
-          <div class="row" style="gap:8px">${r.id && r.on ? (stopped ? `<button class="btn s" onclick="spStop(${i},true)">Yeniden başlat</button>` : live ? `<button class="btn s d" onclick="spStop(${i},false)">Şimdi durdur</button>` : '') : ''}<button class="btn s" onclick="spOpen(${i})">Düzenle</button><button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`;
-      }
-      return `<div class="spx${r.on ? '' : ' off'}"><div class="card hh-top"><div class="row" style="gap:14px;align-items:center;flex-wrap:wrap">
-          <label class="row" style="gap:12px;cursor:pointer;align-items:center">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}<span><b style="font-size:17px">${r.on ? 'Açık' : 'Kapalı'}</b><span class="muted" style="display:block;margin-top:2px">${stopped ? 'Durduruldu; sonraki yayında kendiliğinden devam eder · ' : live ? '● Şu an yayında · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></span></label>
-          <input type="text" maxlength="40" value="${esc(r.name)}" placeholder="Özel yayın adı" aria-label="Özel yayın adı" style="flex:1;min-width:160px;max-width:320px" oninput="SP.rules[${i}].name=this.value;SP.dirty=1">
-          ${r.id && r.on ? (r.stopUntil && r.stopUntil > Date.now() ? `<button class="btn s" onclick="spStop(${i},true)">Yeniden başlat</button>` : live ? `<button class="btn s d" onclick="spStop(${i},false)">Şimdi durdur</button>` : '') : ''}<button class="btn s" onclick="spOpen(${i})">Tamam</button><button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`
-        + step(1, 'Hangi gün, saat kaçta?', 'Bu saatlerde yalnız aşağıda seçtiğiniz içerikler oynar; saat bitince ekran her zamanki hâline döner.',
-          `<div class="chips">${dayChips}</div><div class="chips mt">${dayPre}</div><div class="f mt">${fl('Başlangıç', `<input type="time" value="${s.from || ''}" oninput="SP.rules[${i}].sch.from=this.value;SP.dirty=1">`)}${fl('Bitiş', `<input type="time" value="${s.to || ''}" oninput="SP.rules[${i}].sch.to=this.value;SP.dirty=1">`)}</div>`)
-        + step(2, 'Ne oynasın?', 'Oynatmak istediklerinize dokunun; numara oynatma sırasını gösterir. Normalde gizli içerikler de seçilebilir.',
-          `<div class="spx-grid" ondragover="event.preventDefault();this.classList.add('hot')" ondragleave="this.classList.remove('hot')" ondrop="event.preventDefault();this.classList.remove('hot');spUp(${i},event.dataTransfer.files)">${tiles}</div>
-            <div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><button class="btn s g" onclick="$('sp-f-${i}').click()">+ Fotoğraf / video yükle</button><button class="btn s" aria-expanded="${SP.yt === i}" onclick="spYtTog(${i})">+ YouTube bağlantısı</button><input type="file" id="sp-f-${i}" multiple accept="video/*,image/*" hidden aria-label="Fotoğraf veya video seç" onchange="spUp(${i},this.files)"></div>
-            ${SP.yt === i ? `<div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><input type="text" id="sp-yt-${i}" placeholder="YouTube bağlantısı" aria-label="YouTube bağlantısı" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')spYt(${i})"><button class="btn s g" onclick="spYt(${i})">Ekle</button></div>` : ''}
-            <div id="sp-up-${i}"></div><p class="muted" style="font-size:12.5px;margin:8px 0 0">Yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez. Dosyaları kutuların üzerine de bırakabilirsiniz.</p>`)
-        + step(3, 'Kenar kutular', 'Saat, hava, finans, QR, kayan bant ve logo gibi kutular özel yayında ne olsun?',
-          `<div class="btn-grp" role="radiogroup" aria-label="Kenar kutular"><button role="radio" aria-checked="${r.full !== false}" class="${r.full !== false ? 'on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=true})">Hepsi gizlensin, tam ekran</button><button role="radio" aria-checked="${r.full === false}" class="${r.full === false ? 'on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=false})">Kenar kutular kalsın</button></div>`)
-        + `</div>`;
-    };
-    return head('Özel yayın', 'Seçtiğiniz gün ve saatlerde ekranda yalnız seçtiğiniz içerikler oynar.', `<button class="btn g" onclick="spNew()">+ Yeni özel yayın</button><button class="btn" data-save onclick="saveSpecial()">Kaydet</button>`)
-      + (SP.rules.length ? SP.rules.map(ruleHtml).join('') : `<div class="card"><div class="empty">Henüz özel yayın yok. Örneğin cumartesi 10:00–12:00 arası yalnız kahvaltı tanıtımı oynasın; kampanya, maç, kutlama ve reklam çıkmasın.</div><div class="row mt" style="justify-content:center"><button class="btn" onclick="spNew()">+ Özel yayın ekle</button></div></div>`);
-  },
-  after() { drawThumbs(); },
-};
+function specialHtml() {
+  spInit();
+  const vids = S.db.videos || [];
+  const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+  const step = (n, t, sub, body) => `<div class="hhs"><div class="hhs-n">${n}</div><div class="hhs-b"><h2>${t}</h2><p class="muted">${sub}</p>${body}</div></div>`;
+  const ruleHtml = (r, i) => {
+    const s = r.sch || {}, d = spDays(r), stopped = !!(r.stopUntil && r.stopUntil > Date.now()), live = !stopped && r.on && s.from && s.to && schAt(s, new Date());
+    const dayChips = DAYS.map((n, k) => `<button class="chip${d.includes(k + 1) ? ' on' : ''}" aria-pressed="${d.includes(k + 1)}" onclick="spDay(${i},${k + 1})">${n}</button>`).join('');
+    const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => `<button class="chip${same(d, v) ? ' on' : ''}" aria-pressed="${same(d, v)}" onclick="spDayPre(${i},[${v}])">${n}</button>`).join('');
+    const tiles = vids.length ? vids.map(x => { const k = r.items.indexOf(x.id); return `<div class="spx-t${k >= 0 ? ' on' : ''}" role="checkbox" aria-checked="${k >= 0}" aria-label="${esc(x.name)}" tabindex="0" onclick="spItem(${i},'${x.id}')" onkeydown="spKey(event,()=>spItem(${i},'${x.id}'))"><div class="th">${thumb(x)}</div>${k >= 0 ? `<b class="spx-n">${k + 1}</b>` : ''}<span class="spx-m" title="${esc(x.name)}">${esc(x.name)}</span></div>`; }).join('') : '<span class="muted">Henüz içerik yok. Aşağıdaki düğmeyle yeni dosya yükleyin.</span>';
+    if (SP.open !== i) {
+      const its = r.items.map(id => vids.find(v => v.id === id)).filter(Boolean), st = stopped ? 'Durduruldu; sonraki yayında kendiliğinden devam eder' : live ? '● Şu an yayında' : '';
+      return `<div class="card spr${r.on ? '' : ' off'}"><label class="spr-sw" aria-label="${esc(r.name)}">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}</label>
+        <div class="spr-t"><b>${esc(r.name || 'Özel yayın')}</b><span class="muted">${st ? st + ' · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></div>
+        <div class="spr-th">${its.slice(0, 3).map(x => `<div class="th">${thumb(x)}</div>`).join('')}<span class="muted">${its.length} içerik</span></div>
+        <div class="row" style="gap:8px">${r.id && r.on ? (stopped ? `<button class="btn s" onclick="spStop(${i},true)">Yeniden başlat</button>` : live ? `<button class="btn s d" onclick="spStop(${i},false)">Şimdi durdur</button>` : '') : ''}<button class="btn s" onclick="spOpen(${i})">Düzenle</button><button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`;
+    }
+    return `<div class="spx${r.on ? '' : ' off'}"><div class="card hh-top"><div class="row" style="gap:14px;align-items:center;flex-wrap:wrap">
+        <label class="row" style="gap:12px;cursor:pointer;align-items:center">${sw(r.on, `spSet(()=>{SP.rules[${i}].on=this.checked})`)}<span><b style="font-size:17px">${r.on ? 'Açık' : 'Kapalı'}</b><span class="muted" style="display:block;margin-top:2px">${stopped ? 'Durduruldu; sonraki yayında kendiliğinden devam eder · ' : live ? '● Şu an yayında · ' : ''}${s.from && s.to ? esc(schText(s)) : 'Gün ve saat seçin.'}</span></span></label>
+        <input type="text" maxlength="40" value="${esc(r.name)}" placeholder="Özel yayın adı" aria-label="Özel yayın adı" style="flex:1;min-width:160px;max-width:320px" oninput="SP.rules[${i}].name=this.value;SP.dirty=1">
+        ${r.id && r.on ? (r.stopUntil && r.stopUntil > Date.now() ? `<button class="btn s" onclick="spStop(${i},true)">Yeniden başlat</button>` : live ? `<button class="btn s d" onclick="spStop(${i},false)">Şimdi durdur</button>` : '') : ''}<button class="btn s" onclick="spOpen(${i})">Tamam</button><button class="btn xs d" onclick="spDel(${i})">Sil</button></div></div>`
+      + step(1, 'Hangi gün, saat kaçta?', 'Bu saatlerde yalnız aşağıda seçtiğiniz içerikler oynar; saat bitince ekran her zamanki hâline döner.',
+        `<div class="chips">${dayChips}</div><div class="chips mt">${dayPre}</div><div class="f mt">${fl('Başlangıç', `<input type="time" value="${s.from || ''}" oninput="SP.rules[${i}].sch.from=this.value;SP.dirty=1">`)}${fl('Bitiş', `<input type="time" value="${s.to || ''}" oninput="SP.rules[${i}].sch.to=this.value;SP.dirty=1">`)}</div>`)
+      + step(2, 'Ne oynasın?', 'Oynatmak istediklerinize dokunun; numara oynatma sırasını gösterir. Normalde gizli içerikler de seçilebilir.',
+        `<div class="spx-grid" ondragover="event.preventDefault();this.classList.add('hot')" ondragleave="this.classList.remove('hot')" ondrop="event.preventDefault();this.classList.remove('hot');spUp(${i},event.dataTransfer.files)">${tiles}</div>
+          <div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><button class="btn s g" onclick="$('sp-f-${i}').click()">+ Fotoğraf / video yükle</button><button class="btn s" aria-expanded="${SP.yt === i}" onclick="spYtTog(${i})">+ YouTube bağlantısı</button><input type="file" id="sp-f-${i}" multiple accept="video/*,image/*" hidden aria-label="Fotoğraf veya video seç" onchange="spUp(${i},this.files)"></div>
+          ${SP.yt === i ? `<div class="row mt" style="gap:10px;flex-wrap:wrap;align-items:center"><input type="text" id="sp-yt-${i}" placeholder="YouTube bağlantısı" aria-label="YouTube bağlantısı" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')spYt(${i})"><button class="btn s g" onclick="spYt(${i})">Ekle</button></div>` : ''}
+          <div id="sp-up-${i}"></div><p class="muted" style="font-size:12.5px;margin:8px 0 0">Yeni içerikler yalnız özel yayında oynar, normal döngüde görünmez. Dosyaları kutuların üzerine de bırakabilirsiniz.</p>`)
+      + step(3, 'Kenar kutular', 'Saat, hava, finans, QR, kayan bant ve logo gibi kutular özel yayında ne olsun?',
+        `<div class="btn-grp" role="radiogroup" aria-label="Kenar kutular"><button role="radio" aria-checked="${r.full !== false}" class="${r.full !== false ? 'on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=true})">Hepsi gizlensin, tam ekran</button><button role="radio" aria-checked="${r.full === false}" class="${r.full === false ? 'on' : ''}" onclick="spSet(()=>{SP.rules[${i}].full=false})">Kenar kutular kalsın</button></div>`)
+      + `</div>`;
+  };
+  return (SP.rules.length ? SP.rules.map(ruleHtml).join('') : `<div class="card"><div class="empty">Henüz özel yayın yok. Örneğin cumartesi 10:00–12:00 arası yalnız kahvaltı tanıtımı oynasın; kampanya, maç, kutlama ve reklam çıkmasın.</div><div class="row mt" style="justify-content:center"><button class="btn" onclick="spNew()">+ Özel yayın ekle</button></div></div>`);
+}
 async function spStop(i, resume) {
   const r = SP.rules[i]; if (!r.id) return;
   if (!resume && !await UI.ask('Özel yayın şimdi durdurulsun mu? Ekran hemen normale döner; sonraki yayın saatinde kendiliğinden devam eder.', { ok: 'Durdur' })) return;
@@ -1626,7 +1660,7 @@ function hdTabsHtml() {
 }
 function hdCatRows(d) {
   const cats = MENU.categories;
-  if (!cats.length) return `<span class="muted">İndirimin geçeceği ürünler için önce Fiyat Listesi'nde kategori ekleyin.</span> <a class="btn xs g" href="#menu">Fiyat Listesi'ne git</a>`;
+  if (!cats.length) return `<span class="muted">İndirimin geçeceği ürünler için önce Fiyat Listesi'nde kategori ekleyin.</span> <a class="btn xs g" href="#menu/items">Fiyat Listesi'ne git</a>`;
   const all = d.cats.every(Boolean);
   return `<div class="chips" role="group" aria-label="Hangi ürünlerde?">${hchip(all, `hdSet(()=>{hdc().cats=hdc().cats.map(()=>${!all})})`, 'Tüm menü')}</div>
     <div class="hh-cats mt">${cats.map((c, i) => {
@@ -1660,44 +1694,63 @@ function hhPvCard() {
   return `<div class="camp-prev-screen" id="hh-prev" style="background:#000;position:relative">${c.image ? `<img src="${esc(c.image)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#a3a9b3;font-size:13px;text-align:center;padding:0 10%">Fotoğraf eklerseniz ekranda böyle görünür</div>`}<div id="hh-ov">${ov}</div></div>`;
 }
 const hhPvBody = () => HP_TAB === 'card' ? hhPvCard() : hhPvMenu();
-SECTIONS.happy = {
-  html() {
-    hdInit();
-    const hs = HD.hours, c = HC, d = hs.length ? hdc() : null;
-    const top = `<div class="card hh-top${pro() ? '' : ' pro-card-locked'}" ${lockAttrs('İndirim Saatleri')}><div class="hh-tabs2" id="hh-tabs" role="group" aria-label="İndirim saatleri">${hdTabsHtml()}${pro() ? '' : proBadge('İndirim Saatleri')}</div>`
-      + (d ? `<div class="row hh-row"><div class="hh-st ${hdState(d).k}" id="hh-sum" aria-live="polite">${hdState(d).html}</div><button type="button" class="btn xs d" onclick="hdDel()">Kaldır</button></div>${hdClash(d) ? '<p class="hh-clash">Bu saat başka bir indirim saatiyle çakışıyor; ortak kategorilerde daha yüksek indirim uygulanır.</p>' : ''}`
-        : `<p class="muted" style="margin:12px 0 0">Henüz indirim saati yok. Örneğin hafta içi 17:00–19:00 arası kategorilerde %20 indirim ekleyin; saat gelince fiyatlar kendiliğinden düşer, bitince eski hâline döner.</p>`) + `</div>`;
-    const base = head('İndirim Saatleri (Happy Hour)', 'Belirli gün ve saatlerde otomatik indirim; isterseniz ekranda fotoğraflı duyuru kartı.', `<button class="btn" data-save ${pro() ? 'onclick="saveHappy()"' : 'onclick="warnUpgrade(\'İndirim Saatleri\')"'}>Kaydet</button>`) + lock('İndirim Saatleri') + top;
-    if (!d) return base;
-    const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
-    const dayChips = DAYS.map((n, i) => hchip(d.days.includes(i + 1), `hdDay(${i + 1})`, n)).join('');
-    const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => hchip(same(d.days, v), `hdDays([${v}])`, n)).join('');
-    const timePre = [['17:00', '19:00'], ['16:00', '20:00'], ['14:00', '17:00']].map(([f, t]) => hchip(d.from === f && d.to === t, `hdTime('${f}','${t}')`, `${f}–${t}`)).join('');
-    const pctPre = [10, 20, 30, 40, 50].map(p => hchip(d.pct === p, `hdSet(()=>{hdc().pct=${p}})`, `%${p}`)).join('');
-    const when = `<div class="chips" role="group" aria-label="Günler">${dayChips}</div><div class="chips mt">${dayPre}</div>
-      <div class="f mt">${fl('Başlangıç', `<input type="time" value="${d.from}" oninput="hdSet(()=>{hdc().from=this.value},false)">`)}${fl('Bitiş', `<input type="time" value="${d.to}" oninput="hdSet(()=>{hdc().to=this.value},false)">`)}</div>
-      <div class="chips mt">${timePre}</div>
-      <div class="hh-sub"><b>Geçerlilik</b><div class="chips mt" role="group" aria-label="Geçerlilik">${hchip(!d.range, 'hdRange(false)', 'Süresiz')}${hchip(d.range, 'hdRange(true)', 'Tarih aralığı')}</div>
-      ${d.range ? `<div class="f mt">${fl('İlk gün', `<input type="date" value="${esc(d.extra.start)}" oninput="hdSet(()=>{hdc().extra.start=this.value},false)">`)}${fl('Son gün', `<input type="date" value="${esc(d.extra.end)}" oninput="hdSet(()=>{hdc().extra.end=this.value},false)">`)}</div>` : ''}</div>`;
-    const howMuch = `<div class="f">${fl('İndirim (%)', `<input type="number" min="1" max="90" inputmode="numeric" value="${d.pct || ''}" oninput="hdSet(()=>{hdc().pct=+this.value||0},false)">`)}${fl('Ekranda görünecek ad', `<input type="text" maxlength="24" value="${esc(d.label)}" placeholder="Happy Hour" oninput="hdSet(()=>{hdc().label=this.value},false)">`)}</div>
-      <div class="chips mt" role="group" aria-label="İndirim (%)">${pctPre}</div>`;
-    const photo = `<div class="camp-img-box">${c.image ? `<img src="${esc(c.image)}" class="camp-img-thumb" alt=""><div style="flex:1;min-width:0"><b style="font-size:13px;display:block">Yüklü fotoğraf</b><span class="muted" style="font-size:12px">Tam ekran gösterilir</span></div><button class="btn s d" type="button" onclick="removeHappyImg()">Kaldır</button>` : `<div style="flex:1"><span class="muted" style="font-size:12.5px">Fotoğraf eklemezseniz yalnız fiyat listesindeki fiyatlar düşer.</span></div>`}
-      <label class="btn s g" style="margin:0;cursor:pointer"><span>${c.image ? 'Değiştir' : 'Fotoğraf seç'}</span><input type="file" accept="image/*" style="display:none" onchange="uploadHappyImg(this)"></label></div>`;
-    const which = hs.length > 1 ? `<div class="mt"><b class="lbl">Hangi indirim saatini duyursun?</b><div class="chips" role="group">${hs.map(h => hchip(hdCardHour() === h, `HC.hid='${h.id}';HC.__dirty=1;render(true)`, esc(h.label || 'Happy Hour'))).join('')}</div></div>` : '';
-    const cardOpts = c.image ? `<div class="row mt" style="align-items:center;gap:10px"><label class="row" style="gap:8px;cursor:pointer">${sw(c.on, 'HC.on=this.checked;HC.__dirty=1')}<b>Fotoğraflı kartı ekranda göster</b></label></div>${which}
-      <div class="mt"><b class="lbl">Fotoğrafın üstünde görünsün</b><div class="chips" role="group">${hchip(c.showTitle !== false, "hcSet('showTitle')", 'Ad')}${hchip(c.showTime !== false, "hcSet('showTime')", 'Saat')}${hchip(c.showPct !== false, "hcSet('showPct')", 'İndirim rozeti')}</div></div>
-      <div class="f mt">${fl('Kartın ekranda kalma süresi (saniye)', `<input type="number" min="5" max="300" value="${c.durSec || 15}" oninput="HC.durSec=+this.value;HC.__dirty=1">`)}${fl('Kaç dakikada bir çıksın', `<input type="number" min="1" max="120" value="${c.everyMin || 4}" oninput="HC.everyMin=+this.value;HC.__dirty=1">`)}</div>
-      <div class="row mt" style="justify-content:flex-end"><button class="btn g" type="button" onclick="testHappy()">📺 TV'de dene</button></div>` : '';
-    const open = HP_OPEN === null ? !!c.image : HP_OPEN;
-    const tabs = [['menu', 'Fiyat listesi'], ['card', 'Ekran kartı']].map(([k, n]) => `<button type="button" role="tab" id="hhtab-${k}" aria-selected="${HP_TAB === k}" class="${HP_TAB === k ? 'on' : ''}" onclick="HP_TAB='${k}';render(true)">${n}</button>`).join('');
-    return base + `<div class="hh-grid${pro() ? '' : ' pro-lock-area'}" ${lockAttrs('İndirim Saatleri')}><div class="hh-steps hh-form">`
-      + hsec('Hangi gün, saat kaçta?', 'Bu saatlerde fiyat listesinde fiyatlar düşer; saat bitince eski hâline döner.', when)
-      + hsec('İndirim ne kadar, nerede?', 'Seçtiğiniz kategorilerdeki tüm ürünlere uygulanır. Tek ürüne özel fiyat için Fiyat Listesi\'nde ürünün yanındaki küçük kutuyu kullanın.', howMuch)
-      + hsec('Hangi ürünlerde?', '', hdCatRows(d))
-      + `<details class="hhs hh-photo"${open ? ' open' : ''} ontoggle="HP_OPEN=this.open"><summary><h2>Ekranda fotoğraf çıksın mı?</h2><span class="hh-opt">İsteğe bağlı</span></summary><div class="hhs-b"><p class="muted">İsteğe bağlı. İndirim saatinde medyanın arasında tam ekran çıkar.</p>${photo}${cardOpts}</div></details>`
-      + `</div><aside class="hh-side" aria-label="Önizleme"><div class="camp-prev-wrap"><div class="camp-prev-head"><span>ÖNİZLEME</span></div><div class="hh-tabs" role="tablist">${tabs}</div><div id="hh-pv" role="tabpanel" aria-labelledby="hhtab-${HP_TAB}">${hhPvBody()}</div><p class="muted" style="margin:0;font-size:12.5px">Seçili indirim saati geçerliyken görünüm. Fiyatlar fiyat listenizden hesaplanır.</p></div></aside></div>`;
-  },
-};
+function happyPageHtml() {
+  if (!pro()) {
+    const sMenu = {
+      title: 'Fiyat Listesi', currency: '₺',
+      categories: [
+        { name: 'Sıcak İçecekler', items: [{ name: 'Türk Kahvesi', price: '90' }, { name: 'Latte', price: '130' }, { name: 'Bitki Çayı', price: '85' }] },
+        { name: 'Soğuk İçecekler', items: [{ name: 'Ev Yapımı Limonata', price: '110' }, { name: 'Soğuk Demleme Kahve', price: '140' }] },
+        { name: 'Tatlılar', items: [{ name: 'San Sebastian', price: '190' }, { name: 'Tiramisu', price: '175' }] },
+      ],
+    };
+    const pct = 20, calc = p => String(Math.round(Number(p) * (1 - pct / 100)));
+    const pvRows = sMenu.categories.map((c, idx) => `<div class="pv-cat">${esc(c.name)}${idx < 2 ? '<i class="pv-pct" aria-hidden="true">%</i>' : ''}</div>` + c.items.map(it => `<div class="pv-row"><span>${esc(it.name)}</span><span class="pv-p">${idx < 2 ? `<s>${esc(it.price)}</s><b>${calc(it.price)} ₺</b>` : `${esc(it.price)} ₺`}</span></div>`).join('')).join('');
+    const sTop = `<div class="card hh-top"><div class="hh-tabs2"><button type="button" class="hh-tab on"><i class="hh-dot" aria-hidden="true"></i><b>Happy Hour</b><span class="m">%20</span></button><button type="button" class="btn g">＋ Happy Hour ekle</button></div><div class="row hh-row"><div class="hh-st next"><span>Örnek</span><b>Hafta içi</b><b>17:00 – 19:00</b></div></div></div>`;
+    const sDays = DAYS.map((n, i) => `<button type="button" class="chip${i < 5 ? ' on' : ''}">${n}</button>`).join('');
+    const sCats = sMenu.categories.map((c, i) => `<button type="button" class="hh-cat${i < 2 ? ' on' : ''}"><i class="hh-ck" aria-hidden="true"></i><b>${esc(c.name)}</b><span class="m">Ürün: ${c.items.length}</span></button>`).join('');
+    const sForm = `<div class="hh-steps hh-form">`
+      + hsec('Hangi gün, saat kaçta?', 'Bu saatlerde fiyat listesinde fiyatlar düşer; saat bitince eski hâline döner.', `<div class="chips">${sDays}</div><div class="f mt">${fl('Başlangıç', '<input type="time" value="17:00" readonly>')}${fl('Bitiş', '<input type="time" value="19:00" readonly>')}</div>`)
+      + hsec('İndirim ne kadar, nerede?', 'Seçtiğiniz kategorilerdeki tüm ürünlere uygulanır.', `<div class="f">${fl('İndirim (%)', '<input type="number" value="20" readonly>')}${fl('Ekranda görünecek ad', '<input type="text" value="Happy Hour" readonly>')}</div>`)
+      + hsec('Hangi ürünlerde?', '', `<div class="hh-cats">${sCats}</div>`)
+      + `</div>`;
+    const sSide = `<aside class="hh-side" aria-label="Önizleme"><div class="camp-prev-wrap"><div class="camp-prev-head"><span>ÖNİZLEME</span></div><div class="pv-list"><div class="pv-h"><b>Fiyat Listesi</b><span class="pv-badge"><span>%20</span><span>Happy Hour</span></span></div>${pvRows}</div><p class="muted" style="margin:0;font-size:12.5px">Örnek önizleme. Pro pakete geçince kendi ürünlerinizde hemen çalışır.</p></div></aside>`;
+    return lock('İndirim Saatleri') + `<div class="pro-lock-area" ${lockAttrs('İndirim Saatleri')}>${sTop}<div class="hh-grid">${sForm}${sSide}</div></div>`;
+  }
+  hdInit();
+  const hs = HD.hours, c = HC, d = hs.length ? hdc() : null;
+  const top = `<div class="card hh-top"><div class="hh-tabs2" id="hh-tabs" role="group" aria-label="İndirim saatleri">${hdTabsHtml()}</div>`
+    + (d ? `<div class="row hh-row"><div class="hh-st ${hdState(d).k}" id="hh-sum" aria-live="polite">${hdState(d).html}</div><button type="button" class="btn xs d" onclick="hdDel()">Kaldır</button></div>${hdClash(d) ? '<p class="hh-clash">Bu saat başka bir indirim saatiyle çakışıyor; ortak kategorilerde daha yüksek indirim uygulanır.</p>' : ''}`
+      : `<p class="muted" style="margin:12px 0 0">Henüz indirim saati yok. Örneğin hafta içi 17:00–19:00 arası kategorilerde %20 indirim ekleyin; saat gelince fiyatlar kendiliğinden düşer, bitince eski hâline döner.</p>`) + `</div>`;
+  if (!d) return top;
+  const same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+  const dayChips = DAYS.map((n, i) => hchip(d.days.includes(i + 1), `hdDay(${i + 1})`, n)).join('');
+  const dayPre = [['Hafta içi', [1, 2, 3, 4, 5]], ['Hafta sonu', [6, 7]], ['Her gün', [1, 2, 3, 4, 5, 6, 7]]].map(([n, v]) => hchip(same(d.days, v), `hdDays([${v}])`, n)).join('');
+  const timePre = [['17:00', '19:00'], ['16:00', '20:00'], ['14:00', '17:00']].map(([f, t]) => hchip(d.from === f && d.to === t, `hdTime('${f}','${t}')`, `${f}–${t}`)).join('');
+  const pctPre = [10, 20, 30, 40, 50].map(p => hchip(d.pct === p, `hdSet(()=>{hdc().pct=${p}})`, `%${p}`)).join('');
+  const when = `<div class="chips" role="group" aria-label="Günler">${dayChips}</div><div class="chips mt">${dayPre}</div>
+    <div class="f mt">${fl('Başlangıç', `<input type="time" value="${d.from}" oninput="hdSet(()=>{hdc().from=this.value},false)">`)}${fl('Bitiş', `<input type="time" value="${d.to}" oninput="hdSet(()=>{hdc().to=this.value},false)">`)}</div>
+    <div class="chips mt">${timePre}</div>
+    <div class="hh-sub"><b>Geçerlilik</b><div class="chips mt" role="group" aria-label="Geçerlilik">${hchip(!d.range, 'hdRange(false)', 'Süresiz')}${hchip(d.range, 'hdRange(true)', 'Tarih aralığı')}</div>
+    ${d.range ? `<div class="f mt">${fl('İlk gün', `<input type="date" value="${esc(d.extra.start)}" oninput="hdSet(()=>{hdc().extra.start=this.value},false)">`)}${fl('Son gün', `<input type="date" value="${esc(d.extra.end)}" oninput="hdSet(()=>{hdc().extra.end=this.value},false)">`)}</div>` : ''}</div>`;
+  const howMuch = `<div class="f">${fl('İndirim (%)', `<input type="number" min="1" max="90" inputmode="numeric" value="${d.pct || ''}" oninput="hdSet(()=>{hdc().pct=+this.value||0},false)">`)}${fl('Ekranda görünecek ad', `<input type="text" maxlength="24" value="${esc(d.label)}" placeholder="Happy Hour" oninput="hdSet(()=>{hdc().label=this.value},false)">`)}</div>
+    <div class="chips mt" role="group" aria-label="İndirim (%)">${pctPre}</div>`;
+  const photo = `<div class="camp-img-box">${c.image ? `<img src="${esc(c.image)}" class="camp-img-thumb" alt=""><div style="flex:1;min-width:0"><b style="font-size:13px;display:block">Yüklü fotoğraf</b><span class="muted" style="font-size:12px">Tam ekran gösterilir</span></div><button class="btn s d" type="button" onclick="removeHappyImg()">Kaldır</button>` : `<div style="flex:1"><span class="muted" style="font-size:12.5px">Fotoğraf eklemezseniz yalnız fiyat listesindeki fiyatlar düşer.</span></div>`}
+    <label class="btn s g" style="margin:0;cursor:pointer"><span>${c.image ? 'Değiştir' : 'Fotoğraf seç'}</span><input type="file" accept="image/*" style="display:none" onchange="uploadHappyImg(this)"></label></div>`;
+  const which = hs.length > 1 ? `<div class="mt"><b class="lbl">Hangi indirim saatini duyursun?</b><div class="chips" role="group">${hs.map(h => hchip(hdCardHour() === h, `HC.hid='${h.id}';HC.__dirty=1;render(true)`, esc(h.label || 'Happy Hour'))).join('')}</div></div>` : '';
+  const cardOpts = c.image ? `<div class="row mt" style="align-items:center;gap:10px"><label class="row" style="gap:8px;cursor:pointer">${sw(c.on, 'HC.on=this.checked;HC.__dirty=1')}<b>Fotoğraflı kartı ekranda göster</b></label></div>${which}
+    <div class="mt"><b class="lbl">Fotoğrafın üstünde görünsün</b><div class="chips" role="group">${hchip(c.showTitle !== false, "hcSet('showTitle')", 'Ad')}${hchip(c.showTime !== false, "hcSet('showTime')", 'Saat')}${hchip(c.showPct !== false, "hcSet('showPct')", 'İndirim rozeti')}</div></div>
+    <div class="f mt">${fl('Kartın ekranda kalma süresi (saniye)', `<input type="number" min="5" max="300" value="${c.durSec || 15}" oninput="HC.durSec=+this.value;HC.__dirty=1">`)}${fl('Kaç dakikada bir çıksın', `<input type="number" min="1" max="120" value="${c.everyMin || 4}" oninput="HC.everyMin=+this.value;HC.__dirty=1">`)}</div>
+    <div class="row mt" style="justify-content:flex-end"><button class="btn g" type="button" onclick="testHappy()">📺 TV'de dene</button></div>` : '';
+  const open = HP_OPEN === null ? !!c.image : HP_OPEN;
+  const hTabs = [['menu', 'Fiyat listesi'], ['card', 'Ekran kartı']].map(([k, n]) => `<button type="button" role="tab" id="hhtab-${k}" aria-selected="${HP_TAB === k}" class="${HP_TAB === k ? 'on' : ''}" onclick="HP_TAB='${k}';render(true)">${n}</button>`).join('');
+  return top + `<div class="hh-grid"><div class="hh-steps hh-form">`
+    + hsec('Hangi gün, saat kaçta?', 'Bu saatlerde fiyat listesinde fiyatlar düşer; saat bitince eski hâline döner.', when)
+    + hsec('İndirim ne kadar, nerede?', 'Seçtiğiniz kategorilerdeki tüm ürünlere uygulanır. Tek ürüne özel fiyat için Fiyat Listesi\'nde ürünün yanındaki küçük kutuyu kullanın.', howMuch)
+    + hsec('Hangi ürünlerde?', '', hdCatRows(d))
+    + `<details class="hhs hh-photo"${open ? ' open' : ''} ontoggle="HP_OPEN=this.open"><summary><h2>Ekranda fotoğraf çıksın mı?</h2><span class="hh-opt">İsteğe bağlı</span></summary><div class="hhs-b"><p class="muted">İsteğe bağlı. İndirim saatinde medyanın arasında tam ekran çıkar.</p>${photo}${cardOpts}</div></details>`
+    + `</div><aside class="hh-side" aria-label="Önizleme"><div class="camp-prev-wrap"><div class="camp-prev-head"><span>ÖNİZLEME</span></div><div class="hh-tabs" role="tablist">${hTabs}</div><div id="hh-pv" role="tabpanel" aria-labelledby="hhtab-${HP_TAB}">${hhPvBody()}</div><p class="muted" style="margin:0;font-size:12.5px">Seçili indirim saati geçerliyken görünüm. Fiyatlar fiyat listenizden hesaplanır.</p></div></aside></div>`;
+}
 function hhPrev() { // alanlar değişince sekmeler, durum satırı ve önizleme güncellenir
   if (!HD || !HC || !HD.hours.length) return;
   const tb = $('hh-tabs'); if (tb) tb.innerHTML = hdTabsHtml();
@@ -1822,30 +1875,67 @@ let MENU = null;
 SECTIONS.menu = {
   html() {
     if (!MENU || !MENU.__dirty) MENU = clone(S.db.menu || { title: 'Fiyat Listesi', currency: '₺', categories: [] });
+    const sub = ['items', 'happy', 'lang'].includes(SUB.menu) ? SUB.menu : 'items';
+    const mTabs = tabs('menu', [['items', 'Ürünler'], ['happy', pro() ? 'İndirim Saatleri' : 'İndirim Saatleri · PRO'], ['lang', 'Diller']]);
+    if (sub === 'happy') {
+      return head('Fiyat Listesi · İndirim Saatleri', 'Belirli gün ve saatlerde otomatik indirim; isterseniz ekranda fotoğraflı duyuru kartı.',
+        `<button class="btn" data-save ${pro() ? 'onclick="saveHappy()"' : 'onclick="warnUpgrade(\'İndirim Saatleri\')"'}>Kaydet</button>`) + mTabs + happyPageHtml();
+    }
+    if (sub === 'lang') {
+      const langs = langList(), catList = MENU.categories || [];
+      let missHtml = '';
+      if (!langs.length) {
+        missHtml = '<div class="empty">Henüz ek dil seçilmedi. Yukarıdan dil seçtiğinizde ürün adları ve açıklamaları için çeviri alanları Ürünler sekmesinde açılır.</div>';
+      } else {
+        let total = 0;
+        catList.forEach(c => { total += 1 + (c.items || []).reduce((a, it) => a + 1 + (it.desc ? 1 : 0), 0); });
+        const rows = langs.map(l => {
+          let done = 0;
+          catList.forEach(c => {
+            if ((c.t || {})[l]) done++;
+            (c.items || []).forEach(it => {
+              const tr = (it.t || {})[l] || {};
+              if (tr.name) done++;
+              if (it.desc && tr.desc) done++;
+            });
+          });
+          const pct = total ? Math.round(done / total * 100) : 100;
+          return `<div class="swr"><div class="b"><b>${esc(LANG_NAMES[l] || l)}</b><span>${done} / ${total} alan çevrildi (%${pct})</span></div><a class="btn s g" href="#menu/items">Ürünlerde düzenle</a></div>`;
+        }).join('');
+        missHtml = catList.length ? rows : '<div class="empty">Önce Ürünler sekmesinden kategori ve ürün ekleyin.</div>';
+      }
+      return head('Fiyat Listesi · Diller', 'Turist müşterileriniz için çoklu dil ayarları ve çeviri durumu.', '<button class="btn" data-save onclick="saveMenu()">Kaydet</button>')
+        + mTabs + langCard() + card('Çeviri durumu', 'Seçtiğiniz her ek dil için ürünlerdeki doluluk oranı.', missHtml);
+    }
+    const langs = langList();
     return head('Fiyat Listesi', 'Ürünler ve fiyatlar. Düzene "Fiyat tarifesi" widget\'ı eklenince ekranda sayfa sayfa döner.', `<button class="btn" data-save onclick="saveMenu()">Kaydet</button>`)
+      + mTabs
       + menuLimitNote(MENU)
+      + (langs.length ? `<div class="bn trial"><span>🌍 <b>${langs.map(l => esc(LANG_NAMES[l] || l)).join(', ')}</b> dilleri aktif; çevirileri yönetmek için Diller sekmesini kullanın.</span><a class="btn s g" href="#menu/lang">Diller</a></div>` : '')
       + card('Liste bilgisi', 'Kafe ve restoranlar giriş kapısındaki fiyat tarifesini dijital panoda da gösterebilir (Fiyat Etiketi Yönetmeliği). Giriş ekranı için Tasarım\'da "Vitrin" düzenini kullanabilirsiniz.',
         `<div class="f">${fl('Başlık', `<input type="text" id="mtitle" maxlength="40" value="${esc(MENU.title)}" oninput="MENU.title=this.value;MENU.__dirty=1">`)}${fl('Para birimi', `<input type="text" id="mcur" maxlength="4" value="${esc(MENU.currency || '₺')}" oninput="MENU.currency=this.value;MENU.__dirty=1">`)}</div>`)
-      + langCard()
-      + card('İndirim saati (Happy Hours)', 'Artık ayrı bir sayfada: fotoğraf, ad/saat gizleme ve gösterim süresi de orada.', `<div class="row"><span class="muted" style="flex:1">${hhOf(MENU).length ? hhOf(MENU).map(h => '% ' + esc(h.label || 'Happy Hour') + ' · ' + esc(schText(h.sch))).join('<br>') : 'Kapalı'}</span><a class="btn g" href="#happy">Happy Hours sayfası</a></div>`)
       + card('Gün akışı', 'Bugün hangi kategori hangi saatlerde ekranda. Kategorinin ⏱ düğmesinden kahvaltı, öğle, akşam gibi saat verin; saati geçen kategori kendiliğinden kalkar.', '<div id="mflow"></div>')
       + `<div id="mcats"></div><div class="row" style="margin-bottom:18px"><button class="btn g" onclick="addCat()">＋ Kategori ekle</button><span style="flex:1"></span><button class="btn" data-save onclick="saveMenu()">Kaydet</button></div>`
       + card('Toplu ekle', 'Her satıra bir ürün: <code>Ürün ; fiyat ; açıklama</code>. Kategori satırı <code>#</code> ile başlar. Örnek: <code># Sıcak İçecekler</code> · <code>Türk Kahvesi ; 90</code>',
         `<div class="row" style="margin-bottom:10px"><button class="btn g" onclick="menuTemplate()">⬇ Excel şablonunu indir</button><button class="btn g" onclick="$('mfile').click()">⬆ Doldurduğum dosyayı yükle</button><input id="mfile" type="file" accept=".csv,.txt,.tsv,text/csv,text/plain" style="display:none" onchange="menuFile(this)"></div><div class="muted" style="font-size:13px;margin-bottom:10px">Şablonu indirin, Excel'de ürünlerinizle doldurun, <b>CSV (virgülle/noktalı virgülle ayrılmış)</b> olarak kaydedip buraya yükleyin. Dosyadaki liste aşağıya yazılır; kontrol edip "Listeye ekle" ya da "Listeyi bununla değiştir"e basın.</div><textarea id="mbulk" rows="6" placeholder="# Sıcak İçecekler&#10;Türk Kahvesi ; 90&#10;Latte ; 120 ; Yulaf sütüyle +15"></textarea><div class="row mt"><button class="btn g" onclick="bulk(false)">Listeye ekle</button><button class="btn d" onclick="bulk(true)">Listeyi bununla değiştir</button></div>`);
   },
-  after() { drawMenu(); },
+  after() {
+    const sub = ['items', 'happy', 'lang'].includes(SUB.menu) ? SUB.menu : 'items';
+    if (sub === 'items') drawMenu();
+  },
 };
 function drawMenu() {
+  if (!$('mcats')) return;
   const c = MENU.categories;
   $('mcats').innerHTML = (c.length ? c.map((cat, ci) => `<div class="mcat"><div class="chd"><input type="text" value="${esc(cat.name)}" placeholder="Kategori adı" maxlength="40" oninput="MENU.categories[${ci}].name=this.value;MENU.__dirty=1" style="font-weight:700">
-      <button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},1))">↓</button><button class="btn xs g" onclick="openSched('cat',${ci})" title="Bu kategori hangi gün ve saatlerde görünsün">⏱ ${cat.sch ? esc(schShort(cat.sch)) : 'Her zaman'}</button>${hhOf(MENU).length ? `<a class="btn xs ${catHH(cat).length ? '' : 'g'}" href="#happy" title="İndirim saatlerini İndirim Saatleri sayfasında seçin">% ${catHH(cat).length ? esc(catHH(cat).map(h => h.label || 'Happy Hour').join(', ')) : 'İndirimsiz'}</a>` : ''}<button class="btn xs d" onclick="UI.ask('Kategori silinsin mi?', { ok: 'Sil', danger: true }).then(ok=>{if(ok)mE(()=>MENU.categories.splice(${ci},1))})">Sil</button></div>
+      <button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories,${ci},1))">↓</button><button class="btn xs g" onclick="openSched('cat',${ci})" title="Bu kategori hangi gün ve saatlerde görünsün">⏱ ${cat.sch ? esc(schShort(cat.sch)) : 'Her zaman'}</button>${hhOf(MENU).length ? `<a class="btn xs ${catHH(cat).length ? '' : 'g'}" href="#menu/happy" title="İndirim saatlerini İndirim Saatleri sekmesinde seçin">% ${catHH(cat).length ? esc(catHH(cat).map(h => h.label || 'Happy Hour').join(', ')) : 'İndirimsiz'}</a>` : ''}<button class="btn xs d" onclick="UI.ask('Kategori silinsin mi?', { ok: 'Sil', danger: true }).then(ok=>{if(ok)mE(()=>MENU.categories.splice(${ci},1))})">Sil</button></div>
       ${langList().length ? `<div class="mtr">${langList().map(l => `<input type="text" placeholder="${LANG_NAMES[l]} kategori adı" maxlength="40" value="${esc((cat.t || {})[l] || '')}" oninput="mT(${ci},-1,'${l}','name',this.value)">`).join('')}</div>` : ''}
-      ${cat.items.map((it, ii) => `<div class="mrow${catHH(cat).length ? ' hp' : ''}"><button type="button" class="mthumb" title="${it.img ? 'Ürün fotoğrafını değiştir / kaldır' : 'Ürün fotoğrafı ekle'}" onclick="pickMenuItemImg(${ci},${ii})">${it.img ? `<img src="${esc(it.img)}" alt="">` : ic('camera')}</button><input type="text" value="${esc(it.name)}" placeholder="Ürün" maxlength="60" oninput="MENU.categories[${ci}].items[${ii}].name=this.value;MENU.__dirty=1"><input class="md" type="text" value="${esc(it.desc || '')}" placeholder="Açıklama (isteğe bağlı)" maxlength="90" oninput="MENU.categories[${ci}].items[${ii}].desc=this.value;MENU.__dirty=1"><input type="text" value="${esc(it.price)}" placeholder="Fiyat" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].price=this.value;MENU.__dirty=1">${catHH(cat).length ? `<input type="text" class="mhp" value="${esc(it.hp || '')}" placeholder="${esc(happyPrice(it.price, cat) || 'İnd. fiyat')}" title="İndirim saatindeki fiyat (boşsa %${hhPct(cat)} indirimle hesaplanır)" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].hp=this.value;MENU.__dirty=1">` : ''}<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn xs g" title="${it.kcal ? 'Kaloriyi kaldır' : 'Ürün adından kalori bilgisini getir'}" onclick="kcalBtn(${ci},${ii})">${it.kcal ? '🔥 ' + esc(it.kcal) + ' ✕' : '🔥'}</button><button class="btn xs ${it.off ? 'd' : 'g'}" title="Tükendi olarak işaretle" onclick="mE(()=>{const x=MENU.categories[${ci}].items[${ii}];x.off=!x.off})">${it.off ? 'Tükendi' : 'Var'}</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories[${ci}].items,${ii},-1))">↑</button><button class="btn xs d" onclick="mE(()=>MENU.categories[${ci}].items.splice(${ii},1))">✕</button></span></div>
+      ${cat.items.map((it, ii) => `<div class="mrow${catHH(cat).length ? ' hp' : ''}"><button type="button" class="mthumb" title="${it.img ? 'Ürün fotoğrafını değiştir / kaldır' : 'Ürün fotoğrafı ekle'}" onclick="pickMenuItemImg(${ci},${ii})">${it.img ? `<img src="${esc(it.img)}" alt="">` : ic('camera')}</button><input type="text" value="${esc(it.name)}" placeholder="Ürün" maxlength="60" oninput="MENU.categories[${ci}].items[${ii}].name=this.value;MENU.__dirty=1"><input class="md" type="text" value="${esc(it.desc || '')}" placeholder="Açıklama (isteğe bağlı)" maxlength="90" oninput="MENU.categories[${ci}].items[${ii}].desc=this.value;MENU.__dirty=1"><input type="text" value="${esc(it.price)}" placeholder="Fiyat" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].price=this.value;MENU.__dirty=1">${catHH(cat).length ? `<input type="text" class="mhp" value="${esc(it.hp || '')}" placeholder="${esc(happyPrice(it.price, cat) || 'İnd. fiyat')}" title="İndirim saatindeki fiyat (boşsa %${hhPct(cat)} indirimle hesaplanır)" maxlength="16" oninput="MENU.categories[${ci}].items[${ii}].hp=this.value;MENU.__dirty=1">` : ''}<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn xs g" title="${it.kcal ? 'Kaloriyi kaldır' : 'Ürün adından kalori bilgisini getir'}" onclick="kcalBtn(${ci},${ii})">${it.kcal ? '🔥 ' + esc(it.kcal) + ' ✕' : '🔥'}</button><button class="btn xs ${it.off ? 'd' : 'g'}" title="Tükendi olarak işaretle" onclick="mE(()=>{const x=MENU.categories[${ci}].items[${ii}];x.off=!x.off})">${it.off ? 'Tükendi' : 'Var'}</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories[${ci}].items,${ii},-1))">↑</button><button class="btn xs g" onclick="mE(()=>mv(MENU.categories[${ci}].items,${ii},1))">↓</button><button class="btn xs d" onclick="mE(()=>MENU.categories[${ci}].items.splice(${ii},1))">✕</button></span></div>
       ${langList().length ? `<div class="mtr">${langList().map(l => `<input type="text" placeholder="${LANG_NAMES[l]}: ${esc(it.name || 'ürün adı')}" maxlength="60" value="${esc(((it.t || {})[l] || {}).name || '')}" oninput="mT(${ci},${ii},'${l}','name',this.value)"><input class="md" type="text" placeholder="${LANG_NAMES[l]} açıklama" maxlength="90" value="${esc(((it.t || {})[l] || {}).desc || '')}" oninput="mT(${ci},${ii},'${l}','desc',this.value)">`).join('')}</div>` : ''}`).join('')}
       <button class="btn xs g" onclick="mE(()=>MENU.categories[${ci}].items.push({name:'',price:'',desc:''}))">＋ Ürün</button></div>`).join('')
     : '<div class="empty" style="margin-bottom:14px">Henüz kategori yok. "Kategori ekle" ile başlayın ya da aşağıdan toplu yapıştırın.</div>')
     + `<input type="file" id="mitem-imgf" accept="image/*" hidden onchange="upMenuItemImg(this)">`;
-  drawFlow();
+  drawMenuFlow();
 }
 let __mImgTarget = null;
 async function pickMenuItemImg(ci, ii) {
@@ -1890,7 +1980,7 @@ function schAt(s, d) {
   return true;
 }
 // Gün akışı: bugünün 24 saati, yarım saatlik dilimler; her kategori için görünür olduğu dilimler dolu çizilir
-function drawFlow() {
+function drawMenuFlow() {
   const box = $('mflow'); if (!box) return;
   const rows = MENU.categories.filter(c => c.name || c.items.length).map(c => ({ name: c.name || 'Adsız kategori', sch: c.sch }));
   hhOf(MENU).forEach(h => rows.push({ name: '% ' + (h.label || 'Happy Hour'), sch: h.sch, happy: true }));
@@ -1982,8 +2072,8 @@ SECTIONS.sport = {
     const db = S.db, L = S.lg, bc = Object.assign({ enabled: true, note: '', days: 3, everyMin: 6, durSec: 15, info: ['', '', ''] }, db.bigMatch || {});
     const groups = {}; L.catalog.forEach(l => (groups[l.group] = groups[l.group] || []).push(l));
     const tbl = L.catalog.filter(l => L.enabled.includes(l.code) && L.tables.includes(l.code));
-    const sec = ['leagues', 'table', 'big'].includes(SUB.sport) ? SUB.sport : 'leagues'; // eski #sport/manual bağlantısı da açılsın
-    const TABS = [['leagues', 'Maçlar ve ligler'], ['table', 'Puan durumu'], ['big', 'Büyük maç']];
+    const sec = ['leagues', 'table', 'big', 'predict'].includes(SUB.sport) ? SUB.sport : 'leagues'; // eski #sport/manual bağlantısı da açılsın
+    const TABS = [['leagues', 'Maçlar ve ligler'], ['table', 'Puan durumu'], ['big', 'Büyük maç'], ['predict', hasAddon('tahmin_ligi') ? 'Tahmin Ligi' : 'Tahmin Ligi · EK']];
     const body = { leagues: () => (''
       + card('Takip edilen ligler', 'Seçtiğiniz liglerin bugünkü maçları ve canlı skorları gösterilir; gol olunca ekranda animasyon çıkar.',
         Object.entries(groups).map(([g, items]) => { const n = items.filter(l => L.enabled.includes(l.code)).length; return `<details class="lgrp" ${n ? 'open' : ''}><summary><b>${esc(g)}</b><span class="cnt" data-of="${items.length}">${n}/${items.length}</span></summary><div class="chips">${items.map(l => `<span class="chip ${L.enabled.includes(l.code) ? 'on' : ''}" data-code="${l.code}" onclick="this.classList.toggle('on');spCount();this.closest('.card').classList.add('dirty');savebar()">${esc(l.label)}</span>`).join('')}</div></details>`; }).join('')
@@ -2002,11 +2092,16 @@ SECTIONS.sport = {
          <div class="fl mt"><span>Takım / oyuncu fotoğrafları (isteğe bağlı, arkası şeffaf PNG en iyisi)</span><div class="row"><input type="text" id="bg-team" list="bgteams" placeholder="Takım adı" style="max-width:220px"><datalist id="bgteams"><option>Galatasaray</option><option>Fenerbahçe</option><option>Beşiktaş</option><option>Trabzonspor</option></datalist><input type="file" id="bg-file" accept="image/*" hidden onchange="upBigPhoto(this)"><button class="btn g s" onclick="$('bg-team').value.trim()?$('bg-file').click():toast('Önce takım adını yazın',true)">Fotoğraf yükle</button></div><div class="thumbs" id="bgphotos"></div></div>
          <div class="row mt"><span id="bglist" class="muted" style="flex:1"></span><button class="btn g s" onclick="bigTest()">Şimdi dene</button><button class="btn" data-save onclick="saveBig()">Kaydet</button></div>`,
         sw(bc.enabled, "act('PUT','/bigmatch',{enabled:this.checked},this.checked?'Açıldı':'Kapatıldı')"), bc.enabled ? '' : 'off')
-) }[sec]();
+), predict: () => '<div id="pdv"><div class="loading">Yükleniyor…</div></div>' }[sec]();
     return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.', `<button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button>`)
-      + `<div class="spsum" id="sp-sum"></div>` + tabs('sport', TABS) + body + `<div class="mt">${tahminCard()}</div>`;
+      + (sec === 'predict' ? '' : '<div class="spsum" id="sp-sum"></div>') + tabs('sport', TABS) + body;
   },
   async after() {
+    if (SUB.sport === 'predict') {
+      try { PRED = await req('GET', '/predict'); } catch (e) { if ($('pdv')) $('pdv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+      drawPredict();
+      return;
+    }
     const n = S.lg.enabled.length;
     const sum = (big) => { const el = $('sp-sum'); if (el) el.innerHTML = `<span><b>${n}</b> <span>lig açık</span></span><span>${big}</span>`; };
     sum('');
@@ -2062,13 +2157,36 @@ async function upBigPhoto(inp) { const f = inp.files[0]; inp.value = ''; if (!f)
 
 /* ================= DUYURULAR ================= */
 SECTIONS.promo = {
-  after() { if ($('ig-st')) drawInsta(); (S.db.campaigns || []).forEach(c => updateCampPrev(c.id)); },
   html() {
-    const db = S.db;
-    return head('Kampanya ve yorumlar', 'Kampanya kartı, Google ve Instagram yorumları.')
-      + (db.campaigns || []).map(campCard).join('')
-      + lock('Google yorumları ve Instagram')
-      + googleCard() + instaCard();
+    const db = S.db, sub = ['camp', 'social', 'celeb'].includes(SUB.promo) ? SUB.promo : 'camp';
+    const pTabs = tabs('promo', [['camp', 'Kampanya'], ['social', pro() ? 'Google & Instagram' : 'Google & Instagram · PRO'], ['celeb', 'Kutlamalar']]);
+    if (sub === 'social') {
+      return head('Kampanya & Sosyal', 'Google Haritalar yorumları ve Instagram paylaşımlarınız ekranda otomatik döner.')
+        + pTabs + lock('Google yorumları ve Instagram')
+        + (pro() ? googleCard(true) + instaCard(true) : `<div class="pro-lock-area" ${lockAttrs('Google yorumları ve Instagram')}>${googleCard(true)}${instaCard(true)}</div>`);
+    }
+    if (sub === 'celeb') {
+      return head('Kampanya & Sosyal', 'Müşterilerinize doğum günü mesajları ve resmî bayramlarda bayrak, Atatürk sözleri ve fotoğraflar.')
+        + pTabs + celebPageHtml();
+    }
+    return head('Kampanya & Sosyal', 'Kampanya kartı, Google ve Instagram yorumları ve kutlamalar.')
+      + pTabs + (db.campaigns || []).map(campCard).join('');
+  },
+  async after() {
+    const sub = ['camp', 'social', 'celeb'].includes(SUB.promo) ? SUB.promo : 'camp';
+    if (sub === 'camp') { (S.db.campaigns || []).forEach(c => updateCampPrev(c.id)); return; }
+    if (sub === 'social') { if ($('ig-st')) drawInsta(); return; }
+    if (sub === 'celeb') {
+      loadBdays();
+      try {
+        const c = await req('GET', '/celebrate');
+        if ($('cdays')) $('cdays').innerHTML = c.holidays.map(h => `<div class="it" style="flex-wrap:wrap"><div class="b" style="min-width:200px"><b>${esc(h.title)}${c.active === h.id ? ' <span class="pill ok">şu an açık</span>' : ''}</b><span>${h.md.split('-').reverse().join('.')} · ${h.photos.length} fotoğraf</span>
+            <div class="thumbs">${h.photos.map(p => `<div class="t"><img src="${esc(p.url)}">${p.id ? `<button onclick="act('DELETE','/celebrate/photos/${p.id}',undefined,'Silindi')">✕</button>` : ''}</div>`).join('')}</div></div>
+            <select style="width:auto" onchange="act('PUT','/celebrate/mode',{id:'${h.id}',mode:this.value},'Kaydedildi')">${[['auto', 'Tarihinde otomatik'], ['on', 'Hep açık'], ['off', 'Kapalı']].map(([v, l]) => `<option value="${v}" ${h.mode === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+            ${c.preview === h.id ? `<button class="btn xs" onclick="celebPrevStop()">Önizlemeyi kapat</button>` : `<button class="btn xs g" onclick="celebPrev('${h.id}')">Önizle</button>`}
+            <label class="btn xs g" style="cursor:pointer">＋ Fotoğraf<input type="file" accept="image/*" hidden onchange="upCeleb('${h.id}',this)"></label></div>`).join('');
+      } catch (e) {}
+    }
   },
 };
 function campCard(c) {
@@ -2249,91 +2367,86 @@ function addQr() {
 
 /* ================= KUTLAMALAR ================= */
 let TIMES = null;
-SECTIONS.celeb = {
-  html() {
-    const db = S.db; TIMES = TIMES || [...(db.times || [])];
-    return head('Kutlamalar', 'Müşterilerinize doğum günü mesajları ve resmî bayramlarda bayrak, Atatürk sözleri ve fotoğraflar.')
-      + lock('Doğum günü kutlaması')
-      + `<div class="grid g2" style="margin-bottom:18px">`
-      + cardPro('Doğum günü kutlaması', '🎂 Doğum günü', 'Seçili kişiler için belirlenen saatlerde ekranın altında kutlama yazısı kayar.',
-        `${db.birthdays.length ? `<div class="list">${db.birthdays.map(b => `<div class="it">${sw(b.selected, `act('PATCH','/birthdays/${b.id}',{selected:this.checked},this.checked?'Kutlamaya eklendi':'Kutlamadan çıkarıldı',false)`)}<div class="b"><b>${esc(b.name)}</b><span>${esc(b.text)}</span></div><button class="btn xs d" onclick="act('DELETE','/birthdays/${b.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : '<div class="empty">Henüz kişi yok</div>'}
-         <hr class="sep2">${fl('Kişi', '<input type="text" id="b-n" maxlength="60" placeholder="Ad Soyad">')}<div class="mt">${fl('Ekranda kayacak yazı', '<input type="text" id="b-t" maxlength="200" placeholder="🎉 Sevgili Ahmet, nice mutlu yıllara! 🎂">')}</div>
-         <label class="ckl mt"><input type="checkbox" id="b-ok"> Bu kişi adının ekranda gösterilmesine izin verdi (KVKK)</label>
-         <div class="row end mt"><button class="btn" onclick="addBday()">Ekle</button></div>`)
-      + cardPro('Doğum günü kutlaması', 'Gösterim saatleri', 'Kutlama her gün bu saatlerde başlar.',
-        `<div class="row" id="times">${TIMES.map((t, i) => `<span class="time">${t}<button onclick="TIMES.splice(${i},1);render(true)">×</button></span>`).join('') || '<span class="muted">Saat yok</span>'}</div>
-         <div class="row mt"><input type="time" id="b-time" style="max-width:150px"><button class="btn g s" onclick="const v=$('b-time').value;if(v&&!TIMES.includes(v)){TIMES.push(v);TIMES.sort();render(true)}">＋ Saat ekle</button></div>
-         <div class="f mt">${fl('Ekranda kalma süresi (saniye)', `<input type="number" id="b-dur" min="5" max="300" value="${db.duration}">`)}</div>
-         <div class="row mt"><button class="btn g s" onclick="act('POST','/birthday/fire',undefined,'Kutlama gösteriliyor',false)">Şimdi göster</button><span style="flex:1"></span><button class="btn" data-save onclick="saveTimes()">Kaydet</button></div>`)
-      + `</div>`
-      + '<div id="bdv" style="margin-bottom:18px"></div>'
-      + card('🇹🇷 Resmî günler', '23 Nisan, 19 Mayıs, 30 Ağustos, 29 Ekim ve 10 Kasım\'da medyanın üstünde dalgalanan bayrak ve Atatürk sözleri çıkar, arada fotoğraflar gösterilir. Gün başında açılır, ertesi gün 03:00\'te kalkar.',
-        '<div id="cdays" class="list"><div class="muted">Yükleniyor…</div></div>', sw(db.showCelebrations !== false, "opt('showCelebrations',this.checked).then(()=>render(true))"), db.showCelebrations === false ? 'off' : '');
-  },
-  async after() {
-    loadBdays();
-    try {
-      const c = await req('GET', '/celebrate');
-      $('cdays').innerHTML = c.holidays.map(h => `<div class="it" style="flex-wrap:wrap"><div class="b" style="min-width:200px"><b>${esc(h.title)}${c.active === h.id ? ' <span class="pill ok">şu an açık</span>' : ''}</b><span>${h.md.split('-').reverse().join('.')} · ${h.photos.length} fotoğraf</span>
-          <div class="thumbs">${h.photos.map(p => `<div class="t"><img src="${esc(p.url)}">${p.id ? `<button onclick="act('DELETE','/celebrate/photos/${p.id}',undefined,'Silindi')">✕</button>` : ''}</div>`).join('')}</div></div>
-          <select style="width:auto" onchange="act('PUT','/celebrate/mode',{id:'${h.id}',mode:this.value},'Kaydedildi')">${[['auto', 'Tarihinde otomatik'], ['on', 'Hep açık'], ['off', 'Kapalı']].map(([v, l]) => `<option value="${v}" ${h.mode === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
-          ${c.preview === h.id ? `<button class="btn xs" onclick="celebPrevStop()">Önizlemeyi kapat</button>` : `<button class="btn xs g" onclick="celebPrev('${h.id}')">Önizle</button>`}
-          <label class="btn xs g" style="cursor:pointer">＋ Fotoğraf<input type="file" accept="image/*" hidden onchange="upCeleb('${h.id}',this)"></label></div>`).join('');
-    } catch (e) {}
-  },
-};
+function celebPageHtml() {
+  const db = S.db; TIMES = TIMES || [...(db.times || [])];
+  const sampleMode = !pro();
+  const bdays = (db.birthdays && db.birthdays.length) ? db.birthdays
+    : sampleMode ? [{ id: 's1', name: 'Ahmet Yılmaz', text: '🎉 Sevgili Ahmet, nice mutlu yıllara! 🎂', selected: true }] : [];
+  const times = TIMES.length ? TIMES : (sampleMode ? ['14:00', '18:00', '21:00'] : []);
+  const bdayCard = card('🎂 Doğum günü', 'Seçili kişiler için belirlenen saatlerde ekranın altında kutlama yazısı kayar.',
+    `${bdays.length ? `<div class="list">${bdays.map(b => `<div class="it">${sw(b.selected, `act('PATCH','/birthdays/${b.id}',{selected:this.checked},this.checked?'Kutlamaya eklendi':'Kutlamadan çıkarıldı',false)`)}<div class="b"><b>${esc(b.name)}</b><span>${esc(b.text)}</span></div><button class="btn xs d" onclick="act('DELETE','/birthdays/${b.id}',undefined,'Silindi')">Sil</button></div>`).join('')}</div>` : '<div class="empty">Henüz kişi yok</div>'}
+     <hr class="sep2">${fl('Kişi', '<input type="text" id="b-n" maxlength="60" placeholder="Ad Soyad">')}<div class="mt">${fl('Ekranda kayacak yazı', '<input type="text" id="b-t" maxlength="200" placeholder="🎉 Sevgili Ahmet, nice mutlu yıllara! 🎂">')}</div>
+     <label class="ckl mt"><input type="checkbox" id="b-ok"> Bu kişi adının ekranda gösterilmesine izin verdi (KVKK)</label>
+     <div class="row end mt"><button class="btn" onclick="addBday()">Ekle</button></div>`);
+  const timesCard = card('Gösterim saatleri', 'Kutlama her gün bu saatlerde başlar.',
+    `<div class="row" id="times">${times.map((t, i) => `<span class="time">${t}<button onclick="TIMES.splice(${i},1);TIMES_DIRTY=1;render(true);savebar()">×</button></span>`).join('') || '<span class="muted">Saat yok</span>'}</div>
+     <div class="row mt"><input type="time" id="b-time" style="max-width:150px"><button class="btn g s" onclick="const v=$('b-time').value;if(v&&!TIMES.includes(v)){TIMES.push(v);TIMES.sort();TIMES_DIRTY=1;render(true);savebar()}">＋ Saat ekle</button></div>
+     <div class="f mt">${fl('Ekranda kalma süresi (saniye)', `<input type="number" id="b-dur" min="5" max="300" value="${db.duration}" oninput="TIMES_DIRTY=1;savebar()">`)}</div>
+     <div class="row mt"><button class="btn g s" onclick="act('POST','/birthday/fire',undefined,'Kutlama gösteriliyor',false)">Şimdi göster</button><span style="flex:1"></span><button class="btn" data-save onclick="saveTimes()">Kaydet</button></div>`);
+  const lockedBlock = `<div class="grid g2" style="margin-bottom:18px">${bdayCard}${timesCard}</div><div id="bdv" style="margin-bottom:18px"></div>`;
+  const resmiCard = card('🇹🇷 Resmî günler', '23 Nisan, 19 Mayıs, 30 Ağustos, 29 Ekim ve 10 Kasım\'da medyanın üstünde dalgalanan bayrak ve Atatürk sözleri çıkar, arada fotoğraflar gösterilir. Gün başında açılır, ertesi gün 03:00\'te kalkar.',
+    '<div id="cdays" class="list"><div class="muted">Yükleniyor…</div></div>', sw(db.showCelebrations !== false, "opt('showCelebrations',this.checked).then(()=>render(true))"), db.showCelebrations === false ? 'off' : '');
+  return (pro() ? lockedBlock : lock('Doğum günü kutlaması') + `<div class="pro-lock-area" ${lockAttrs('Doğum günü kutlaması')}>${lockedBlock}</div>`) + resmiCard;
+}
 // Bugün doğanlar: Tahmin Ligi'ne kayıtlı müşterilerden bugün doğanlar ekranda kutlama afişiyle gösterilir
 let BDV = null;
 async function loadBdays() { try { BDV = await req('GET', '/predict/bday'); } catch (e) { BDV = null; } drawBdays(); }
 function drawBdays() {
-  const el = $('bdv'); if (!el) return; const b = BDV;
+  const el = $('bdv'); if (!el) return;
+  let b = BDV;
+  if (!b && !pro()) b = { on: true, every: 8, today: [], next: [] };
   if (!b) { el.innerHTML = ''; return; }
+  const useSample = !pro() && (!b.today || !b.today.length);
+  const today = useSample ? [{ name: 'Zeynep T.', nick: 'zeynept', age: 28, ok: true }] : b.today;
+  const next = useSample && (!b.next || !b.next.length) ? [{ name: 'Mert Y.', nick: 'merty', in: 1, ok: true }] : b.next;
   const who = x => `<div class="it"><div class="b"><b>${esc(x.name || x.nick)}</b><span>${esc(x.nick)}${x.age ? ' · ' + I18N.t(x.age + ' yaş') : ''}${x.tel ? ` · <a href="tel:${esc(x.tel.replace(/\s/g, ''))}">${esc(x.tel)}</a>` : ''}${x.in ? ' · ' + I18N.t(x.in === 1 ? 'yarın' : x.in + ' gün sonra') : ''}</span></div>${x.ok ? '<span class="pill ok">ekranda</span>' : '<span class="pill">izin yok</span>'}</div>`;
   el.innerHTML = card('🎉 Bugün doğanlar', 'Tahmin Ligi\'ne kayıtlı müşterilerden bugün doğum günü olanlar, ekranda konfetili bir kutlama afişinde kullanıcı adlarıyla (ör. Ahmet Y.) gösterilir. Yalnız kayıt olurken buna izin veren müşteriler görünür.',
-    `${!b.pro ? '<p class="muted" style="margin:0 0 10px">Pro pakete dahildir.</p>' : ''}
-     <div class="f">${fl('Ekranda ne sıklıkla', `<select onchange="bdaySet({every:+this.value})">${[4, 6, 8, 12, 20].map(n => `<option value="${n}" ${b.every === n ? 'selected' : ''}>Her ${n} içerikte bir</option>`).join('')}</select>`)}</div>
-     <h4 style="margin:14px 0 6px">Bugün</h4><div class="list">${b.today.length ? b.today.map(who).join('') : `<div class="empty">${b.users ? 'Bugün doğum günü olan müşteri yok.' : 'Henüz kayıtlı müşteri yok. Müşteriler Tahmin Ligi\'ne kaydolurken doğum tarihlerini girer.'}</div>`}</div>
-     ${b.next.length ? `<h4 style="margin:14px 0 6px">Önümüzdeki 7 gün</h4><div class="list">${b.next.map(who).join('')}</div>` : ''}`,
-    sw(b.on, "bdaySet({on:this.checked})"), b.on ? '' : 'off');
+    `<div class="f">${fl('Ekranda ne sıklıkla', `<select onchange="bdaySet({every:+this.value})">${[4, 6, 8, 12, 20].map(n => `<option value="${n}" ${(b.every || 8) === n ? 'selected' : ''}>Her ${n} içerikte bir</option>`).join('')}</select>`)}</div>
+     <h4 style="margin:14px 0 6px">Bugün</h4><div class="list">${today.length ? today.map(who).join('') : `<div class="empty">${b.users ? 'Bugün doğum günü olan müşteri yok.' : 'Henüz kayıtlı müşteri yok. Müşteriler Tahmin Ligi\'ne kaydolurken doğum tarihlerini girer.'}</div>`}</div>
+     ${next.length ? `<h4 style="margin:14px 0 6px">Önümüzdeki 7 gün</h4><div class="list">${next.map(who).join('')}</div>` : ''}`,
+    sw(useSample ? true : b.on, "bdaySet({on:this.checked})"), (useSample ? true : b.on) ? '' : 'off');
 }
 async function bdaySet(x) { try { BDV = await req('PUT', '/predict/bday', x); toast(x.on === true ? 'Bugün doğanlar ekranda' : x.on === false ? 'Bugün doğanlar kapatıldı' : 'Kaydedildi'); drawBdays(); } catch (e) { toast(e.message, true); } }
 async function celebPrev(id) { if (await act('POST', '/celebrate/preview', { id }, 'Önizleme TV\'de 3 dakika gösterilecek', false)) render(true); }
 async function celebPrevStop() { if (await act('POST', '/celebrate/preview', {}, 'Önizleme kapatıldı', false)) render(true); }
 async function addBday() { if (!$('b-ok').checked) return toast('Kişinin adının ekranda gösterilmesine izin verdiğini onaylayın', true); if (await act('POST', '/birthdays', { name: $('b-n').value.trim(), text: $('b-t').value.trim() }, 'Kişi eklendi')) {} }
-async function saveTimes() { if (await act('PUT', '/schedule', { times: TIMES, duration: $('b-dur').value }, 'Saatler kaydedildi', false)) { S.db = await req('GET', '/db'); TIMES = null; render(true); } }
+async function saveTimes() { if (await act('PUT', '/schedule', { times: TIMES, duration: $('b-dur').value }, 'Saatler kaydedildi', false)) { S.db = await req('GET', '/db'); TIMES = null; TIMES_DIRTY = 0; render(true); } }
 async function upCeleb(day, inp) { const f = inp.files[0]; inp.value = ''; if (!f) return; const fd = new FormData(); fd.append('day', day); fd.append('file', f); try { await req('POST', '/celebrate/photos', fd); toast('Fotoğraf eklendi'); render(true); } catch (e) { toast(e.message, true); } }
 
 /* ================= BİLGİ BANDI ================= */
 /* ================= Tahmin Ligi ================= */
 let PRED = null, PRED_V = 'week';
-SECTIONS.predict = {
-  html() {
-    return head('Tahmin Ligi', 'Süper Lig tahmin oyunu: müşteriler işletmedeki ekranda çıkan QR\'ı okutup Google hesaplarıyla katılır, haftanın maçlarına skor, golcü ve kırmızı kart tahmini girer. Haftanın birincisine ikram verirsiniz; puan durumu ekranda döngü arasında görünür ve katılımcılara her hafta e-postayla gider.')
-      + '<div id="pdv"><div class="loading">Yükleniyor…</div></div>';
-  },
-  async after() { try { PRED = await req('GET', '/predict'); } catch (e) { $('pdv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; } drawPredict(); },
-};
 function drawPredict() {
   const p = PRED; if (!p || !$('pdv')) return;
-  const P = p.pts, list = PRED_V === 'week' ? p.week.board : p.all;
+  const unlocked = !!(p.addon && p.addon.active);
+  const P = p.pts;
+  const rawList = PRED_V === 'week' ? p.week.board : p.all;
+  const list = rawList.length ? rawList : (!unlocked ? [
+    { nick: 'Ahmet K.', n: 9, exact: 3, pts: 18 },
+    { nick: 'Zeynep T.', n: 8, exact: 2, pts: 15 },
+    { nick: 'Mert Y.', n: 7, exact: 2, pts: 12 },
+    { nick: 'Selin A.', n: 6, exact: 1, pts: 9 },
+  ] : []);
   const rows = list.length ? list.map((r, i) => `<div class="it"><div class="b"><b>${i + 1}. ${esc(r.nick)}</b><span>${r.n} maça tahmin · ${r.exact} tam skor</span></div><b>${r.pts} puan</b></div>`).join('') : '<div class="empty">Henüz puan yok.</div>';
   const aw = p.awards.length ? p.awards.map(a => a.none ? `<div class="it"><div class="b"><b>${esc(a.label)}</b><span>Puan alan olmadı</span></div></div>`
     : `<div class="it"><div class="b"><b>${esc(a.label)} · ${esc(a.nick)}</b><span>${a.pts} puan · ${esc(a.email)}${a.prize ? ' · ' + esc(a.prize) : ''}</span></div><label class="row" style="gap:8px;align-items:center"><span class="muted">Ödül verildi</span>${sw(a.given, `predAward('${a.key}',this.checked)`)}</label></div>`).join('') : '<div class="empty">Henüz biten hafta yok. Hafta Salı başlar; haftanın maçları bitince birinci kesinleşir ve kendisine e-posta gider.</div>';
   const q = (PRED_Q || '').toLocaleLowerCase('tr');
   const ul = p.users.filter(u => !q || u.nick.toLocaleLowerCase('tr').includes(q) || (u.name || '').toLocaleLowerCase('tr').includes(q) || u.email.toLocaleLowerCase('tr').includes(q));
   const us = ul.length ? ul.slice(0, 200).map(u => `<div class="it"><div class="b"><b>${esc(u.nick)}${u.off ? ' <span class="muted">· kapatıldı</span>' : ''}</b><span>${u.name ? esc(u.name) + ' · ' : ''}${esc(u.email)}${u.tel ? ' · ' + esc(u.tel) : ''}${u.mail ? '' : ' · ' + I18N.t('e-posta kapalı')}${u.age != null ? ' · ' + I18N.t(u.age + ' yaş') : ''} · ${I18N.t(u.n + ' maça tahmin')} · ${new Date(u.at).toLocaleDateString(I18N.locale)}</span></div><div class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn g s" onclick="predEdit('${u.uid}')">Düzenle</button><button class="btn g s" onclick="predUser('${u.uid}',${!u.off})">${u.off ? 'Geri aç' : 'Ligden çıkar'}</button><button class="btn g s" style="color:var(--bad,#e5484d)" onclick="predDel('${u.uid}')">Sil</button></div></div>`).join('') : `<div class="empty">${p.users.length ? 'Eşleşen katılımcı yok.' : 'Henüz katılımcı yok.'}</div>`;
-  $('pdv').innerHTML = (!p.google ? `<div class="card"><p style="margin:0"><b>Google girişi ayarlı değil.</b> <span class="muted">Müşteriler yalnız Google hesabıyla katılabildiği için Tahmin Ligi şu an kayıt alamaz. Süper yönetimden Google OAuth anahtarlarını girin.</span></p></div>` : '') + (!(p.addon && p.addon.active) ? lock('Tahmin Ligi', 'tahmin_ligi') : '')
-    + card('Tahmin Ligi', p.on ? 'Açık: ekranda döngü arasında puan durumu ve katılım QR\'ı görünür.' : 'Kapalı. Açınca ekranda katılım QR\'ı ve puan durumu görünmeye başlar.',
-      `<div class="f">${fl('Haftanın birincisine ikram', `<input type="text" id="pd-prize" maxlength="120" placeholder="örn. 1 adet büyük boy pizza" value="${esc(p.prize)}">`)}
+  const prizeVal = p.prize || (!unlocked ? '1 adet büyük boy pizza' : '');
+  const cards = card('Tahmin Ligi', p.on ? 'Açık: ekranda döngü arasında puan durumu ve katılım QR\'ı görünür.' : 'Kapalı. Açınca ekranda katılım QR\'ı ve puan durumu görünmeye başlar.',
+      `<div class="f">${fl('Haftanın birincisine ikram', `<input type="text" id="pd-prize" maxlength="120" placeholder="örn. 1 adet büyük boy pizza" value="${esc(prizeVal)}">`)}
        ${fl('Yaş sınırı', `<select id="pd-age"><option value="0" ${!p.minAge ? 'selected' : ''}>Yok</option><option value="18" ${p.minAge === 18 ? 'selected' : ''}>18 yaş ve üzeri</option></select>`)}
        ${fl('Ekranda ne sıklıkla', `<select id="pd-every">${[4, 6, 8, 12, 20].map(n => `<option value="${n}" ${p.every === n ? 'selected' : ''}>Her ${n} içerikte bir</option>`).join('')}</select>`)}</div>
        <div class="row mt" style="gap:10px;flex-wrap:wrap"><a class="btn g s" href="${esc(p.url)}" target="_blank" rel="noopener">Müşteri sayfasını aç ↗</a><span class="muted" style="font-size:12px;word-break:break-all">${esc(p.url)}</span><span style="flex:1"></span><button class="btn" data-save onclick="predSave()">Kaydet</button></div>`,
-      sw(p.on && !!(p.addon && p.addon.active), "predSet({on:this.checked})"), p.on && p.addon && p.addon.active ? '' : 'off')
-    + card(`Puan durumu · ${esc(p.week.label)}`, `${p.userCount} katılımcı`, `<div class="tabs" style="margin:0 0 10px"><button class="${PRED_V === 'week' ? 'on' : ''}" onclick="PRED_V='week';drawPredict()">Bu hafta</button><button class="${PRED_V === 'all' ? 'on' : ''}" onclick="PRED_V='all';drawPredict()">Genel</button></div><div class="list">${rows}</div>`)
+      sw(p.on && unlocked, "predSet({on:this.checked})"), p.on && unlocked ? '' : 'off')
+    + card(`Puan durumu · ${esc(p.week.label)}`, `${p.userCount || (!unlocked ? 4 : 0)} katılımcı`, `<div class="tabs" style="margin:0 0 10px"><button class="${PRED_V === 'week' ? 'on' : ''}" onclick="PRED_V='week';drawPredict()">Bu hafta</button><button class="${PRED_V === 'all' ? 'on' : ''}" onclick="PRED_V='all';drawPredict()">Genel</button></div><div class="list">${rows}</div>`)
     + card('Haftanın birincileri', 'Ödülü verince işaretleyin. Kazanan, ödülü alırken kullanıcı adını ve kendisine gelen e-postayı gösterir.', `<div class="list">${aw}</div>`)
     + card('Kurallar ve puanlar', '', `<p class="muted" style="margin:0 0 8px">Tam skor ${P.exact} · doğru sonuç ${P.result} · golcünün her golü ${P.goal} · kırmızı kart çıkar/çıkmaz ${P.red} puan. Müşteri istediği maçlara tahmin girer; maç başlayınca tahmin kilitlenir. Hafta Salı–Pazartesi; eşitlikte daha çok tam skor, sonra daha erken tahmin öne geçer. Katılım ücretsizdir, kura yoktur.</p>
        <p class="muted" style="margin:0">Ödüllü yarışmalar mevzuata tabidir: katılım ücretsiz ve alışveriş şartsız olmalı, ödül nakit olmamalı. Emin değilseniz bir hukukçuya danışın.</p>`)
     + card('Katılımcılar', 'Kayıtlı müşterilerin adı, e-postası, telefonu ve doğum tarihi burada tutulur. Bilgileri düzenleyebilir, kural dışı davrananı (ör. birden çok hesap açan) ligden çıkarabilir ya da tamamen silebilirsiniz.', `${owner() && p.users.length ? `<div class="row" style="margin:0 0 10px;justify-content:flex-end"><a class="btn g s" href="/api/admin/predict/export.csv" download>⬇ Müşteri listesini indir (Excel)</a></div>` : ''}${p.users.length > 8 ? `<input type="search" id="pd-q" style="margin:0 0 10px;width:100%" placeholder="Ad, kullanıcı adı veya e-posta ara" value="${esc(PRED_Q || '')}" oninput="PRED_Q=this.value;drawPredict();const i=$('pd-q');i.focus();i.setSelectionRange(i.value.length,i.value.length)">` : ''}<div class="list">${us}</div>`);
+  $('pdv').innerHTML = (!p.google ? `<div class="card"><p style="margin:0"><b>Google girişi ayarlı değil.</b> <span class="muted">Müşteriler yalnız Google hesabıyla katılabildiği için Tahmin Ligi şu an kayıt alamaz. Süper yönetimden Google OAuth anahtarlarını girin.</span></p></div>` : '')
+    + (!unlocked ? lock('Tahmin Ligi', 'tahmin_ligi') + `<div class="pro-lock-area" ${lockAttrs('Tahmin Ligi', 'tahmin_ligi')}>${cards}</div>` : cards);
 }
 async function predSet(b) { try { PRED = await req('PUT', '/predict', b); toast(b.on === false ? 'Tahmin Ligi kapatıldı' : b.on ? 'Tahmin Ligi açıldı' : 'Kaydedildi'); drawPredict(); } catch (e) { toast(e.message, true); } }
 const predSave = () => predSet({ prize: $('pd-prize').value, every: +$('pd-every').value, minAge: +$('pd-age').value });
@@ -2360,11 +2473,11 @@ async function predEditSave(uid, b) {
 }
 async function predDel(uid) {
   const u = (PRED.users || []).find(x => x.uid === uid);
-  if (!confirm(I18N.t((u ? u.nick : '') + ' adlı katılımcı ve tüm tahminleri silinsin mi? Bu işlem geri alınamaz.'))) return;
+  if (!await UI.ask(I18N.t((u ? u.nick : '') + ' adlı katılımcı ve tüm tahminleri silinsin mi? Bu işlem geri alınamaz.'), { ok: 'Sil', danger: true })) return;
   try { PRED = await req('DELETE', '/predict/user/' + uid); toast('Katılımcı silindi'); drawPredict(); } catch (e) { toast(e.message, true); }
 }
 async function predAward(k, given) { try { PRED = await req('POST', '/predict/award/' + k, { given }); drawPredict(); } catch (e) { toast(e.message, true); } }
-async function predUser(uid, off) { if (off && !confirm('Bu katılımcı ligden çıkarılsın mı? Puan durumunda görünmez.')) return; try { PRED = await req('POST', '/predict/user/' + uid, { off }); drawPredict(); } catch (e) { toast(e.message, true); } }
+async function predUser(uid, off) { if (off && !await UI.ask('Bu katılımcı ligden çıkarılsın mı? Puan durumunda görünmez.', { ok: 'Çıkar', danger: true })) return; try { PRED = await req('POST', '/predict/user/' + uid, { off }); drawPredict(); } catch (e) { toast(e.message, true); } }
 
 SECTIONS.info = {
   html() {
@@ -2372,17 +2485,17 @@ SECTIONS.info = {
     const ist = /istanbul|İstanbul/i.test((db.location || {}).city || '');
     const defSec = ic.pageSec || 12;
     // süre / öğe sayısı kutuları (boş = genel değer)
-    const durIn = (k, d) => `<label class="ibf"><span>Ekranda kalma süresi</span><span class="ibn"><input type="number" class="ic-d" data-t="${k}" min="5" max="60" value="${idur[k] || ''}" placeholder="${d || defSec}"><em>sn</em></span></label>`;
-    const maxIn = (k, d, lo, hi) => `<label class="ibf"><span>En çok kaç öğe</span><span class="ibn"><input type="number" class="ic-m" data-t="${k}" min="${lo}" max="${hi}" value="${imax[k] || ''}" placeholder="${d}"><em>adet</em></span></label>`;
+    const durIn = (k, d) => `<label class="ibf"><span>Ekranda kalma süresi</span><span class="ibn"><input type="number" class="ic-d" data-t="${k}" min="5" max="60" value="${idur[k] || ''}" placeholder="${d || defSec}" oninput="INFO_DIRTY=1;savebar()"><em>sn</em></span></label>`;
+    const maxIn = (k, d, lo, hi) => `<label class="ibf"><span>En çok kaç öğe</span><span class="ibn"><input type="number" class="ic-m" data-t="${k}" min="${lo}" max="${hi}" value="${imax[k] || ''}" placeholder="${d}" oninput="INFO_DIRTY=1;savebar()"><em>adet</em></span></label>`;
     const tile = (icon, title, desc, on, js, body = '', extra = '') => `<div class="ibc ${on === null || on ? '' : 'off'}"><div class="ibh"><span class="ibi">${icon}</span><div class="b"><b>${title}</b><span>${desc}</span></div>${on === null ? '' : sw(on, js)}</div><div class="ibb">${body}</div>${extra ? `<details class="ibx"><summary>Diğer ayarlar</summary><div>${extra}</div></details>` : ''}</div>`;
     return head('Bilgi Bandı', '"Maçlar ve bilgi sayfaları" widget\'ında sırayla dönen ve kayan bantta akan bilgiler. Maç yokken ekranı canlı tutar.')
       + card('Genel süre', 'Her sayfa ekranda bu kadar kalır. Aşağıda bir içerik için ayrı süre girerseniz o içerik için o geçerli olur. Tüm ekranlar sunucu saatine göre aynı sayfada kalır.',
-        `<div class="ibg"><input type="range" id="ic-def" min="5" max="60" step="1" value="${defSec}" oninput="$('ic-defv').textContent=this.value+' sn'"><b id="ic-defv">${defSec} sn</b></div>
+        `<div class="ibg"><input type="range" id="ic-def" min="5" max="60" step="1" value="${defSec}" oninput="$('ic-defv').textContent=this.value+' sn';INFO_DIRTY=1;savebar()"><b id="ic-defv">${defSec} sn</b></div>
          <div class="row end mt"><button class="btn" data-save onclick="saveInfoCfg()">Süreleri kaydet</button></div>`)
       + `<div class="ibgrid">`
       + tile('⚽', 'Maç sayfaları', 'Seçili liglerin yaklaşan maçları', null, '', durIn('league') + `<p class="muted" style="font-size:12px;margin:0">Ligleri <a href="#sport">Spor</a> sayfasından seçin.</p>`)
-      + tile('🏆', 'Puan durumu', 'Ligin puan tablosu (birden çok sayfa olabilir)', db.showStandings !== false, "opt('showStandings',this.checked)", durIn('table'))
-      + tile('👟', 'Gol ve asist krallığı', 'İlk 5 golcü ve ilk 5 asist yapan oyuncu (puan tablosu olan liglerde)', db.showLeaders !== false, "opt('showLeaders',this.checked)", durIn('leaders'))
+      + tile('🏆', 'Puan durumu', 'Ligin puan tablosu (birden çok sayfa olabilir)', null, '', durIn('table') + `<p class="muted" style="font-size:12px;margin:0">Açıp kapatmak için <a href="#sport/table">Spor › Puan durumu</a> sayfasını kullanın.</p>`)
+      + tile('👟', 'Gol ve asist krallığı', 'İlk 5 golcü ve ilk 5 asist yapan oyuncu (puan tablosu olan liglerde)', null, '', durIn('leaders') + `<p class="muted" style="font-size:12px;margin:0">Açıp kapatmak için <a href="#sport/table">Spor › Puan durumu</a> sayfasını kullanın.</p>`)
       + tile('🚨', 'Son dakika', 'Seçtiğiniz kaynakların başlıkları; yeni haber gelince üstte kırmızı bantla da çıkar', bk.enabled !== false, "act('PUT','/breaking',{enabled:this.checked},'Kaydedildi')",
           durIn('breaking') + maxIn('breaking', 8, 1, 12),
           `<div class="swr"><div class="b"><b>Ekranda bildirim bandı</b><span>Yeni son dakika gelince birkaç saniye üstte gösterilir</span></div>${sw(bk.banner !== false, "act('PUT','/breaking',{banner:this.checked},'Kaydedildi',false)")}</div>
@@ -2404,14 +2517,14 @@ SECTIONS.info = {
       + tile('📜', 'Tarihte bugün', 'Vikipedi\'den bugünün tarihinde yaşanan olaylar', db.showOnThisDay !== false, "opt('showOnThisDay',this.checked)", durIn('otd') + maxIn('otd', 'hepsi', 1, 12))
       + tile('💡', 'Etkileşimli Bilgi & Mini Quiz (Medya ekranı)', 'Medya ekranında 2 aşamalı Mini Quiz, Bunları Biliyor Muydunuz?, Sayılarla Dünya ve Bilmece kartları (Ücretsiz)', trvCfg().enabled, "saveTriviaCfg({enabled:this.checked})", `<p class="muted" style="font-size:12px;margin:0">Format ve kategori seçimi için <a href="#media/trivia">Medya › Bilgi & Mini Quiz</a> bölümünü açın.</p>`)
       + tile('🚗', 'Canlı trafik', ist ? 'İstanbul trafik haritası ve yoğunluk yüzdesi' : 'Yalnızca İstanbul\'daki işletmelerde gösterilir', db.showTraffic !== false, "opt('showTraffic',this.checked)", durIn('traffic'))
-      + `</div><div class="row end mt"><button class="btn" onclick="saveInfoCfg()">Süreleri ve sınırları kaydet</button></div>`;
+      + `</div><div class="row end mt"><button class="btn" data-save onclick="saveInfoCfg()">Süreleri ve sınırları kaydet</button></div>`;
   },
 };
 async function saveInfoCfg() {
   const dur = {}, max = {};
   document.querySelectorAll('.ic-d').forEach(e => { dur[e.dataset.t] = e.value; });
   document.querySelectorAll('.ic-m').forEach(e => { max[e.dataset.t] = e.value; });
-  if (await act('PUT', '/infocfg', { pageSec: $('ic-def').value, dur, max }, 'Bilgi bandı ayarları kaydedildi', false)) { S.db = await req('GET', '/db'); render(true); }
+  if (await act('PUT', '/infocfg', { pageSec: $('ic-def').value, dur, max }, 'Bilgi bandı ayarları kaydedildi', false)) { INFO_DIRTY = 0; S.db = await req('GET', '/db'); render(true); }
 }
 const IL81 = ['Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan', 'Artvin', 'Aydın', 'Balıkesir', 'Bartın', 'Batman', 'Bayburt', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum', 'Denizli', 'Diyarbakır', 'Düzce', 'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir', 'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkari', 'Hatay', 'Iğdır', 'Isparta', 'İstanbul', 'İzmir', 'Kahramanmaraş', 'Karabük', 'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kilis', 'Kırıkkale', 'Kırklareli', 'Kırşehir', 'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Muğla', 'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Osmaniye', 'Rize', 'Sakarya', 'Samsun', 'Şanlıurfa', 'Siirt', 'Sinop', 'Sivas', 'Şırnak', 'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Uşak', 'Van', 'Yalova', 'Yozgat', 'Zonguldak'];
 const pharmAuto = ph => ph.mode === 'auto' || ph.mode === 'manual' ? ph.mode === 'auto' : !(ph.districts || []).length;
@@ -2444,21 +2557,29 @@ async function testPharm() {
 }
 
 /* ================= AYARLAR ================= */
+SECTIONS.devices = {
+  html() {
+    const h = head('Cihazlar', 'Bağlı TV kutularınız, yeni cihaz eşleştirme ve ekran atamaları.') + devicesPage();
+    window.__pair = null;
+    return h;
+  },
+  after() {
+    drawDevStatus();
+    const pc = $('pcode');
+    if (pc && pc.value) pc.focus();
+  },
+};
 let GEO = null;
 SECTIONS.settings = {
   html() {
-    const sub = SUB.settings || 'business', t = S.me.tenant;
-    let h = head('Ayarlar', 'İşletme bilgileri, TV kutusu, bildirimler, kullanıcılar, paket ve yedekler.')
-      + tabs('settings', [['business', 'İşletme'], ['devices', 'Cihazlar'], ['notify', 'Bildirimler'], ['branches', 'Şubeler'], ['users', 'Kullanıcılar'], ['plan', 'Paket'], ['backup', 'Yedekler'], ['privacy', 'Verilerim']]);
+    const sub = ['business', 'branches', 'notify', 'users', 'plan', 'data'].includes(SUB.settings) ? SUB.settings : 'business', t = S.me.tenant;
+    let h = head('Ayarlar', 'İşletme bilgileri, şubeler, bildirimler, kullanıcılar, paket ve veriler.')
+      + tabs('settings', [['business', 'İşletme'], ['branches', 'Şubeler'], ['notify', 'Bildirimler'], ['users', 'Kullanıcılar'], ['plan', 'Paket'], ['data', 'Yedek & Veriler']]);
     if (sub === 'business') {
       const loc = S.db.location || {};
       h += card('İşletme bilgileri', '', `<div class="f" style="align-items:start">${fl('İşletme adı', `<input type="text" id="s-name" maxlength="80" value="${esc(t.name)}">`)}${fl('Şehir / ilçe (hava durumu için)', `<input type="text" id="s-city" placeholder="örn. Kadıköy" autocomplete="off" oninput="geoSearch()"><button type="button" class="btn ghost sm" id="geo-me" style="margin-top:6px" onclick="geoLocate()">📍 Konumumu otomatik bul</button>`)}</div>
         <div class="geo" id="geo"></div><p class="muted mt">Şu anki konum: <b style="color:var(--text)">${esc(loc.city || '-')}</b>${loc.custom ? '' : ' (varsayılan)'}</p>
-        <div class="row end mt"><button class="btn" data-save onclick="saveProfile()">Kaydet</button></div>`)
-        + '<div id="brloc"><div class="muted">Yükleniyor…</div></div>';
-    } else if (sub === 'devices') {
-      h += devicesPage();
-      window.__pair = null;
+        <div class="row end mt"><button class="btn" data-save onclick="saveProfile()">Kaydet</button></div>`);
     } else if (sub === 'notify') {
       h += notifyPageHtml();
     } else if (sub === 'users') {
@@ -2473,29 +2594,26 @@ SECTIONS.settings = {
         + card('Paketler', playBridge() ? 'Paket değişikliği için yükseltme düğmesini kullanın; ödeme Google Play üzerinden yapılır.' : 'Paket değişikliği ve ödeme için yükseltme düğmesini kullanın ya da bizimle iletişime geçin.', `<div class="plans">${Object.values(S.me.plans).map(x => `<div class="${x.id === p.id ? 'cur' : ''}"><b>${esc(x.name)}</b>${planPrice(x.id)}${x.devices} cihaz · ${x.storageMB >= 1024 ? x.storageMB / 1024 + ' GB' : x.storageMB + ' MB'} · ${x.users} kullanıcı<br>${x.pro ? '✓ Başlangıç\'taki her şey<br>✓ Reklamsız ekran<br>✓ Müzik (YouTube Müzik, Spotify)<br>✓ İndirim saatleri, şubeler<br>✓ Google yorumları, Instagram, doğum günü<br>✓ Sınırsız fiyat listesi' + (!pro() && !mustBuy() ? `<div class="mt"><button type="button" class="btn s" onclick="openUpgradeModal('Pro Paket')">🚀 Pro Pakete Yükselt</button></div>` : '') : '✓ Tüm işletme düzenleri<br>✓ Maçlar, canlı skor, bilgi bandı<br>✓ Medya, fiyat listesi, kampanya, QR<br><span class="muted">Ekranda ScreenPano ve sponsor reklamları gösterilir; köşede ürün adı görünür</span>'}${mustBuy() ? `<div class="mt"><button type="button" class="btn s${x.pro ? '' : ' g'}" onclick="buyPlan('${esc(x.id)}')">${esc(x.name)} — satın al</button></div>` : ''}</div>`).join('')}</div>`) + `</div><div class="mt">${tahminCard()}</div><div id="paycard" style="grid-column:1/-1"></div>`;
     } else if (sub === 'branches') {
       h += branchesHtml();
-    } else if (sub === 'privacy') {
-      h += privacyHtml();
-    } else {
+    } else if (sub === 'data') {
       h += card('Yedekler', 'Ayarlarınız (liste sırası, yorumlar, QR, doğum günleri, lig seçimi…) her gün otomatik yedeklenir; en yeni 30 yedek saklanır. Medya dosyaları yedeğe dahil değildir.',
-        `<div class="row"><button class="btn" onclick="act('POST','/backups',undefined,'Yedek alındı')">Şimdi yedek al</button></div><div id="blist" class="list mt"><div class="muted">Yükleniyor…</div></div>`);
+        `<div class="row"><button class="btn" onclick="act('POST','/backups',undefined,'Yedek alındı')">Şimdi yedek al</button></div><div id="blist" class="list mt"><div class="muted">Yükleniyor…</div></div>`)
+        + privacyHtml();
     }
     return h;
   },
   async after() {
-    const sub = SUB.settings || 'business';
+    const sub = ['business', 'branches', 'notify', 'users', 'plan', 'data'].includes(SUB.settings) ? SUB.settings : 'business';
     if (sub === 'users' && owner()) {
       const us = await req('GET', '/users').catch(() => []);
       $('ulist').innerHTML = us.map(u => `<div class="it"><div class="b"><b>${esc(u.username)}</b><span>${u.role === 'owner' ? 'İşletme sahibi' : 'Personel'} · son giriş: ${ago(u.last_login)}</span></div>${u.role === 'staff' ? `<button class="btn xs d" onclick="delUser('${u.id}','${esc(u.username)}')">Sil</button>` : ''}</div>`).join('');
     }
-    if (sub === 'backup') {
+    if (sub === 'data') {
       const bs = await req('GET', '/backups').catch(() => []);
       $('blist').innerHTML = bs.length ? bs.map(b => `<div class="it"><div class="b"><b>${new Date(b.time).toLocaleString(I18N.locale, { dateStyle: 'medium', timeStyle: 'short' })}</b><span>${esc(b.name.replace(/^db-|\.json$/g, '').split('-').pop())} · ${fmtSize(b.size)}</span></div><a class="btn xs g" href="/api/admin/backups/${encodeURIComponent(b.name)}/download">İndir</a>${owner() ? `<button class="btn xs g" onclick="restore('${b.name}')">Geri yükle</button>` : ''}</div>`).join('') : '<div class="empty">Henüz yedek yok</div>';
     }
-    if (sub === 'devices') { drawDevStatus(); const pc = $('pcode'); if (pc && pc.value) pc.focus(); }
     if (sub === 'plan') drawPayCard();
     if (sub === 'notify') drawNotifySettings();
     if (sub === 'branches') drawBranches();
-    if (sub === 'business') drawBizLocations();
   },
 };
 let geoT;
@@ -2706,7 +2824,7 @@ async function autoTranslateMenu() {
     } catch (e) { return toast('Çeviri hatası: ' + e.message, true); }
   }
   if (!filled) return toast('Tüm alanların çevirisi zaten dolu');
-  MENU.__dirty = 1; drawMenu(); savebar();
+  MENU.__dirty = 1; if ($('mcats')) drawMenu(); else render(true); savebar();
   toast(`${filled} metin otomatik çevrildi. Kontrol edip "Kaydet"e basın.`);
 }
 async function togLang(l) {
@@ -2716,15 +2834,30 @@ async function togLang(l) {
 }
 
 /* ================= GOOGLE VE INSTAGRAM ================= */
-function googleCard() {
+function googleCard(inSharedLock = false) {
   const g = S.db.google;
-  const body = g && g.placeId
-    ? `<div class="it" style="display:flex;gap:12px;align-items:center"><div class="b" style="flex:1"><b>${esc(g.name || 'İşletmeniz')}</b><span>${g.rating ? `${String(g.rating).replace('.', ',')} ★ · ${g.count} değerlendirme · ` : ''}${(g.reviews || []).filter(r => r.rating >= 4).length} yorum ekranda · ${g.updated ? 'güncellendi ' + ago(g.updated) : 'henüz alınmadı'}</span>${g.error ? `<span style="color:var(--bad)">${esc(g.error)}</span>` : ''}</div>
+  const wrap = inSharedLock ? card : (t, d, b, r) => cardPro('Google yorumları', t, d, b, r);
+  let body, right;
+  if (g && g.placeId) {
+    body = `<div class="it" style="display:flex;gap:12px;align-items:center"><div class="b" style="flex:1"><b>${esc(g.name || 'İşletmeniz')}</b><span>${g.rating ? `${String(g.rating).replace('.', ',')} ★ · ${g.count} değerlendirme · ` : ''}${(g.reviews || []).filter(r => r.rating >= 4).length} yorum ekranda · ${g.updated ? 'güncellendi ' + ago(g.updated) : 'henüz alınmadı'}</span>${g.error ? `<span style="color:var(--bad)">${esc(g.error)}</span>` : ''}</div>
         <button class="btn g s" onclick="act('POST','/google/refresh',undefined,'Yorumlar yenilendi')">Yenile</button><button class="btn d s" onclick="UI.ask('Google bağlantısı kaldırılsın mı?', { ok: 'Kaldır', danger: true }).then(ok=>{if(ok)act('DELETE','/google',undefined,'Kaldırıldı')})">Kaldır</button></div>
-       ${(g.reviews || []).length ? `<div class="list mt">${g.reviews.slice(0, 5).map(r => `<div class="it"><div class="b"><b>${esc(r.author)} <span class="stars">${'★'.repeat(r.rating)}</span> <span class="muted" style="font-weight:400">${esc(r.when || '')}</span></b><span>${esc(r.text)}</span></div></div>`).join('')}</div><p class="muted" style="font-size:12.5px">Google en fazla 5 yorum verir; 12 saatte bir yenilenir. Yalnız 4 ve 5 yıldızlılar ekranda görünür.</p>` : ''}`
-    : `<div class="row"><input type="text" id="g-q" placeholder="İşletme adı ve semt, ya da Google Haritalar bağlantısı" style="flex:1" onkeydown="if(event.key==='Enter')gSearch()"><button class="btn" onclick="gSearch()">Ara</button></div><div id="g-res" class="list mt"></div>`;
-  return cardPro('Google yorumları', '★ Google yorumları', 'Google Haritalar\'daki yorumlarınız otomatik gelir ve medyanın altındaki şeritte döner (düzende "Google yorumları" widget\'ı olmalı).', body,
-    g && g.placeId ? sw(g.show !== false, "act('PUT','/google',{show:this.checked},this.checked?'Ekranda':'Ekrandan kaldırıldı')") : '');
+       ${(g.reviews || []).length ? `<div class="list mt">${g.reviews.slice(0, 5).map(r => `<div class="it"><div class="b"><b>${esc(r.author)} <span class="stars">${'★'.repeat(r.rating)}</span> <span class="muted" style="font-weight:400">${esc(r.when || '')}</span></b><span>${esc(r.text)}</span></div></div>`).join('')}</div><p class="muted" style="font-size:12.5px">Google en fazla 5 yorum verir; 12 saatte bir yenilenir. Yalnız 4 ve 5 yıldızlılar ekranda görünür.</p>` : ''}`;
+    right = sw(g.show !== false, "act('PUT','/google',{show:this.checked},this.checked?'Ekranda':'Ekrandan kaldırıldı')");
+  } else if (!pro()) {
+    const sampleRevs = [
+      { author: 'Ayşe K.', when: '2 gün önce', text: 'Kahveleri ve tatlıları harika, atmosferi çok keyifli ve sakin.' },
+      { author: 'Mehmet D.', when: '1 hafta önce', text: 'Hızlı servis, güler yüzlü ekip. Akşam çayı için her zaman tercih ediyoruz.' },
+      { author: 'Selin Y.', when: '2 hafta önce', text: 'Fiyatlar çok net, sunum özenli. Herkese tavsiye ederim.' },
+    ];
+    body = `<div class="it" style="display:flex;gap:12px;align-items:center"><div class="b" style="flex:1"><b>Örnek Kafe</b><span>4,8 ★ · 142 değerlendirme · 5 yorum ekranda</span></div>
+        <button class="btn g s" type="button">Yenile</button></div>
+      <div class="list mt">${sampleRevs.map(r => `<div class="it"><div class="b"><b>${esc(r.author)} <span class="stars">★★★★★</span> <span class="muted" style="font-weight:400">${esc(r.when)}</span></b><span>${esc(r.text)}</span></div></div>`).join('')}</div>`;
+    right = sw(true, '');
+  } else {
+    body = `<div class="row"><input type="text" id="g-q" placeholder="İşletme adı ve semt, ya da Google Haritalar bağlantısı" style="flex:1" onkeydown="if(event.key==='Enter')gSearch()"><button class="btn" onclick="gSearch()">Ara</button></div><div id="g-res" class="list mt"></div>`;
+    right = '';
+  }
+  return wrap('★ Google yorumları', 'Google Haritalar\'daki yorumlarınız otomatik gelir ve medyanın altındaki şeritte döner (düzende "Google yorumları" widget\'ı olmalı).', body, right);
 }
 async function gSearch() {
   const q = $('g-q').value.trim(); if (q.length < 3) return toast('İşletmenizin adını yazın', true);
@@ -2735,9 +2868,10 @@ async function gSearch() {
   } catch (e) { $('g-res').innerHTML = `<div class="muted" style="color:var(--bad)">${esc(e.message)}</div>`; }
 }
 async function gPick(i) { const p = window.__gres[i]; if (await act('PUT', '/google', { placeId: p.id, name: p.name }, 'Google işletmeniz bağlandı')) {} }
-function instaCard() {
+function instaCard(inSharedLock = false) {
   const ig = S.db.instagram || {};
-  return cardPro('Instagram paylaşımları', '📷 Instagram paylaşımları', 'Son paylaşımlarınızın fotoğrafları medya döngüsüne kendiliğinden girer; yeni paylaşım yaptığınızda bir saat içinde ekrana gelir.',
+  const wrap = inSharedLock ? card : (t, d, b, r) => cardPro('Instagram paylaşımları', t, d, b, r);
+  return wrap('📷 Instagram paylaşımları', 'Son paylaşımlarınızın fotoğrafları medya döngüsüne kendiliğinden girer; yeni paylaşım yaptığınızda bir saat içinde ekrana gelir.',
     ig.connected
       ? `<div class="it" style="display:flex;gap:12px;align-items:center"><div class="b" style="flex:1"><b>@${esc(ig.user || '…')}</b><span id="ig-st">${(ig.posts || []).length} paylaşım · ${ig.updated ? 'güncellendi ' + ago(ig.updated) : 'henüz alınmadı'}</span>${ig.error ? `<span style="color:var(--bad)">${esc(ig.error)}</span>` : ''}</div>
           <button class="btn g s" onclick="act('POST','/instagram/refresh',undefined,'Paylaşımlar yenilendi')">Yenile</button><button class="btn d s" onclick="UI.ask('Instagram bağlantısı kaldırılsın mı?', { ok: 'Kaldır', danger: true }).then(ok=>{if(ok)act('DELETE','/instagram',undefined,'Kaldırıldı')})">Kaldır</button></div>
@@ -2814,7 +2948,7 @@ function devInfo(d, r) {
   // birkaç kısa aksama (video/fotoğraf geçişi gibi) normaldir; ancak hız düşükse ya da dakikada çok aksama varsa uyar (takılma testinin ölçütüyle uyumlu)
   if (r.jank && (r.jank.fps < 50 || r.jank.drops > 25)) flags.push(`Ekranda takılma var (~${r.jank.fps} fps, dakikada ${r.jank.drops} aksama): ayrıntı için “Takılma testi”ni çalıştırın`);
   if (r.weak && r.fx >= 2) flags.push('Düşük bellekli cihaz: “çok hafif” mod otomatik açıldı. Videoları Medya sekmesinde 720p ya da 480p yapmanız önerilir');
-  else if (r.fxAuto && r.fx >= 2) flags.push('Cihaz takıldığı için “çok hafif” moda otomatik geçti. Efekt modunu Ayarlar › Cihazlar altında değiştirebilirsiniz');
+  else if (r.fxAuto && r.fx >= 2) flags.push('Cihaz takıldığı için “çok hafif” moda otomatik geçti. Efekt modunu Cihazlar altında değiştirebilirsiniz');
   if (r.res && r.res.low) flags.push('Cihazın belleği doldu: uygulama yavaşlayabilir, kutuyu yeniden başlatın');
   if (r.mus && r.mus.on && r.mus.err) flags.push('Müzik: ' + r.mus.err);
   if (r.lastError) flags.push('Son hata: ' + r.lastError);
@@ -2867,7 +3001,7 @@ function devDrawInfo() {
   $('dvd-tools').innerHTML = on ? `<div class="dv-act"><button type="button" class="dv-b" onclick="snapDev('${d.id}')">${ic('camera')}Ekran görüntüsü</button><button type="button" class="dv-b" onclick="perfDev('${d.id}')">${ic('activity')}Takılma testi</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','restart','Uygulama yeniden başlatılıyor')">${ic('refresh-cw')}Uygulamayı yeniden başlat</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','clear_cache','Önbellek temizlenip yenileniyor')">${ic('trash-2')}Önbelleği temizle</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','sync_time','Saat eşitlendi')">${ic('clock')}Saati eşitle</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','sleep','Ekran karartıldı')">${ic('eye-off')}Ekranı karart</button><button type="button" class="dv-b" onclick="devCmd('${d.id}','wake','Ekran uyandırıldı')">${ic('sun')}Ekranı uyandır</button></div>` : `<div class="dv-off">${ic('wifi-off')}<span>Cihaz kapalı: araçlar yalnız çevrimiçi cihazda çalışır.</span></div>`;
   $('dvd-more').innerHTML = `<section class="dvd-s"><h4>Gösterilecek ekran profili</h4><p class="muted" style="font-size:12.5px;margin:0 0 8px">Farklı TV'lerde farklı düzen veya videolar göstermek için Tasarım sekmesinden yeni ekran profili açıp buradan seçin.</p><select onchange="act('PUT','/devices/${d.id}',{screen_id:this.value},'Ekran profili atandı')">${scrs.map(s => `<option value="${esc(s.id)}" ${(d.screen_id || 'main') === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></section>
     <section class="dvd-s"><h4>Bilgiler</h4>${rows.length ? `<dl class="dvd-dl">${rows.map(([k, v, raw]) => `<dt>${k}</dt><dd>${raw ? v : esc(String(v))}</dd>`).join('')}</dl>` : '<p class="muted">Henüz bilgi gelmedi.</p>'}</section>
-    <section class="dvd-s"><div class="swr"><div class="b"><b>Yerel ekran (deneysel)</b><span>Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+)</span></div>${sw(!!d.native, `act('PUT','/devices/${d.id}',{native:this.checked},'Kaydedildi')`)}</div></section>`;
+    <section class="dvd-s adv-only"><div class="swr"><div class="b"><b>Yerel ekran (deneysel)</b><span>Ekranı sayfa yerine uygulamanın kendi bileşenleriyle çizer (Android 3.3+)</span></div>${sw(!!d.native, `act('PUT','/devices/${d.id}',{native:this.checked},'Kaydedildi')`)}</div></section>`;
 }
 async function devCmd(id, cmd, msg) {
   await act('POST', `/devices/${id}/cmd`, { cmd }, msg || 'Komut gönderildi', false);
@@ -2889,9 +3023,10 @@ function devAddHtml(open, full) {
 }
 function devMoreHtml() {
   const perf = card('Performans', 'Ekran takılıyorsa efektleri azaltın; video ağırlıklı takılmada Medya sekmesindeki kaliteyi 720p\'ye düşürün. TV kutusunda "Otomatik" zaten hafif modu seçer.',
-    `<div class="f">${fl('Efekt modu', `<select onchange="opt('fxMode',this.value)">${[['auto', 'Otomatik (cihaza göre ayarlanır)'], ['lite', 'Hafif (her yerde)'], ['ultra', 'Çok hafif (zayıf cihazlar için)'], ['full', 'Tam (her yerde)']].map(([v, l]) => `<option value="${v}" ${(S.db.fxMode || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`);
-  const j = DEVST;
-  return `<div class="grid g2" style="margin-top:18px">${j ? notifyCard(j) : card('Uyarılar', '', '<div class="muted">Yükleniyor…</div>')}${perf}</div>`;
+    `<div class="f">${fl('Efekt modu', `<select onchange="opt('fxMode',this.value)">${[['auto', 'Otomatik (cihaza göre ayarlanır)'], ['lite', 'Hafif (her yerde)'], ['ultra', 'Çok hafif (zayıf cihazlar için)'], ['full', 'Tam (her yerde)']].map(([v, l]) => `<option value="${v}" ${(S.db.fxMode || 'auto') === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}</div>`, '', 'adv-only');
+  const notifyLink = card('Bildirimler', 'TV çevrimdışı kalınca e-posta veya panel uyarısı almak ve son kesinti uyarılarını görmek için Bildirimler ayarlarını kullanın.',
+    `<div class="row"><a class="btn g s" href="#settings/notify">${ic('bell')}Bildirim ayarlarına git</a></div>`);
+  return `<div class="grid g2" style="margin-top:18px">${notifyLink}${perf}</div>`;
 }
 function notifyCard(j) {
   const n = j.notify || {}, om = n.offlineMin || j.offlineMin;
@@ -2988,7 +3123,7 @@ const saveNotify = () => {
   }, 'Uyarı ayarları kaydedildi', false).then(async ok => {
     if (ok) { try { S.me = await req('GET', '/me'); drawBanner(); } catch (e) {} }
     if (SUB.settings === 'notify') drawNotifySettings();
-    else if (SUB.settings === 'devices') drawDevStatus();
+    else if (TAB === 'devices') drawDevStatus();
   });
 };
 async function snapDev(id) {
@@ -3046,10 +3181,18 @@ function perfShow(id, r) {
 let STDAYS = 30;
 SECTIONS.stats = {
   html() {
-    return head('İstatistik', 'Ekranınız ne kadar açık kaldı, hangi içerik kaç kez oynadı, QR kodlarınız kaç kez okutuldu.', `<div class="row" style="gap:10px;align-items:center"><div class="tabs" style="margin:0">${[7, 30, 90].map(d => `<button class="${STDAYS === d ? 'on' : ''}" onclick="STDAYS=${d};render(true)">${d} gün</button>`).join('')}</div><a class="btn xs g" href="/api/admin/stats.csv?days=${STDAYS}">Excel (CSV) indir</a></div>`)
-      + '<div id="stv"><div class="loading">Yükleniyor…</div></div>';
+    const sub = ['overview', 'agenda'].includes(SUB.stats) ? SUB.stats : 'overview';
+    const sTabs = tabs('stats', [['overview', 'İstatistik'], ['agenda', 'Yayın Ajandası']]);
+    if (sub === 'agenda') {
+      return head('İstatistik & Akış', 'Önümüzdeki 7 gün boyunca planlı yayınlar ve günlük yayın akışı.',
+        `<div class="row"><a class="btn xs g" href="#media">Medya zamanla</a><a class="btn xs g" href="#menu">Menü saati ayarla</a><a class="btn xs g" href="#menu/happy">İndirim saati ekle</a></div>`)
+        + sTabs + agendaBodyHtml();
+    }
+    return head('İstatistik & Akış', 'Ekranınız ne kadar açık kaldı, hangi içerik kaç kez oynadı, QR kodlarınız kaç kez okutuldu.', `<div class="row" style="gap:10px;align-items:center"><div class="tabs" style="margin:0">${[7, 30, 90].map(d => `<button class="${STDAYS === d ? 'on' : ''}" onclick="STDAYS=${d};render(true)">${d} gün</button>`).join('')}</div><a class="btn xs g" href="/api/admin/stats.csv?days=${STDAYS}">Excel (CSV) indir</a></div>`)
+      + sTabs + '<div id="stv"><div class="loading">Yükleniyor…</div></div>';
   },
   async after() {
+    if (SUB.stats === 'agenda') { drawFlow(); return; }
     let j; try { j = await req('GET', '/stats?days=' + STDAYS); } catch (e) { $('stv').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
     const hrs = m => (m / 60).toFixed(m < 600 ? 1 : 0).replace('.', ',');
     const nf = n => Number(n || 0).toLocaleString(I18N.locale);
@@ -3084,7 +3227,7 @@ SECTIONS.stats = {
       + `</div>`
       + impactCard(j, nf)
       + card('Günlük ekran süresi', 'Saat cinsinden; bağlı tüm kutuların toplamı. Telefondan bir güne dokunarak ayrıntısını görebilirsiniz.', `<div class="bars-wrap"><div class="bars-y"><span>${hrs(max)} sa</span><span>${hrs(max / 2)} sa</span><span>0 sa</span></div><div class="bars" role="img" aria-label="Günlük ekran süresi grafiği">${j.daily.map(d => { const tip = `${new Date(d.day + 'T12:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' })}: ${hrs(d.online)} saat açık, ${d.plays} içerik oynatma`; return `<div title="${esc(tip)}" data-tip="${esc(tip)}" onclick="showBarTip(this)"><i style="height:${Math.round(d.online / max * 100)}%"></i></div>`; }).join('')}</div></div>
-        <div class="row" style="justify-content:space-between;font-size:12px;padding-left:44px" class="muted"><span class="muted">${fmtD(j.daily[0].day)}</span><span id="bar-tip" class="bar-tip">Bir çubuğa dokunun</span><span class="muted">${fmtD(j.daily[j.daily.length - 1].day)}</span></div>`)
+        <div class="row muted" style="justify-content:space-between;font-size:12px;padding-left:44px"><span>${fmtD(j.daily[0].day)}</span><span id="bar-tip" class="bar-tip">Bir çubuğa dokunun</span><span>${fmtD(j.daily[j.daily.length - 1].day)}</span></div>`)
       + card('QR okutmaları', 'Bağlantı QR\'ları ve kampanya QR\'ı kaç kez okutuldu. Aynı telefonun kısa sürede tekrar açması ve bot ziyaretleri sayılmaz; kişisel bilgi saklanmaz.', j.qr.length ? `<div class="list">${j.qr.map(qrRow).join('')}</div>` : '<div class="empty">Henüz QR kod yok. QR Kodlar sayfasından ekleyin.</div>')
       + card('Saat bazında yoğunluk', 'İçeriklerin gün ve saate göre gösterilme yoğunluğu (koyu renk daha yoğun). Kutucuğa dokunarak değeri okuyabilirsiniz.', pk.v ? `<div class="heat"><div></div>${Array.from({ length: 24 }, (_, h) => `<span class="hl">${h % 3 === 0 ? h : ''}</span>`).join('')}${j.heat.map((row, d) => `<span class="dn">${wds(d)}</span>${row.map((v, h) => { const tip = `${wd(d)} ${hh(h)} — ${v} gösterim`; return `<i title="${esc(tip)}" data-tip="${esc(tip)}" onclick="showHeatTip(this)" style="background:rgba(var(--a2),${v ? (0.12 + v / hmax * 0.88).toFixed(2) : 0.04});cursor:pointer"></i>`; }).join('')}`).join('')}</div><div id="heat-tip" class="bar-tip">Bir kutucuğa dokunun</div>` : '<div class="empty">Henüz veri yok. Ekran açık kaldıkça burada görünür.</div>')
       + `<div class="grid g2">` + card('Kesintiler', 'Ekranın internet bağlantısı 2 dakikadan uzun koptuğunda sayılır.', j.totals.drops ? `<div class="scroll"><table class="tbl"><thead><tr><th>Gün</th><th>Kesinti</th><th>Toplam süre</th></tr></thead><tbody>${j.daily.filter(d => d.drops).reverse().slice(0, 14).map(d => `<tr><td>${fmtD(d.day)}</td><td>${d.drops}</td><td>${dur(d.dropsec)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Bu dönemde kesinti olmadı.</div>')
@@ -3110,12 +3253,12 @@ function impactCard(j, nf) {
   };
   const body = L.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>İçerik</th><th>Tür</th><th>Gösterim</th><th>QR okutma</th><th>100 gösterimde</th><th>Önceki döneme göre</th><th>Yorum</th></tr></thead><tbody>${L.map(x => `<tr><td><b>${esc(x.name)}</b>${x.enabled === false ? ' <span class="muted">· kapalı</span>' : ''}</td><td>${KIND[x.kind] || ''}</td><td>${nf(x.shown)}</td><td>${x.kind === 'camp' || x.tracked ? nf(x.scans) : '—'}</td><td>${x.rate != null && (x.kind === 'camp' || x.tracked) ? String(x.rate).replace('.', ',') : '—'}</td><td>${x.kind === 'camp' || x.tracked ? trend(x) : ''}</td><td style="min-width:220px">${verdict(x)}</td></tr>`).join('')}</tbody></table></div>`
     + (avg != null ? `<p class="muted" style="font-size:12.5px;margin:10px 0 0">Ortalama: 100 gösterimde ${avg.toFixed(1).replace('.', ',')} okutma. Kampanya kartlarının gösterim sayımı bu sürümle başladı; eski günler için gösterim sıfır görünebilir.</p>` : '')
-    : `<div class="empty">Henüz ölçülecek kampanya yok. <a href="#promo">Kampanya ve yorumlar</a> sayfasından kampanya kartını açın ya da <a href="#media/posters">Fotoğraftan afiş</a> ile QR'lı bir afiş hazırlayın; ekranda kaç kez göründüğü ve QR'ının kaç kez okutulduğu burada karşılaştırılır.</div>`;
+    : `<div class="empty">Henüz ölçülecek kampanya yok. <a href="#promo/camp">Kampanya & Sosyal</a> sayfasından kampanya kartını açın ya da <a href="#media/posters">Fotoğraftan afiş</a> ile QR'lı bir afiş hazırlayın; ekranda kaç kez göründüğü ve QR'ının kaç kez okutulduğu burada karşılaştırılır.</div>`;
   return card('Kampanya etkisi', 'Her kampanya ekranda kaç kez göründü ve müşteriler QR\'ını kaç kez okuttu. "100 gösterimde" sütunu kampanyaları birbiriyle karşılaştırmanın en adil yolu.', body);
 }
 function showBarTip(el) {
-  document.querySelectorAll('.bars > div.on').forEach(x => x.classList.remove('on'));
-  el.classList.add('on');
+  document.querySelectorAll('.bars > div.act').forEach(x => x.classList.remove('act'));
+  el.classList.add('act');
   const t = $('bar-tip'); if (t) t.textContent = el.dataset.tip || '';
 }
 function showHeatTip(el) {
@@ -3977,22 +4120,14 @@ async function addBranch(confirmed) {
     toast(e.message, true);
   }
 }
-const renBranch = async (id, cur) => { const n = await UI.ask('Şube adı:', { title: 'Şubeyi Adlandır', input: cur || '', ok: 'Kaydet' }); if (n && n.trim()) act('PUT', '/branches/' + id, { name: n.trim() }, 'Kaydedildi', false).then(() => { drawBranches(); drawBranchSwitch(); drawBizLocations(); }); };
+const renBranch = async (id, cur) => { const n = await UI.ask('Şube adı:', { title: 'Şubeyi Adlandır', input: cur || '', ok: 'Kaydet' }); if (n && n.trim()) act('PUT', '/branches/' + id, { name: n.trim() }, 'Kaydedildi', false).then(() => { drawBranches(); drawBranchSwitch(); }); };
 // şube silme (işletme panelinden): ad onayı ister; ana işletme satırında düğme yok
 async function delBranch(id, name) {
   const c = await UI.ask(`"${name}" şubesi, içindeki tüm içerik ve cihazlarıyla kalıcı olarak silinir. Onaylamak için şube adını aynen yazın: ${name}`, { input: '', ok: 'Sil', danger: true });
   if (c === null || !c.trim()) return;
   try { await req('DELETE', '/branches/' + id, { confirm: c.trim() }); toast('Şube silindi'); }
   catch (e) { return toast(e.message, true); }
-  drawBranches(); drawBranchSwitch(); drawBizLocations();
-}
-/* Lokasyonlarım: Ayarlar → İşletme sekmesindeki lokasyon listesi (ana işletme silinemez) */
-async function drawBizLocations() {
-  const el = $('brloc'); if (!el) return;
-  let j; try { j = await req('GET', '/branches'); } catch (e) { el.innerHTML = ''; return; } S.br = j;
-  el.innerHTML = card('Lokasyonlarım', 'İlk açılan işletme ana işletmedir ve silinemez. Şubeye geçince panel o şubeyi yönetir.',
-    '<div class="list">' + j.list.map(b => `<div class="it"><span class="dot ${b.online ? 'on' : ''}"></span><div class="b"><b>${esc(b.name)}${b.id === j.current ? ' <span style="color:var(--accent2);font-weight:600">· şu an burada</span>' : ''}</b><span>${b.home ? 'Ana İşletme' : 'Şube'} · ${b.online}/${b.devices} cihaz bağlı · ${b.media} içerik</span></div>
-      ${b.id !== j.current ? `<button class="btn xs" onclick="switchBranch('${b.id}')">Bu şubeye geç</button>` : ''}${owner() && !b.home && b.id !== j.current ? `<button class="btn xs g" data-nm="${esc(b.name)}" onclick="renBranch('${b.id}', this.dataset.nm)">Adlandır</button><button class="btn xs d" data-nm="${esc(b.name)}" onclick="delBranch('${b.id}', this.dataset.nm)">Sil</button>` : ''}</div>`).join('') + '</div>');
+  drawBranches(); drawBranchSwitch();
 }
 async function copyBranches() {
   const targets = [...document.querySelectorAll('#cp-t .chip.on')].map(x => x.dataset.id), parts = [...document.querySelectorAll('#cp-p .chip.on')].map(x => x.dataset.k);
@@ -4034,53 +4169,49 @@ function schMatchesDay(sc, ymd, isoDay) {
   if (Array.isArray(sc.days) && sc.days.length && !sc.days.includes(isoDay)) return false;
   return true;
 }
-SECTIONS.agenda = {
-  html() {
-    const today = new Date();
-    const vids = (S.db.videos || []).filter(v => !v.hidden);
-    const cats = ((S.db.menu && S.db.menu.categories) || []);
-    const camps = (S.db.campaigns || []).filter(c => c.enabled !== false);
-    const hhs = hhOf(S.db.menu).filter(h => h.enabled !== false);
-    const sp = S.db.special || {};
-    const daysHtml = Array.from({ length: 7 }, (_, idx) => {
-      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + idx, 12, 0, 0);
-      const ymd = d.toISOString().slice(0, 10);
-      const isoDay = d.getDay() || 7;
-      const dayTitle = idx === 0 ? 'Bugün' : idx === 1 ? 'Yarın' : d.toLocaleDateString(I18N.locale, { weekday: 'long' });
-      const dateStr = d.toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' });
-      const items = [];
-      if (idx === 0 && sp.enabled) {
-        items.push(`<span class="ag-pill sp">🚨 Özel Yayın aktif: <b>${esc(sp.title || 'Özel Yayın')}</b></span>`);
-      }
-      hhs.filter(h => schMatchesDay(h.sch, ymd, isoDay)).forEach(h => {
-        const tm = h.sch && h.sch.from ? `${h.sch.from}–${h.sch.to}` : 'Gün boyu';
-        items.push(`<a href="#happy" class="ag-pill hh">🏷 ${esc(tm)} · <b>${esc(h.title || 'İndirim Saati')}</b> (%${h.pct || 0})</a>`);
-      });
-      cats.filter(c => c.sch && schMatchesDay(c.sch, ymd, isoDay)).forEach(c => {
-        const tm = c.sch.from ? `${c.sch.from}–${c.sch.to}` : 'Gün boyu';
-        items.push(`<a href="#menu" class="ag-pill menu">🍽 ${esc(tm)} · <b>${esc(c.name)}</b> kategorisi</a>`);
-      });
-      vids.filter(v => v.sch && schMatchesDay(v.sch, ymd, isoDay)).forEach(v => {
-        const tm = v.sch.from ? `${v.sch.from}–${v.sch.to}` : 'Gün boyu';
-        items.push(`<a href="#media" class="ag-pill vid">🎬 ${esc(tm)} · <b>${esc(v.name || 'Medya')}</b></a>`);
-      });
-      camps.filter(c => c.sch && schMatchesDay(c.sch, ymd, isoDay)).forEach(c => {
-        const tm = c.sch.from ? `${c.sch.from}–${c.sch.to}` : 'Gün boyu';
-        items.push(`<a href="#promo" class="ag-pill camp">✨ ${esc(tm)} · <b>${esc(c.title || 'Kampanya')}</b></a>`);
-      });
-      const alwaysVids = vids.filter(v => !v.sch).length;
-      const alwaysCats = cats.filter(c => !c.sch).length;
-      return `<div class="ag-day"><h4><span>${esc(dayTitle)}</span><span class="muted" style="font-weight:400;font-size:13px">${esc(dateStr)}</span></h4>
-        <div class="ag-items">${items.length ? items.join('') : `<span class="muted" style="font-size:13px">Özel saatli içerik yok — gün boyu standart yayın (${alwaysVids} medya, ${alwaysCats} menü kategorisi) döner.</span>`}</div>
-        ${items.length ? `<div class="muted" style="font-size:12px;margin-top:8px">+ Gün boyu sürekli dönen ${alwaysVids} medya ve ${alwaysCats} menü kategorisi</div>` : ''}</div>`;
-    }).join('');
-    return head('Yayın Ajandası', 'Önümüzdeki 7 gün boyunca ekranınızda hangi saatte hangi indirim, menü, kampanya veya zamanlanmış medyanın çıkacağını tek bakışta görün.',
-      `<div class="row"><a class="btn xs g" href="#media">Medya zamanla</a><a class="btn xs g" href="#menu">Menü saati ayarla</a><a class="btn xs g" href="#happy">İndirim saati ekle</a></div>`)
-      + card('Akış Özeti', 'Ekranda içeriklerin hangi sırayla ve kaç saniye gösterileceği: ana döngünün bir turu tek çizgide, araya giren kampanya, büyük maç ve fragmanla birlikte. Günlük görünümde tüm günü görürsünüz. Harita bir tahmindir; gerçek akış TV\'de anlık belirlenir.', '<div id="flowv"><div class="loading">Yükleniyor…</div></div>')
-      + card('7 Günlük Yayın Akışı', 'Bir öğeye tıklayarak ilgili ayar sayfasına gidebilirsiniz.', daysHtml);
-  },
-  async after() { drawFlow(); }
-};
+function agendaBodyHtml() {
+  const today = new Date();
+  const vids = (S.db.videos || []).filter(v => !v.hidden);
+  const cats = ((S.db.menu && S.db.menu.categories) || []);
+  const camps = (S.db.campaigns || []).filter(c => c.enabled !== false);
+  const hhs = hhOf(S.db.menu).filter(h => h.enabled !== false);
+  const sp = Array.isArray(S.db.special) ? S.db.special : [];
+  const daysHtml = Array.from({ length: 7 }, (_, idx) => {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + idx, 12, 0, 0);
+    const ymd = d.toISOString().slice(0, 10);
+    const isoDay = d.getDay() || 7;
+    const dayTitle = idx === 0 ? 'Bugün' : idx === 1 ? 'Yarın' : d.toLocaleDateString(I18N.locale, { weekday: 'long' });
+    const dateStr = d.toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long' });
+    const items = [];
+    sp.filter(r => r && r.on && r.sch && schMatchesDay(r.sch, ymd, isoDay)).forEach(r => {
+      const tm = r.sch.from ? `${r.sch.from}–${r.sch.to}` : 'Gün boyu';
+      items.push(`<a href="#media/special" class="ag-pill sp">🚨 ${esc(tm)} · <b>${esc(r.name || 'Özel Yayın')}</b></a>`);
+    });
+    hhs.filter(h => schMatchesDay(h.sch, ymd, isoDay)).forEach(h => {
+      const tm = h.sch && h.sch.from ? `${h.sch.from}–${h.sch.to}` : 'Gün boyu';
+      items.push(`<a href="#menu/happy" class="ag-pill hh">🏷 ${esc(tm)} · <b>${esc(h.label || h.title || 'İndirim Saati')}</b> (%${h.pct || 0})</a>`);
+    });
+    cats.filter(c => c.sch && schMatchesDay(c.sch, ymd, isoDay)).forEach(c => {
+      const tm = c.sch.from ? `${c.sch.from}–${c.sch.to}` : 'Gün boyu';
+      items.push(`<a href="#menu" class="ag-pill menu">🍽 ${esc(tm)} · <b>${esc(c.name)}</b> kategorisi</a>`);
+    });
+    vids.filter(v => v.sch && schMatchesDay(v.sch, ymd, isoDay)).forEach(v => {
+      const tm = v.sch.from ? `${v.sch.from}–${v.sch.to}` : 'Gün boyu';
+      items.push(`<a href="#media" class="ag-pill vid">🎬 ${esc(tm)} · <b>${esc(v.name || 'Medya')}</b></a>`);
+    });
+    camps.filter(c => c.sch && schMatchesDay(c.sch, ymd, isoDay)).forEach(c => {
+      const tm = c.sch.from ? `${c.sch.from}–${c.sch.to}` : 'Gün boyu';
+      items.push(`<a href="#promo/camp" class="ag-pill camp">✨ ${esc(tm)} · <b>${esc(c.headline || c.title || 'Kampanya')}</b></a>`);
+    });
+    const alwaysVids = vids.filter(v => !v.sch).length;
+    const alwaysCats = cats.filter(c => !c.sch).length;
+    return `<div class="ag-day${idx === 0 ? ' today' : ''}"><h4><span>${esc(dayTitle)}</span><span class="muted" style="font-weight:400;font-size:13px">${esc(dateStr)}</span></h4>
+      <div class="ag-items">${items.length ? items.join('') : `<span class="muted" style="font-size:13px">Özel saatli içerik yok — gün boyu standart yayın (${alwaysVids} medya, ${alwaysCats} menü kategorisi) döner.</span>`}</div>
+      ${items.length ? `<div class="muted" style="font-size:12px;margin-top:8px">+ Gün boyu sürekli dönen ${alwaysVids} medya ve ${alwaysCats} menü kategorisi</div>` : ''}</div>`;
+  }).join('');
+  return card('Akış Özeti', 'Ekranda içeriklerin hangi sırayla ve kaç saniye gösterileceği: ana döngünün bir turu tek çizgide, araya giren kampanya, büyük maç ve fragmanla birlikte. Günlük görünümde tüm günü görürsünüz. Harita bir tahmindir; gerçek akış TV\'de anlık belirlenir.', '<div id="flowv"><div class="loading">Yükleniyor…</div></div>')
+    + card('7 Günlük Yayın Akışı', 'Bir öğeye tıklayarak ilgili ayar sayfasına gidebilirsiniz.', daysHtml);
+}
 
 // Akış özeti: günün tek çizgide sıralı akışı; sunucunun TV kurallarına göre yaptığı tahmini benzetim (server/flow.js)
 const FLOW_KIND = { video: ['Video', '#3b82f6'], image: ['Fotoğraf', '#14b8a6'], poster: ['Afiş', '#a855f7'], youtube: ['YouTube', '#ef4444'], ad: ['Reklam', '#f59e0b'], book: ['Kitap', '#84cc16'], insta: ['Instagram', '#ec4899'], camp: ['Kampanya', '#f97316'], big: ['Büyük maç', '#22c55e'], trailer: ['Fragman', '#6366f1'] };
@@ -4204,13 +4335,13 @@ async function flowSave(i, reset) {
 const FLOW_KIND_ORDER = ['video', 'youtube', 'image', 'poster', 'ad', 'book', 'insta', 'camp', 'big', 'trailer'];
 
 const FAQ_LIST = [
-  ['TV kutusunu ekrana nasıl bağlarım?', 'TV kutunuzu HDMI ile televizyona takın ve internete bağlayın. Kutuda ScreenPano uygulamasını açtığınızda ekranda 6 haneli bir kod belirir. Panelde <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasına gidip bu kodu yazarak saniyeler içinde eşleştirebilirsiniz.'],
+  ['TV kutusunu ekrana nasıl bağlarım?', 'TV kutunuzu HDMI ile televizyona takın ve internete bağlayın. Kutuda ScreenPano uygulamasını açtığınızda ekranda 6 haneli bir kod belirir. Panelde <a href="#devices">Cihazlar</a> sayfasına gidip bu kodu yazarak saniyeler içinde eşleştirebilirsiniz.'],
   ['İnternet kesilirse TV ekranı kararır mı?', 'Hayır. ScreenPano videolarınızı, fotoğraflarınızı ve fiyat listenizi TV kutusunun hafızasına kaydeder. İnternet kopsa bile ekranınız kesintisiz oynamaya devam eder; bağlantı geldiğinde yeni değişiklikleri otomatik alır.'],
-  ['Farklı televizyonlarda farklı içerik (birinde menü, diğerinde maç/video) gösterebilir miyim?', 'Evet. <a href="#design">Tasarım</a> sayfasındaki <b>Ekran Profilleri (Çoklu TV)</b> kartından <b>＋ Yeni ekran profili</b> ile ikinci bir ekran tasarımı oluşturun. Ardından <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasında ilgili TV kutusunun <b>Ayrıntılar ve araçlar</b> penceresinden hangi ekran profilini göstereceğini seçin. Birden fazla profil varken <a href="#media">Medya</a> sayfasında videonun <b>⋯</b> menüsündeki <b>Hangi ekranlarda oynasın?</b> ile videonun hangi TV\'lerde döneceğini de seçebilirsiniz.'],
+  ['Farklı televizyonlarda farklı içerik (birinde menü, diğerinde maç/video) gösterebilir miyim?', 'Evet. <a href="#design">Tasarım</a> sayfasındaki <b>Ekran Profilleri (Çoklu TV)</b> kartından <b>＋ Yeni ekran profili</b> ile ikinci bir ekran tasarımı oluşturun. Ardından <a href="#devices">Cihazlar</a> sayfasında ilgili TV kutusunun <b>Ayrıntılar ve araçlar</b> penceresinden hangi ekran profilini göstereceğini seçin. Birden fazla profil varken <a href="#media">Medya</a> sayfasında videonun <b>⋯</b> menüsündeki <b>Hangi ekranlarda oynasın?</b> ile videonun hangi TV\'lerde döneceğini de seçebilirsiniz.'],
   ['Yüklediğim videoların kendi sesi neden çıkmıyor veya müzikle çakışıyor mu?', 'Videolar varsayılan olarak sessiz oynar. <a href="#media">Medya</a> sayfasında videonun <b>⋯</b> menüsünden <b>Sesli oynat (müziği kısar)</b> seçeneğiyle o videonun sesini açabilirsiniz. Sesli bir video başladığında arka planda çalan müzik otomatik olarak kısılır, video bitince müzik eski sesine döner.'],
-  ['Fiyat listesine ürün fotoğrafı ve yabancı dil nasıl eklerim?', '<a href="#menu">Fiyat Listesi</a> sayfasında her ürünün solundaki kamera kutucuğuna tıklayarak ürün fotoğrafı yükleyebilirsiniz. Üstteki "Diller" kartından İngilizce, Almanca, Rusça veya Arapça seçip <b>"✨ Eksik çevirileri otomatik doldur"</b> butonuna basarak tüm menünüzü tek tıkla çevirebilirsiniz.'],
+  ['Fiyat listesine ürün fotoğrafı ve yabancı dil nasıl eklerim?', '<a href="#menu">Fiyat Listesi</a> sayfasında her ürünün solundaki kamera kutucuğuna tıklayarak ürün fotoğrafı yükleyebilirsiniz. <a href="#menu/lang">Diller</a> sekmesinden İngilizce, Almanca, Rusça veya Arapça seçip <b>"✨ Eksik çevirileri otomatik doldur"</b> butonuna basarak tüm menünüzü tek tıkla çevirebilirsiniz.'],
   ['Panel çok detaylı görünüyor, daha sade bir görünüm var mı?', 'Sol menünün en altındaki <b>Basit Mod</b> düğmesine tıklayarak günlük kullanımda en çok ihtiyaç duyulan bölümler dışındaki gelişmiş ayarları gizleyebilirsiniz. Aynı yerdeki <b>Gelişmiş Mod</b> düğmesiyle istediğiniz zaman tüm bölümlere dönebilirsiniz.'],
-  ['TV ekranında takılma veya yavaşlık olursa ne yapmalıyım?', '<a href="#media">Medya</a> sayfasındaki <b>Depolama ve Oynatma Akıcılığı</b> kartından oynatma akıcılığını <b>Akıcı</b> yapıp <b>Videoları TV\'ye uyarla</b> düğmesine basın; yüksek çözünürlüklü videolar kutuya uygun hale getirilir. Ayrıca <a href="#settings/devices">Ayarlar → Cihazlar</a> sayfasında cihazın <b>Ayrıntılar ve araçlar</b> penceresinden <b>Takılma testi</b>, <b>Uygulamayı yeniden başlat</b> ve <b>Önbelleği temizle</b> komutlarını uzaktan gönderebilirsiniz.'],
+  ['TV ekranında takılma veya yavaşlık olursa ne yapmalıyım?', '<a href="#media">Medya</a> sayfasındaki <b>Depolama ve Oynatma Akıcılığı</b> kartından oynatma akıcılığını <b>Akıcı</b> yapıp <b>Videoları TV\'ye uyarla</b> düğmesine basın; yüksek çözünürlüklü videolar kutuya uygun hale getirilir. Ayrıca <a href="#devices">Cihazlar</a> sayfasında cihazın <b>Ayrıntılar ve araçlar</b> penceresinden <b>Takılma testi</b>, <b>Uygulamayı yeniden başlat</b> ve <b>Önbelleği temizle</b> komutlarını uzaktan gönderebilirsiniz.'],
 ];
 SECTIONS.help = {
   html() {
@@ -4221,9 +4352,9 @@ SECTIONS.help = {
       + `<div class="grid g2">`
       + card('🚀 Hızlı Kısayollar', 'En sık kullanılan işlemler:',
         `<div class="row" style="gap:8px;flex-wrap:wrap">
-          <a class="btn g s" href="#settings/devices">📺 TV Kutusu Bağla</a>
+          <a class="btn g s" href="#devices">📺 TV Kutusu Bağla</a>
           <a class="btn g s" href="#media/posters">📷 Fotoğraftan Afiş Yap</a>
-          <a class="btn g s" href="#agenda">📅 7 Günlük Yayın Ajandası</a>
+          <a class="btn g s" href="#stats/agenda">📅 7 Günlük Yayın Ajandası</a>
           <a class="btn g s" href="#menu">🍽 Fiyat Listesi & QR Menü</a>
           <a class="btn g s" href="#music">🎵 Müzik Yayını</a>
         </div>`)
@@ -4269,14 +4400,18 @@ function drawBrand() {
   setInterval(async () => { if (document.hidden) return; try { S.scr = await req('GET', '/screen'); } catch (e) {} }, 30000);
   addEventListener('sp:play-billing', () => { if (TAB === 'settings' || TAB === 'sport') render(true); });
 })();
-addEventListener('beforeunload', e => { if (EDIT.dirty || (MENU && MENU.__dirty) || (HD && HD.__dirty) || (HC && HC.__dirty) || document.querySelector('#view .card.dirty')) { e.preventDefault(); e.returnValue = ''; } });
+addEventListener('beforeunload', e => { if (EDIT.dirty || (MENU && MENU.__dirty) || (HD && HD.__dirty) || (HC && HC.__dirty) || (SP && SP.dirty) || INFO_DIRTY || TIMES_DIRTY || document.querySelector('#view .card.dirty')) { e.preventDefault(); e.returnValue = ''; } });
 /* A2: ortak kayıt çubuğu. Kaydedilmemiş değişiklik olunca altta çıkar; "Kaydet" ilgili bölümü kaydeder, "Vazgeç" son kaydı geri getirir. */
 function savebar() {
   const b = $('savebar'); if (!b) return;
+  const sub = curSubOf(TAB);
   let n = 0, save = null, cancel = () => render(true);
-  if (TAB === 'design' && EDIT.dirty) { n = 1; save = saveL; cancel = () => { EDIT.dirty = false; EDIT.layout = null; render(true); }; }
-  else if (TAB === 'happy' && ((HD && HD.__dirty) || (HC && HC.__dirty))) { n = 1; save = saveHappy; cancel = () => { HD = null; HC = null; MENU = null; render(true); }; }
-  else if (TAB === 'menu' && MENU && MENU.__dirty) { n = 1; save = saveMenu; cancel = () => { MENU.__dirty = 0; MENU = null; render(true); }; }
+  if (TAB === 'design' && sub === 'layout' && EDIT.dirty) { n = 1; save = saveL; cancel = () => { EDIT.dirty = false; EDIT.layout = null; render(true); }; }
+  else if (TAB === 'menu' && sub === 'happy' && ((HD && HD.__dirty) || (HC && HC.__dirty))) { n = 1; save = saveHappy; cancel = () => { HD = null; HC = null; MENU = null; render(true); }; }
+  else if (TAB === 'menu' && (sub === 'items' || sub === 'lang') && MENU && MENU.__dirty) { n = 1; save = saveMenu; cancel = () => { MENU.__dirty = 0; MENU = null; render(true); }; }
+  else if (TAB === 'media' && sub === 'special' && SP && SP.dirty) { n = 1; save = saveSpecial; cancel = () => { SP = null; render(true); }; }
+  else if (TAB === 'info' && INFO_DIRTY) { n = 1; save = saveInfoCfg; cancel = () => { INFO_DIRTY = 0; render(true); }; }
+  else if (TAB === 'promo' && sub === 'celeb' && TIMES_DIRTY) { n = 1; save = saveTimes; cancel = () => { TIMES = null; TIMES_DIRTY = 0; render(true); }; }
   else { const d = [...document.querySelectorAll('#view .card.dirty')]; n = d.length; save = () => { d.forEach(c => { const x = c.querySelector('[data-save]'); c.classList.remove('dirty'); if (x) x.click(); }); }; }
   const was = b.classList.contains('on'); b.classList.toggle('on', n > 0); document.body.classList.toggle('sbon', n > 0);
   if (!n) return;

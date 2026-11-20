@@ -69,7 +69,7 @@ code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:var(--r-s);f
 .t-neonarena{background:radial-gradient(circle at 15% 50%,rgba(201,8,42,.75),transparent 60%),radial-gradient(circle at 85% 50%,rgba(18,54,144,.75),transparent 60%),#060913}
 .t-neonarena i:nth-child(1),.t-neonarena i:nth-child(2){top:22%;width:25%;aspect-ratio:1;background:rgba(14,20,36,.85);border:1.5px solid #ffd478;clip-path:polygon(15% 0%,85% 0%,100% 15%,100% 85%,85% 100%,15% 100%,0% 85%,0% 15%)}.t-neonarena i:nth-child(1){left:9%;border-color:#ffb800}.t-neonarena i:nth-child(2){right:9%;border-color:#29a8ff}
 .t-neonarena i:nth-child(3){left:32%;right:32%;top:10%;height:11%;background:#0c111e;border:1px solid rgba(255,255,255,.35)}
-#modal .mb:has(.bpv){max-width:1100px;width:96vw}
+#modal .mb:has(.bpv){max-width:1100px;width:96vw;background:transparent;border:0;padding:0;box-shadow:none}
 .bpv{display:flex;flex-direction:column;gap:12px;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:18px}
 .spsum{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;padding:11px 16px;margin-bottom:14px;border-radius:var(--r-m);background:var(--panel2);font-size:13.5px;color:var(--soft)}.spsum b{color:var(--text);font-size:15px}
 .lgrp{border:1px solid var(--line);border-radius:var(--r-m);margin-bottom:10px;padding:0 14px}.lgrp summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:12px 0;font-size:14px}.lgrp summary::-webkit-details-marker{display:none}.lgrp summary:before{content:'›';display:inline-block;width:16px;color:var(--mute);transition:transform .15s}.lgrp[open] summary:before{transform:rotate(90deg)}.lgrp summary b{flex:1}.lgrp .cnt{font-size:12px;color:var(--accent2);font-weight:700}.lgrp .chips{padding-bottom:14px}
@@ -332,7 +332,10 @@ input[type=range]{width:100%;accent-color:var(--accent2)}
 .code-in{font-size:22px!important;letter-spacing:.2em;font-weight:700;text-align:center;max-width:220px}
 #modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:20px}
 #modal.on{display:flex}
-#modal .mb{max-width:min(1100px,94vw);max-height:88vh;display:flex;flex-direction:column;gap:10px;align-items:center}
+#modal .mb{width:min(560px,94vw);max-width:min(1100px,94vw);max-height:88vh;display:flex;flex-direction:column;gap:10px;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px;overflow:auto;box-shadow:0 24px 64px rgba(0,0,0,.65)}
+#modal .mb:has(.mpv){width:auto;max-width:min(1100px,94vw);background:transparent;border:0;padding:0;box-shadow:none;align-items:center;overflow:visible}
+.mpv{display:flex;flex-direction:column;gap:10px;align-items:center;width:100%}
+.mpv iframe{width:min(920px,90vw);aspect-ratio:16/9;border:0;border-radius:var(--r-m);background:#000}
 #modal video,#modal img{max-width:100%;max-height:80vh;border-radius:var(--r-m);background:#000}
 #toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:70;max-width:min(420px,calc(100vw - 36px))}
 .toast{background:#2a2f2f;border:1px solid var(--line2);border-left:4px solid var(--ok);padding:12px 16px;border-radius:var(--r-m);font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.45);animation:tin .2s}
@@ -376,7 +379,12 @@ details.stx>.card{border:0;background:none;margin:0;padding:0 22px 20px}details.
   .g2,.g3{grid-template-columns:1fr}
   .head h1{font-size:23px}
   .card{padding:16px}
-  .mrow{grid-template-columns:38px 1fr 90px auto}.mrow .md{display:none}.mrow.hp{grid-template-columns:38px 1fr 80px 80px auto}.flow .fr{grid-template-columns:90px 1fr}
+  .mrow,.mrow.hp{display:grid;grid-template-columns:38px minmax(0,1fr) 88px;gap:6px 8px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .mrow .md{grid-column:1 / -1;order:3}
+  .mrow .mhp{grid-column:2 / 4;order:4}
+  .mrow>.row{grid-column:1 / -1;order:5;justify-content:flex-end}
+  .flow .fr{grid-template-columns:90px 1fr}
+  .jump{display:none}
   .plans{grid-template-columns:1fr}
 }
 /* ===== yeni bölümler: afiş, zamanlama, istatistik, şube ===== */
@@ -394,11 +402,9 @@ details.stx>.card{border:0;background:none;margin:0;padding:0 22px 20px}details.
 .ped{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;align-items:start}
 .ped .fl{margin-bottom:10px}
 .pv16{position:relative;aspect-ratio:16/9;border-radius:var(--r-m);overflow:hidden;background:#000;margin-bottom:6px}
-#modal .mb:has(#sc-days){width:min(560px,94vw);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px;overflow:auto;align-items:stretch}
-#modal .mb:has(#c-go){width:min(560px,94vw);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px;overflow:auto;align-items:stretch}
-#modal .mb:has(#pe-nick){width:min(480px,94vw);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px;overflow:auto;align-items:stretch}
+#modal .mb:has(#pe-nick){width:min(480px,94vw)}
 #modal .mb:has(#pe-nick) .f{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#modal .mb:has(#pro-upg){width:min(740px,95vw);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:22px 24px;overflow:auto;align-items:stretch}
+#modal .mb:has(#pro-upg){width:min(740px,95vw);padding:22px 24px}
 .upg-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .upg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px}
 .upg-card{background:var(--panel2);border:1px solid var(--line2);border-radius:var(--r-m);padding:16px;display:flex;flex-direction:column;gap:8px}
@@ -407,7 +413,7 @@ details.stx>.card{border:0;background:none;margin:0;padding:0 22px 20px}details.
 .upg-price{font-size:20px;font-weight:800;color:var(--accent2)}
 .upg-trial{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--r-pill);background:rgba(62,207,116,.14);color:#5fd39a;font-size:12px;font-weight:700;width:fit-content}
 .upg-list{margin:4px 0 8px;padding-left:18px;color:var(--soft);font-size:13px;line-height:1.55}
-#modal .mb:has(.ped){max-width:980px;width:96vw;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px;overflow:auto;align-items:stretch}
+#modal .mb:has(.ped){max-width:980px;width:96vw}
 .stu-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:200px;border:2px dashed var(--line2);border-radius:var(--r-m);cursor:pointer;text-align:center;padding:20px}
 .stu-drop b{font-size:18px}.stu-drop:hover,.stu-drop.over{border-color:var(--accent2);background:rgba(var(--a2),.06)}
 .stu-cv{width:100%;aspect-ratio:16/9;border-radius:var(--r-m);background:#000;display:block;margin-bottom:10px}
@@ -432,6 +438,7 @@ details.stx>.card{border:0;background:none;margin:0;padding:0 22px 20px}details.
 .bars div:hover i,.bars div.act i{background:var(--text)}
 .bar-tip{font-size:13px;color:var(--soft);min-height:20px;margin-bottom:6px;font-weight:600}
 body.simple-mode .adv-only{display:none!important}
+#mode-btn.on{border-color:var(--accent2);background:rgba(var(--a2),.18);color:#fff}
 .ag-day{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);padding:12px 14px;margin-bottom:10px}
 .ag-day.today{border-color:var(--accent2);background:rgba(var(--a2),.07)}
 .ag-items{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
@@ -893,7 +900,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <nav id="nav"></nav>
     <div id="sidefoot">
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
-        <button type="button" class="btn g s" id="mode-btn" onclick="toggleSimpleMode()" style="flex:1;justify-content:center" title="Basit ve gelişmiş görünüm arasında geçiş yap">Basit Mod</button>
+        <button type="button" class="btn g s" id="mode-btn" onclick="toggleSimpleMode()" style="flex:1;justify-content:center" title="Basit ve gelişmiş görünüm arasında geçiş yap">⚙ Gelişmiş Mod</button>
         <div data-langpick></div>
       </div>
       <div class="acct"><button type="button" id="acctb" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation();var p=this.parentNode;p.classList.toggle('on');this.setAttribute('aria-expanded',p.classList.contains('on'))"><svg class="ic"><use href="/icons.svg#i-user"></use></svg><span id="acctn">Hesap</span><svg class="ic"><use href="/icons.svg#i-chevron-up"></use></svg></button>
@@ -901,14 +908,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
           <a href="/tv?preview=1" target="_blank"><svg class="ic"><use href="/icons.svg#i-tv"></use></svg>TV ekranını aç</a>
           <a href="/app.apk"><svg class="ic"><use href="/icons.svg#i-smartphone"></use></svg>Android uygulaması (APK)</a>
           <a href="/app.exe"><svg class="ic"><use href="/icons.svg#i-monitor"></use></svg>Windows uygulaması</a>
-          <div class="acctl" data-langpick></div>
           <a href="#" onclick="logout();return false"><svg class="ic"><use href="/icons.svg#i-log-out"></use></svg>Çıkış yap</a>
         </div>
       </div>
     </div>
   </aside>
   <div id="shade" onclick="menu(false)"></div>
-  <div id="top"><button onclick="menu(true)" aria-label="Menü" aria-expanded="false">☰</button><b id="toptitle"></b></div>
+  <div id="top"><button onclick="menu(true)" aria-label="Menü" aria-expanded="false">☰</button><b id="toptitle"></b><a class="btn xs g" id="top-tv" href="/tv?preview=1" target="_blank" title="TV ekranını aç"><svg class="ic"><use href="/icons.svg#i-tv"></use></svg>TV</a></div>
   <main><div class="wrap"><div id="banner"></div><div id="view"><div class="loading">Yükleniyor…</div></div></div></main>
 </div>
 <div id="modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModal()"><div class="mb" id="modalb"></div></div>
