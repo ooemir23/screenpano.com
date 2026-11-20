@@ -161,6 +161,22 @@ function googleDone(req, res, code, email, k, gn) {
   const q = new URLSearchParams({ gs: auth.sign({ kind: 'lig_g', tid: t.id, email, exp: now() + 20 * 60e3 }), ge: email, ga: cap(gn && gn.ad).slice(0, 30), gy: cap(gn && gn.soyad).slice(0, 30) });
   back(q.toString());
 }
+// Kodsuz Google girişi (giriş sayfasından): e-postanın kayıtlı olduğu açık ligler. Tek lig → doğrudan o lig,
+// birden çoksa giriş sayfası hepsinin anahtarını (#ligs=) alır ve listeler. Yeni kayıt burada yapılmaz (QR gerekir).
+function googleAny(req, res, email) {
+  const hits = [];
+  for (const t of tenants.all()) {
+    const p = t.db.predict; if (!p || !p.code || !P.isOn(t)) continue;
+    const u = Object.values(p.users || {}).find(x => x.email === email && !x.off); if (u) hits.push({ t, u });
+  }
+  if (!hits.length) return res.redirect(P.LIG_ROOT + '#gerr=yok');
+  if (hits.length === 1) return res.redirect(`${P.urlOf(hits[0].t)}#tk=${issue(hits[0].t, hits[0].u)}`);
+  res.redirect(P.LIG_ROOT + '#ligs=' + hits.slice(0, 10).map(h => P.cfg(h.t).code + '.' + issue(h.t, h.u)).join(','));
+}
+const landing = (req, res) => {
+  res.set({ 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex, nofollow', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' });
+  res.type('html').send(require('./predict-page').landing({ google: googleOn() }));
+};
 // Haftalık e-postayı kapat / aç
 pub.get('/:code/unsub', (req, res) => {
   const t = P.byCode(req.params.code), uid = String(req.query.u || ''), d = t && P.cfg(t), u = d && d.users[uid];
@@ -364,4 +380,4 @@ function admin(r, { changed, ownerOnly }) {
   });
 }
 
-module.exports = { pub, page, admin, googleDone, birth, phone };
+module.exports = { pub, page, landing, admin, googleDone, googleAny, birth, phone };

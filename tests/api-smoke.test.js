@@ -369,3 +369,17 @@ test('YouTube süresi: değiştirilince orijinal saklanır, dur:0 ile geri yükl
   assert.equal(yt.repDur(100, 3), 300); assert.equal(yt.repDur(2000, 5), 3600); assert.equal(yt.clampRep(0), 1); assert.equal(yt.clampRep(99), 50);
 
 });
+
+test('tahmin.* alt alanı: kök giriş sayfası, /predict girişsiz /login, girişte sonraki adres /predict', async () => {
+  const H = { 'x-forwarded-host': 'tahmin.screenpano.com' };
+  let r = await fetch(BASE + '/', { headers: H, redirect: 'manual' });
+  assert.equal(r.status, 200); assert.match(await r.text(), /Oyuncu girişi/);
+  assert.equal((await fetch(BASE + '/lig', { redirect: 'manual' })).status, 200); // test ortamı: alt alan yerine yol
+  r = await fetch(BASE + '/predict', { headers: H, redirect: 'manual' });
+  assert.equal(r.status, 302); assert.match(r.headers.get('location'), /\/login$/);
+  assert.equal((await fetch(BASE + '/login', { headers: H, redirect: 'manual' })).status, 200); // lig kodu olmayan yollar olduğu gibi çalışır
+  r = await fetch(BASE + '/api/auth/login', { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'admin', password: SUPER_PASS }), redirect: 'manual' });
+  assert.equal(r.status, 200); assert.equal((await r.json()).next, '/predict');
+  r = await fetch(BASE + '/api/auth/google/lig', { headers: H, redirect: 'manual' }); // Google anahtarı yok: giriş sayfasına hata ile döner
+  assert.equal(r.status, 302); assert.match(r.headers.get('location'), /\/lig#gerr=1$/);
+});

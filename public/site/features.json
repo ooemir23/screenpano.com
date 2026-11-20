@@ -1195,11 +1195,12 @@
         "Skor, her golün golcüsü ve kırmızı kart çıkar mı",
         "QR'dan doğrudan Google ile kayıt; yalnız işletmedekiler katılabilir",
         "Haftalık puan durumu ekranda ve e-postayla",
-        "Katılımcıları panelden düzenleme, ligden çıkarma ve silme"
+        "Katılımcıları panelden düzenleme, ligden çıkarma ve silme",
+        "Kendi adresi tahmin.screenpano.com: oyuncu Google ile ligine girer, işletme yalnız Tahmin Ligi panelini açar"
       ],
       "plan": "addon",
       "compare": "Süper Lig Tahmin Ligi",
-      "added": "2026-11-18",
+      "added": "2026-11-21",
       "i18n": {
         "en": {
           "title": "Your own Süper Lig Prediction League",
@@ -1210,7 +1211,8 @@
             "Score, the scorer of each goal and whether there will be a red card",
             "Straight from the QR to Google sign-up; only people at your venue can join",
             "Weekly standings on screen and by email",
-            "Edit, remove or delete participants in the panel"
+            "Edit, remove or delete participants in the panel",
+            "Its own address, tahmin.screenpano.com: players sign in with Google to reach their league, and businesses open just the Prediction League panel"
           ]
         },
         "de": {
@@ -1222,7 +1224,8 @@
             "Ergebnis, Torschütze je Tor und Rote Karte ja/nein",
             "Vom QR-Code direkt zur Google-Anmeldung; nur Gäste vor Ort können mitmachen",
             "Wöchentliche Tabelle auf dem Bildschirm und per E-Mail",
-            "Teilnehmer im Panel bearbeiten, ausschließen oder löschen"
+            "Teilnehmer im Panel bearbeiten, ausschließen oder löschen",
+            "Eigene Adresse tahmin.screenpano.com: Spieler melden sich mit Google an und landen in ihrem Tippspiel, Betriebe öffnen nur das Tippspiel-Panel"
           ]
         },
         "ar": {
@@ -1234,7 +1237,8 @@
             "النتيجة وهداف كل هدف وهل ستكون هناك بطاقة حمراء",
             "من رمز QR مباشرة إلى التسجيل عبر Google؛ يشارك الموجودون في نشاطك فقط",
             "الترتيب الأسبوعي على الشاشة وبالبريد",
-            "تعديل المشاركين أو إخراجهم أو حذفهم من اللوحة"
+            "تعديل المشاركين أو إخراجهم أو حذفهم من اللوحة",
+            "عنوان خاص tahmin.screenpano.com: يسجّل اللاعب الدخول بحساب Google ليصل إلى دوريه، ويفتح النشاط التجاري لوحة دوري التوقعات وحدها"
           ]
         }
       }

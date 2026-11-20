@@ -25,15 +25,17 @@ function baseOrigin(req) {
   return `${proto}://${rawHost}`;
 }
 
+// Tek bölümlük alt alanlar: girişten sonra panel yalnız o bölümle açılır
+const ONLY = { music: '/music', tahmin: '/predict' };
 function postAuthUrl(req, u, sub = '', pair = '') {
   const hash = /^\d{6}$/.test(String(pair || '')) ? `#pair=${pair}` : '';
   let target;
-  if (sub === 'music') {
+  if (ONLY[sub]) {
     let baseHost = '';
     try { baseHost = new URL(config.BASE_URL).hostname.toLowerCase(); } catch {}
     const reqHost = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(':')[0].toLowerCase();
     const sameBase = baseHost && baseHost.includes('.') && (reqHost === baseHost || reqHost.endsWith('.' + baseHost));
-    target = (config.APP_ENV === 'live' && sameBase) ? `https://music.${baseHost}/music` : '/music';
+    target = (config.APP_ENV === 'live' && sameBase) ? `https://${sub}.${baseHost}${ONLY[sub]}` : ONLY[sub];
   } else {
     target = auth.homeFor(req, u);
   }
@@ -89,7 +91,7 @@ r.post('/login', async (req, res) => {
   auth.clearFails(ip, username);
   store.q.userLogin.run(Date.now(), u.id);
   auth.setSession(req, res, u);
-  res.json({ ok: true, role: u.role, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : auth.subOf(req) === 'sadmin' && auth.superOk(u) ? '/super' : auth.homeFor(req, u) });
+  res.json({ ok: true, role: u.role, next: auth.subOf && ONLY[auth.subOf(req)] ? ONLY[auth.subOf(req)] : auth.subOf(req) === 'sadmin' && auth.superOk(u) ? '/super' : auth.homeFor(req, u) });
 });
 // all:true gelirse kullanıcının tüm cihazlardaki oturumları da düşer (token_epoch artar)
 r.post('/logout', (req, res) => {
@@ -132,7 +134,7 @@ r.get('/google/start', (req, res) => {
   if (gNonces.size > 5000) return gHome(req, res, '#gerr=limit');
   const n = crypto.randomBytes(16).toString('hex');
   gNonces.set(n, now + 10 * 60 * 1000);
-  const sub = (reqSub === 'music' || reqSub === 'sadmin') ? reqSub : '';
+  const sub = (ONLY[reqSub] || reqSub === 'sadmin') ? reqSub : '';
   const pair = /^\d{6}$/.test(String(req.query.pair || '')) ? String(req.query.pair) : '';
   const q = new URLSearchParams({
     client_id: g.id, redirect_uri: `${baseOrigin(req)}/api/auth/google/callback`, response_type: 'code',
@@ -141,10 +143,12 @@ r.get('/google/start', (req, res) => {
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${q}`);
 });
 // Tahmin Ligi müşterisi: Google ile giriş/kayıt (aynı geri çağrı adresi; Google Console'a yeni adres eklemek gerekmez)
-r.get('/google/lig/:code', (req, res) => {
-  const code = String(req.params.code || '');
-  const back = h => res.redirect(`${require('./predict').ligUrl(code)}#${h}`);
-  if (!/^[a-z0-9]{4,16}$/i.test(code)) return res.status(404).end();
+// Kodsuz (/google/lig): giriş sayfasından; kayıtlı olduğu lig(ler) callback'te e-postadan bulunur (lig: '*')
+const ligBack = code => (code === '*' ? require('./predict').LIG_ROOT : require('./predict').ligUrl(code));
+r.get(['/google/lig', '/google/lig/:code'], (req, res) => {
+  const code = req.params.code === undefined ? '*' : String(req.params.code);
+  const back = h => res.redirect(`${ligBack(code)}#${h}`);
+  if (code !== '*' && !/^[a-z0-9]{4,16}$/i.test(code)) return res.status(404).end();
   const g = gCfg();
   if (!g.id || !g.secret) return back('gerr=1');
   const ip = auth.clientIp(req), now = Date.now();
@@ -199,7 +203,7 @@ r.get('/google/callback', async (req, res) => {
   const fail = (msg, code = '1', countFail = true) => {
     console.error('[Google OAuth]', msg);
     if (countFail && !lig) auth.noteFail(ip);
-    if (lig) return res.redirect(`${require('./predict').ligUrl(lig)}#gerr=${code}`);
+    if (lig) return res.redirect(`${ligBack(lig)}#gerr=${code}`);
     return gHome(req, res, `#gerr=${code}`);
   };
   try {
@@ -225,6 +229,7 @@ r.get('/google/callback', async (req, res) => {
     const c = await gVerifyIdToken(tj.id_token, g.id);
     if (!c.email || c.email_verified !== true) return fail('e-posta doğrulanmamış', 'unverified');
     const emLow = String(c.email).toLowerCase();
+    if (lig === '*') return require('./routes-predict').googleAny(req, res, emLow);
     if (lig) return require('./routes-predict').googleDone(req, res, lig, emLow, st.k || '', { ad: c.given_name || '', soyad: c.family_name || '' }); // panel oturumu açılmaz
     if (gSuperEmails().includes(emLow)) {
       const su = store.sql.prepare("SELECT * FROM users WHERE role = 'super' ORDER BY created ASC LIMIT 1").get();
@@ -232,7 +237,7 @@ r.get('/google/callback', async (req, res) => {
         auth.clearFails(ip, su.username);
         store.q.userLogin.run(Date.now(), su.id);
         auth.setSession(req, res, su);
-        return res.redirect(postAuthUrl(req, su, st.sub === 'music' ? 'music' : '', st.pair || ''));
+        return res.redirect(postAuthUrl(req, su, ONLY[st.sub] ? st.sub : '', st.pair || ''));
       }
     }
     // kayıtlı işletme: doğrulanmış olanlar önce, ardından son girişe göre bildirim e-postası eşleşen sahip hesabı
@@ -252,7 +257,7 @@ r.get('/google/callback', async (req, res) => {
       auth.clearFails(ip, hit.u.username);
       store.q.userLogin.run(Date.now(), hit.u.id);
       auth.setSession(req, res, hit.u);
-      return res.redirect(postAuthUrl(req, hit.u, st.sub === 'music' ? 'music' : '', st.pair || ''));
+      return res.redirect(postAuthUrl(req, hit.u, ONLY[st.sub] ? st.sub : '', st.pair || ''));
     }
     if (!config.ALLOW_SIGNUP) return fail('kayıt kapalı', 'nosignup', false);
     // eşleşme yok: kayıt ekranına güvenli e-posta taşı (imzalı belirteçle)
@@ -451,7 +456,7 @@ r.post('/reset', (req, res) => {
   auth.clearFails(ip, u.username);
   store.q.userLogin.run(Date.now(), u.id);
   auth.setSession(req, res, store.q.userGet.get(u.id));
-  res.json({ ok: true, username: u.username, next: auth.subOf && auth.subOf(req) === 'music' ? '/music' : auth.homeFor(req, u) });
+  res.json({ ok: true, username: u.username, next: auth.subOf && ONLY[auth.subOf(req)] ? ONLY[auth.subOf(req)] : auth.homeFor(req, u) });
 });
 
 module.exports = r;

@@ -352,4 +352,57 @@ setInterval(() => { if (document.visibilityState === 'visible' && S && S.me && !
 })();
 </script></body></html>`;
 }
-module.exports = { html };
+// Kodsuz giriş sayfası (tahmin.<taban>/): oyuncu Google ile kayıtlı olduğu lige girer, işletme yalnız Tahmin Ligi panelini açar.
+// Bu tarayıcıda daha önce girilmiş ligler (localStorage lig_<kod>) doğrudan listelenir.
+function landing({ google }) {
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><meta name="theme-color" content="#151717">
+<title>Tahmin Ligi · ScreenPano</title>
+<style>
+:root{--bg:#151717;--a:#906538;--a2:#c9955c;--tx:#fbfbfb;--mut:#fbfbfba0;--card:#fbfbfb12;--bd:#fbfbfb24;--bad:#ff6b6b}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(120% 50% at 50% 0,#90653873,transparent 70%),var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:520px;margin:0 auto;padding:28px 16px calc(40px + env(safe-area-inset-bottom))}
+header{text-align:center;margin:0 0 20px}header h1{margin:0;font-size:26px;letter-spacing:-.01em}header p{margin:4px 0 0;color:var(--mut);font-size:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin:0 0 14px}
+h2{font-size:13px;margin:0 0 6px;color:var(--a2);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.note{color:var(--mut);font-size:13.5px;margin:4px 0 0}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:12px;padding:13px;font:700 15px inherit;background:var(--a2);color:#111;margin-top:12px;cursor:pointer;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.lig{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--bd);border-radius:12px;margin-top:8px;color:var(--tx);text-decoration:none;font-weight:700}
+.lig span{color:var(--mut);font-weight:400;font-size:13px}
+.err{color:var(--bad);font-size:13.5px;margin:10px 0 0}
+</style></head><body><main>
+<header><h1>⚽ Tahmin Ligi</h1><p>Maçları tahmin et, puan topla, haftanın birincisi ol.</p></header>
+<section class="card" id="mine" hidden><h2>Liglerin</h2><div id="ligs"></div></section>
+<section class="card"><h2>Oyuncu girişi</h2>
+<p class="note">Daha önce işletmedeki ekrandan QR kod okutup katıldıysan Google hesabınla gir; ligin açılır.</p>
+${google ? '<a class="btn" href="/api/auth/google/lig">Google ile giriş yap</a>' : '<p class="err">Google girişi şu an kullanılamıyor.</p>'}
+<p class="err" id="err" hidden></p>
+<p class="note">Yeni katılmak için işletmedeki ekranda görünen QR kodu okut.</p></section>
+<section class="card"><h2>İşletme girişi</h2>
+<p class="note">Tahmin Ligi'ni yönetmek için ScreenPano işletme hesabınızla girin.</p>
+<a class="btn ghost" href="/predict">İşletme olarak giriş yap</a></section>
+</main><script>
+(() => {
+const $ = id => document.getElementById(id), esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ERR = { yok: 'Bu Google hesabıyla kayıtlı bir tahmin ligi bulunamadı. Katılmak için işletmedeki ekrandaki QR kodu okut.', cancel: 'Google girişi iptal edildi.', unverified: 'Google hesabının e-postası doğrulanmamış.', limit: 'Çok fazla deneme; biraz sonra tekrar dene.' };
+// Google dönüşü: #ligs=kod.anahtar,... (birden çok lig) ya da #gerr= (adres çubuğundan hemen silinir)
+const h = new URLSearchParams(location.hash.slice(1));
+if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+(h.get('ligs') || '').split(',').forEach(x => { const m = /^([a-z0-9]{6,12})\.([a-f0-9]{64})$/.exec(x); if (m) try { localStorage.setItem('lig_' + m[1], m[2]); } catch (e) {} });
+if (h.get('gerr')) { $('err').textContent = ERR[h.get('gerr')] || 'Google girişi tamamlanamadı; tekrar dene.'; $('err').hidden = false; }
+let keys = []; try { keys = Object.keys(localStorage).filter(k => /^lig_[a-z0-9]{6,12}$/.test(k) && /^[a-f0-9]{64}$/.test(localStorage.getItem(k) || '')); } catch (e) {}
+keys.slice(0, 10).forEach(async k => {
+  const code = k.slice(4);
+  try {
+    const r = await fetch('/api/lig/' + code + '/state', { headers: { Authorization: 'Bearer ' + localStorage.getItem(k) } });
+    const j = r.ok ? await r.json() : null;
+    if (r.status === 404 || (j && !j.me)) { localStorage.removeItem(k); return; }
+    if (!j) return;
+    $('ligs').insertAdjacentHTML('beforeend', '<a class="lig" href="/' + (location.pathname.startsWith('/lig') ? 'lig/' : '') + code + '">' + esc(j.biz) + '<span>' + esc(j.me.nick) + ' →</span></a>');
+    $('mine').hidden = false;
+  } catch (e) {}
+});
+})();
+</script></body></html>`;
+}
+module.exports = { html, landing };

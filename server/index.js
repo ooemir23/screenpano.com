@@ -24,9 +24,9 @@ app.use((req, res, next) => {
   if (/^www\./i.test(host)) req.isWww = true;
   next();
 });
-// Alt alan adları: admin.* panel, tv.* TV ekranı, music.* yalnız müzik sayfası, sadmin.* süper yönetim. Ana adres (ve eski yollar) olduğu gibi çalışır;
+// Alt alan adları: admin.* panel, tv.* TV ekranı, music.* yalnız müzik sayfası, tahmin.* Tahmin Ligi (oyuncu girişi + yalnız Tahmin paneli), sadmin.* süper yönetim. Ana adres (ve eski yollar) olduğu gibi çalışır;
 // yalnız kök adres ("/") ve girişten sonra gidilecek sayfa alt alana göre seçilir. Test ortamında taban adres test.screenpano.com olur (admin.test.screenpano.com ...).
-const SUBS = { admin: 1, panel: 1, tv: 1, music: 1, sadmin: 1 };
+const SUBS = { admin: 1, panel: 1, tv: 1, music: 1, sadmin: 1, tahmin: 1 };
 const baseHost = (() => { try { return new URL(config.BASE_URL).hostname.toLowerCase(); } catch (e) { return 'screenpano.com'; } })();
 function subOf(req) {
   const h = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(':')[0].toLowerCase();
@@ -47,7 +47,7 @@ app.use((req, res, next) => {
   if (subOf(req) !== 'sadmin') return next();
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   if (auth.superOk(auth.sessionUser(req))) return next();
-  if (/^\/(panel|music|tv|super)(\/|$)/.test(req.path)) return res.redirect('/login');
+  if (/^\/(panel|music|predict|tv|super)(\/|$)/.test(req.path)) return res.redirect('/login');
   if (req.path.startsWith('/api/') && !/^\/api\/auth\/(login|logout|config|google\/(start|callback))$/.test(req.path)) return res.status(401).json({ error: 'Süper yönetici girişi gerekli' });
   next();
 });
@@ -75,7 +75,7 @@ const TV_CSP = PAGE_CSP.replace("frame-ancestors 'none'", `frame-ancestors ${TV_
 const page = (file, only) => (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Content-Security-Policy', file === 'tv.html' ? TV_CSP : PAGE_CSP);
-  if (only) { // müzik sayfası: panel, yalnız Müzik bölümüyle açılır
+  if (only) { // müzik / tahmin sayfası: panel, yalnız o bölümle açılır
     return fs.readFile(path.join(config.PUBLIC_DIR, file), 'utf8', (err, html) => err ? res.sendStatus(404) : res.type('html').send(String(html).replace('<head>', '<head><script>window.__ONLY=' + JSON.stringify(only) + ';</script>')));
   }
   if (file !== 'tv.html') return res.sendFile(path.join(config.PUBLIC_DIR, file));
@@ -84,10 +84,10 @@ const page = (file, only) => (req, res) => {
     res.type('html').send(String(html).replace('<head>', '<head><script>window.__pageBuild="' + require('./realtime').build + '";</script>'));
   });
 };
-// tahmin.<taban>: kök ana siteye gider, /<kod> lig sayfasıdır (kod yoksa diğer yollar olduğu gibi çalışır)
+// tahmin.<taban>: kök giriş sayfasıdır (oyuncu / işletme), /<kod> lig sayfası (kod yoksa diğer yollar olduğu gibi çalışır)
 app.get(['/', '/:code'], (req, res, next) => {
-  if (String(req.headers['x-forwarded-host'] || req.headers.host || '').split(':')[0].toLowerCase() !== 'tahmin.' + baseHost) return next();
-  if (req.path === '/') return res.redirect(config.BASE_URL);
+  if (subOf(req) !== 'tahmin') return next();
+  if (req.path === '/') return require('./routes-predict').landing(req, res);
   if (!require('./predict').byCode(req.params.code)) return next();
   require('./routes-predict').page(req, res);
 });
@@ -116,9 +116,9 @@ app.get(/^\/(en|de|ar)\/?$/, (req, res) => {
   res.type('html').send(sitePage(req.params[0]));
 });
 // Arama motorları: panel, TV ve API sayfaları dizine girmez; site ve hukuki sayfalar girer
-app.use((req, res, next) => { if (/^\/(panel|super|tv|api|login|music)(\/|$)/.test(req.path)) res.setHeader('X-Robots-Tag', 'noindex, nofollow'); next(); });
+app.use((req, res, next) => { if (/^\/(panel|super|tv|api|login|music|predict)(\/|$)/.test(req.path)) res.setHeader('X-Robots-Tag', 'noindex, nofollow'); next(); });
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /super\nDisallow: /music\nDisallow: /tv\nDisallow: /api/\nDisallow: /login\n\nSitemap: ${require('./site').BASE}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /super\nDisallow: /music\nDisallow: /predict\nDisallow: /tv\nDisallow: /api/\nDisallow: /login\n\nSitemap: ${require('./site').BASE}/sitemap.xml\n`);
 });
 app.get('/sitemap.xml', (req, res) => {
   const { LANGS, BASE, PATH } = require('./site'), fs = require('fs');
@@ -139,6 +139,7 @@ app.get('/q/:code', require('./qrtrack').handler);
 // Tek QR ile açılan sayfa (menü, Wi-Fi, bağlantı butonları)
 app.get('/h/:code', require('./hubpage').page);
 // Tahmin Ligi müşteri sayfası ve API'si (QR ile açılır; ayrıntı: server/predict.js)
+app.get('/lig', require('./routes-predict').landing); // test ortamında (alt alan yok) giriş sayfası
 app.get('/lig/:code', require('./routes-predict').page);
 app.use('/api/lig', require('./routes-predict').pub);
 require('./predict').start();
@@ -151,6 +152,7 @@ app.get('/tv', page('tv.html'));
 app.get(['/tv-lounge', '/lounge'], (req, res) => res.redirect(302, '/tv?preview=1'));
 app.get('/panel', (req, res, next) => (auth.sessionUser(req) ? page('panel.html')(req, res, next) : res.redirect('/login')));
 app.get('/music', (req, res, next) => (auth.sessionUser(req) ? page('panel.html', 'music')(req, res, next) : res.redirect('/login')));
+app.get('/predict', (req, res, next) => (auth.sessionUser(req) ? page('panel.html', 'predict')(req, res, next) : res.redirect('/login')));
 app.get('/super', (req, res, next) => { const u = auth.superUser(req); return u ? page('super.html')(req, res, next) : res.redirect('/login'); });
 
 app.use('/api/auth', require('./routes-auth'));

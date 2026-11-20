@@ -353,6 +353,11 @@ function drawNav() {
     : SIMPLE_MODE
       ? NAV.filter((n, i, a) => typeof n !== 'string' ? (n && SIMPLE_ALLOW.has(n[0])) : a.slice(i + 1).some((x, j) => { const idx = i + 1 + j; return typeof a[idx] !== 'string' && a[idx] && SIMPLE_ALLOW.has(a[idx][0]) && !a.slice(i + 1, idx).some(y => typeof y === 'string'); }))
       : NAV; // music.* adresi: yalnız Müzik bölümü
+  if (window.__ONLY === 'predict') { // tahmin.* adresi: yalnız Tahmin Ligi
+    $('nav').innerHTML = `<a href="#predict" class="on">${ic('trophy')}Tahmin Ligi</a>`;
+    document.title = 'ScreenPano Tahmin Ligi'; $('toptitle').textContent = 'Tahmin Ligi';
+    return;
+  }
   if (window.__ONLY === 'music') { // music.* adresi: sol menüde iki kaynak; seçilen kaynak tüm sayfayı ve çalmayı değiştirir
     const v = typeof srcView === 'function' ? srcView() : 'yt';
     const it = (k, icn, name) => { const av = !pro() || srcAvail(k); return `<a href="#music" class="${v === k ? 'on' : ''}${av ? '' : ' off'}" onclick="switchSrc('${k}');return false">${ic(icn)}${name}${av ? '' : '<span class="pro">Pasif</span>'}</a>`; };
@@ -390,7 +395,8 @@ function route() {
     else if (t === 'agenda') { TAB = 'stats'; SUB.stats = 'agenda'; }
     else { TAB = SECTIONS[t] ? t : 'home'; if (s) SUB[TAB] = s; }
   }
-  if (window.__ONLY) TAB = window.__ONLY; // yalnız Müzik sayfası: başka bölüme geçilemez
+  if (window.__ONLY === 'predict') { TAB = 'sport'; SUB.sport = 'predict'; } // yalnız Tahmin Ligi sayfası
+  else if (window.__ONLY) TAB = window.__ONLY; // yalnız Müzik sayfası: başka bölüme geçilemez
   const curSub = curSubOf(TAB);
   // kaydedilmemiş değişiklik varsa önce bölümde kalınır; kullanıcı "Kaydetmeden çık" derse hedefe gidilir
   const leave = (sec, backSub, back, msg, clear) => {
@@ -2097,6 +2103,7 @@ SECTIONS.sport = {
          <div class="row mt"><span id="bglist" class="muted" style="flex:1"></span><button class="btn g s" onclick="bigTest()">Şimdi dene</button><button class="btn" data-save onclick="saveBig()">Kaydet</button></div>`,
         sw(bc.enabled, "act('PUT','/bigmatch',{enabled:this.checked},this.checked?'Açıldı':'Kapatıldı')"), bc.enabled ? '' : 'off')
 ), predict: () => '<div id="pdv"><div class="loading">Yükleniyor…</div></div>' }[sec]();
+    if (window.__ONLY === 'predict') return head('Tahmin Ligi', 'Müşterileriniz maçları tahmin eder, puan toplar; haftanın birincisi ekranda duyurulur.') + body;
     return head('Spor', 'Maçlar, canlı skorlar, puan durumu ve gol anı. "Maçlar ve bilgi sayfaları" widget\'ında ve kayan bantta görünür.', `<button class="btn g s" onclick="testGoal()">⚽ Gol animasyonunu dene</button>`)
       + (sec === 'predict' ? '' : '<div class="spsum" id="sp-sum"></div>') + tabs('sport', TABS) + body;
   },
@@ -3989,7 +3996,7 @@ async function ytAccAdd(id, playNow) {
   const q = new URLSearchParams(location.search);
   for (const [k, name] of [['yt', 'YouTube'], ['sp', 'Spotify']]) {
     const c = q.get(k); if (!c) continue;
-    history.replaceState(null, '', (window.__ONLY ? '/music' : '/panel') + '#music/accounts');
+    history.replaceState(null, '', (window.__ONLY === 'music' ? '/music' : '/panel') + '#music/accounts');
     setTimeout(() => {
       if (c === 'ok') toast(`${name} hesabı bağlandı`);
       else if (c === 'denied') toast(`${name} izni verilmedi`, true);
