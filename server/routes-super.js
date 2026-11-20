@@ -143,35 +143,42 @@ r.put('/tenants/:id', (req, res) => {
     res.status(500).json({ error: 'İşletme güncellenemedi' });
   }
 });
-r.post('/tenants/:id/password', trueOnly, (req, res) => {
+r.post('/tenants/:id/password', trueOnly, async (req, res) => {
   const t = tenants.get(req.params.id); if (!t) return res.status(404).json({ error: 'bulunamadı' });
   const owner = store.q.usersOf.all(req.params.id).find(u => u.role === 'owner');
   if (!owner) return res.status(404).json({ error: 'işletme sahibi bulunamadı' });
   // Düz parola üretilip döndürülmez: tek kullanımlık sıfırlama bağlantısı verilir. İşletmenin e-postası kayıtlıysa
-  // bağlantı ona postalananır (yanıtta gösterilmez); değilse bağlantı yalnız burada bir kez gösterilip paylaşılır.
+  // bağlantı ona postalananır (yanıtta gösterilmez); değilse ya da e-posta gönderilemezse bağlantı yalnız burada bir kez gösterilir.
   const ownerFull = store.q.userGet.get(owner.id); // parola özeti (ph) için tam satır gerekir
-  const rtok = auth.sign({ kind: 'pwreset', uid: owner.id, ph: String((ownerFull || {}).pass || '').slice(-12), exp: Date.now() + 30 * 60 * 1000 });
+  if (!ownerFull || !ownerFull.pass) return res.status(500).json({ error: 'işletme sahibi kaydı okunamadı' });
+  const rtok = auth.sign({ kind: 'pwreset', uid: owner.id, ph: String(ownerFull.pass).slice(-12), exp: Date.now() + 30 * 60 * 1000 });
   const resetUrl = `${require('./routes-auth').baseOrigin(req)}/login#reset=${encodeURIComponent(rtok)}`;
   store.bumpEpoch(owner.id); // sıfırlama talebi mevcut oturumları düşürür
-  const email = (t.db.notify || {}).email || '';
+  const email = String((t.db.notify || {}).email || '').trim();
   if (email && require('./mailer').enabled()) {
     const tpl = require('./mailtpl');
-    require('./mailer').send({
-      to: email,
-      subject: `🔒 ${config.BRAND || 'ScreenPano'} — Şifre Sıfırlama Talebi (${owner.username})`,
-      text: `Merhaba ${t.name},\n\nYönetim paneli hesabınız ("${owner.username}") için yeni şifre talebinde bulunuldu.\nYeni şifrenizi belirlemek için bağlantıya tıklayın (30 dakika geçerli, tek kullanımlık):\n${resetUrl}\n\nBu talebi siz başlatmadıysanız bu iletiyi dikkate almayın.`,
-      html: tpl.html({
-        title: 'Şifre Sıfırlama Talebi',
-        badge: 'Güvenlik Bildirimi', badgeColor: 'warning',
-        preheader: `${owner.username} hesabı için yeni şifre belirleme bağlantısı.`,
-        body: tpl.p(`Merhaba <b>${tpl.e(t.name)}</b>,`) +
-          tpl.p(`<b>${tpl.e(owner.username)}</b> hesabı için yeni şifre talebinde bulunuldu. Aşağıdaki tek kullanımlık bağlantıyla yeni şifrenizi belirleyebilirsiniz. Güvenlik için oturumlarınız kapatıldı.`) +
-          tpl.callout('Bu talebi siz başlatmadıysanız bu iletiyi dikkate almayın; bağlantı kullanılmadıkça şifreniz değişmez.', 'warning'),
-        cta: resetUrl, ctaLabel: 'Yeni Şifre Belirle',
-        small: 'Bağlantı tek kullanımlıktır ve 30 dakika sonra geçersiz olur.',
-      }),
-    }).catch(e => console.error('Şifre sıfırlama e-postası gönderilemedi', e.message));
-    return res.json({ ok: true, username: owner.username, sent: true });
+    try {
+      await require('./mailer').send({
+        to: email,
+        subject: `🔒 ${config.BRAND || 'ScreenPano'} — Şifre Sıfırlama Talebi (${owner.username})`,
+        text: `Merhaba ${t.name},\n\nYönetim paneli hesabınız ("${owner.username}") için yeni şifre talebinde bulunuldu.\nYeni şifrenizi belirlemek için bağlantıya tıklayın (30 dakika geçerli, tek kullanımlık):\n${resetUrl}\n\nBu talebi siz başlatmadıysanız bu iletiyi dikkate almayın.`,
+        html: tpl.html({
+          title: 'Şifre Sıfırlama Talebi',
+          badge: 'Güvenlik Bildirimi', badgeColor: 'warning',
+          preheader: `${owner.username} hesabı için yeni şifre belirleme bağlantısı.`,
+          body: tpl.p(`Merhaba <b>${tpl.e(t.name)}</b>,`) +
+            tpl.p(`<b>${tpl.e(owner.username)}</b> hesabı için yeni şifre talebinde bulunuldu. Aşağıdaki tek kullanımlık bağlantıyla yeni şifrenizi belirleyebilirsiniz. Güvenlik için oturumlarınız kapatıldı.`) +
+            tpl.callout('Bu talebi siz başlatmadıysanız bu iletiyi dikkate almayın; bağlantı kullanılmadıkça şifreniz değişmez.', 'warning'),
+          cta: resetUrl, ctaLabel: 'Yeni Şifre Belirle',
+          small: 'Bağlantı tek kullanımlıktır ve 30 dakika sonra geçersiz olur.',
+        }),
+      });
+      return res.json({ ok: true, username: owner.username, sent: true });
+    } catch (e) {
+      const mailError = String((e && e.message) || e || 'SMTP hatası').split('\n')[0];
+      console.error('Şifre sıfırlama e-postası gönderilemedi:', owner.username, email, mailError);
+      return res.json({ ok: true, username: owner.username, sent: false, resetUrl, mailError });
+    }
   }
   res.json({ ok: true, username: owner.username, sent: false, resetUrl });
 });

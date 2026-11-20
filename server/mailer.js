@@ -2,25 +2,30 @@
 //   SMTP_PORT=465            SSL (önerilen)
 //   SMTP_PORT=587            SMTP_STARTTLS ile: true = şifreleme zorunlu, false = şifresiz (Natro gibi
 //                            587'de STARTTLS desteklemeyen sağlayıcılar), boş = sunucu destekliyorsa kullan
+//   SMTP_TLS_INSECURE=true   Sertifika doğrulamasını esnetir (yalnız sağlayıcının sertifikası süresini
+//                            doldurduğunda geçici kullanılır; sertifika yenilenince kaldırın)
 // Bazı sunucu sağlayıcıları (ör. Hetzner) 465'i engeller: bağlantı kurulamazsa diğer port denenir.
 // STARTTLS el sıkışması bozuksa (ve zorunlu tutulmadıysa) aynı port şifresiz denenir. İşe yarayan ayar hatırlanır.
 const nodemailer = require('nodemailer');
 const config = require('./config');
 const e = process.env;
-const enabled = () => !!e.SMTP_HOST;
-const auth = () => (e.SMTP_USER ? { user: e.SMTP_USER, pass: e.SMTP_PASS } : undefined);
-const startTls = () => { const v = String(e.SMTP_STARTTLS || '').toLowerCase(); return ['true', '1', 'on', 'evet'].includes(v) ? 'require' : ['false', '0', 'off', 'hayir', 'hayır', 'yok'].includes(v) ? 'off' : 'auto'; };
-const primary = () => { const port = Number(e.SMTP_PORT) || 587, secure = e.SMTP_SECURE === 'true' || port === 465; return { port, secure, tls: secure ? 'ssl' : startTls() }; };
+const env = k => String(e[k] || '').trim();
+const enabled = () => !!env('SMTP_HOST');
+const auth = () => (env('SMTP_USER') ? { user: env('SMTP_USER'), pass: e.SMTP_PASS } : undefined);
+const startTls = () => { const v = env('SMTP_STARTTLS').toLowerCase(); return ['true', '1', 'on', 'evet'].includes(v) ? 'require' : ['false', '0', 'off', 'hayir', 'hayır', 'yok'].includes(v) ? 'off' : 'auto'; };
+const tlsInsecure = () => ['true', '1', 'on', 'evet'].includes(env('SMTP_TLS_INSECURE').toLowerCase());
+const primary = () => { const port = Number(env('SMTP_PORT')) || 587, secure = env('SMTP_SECURE') === 'true' || port === 465; return { port, secure, tls: secure ? 'ssl' : startTls() }; };
 let working = null; // { port, secure, tls }
 
 const transport = o => nodemailer.createTransport({
-  host: e.SMTP_HOST, port: o.port, secure: o.secure,
+  host: env('SMTP_HOST'), port: o.port, secure: o.secure,
   requireTLS: o.tls === 'require', ignoreTLS: o.tls === 'off',
+  ...(tlsInsecure() ? { tls: { rejectUnauthorized: false } } : {}),
   auth: auth(), connectionTimeout: 12000, greetingTimeout: 12000, socketTimeout: 20000,
 });
-const isConnErr = err => /timeout|ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ESOCKET|ECONNECTION|EDNS/i.test(`${err && err.code} ${err && err.message}`);
-const isTlsErr = err => /STARTTLS|ETLS|TLS|SSL|certificate|wrong version|handshake/i.test(`${err && err.code} ${err && err.message}`);
-const label = o => `${o.port} (${{ ssl: 'SSL', require: 'STARTTLS', auto: 'STARTTLS varsa', off: 'şifresiz' }[o.tls]})`;
+const isConnErr = err => /timeout|ETIMEDOUT|ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ENETUNREACH|ESOCKET|ECONNECTION|EDNS|ENOTFOUND|EAI_AGAIN|ECONNABORTED|EPIPE/i.test(`${err && err.code} ${err && err.message}`);
+const isTlsErr = err => /STARTTLS|ETLS|TLS|SSL|certificate|wrong version|handshake|altnames|self[- ]signed|unable to verify|depth zero|UNABLE_TO_VERIFY|CERT_/i.test(`${err && err.code} ${err && err.message}`);
+const label = o => `${o.port} (${{ ssl: 'SSL', require: 'STARTTLS', auto: 'STARTTLS varsa', off: 'şifresiz' }[o.tls]}${tlsInsecure() && o.tls !== 'off' ? ', sertifika esnek' : ''})`;
 
 function plan() {
   const p = primary(), list = [p];
@@ -35,10 +40,10 @@ function plan() {
 async function send(msg) {
   if (!enabled()) throw new Error('SMTP ayarlı değil');
   const brand = config.BRAND || 'ScreenPano';
-  const rawFrom = (msg && msg.from) || e.SMTP_FROM || e.SMTP_USER || '';
+  const rawFrom = String((msg && msg.from) || env('SMTP_FROM') || env('SMTP_USER') || '').trim();
   const from = rawFrom && !rawFrom.includes('<') ? `"${brand}" <${rawFrom}>` : rawFrom;
-  const mail = { from, ...msg };
-  const tries = working ? [working] : plan();
+  const mail = { ...msg, from };
+  const tries = working ? [working, ...plan().filter(x => label(x) !== label(working))] : plan();
   let last;
   for (let i = 0; i < tries.length; i++) {
     const o = tries[i];

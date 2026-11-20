@@ -942,6 +942,7 @@ async function resetPw(id) {
   try {
     const j = await api('POST', `/tenants/${id}/password`, {});
     if (j.sent) return toast(`${j.username} için sıfırlama bağlantısı e-postayla gönderildi`);
+    if (j.mailError) toast(`E-posta gönderilemedi: ${j.mailError}`, true);
     UI.ask(j.resetUrl, { title: `Şifre Sıfırlama Bağlantısı — ${j.username}`, cancel: 'Kapat', ok: 'Kopyala' }).then(ok => {
       if (ok) navigator.clipboard.writeText(j.resetUrl).then(() => toast('Kopyalandı')).catch(() => {});
     });

@@ -234,6 +234,29 @@ test('süper parola sıfırlama: düz parola dönmez, bağlantı tek kullanıml�
   assert.equal(again.status, 400);
 });
 
+test('e-posta ile şifre sıfırlama: şubeli işletmede gerçek ph üretilir, sıfırlama ve yeni giriş çalışır', async () => {
+  await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
+  const un = 'mailrst' + Date.now();
+  let r = await req('POST', '/api/super/tenants', { name: 'Mail Sıfırla Kafe', username: un, password: 'parola-12345', plan: 'pro', days: 30 });
+  assert.equal(r.status, 200);
+  await req('POST', '/api/auth/login', { username: un, password: 'parola-12345' });
+  r = await req('PUT', '/api/admin/notify', { email: 'Sifirla-Test@Example.com', offline: true, online: true });
+  assert.equal(r.status, 200);
+  r = await req('POST', '/api/admin/branches', { name: 'Mail Şube' });
+  assert.equal(r.status, 200);
+  await req('POST', '/api/auth/logout', {});
+  r = await req('POST', '/api/auth/forgot', { identifier: '  sifirla-test@example.com  ' });
+  assert.equal(r.status, 200);
+  assert.ok(typeof r.j.resetUrl === 'string' && r.j.resetUrl.includes('#reset='), 'resetUrl gelmeli');
+  const token = decodeURIComponent(r.j.resetUrl.split('#reset=')[1]);
+  r = await req('POST', '/api/auth/reset', { token, password: 'yeni-parola-88' });
+  assert.equal(r.status, 200, JSON.stringify(r.j));
+  r = await req('POST', '/api/auth/login', { username: un, password: 'yeni-parola-88' });
+  assert.equal(r.status, 200);
+  const again = await req('POST', '/api/auth/reset', { token, password: 'baska-parola-2' });
+  assert.equal(again.status, 400);
+});
+
 test('kota: Content-Length başlığı olmadan (chunked) yükleme reddedilir ve dosya silinir', async () => {
   await req('POST', '/api/auth/login', { username: 'admin', password: SUPER_PASS });
   const un = 'kota' + Date.now();

@@ -57,8 +57,9 @@ R2_SECRET_ACCESS_KEY=...
 R2_BUCKET=screenpano-media
 # R2_PUBLIC_URL=https://media.screenpano.com   (kovayı alan adına bağladıysanız)
 # Çevrimdışı uyarı e-postaları
-# Natro kurumsal e-posta: önce 465 (SSL); sunucunuz 465'i engelliyorsa uygulama 587'yi kendisi dener.
-# Natro 587'de STARTTLS desteklemez; 587'yi doğrudan kullanacaksanız SMTP_PORT=587 ve SMTP_STARTTLS=false yazın.
+# Natro kurumsal e-posta: önce 465 (SSL); sunucunuz (ör. Hetzner) 465'i engelliyorsa doğrudan 587 için
+# SMTP_PORT=587 ve SMTP_STARTTLS=false veya SMTP_STARTTLS=true kullanın. Sağlayıcı 587 STARTTLS
+# sertifikası süresi dolduysa sertifika yenilenene kadar geçici SMTP_TLS_INSECURE=true eklenebilir.
 SMTP_HOST=mail.kurumsaleposta.com
 SMTP_PORT=465
 SMTP_USER=bildirim@screenpano.com

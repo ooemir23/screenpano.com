@@ -347,22 +347,46 @@ r.post('/forgot', async (req, res) => {
   const idRaw = String((req.body && (req.body.identifier || req.body.username || req.body.email)) || '').trim();
   if (!idRaw) return res.status(400).json({ error: 'Kullanıcı adınızı veya kayıtlı e-posta adresinizi girin' });
   if (auth.tooMany(ip, idRaw)) return res.status(429).json({ error: 'Çok fazla deneme. Lütfen 10 dakika sonra tekrar deneyin.' });
+  if (config.APP_ENV !== 'test' && !mailer.enabled()) {
+    console.error('[FORGOT MAIL] SMTP ayarlı değil (SMTP_HOST tanımlı değil)');
+    return res.status(503).json({ error: 'E-posta gönderimi sunucuda ayarlı değil. Şifre sıfırlama için destek hattıyla iletişime geçin.' });
+  }
   auth.noteFail(ip, idRaw);
 
   let u = store.q.userByName.get(idRaw.toLowerCase());
   let t = u && u.tenant_id ? tenants.get(u.tenant_id) : null;
   if (!u && idRaw.includes('@')) {
     const emLow = idRaw.toLowerCase();
-    t = tenants.all().find(x => x.db && x.db.notify && String(x.db.notify.email || '').toLowerCase() === emLow) || null;
-    if (t) {
-      const users = store.q.usersOf.all(t.id);
-      u = users.find(x => x.role === 'owner') || users[0] || null;
+    const hits = [];
+    for (const x of tenants.all()) {
+      if (String((x.db && x.db.notify && x.db.notify.email) || '').trim().toLowerCase() !== emLow) continue;
+      const users = store.q.usersOf.all(x.id);
+      let cand = users.find(z => z.role === 'owner') || users[0] || null;
+      const direct = !!cand;
+      if (!cand && x.org_id) {
+        for (const b of store.q.orgTenants.all(x.org_id)) {
+          const bu = store.q.usersOf.all(b.id);
+          cand = bu.find(z => z.role === 'owner') || bu[0] || null;
+          if (cand) break;
+        }
+      }
+      if (cand) hits.push({ t: x, u: cand, direct });
+    }
+    hits.sort((a, b) =>
+      (b.direct ? 1 : 0) - (a.direct ? 1 : 0) ||
+      ((b.t.db.notify || {}).verified ? 1 : 0) - ((a.t.db.notify || {}).verified ? 1 : 0) ||
+      (b.u.last_login || 0) - (a.u.last_login || 0)
+    );
+    const hit = hits[0];
+    if (hit) {
+      t = hit.t;
+      u = store.q.userGet.get(hit.u.id) || null;
     }
   }
   const genericMsg = 'Bilgiler eşleşiyorsa şifre sıfırlama bağlantısı işletmenin kayıtlı e-posta adresine gönderildi.';
-  if (!u) return res.json({ ok: true, message: genericMsg });
+  if (!u || !u.pass) return res.json({ ok: true, message: genericMsg });
 
-  const email = (t && t.db && t.db.notify && t.db.notify.email) || '';
+  const email = String((t && t.db && t.db.notify && t.db.notify.email) || '').trim();
   const rtok = auth.sign({ kind: 'pwreset', uid: u.id, ph: String(u.pass || '').slice(-12), exp: Date.now() + 30 * 60 * 1000 });
   const resetUrl = `${baseOrigin(req)}/login#reset=${encodeURIComponent(rtok)}`;
 
@@ -394,6 +418,7 @@ r.post('/forgot', async (req, res) => {
       });
       return res.json({ ok: true, sent: true, message: genericMsg });
     } catch (e) {
+      console.error('[FORGOT MAIL]', u.username, email, e && e.message ? e.message : e);
       return res.status(500).json({ error: 'E-posta gönderilemedi: ' + (e.message || 'SMTP hatası') });
     }
   }
@@ -412,7 +437,7 @@ r.post('/reset', (req, res) => {
   const pw = String(password || '');
   if (pw.length < 8) return res.status(400).json({ error: 'Yeni şifre en az 8 karakter olmalı' });
   const p = auth.verify(String(token || '').trim());
-  if (!p || p.kind !== 'pwreset' || !p.uid) {
+  if (!p || p.kind !== 'pwreset' || !p.uid || !p.ph) {
     auth.noteFail(ip);
     return res.status(400).json({ error: 'Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş' });
   }
