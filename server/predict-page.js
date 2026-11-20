@@ -76,6 +76,19 @@ details{font-size:12.5px;color:var(--mut)}details summary{cursor:pointer;color:v
 .cds .cl{display:grid;grid-template-columns:1fr;gap:6px}.cds .pkb{min-height:40px;font-size:12.5px}.cds .pkb img{width:18px;height:18px;object-fit:contain;flex:none}
 .cdi{display:inline-block;width:12px;height:16px;border-radius:2px;vertical-align:-3px}.cdi.y{background:#f5c542}.cdi.r{background:#e5484d}
 .addb{border:1px dashed var(--bd);background:transparent;color:var(--a2);border-radius:10px;font:700 13px inherit;padding:9px;cursor:pointer;min-height:40px}
+.tm .rk{font-size:11.5px;font-weight:700;color:var(--mut)}
+.res{display:grid;grid-template-columns:1fr auto 1fr;border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-top:6px}
+.res button{border:0;background:transparent;color:var(--tx);padding:9px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;font:inherit}
+.res button+button{border-left:1px solid var(--bd)}.res button b{font-size:17px;font-weight:800}.res button small{font-size:11.5px;color:var(--mut);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.res button[data-r=d]{padding:9px 16px}.res button.on{background:var(--a2);color:#111}.res button.on small{color:#111}
+.xt{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:12px;border:1px dashed var(--bd);background:transparent;color:var(--a2);border-radius:12px;font:700 13.5px inherit;padding:10px;cursor:pointer}
+.xt{flex-direction:column;gap:1px}.xt span{color:var(--mut);font-weight:600;font-size:12px}.tabs button{font-size:13px;padding:9px 3px}
+.rcb{margin-top:12px;text-align:center}.rcb label{margin:0 0 6px}.rcb .seg{max-width:300px;margin:0 auto}
+#sheet .gc{flex:none;font-size:12.5px;font-weight:800;color:var(--tx);background:var(--card);border-radius:99px;padding:3px 9px;white-space:nowrap}
+.lt{width:100%;border-collapse:collapse;font-size:13px}.lt th{font-size:11px;color:var(--mut);font-weight:700;padding:6px 3px;text-align:center;border-bottom:1px solid var(--bd)}
+.lt td{padding:7px 3px;text-align:center;border-bottom:1px solid var(--bd);font-weight:600}.lt td:last-child{font-weight:800}.lt tr:last-child td{border:0}
+.lt td.t{text-align:left;font-weight:700;max-width:0;width:100%}.lt td.t div{display:flex;align-items:center;gap:7px;overflow:hidden}.lt td.t img{width:20px;height:20px;object-fit:contain;flex:none}.lt td.t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lt tr.hl td{background:color-mix(in srgb,var(--a2) 14%,transparent)}.lt td.n{color:var(--mut);font-weight:800}
 [hidden]{display:none!important}
 </style></head><body><main>
 <header>${logo ? `<img src="${esc(logo)}" alt="">` : ''}<h1>${esc(name)} Tahmin Ligi</h1><p id="wk">Süper Lig</p></header>
@@ -102,10 +115,10 @@ details{font-size:12.5px;color:var(--mut)}details summary{cursor:pointer;color:v
 </section>
 <div class="acc" id="acc" hidden><span id="accT"></span><span><button class="btn sm ghost" id="out">Çıkış</button></span></div>
 <label class="acc" id="mailR" hidden style="justify-content:flex-start;cursor:pointer"><input type="checkbox" id="mailC" style="width:18px;height:18px;margin:0"> Haftalık puan durumu e-postası</label>
-<nav class="tabs" id="tabs" hidden><button data-t="m" class="on">Maçlar</button><button data-t="b">Puan durumu</button><button data-t="k">Kurallar</button></nav>
-<section id="t-m"></section><section id="t-b" hidden></section>
+<nav class="tabs" id="tabs" hidden><button data-t="m" class="on">Maçlar</button><button data-t="b">Puan durumu</button><button data-t="l">Lig tablosu</button><button data-t="k">Kurallar</button></nav>
+<section id="t-m"></section><section id="t-b" hidden></section><section id="t-l" hidden></section>
 <section id="t-k" hidden><div class="card"><b>Puanlar</b><table id="ptsT"></table>
-  <p class="note">İstediğin maçlara tahmin girersin; maç sayısı zorunlu değildir. Her maçta alanların hepsini doldurman gerekmez, yalnız doldurduklarından puan alırsın. Tahminler maç başlayana kadar değiştirilebilir.</p>
+  <p class="note">İstediğin maçlara tahmin girersin; maç sayısı zorunlu değildir. Her maçta maç sonucunu (1 ev sahibi kazanır, X beraberlik, 2 deplasman kazanır) seçersin; skor ve golcü isteğe bağlıdır, ekstra puan getirir. Tam skoru bilirsen sonuç puanı yerine tam skor puanını alırsın. Yalnız doldurduğun alanlardan puan alırsın. Tahminler maç başlayana kadar değiştirilebilir.</p>
   <p class="note">Hafta Salı'dan Pazartesi'ye kadardır. Haftanın birincisi, o haftanın maçlarından en çok puanı toplayandır. Eşitlikte daha çok tam skor bilen, o da eşitse tahminlerini daha önce tamamlayan öne geçer. Kura veya çekiliş yoktur; katılım ücretsizdir ve alışveriş şartı yoktur.</p>
   <p class="note">Skoru kaç gol tahmin edersen o kadar golcü seçebilirsin; her golün golcüsü yalnız o golü atan takımdan seçilir. Aynı oyuncuyu birden çok gole yazabilirsin; oyuncu maçta kaç gol attıysa o kadarı puan alır. Kendi kalesine atılan gol sayılmaz. Kırmızı kart için yalnız "Çıkar" ya da "Çıkmaz" dersin (ikinci sarıdan gelen kırmızı da sayılır). Maç sonuçları ve istatistikler maçtan sonra otomatik işlenir. Ertelenen maçtan puan çıkmaz.</p>
   <button class="btn ghost" id="del" hidden>Hesabımı ve tahminlerimi sil</button></div></section>
@@ -136,11 +149,20 @@ function render() {
   $('mailR').hidden = !inn; if (inn) $('mailC').checked = S.me.mail !== false;
   if (inn) $('accT').textContent = S.me.nick + ' · ' + S.me.email;
   for (const b of $('tabs').children) b.classList.toggle('on', b.dataset.t === tab);
-  $('t-m').hidden = !inn || tab !== 'm'; $('t-b').hidden = inn ? tab !== 'b' : false; $('t-k').hidden = inn ? tab !== 'k' : false;
+  $('t-m').hidden = !inn || tab !== 'm'; $('t-b').hidden = inn ? tab !== 'b' : false; $('t-l').hidden = !inn || tab !== 'l'; $('t-k').hidden = inn ? tab !== 'k' : false;
   const P = S.pts;
-  $('ptsT').innerHTML = [['Tam skor', P.exact], ['Doğru sonuç (1 / X / 2)', P.result], ['Her doğru golcü', P.goal], ['Kırmızı kart çıkar / çıkmaz', P.red]].map(([a, b]) => '<tr><td>' + a + '</td><td>' + b + ' puan</td></tr>').join('');
-  if (inn) renderMatches();
+  $('ptsT').innerHTML = [['Doğru maç sonucu (1 / X / 2)', P.result], ['Tam skor (sonuç dahil)', P.exact], ['Her doğru golcü', P.goal], ['Kırmızı kart çıkar / çıkmaz', P.red]].map(([a, b]) => '<tr><td>' + a + '</td><td>' + b + ' puan</td></tr>').join('');
+  if (inn) { renderMatches(); renderTable(); }
   renderBoard();
+}
+// gerçek Süper Lig puan durumu; bu haftanın tahmin açık maçlarındaki takımlar vurgulanır
+function renderTable() {
+  const T = S.table || [];
+  if (!T.length) { $('t-l').innerHTML = '<div class="card empty">Puan durumu şu an alınamadı; biraz sonra tekrar dene.</div>'; return; }
+  const wk = new Set(); allM().filter(m => !m.locked).forEach(m => { wk.add(m.home.id); wk.add(m.away.id); });
+  $('t-l').innerHTML = '<div class="card" style="padding:8px 10px"><table class="lt"><tr><th>#</th><th style="text-align:left">Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>Av</th><th>P</th></tr>'
+    + T.map(r => { const av = r.gf - r.ga; return '<tr' + (wk.has(r.id) ? ' class="hl"' : '') + '><td class="n">' + r.rank + '</td><td class="t"><div>' + (r.logo ? '<img src="' + E(r.logo) + '" alt="">' : '') + '<span>' + E(r.name) + '</span></div></td><td>' + r.gp + '</td><td>' + r.w + '</td><td>' + r.d + '</td><td>' + r.l + '</td><td>' + (av > 0 ? '+' : '') + av + '</td><td>' + r.pts + '</td></tr>'; }).join('')
+    + '</table><p class="note" style="text-align:center">Süper Lig · O oynanan, G galibiyet, B beraberlik, M mağlubiyet, Av averaj, P puan. Vurgulu takımların tahmin açık maçı var.</p></div>';
 }
 const POS = { F: ['FV', 'Forvetler'], M: ['OS', 'Orta sahalar'], D: ['DF', 'Defans oyuncuları'], G: ['KL', 'Kaleciler'] };
 const psChip = p => '<span class="ps ' + (POS[p] ? p : 'X') + '">' + (POS[p] ? POS[p][0] : '–') + '</span>';
@@ -148,7 +170,8 @@ function pickRows(m) {
   const p = m.pick, o = m.pts; if (!p) return '<div class="note">Bu maça tahmin girmedin.</div>';
   const pp = v => o ? '<span class="p' + (v ? '' : ' z') + '">' + (v ? '+' + v : '0') + '</span>' : '<span class="p z">–</span>';
   let h = '<div class="mine">';
-  if (p.h != null) h += '<div><span>Skor: ' + p.h + ' – ' + p.a + '</span>' + pp(o && o.score) + '</div>';
+  const r = p.r || (p.h != null ? (p.h > p.a ? 'h' : p.h < p.a ? 'a' : 'd') : '');
+  if (r || p.h != null) h += '<div><span>' + (r ? 'Sonuç: ' + resLabel(m, r) : '') + (p.h != null ? (r ? ' · ' : '') + 'Skor: ' + p.h + ' – ' + p.a : '') + '</span>' + pp(o && o.score) + '</div>';
   const gl = p.gl || (p.g ? [{ g: p.g, gn: p.gn }] : []);
   gl.forEach((x, i) => {
     const sl = o && o.slots ? o.slots[i] : null, tm = x.s ? (x.s === 'h' ? m.home.name : m.away.name) : '';
@@ -158,6 +181,8 @@ function pickRows(m) {
   if (o) h += '<div><b>Bu maçtan</b><span class="tot">' + o.total + ' puan</span></div>';
   return h + '</div>';
 }
+const resLabel = (m, r) => r === 'h' ? '1 (' + E(m.home.name) + ' kazanır)' : r === 'a' ? '2 (' + E(m.away.name) + ' kazanır)' : 'X (beraberlik)';
+const scoreR = d => (d.h == null || d.a == null ? '' : d.h > d.a ? 'h' : d.h < d.a ? 'a' : 'd');
 const allM = () => [...S.matches, ...(S.next ? S.next.matches : [])];
 const plOf = (mid, side, id) => { const sq = SQ[mid]; if (!sq || !id) return null; return (sq[side === 'h' ? 'home' : 'away'].players || []).find(x => x.id === id) || null; };
 // skor kadar gol kutusu: her kutuda golcü; yalnız golü atan takımın oyuncuları
@@ -186,16 +211,23 @@ function matchCard(m) {
   if (!d.gl && d.g) d.gl = [];
   const st = m.st === 'in' ? '<span class="badge live">Canlı</span>' : m.st === 'post' ? '<span class="badge">Bitti</span>' : m.st === 'off' ? '<span class="badge">Ertelendi</span>' : '';
   const mid = m.sc ? '<div class="s">' + m.sc[0] + ' – ' + m.sc[1] + '</div>' + st : '<div class="t">' + when(m.at) + '</div>' + (m.pick ? '<span class="badge ok">Tahmin var</span>' : '');
-  let h = '<div class="card" data-m="' + m.id + '"><div class="m-top"><div class="tm">' + (m.home.logo ? '<img src="' + E(m.home.logo) + '" alt="">' : '') + '<span>' + E(m.home.name) + '</span></div><div class="mid">' + mid + '</div><div class="tm">' + (m.away.logo ? '<img src="' + E(m.away.logo) + '" alt="">' : '') + '<span>' + E(m.away.name) + '</span></div></div>';
+  const tmH = t => '<div class="tm">' + (t.logo ? '<img src="' + E(t.logo) + '" alt="">' : '') + '<span>' + E(t.name) + '</span>' + (t.rank ? '<span class="rk">Ligde ' + t.rank + '.</span>' : '') + '</div>';
+  let h = '<div class="card" data-m="' + m.id + '"><div class="m-top">' + tmH(m.home) + '<div class="mid">' + mid + '</div>' + tmH(m.away) + '</div>';
   if (m.locked) return h + pickRows(m) + '</div>';
   const stp = (k, v) => '<div class="step"><button type="button" data-st="' + k + '" data-d="-1">−</button><input data-f="' + k + '" inputmode="numeric" value="' + (v == null ? '' : v) + '" placeholder="–" maxlength="2"><button type="button" data-st="' + k + '" data-d="1">+</button></div>';
-  h += '<label>Skor</label><div class="sc">' + stp('h', d.h) + '<span class="x">–</span>' + stp('a', d.a) + '</div>';
-  h += '<div class="gls" data-gls>' + goalsHtml(m, d) + '</div>';
-  h += '<div class="two"><div><label>Kırmızı kart</label><div class="seg"><button type="button" data-rc="1" class="' + (d.rc === true ? 'on' : '') + '">Çıkar</button><button type="button" data-rc="0" class="' + (d.rc === false ? 'on' : '') + '">Çıkmaz</button></div></div></div>';
+  if (!d.r && d.h != null) d.r = scoreR(d);
+  const rb = (k, b, sm) => '<button type="button" data-r="' + k + '" class="' + (d.r === k ? 'on' : '') + '"><b>' + b + '</b><small>' + sm + '</small></button>';
+  h += '<label>Maç sonucu</label><div class="res">' + rb('h', '1', E(m.home.name)) + rb('d', 'X', 'Beraberlik') + rb('a', '2', E(m.away.name)) + '</div>';
+  const ex = d.h != null || (d.gl || []).some(x => x.g) || d.xo;
+  h += '<button type="button" class="xt" data-xt' + (ex ? ' hidden' : '') + '>+ Skor ve golcü tahmini <span>(isteğe bağlı · ekstra puan)</span></button>';
+  h += '<div data-xb' + (ex ? '' : ' hidden') + '><label>Skor <span style="opacity:.75">(isteğe bağlı)</span></label><div class="sc">' + stp('h', d.h) + '<span class="x">–</span>' + stp('a', d.a) + '</div>';
+  h += '<div class="gls" data-gls>' + goalsHtml(m, d) + '</div></div>';
+  h += '<div class="rcb"><label>Kırmızı kart</label><div class="seg"><button type="button" data-rc="1" class="' + (d.rc === true ? 'on' : '') + '">Çıkar</button><button type="button" data-rc="0" class="' + (d.rc === false ? 'on' : '') + '">Çıkmaz</button></div></div>';
   h += '<button class="btn" data-save="' + m.id + '">' + (m.pick ? 'Tahmini güncelle' : 'Tahmini kaydet') + '</button><div class="saved" data-ok="' + m.id + '"></div><div class="err" data-er="' + m.id + '"></div></div>';
   if (!SQ[m.id]) loadSquad(m.id);
   return h;
 }
+const syncR = (card, d) => { for (const b of card.querySelectorAll('[data-r]')) b.classList.toggle('on', d.r === b.dataset.r); };
 function refreshGoals(card, id) { const m = allM().find(x => x.id === id), el = card.querySelector('[data-gls]'); if (m && el) el.innerHTML = goalsHtml(m, draft[id]); }
 async function loadSquad(id) {
   if (SQ[id] === 0) return; SQ[id] = 0;
@@ -209,7 +241,7 @@ function openSheet(mid, side, i, k) {
   { const own = d.gl.filter(x => x.s === side); while (own.length <= i) { const n = { s: side }; d.gl.push(n); own.push(n); } SH = { mid, side, slot: own[i], k, q: '' }; }
   const tm = side === 'h' ? m.home : m.away;
   const title = (i + 1) + '. golü kim atar?';
-  const sub = card ? E(m.home.name) + ' – ' + E(m.away.name) : E(tm.name) + ' oyuncuları';
+  const sub = card ? E(m.home.name) + ' – ' + E(m.away.name) : E(tm.name) + ' oyuncuları · ⚽ bu sezon ligde attığı gol';
   const el = document.createElement('div'); el.id = 'sheet';
   el.innerHTML = '<div class="sh" role="dialog" aria-modal="true"><div class="hd"><div class="grab"></div><div class="tt">' + (card ? '<span class="cdi ' + k + '" style="width:22px;height:30px;border-radius:4px"></span>' : tm.logo ? '<img src="' + E(tm.logo) + '" alt="">' : '') + '<div><b>' + title + '</b><small>' + sub + '</small></div><button class="x" data-shx aria-label="Kapat">×</button></div><input type="search" id="shq" placeholder="Oyuncu ara" autocomplete="off"></div><div class="ls" id="shl"></div></div>';
   document.body.appendChild(el); document.body.style.overflow = 'hidden';
@@ -232,7 +264,7 @@ function drawSheet() {
       if (!ps.length) continue;
       th += '<div class="gp">' + psChip(pos) + (POS[pos] ? POS[pos][1] : 'Diğer') + '</div>';
       th += ps.map(p => { const off = p.id === other || taken.has(p.id);
-        return '<button class="pl' + (p.id === cur ? ' sel' : '') + '" data-pl="' + p.id + '" data-sd="' + side + '"' + (off ? ' disabled' : '') + '><span class="jn">' + (p.no || '–') + '</span><span class="pn">' + E(p.name) + '</span>' + (p.id === cur ? '<span class="ck">✓</span>' : p.id === other ? '<small style="color:var(--mut)">' + (SH.k === 'g' ? 'asist' : 'golcü') + '</small>' : taken.has(p.id) ? '<small style="color:var(--mut)">seçili</small>' : '') + '</button>'; }).join('');
+        return '<button class="pl' + (p.id === cur ? ' sel' : '') + '" data-pl="' + p.id + '" data-sd="' + side + '"' + (off ? ' disabled' : '') + '><span class="jn">' + (p.no || '–') + '</span><span class="pn">' + E(p.name) + '</span>' + (p.gl ? '<span class="gc" title="Bu sezon ligde attığı gol">⚽ ' + p.gl + '</span>' : '') + (p.id === cur ? '<span class="ck">✓</span>' : p.id === other ? '<small style="color:var(--mut)">' + (SH.k === 'g' ? 'asist' : 'golcü') + '</small>' : taken.has(p.id) ? '<small style="color:var(--mut)">seçili</small>' : '') + '</button>'; }).join('');
     }
     if (th) { any = true; h += (card ? '<div class="tg">' + (tm.logo ? '<img src="' + E(tm.logo) + '" alt="">' : '') + E(tm.name) + '</div>' : '') + th; }
   }
@@ -323,17 +355,26 @@ document.addEventListener('click', async e => {
   const bv = e.target.closest('[data-bv]'); if (bv) { bView = bv.dataset.bv; renderBoard(); return; }
   const card = e.target.closest('[data-m]'); if (!card) return; const id = card.dataset.m, d = draft[id] || (draft[id] = {});
   const st = e.target.closest('[data-st]');
-  if (st) { const k = st.dataset.st, inp = card.querySelector('[data-f="' + k + '"]'); let v = inp.value === '' ? (+st.dataset.d > 0 ? -1 : 1) : +inp.value; v = Math.max(0, Math.min(10, v + +st.dataset.d)); inp.value = v; d[k] = v; { if (d.h == null && k === 'a') { d.h = 0; card.querySelector('[data-f="h"]').value = 0; } if (d.a == null && k === 'h') { d.a = 0; card.querySelector('[data-f="a"]').value = 0; } refreshGoals(card, id); } return; }
+  if (st) { const k = st.dataset.st, inp = card.querySelector('[data-f="' + k + '"]'); let v = inp.value === '' ? (+st.dataset.d > 0 ? -1 : 1) : +inp.value; v = Math.max(0, Math.min(10, v + +st.dataset.d)); inp.value = v; d[k] = v; { if (d.h == null && k === 'a') { d.h = 0; card.querySelector('[data-f="h"]').value = 0; } if (d.a == null && k === 'h') { d.a = 0; card.querySelector('[data-f="a"]').value = 0; } refreshGoals(card, id); d.r = scoreR(d); syncR(card, d); } return; }
   const pk = e.target.closest('[data-pk]'); if (pk) { openSheet(id, pk.dataset.sd, +pk.dataset.i, pk.dataset.pk); return; }
+  if (e.target.closest('[data-xt]')) { d.xo = 1; card.querySelector('[data-xt]').hidden = true; card.querySelector('[data-xb]').hidden = false; return; }
+  const rr = e.target.closest('[data-r]');
+  if (rr) {
+    d.r = d.r === rr.dataset.r ? undefined : rr.dataset.r;
+    // seçilen sonuçla uyuşmayan skor ve golcüler silinir
+    if (d.h != null && scoreR(d) !== d.r) { d.h = d.a = undefined; d.gl = []; card.querySelector('[data-f="h"]').value = ''; card.querySelector('[data-f="a"]').value = ''; refreshGoals(card, id); }
+    syncR(card, d); return;
+  }
   const rc = e.target.closest('[data-rc]');
   if (rc) { const v = rc.dataset.rc === '1'; d.rc = d.rc === v ? undefined : v; for (const b of card.querySelectorAll('[data-rc]')) b.classList.toggle('on', d.rc === (b.dataset.rc === '1')); return; }
   const sv = e.target.closest('[data-save]');
   if (sv) {
     const er = card.querySelector('[data-er]'), ok = card.querySelector('[data-ok]'); er.textContent = ''; ok.textContent = '';
     if ((d.h == null) !== (d.a == null)) { er.textContent = 'Skor için iki takımın golünü de yaz'; return; }
+    if (d.h != null) d.r = scoreR(d);
     sv.disabled = true;
     try {
-      const j = await api('POST', '/pick', { mid: id, h: d.h, a: d.a, gl: (d.gl || []).filter(x => x.g), rc: d.rc });
+      const j = await api('POST', '/pick', { mid: id, r: d.r, h: d.h, a: d.a, gl: (d.gl || []).filter(x => x.g), rc: d.rc });
       const m = allM().find(x => x.id === id); if (m) m.pick = j.pick;
       ok.textContent = j.pick ? 'Kaydedildi ✓' : 'Tahmin silindi'; sv.textContent = j.pick ? 'Tahmini güncelle' : 'Tahmini kaydet';
     } catch (x) { er.textContent = x.message; if (x.status === 409) setTimeout(load, 1200); }
@@ -344,7 +385,7 @@ document.addEventListener('input', e => {
   const f = e.target.closest('[data-f]'), card = e.target.closest('[data-m]'); if (!f || !card) return;
   const d = draft[card.dataset.m] || (draft[card.dataset.m] = {}), k = f.dataset.f;
   if (f.tagName === 'SELECT') d[k] = f.value || undefined;
-  else { const v = f.value.replace(/\\D/g, '').slice(0, 2); f.value = v; d[k] = v === '' ? undefined : Math.min(10, +v); refreshGoals(card, card.dataset.m); }
+  else { const v = f.value.replace(/\\D/g, '').slice(0, 2); f.value = v; d[k] = v === '' ? undefined : Math.min(10, +v); refreshGoals(card, card.dataset.m); if (d.h != null && d.a != null) { d.r = scoreR(d); syncR(card, d); } }
 });
 document.addEventListener('change', e => { const f = e.target.closest('select[data-f]'), card = e.target.closest('[data-m]'); if (f && card) { (draft[card.dataset.m] || (draft[card.dataset.m] = {}))[f.dataset.f] = f.value || undefined; } });
 load().catch(e => { document.body.insertAdjacentHTML('beforeend', '<p class="err" style="text-align:center">' + E(e.message) + '</p>'); });

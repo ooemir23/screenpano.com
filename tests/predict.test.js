@@ -39,6 +39,13 @@ test('puanlama: tam skor 5 (sonuç puanı ayrıca eklenmez), sonuç 2, golcü he
   assert.equal(P.pointsFor({ rc: false }, { ...M, res: { ...M.res, rc: 0 } }).red, 2, 'kırmızı çıkmaz bildi');
   assert.equal(P.pointsFor({ h: 2, a: 1 }, { ...M, st: 'pre' }), null, 'bitmemiş maç puanlanmaz');
   assert.equal(P.pointsFor({ h: 2, a: 1 }, { ...M, res: null }), null, 'istatistik gelmeden puan yok');
+  // 1/X/2: skorsuz sonuç tahmini; skor girilmişse tam skor sonucu da kapsar
+  assert.equal(P.pointsFor({ r: 'h' }, M).score, 2, 'yalnız 1/X/2 doğru');
+  assert.equal(P.pointsFor({ r: 'd' }, M).score, 0, 'yalnız 1/X/2 yanlış');
+  assert.equal(P.pointsFor({ r: 'h', h: 2, a: 1 }, M).score, 5, 'sonuç + tam skor yine 5');
+  assert.equal(P.pointsFor({ r: 'h', h: 3, a: 1 }, M).score, 2, 'sonuç doğru, skor tutmadı');
+  assert.equal(P.pointsFor({ r: 'a', rc: true }, M).total, 2, 'yanlış sonuç, doğru kart');
+  assert.equal(P.pickOutcome({ h: 0, a: 0 }), 'd'); assert.equal(P.pickOutcome({ rc: true }), null);
 });
 
 test('puan durumu: puan, sonra tam skor, sonra erken tahmin; kapatılan katılımcı görünmez', () => {

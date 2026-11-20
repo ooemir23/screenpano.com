@@ -1,5 +1,5 @@
 // Tahmin Ligi (Süper Lig): müşteri ekrandaki QR'ı okutur, e-postasına gelen kodla kaydolur ve haftanın maçlarından
-// istediklerine tahmin girer (maç sayısı zorunlu değil): skor, golcü, kırmızı kart çıkar mı.
+// istediklerine tahmin girer (maç sayısı zorunlu değil): maç sonucu (1/X/2), isteğe bağlı skor ve golcü, kırmızı kart çıkar mı.
 // Puanlar sabittir (PTS). Haftanın lideri işletmeden ikram kazanır; puan durumu ekranlarda döngü arasında gösterilir.
 //
 // Veri: ESPN'in açık (resmi olmayan) Süper Lig verisi — fikstür, kadrolar ve maç sonu oyuncu istatistikleri (gol, asist, kart).
@@ -38,8 +38,8 @@ function weekLabel(key) {
 
 // ---------- veri önbelleği (tüm işletmeler ortak) ----------
 // matches: id → { id, at, wk, st: 'pre'|'in'|'post'|'off', home:{id,name,logo}, away:{…}, sc:[h,a]|null, res:{goals,assists,yc,rc}|null }
-let C = { matches: {}, squads: {} };
-try { const j = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8')); if (j && j.matches) C = { matches: j.matches, squads: j.squads || {} }; } catch (e) {}
+let C = { matches: {}, squads: {}, table: null };
+try { const j = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8')); if (j && j.matches) C = { matches: j.matches, squads: j.squads || {}, table: j.table || null }; } catch (e) {}
 let saveT = null;
 const saveCache = () => { clearTimeout(saveT); saveT = setTimeout(() => { try { fs.writeFileSync(CACHE_FILE + '.tmp', JSON.stringify(C)); fs.renameSync(CACHE_FILE + '.tmp', CACHE_FILE); } catch (e) { console.error('Tahmin ligi önbelleği yazılamadı', e.message); } }, 1500); };
 
@@ -117,29 +117,52 @@ async function refreshResults() {
   } finally { resBusy = false; }
 }
 
-// Kadro (golcü / asist seçimi için): takım başına günde bir
+// Kadro (golcü seçimi için): takım başına 6 saatte bir; gl = oyuncunun bu sezon ligde attığı gol
+const seasonGoals = a => { for (const ct of ((a.statistics || {}).splits || {}).categories || []) for (const x of ct.stats || []) if (x.name === 'totalGoals') return Math.max(0, Math.round(Number(x.value) || 0)); return 0; };
 async function squad(teamId) {
   const c = C.squads[teamId];
-  if (c && c.v === 2 && Date.now() - c.at < DAY) return c.list;
+  if (c && c.v === 3 && Date.now() - c.at < 6 * 3600e3) return c.list;
   try {
     const j = await jget(`${ESPN}/teams/${encodeURIComponent(teamId)}/roster`);
     const ORDER = { F: 0, M: 1, D: 2, G: 3 };
-    const list = (j.athletes || []).filter(a => a && a.id).map(a => ({ id: String(a.id), name: String(a.displayName || '').slice(0, 60), pos: ((a.position || {}).abbreviation || '').slice(0, 2), no: /^\d{1,3}$/.test(String(a.jersey || '')) ? String(a.jersey) : '' }))
-      .sort((a, b) => (ORDER[a.pos] ?? 9) - (ORDER[b.pos] ?? 9) || a.name.localeCompare(b.name, 'tr'));
-    C.squads[teamId] = { at: Date.now(), v: 2, list }; saveCache();
+    const list = (j.athletes || []).filter(a => a && a.id).map(a => ({ id: String(a.id), name: String(a.displayName || '').slice(0, 60), pos: ((a.position || {}).abbreviation || '').slice(0, 2), no: /^\d{1,3}$/.test(String(a.jersey || '')) ? String(a.jersey) : '', gl: seasonGoals(a) }))
+      .sort((a, b) => (ORDER[a.pos] ?? 9) - (ORDER[b.pos] ?? 9) || b.gl - a.gl || a.name.localeCompare(b.name, 'tr'));
+    C.squads[teamId] = { at: Date.now(), v: 3, list }; saveCache();
     return list;
   } catch (e) { return c ? c.list : []; }
 }
 
+// Gerçek Süper Lig puan durumu (sıra, takım kimliğiyle; maç kartındaki sıra buradan): 30 dakikada bir
+let tblBusy = false;
+async function refreshTable(force) {
+  if (tblBusy || (!force && C.table && Date.now() - C.table.at < 30 * 60e3)) return;
+  tblBusy = true;
+  try {
+    const j = await jget('https://site.api.espn.com/apis/v2/sports/soccer/' + LEAGUE + '/standings');
+    const ch = j.children || []; if (ch.length !== 1) return;
+    const num = (e, n) => { const x = (e.stats || []).find(s => s.name === n); return x ? Number(x.value) || 0 : 0; };
+    const rows = ((ch[0].standings || {}).entries || []).filter(e => e.team && e.team.id).map(e => ({
+      id: String(e.team.id), rank: num(e, 'rank'), name: trName(e.team.shortDisplayName || e.team.displayName || ''), logo: ((e.team.logos || [])[0] || {}).href || '',
+      gp: num(e, 'gamesPlayed'), w: num(e, 'wins'), d: num(e, 'ties'), l: num(e, 'losses'), gf: num(e, 'pointsFor'), ga: num(e, 'pointsAgainst'), pts: num(e, 'points'),
+    })).sort((a, b) => a.rank - b.rank);
+    if (rows.length) { C.table = { at: Date.now(), rows }; saveCache(); }
+  } catch (e) { /* bir sonraki istekte yeniden denenir */ } finally { tblBusy = false; }
+}
+const table = () => (C.table ? C.table.rows : []);
+const rankOf = id => { const r = table().find(x => x.id === String(id)); return r ? r.rank : 0; };
+
 // ---------- puan ----------
 const sign = (h, a) => Math.sign(h - a);
+// maç sonucu: 'h' ev sahibi kazanır (1), 'd' beraberlik (X), 'a' deplasman kazanır (2)
+const outcome = (h, a) => ['a', 'd', 'h'][sign(h, a) + 1];
+// tahminin sonucu: açık seçim (r) ya da yalnız skor girilmiş eski tahminlerde skordan çıkarılır
+const pickOutcome = p => (p && /^[hda]$/.test(p.r) ? p.r : p && Number.isInteger(p.h) && Number.isInteger(p.a) ? outcome(p.h, p.a) : null);
 function pointsFor(p, m) {
   if (!p || !m || m.st !== 'post' || !m.res || !m.sc) return null;
   const r = m.res, o = { score: 0, goal: 0, red: 0, exact: false };
-  if (Number.isInteger(p.h) && Number.isInteger(p.a)) {
-    if (p.h === m.sc[0] && p.a === m.sc[1]) { o.score = PTS.exact; o.exact = true; }
-    else if (sign(p.h, p.a) === sign(m.sc[0], m.sc[1])) o.score = PTS.result;
-  }
+  // tam skor sonucu da içerir (PTS.exact); yalnız sonuç doğruysa PTS.result
+  if (Number.isInteger(p.h) && Number.isInteger(p.a) && p.h === m.sc[0] && p.a === m.sc[1]) { o.score = PTS.exact; o.exact = true; }
+  else if (pickOutcome(p) === outcome(m.sc[0], m.sc[1])) o.score = PTS.result;
   // gol kutuları: her kutu bir golün golcüsü (g). Aynı oyuncu birden çok kutuda olabilir; oyuncunun maçtaki gol
   // sayısını aşan kutular puan almaz. Eski biçim (tek g) ve eski tahminlerdeki asist / sarı kart alanları okunur ama puanlanmaz.
   const slots = Array.isArray(p.gl) ? p.gl : [{ g: p.g }].filter(x => x.g);
@@ -339,5 +362,5 @@ function tvView(t) {
     last: lw && !lw.none ? { nick: lw.nick, pts: lw.pts, week: weekLabel(lastKey) } : null, every: Math.max(3, Math.min(30, Number(d.every) || 8)) };
 }
 
-module.exports = { LIG_HOST, LIG_ROOT, ligUrl, bornOn, bdayList, bdayView, PTS, LEAGUE, qrKey, qrValid, joinUrl, unsubSig, mailWeek, start, cfg, urlOf, byCode, isOn, board, pointsFor, weekKey, weekLabel, weekRange, weekStart, weekMatches, weekDone,
+module.exports = { outcome, pickOutcome, refreshTable, table, rankOf, LIG_HOST, LIG_ROOT, ligUrl, bornOn, bdayList, bdayView, PTS, LEAGUE, qrKey, qrValid, joinUrl, unsubSig, mailWeek, start, cfg, urlOf, byCode, isOn, board, pointsFor, weekKey, weekLabel, weekRange, weekStart, weekMatches, weekDone,
   squad, refreshFixtures, refreshResults, settle, tvView, qrSvg, sha, rnd, prune, get matches() { return C.matches; }, _cache: C };

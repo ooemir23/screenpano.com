@@ -89,7 +89,7 @@ function ctx(req, res) {
 function matchView(m, pick) {
   const locked = m.st !== 'pre' || m.at <= now();
   const o = pick ? P.pointsFor(pick, m) : null;
-  return { id: m.id, at: m.at, st: m.st, locked, home: m.home, away: m.away, sc: m.st === 'pre' ? null : m.sc,
+  return { id: m.id, at: m.at, st: m.st, locked, home: { ...m.home, rank: P.rankOf(m.home.id) }, away: { ...m.away, rank: P.rankOf(m.away.id) }, sc: m.st === 'pre' ? null : m.sc,
     res: m.res ? { yc: m.res.yc, rc: m.res.rc } : null, pick: pick || null, pts: o };
 }
 
@@ -100,7 +100,7 @@ pub.use((req, res, next) => { res.set({ 'Cache-Control': 'no-store', 'X-Robots-T
 // Durum: haftanın maçları, kendi tahminleri, puan durumu (haftalık + genel), geçen haftanın birincisi
 pub.get('/:code/state', async (req, res) => {
   const c = ctx(req, res); if (!c) return;
-  P.refreshFixtures().catch(() => {});
+  P.refreshFixtures().catch(() => {}); P.refreshTable().catch(() => {});
   const { t, d, uid, user } = c, key = P.weekKey(now()), picks = (uid && d.picks[uid]) || {};
   const nextKey = P.weekKey(now() + 7 * 86400e3);
   let ms = P.weekMatches(key);
@@ -118,6 +118,7 @@ pub.get('/:code/state', async (req, res) => {
     next: next.length ? { key: nextKey, label: P.weekLabel(nextKey), matches: next.map(m => matchView(m, picks[m.id])) } : null,
     board: { week: wk.slice(0, 20).map(strip), weekMe: strip(mine(wk)), all: all.slice(0, 20).map(strip), allMe: strip(mine(all)), players: wk.length },
     last: lw && !lw.none ? { nick: lw.nick, pts: lw.pts, week: P.weekLabel(lastKey) } : null,
+    table: P.table(),
   });
 });
 
@@ -207,6 +208,10 @@ pub.post('/:code/pick', async (req, res) => {
   if ([h, a].some(Number.isNaN)) return res.status(400).json({ error: 'Geçersiz sayı' });
   if ((h === undefined) !== (a === undefined)) return res.status(400).json({ error: 'Skor için iki takımın golünü de yazın' });
   const rc = typeof b.rc === 'boolean' ? b.rc : undefined;
+  // maç sonucu (1/X/2); skor girildiyse sonuçla uyuşmalı, sonuç seçilmediyse skordan çıkarılır
+  if (b.r != null && b.r !== '' && !/^[hda]$/.test(b.r)) return res.status(400).json({ error: 'Geçersiz maç sonucu' });
+  let r = b.r || undefined;
+  if (h !== undefined) { const sr = P.outcome(h, a); if (r && r !== sr) return res.status(400).json({ error: 'Skor, seçtiğiniz maç sonucuyla uyuşmuyor' }); r = sr; }
   // gol kutuları: tahmin edilen skordan fazla olamaz; golcü yalnız golü atan takımdan seçilir
   const raw = Array.isArray(b.gl) ? b.gl.slice(0, 41) : [];
   const want = { h: h || 0, a: a || 0 }, cnt = { h: 0, a: 0 }, gl = [];
@@ -227,6 +232,7 @@ pub.post('/:code/pick', async (req, res) => {
     gl.push(o);
   }
   const p = { at: now() };
+  if (r) p.r = r;
   if (h !== undefined) { p.h = h; p.a = a; }
   if (gl.length) p.gl = gl;
   if (rc !== undefined) p.rc = rc;

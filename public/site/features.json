@@ -1190,11 +1190,12 @@
       "icon": "🎯",
       "title": "İşletmenize özel Süper Lig Tahmin Ligi",
       "short": "Tahmin Ligi",
-      "text": "Müşterileriniz işletmenizdeki ekranda çıkan QR'ı okutup Google hesaplarıyla tek dokunuşla ücretsiz katılır; yalnız ad, soyad ve doğum tarihi istenir, kullanıcı adı kendiliğinden oluşur. QR birkaç saatte bir yenilendiği için işletmeye gelmeyen kişi kayıt olamaz. Haftanın istedikleri maçlarına skor, golcü ve kırmızı kart tahmini girerler; puan durumu ekranda gösterilir ve her hafta e-postayla gider. Haftanın birincisine sizin belirlediğiniz ikram verilir. Reklam e-postası gönderilmez. Pakete dahil değildir; her paketteki işletme ek abonelik olarak alabilir.",
+      "text": "Müşterileriniz işletmenizdeki ekranda çıkan QR'ı okutup Google hesaplarıyla tek dokunuşla ücretsiz katılır; yalnız ad, soyad ve doğum tarihi istenir, kullanıcı adı kendiliğinden oluşur. QR birkaç saatte bir yenilendiği için işletmeye gelmeyen kişi kayıt olamaz. Haftanın istedikleri maçlarına 1/X/2 tahmini ve kırmızı kart tahmini girerler; skor ve golcü isteğe bağlıdır, ekstra puan getirir. Takımların ligdeki sırası, gerçek puan durumu ve oyuncuların sezon gol sayıları tahmin sayfasında görünür; puan durumu ekranda gösterilir ve her hafta e-postayla gider. Haftanın birincisine sizin belirlediğiniz ikram verilir. Reklam e-postası gönderilmez. Pakete dahil değildir; her paketteki işletme ek abonelik olarak alabilir.",
       "points": [
-        "Skor, her golün golcüsü ve kırmızı kart çıkar mı",
+        "1/X/2 tahmini; skor ve her golün golcüsü isteğe bağlı, kırmızı kart çıkar mı",
         "QR'dan doğrudan Google ile kayıt; yalnız işletmedekiler katılabilir",
         "Haftalık puan durumu ekranda ve e-postayla",
+        "Gerçek Süper Lig puan durumu, takım sıraları ve oyuncu gol sayıları",
         "Katılımcıları panelden düzenleme, ligden çıkarma ve silme",
         "Kendi adresi tahmin.screenpano.com: oyuncu Google ile ligine girer, işletme yalnız Tahmin Ligi panelini açar"
       ],
@@ -1206,11 +1207,12 @@
           "title": "Your own Süper Lig Prediction League",
           "short": "Prediction League",
           "compare": "Süper Lig Prediction League",
-          "text": "Customers scan the QR on the screen in your venue and join free with one tap using their Google account; only their name and date of birth are asked and a username is created automatically. Because the QR refreshes every few hours, people who aren't at your venue can't sign up. They predict the score, scorers and whether there will be a red card for any of the week's matches; the standings appear on screen and are emailed every week. The week's winner gets the treat you choose. No promotional emails are sent. Not included in the plans; businesses on any plan can add it as an add-on.",
+          "text": "Customers scan the QR on the screen in your venue and join free with one tap using their Google account; only their name and date of birth are asked and a username is created automatically. Because the QR refreshes every few hours, people who aren't at your venue can't sign up. They make a 1/X/2 prediction and a red card call for any of the week's matches; score and scorers are optional and earn extra points. Each team's league position, the real league table and players' season goal tallies are shown on the prediction page; the standings appear on screen and are emailed every week. The week's winner gets the treat you choose. No promotional emails are sent. Not included in the plans; businesses on any plan can add it as an add-on.",
           "points": [
-            "Score, the scorer of each goal and whether there will be a red card",
+            "1/X/2 prediction; optional score and scorer of each goal, plus red card yes/no",
             "Straight from the QR to Google sign-up; only people at your venue can join",
             "Weekly standings on screen and by email",
+            "Real Süper Lig table, team positions and player goal tallies",
             "Edit, remove or delete participants in the panel",
             "Its own address, tahmin.screenpano.com: players sign in with Google to reach their league, and businesses open just the Prediction League panel"
           ]
@@ -1219,11 +1221,12 @@
           "title": "Ihr eigenes Süper-Lig-Tippspiel",
           "short": "Tippspiel",
           "compare": "Süper-Lig-Tippspiel",
-          "text": "Gäste scannen den QR-Code auf dem Bildschirm in Ihrem Lokal und machen mit einem Tipp über ihr Google-Konto kostenlos mit; abgefragt werden nur Name und Geburtsdatum, der Benutzername entsteht automatisch. Da sich der QR-Code alle paar Stunden ändert, kann sich niemand von außerhalb anmelden. Getippt werden Ergebnis, Torschützen und ob es eine Rote Karte gibt beliebiger Spiele der Woche; die Tabelle erscheint auf dem Bildschirm und kommt jede Woche per E-Mail. Der Wochensieger bekommt Ihr Geschenk. Es werden keine Werbe-E-Mails verschickt. Nicht im Paket enthalten; Betriebe jedes Pakets können es als Zusatzabo buchen.",
+          "text": "Gäste scannen den QR-Code auf dem Bildschirm in Ihrem Lokal und machen mit einem Tipp über ihr Google-Konto kostenlos mit; abgefragt werden nur Name und Geburtsdatum, der Benutzername entsteht automatisch. Da sich der QR-Code alle paar Stunden ändert, kann sich niemand von außerhalb anmelden. Getippt werden der Spielausgang (1/X/2) und ob es eine Rote Karte gibt, für beliebige Spiele der Woche; Ergebnis und Torschützen sind optional und bringen Extrapunkte. Tabellenplatz der Teams, die echte Ligatabelle und die Saisontore der Spieler stehen auf der Tippseite; die Tabelle erscheint auf dem Bildschirm und kommt jede Woche per E-Mail. Der Wochensieger bekommt Ihr Geschenk. Es werden keine Werbe-E-Mails verschickt. Nicht im Paket enthalten; Betriebe jedes Pakets können es als Zusatzabo buchen.",
           "points": [
-            "Ergebnis, Torschütze je Tor und Rote Karte ja/nein",
+            "1/X/2-Tipp; Ergebnis und Torschütze je Tor optional, dazu Rote Karte ja/nein",
             "Vom QR-Code direkt zur Google-Anmeldung; nur Gäste vor Ort können mitmachen",
             "Wöchentliche Tabelle auf dem Bildschirm und per E-Mail",
+            "Echte Süper-Lig-Tabelle, Tabellenplätze und Torzahlen der Spieler",
             "Teilnehmer im Panel bearbeiten, ausschließen oder löschen",
             "Eigene Adresse tahmin.screenpano.com: Spieler melden sich mit Google an und landen in ihrem Tippspiel, Betriebe öffnen nur das Tippspiel-Panel"
           ]
@@ -1232,11 +1235,12 @@
           "title": "دوري توقعات الدوري التركي الخاص بنشاطك",
           "short": "دوري التوقعات",
           "compare": "دوري توقعات الدوري التركي",
-          "text": "يمسح العملاء رمز QR على الشاشة في نشاطك وينضمون مجانًا بلمسة واحدة عبر حساب Google؛ ولا يُطلب سوى الاسم وتاريخ الميلاد ويُنشأ اسم المستخدم تلقائيًا. ولأن رمز QR يتجدد كل بضع ساعات، لا يستطيع من هم خارج نشاطك التسجيل. يتوقعون النتيجة والهدافين وهل ستكون هناك بطاقة حمراء لأي مباريات هذا الأسبوع؛ ويظهر الترتيب على الشاشة ويُرسل بالبريد كل أسبوع. يحصل بطل الأسبوع على الضيافة التي تحددها. لا تُرسل رسائل إعلانية. غير مشمول في الباقات؛ يمكن لأي نشاط إضافته كاشتراك إضافي.",
+          "text": "يمسح العملاء رمز QR على الشاشة في نشاطك وينضمون مجانًا بلمسة واحدة عبر حساب Google؛ ولا يُطلب سوى الاسم وتاريخ الميلاد ويُنشأ اسم المستخدم تلقائيًا. ولأن رمز QR يتجدد كل بضع ساعات، لا يستطيع من هم خارج نشاطك التسجيل. يتوقعون نتيجة المباراة (1/X/2) وهل ستكون هناك بطاقة حمراء لأي مباريات هذا الأسبوع، والنتيجة الدقيقة والهداف اختياريان ويمنحان نقاطًا إضافية. ويظهر ترتيب الفرق في الدوري وجدول الدوري الحقيقي وعدد أهداف اللاعبين هذا الموسم في صفحة التوقع؛ ويظهر الترتيب على الشاشة ويُرسل بالبريد كل أسبوع. يحصل بطل الأسبوع على الضيافة التي تحددها. لا تُرسل رسائل إعلانية. غير مشمول في الباقات؛ يمكن لأي نشاط إضافته كاشتراك إضافي.",
           "points": [
-            "النتيجة وهداف كل هدف وهل ستكون هناك بطاقة حمراء",
+            "توقع 1/X/2؛ والنتيجة وهداف كل هدف اختياريان، وهل ستكون هناك بطاقة حمراء",
             "من رمز QR مباشرة إلى التسجيل عبر Google؛ يشارك الموجودون في نشاطك فقط",
             "الترتيب الأسبوعي على الشاشة وبالبريد",
+            "جدول الدوري التركي الممتاز الحقيقي وترتيب الفرق وعدد أهداف اللاعبين",
             "تعديل المشاركين أو إخراجهم أو حذفهم من اللوحة",
             "عنوان خاص tahmin.screenpano.com: يسجّل اللاعب الدخول بحساب Google ليصل إلى دوريه، ويفتح النشاط التجاري لوحة دوري التوقعات وحدها"
           ]
