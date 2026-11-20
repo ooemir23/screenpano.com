@@ -1349,8 +1349,8 @@ function openDur(id) {
   const yt = v.type === 'youtube', hi = yt ? 3600 : 120, cur = v.dur || (yt ? 30 : S.db.imageSeconds || 10), canReset = yt ? v.dur0 != null : !!v.dur;
   openModal(`<h3 style="margin:0 0 6px">Ekranda kalma süresi</h3>
     <p style="margin:0 0 4px"><b>${esc(v.name)}</b></p><p class="muted" style="margin:0 0 ${yt ? 14 : 4}px;font-size:13px">${esc(3 + ' – ' + hi + ' sn arası')}</p>${yt ? '' : `<p class="muted" style="margin:0 0 14px;font-size:13px">${esc('Varsayılan fotoğraf süresi: ' + (S.db.imageSeconds || 10) + ' sn (Ayarlar)')}</p>`}
-    <div class="f"><label><span>Ekranda kalma süresi (saniye)</span><input type="number" id="durin" min="3" max="${hi}" value="${cur}" style="width:140px" ${yt ? `oninput="$('repin').value=0"` : ''} onkeydown="if(event.key==='Enter')saveDur('${id}')"></label></div>
-    ${yt ? `<div class="f"><label><span>Kaç kez arka arkaya oynasın (0 = kapalı)</span><input type="number" id="repin" min="0" max="50" value="${v.rep || 0}" style="width:140px" onkeydown="if(event.key==='Enter')saveDur('${id}')"></label><small class="muted">Kez açıkken süre otomatik: video uzunluğu × kez; saniye yazarsanız kez kapanır</small></div>` : ''}
+    <div class="f">${fl('Ekranda kalma süresi (saniye)', `<input type="number" id="durin" min="3" max="${hi}" value="${cur}" ${yt ? `oninput="$('repin').value=0"` : ''} onkeydown="if(event.key==='Enter')saveDur('${id}')">`)}${yt ? fl('Kaç kez arka arkaya oynasın (0 = kapalı)', `<input type="number" id="repin" min="0" max="50" value="${v.rep || 0}" onkeydown="if(event.key==='Enter')saveDur('${id}')">`) : ''}</div>
+    ${yt ? '<p class="muted" style="margin:8px 0 0;font-size:13px">Kez açıkken süre otomatik: video uzunluğu × kez; saniye yazarsanız kez kapanır</p>' : ''}
     <div class="row end mt"><button class="btn g" onclick="closeModal()">Vazgeç</button>${canReset ? `<button class="btn g" onclick="saveDur('${id}',true)">Varsayılana dön</button>` : ''}<button class="btn" onclick="saveDur('${id}')">Kaydet</button></div>`);
   const inp = $('durin'); if (inp) { inp.focus(); inp.select(); }
 }
