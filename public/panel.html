@@ -86,6 +86,12 @@ code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:var(--r-s);f
 .acctm a:hover{background:rgba(255,255,255,.06);color:#fff}
 .acctl{padding:6px 4px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:4px 0}
 .acctl .lsel,.acctl .lsel>button{width:100%}.acctl .lsel>button span{flex:1;text-align:start}
+.side-tools{display:flex;flex-direction:column;gap:6px;margin-bottom:6px}
+.side-tools #mode-btn{width:100%;justify-content:center;padding:7px 10px;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.side-tools .lsel,.side-tools .lsel>button{width:100%}
+.side-tools .lsel>button{border-radius:var(--r-m);padding:7px 12px;font-size:13px}
+.side-tools .lsel>button span{flex:1;text-align:start}
+.side-tools .lsel ul{left:0;right:0;min-width:0}
 #top{display:none}
 main{flex:1;min-width:0;padding:28px 36px 90px}
 .wrap{max-width:1180px;margin:0 auto}
@@ -899,8 +905,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <div id="brand"><b>…</b></div>
     <nav id="nav"></nav>
     <div id="sidefoot">
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
-        <button type="button" class="btn g s" id="mode-btn" onclick="toggleSimpleMode()" style="flex:1;justify-content:center" title="Basit ve gelişmiş görünüm arasında geçiş yap">⚙ Gelişmiş Mod</button>
+      <div class="side-tools">
+        <button type="button" class="btn g s" id="mode-btn" onclick="toggleSimpleMode()" title="Basit ve gelişmiş görünüm arasında geçiş yap">⚙ Gelişmiş Mod</button>
         <div data-langpick></div>
       </div>
       <div class="acct"><button type="button" id="acctb" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation();var p=this.parentNode;p.classList.toggle('on');this.setAttribute('aria-expanded',p.classList.contains('on'))"><svg class="ic"><use href="/icons.svg#i-user"></use></svg><span id="acctn">Hesap</span><svg class="ic"><use href="/icons.svg#i-chevron-up"></use></svg></button>
