@@ -628,10 +628,10 @@ async function delScreenProfile(id) {
     await switchScreenProfile('main');
   } catch (e) { toast(e.message, true); }
 }
-// Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al + Kaydet görünür
+// Düzen araç çubuğu (Hazır düzenler ve Düzen kartlarının başlığında): değişiklik varsa Geri al görünür, kaydetmek için alttaki kayıt çubuğu kullanılır
 const layoutBar = () => {
   const o = curOrient(true);
-  return `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><span class="chg-live dyn"></span><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn s dyn" onclick="saveL()">Düzeni kaydet</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><select class="btn g s orsel" onchange="orientSet(+this.value)" title="Ekran yönü: yatay ya da dikey asılı TV"><option value="0" ${!o ? 'selected' : ''}>↔ Yatay (16:9)</option><option value="90" ${o === 90 ? 'selected' : ''}>↕ Dikey · Sağa 90° (9:16)</option><option value="270" ${o === 270 ? 'selected' : ''}>↕ Dikey · Sola 270° (9:16)</option></select><button class="btn g s ${EDIT.locked ? 'on' : ''}" id="lockbtn" onclick="toggleEditLock()" title="Telefondan kullanırken kutuların yanlışlıkla kaymasını önler">${EDIT.locked ? '🔒 Taşıma Kilitli' : '🔓 Taşıma Açık'}</button><button class="btn g s adv-only" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
+  return `<div class="row lbar${EDIT.dirty ? '' : ' clean'}"><button class="btn g s dyn" onclick="undoL()">↶ Geri al</button><button class="btn g s" onclick="resetDesign('layout')">⟲ Sıfırla</button><select class="btn g s orsel" onchange="orientSet(+this.value)" title="Ekran yönü: yatay ya da dikey asılı TV"><option value="0" ${!o ? 'selected' : ''}>↔ Yatay (16:9)</option><option value="90" ${o === 90 ? 'selected' : ''}>↕ Dikey · Sağa 90° (9:16)</option><option value="270" ${o === 270 ? 'selected' : ''}>↕ Dikey · Sola 270° (9:16)</option></select><button class="btn g s ${EDIT.locked ? 'on' : ''}" id="lockbtn" onclick="toggleEditLock()" title="Telefondan kullanırken kutuların yanlışlıkla kaymasını önler">${EDIT.locked ? '🔒 Taşıma Kilitli' : '🔓 Taşıma Açık'}</button><button class="btn g s adv-only" id="gridbtn" onclick="gridSet(((EDIT.layout||{}).cols||24)===48?24:48)" title="Hizalamayı daha ince ayarlamak için ızgarayı sıklaştırır; kutular yerinde kalır">▦ İnce ızgara</button><button class="btn g s" onclick="gotoPv()">👁 Önizleme</button><button class="btn g s" onclick="openDraft()">↗ Yeni sekmede</button></div>`;
 };
 function layoutDiff() {
   const base = (S.scr && S.scr.layout) || {}, cur = EDIT.layout || {};
@@ -662,16 +662,7 @@ function layoutDiff() {
 const lbarSync = () => {
   const ch = EDIT.layout && S.scr && S.scr.layout ? layoutDiff() : [];
   EDIT.dirty = ch.length > 0;
-  const sum = EDIT.dirty ? UI.summarizeChanges(ch) : null;
-  document.querySelectorAll('.lbar').forEach(b => {
-    b.classList.toggle('clean', !EDIT.dirty);
-    const lv = b.querySelector('.chg-live');
-    if (lv) {
-      lv.hidden = !EDIT.dirty;
-      lv.textContent = EDIT.dirty ? sum.text : '';
-      if (EDIT.dirty) lv.setAttribute('title', sum.title); else lv.removeAttribute('title');
-    }
-  });
+  document.querySelectorAll('.lbar').forEach(b => b.classList.toggle('clean', !EDIT.dirty));
   pushDraft();
   if (typeof savebar === 'function') savebar();
 };
@@ -2551,7 +2542,7 @@ function qrEdit(id) {
   else if (q.kind === 'wifi') { const w = wifiParse(q.text); $('q-ssid').value = w.ssid; $('q-pass').value = w.password; $('q-sec').value = w.security; } else $('q-text').value = q.text || '';
   $('q-mode').textContent = 'QR düzenleniyor: ' + (q.label || ''); $('q-save').textContent = 'Kaydet'; $('q-cancel').hidden = false;
   qrPrev(); $('q-mode').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('q-label').focus();
-  UI.track($('qr-form'), { buttons: [$('q-save')], live: $('qr-live'), onChange: () => savebar() });
+  UI.track($('qr-form'), { buttons: [$('q-save')], live: $('qr-live'), showInline: false, onChange: () => savebar() });
   savebar();
 }
 const qrCancel = () => { const f = $('qr-form'); if (f && f._tracker) f._tracker.destroy(); qrEditId = null; render(true); };
@@ -4207,6 +4198,7 @@ function syncDraftSave() {
   if (!MDRAFT || !MDRAFT.id || !MDRAFT0) return;
   const ch = draftDiff();
   syncCustomSave('[data-save-draft]', ch);
+  document.querySelectorAll('[data-save-draft-play]').forEach(b => { b.hidden = !ch.length; });
   if (typeof savebar === 'function') savebar();
 }
 function searchHtml() {
@@ -4239,7 +4231,7 @@ function searchHtml() {
     out += `<section class="ytm-draft"${isEdit ? ' data-custom-save="draft"' : ''}><div class="ytm-sh"><div><small>${d.id ? 'Listemi düzenle' : 'Yeni listem'}</small><h2>${d.tracks.length} şarkı</h2></div></div>
       <input type="text" id="md-title" class="ytm-in" placeholder="Liste başlığı (örn. Akşam Listem)" value="${esc(d.title)}" maxlength="90" oninput="MDRAFT.title=this.value;syncDraftSave()">
       <div class="ytm-tracks">${d.tracks.length ? d.tracks.map((t, i) => trow({ v: t.v, thumb: t.th, title: t.t, artist: t.c, dur: t.d, play: '', acts: `<button class="ytm-ib sm" title="Yukarı taşı" onclick="draftMove(${i},-1)">${ic('chevron-up')}</button><button class="ytm-ib sm" title="Aşağı taşı" onclick="draftMove(${i},1)">${ic('chevron-down')}</button><button class="ytm-ib sm" title="Listeden çıkar" onclick="draftDel(${i})">${ic('x')}</button>` })).join('') : '<div class="ytm-empty sm">Arama sonuçlarından + ile şarkı ekleyin.</div>'}</div>
-      <div class="row end"><button class="ytm-btn" onclick="draftClear()">Temizle</button><button class="ytm-btn" ${isEdit ? 'data-save-draft hidden ' : ''}onclick="draftSave(false)">Kaydet</button><button class="ytm-btn w" ${isEdit ? 'data-save-draft hidden ' : ''}onclick="draftSave(true)">${ic('play-f')}Kaydet ve TV'de çal</button></div></section>`;
+      <div class="row end"><button class="ytm-btn" onclick="draftClear()">Temizle</button><button class="ytm-btn" ${isEdit ? 'data-save-draft hidden ' : ''}onclick="draftSave(false)">Kaydet</button><button class="ytm-btn w" ${isEdit ? 'data-save-draft-play hidden ' : ''}onclick="draftSave(true)">${ic('play-f')}Kaydet ve TV'de çal</button></div></section>`;
   }
   return out;
 }
@@ -4891,23 +4883,26 @@ function drawBrand() {
   setInterval(async () => { if (document.hidden) return; try { S.scr = await req('GET', '/screen'); } catch (e) {} }, 30000);
   addEventListener('sp:play-billing', () => { if (TAB === 'settings' || TAB === 'sport') render(true); });
 })();
-function syncCustomSave(sel, changes) {
+function syncCustomSave(sel, changes, showInline = false) {
   const dirty = Array.isArray(changes) && changes.length > 0;
-  const sum = dirty ? UI.summarizeChanges(changes) : null;
+  const show = showInline && dirty;
+  const sum = show ? UI.summarizeChanges(changes) : null;
   document.querySelectorAll(sel).forEach(btn => {
-    btn.hidden = !dirty;
+    btn.hidden = !show;
     const p = btn.parentNode;
     if (p) {
       let lv = [...p.children].find(x => x.classList && x.classList.contains('chg-live'));
-      if (!lv) {
+      if (showInline && !lv) {
         lv = document.createElement('span');
         lv.className = 'chg-live';
         lv.hidden = true;
         p.insertBefore(lv, btn);
       }
-      lv.hidden = !dirty;
-      lv.textContent = dirty ? sum.text : '';
-      if (dirty) lv.setAttribute('title', sum.title); else lv.removeAttribute('title');
+      if (lv) {
+        lv.hidden = !show;
+        lv.textContent = show ? sum.text : '';
+        if (show) lv.setAttribute('title', sum.title); else lv.removeAttribute('title');
+      }
       if (p.classList && (p.classList.contains('cardfoot') || p.classList.contains('save-row') || (p.classList.contains('row') && p.classList.contains('end')))) {
         const empty = [...p.children].every(ch => ch.hidden || ch.classList.contains('chg-live'));
         p.classList.toggle('save-row-empty', empty);
@@ -4984,7 +4979,7 @@ function trackPanelCards() {
       const cid = el.dataset.campId;
       onReset = () => updateCampPrev(cid);
     }
-    UI.track(el, { extra, onReset, onChange: () => savebar() });
+    UI.track(el, { showInline: false, extra, onReset, onChange: () => savebar() });
   }
   if (TAB === 'media' && SUB.media === 'special') syncSpecialSave();
   if (TAB === 'menu' && SUB.menu === 'happy') syncHappySave();
@@ -5068,7 +5063,13 @@ function savebar() {
   };
   b._save = async () => {
     if (!await UI.confirmChanges(allChanges, { title: 'Değişiklikleri kaydet', ok: 'Kaydet' })) return;
-    for (const src of sources) if (typeof src.save === 'function') await src.save();
+    const sb = b.querySelector('.btn:not(.g)');
+    if (sb) sb.disabled = true;
+    try {
+      for (const src of sources) if (typeof src.save === 'function') await src.save();
+    } finally {
+      if (sb) sb.disabled = false;
+    }
     savebar();
   };
 }

@@ -1662,7 +1662,7 @@ async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); l
 
 function trackSuperCard(cardEl) {
   if (!cardEl || !cardEl.querySelector('[data-save-btn]')) return;
-  UI.track(cardEl, { onChange: () => superSavebar() });
+  UI.track(cardEl, { showInline: false, onChange: () => superSavebar() });
 }
 function superSavebar() {
   const b = $('savebar'); if (!b) return;
@@ -1692,20 +1692,34 @@ function superSavebar() {
     superSavebar();
   };
   b._save = async () => {
+    if (PLAY_PRICES && dirtyCards.some(c => c.querySelector('#pr-play'))) {
+      for (const [id] of PLAY_PR) {
+        const inp = $('pp-' + id); if (!inp || inp.disabled) continue;
+        if (PLAY_PRICES[id] != null && plNum(inp.value) !== PLAY_PRICES[id] && !plNum(inp.value)) {
+          return toast('Google Play fiyatı 0 veya boş olamaz', true);
+        }
+      }
+    }
     const warnPlay = dirtyCards.some(c => c.querySelector('#pr-play') && c._tracker.diff().some(ch => ch.el && ch.el.id && ch.el.id.startsWith('pp-')));
     const paySel = $('pay-mode');
     const warnPay = dirtyCards.some(c => paySel && c.contains(paySel) && paySel.value !== 'off') ? (paySel.value === 'all' ? 'Çevrimiçi ödeme tüm işletmelere açılacak.' : 'Çevrimiçi ödeme pilot işletmelere açılacak.') : '';
     const warn = [warnPlay ? "Google Play fiyatları canlı olarak Google Play'e yazılır (test ortamında da gerçek Play fiyatı değişir)." : '', warnPay].filter(Boolean).join(' ');
     if (!await UI.confirmChanges(allChanges, { title: 'Değişiklikleri kaydet', ok: 'Kaydet', warn })) return;
-    for (const c of dirtyCards) {
-      const btn = c.querySelector('[data-save-btn]');
-      const fn = btn && btn.dataset.saveFn;
-      if (fn === 'savePricing') await savePricing(btn, true);
-      else if (fn === 'saveTickerBrand') await saveTickerBrand(btn, true);
-      else if (fn === 'savePlay') await savePlay(btn, true);
-      else if (fn === 'savePayMode') await savePayMode(btn, true);
-      else if (fn === 'saveKeys') await saveKeys(JSON.parse(btn.dataset.saveKeys || '[]'), btn, true);
-      else if (fn === 'changePw') await changePw(btn, true);
+    const sb = b.querySelector('.btn:not(.g)');
+    if (sb) sb.disabled = true;
+    try {
+      for (const c of dirtyCards) {
+        const btn = c.querySelector('[data-save-btn]');
+        const fn = btn && btn.dataset.saveFn;
+        if (fn === 'savePricing') await savePricing(btn, true);
+        else if (fn === 'saveTickerBrand') await saveTickerBrand(btn, true);
+        else if (fn === 'savePlay') await savePlay(btn, true);
+        else if (fn === 'savePayMode') await savePayMode(btn, true);
+        else if (fn === 'saveKeys') await saveKeys(JSON.parse(btn.dataset.saveKeys || '[]'), btn, true);
+        else if (fn === 'changePw') await changePw(btn, true);
+      }
+    } finally {
+      if (sb) sb.disabled = false;
     }
     superSavebar();
   };

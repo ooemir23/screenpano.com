@@ -227,14 +227,15 @@
     if (!root) return null;
     if (root._tracker && typeof root._tracker.destroy === 'function') root._tracker.destroy();
 
+    const showInline = opts.showInline !== false;
     const snaps = new Map();
     const buttons = opts.buttons
       ? [...opts.buttons].filter(Boolean)
       : [...root.querySelectorAll('[data-save-btn], [data-save]')];
 
-    let live = opts.live || root.querySelector('.chg-live') || null;
+    let live = showInline ? (opts.live || root.querySelector('.chg-live') || null) : null;
     let ownsLive = false;
-    if (!live && buttons.length) {
+    if (showInline && !live && buttons.length) {
       const b0 = buttons[0];
       if (b0 && b0.parentNode) {
         live = document.createElement('span');
@@ -311,12 +312,13 @@
       const changes = diff();
       const dirty = changes.length > 0;
       if (root.classList) root.classList.toggle('dirty', dirty);
-      for (const b of buttons) b.hidden = !dirty;
+      for (const b of buttons) b.hidden = showInline ? !dirty : true;
       if (live) {
-        const sum = summarizeChanges(changes);
-        live.hidden = !dirty;
-        live.textContent = dirty ? sum.text : '';
-        if (dirty) live.setAttribute('title', sum.title);
+        const showLive = showInline && dirty;
+        const sum = showLive ? summarizeChanges(changes) : null;
+        live.hidden = !showLive;
+        live.textContent = showLive ? sum.text : '';
+        if (showLive) live.setAttribute('title', sum.title);
         else live.removeAttribute('title');
       }
       syncRowEmpty();

@@ -434,3 +434,36 @@ test('UI.confirmChanges boşta false döner, farkları ve uyarıyı işler, onay
   dispatchDocKey('Escape');
   assert.equal(await pEsc, false);
 });
+
+test('UI.track showInline: false iken satır içi düğme ve özeti gizli tutar, yalnızca kart dirty/onChange çalışır', () => {
+  const { UI, El, body, dispatch } = makeDom();
+
+  const card = new El('div', { className: 'card' });
+  const inp = new El('input', { type: 'text', value: '100', dataset: { label: 'Başlık' } });
+  const foot = new El('div', { className: 'cardfoot' });
+  const saveBtn = new El('button', { attrs: { 'data-save-btn': '' }, hidden: true, textContent: 'Kaydet' });
+  foot.appendChild(saveBtn);
+  card.appendChild(inp);
+  card.appendChild(foot);
+  body.appendChild(card);
+
+  let lastCall = null;
+  const tr = UI.track(card, {
+    showInline: false,
+    onChange: (changes, dirty) => { lastCall = { count: changes.length, dirty }; },
+  });
+
+  assert.equal(tr.live, null);
+  assert.equal(saveBtn.hidden, true);
+  assert.equal(foot.classList.contains('save-row-empty'), true);
+
+  inp.value = '200';
+  dispatch(inp, 'input');
+
+  assert.equal(card.classList.contains('dirty'), true);
+  assert.equal(tr.diff().length, 1);
+  assert.equal(saveBtn.hidden, true);
+  assert.equal(tr.live, null);
+  assert.equal(foot.classList.contains('save-row-empty'), true);
+  assert.deepStrictEqual(lastCall, { count: 1, dirty: true });
+});
