@@ -160,6 +160,14 @@ label{display:block;font-size:12px;color:var(--mute);margin-bottom:5px}
   main{padding:20px 16px 60px}.grid2{grid-template-columns:1fr}
 }
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid #e8b27a;outline-offset:2px}
+.card.dirty{border-color:rgba(var(--a2),.45)}
+.cardfoot:not(:has(> :not([hidden]))){display:none}
+.m-foot-msg{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+#savebar{position:fixed;left:calc(50% + 124px);bottom:18px;transform:translate(-50%,140%);z-index:65;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 18px;background:var(--panel3);border:1px solid rgba(var(--a2),.55);border-radius:var(--r-l);box-shadow:0 16px 40px rgba(0,0,0,.55);transition:transform .25s;max-width:calc(100vw - 32px)}
+#savebar.on{transform:translate(-50%,0)}
+#savebar:not(.on){visibility:hidden}
+body.sbon #toasts{bottom:86px}
+@media(max-width:900px){#savebar{left:50%}}
 @media(pointer:coarse){.modal-x{width:40px;height:40px}.btn.s,.btn.xs{min-height:40px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style></head><body>
@@ -174,6 +182,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 </div>
 <div id="drawer"><div class="bg" onclick="closeDrawer()"></div><div class="pane" id="pane"></div></div>
 <div id="toasts" aria-live="polite"></div>
+<div id="savebar" role="status"><div class="sb-txt"><b></b><small></small></div><button class="btn g" onclick="this.parentNode._cancel()">Vazgeç</button><button class="btn" onclick="this.parentNode._save()">Kaydet</button></div>
 <script src="/ui.js"></script>
 <script>
 const $ = id => document.getElementById(id);
@@ -269,6 +278,8 @@ function render() {
   page = pageOf(); drawNav();
   if (!D) return;
   const pg = PAGES[page]; $('main').innerHTML = pg.html(); if (pg.after) pg.after();
+  document.querySelectorAll('#main .card').forEach(trackSuperCard);
+  superSavebar();
   window.scrollTo(0, 0);
 }
 addEventListener('hashchange', () => { closeDrawer(); render(); });
@@ -276,7 +287,8 @@ addEventListener('hashchange', () => { closeDrawer(); render(); });
 const head = (title, sub, right = '') => `<div class="top"><div><h1>${title}</h1><p class="sub">${sub}</p></div>${right}</div>`;
 const card = (title, sub, body, foot = '', badge = '') => `<div class="card"><h2>${title}${badge}</h2>${sub ? `<p class="hint">${sub}</p>` : ''}${body}${foot ? `<div class="cardfoot">${foot}</div>` : ''}</div>`;
 const field = (label, id, val = '', attrs = '') => `<div><label>${label}</label><input id="${id}" value="${esc(val)}" ${attrs}></div>`;
-const setting = (label, k, attrs = '') => field(label, 's-' + k, D.settings[k] || '', attrs);
+const SECRET_KEYS = new Set(['youtube_api_key', 'collect_key', 'tmdb_key', 'google_places_key', 'google_oauth_secret', 'alert_webhook']);
+const setting = (label, k, attrs = '') => field(label, 's-' + k, D.settings[k] || '', attrs + (SECRET_KEYS.has(k) ? ' data-secret="1"' : ''));
 const stat = (b, label, extra = '') => `<div class="stat"><b>${b}</b><span>${T(label)}${extra}</span></div>`;
 const dl = (cur, prev, goodUp = true) => { if (!prev) return ''; const p = Math.round((cur - prev) / prev * 100); if (!p) return ''; const good = (p > 0) === goodUp; return `<br><b class="dl ${good ? 'up' : 'dn'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p)}%</b> <span style="display:inline">${T('önceki döneme göre')}</span>`; };
 const tabs = (cur, fn) => `<div class="tabs">${[7, 30, 90].map(d => `<button class="${cur === d ? 'on' : ''}" onclick="${fn}(${d})">${d} ${T('gün')}</button>`).join('')}</div>`;
@@ -564,8 +576,8 @@ function drawRows() {
 }
 
 /* ---- yeni işletme / ayrıntı paneli (modal) ---- */
-const closeDrawer = () => $('drawer').classList.remove('on');
-const openDrawer = html => { $('pane').innerHTML = html; $('drawer').classList.add('on'); };
+const closeDrawer = () => { if ($('pane') && $('pane')._tracker) $('pane')._tracker.destroy(); $('drawer').classList.remove('on'); };
+const openDrawer = html => { if ($('pane') && $('pane')._tracker) $('pane')._tracker.destroy(); $('pane').innerHTML = html; $('drawer').classList.add('on'); };
 window.addEventListener('keydown', e => { if (e.key === 'Escape' && $('drawer') && $('drawer').classList.contains('on')) closeDrawer(); });
 const planOpts = sel => Object.values(D.plans).map(p => `<option value="${p.id}"${p.id === sel ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
 
@@ -623,6 +635,7 @@ function addInputDays(id, days) {
   base.setDate(base.getDate() + days);
   const y = base.getFullYear(), m = String(base.getMonth() + 1).padStart(2, '0'), d = String(base.getDate()).padStart(2, '0');
   el.value = `${y}-${m}-${d}`;
+  el.dispatchEvent(new Event('change', { bubbles: true }));
   toast(`Tarih güncellendi: ${el.value}`);
 }
 
@@ -725,8 +738,8 @@ function openTenant(id) {
       <div class="d-card">
         <h4>${ic('receipt-text')} Ek Abonelikler</h4>
         ${Object.entries(x.addons || {}).map(([k, a]) => `<div class="row" style="align-items:flex-end">
-          <label class="check-box-label" style="flex:1.4;margin:0"><input type="checkbox" id="e-ad-${k}" ${a.active || (a.source && a.until == null) ? 'checked' : ''}><span><b>${esc(a.name)}</b><br><small class="hint" style="margin:0">${a.active ? (a.until ? 'Açık · ' + fmt(a.until) + ' tarihine kadar' : 'Açık · süresiz') : a.until ? 'Süresi doldu · ' + fmt(a.until) : 'Kapalı'}${a.source === 'play' ? ' · Google Play aboneliği' : a.source === 'admin' ? ' · süper yönetimden' : ''}</small></span></label>
-          <div><label>Bitiş (boş: süresiz)</label><input id="e-adu-${k}" type="date" value="${d(a.until)}">
+          <label class="check-box-label" style="flex:1.4;margin:0"><input type="checkbox" id="e-ad-${k}" data-label="${esc(a.name)}" ${a.active || (a.source && a.until == null) ? 'checked' : ''}><span><b>${esc(a.name)}</b><br><small class="hint" style="margin:0">${a.active ? (a.until ? 'Açık · ' + fmt(a.until) + ' tarihine kadar' : 'Açık · süresiz') : a.until ? 'Süresi doldu · ' + fmt(a.until) : 'Kapalı'}${a.source === 'play' ? ' · Google Play aboneliği' : a.source === 'admin' ? ' · süper yönetimden' : ''}</small></span></label>
+          <div><label>Bitiş (boş: süresiz)</label><input id="e-adu-${k}" data-label="${esc(a.name)} · Bitiş" type="date" value="${d(a.until)}">
             <div style="display:flex;gap:4px;margin-top:5px"><button type="button" class="quick-date-btn" onclick="addInputDays('e-adu-${k}',30)">+30g</button><button type="button" class="quick-date-btn" onclick="addInputDays('e-adu-${k}',365)">+1 yıl</button></div></div>
         </div>`).join('')}
         <small class="hint" style="margin:0">Google Play'den alınan abonelikler kendiliğinden işlenir; buradan elle açıp kapatabilirsiniz.</small>
@@ -736,11 +749,11 @@ function openTenant(id) {
       <div class="d-card">
         <h4>${ic('receipt-text')} Özel İndirim ${dcActive(x.discount) ? `<span class="tag ok">%${x.discount.pct}</span>` : x.discount ? '<span class="tag mute">süresi doldu</span>' : ''}</h4>
         <div class="row" style="align-items:flex-end">
-          <div><label>İndirim</label><select id="e-dc">${[0, ...DC_RATES].map(p => `<option value="${p}"${(x.discount ? x.discount.pct : 0) === p ? ' selected' : ''}>${p ? '%' + p : 'Yok'}</option>`).join('')}</select></div>
-          <div><label>Bitiş (boş: süresiz)</label><input id="e-dcu" type="date" value="${d(x.discount && x.discount.until)}">
+          <div><label>İndirim</label><select id="e-dc" data-label="Özel indirim">${[0, ...DC_RATES].map(p => `<option value="${p}"${(x.discount ? x.discount.pct : 0) === p ? ' selected' : ''}>${p ? '%' + p : 'Yok'}</option>`).join('')}</select></div>
+          <div><label>Bitiş (boş: süresiz)</label><input id="e-dcu" data-label="Özel indirim · Bitiş" type="date" value="${d(x.discount && x.discount.until)}">
             <div style="display:flex;gap:4px;margin-top:5px"><button type="button" class="quick-date-btn" onclick="addInputDays('e-dcu',90)">+3 ay</button><button type="button" class="quick-date-btn" onclick="addInputDays('e-dcu',365)">+1 yıl</button></div></div>
         </div>
-        <div><label>Not (isteğe bağlı)</label><input id="e-dcn" maxlength="120" value="${esc((x.discount && x.discount.note) || '')}" placeholder="örn. açılış kampanyası"></div>
+        <div><label>Not (isteğe bağlı)</label><input id="e-dcn" data-label="Özel indirim · Not" maxlength="120" value="${esc((x.discount && x.discount.note) || '')}" placeholder="örn. açılış kampanyası"></div>
         <small class="hint" style="margin:0">Web ödemesinde paket fiyatına uygulanır. Google Play'de aynı orandaki "indirim" teklifiyle ilk 12 ay indirimli ödenir (uygulama 3.24.21 ve üstü). Mevcut aboneliklerin fiyatı değişmez.</small>
       </div>
 
@@ -763,7 +776,7 @@ function openTenant(id) {
           <input type="checkbox" id="e-pay" ${x.canPay ? 'checked' : ''}>
           <span><b>Çevrimiçi Ödeme Pilotu</b><br><small class="hint" style="margin:0">Ödeme modu "Pilot" iken bu işletme panelden kartla ödeyebilir (Veri kaynakları → Abonelik ve ödeme).</small></span>
         </label>
-        ${x.org ? `<label class="check-box-label" style="border-color:var(--accent2);background:rgba(var(--a2),.08)"><input type="checkbox" id="e-org"><span><b>Zincir Şube Eşitleme:</b> Paket ve süreyi zincirin tüm şubelerine uygula</span></label>` : ''}
+        ${x.org ? `<label class="check-box-label" style="border-color:var(--accent2);background:rgba(var(--a2),.08)"><input type="checkbox" id="e-org" data-label="Zincir şube eşitleme"><span><b>Zincir Şube Eşitleme:</b> Paket ve süreyi zincirin tüm şubelerine uygula</span></label>` : ''}
       </div>
 
       ${chain.length > 1 ? `
@@ -850,14 +863,20 @@ function openTenant(id) {
   </div>
 
   <div class="m-foot">
-    <div style="font-size:12.5px;color:var(--mute)">
-      Değişikliklerin kaydedilmesi için "Değişiklikleri Kaydet" butonuna tıklayın.
+    <div class="m-foot-msg">
+      <span class="chg-live" id="drw-live" hidden></span>
+      <span id="drw-clean" style="font-size:12.5px;color:var(--mute)">Değişiklik yok</span>
     </div>
     <div class="acts">
       <button class="btn ghost" onclick="closeDrawer()">Vazgeç</button>
-      <button class="btn" onclick="saveT('${id}')">${ic('circle-check')} Değişiklikleri Kaydet</button>
+      <button class="btn" data-save-btn hidden onclick="saveT('${id}')">${ic('circle-check')} Değişiklikleri Kaydet</button>
     </div>
   </div>`);
+
+  UI.track($('pane'), {
+    live: $('drw-live'),
+    onChange: (_, d) => { if ($('drw-clean')) $('drw-clean').hidden = d; }
+  });
 
   api('GET', `/tenants/${id}/stats?days=30`).then(j => {
     const el = $('dstats');
@@ -888,6 +907,10 @@ function adChanges(id) {
   return out;
 }
 async function saveT(id) {
+  const tr = $('pane') && $('pane')._tracker, changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
+  const x = D.tenants.find(t => t.id === id);
+  if (!await UI.confirmChanges(changes, { title: `${x ? x.name + ' · ' : ''}Değişiklikleri kaydet`, ok: 'Kaydet' })) return;
   try {
     await api('PUT', '/tenants/' + id, {
       name: $('e-name').value,
@@ -1047,11 +1070,34 @@ function tenantStatsHtml(j) {
 
 /* ================= VERİ KAYNAKLARI ================= */
 const badge = ok => ok ? '<span class="tag ok">Bağlı</span>' : '<span class="tag bad">Anahtar yok</span>';
-async function saveKeys(keys, btn) {
+async function saveKeys(keys, btn, skipConfirm) {
+  const cardEl = btn && btn.closest('.card'), tr = cardEl && cardEl._tracker;
+  const changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
+  if (!skipConfirm && changes.length && !await UI.confirmChanges(changes, { title: 'Ayarları kaydet', ok: 'Kaydet' })) return false;
   const b = {}; for (const k of keys) if ($('s-' + k) && !$('s-' + k).readOnly) b[k] = $('s-' + k).value;
   if (btn) btn.disabled = true;
-  try { await api('PUT', '/settings', b); Object.assign(D.settings, b); toast('Kaydedildi'); drawNav(); } catch (e) { toast(e.message, true); }
-  if (btn) btn.disabled = false;
+  try {
+    await api('PUT', '/settings', b);
+    for (const k of keys) {
+      if (!(k in b)) continue;
+      const v = String(b[k] || '').trim();
+      if (SECRET_KEYS.has(k)) {
+        if (v && !v.startsWith('••••')) {
+          const mask = '••••' + v.slice(-4);
+          D.settings[k] = mask;
+          if ($('s-' + k)) $('s-' + k).value = mask;
+        }
+      } else {
+        D.settings[k] = v.slice(0, 300);
+      }
+    }
+    if (tr) tr.rebaseline();
+    superSavebar();
+    toast('Kaydedildi'); drawNav();
+    return true;
+  } catch (e) { toast(e.message, true); return false; }
+  finally { if (btn) btn.disabled = false; }
 }
 /* ---- Fiyatlandırma: paketler, ek kutu, ek şube (aylık + yıllık). Site, işletme paneli ve şube ücreti buradan okur. ---- */
 const PR_ITEMS = [['baslangic', 'Başlangıç paketi', '1 TV kutusu'], ['pro', 'Pro paketi', '2 TV kutusu dahil'], ['extraBox', 'Ek TV kutusu', 'Pro\'da dahil kutuların üstündeki her kutu'], ['tahminLigi', 'Tahmin Ligi (ek abonelik)', 'Pakete dahil değil; isteyen işletme alır'], ['extraBranch', 'Ek şube', 'Pro\'daki 3 dahil lokasyonu aşan her şube; şube açılınca bu tutar istenir (boşsa 500)']];
@@ -1068,15 +1114,15 @@ function pricingCard() {
   const P = D.pricing || {}, cur = P.currency || 'TRY';
   const rows = PR_ITEMS.map(([k, n, d]) => { const x = P[k] || {};
     return `<div class="row" style="align-items:flex-end"><div style="flex:1.3"><label>${esc(n)}</label><small class="hint" style="margin:0">${esc(d)}</small></div>
-      <div><label>Aylık</label><input id="pr-${k}-m" inputmode="numeric" value="${prFmt(x.monthly)}" placeholder="0" oninput="prHint('${k}')"></div>
-      <div><label>Yıllık</label><input id="pr-${k}-y" inputmode="numeric" value="${prFmt(x.yearly)}" placeholder="boş: yıllık yok" oninput="prHint('${k}')"></div>
+      <div><label>Aylık</label><input id="pr-${k}-m" data-label="${esc(n)} · Aylık" data-norm="int" inputmode="numeric" value="${prFmt(x.monthly)}" placeholder="0" oninput="prHint('${k}')"></div>
+      <div><label>Yıllık</label><input id="pr-${k}-y" data-label="${esc(n)} · Yıllık" data-norm="int" inputmode="numeric" value="${prFmt(x.yearly)}" placeholder="boş: yıllık yok" oninput="prHint('${k}')"></div>
       <div style="flex:1.2"><small class="hint" id="pr-${k}-h" style="margin:0 0 10px;display:block"></small></div></div>`; }).join('');
   return card('Fiyatlandırma', 'Tüm fiyatlar tek yerden: kaydedince site, işletme paneli, web ödemesi ve Google Play birlikte güncellenir. Mevcut abonelik ve ödemeler etkilenmez. İşletmeye özel indirim işletme kartından verilir.',
-    `<h3 class="subh" style="margin-top:0">Web ve site fiyatları</h3><p class="hint" style="margin:0 0 6px">Tanıtım sitesi, panel Paketler kartı, web ödemesi ve şube ücreti. Tutarları rakamla girin (örn. 2000).</p>` + rows + `<div class="row"><div><label>Para birimi</label><select id="pr-cur">${[['TRY', '₺ Türk lirası'], ['USD', '$ ABD doları'], ['EUR', '€ Euro']].map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
-      <div><label>KDV</label><select id="pr-vat"><option value="excl"${P.vat !== 'incl' ? ' selected' : ''}>Fiyatlara KDV dahil değil</option><option value="incl"${P.vat === 'incl' ? ' selected' : ''}>Fiyatlara KDV dahil</option></select></div>
-      <div style="flex:1.5"><label>Ek not (isteğe bağlı)</label><input id="pr-note" maxlength="60" value="${esc(P.annualNote || '')}" placeholder="örn. İlk ay %50 indirim"></div></div>
+    `<div id="pr-web"><h3 class="subh" style="margin-top:0">Web ve site fiyatları</h3><p class="hint" style="margin:0 0 6px">Tanıtım sitesi, panel Paketler kartı, web ödemesi ve şube ücreti. Tutarları rakamla girin (örn. 2000).</p>` + rows + `<div class="row"><div><label>Para birimi</label><select id="pr-cur" data-label="Para birimi">${[['TRY', '₺ Türk lirası'], ['USD', '$ ABD doları'], ['EUR', '€ Euro']].map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div><label>KDV</label><select id="pr-vat" data-label="KDV"><option value="excl"${P.vat !== 'incl' ? ' selected' : ''}>Fiyatlara KDV dahil değil</option><option value="incl"${P.vat === 'incl' ? ' selected' : ''}>Fiyatlara KDV dahil</option></select></div>
+      <div style="flex:1.5"><label>Ek not (isteğe bağlı)</label><input id="pr-note" data-label="Ek not" maxlength="60" value="${esc(P.annualNote || '')}" placeholder="örn. İlk ay %50 indirim"></div></div></div>
       <div id="pr-play" class="mt"></div>`,
-    `<button class="btn" onclick="savePricing(this)">Fiyatları kaydet</button>`);
+    `<button class="btn" data-save-btn data-save-fn="savePricing" hidden onclick="savePricing(this)">Fiyatları kaydet</button>`);
 }
 // Google Play fiyatları: Google'dan canlı okunur; "Fiyatları kaydet" yalnız değişenleri Play'e yazar
 const PLAY_PR = [['baslangic', 'Başlangıç paketi'], ['pro', 'Pro paketi'], ['tahmin_ligi', 'Tahmin Ligi']];
@@ -1089,7 +1135,10 @@ async function playPrices() {
   if (!r.configured) { el.innerHTML = '<small class="hint">Google Play fiyatları için önce Veri kaynakları → Google Play abonelikleri kartını bağlayın.</small>'; return; }
   PLAY_PRICES = r.prices;
   el.innerHTML = `<h3 class="subh">Google Play fiyatları (Türkiye, KDV dahil)</h3><small class="hint" style="margin:0 0 8px;display:block">Play uygulamasından abone olanların ödediği tutar; Google'dan okunur ve kaydedince Google Play'e yazılır. Yeni fiyat yeni abonelere uygulanır, mevcut aboneler eski fiyattan devam eder. Test ortamında da gerçek Play fiyatı değişir.</small>`
-    + `<div class="row">${PLAY_PR.map(([id, n]) => `<div><label>${esc(n)}</label><input id="pp-${id}" inputmode="decimal" value="${plFmt(r.prices[id])}" placeholder="${r.prices[id] == null ? 'Play\'de TR fiyatı yok' : ''}"${r.prices[id] == null ? ' disabled' : ''}></div>`).join('')}</div>`;
+    + `<div class="row">${PLAY_PR.map(([id, n]) => `<div><label>${esc(n)}</label><input id="pp-${id}" data-label="${esc(n)} (Google Play)" data-norm="dec" inputmode="decimal" value="${plFmt(r.prices[id])}" placeholder="${r.prices[id] == null ? 'Play\'de TR fiyatı yok' : ''}"${r.prices[id] == null ? ' disabled' : ''}></div>`).join('')}</div>`;
+  const cardEl = el.closest('.card');
+  if (cardEl && cardEl._tracker) cardEl._tracker.rebaseline(el);
+  superSavebar();
 }
 function tickerBrandCard() {
   const T = D.tickerBrand || {}, al = T.align || 'center';
@@ -1097,22 +1146,59 @@ function tickerBrandCard() {
     `<div class="row"><div style="flex:2"><label>Yazı</label><input id="tb-text" maxlength="60" value="${esc(T.text || '')}" placeholder="www.screenpano.com"></div>
       <div><label>Yazı boyutu (%)</label><input id="tb-size" type="number" min="50" max="300" step="10" value="${+T.size || 100}"></div>
       <div><label>Konum</label><select id="tb-align">${[['left', 'Sola'], ['center', 'Ortaya'], ['right', 'Sağa']].map(([v, l]) => `<option value="${v}"${v === al ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>`,
-    `<button class="btn" onclick="saveTickerBrand(this)">Kaydet</button>`);
+    `<button class="btn" data-save-btn data-save-fn="saveTickerBrand" hidden onclick="saveTickerBrand(this)">Kaydet</button>`);
 }
-async function saveTickerBrand(btn) {
+async function saveTickerBrand(btn, skipConfirm) {
+  const cardEl = btn && btn.closest('.card'), tr = cardEl && cardEl._tracker;
+  const changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
+  if (!skipConfirm && changes.length && !await UI.confirmChanges(changes, { title: 'Ekran alt yazısını kaydet', ok: 'Kaydet' })) return false;
   if (btn) btn.disabled = true;
-  try { const r = await api('PUT', '/ticker-brand', { text: $('tb-text').value, align: $('tb-align').value, size: $('tb-size').value }); D.tickerBrand = r.tickerBrand; toast('Kaydedildi; ekranlara kısa sürede yansır'); } catch (e) { toast(e.message, true); }
-  if (btn) btn.disabled = false;
+  try {
+    const r = await api('PUT', '/ticker-brand', { text: $('tb-text').value, align: $('tb-align').value, size: $('tb-size').value });
+    D.tickerBrand = r.tickerBrand;
+    if (tr) tr.rebaseline();
+    superSavebar();
+    toast('Kaydedildi; ekranlara kısa sürede yansır');
+    return true;
+  } catch (e) { toast(e.message, true); return false; }
+  finally { if (btn) btn.disabled = false; }
 }
-async function savePricing(btn) {
+async function savePricing(btn, skipConfirm) {
+  const cardEl = (btn && btn.closest('.card')) || ($('pr-cur') && $('pr-cur').closest('.card'));
+  const tr = cardEl && cardEl._tracker;
+  const changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
+  const webChanged = !tr || changes.some(c => !c.el || !c.el.id || !c.el.id.startsWith('pp-'));
+  const pb = {};
+  if (PLAY_PRICES) for (const [id] of PLAY_PR) {
+    const inp = $('pp-' + id); if (!inp || inp.disabled) continue;
+    const v = plNum(inp.value);
+    if (PLAY_PRICES[id] != null && v !== PLAY_PRICES[id]) {
+      if (!v) return toast('Google Play fiyatı 0 veya boş olamaz', true);
+      pb[id] = v;
+    }
+  }
+  const playChanged = Object.keys(pb).length > 0;
+  if (!skipConfirm && changes.length) {
+    const ok = await UI.confirmChanges(changes, {
+      title: 'Fiyat değişikliklerini kaydet',
+      ok: 'Fiyatları kaydet',
+      warn: playChanged ? "Google Play fiyatları canlı olarak Google Play'e yazılır (test ortamında da gerçek Play fiyatı değişir)." : '',
+    });
+    if (!ok) return false;
+  }
   const b = { currency: $('pr-cur').value, vat: $('pr-vat').value, annualNote: $('pr-note').value };
   for (const [k] of PR_ITEMS) b[k] = { monthly: prNum($('pr-' + k + '-m').value), yearly: prNum($('pr-' + k + '-y').value) };
   if (btn) btn.disabled = true;
-  try { const r = await api('PUT', '/pricing', b); D.pricing = r.pricing; toast('Fiyatlar kaydedildi'); PR_ITEMS.forEach(([k]) => prHint(k)); } catch (e) { toast(e.message, true); if (btn) btn.disabled = false; return; }
-  // Play: yalnız değişen fiyatlar gönderilir
-  const pb = {};
-  if (PLAY_PRICES) for (const [id] of PLAY_PR) { const inp = $('pp-' + id); if (!inp || inp.disabled) continue; const v = plNum(inp.value); if (v && v !== PLAY_PRICES[id]) pb[id] = v; }
-  if (Object.keys(pb).length) {
+  if (webChanged) {
+    try {
+      const r = await api('PUT', '/pricing', b); D.pricing = r.pricing;
+      toast('Fiyatlar kaydedildi'); PR_ITEMS.forEach(([k]) => prHint(k));
+      if (tr && $('pr-web')) tr.rebaseline($('pr-web'));
+    } catch (e) { toast(e.message, true); if (btn) btn.disabled = false; superSavebar(); return false; }
+  }
+  if (playChanged) {
     try {
       const r = await api('PUT', '/play/prices', pb), bad = r.results.filter(x => x.error);
       if (bad.length) toast('Google Play: ' + bad.map(x => x.error).join(' · '), true); else toast('Google Play fiyatları güncellendi');
@@ -1120,6 +1206,8 @@ async function savePricing(btn) {
     await playPrices();
   }
   if (btn) btn.disabled = false;
+  superSavebar();
+  return true;
 }
 // Google Play abonelikleri: servis hesabı (Play Console → Kullanıcılar ve izinler'de "Finansal verileri görüntüle" + "Siparişleri ve abonelikleri yönet" yetkisi), RTDN adresi
 async function playCard() {
@@ -1128,16 +1216,23 @@ async function playCard() {
   try { p = await api('GET', '/play'); } catch (e) { el.innerHTML = e.status === 403 ? '<div class="empty">Google Play ve ödeme ayarları yalnız süper yönetici hesabıyla görünür.</div>' : ''; stTag('<span class="tag mute">Yetki yok</span>'); return; }
   stTag(p.configured ? '<span class="tag ok">Bağlı</span>' : '<span class="tag bad">Anahtar yok</span>');
   el.innerHTML = card('Google Play abonelikleri', `Play Store sürümündeki (${esc(p.package)}) abonelikler sunucuda Google'dan doğrulanır. Google Cloud'da bir servis hesabı oluşturup JSON anahtarını buraya yükleyin, ardından Play Console → Kullanıcılar ve izinler'den bu hesaba <b>Finansal verileri görüntüleme</b> ve <b>Siparişleri ve abonelikleri yönetme</b> izni verin. Play Console'da ürün kimlikleri: <code>${p.products.map(esc).join('</code>, <code>')}</code>. Yenileme ve iptallerin anında gelmesi için Play Console → Gelir elde etme ayarları → Gerçek zamanlı bildirimler'e bir Pub/Sub konusu bağlayıp push aboneliğini şu adrese yönlendirin:<br><code style="word-break:break-all">${esc(p.rtdn)}</code>`,
-    `<div class="row"><div style="flex:2"><label>Servis hesabı JSON anahtarı ${p.configured ? `· <span class="tag ok">yüklü: ${esc(p.email)}</span>` : ''}</label><input type="file" id="pl-sa" accept="application/json,.json"></div>
-      <div><label>Paket adı</label><input id="pl-pkg" value="${esc(p.package)}" autocomplete="off"></div></div>`,
-    `<button class="btn" onclick="savePlay(this)">Kaydet</button>${p.configured ? ' <button class="btn ghost" onclick="api(\'POST\',\'/play/sweep\').then(()=>toast(\'Abonelikler yeniden okundu\')).catch(e=>toast(e.message,true))">Şimdi doğrula</button>' : ''}`, badge(p.configured));
+    `<div class="row"><div style="flex:2"><label>Servis hesabı JSON anahtarı ${p.configured ? `· <span class="tag ok">yüklü: ${esc(p.email)}</span>` : ''}</label><input type="file" id="pl-sa" data-track-file data-label="Servis hesabı JSON anahtarı" accept="application/json,.json"></div>
+      <div><label>Paket adı</label><input id="pl-pkg" data-label="Paket adı" value="${esc(p.package)}" autocomplete="off"></div></div>`,
+    `<button class="btn" data-save-btn data-save-fn="savePlay" hidden onclick="savePlay(this)">Kaydet</button>${p.configured ? ' <button class="btn ghost" onclick="api(\'POST\',\'/play/sweep\').then(()=>toast(\'Abonelikler yeniden okundu\')).catch(e=>toast(e.message,true))">Şimdi doğrula</button>' : ''}`, badge(p.configured));
+  trackSuperCard(el.querySelector('.card'));
+  superSavebar();
 }
-async function savePlay(btn) {
+async function savePlay(btn, skipConfirm) {
+  const cardEl = btn && btn.closest('.card'), tr = cardEl && cardEl._tracker;
+  const changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
   const f = $('pl-sa').files[0], b = { package: $('pl-pkg').value };
-  if (f) { if (f.size > 20000) return toast('Dosya çok büyük; servis hesabı JSON anahtarını seçin', true); b.serviceAccount = await f.text(); }
-  btn.disabled = true;
-  try { await api('PUT', '/play', b); toast('Kaydedildi'); playCard(); } catch (e) { toast(e.message, true); }
-  btn.disabled = false;
+  if (f && f.size > 20000) return toast('Dosya çok büyük; servis hesabı JSON anahtarını seçin', true);
+  if (!skipConfirm && changes.length && !await UI.confirmChanges(changes, { title: 'Google Play ayarlarını kaydet', ok: 'Kaydet' })) return false;
+  if (f) b.serviceAccount = await f.text();
+  if (btn) btn.disabled = true;
+  try { await api('PUT', '/play', b); toast('Kaydedildi'); await playCard(); return true; } catch (e) { toast(e.message, true); return false; }
+  finally { if (btn) btn.disabled = false; }
 }
 // İşletmeye özel indirim teklifleri (Google Play): durum tablosu ve eksikleri kurma
 async function offersCard() {
@@ -1164,17 +1259,25 @@ async function payCard() {
   const t = $('st-payc'); if (t) t.outerHTML = b.mode === 'off' ? '<span class="tag mute">Kapalı</span>' : `<span class="tag ok">${b.mode === 'all' ? T('Tüm işletmeler') : T('Pilot')}</span>`;
   const prov = (n, ok) => `<span class="tag ${ok ? 'ok' : 'mute'}">${n}: ${ok ? T('ayarlı') : T('ayarsız')}</span>`;
   el.innerHTML = card('Çevrimiçi ödeme (web)', 'İşletmelerin panelden kartla ödemesi. Tutar her zaman sunucuda hesaplanır: Fiyatlandırma ve işletmeye özel indirim. Sağlayıcı anahtarları sunucu ortam değişkenlerindedir.' + (b.envOverride ? ' <b>Mod PAYMENTS_MODE ortam değişkeniyle sabit; buradan değişmez.</b>' : ''),
-    `<div class="row" style="align-items:flex-end"><div style="max-width:320px"><label>Mod</label><select id="pay-mode"${b.envOverride ? ' disabled' : ''}>${[['off', 'Kapalı'], ['pilot', 'Pilot: yalnız seçili işletmeler'], ['all', 'Tüm işletmeler']].map(([v, l]) => `<option value="${v}"${b.mode === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div><div style="display:flex;gap:6px;flex-wrap:wrap;padding-bottom:10px">${prov('iyzico', b.iyzico)}${prov('PayTR', b.paytr)}</div></div><small class="hint" style="margin:0">Pilot işletmeler işletme kartındaki "Çevrimiçi Ödeme Pilotu" kutusuyla seçilir.</small>`,
-    b.envOverride ? '' : `<button class="btn" onclick="savePayMode(this)">Kaydet</button>`);
+    `<div class="row" style="align-items:flex-end"><div style="max-width:320px"><label>Mod</label><select id="pay-mode" data-label="Çevrimiçi ödeme modu"${b.envOverride ? ' disabled' : ''}>${[['off', 'Kapalı'], ['pilot', 'Pilot: yalnız seçili işletmeler'], ['all', 'Tüm işletmeler']].map(([v, l]) => `<option value="${v}"${b.mode === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div><div style="display:flex;gap:6px;flex-wrap:wrap;padding-bottom:10px">${prov('iyzico', b.iyzico)}${prov('PayTR', b.paytr)}</div></div><small class="hint" style="margin:0">Pilot işletmeler işletme kartındaki "Çevrimiçi Ödeme Pilotu" kutusuyla seçilir.</small>`,
+    b.envOverride ? '' : `<button class="btn" data-save-btn data-save-fn="savePayMode" hidden onclick="savePayMode(this)">Kaydet</button>`);
+  trackSuperCard(el.querySelector('.card'));
+  superSavebar();
 }
-async function savePayMode(btn) {
+async function savePayMode(btn, skipConfirm) {
+  const cardEl = btn && btn.closest('.card'), tr = cardEl && cardEl._tracker;
+  const changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
   const m = $('pay-mode').value;
-  if (m !== 'off' && !await UI.ask(m === 'all' ? 'Çevrimiçi ödeme tüm işletmelere açılacak. Emin misiniz?' : 'Çevrimiçi ödeme pilot işletmelere açılacak. Devam edilsin mi?', { ok: 'Aç' })) return;
-  btn.disabled = true;
-  try { await api('PUT', '/billing', { mode: m }); toast('Kaydedildi'); } catch (e) { toast(e.message, true); }
-  btn.disabled = false; payCard();
+  if (!skipConfirm) {
+    const warn = m === 'all' ? 'Çevrimiçi ödeme tüm işletmelere açılacak.' : m === 'pilot' ? 'Çevrimiçi ödeme pilot işletmelere açılacak.' : '';
+    if (!await UI.confirmChanges(changes, { title: 'Çevrimiçi ödeme modunu kaydet', ok: m === 'off' ? 'Kaydet' : 'Aç', warn })) return false;
+  }
+  if (btn) btn.disabled = true;
+  try { await api('PUT', '/billing', { mode: m }); toast('Kaydedildi'); await payCard(); return true; } catch (e) { toast(e.message, true); return false; }
+  finally { if (btn) btn.disabled = false; }
 }
-const saveBtn = keys => `<button class="btn" onclick="saveKeys(${esc(JSON.stringify(keys))},this)">Kaydet</button>`;
+const saveBtn = keys => `<button class="btn" data-save-btn data-save-fn="saveKeys" data-save-keys="${esc(JSON.stringify(keys))}" hidden onclick="saveKeys(${esc(JSON.stringify(keys))},this)">Kaydet</button>`;
 // Sayfa içi gruplar: üstte sekmeler, altta yalnız seçili grubun kartları. Tüm gruplar DOM'da kalır (form değerleri ve
 // after() içindeki kimlikler korunur), seçili olmayanlar gizlenir. Seçim sayfa değişse de hatırlanır.
 const GRP = {};
@@ -1365,12 +1468,13 @@ function adFormBasic(a, isNew) {
   <div class="row"><div><label>${T('Paket')}</label><select id="pa-pkg" onchange="adPick()"><option value="">${T('Özel (elle gir)')}</option>${pk.map(p => `<option value="${esc(p.id)}" ${a.packageId === p.id ? 'selected' : ''}>${esc(p.name)} · ${p.days} ${T('gün')} · ${tl(p.price)}</option>`).join('')}</select></div>${field(T('Fiyat (₺)'), 'pa-price', a.price || '', 'type="number" min="0" step="0.01"')}</div>
   <div class="row">${field(T('Başlangıç'), 'pa-start', a.start || (isNew ? today : ''), 'type="date"')}${field(T('Bitiş'), 'pa-end', a.end || '', 'type="date"')}</div>
   <div class="row">${field(T('Sıklık: kaç içerikte bir'), 'pa-every', a.every || 4, 'type="number" min="1" max="50"')}${field(T('Gösterim süresi (saniye)'), 'pa-dur', a.dur || 10, 'type="number" min="3" max="120"')}</div>
-  <div class="row"><div><label>${T('Ödeme')}</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:8px"><input type="checkbox" id="pa-free" ${a.allowUnpaid ? 'checked' : ''}> ${T('Ödeme gelmeden de yayınla')}</label></div></div>`;
+  <div class="row"><div><label>${T('Ödeme')}</label><label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:8px"><input type="checkbox" id="pa-free" data-label="Ödeme gelmeden de yayınla" ${a.allowUnpaid ? 'checked' : ''}> ${T('Ödeme gelmeden de yayınla')}</label></div></div>`;
 }
 function adPick() {
   const p = AD.d.packages.find(x => x.id === $('pa-pkg').value); if (!p) return;
   $('pa-price').value = p.price; const st = $('pa-start').value || adToday(); $('pa-start').value = st;
   $('pa-end').value = new Date(Date.parse(st + 'T12:00:00Z') + (p.days - 1) * 86400000).toISOString().slice(0, 10);
+  if ($('pane') && $('pane')._tracker) $('pane')._tracker.sync();
 }
 function adRead() {
   const v = id => ($(id) || {}).value, o = {
@@ -1391,12 +1495,12 @@ async function adOpen(id) {
   <div class="m-body"><div class="m-col">
     <div class="d-card">${adFormBasic(a)}</div>
     <div class="d-card"><h4>${ic('target')} ${T('Hedefleme')}</h4>
-      <div><label>${T('Hangi işletmelerde yayınlansın')}</label><select id="pa-mode" onchange="adMode()"><option value="all" ${g.mode === 'all' ? 'selected' : ''}>${T('Tüm işletmeler')}</option><option value="plan" ${g.mode === 'plan' ? 'selected' : ''}>${T('Seçilen paketler')}</option><option value="city" ${g.mode === 'city' ? 'selected' : ''}>${T('Seçilen şehirler')}</option></select></div>
-      <div id="pa-plans" style="margin-top:10px">${d.plans.map(x => `<label style="display:inline-flex;gap:6px;margin-right:14px"><input type="checkbox" class="pa-plan" value="${x.id}" ${(g.plans || []).includes(x.id) ? 'checked' : ''}> ${esc(x.name)}</label>`).join('')}</div>
-      <div id="pa-cities" style="margin-top:10px">${d.cities.map(c => `<label style="display:inline-flex;gap:6px;margin-right:14px"><input type="checkbox" class="pa-city" value="${esc(c)}" ${(g.cities || []).includes(c) ? 'checked' : ''}> ${esc(c)}</label>`).join('') || `<span class="hint">${T('Henüz şehir bilgisi olan işletme yok')}</span>`}</div>
-      <details style="margin-top:12px"><summary style="cursor:pointer">${T('Hariç tutulacak işletmeler')} (${(g.exclude || []).length})</summary><div class="scroll" style="max-height:170px;margin-top:8px">${d.tenants.map(t => `<label style="display:flex;gap:8px;padding:3px 0"><input type="checkbox" class="pa-ex" value="${t.id}" ${(g.exclude || []).includes(t.id) ? 'checked' : ''}> ${esc(t.name)}${t.city ? ` <small class="hint">${esc(t.city)}</small>` : ''}</label>`).join('')}</div></details>
+      <div><label>${T('Hangi işletmelerde yayınlansın')}</label><select id="pa-mode" data-label="Hedefleme" onchange="adMode()"><option value="all" ${g.mode === 'all' ? 'selected' : ''}>${T('Tüm işletmeler')}</option><option value="plan" ${g.mode === 'plan' ? 'selected' : ''}>${T('Seçilen paketler')}</option><option value="city" ${g.mode === 'city' ? 'selected' : ''}>${T('Seçilen şehirler')}</option></select></div>
+      <div id="pa-plans" style="margin-top:10px">${d.plans.map(x => `<label style="display:inline-flex;gap:6px;margin-right:14px"><input type="checkbox" class="pa-plan" data-label="Paket: ${esc(x.name)}" value="${x.id}" ${(g.plans || []).includes(x.id) ? 'checked' : ''}> ${esc(x.name)}</label>`).join('')}</div>
+      <div id="pa-cities" style="margin-top:10px">${d.cities.map(c => `<label style="display:inline-flex;gap:6px;margin-right:14px"><input type="checkbox" class="pa-city" data-label="Şehir: ${esc(c)}" value="${esc(c)}" ${(g.cities || []).includes(c) ? 'checked' : ''}> ${esc(c)}</label>`).join('') || `<span class="hint">${T('Henüz şehir bilgisi olan işletme yok')}</span>`}</div>
+      <details style="margin-top:12px"><summary style="cursor:pointer">${T('Hariç tutulacak işletmeler')} (${(g.exclude || []).length})</summary><div class="scroll" style="max-height:170px;margin-top:8px">${d.tenants.map(t => `<label style="display:flex;gap:8px;padding:3px 0"><input type="checkbox" class="pa-ex" data-label="Hariç: ${esc(t.name)}" value="${t.id}" ${(g.exclude || []).includes(t.id) ? 'checked' : ''}> ${esc(t.name)}${t.city ? ` <small class="hint">${esc(t.city)}</small>` : ''}</label>`).join('')}</div></details>
     </div>
-  </div><div class="m-col">
+  </div><div class="m-col" data-no-track>
     <div class="d-card"><h4>${ic('coins')} ${T('Ödemeler')}</h4>
       <div class="stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px"><div class="stat"><b>${tl(a.price)}</b><span>${T('Toplam')}</span></div><div class="stat"><b>${tl(a.paid)}</b><span>${T('Tahsil edilen')}</span></div><div class="stat"><b style="color:${a.due ? 'var(--bad)' : 'var(--ok)'}">${tl(a.due)}</b><span>${T('Kalan')}</span></div></div>
       ${(a.payments || []).length ? `<table><thead><tr><th>${T('Tarih')}</th><th>${T('Yöntem')}</th><th class="num">${T('Tutar')}</th><th></th></tr></thead><tbody>${a.payments.map(x => `<tr><td>${fmtD(x.date)}</td><td>${T(AD_METHOD[x.method] || 'Diğer')}${x.note ? `<br><small class="hint">${esc(x.note)}</small>` : ''}</td><td class="num">${tl(x.amount)}</td><td><button class="btn xs ghost" onclick="adPayDel('${a.id}','${x.id}')" title="Sil">×</button></td></tr>`).join('')}</tbody></table>` : `<p class="hint">${T('Henüz ödeme kaydı yok.')}</p>`}
@@ -1425,13 +1529,17 @@ async function adOpen(id) {
       <div class="acts" style="margin-top:12px"><button class="btn xs ghost" onclick="adCopy('${a.id}')">🔗 ${T('Rapor bağlantısını kopyala')}</button><a class="btn xs ghost" href="${esc(a.url)}" target="_blank">${T('Raporu aç')} ↗</a><button class="btn xs ghost" onclick="adToken('${a.id}')">${T('Bağlantıyı yenile')}</button></div>
     </div>
   </div></div>
-  <div class="m-foot"><button class="btn ghost" style="color:var(--bad)" onclick="adDel('${a.id}')">${T('Sil')}</button><span style="flex:1"></span><button class="btn ghost" onclick="adPause('${a.id}',${!a.paused})">${a.paused ? T('Yeniden başlat') : T('Durdur')}</button><button class="btn" onclick="adSave('${a.id}')">${T('Kaydet')}</button></div>`);
+  <div class="m-foot"><button class="btn ghost" style="color:var(--bad)" onclick="adDel('${a.id}')">${T('Sil')}</button><div class="m-foot-msg"><span class="chg-live" id="drw-live" hidden></span></div><button class="btn ghost" onclick="adPause('${a.id}',${!a.paused})">${a.paused ? T('Yeniden başlat') : T('Durdur')}</button><button class="btn" data-save-btn hidden onclick="adSave('${a.id}')">${T('Kaydet')}</button></div>`);
   adMode();
+  UI.track($('pane'), { live: $('drw-live') });
 }
 function adMode() { const m = ($('pa-mode') || {}).value; if (!$('pa-plans')) return; $('pa-plans').style.display = m === 'plan' ? '' : 'none'; $('pa-cities').style.display = m === 'city' ? '' : 'none'; }
 async function adSave(id) {
   const o = adRead(); if (!String(o.advertiser).trim()) return toast('Reklam veren adı gerekli', true);
   if (o.start && o.end && o.end < o.start) return toast('Bitiş tarihi başlangıçtan önce olamaz', true);
+  const tr = $('pane') && $('pane')._tracker, changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
+  if (!await UI.confirmChanges(changes, { title: `${AD.cur ? AD.cur.ad.advertiser + ' · ' : ''}Değişiklikleri kaydet`, ok: 'Kaydet' })) return;
   try { await api('PUT', '/pads/' + id, o); toast('Kaydedildi'); await adLoad(); adOpen(id); } catch (e) { toast(e.message, true); }
 }
 async function adPay(id) {
@@ -1483,14 +1591,45 @@ async function adDel(id) { if (!await UI.ask(T('Bu reklam ve görselleri silinsi
 async function adCopy(id) { try { await navigator.clipboard.writeText(AD.cur.ad.url); toast('Bağlantı kopyalandı'); } catch (e) { await UI.ask(T('Rapor bağlantısı'), { input: AD.cur.ad.url, ok: T('Tamam') }); } }
 async function adToken(id) { if (!await UI.ask(T('Yeni bir rapor bağlantısı oluşturulsun mu? Eski bağlantı artık açılmaz.'), { ok: T('Oluştur'), cancel: T('Vazgeç') })) return; try { await api('POST', `/pads/${id}/token`); await adOpen(id); toast('Yeni bağlantı oluşturuldu'); } catch (e) { toast(e.message, true); } }
 // Paketler: ad, gün, fiyat; reklam eklerken seçilince fiyat ve bitiş tarihi otomatik dolar
+function adPkgDiff(pk0) {
+  const cur = [...document.querySelectorAll('#pk-rows .pk')].map(r => ({
+    id: r.dataset.id || '',
+    name: String(r.querySelector('.pk-n').value || '').trim(),
+    days: String(r.querySelector('.pk-d').value ?? '').trim(),
+    price: String(r.querySelector('.pk-p').value ?? '').trim(),
+  }));
+  const out = [];
+  const used = new Set();
+  for (let i = 0; i < cur.length; i++) {
+    const c = cur[i];
+    let idx = c.id ? pk0.findIndex((p, j) => !used.has(j) && p.id === c.id) : -1;
+    if (idx < 0 && !c.id && i < pk0.length && !pk0[i].id && !used.has(i)) idx = i;
+    if (idx < 0) {
+      if (c.name || c.price || c.days !== '30') out.push({ label: 'Yeni reklam paketi', detail: `${c.name || T('Adsız')} (${c.days || 30} ${T('gün')}, ${c.price || 0} ₺)` });
+      continue;
+    }
+    used.add(idx);
+    const p = pk0[idx], nm = p.name || c.name || T('Paket');
+    if (c.name !== p.name) out.push({ label: `${nm} · ${T('Paket adı')}`, from: p.name, to: c.name });
+    if (c.days !== p.days) out.push({ label: `${nm} · ${T('Gün')}`, from: p.days, to: c.days });
+    if (c.price !== p.price) out.push({ label: `${nm} · ${T('Fiyat (₺)')}`, from: p.price, to: c.price });
+  }
+  pk0.forEach((p, j) => { if (!used.has(j) && (p.id || p.name)) out.push({ label: 'Kaldırılan paket', detail: p.name || `#${p.id}` }); });
+  return out;
+}
 function adPkgs() {
   const rows = AD.d.packages.length ? AD.d.packages : [{ name: '', days: 30, price: '' }];
+  const pk0 = rows.map(p => ({ id: p.id || '', name: String(p.name || '').trim(), days: String(p.days ?? '').trim(), price: String(p.price ?? '').trim() }));
   openDrawer(`<div class="m-head"><div><h2 style="margin:0 0 2px;font-size:18px;font-weight:700">${T('Reklam paketleri')}</h2><p class="hint" style="margin:0;font-size:12.5px">${T('Hazır süre ve fiyat paketleri; reklam eklerken seçilince fiyat ve bitiş tarihi otomatik dolar.')}</p></div><button class="modal-x" onclick="closeDrawer()" aria-label="Kapat">×</button></div>
-  <div class="m-body" style="grid-template-columns:1fr"><div class="d-card"><div id="pk-rows">${rows.map(pkRow).join('')}</div><button class="btn ghost" style="margin-top:10px" onclick="$('pk-rows').insertAdjacentHTML('beforeend',pkRow({name:'',days:30,price:''}))">＋ ${T('Paket ekle')}</button></div></div>
-  <div class="m-foot"><button class="btn ghost" onclick="closeDrawer()">${T('Vazgeç')}</button><button class="btn" onclick="adPkgSave()">${T('Kaydet')}</button></div>`);
+  <div class="m-body" style="grid-template-columns:1fr"><div class="d-card"><div id="pk-rows" data-no-track>${rows.map(pkRow).join('')}</div><button class="btn ghost" style="margin-top:10px" onclick="$('pk-rows').insertAdjacentHTML('beforeend',pkRow({name:'',days:30,price:''}));$('pane')._tracker&&$('pane')._tracker.sync()">＋ ${T('Paket ekle')}</button></div></div>
+  <div class="m-foot"><div class="m-foot-msg"><span class="chg-live" id="drw-live" hidden></span></div><button class="btn ghost" onclick="closeDrawer()">${T('Vazgeç')}</button><button class="btn" data-save-btn hidden onclick="adPkgSave()">${T('Kaydet')}</button></div>`);
+  UI.track($('pane'), { live: $('drw-live'), extra: () => adPkgDiff(pk0) });
 }
-const pkRow = p => `<div class="row pk" data-id="${esc(p.id || '')}" style="grid-template-columns:2fr 1fr 1fr auto;align-items:end"><div><label>${T('Paket adı')}</label><input class="pk-n" value="${esc(p.name)}" maxlength="40" placeholder="örn. Aylık"></div><div><label>${T('Gün')}</label><input class="pk-d" type="number" min="1" max="730" value="${p.days}"></div><div><label>${T('Fiyat (₺)')}</label><input class="pk-p" type="number" min="0" step="0.01" value="${p.price}"></div><button class="btn xs ghost" onclick="this.parentNode.remove()" title="Sil">×</button></div>`;
+const pkRow = p => `<div class="row pk" data-id="${esc(p.id || '')}" style="grid-template-columns:2fr 1fr 1fr auto;align-items:end"><div><label>${T('Paket adı')}</label><input class="pk-n" value="${esc(p.name)}" maxlength="40" placeholder="örn. Aylık"></div><div><label>${T('Gün')}</label><input class="pk-d" type="number" min="1" max="730" value="${p.days}"></div><div><label>${T('Fiyat (₺)')}</label><input class="pk-p" type="number" min="0" step="0.01" value="${p.price}"></div><button class="btn xs ghost" onclick="this.parentNode.remove();$('pane')._tracker&&$('pane')._tracker.sync()" title="Sil">×</button></div>`;
 async function adPkgSave() {
+  const tr = $('pane') && $('pane')._tracker, changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
+  if (!await UI.confirmChanges(changes, { title: 'Reklam paketlerini kaydet', ok: 'Kaydet' })) return;
   const packages = [...document.querySelectorAll('#pk-rows .pk')].map(r => ({ id: r.dataset.id, name: r.querySelector('.pk-n').value, days: r.querySelector('.pk-d').value, price: r.querySelector('.pk-p').value }));
   try { await api('PUT', '/pad-packages', { packages }); toast('Paketler kaydedildi'); closeDrawer(); await adLoad(); } catch (e) { toast(e.message, true); }
 }
@@ -1499,12 +1638,82 @@ async function adPkgSave() {
 PAGES.account = {
   html() {
     return head('Hesabım', 'Süper yönetici hesabınız.')
-      + card('Şifre değiştir', '', `<div class="row"><div><label>Mevcut</label><input id="p-cur" type="password" autocomplete="current-password"></div><div><label>Yeni (en az 10)</label><input id="p-new" type="password" autocomplete="new-password"></div></div>`, '<button class="btn" onclick="changePw()">Değiştir</button>')
+      + card('Şifre değiştir', '', `<div class="row"><div><label>Mevcut</label><input id="p-cur" data-label="Mevcut şifre" data-secret="1" type="password" autocomplete="current-password"></div><div><label>Yeni (en az 10)</label><input id="p-new" data-label="Yeni şifre" data-secret="1" type="password" autocomplete="new-password"></div></div>`, '<button class="btn" data-save-btn data-save-fn="changePw" hidden onclick="changePw(this)">Değiştir</button>')
       + card('Oturum', '', '<div class="acts"><a class="btn ghost" href="/tv" target="_blank">TV sayfası ↗</a><button class="btn ghost" onclick="logout()">Çıkış yap</button></div>');
   },
 };
-async function changePw() { try { await api('PUT', '/password', { current: $('p-cur').value, next: $('p-new').value }); $('p-cur').value = ''; $('p-new').value = ''; toast('Şifre değiştirildi'); } catch (e) { toast(e.message, true); } }
+async function changePw(btn, skipConfirm) {
+  const cardEl = btn && btn.closest('.card'), tr = cardEl && cardEl._tracker;
+  const changes = tr ? tr.diff() : [];
+  if (tr && !changes.length) return;
+  if (!skipConfirm && changes.length && !await UI.confirmChanges(changes, { title: 'Şifreyi değiştir', ok: 'Değiştir' })) return false;
+  if (btn) btn.disabled = true;
+  try {
+    await api('PUT', '/password', { current: $('p-cur').value, next: $('p-new').value });
+    $('p-cur').value = ''; $('p-new').value = '';
+    if (tr) tr.rebaseline();
+    superSavebar();
+    toast('Şifre değiştirildi');
+    return true;
+  } catch (e) { toast(e.message, true); return false; }
+  finally { if (btn) btn.disabled = false; }
+}
 async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/login'; }
+
+function trackSuperCard(cardEl) {
+  if (!cardEl || !cardEl.querySelector('[data-save-btn]')) return;
+  UI.track(cardEl, { onChange: () => superSavebar() });
+}
+function superSavebar() {
+  const b = $('savebar'); if (!b) return;
+  const dirtyCards = [...document.querySelectorAll('#main .card.dirty')].filter(c => c._tracker);
+  const allChanges = [];
+  for (const c of dirtyCards) {
+    const h = c.querySelector('h2');
+    const cardName = h ? ([...h.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim() || h.textContent.trim()) : '';
+    for (const ch of c._tracker.diff()) {
+      allChanges.push(dirtyCards.length > 1 && cardName ? { ...ch, label: `${T(cardName)} · ${T(ch.label)}` } : ch);
+    }
+  }
+  const n = allChanges.length;
+  b.classList.toggle('on', n > 0);
+  document.body.classList.toggle('sbon', n > 0);
+  if (!n) return;
+  const sum = UI.summarizeChanges(allChanges);
+  const txt = b.querySelector('.sb-txt');
+  if (txt) {
+    txt.querySelector('b').textContent = n === 1 ? T('1 değişiklik') : T(`${n} değişiklik`);
+    txt.querySelector('small').textContent = sum.text;
+    txt.setAttribute('title', sum.title);
+  }
+  b._cancel = () => {
+    for (const c of dirtyCards) if (c._tracker) c._tracker.reset();
+    if (typeof PR_ITEMS !== 'undefined') PR_ITEMS.forEach(([k]) => prHint(k));
+    superSavebar();
+  };
+  b._save = async () => {
+    const warnPlay = dirtyCards.some(c => c.querySelector('#pr-play') && c._tracker.diff().some(ch => ch.el && ch.el.id && ch.el.id.startsWith('pp-')));
+    const paySel = $('pay-mode');
+    const warnPay = dirtyCards.some(c => paySel && c.contains(paySel) && paySel.value !== 'off') ? (paySel.value === 'all' ? 'Çevrimiçi ödeme tüm işletmelere açılacak.' : 'Çevrimiçi ödeme pilot işletmelere açılacak.') : '';
+    const warn = [warnPlay ? "Google Play fiyatları canlı olarak Google Play'e yazılır (test ortamında da gerçek Play fiyatı değişir)." : '', warnPay].filter(Boolean).join(' ');
+    if (!await UI.confirmChanges(allChanges, { title: 'Değişiklikleri kaydet', ok: 'Kaydet', warn })) return;
+    for (const c of dirtyCards) {
+      const btn = c.querySelector('[data-save-btn]');
+      const fn = btn && btn.dataset.saveFn;
+      if (fn === 'savePricing') await savePricing(btn, true);
+      else if (fn === 'saveTickerBrand') await saveTickerBrand(btn, true);
+      else if (fn === 'savePlay') await savePlay(btn, true);
+      else if (fn === 'savePayMode') await savePayMode(btn, true);
+      else if (fn === 'saveKeys') await saveKeys(JSON.parse(btn.dataset.saveKeys || '[]'), btn, true);
+      else if (fn === 'changePw') await changePw(btn, true);
+    }
+    superSavebar();
+  };
+}
+addEventListener('beforeunload', e => {
+  const drwDirty = $('drawer') && $('drawer').classList.contains('on') && $('pane') && $('pane')._tracker && $('pane')._tracker.diff().length > 0;
+  if (document.querySelector('#main .card.dirty') || drwDirty) { e.preventDefault(); e.returnValue = ''; }
+});
 
 /* ================= yükleme ve yenileme ================= */
 async function load() {

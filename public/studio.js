@@ -6,7 +6,8 @@
   const W = 1920, H = 1080;
   const LAYOUTS = [['tam', 'Tam kadraj'], ['bolunmus', 'Yarım panel'], ['cerceve', 'Çerçeveli'], ['vitrin', 'Vitrin bandı']];
   const BADGES = ['Yeni', 'Bugüne özel', '%20 indirim', 'Şefin önerisi', 'Kampanya'];
-  let ST = null; // açık stüdyo durumu
+  const ST_LABELS = { title: 'Ürün adı / başlık', price: 'Fiyat', badge: 'Rozet', sub: 'Alt yazı', note: 'Not', qrLabel: 'QR altındaki yazı' };
+  let ST = null, ST0 = null; // açık stüdyo durumu ve ilk anlık görüntü (düzenlemede)
 
   // ---- yazı tipi: panelle aynı Montserrat (Türkçe harfler latin-ext dosyasında) ----
   let fontReady = null;
@@ -170,10 +171,12 @@
       const v = S.db.videos.find(x => x.id === id); if (!v || !v.design) return;
       const d = v.design;
       ST = { id, ad: v.ad || null, layout: d.layout, fields: { ...fieldsDefault(), ...(d.fields || {}) }, palette: d.palette || 'photo', photo: d.photo, qrUrl: d.qrUrl || '', qrCode: v.qrCode || '', name: v.name };
+      ST0 = { layout: ST.layout, fields: { ...ST.fields }, palette: ST.palette, photo: ST.photo, qrUrl: ST.qrUrl };
       try { ST.img = await loadImg(S.me.upBase + d.photo, true); ST.photoPal = photoPalette(ST.img); } catch (e) { toast('Kaynak fotoğraf açılamadı; yeni bir fotoğraf seçin', true); ST.img = null; }
       if (ST.qrUrl) await setQr(ST.qrUrl, true);
       return ST.img ? editor() : pickPhoto();
     }
+    ST0 = null;
     ST = { id: null, ad: opts.ad || null, layout: 'tam', fields: { ...fieldsDefault(), ...(opts.fields || {}) }, palette: 'photo', qrUrl: opts.qrUrl || '', qrCode: '' };
     if (ST.qrUrl) await setQr(ST.qrUrl, true);
     pickPhoto();
@@ -223,9 +226,34 @@
           <p class="muted" style="font-size:12.5px;margin:0">QR'ın kaç kez okutulduğu İstatistik → Kampanya etkisi bölümünde görünür.</p></details>
         <div class="row mt"><label class="btn g s" style="cursor:pointer">Fotoğrafı değiştir<input type="file" accept="image/*" hidden onchange="stuSwap(this.files[0])"></label></div>
       </div></div>
-      <div class="row mt" style="justify-content:space-between">${ST.id ? `<button class="btn d" onclick="if(confirm('Afiş silinsin mi?')){closeModal();act('DELETE','/videos/${ST.id}',undefined,'Silindi')}">Sil</button>` : '<span></span>'}
-        <span class="row"><button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" id="stu-save" onclick="stuSave()">${ST.id ? 'Kaydet' : ST.ad ? 'Reklama ekle' : 'Medyaya ekle'}</button></span></div>`);
+      <div class="row mt" style="justify-content:space-between">${ST.id ? `<button class="btn d" onclick="UI.ask('Afiş silinsin mi?', { ok: 'Sil', danger: true }).then(ok=>{if(ok){closeModal();act('DELETE','/videos/${ST.id}',undefined,'Silindi')}})">Sil</button>` : '<span></span>'}
+        <span class="row" style="gap:8px;align-items:center">${ST0 ? '<span id="stu-live" class="chg-live" hidden></span>' : ''}<button class="btn g" onclick="closeModal()">Vazgeç</button><button class="btn" id="stu-save" ${ST0 ? 'hidden ' : ''}onclick="stuSave()">${ST.id ? 'Kaydet' : ST.ad ? 'Reklama ekle' : 'Medyaya ekle'}</button></span></div>`);
     redraw(true);
+    stuSyncSave();
+  }
+  function stuDiff() {
+    if (!ST || !ST0) return [];
+    const out = [], layName = k => (LAYOUTS.find(x => x[0] === k) || [k, k])[1];
+    if (ST.layout !== ST0.layout) out.push({ label: 'Tasarım', from: layName(ST0.layout), to: layName(ST.layout) });
+    for (const k of Object.keys(ST_LABELS)) {
+      const a = String(ST0.fields[k] || ''), b = String(ST.fields[k] || '');
+      if (a !== b) out.push({ label: ST_LABELS[k], from: a, to: b });
+    }
+    if (ST.palette !== ST0.palette) out.push({ label: 'Renkler', from: ST0.palette === 'theme' ? 'Ekran teması' : 'Fotoğraftan', to: ST.palette === 'theme' ? 'Ekran teması' : 'Fotoğraftan' });
+    if (ST.photo !== ST0.photo) out.push({ label: 'Fotoğraf', from: 'Mevcut', to: 'Yeni fotoğraf' });
+    if ((ST.qrUrl || '') !== (ST0.qrUrl || '')) out.push({ label: 'QR bağlantısı', from: ST0.qrUrl || '', to: ST.qrUrl || '' });
+    return out;
+  }
+  function stuSyncSave() {
+    if (!ST0) return;
+    const ch = stuDiff(), dirty = ch.length > 0, b = $('stu-save'), lv = $('stu-live');
+    if (b) b.hidden = !dirty;
+    if (lv) {
+      const sum = dirty ? UI.summarizeChanges(ch) : null;
+      lv.hidden = !dirty;
+      lv.textContent = dirty ? sum.text : '';
+      if (dirty) lv.setAttribute('title', sum.title); else lv.removeAttribute('title');
+    }
   }
   function redraw(all) {
     const c = $('stu-cv'); if (!c || !ST.img) return;
@@ -233,18 +261,23 @@
     if (all) document.querySelectorAll('canvas[data-lay]').forEach(x => draw(x, { ...ST, layout: x.dataset.lay }));
   }
   let rt = null;
-  window.stuSet = (k, v) => { ST.fields[k] = v; clearTimeout(rt); rt = setTimeout(() => redraw(true), 60); };
+  window.stuSet = (k, v) => { ST.fields[k] = v; stuSyncSave(); clearTimeout(rt); rt = setTimeout(() => redraw(true), 60); };
   window.stuBadge = b => { ST.fields.badge = ST.fields.badge === b ? '' : b; editor(); };
-  window.stuLayout = k => { ST.layout = k; document.querySelectorAll('.stu-lay').forEach(b => b.classList.toggle('on', b.querySelector('canvas').dataset.lay === k)); redraw(false); };
+  window.stuLayout = k => { ST.layout = k; document.querySelectorAll('.stu-lay').forEach(b => b.classList.toggle('on', b.querySelector('canvas').dataset.lay === k)); redraw(false); stuSyncSave(); };
   window.stuPal = p => { ST.palette = p; editor(); };
-  window.stuQr = async v => { await setQr(v); redraw(true); };
+  window.stuQr = async v => { await setQr(v); redraw(true); stuSyncSave(); };
   window.stuSwap = async file => {
     if (!file) return; const sm = await shrink(file); if (!sm) return toast('Fotoğraf açılamadı', true);
-    try { ST.img = await loadImg(sm.url); ST.photoPal = photoPalette(ST.img); const fd = new FormData(); fd.append('file', new File([sm.blob], 'foto.jpg', { type: 'image/jpeg' })); ST.photo = (await req('POST', '/posters/image', fd)).file; redraw(true); }
+    try { ST.img = await loadImg(sm.url); ST.photoPal = photoPalette(ST.img); const fd = new FormData(); fd.append('file', new File([sm.blob], 'foto.jpg', { type: 'image/jpeg' })); ST.photo = (await req('POST', '/posters/image', fd)).file; redraw(true); stuSyncSave(); }
     catch (e) { toast(e.message, true); }
   };
   window.stuSave = async function () {
     if (!(ST.fields.title || '').trim()) return toast('Ürün adını ya da başlığı yazın', true);
+    if (ST0) {
+      const ch = stuDiff();
+      if (!ch.length) return;
+      if (!await UI.confirmChanges(ch, { title: 'Afişi kaydet', ok: 'Kaydet' })) return;
+    }
     const b = $('stu-save'); b.disabled = true; b.textContent = 'Kaydediliyor…';
     try {
       const c = document.createElement('canvas'); c.width = W; c.height = H; draw(c, ST);
@@ -254,7 +287,7 @@
       fd.append('file', new File([blob], 'afis.jpg', { type: 'image/jpeg' }));
       await req('POST', '/studio', fd);
       toast(ST.id ? 'Afiş güncellendi' : ST.ad ? 'Reklam görseli eklendi' : 'Afiş medya sırasının sonuna eklendi');
-      closeModal(); ST = null; refresh();
+      closeModal(); ST = null; ST0 = null; refresh();
     } catch (e) { toast(e.message, true); b.disabled = false; b.textContent = 'Kaydet'; }
   };
   window.SPStudio = { draw, LAYOUTS };
